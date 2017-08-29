@@ -48,6 +48,7 @@ namespace CASPT2{
 class CASPT2 : public SpinFreeMethod<double> {
   friend class SPCASPT2::SPCASPT2;
   friend class MSCASPT2::MSCASPT2;
+//  friend class CASPT2_ALT::CASPT2_ALT;
   protected:
     // these are tensors that are used internally
     std::shared_ptr<Tensor> t2;
