@@ -8,6 +8,8 @@
 
 using namespace std;
 using namespace WickUtils;
+using namespace bagel;
+using namespace bagel::SMITH;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
 void TensOp<DType>::initialize(vector<string> orig_idxs, vector<vector<string>> orig_idx_ranges,
@@ -137,7 +139,7 @@ void TensOp<DType>::get_ctrs_tens_ranges() {
   int counterer = 0;
   for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
     auto ReIm_factors = make_shared<vector<pair<int,int>>>(1, get<3>(rng_it->second)); 
-    auto CTP = make_shared< CtrTensorPart<vector<double>> >(idxs, rng_it->first, noctrs, ReIm_factors ); 
+    auto CTP = make_shared< CtrTensorPart<DType> >(idxs, rng_it->first, noctrs, ReIm_factors ); 
     CTP_map->emplace(CTP->myname(), CTP); //maybe should be addded in with ctr_idxs.
   }
 
@@ -158,7 +160,7 @@ void TensOp<DType>::get_ctrs_tens_ranges() {
 
         if (valid) {
           auto ReIm_factors = make_shared<vector<pair<int,int>>>(1, get<3>(rng_it->second)); 
-          auto CTP = make_shared< CtrTensorPart<vector<double>> >(idxs, rng_it->first, ctr_vec, ReIm_factors ); 
+          auto CTP = make_shared< CtrTensorPart<DType> >(idxs, rng_it->first, ctr_vec, ReIm_factors ); 
           CTP_map->emplace(CTP->myname(), CTP); //maybe should be addded in with ctr_idxs.
         }
       }
@@ -442,7 +444,7 @@ void MultiTensOp<DType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_ptr<v
   auto unc_ranges_in = make_shared<vector<shared_ptr<vector<string>>>>(0);
   auto unc_aops_in = make_shared<vector<shared_ptr<vector<bool>>>>(0);
 
-  auto CTP_vec = make_shared< vector<shared_ptr<CtrTensorPart<vector<double>> > >> (0); 
+  auto CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart<DType>> >> (0); 
   vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
   vector<vector<pair<int,int>>> sameT_ctrs_pos(orig_tensors_.size(),  pint_vec(0));
   
@@ -480,12 +482,12 @@ void MultiTensOp<DType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_ptr<v
      for(int jj = cmlsizevec->at(ii) ; jj != cmlsizevec->at(ii)+orig_tensors_[ii]->idxs->size(); jj++)
        TS_id_ranges->push_back(id_ranges->at(jj));
 
-     CTP_vec->push_back(make_shared< CtrTensorPart<vector<double>> >(orig_tensors_[ii]->idxs, TS_id_ranges,
+     CTP_vec->push_back(make_shared< CtrTensorPart<DType> >(orig_tensors_[ii]->idxs, TS_id_ranges,
                                                                      make_shared<vector<pair<int,int>>>(sameT_ctrs_pos.at(ii)),
                                                                      make_shared<vector<pair<int,int>>>(1, ReIm_factors->at(ii)))); 
   }
 
-  auto CMTP = make_shared<CtrMultiTensorPart<vector<double>>>(CTP_vec, make_shared<vector<pair<pair<int,int>,pair<int,int>>>>(diffT_ctrs_pos)); 
+  auto CMTP = make_shared<CtrMultiTensorPart<DType> >(CTP_vec, make_shared<vector<pair<pair<int,int>,pair<int,int>>>>(diffT_ctrs_pos)); 
 
   CMTP_map->emplace(CMTP->myname(), CMTP); 
   //get info to connect with gamma
@@ -541,6 +543,8 @@ void MultiTensOp<DType>::print_gamma_contribs(){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class TensOp<std::vector<double>>;
+template class TensOp<Tensor_<double>>;
 template class MultiTensOp<std::vector<double>>;
+template class MultiTensOp<Tensor_<double>>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif

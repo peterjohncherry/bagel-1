@@ -165,6 +165,7 @@ namespace RelSPCASPT2 { using Tensor = Tensor_<std::complex<double>>; }
 namespace RelMSCASPT2 { using Tensor = Tensor_<std::complex<double>>; }
 namespace RelMRCI   { using Tensor = Tensor_<std::complex<double>>; }
 
+namespace CASPT2_ALT { using Tensor = Tensor_<double>; }
 }
 }
 

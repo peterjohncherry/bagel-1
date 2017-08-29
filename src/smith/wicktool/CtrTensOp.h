@@ -60,7 +60,7 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
                   contracted = false;
                   get_ctp_idxs_ranges();
                   get_name();;
-                  CTdata = std::make_shared<DType>(0); 
+                  CTdata = std::make_shared<DType>(); 
                 };
 
      void get_ctp_idxs_ranges();

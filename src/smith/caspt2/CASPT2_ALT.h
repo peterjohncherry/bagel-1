@@ -39,6 +39,7 @@ namespace CASPT2_ALT{
 class CASPT2_ALT {
   
   public:
+
     std::shared_ptr<CASPT2::CASPT2> orig_cpt2;
 
     CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in);

@@ -4,7 +4,11 @@
 //#include "BraKet.h"
 
 using namespace std;
+using namespace bagel;
+using namespace bagel::SMITH;
 using namespace WickUtils;
+
+
       using pint_vec = std::vector<std::pair<int,int>>;
       using pstr_vec = std::vector<std::pair<std::string,std::string>>;
       
@@ -17,6 +21,7 @@ using namespace WickUtils;
                                             std::tuple< std::shared_ptr<std::vector<std::shared_ptr<pstr_vec>>>, /* contractions from reordering to gamma */  
                                                         std::shared_ptr<std::vector<std::shared_ptr<pstr_vec>>>, /* spins of contractions from reordering to gamma */  
                                                         std::shared_ptr<std::vector<int>>  /* signs from reordering to gamma */ > >;
+
 
 
 
@@ -388,6 +393,7 @@ void BraKet<DType>::Build_Tensor_Contraction_list_CMTP(){
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class BraKet<std::vector<double>>;
+template class BraKet<Tensor_<double>>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

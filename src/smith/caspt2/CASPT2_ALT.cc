@@ -50,7 +50,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const double factor_in ) {
 /////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::test() { 
 /////////////////////////////////
-  auto weqn = make_shared<Equation<vector<double>>>();
+  auto weqn = make_shared<Equation<Tensor>>();
   weqn->equation_build();
 }
 

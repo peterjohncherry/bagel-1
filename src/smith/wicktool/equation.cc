@@ -139,7 +139,7 @@ void  Equation<DType>::equation_build(){
   auto X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free }); 
   auto X_symmfuncs = set_2el_symmfuncs();
   vector<bool(*)(shared_ptr<vector<string>>)> X_constraints = { &always_true };
-  shared_ptr<vector<double>> X_data = make_shared<vector<double>>(0);  
+  shared_ptr<DType> X_data = make_shared<DType>();  
 
   auto XTens = Build_TensOp("X", X_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
  
@@ -151,7 +151,7 @@ void  Equation<DType>::equation_build(){
   auto T_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });   
   auto T_symmfuncs = set_2el_symmfuncs();
   vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = { &NotAllAct };
-  shared_ptr<vector<double>> T_data = make_shared<vector<double>>(0);  
+  shared_ptr<DType> T_data = make_shared<DType>();  
 
   auto TTens = Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
   ///////////////////////////////////////////////////////////////////////
@@ -180,5 +180,6 @@ void  Equation<DType>::equation_build(){
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Equation<std::vector<double>>;
+template class Equation<bagel::SMITH::Tensor_<double>>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif

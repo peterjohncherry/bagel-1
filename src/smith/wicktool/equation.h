@@ -1,12 +1,13 @@
 #include <src/smith/wicktool/BraKet.h>
 #include <src/smith/wicktool/WickUtils.h>
 #include <src/smith/wicktool/TensOp.h>
+#include <src/smith/tensor.h>
  #ifndef __SRC_SMITH_EQUATION_H
  #define __SRC_SMITH_EQUATION_H
 
-#include "WickUtils.h"
-#include "BraKet.h"
-#include "TensOp.h"
+//#include "WickUtils.h"
+//#include "BraKet.h"
+//#include "TensOp.h"
 
 
 template<class DType> 

@@ -7,6 +7,7 @@
 //#include "CtrTensOp.h"
 
 using namespace std;
+using namespace bagel::SMITH;
 ////////////////////////////////////////////////////////////////////////////
 template<typename DType>
 void TensorPart<DType>::get_name(){
@@ -187,7 +188,7 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
       auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, new_ctrs_pos, new_ReIm_factors ); 
       string new_name = get_next_name(new_ctrs_pos);
       
-      new_CTP->CTdata = make_shared<DType>(0); //CHANGE TO GET UNC TENSOR DATA
+      new_CTP->CTdata = make_shared<DType>(); //CHANGE TO GET UNC TENSOR DATA
       Tmap->emplace(new_name, new_CTP);
     }
    
@@ -223,7 +224,7 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
       auto unc_ReIm_factors = make_shared<vector<pair<int,int>>>(0); 
       auto unc_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, unc_ctrs_pos, unc_ReIm_factors ); 
       
-      unc_CTP->CTdata = make_shared<DType>(0); //CHANGE TO GET UNC TENSOR DATA
+      unc_CTP->CTdata = make_shared<DType>(); //CHANGE TO GET UNC TENSOR DATA
       Tmap->emplace(unc_CTP->name, unc_CTP);
 
       CTdata = unc_CTP->Binary_Contract_same_tensor(ctrs_pos->back());
@@ -389,7 +390,7 @@ shared_ptr<CtrTensorPart<DType>> CtrTensorPart<DType>::Binary_Contract_same_tens
 
   auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, new_ctrs_pos, new_ReIm_factors); 
 
-  CTdata = make_shared<DType>(0);
+  CTdata = make_shared<DType>();
 
   return new_CTP;
 }
@@ -403,14 +404,17 @@ shared_ptr<DType> CtrTensorPart<DType>::Binary_Contract_same_tensor(pair<int,int
 //  while (TP::idxs->at(relctr.first++)  != c1_idx) { cout << "TP::idxs->at("<<relctr.first-1 << ") = " << TP::idxs->at(relctr.first-1) << endl;   }
 //  while (TP::idxs->at(relctr.second++) != c2_idx) { cout << "TP::idxs->at("<<relctr.second-1 << ") = " << TP::idxs->at(relctr.second-1) << endl;  }
 //  BC_same_T(TP::id_ranges, relctr, inTdata);
-  auto bob = make_shared<DType>(0);
-  CTdata = make_shared<DType> (0);
+  auto bob = make_shared<DType>();
+  CTdata = make_shared<DType> ();
   return bob;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class TensorPart<std::vector<double>>;
+template class TensorPart<Tensor_<double>>;
 template class CtrTensorPart<std::vector<double>>;
+template class CtrTensorPart<Tensor_<double>>;
 template class CtrMultiTensorPart<std::vector<double>>;
+template class CtrMultiTensorPart<Tensor_<double>>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
     
 #endif
