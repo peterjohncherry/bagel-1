@@ -30,18 +30,25 @@
 #include <iomanip>
 
 using namespace std;
-//using namespace bagel;
-//using namespace bagel::SMITH;
+using namespace bagel;
+using namespace bagel::SMITH;
 
 ////////////////////////////////////////////////////////////////////
-CASPT2_ALT::CASPT2_ALT(/*const CASPT2::CASPT2&*/ double orig_cas_in ) { 
+CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) { 
+////////////////////////////////////////////////////////////////////
+   
+//   CASPT2::CASPT2 orig_cpt2_raw(orig_cpt2_in);
+   orig_cpt2 = make_shared<CASPT2::CASPT2>(orig_cpt2_in);
+}
+////////////////////////////////////////////////////////////////////
+CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const double factor_in ) { 
 ////////////////////////////////////////////////////////////////////
     
-    double orig_cas = orig_cas_in;
+    factor = factor_in;
 }
 
 /////////////////////////////////
-void CASPT2_ALT::test() { 
+void CASPT2_ALT::CASPT2_ALT::test() { 
 /////////////////////////////////
   auto weqn = make_shared<Equation<vector<double>>>();
   weqn->equation_build();

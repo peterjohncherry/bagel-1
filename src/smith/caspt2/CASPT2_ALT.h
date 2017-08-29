@@ -32,28 +32,27 @@
 #include <src/smith/wicktool/equation.h>
 #include <src/smith/caspt2/CASPT2.h>
 
-//namespace bagel {
-//namespace SMITH { 
-
-//namespace CASPT2_ALT{
+namespace bagel {
+namespace SMITH { 
+namespace CASPT2_ALT{
 
 class CASPT2_ALT {
   
   public:
-//  const CASPT2::CASPT2& orig_cas;
+    std::shared_ptr<CASPT2::CASPT2> orig_cpt2;
 
-    //CASPT2_ALT(){};
-    CASPT2_ALT(/*const CASPT2::CASPT2& orig_cas_in*/ double xx);
+    CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in);
 
+    CASPT2_ALT(double factor);
+    double factor;
+    
     ~CASPT2_ALT() {};
-
+    
     void test();
 
 };
-//}
-//}
-//}
-
-//}
+}//end CASPT2_ALT namespace
+}//end SMITH namespace 
+}//end bagel namespace
 #endif
 
