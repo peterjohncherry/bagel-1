@@ -31,6 +31,7 @@
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
+#include <src/smith/wicktool/equation.h>
 
 using namespace std;
 using namespace bagel;
@@ -89,6 +90,11 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   rdm2all_ = cas.rdm2all_;
   rdm3all_ = cas.rdm3all_;
   rdm4all_ = cas.rdm4all_;
+
+  ////////////////////////WICK_TEST ////////////////////
+  auto weqn = make_shared<Equation<vector<double>>>();
+  weqn->equation_build();
+
 }
 
 
@@ -488,6 +494,7 @@ void CASPT2::CASPT2::solve_gradient(const int targetJ, const int targetI, shared
       Den1_ = Den1;
     }
     timer.tick_print("Correlated density matrix evaluation");
+ 
 
     // first make ci_deriv_
     ci_deriv_ = make_shared<Dvec>(info_->ref()->ciwfn()->det(), 1);
