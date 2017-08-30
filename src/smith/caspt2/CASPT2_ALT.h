@@ -53,7 +53,8 @@ class CASPT2_ALT {
     int  norb_  ;
     int  nstate_;
     std::shared_ptr<const Determinants> det_ ; 
-
+    std::shared_ptr<VecRDM<1>> all_gamma1;
+    std::shared_ptr<VecRDM<2>> all_gamma2;
 
     CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref_alt);
 
@@ -68,12 +69,10 @@ class CASPT2_ALT {
 
 
 
-    //std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>>
-    void
+    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>>
     compute_gamma12_from_civec(std::shared_ptr<const Civec> cbra, std::shared_ptr<const Civec> cket) const ;
 
-//  std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>>
-    void
+    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>>
     compute_gamma12_last_step(std::shared_ptr<const Dvec> dbra, std::shared_ptr<const Dvec> dket, std::shared_ptr<const Civec> cibra) const ;
 
 };

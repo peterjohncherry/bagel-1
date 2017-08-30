@@ -44,6 +44,8 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref
   norb_  = ref->ciwfn()->nact();
   nstate_ = ref->ciwfn()->nstates();
   cc_ = ref->ciwfn()->civectors();
+  auto all_gamma1 = make_shared<VecRDM<1>>()  ;
+  auto all_gamma2 = make_shared<VecRDM<2>>()  ;
 }
 
 /////////////////////////////////
@@ -51,11 +53,14 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 /////////////////////////////////
   auto weqn = make_shared<Equation<Tensor>>();
   weqn->equation_build();
+  return;
 }
 
-
-// The first two are a part of Base because they are needed in the RDM parts
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Taken directly from src/ci/fci/knowles_compute.cc         
+//////////////////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::sigma_2a1(shared_ptr<const Civec> cc, shared_ptr<Dvec> d) const {
+//////////////////////////////////////////////////////////////////////////////////////////////
   const int lb = d->lenb();
   const int ij = d->ij();
   const double* const source_base = cc->data();
@@ -69,7 +74,11 @@ void CASPT2_ALT::CASPT2_ALT::sigma_2a1(shared_ptr<const Civec> cc, shared_ptr<Dv
   }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Taken directly from src/ci/fci/knowles_compute.cc         
+///////////////////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::sigma_2a2(shared_ptr<const Civec> cc, shared_ptr<Dvec> d) const {
+///////////////////////////////////////////////////////////////////////////////////////////////
   const int la = d->lena();
   const int ij = d->ij();
   for (int i = 0; i < la; ++i) {
@@ -83,9 +92,6 @@ void CASPT2_ALT::CASPT2_ALT::sigma_2a2(shared_ptr<const Civec> cc, shared_ptr<Dv
     }
   }
 }
-
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
 // mangled version of routines in fci_rdm.cc
@@ -103,80 +109,83 @@ void CASPT2_ALT::CASPT2_ALT::compute_gamma12(const int MM, const int NN ) {
 
  shared_ptr<RDM<1>> gamma1;
  shared_ptr<RDM<2>> gamma2;
-// tie(gamma1, gamma2) = compute_gamma12_from_civec(ccbra, ccket);
+ tie(gamma1, gamma2) = compute_gamma12_from_civec(ccbra, ccket);
 
- cc_->set_det(det_); // 
+ all_gamma1->emplace(MM,NN, gamma1);
+ all_gamma2->emplace(MM,NN, gamma2);
+
+ cc_->set_det(det_); 
 
   return;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>>
-void
+tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>>
 CASPT2_ALT::CASPT2_ALT::compute_gamma12_from_civec(shared_ptr<const Civec> cbra, shared_ptr<const Civec> cket) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
- auto dbra = make_shared<Dvec>(cbra->det(), norb_*norb_);
- sigma_2a1(cbra, dbra);
- sigma_2a2(cbra, dbra);
- 
- shared_ptr<Dvec> dket;
- if (cbra != cket) {
-   dket = make_shared<Dvec>(cket->det(), norb_*norb_);
-   sigma_2a1(cket, dket);
-   sigma_2a2(cket, dket);
- } else {
-   dket = dbra;
- }
- 
- // return compute_gamma12_last_step(dbra, dket, cbra);
-}//
+  auto dbra = make_shared<Dvec>(cbra->det(), norb_*norb_);
+  sigma_2a1(cbra, dbra);
+  sigma_2a2(cbra, dbra);
+  
+  shared_ptr<Dvec> dket;
+  if (cbra != cket) {
+    dket = make_shared<Dvec>(cket->det(), norb_*norb_);
+    sigma_2a1(cket, dket);
+    sigma_2a2(cket, dket);
+  } else {
+    dket = dbra;
+  }
+  
+  return compute_gamma12_last_step(dbra, dket, cbra);
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>>
-void
+tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>>
 CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, shared_ptr<const Dvec> dket, shared_ptr<const Civec> cibra) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
- // const int nri = cibra->asize()*cibra->lenb();
- // const int ij  = norb_*norb_;
- //
- // // 1gamma c^dagger <I|\hat{E}|0>
- // // 2gamma \sum_I <0|\hat{E}|I> <I|\hat{E}|0>
- // auto gamma1 = make_shared<RDM<1>>(norb_);
- // auto gamma2 = make_shared<RDM<2>>(norb_);
- // {
- //   auto cibra_data = make_shared<VectorB>(nri);
- //   copy_n(cibra->data(), nri, cibra_data->data());
+  const int nri = cibra->asize()*cibra->lenb();
+  const int ij  = norb_*norb_;
+ 
+  // 1gamma c^dagger <I|\hat{E}|0>
+  // 2gamma \sum_I <0|\hat{E}|I> <I|\hat{E}|0>
+  auto gamma1 = make_shared<RDM<1>>(norb_);
+  auto gamma2 = make_shared<RDM<2>>(norb_);
 
- //   auto dket_data = make_shared<Matrix>(nri, ij);
- //   for (int i = 0; i != ij; ++i)
- //     copy_n(dket->data(i)->data(), nri, dket_data->element_ptr(0, i));
- //   auto gamma1t = btas::group(*gamma1,0,2);
- //   btas::contract(1.0, *dket_data, {0,1}, *cibra_data, {0}, 0.0, gamma1t, {1});
+  //section to be made recursive for arbitrary orders of gamma
+  {
+    auto cibra_data = make_shared<VectorB>(nri);
+    copy_n(cibra->data(), nri, cibra_data->data());
 
- //   auto dbra_data = dket_data;
- //   if (dbra != dket) {
- //     dbra_data = make_shared<Matrix>(nri, ij);
- //     for (int i = 0; i != ij; ++i)
- //       copy_n(dbra->data(i)->data(), nri, dbra_data->element_ptr(0, i));
- //   }
- //   auto gamma2t = group(group(*gamma2, 2,4), 0,2);
- //   btas::contract(1.0, *dbra_data, {1,0}, *dket_data, {1,2}, 0.0, gamma2t, {0,2});
- // }
- //
+    auto dket_data = make_shared<Matrix>(nri, ij);
+    for (int i = 0; i != ij; ++i)
+      copy_n(dket->data(i)->data(), nri, dket_data->element_ptr(0, i));
+    auto gamma1t = btas::group(*gamma1,0,2);
+    btas::contract(1.0, *dket_data, {0,1}, *cibra_data, {0}, 0.0, gamma1t, {1});
+
+    auto dbra_data = dket_data;
+    if (dbra != dket) {
+      dbra_data = make_shared<Matrix>(nri, ij);
+      for (int i = 0; i != ij; ++i)
+        copy_n(dbra->data(i)->data(), nri, dbra_data->element_ptr(0, i));
+    }
+    auto gamma2t = group(group(*gamma2, 2,4), 0,2);
+    btas::contract(1.0, *dbra_data, {1,0}, *dket_data, {1,2}, 0.0, gamma2t, {0,2});
+  }
+ 
   // sorting... a bit stupid but cheap anyway
   // This is since we transpose operator pairs in dgemm - cheaper to do so after dgemm (usually Nconfig >> norb_**2).
- // unique_ptr<double[]> buf(new double[norb_*norb_]);
- // for (int i = 0; i != norb_; ++i) {
- //   for (int k = 0; k != norb_; ++k) {
- ////     copy_n(&gamma2->element(0,0,k,i), norb_*norb_, buf.get());
- ////     blas::transpose(buf.get(), norb_, norb_, gamma2->element_ptr(0,0,k,i));
- //   }
- // }
- //
- // return tie(gamma1, gamma2);
- return;
+  unique_ptr<double[]> buf(new double[norb_*norb_]);
+  for (int i = 0; i != norb_; ++i) {
+    for (int k = 0; k != norb_; ++k) {
+      copy_n(&gamma2->element(0,0,k,i), norb_*norb_, buf.get());
+      blas::transpose(buf.get(), norb_, norb_, gamma2->element_ptr(0,0,k,i));
+    }
+  }
+ 
+  return tie(gamma1, gamma2);
+// return;
 }
 ////////////////////////////////////////////////////////////////////
 WICKTOOLS::WICKTOOLS::WICKTOOLS(std::shared_ptr<const SMITH_Info<double>> ref){
