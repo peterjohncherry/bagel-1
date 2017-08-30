@@ -37,7 +37,6 @@
 #include <src/smith/smith_info.h>
 #include <src/grad/nacmtype.h>
 #include <src/smith/wicktool/equation.h>
-#include <src/smith/caspt2/CASPT2_ALT.h>
 
 namespace bagel {
 namespace SMITH {

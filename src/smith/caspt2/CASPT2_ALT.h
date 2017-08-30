@@ -29,6 +29,7 @@
 #include <tuple>
 #include <src/smith/wicktool/equation.h>
 #include <src/smith/caspt2/CASPT2.h>
+#include <src/ci/fci/fci.h>
 
 namespace bagel {
 namespace SMITH { 
@@ -45,13 +46,13 @@ class CASPT2_ALT {
     std::shared_ptr<const SMITH_Info<double>> info_;
 
     CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in);
-    std::shared_ptr<Dvec> cc_; 
+    std::shared_ptr<const Dvec> cc_; 
     int  nelea_ ;
     int  neleb_ ;
     int  ncore_ ;
     int  norb_  ;
     int  nstate_;
-    std::shared_ptr<Determinants> det_ ; 
+    std::shared_ptr<const Determinants> det_ ; 
 
 
     CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref_alt);
@@ -60,6 +61,12 @@ class CASPT2_ALT {
     
     void test();
     void compute_gamma12(const int MM, const int NN ) ;
+
+
+   void sigma_2a1(std::shared_ptr<const Civec> cc, std::shared_ptr<Dvec> d) const ;
+   void sigma_2a2(std::shared_ptr<const Civec> cc, std::shared_ptr<Dvec> d) const ;
+
+
 
     //std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>>
     void

@@ -43,8 +43,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref
   ncore_ = ref->ciwfn()->ncore();
   norb_  = ref->ciwfn()->nact();
   nstate_ = ref->ciwfn()->nstates();
-  //det_ = ref->ciwfn()->det();
-  //cc_ = ref->ciwfn()->civectors();
+  cc_ = ref->ciwfn()->civectors();
 }
 
 /////////////////////////////////
@@ -54,6 +53,39 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   weqn->equation_build();
 }
 
+
+// The first two are a part of Base because they are needed in the RDM parts
+void CASPT2_ALT::CASPT2_ALT::sigma_2a1(shared_ptr<const Civec> cc, shared_ptr<Dvec> d) const {
+  const int lb = d->lenb();
+  const int ij = d->ij();
+  const double* const source_base = cc->data();
+  for (int ip = 0; ip != ij; ++ip) {
+    double* const target_base = d->data(ip)->data();
+    for (auto& iter : cc->det()->phia(ip)) {
+      const double sign = static_cast<double>(iter.sign);
+      double* const target_array = target_base + iter.source*lb;
+      blas::ax_plus_y_n(sign, source_base + iter.target*lb, lb, target_array);
+    }
+  }
+}
+
+void CASPT2_ALT::CASPT2_ALT::sigma_2a2(shared_ptr<const Civec> cc, shared_ptr<Dvec> d) const {
+  const int la = d->lena();
+  const int ij = d->ij();
+  for (int i = 0; i < la; ++i) {
+    const double* const source_array0 = cc->element_ptr(0, i);
+    for (int ip = 0; ip != ij; ++ip) {
+      double* const target_array0 = d->data(ip)->element_ptr(0, i);
+      for (auto& iter : cc->det()->phib(ip)) {
+        const double sign = static_cast<double>(iter.sign);
+        target_array0[iter.source] += sign * source_array0[iter.target];
+      }
+    }
+  }
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
 // mangled version of routines in fci_rdm.cc
@@ -62,22 +94,19 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 void CASPT2_ALT::CASPT2_ALT::compute_gamma12(const int MM, const int NN ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//  if (det_->compress()) { // uncompressing determinants
-//    auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
-//    cc_->set_det(detex);
-//  }
-//  shared_ptr<Civec> ccbra = cc_->data(MM);
-//  shared_ptr<Civec> ccket = cc_->data(NN);
- 
- // shared_ptr<RDM<1>> gamma1;
- // shared_ptr<RDM<2>> gamma2;
- // tie(gamma1, gamma2) = compute_gamma12_from_civec(ccbra, ccket);
+ if (det_->compress()) { // uncompressing determinants
+   auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
+   cc_->set_det(detex);
+ }
+ shared_ptr<Civec> ccbra = make_shared<Civec>(*cc_->data(MM));
+ shared_ptr<Civec> ccket = make_shared<Civec>(*cc_->data(NN));
 
- // gamma1_->emplace(MM, NN, gamma1);
- // gamma2_->emplace(MM, NN, gamma2);
- //
- // cc_->set_det(det_); // 
- //
+ shared_ptr<RDM<1>> gamma1;
+ shared_ptr<RDM<2>> gamma2;
+// tie(gamma1, gamma2) = compute_gamma12_from_civec(ccbra, ccket);
+
+ cc_->set_det(det_); // 
+
   return;
 }
 
@@ -87,21 +116,19 @@ void
 CASPT2_ALT::CASPT2_ALT::compute_gamma12_from_civec(shared_ptr<const Civec> cbra, shared_ptr<const Civec> cket) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // since we consider here number conserving operators...
- // auto dbra = make_shared<Dvec>(cbra->det(), norb_*norb_);
- // sigma_2a1(cbra, dbra);
- // sigma_2a2(cbra, dbra);
- //
- // shared_ptr<Dvec> dket;
-  // if bra and ket vectors are different, we need to form Sigma for ket as well.
- // if (cbra != cket) {
- //   dket = make_shared<Dvec>(cket->det(), norb_*norb_);
- //   sigma_2a1(cket, dket);
- ////   sigma_2a2(cket, dket);
- //// } else {
- ////   dket = dbra;
- //// }
- ////
+ auto dbra = make_shared<Dvec>(cbra->det(), norb_*norb_);
+ sigma_2a1(cbra, dbra);
+ sigma_2a2(cbra, dbra);
+ 
+ shared_ptr<Dvec> dket;
+ if (cbra != cket) {
+   dket = make_shared<Dvec>(cket->det(), norb_*norb_);
+   sigma_2a1(cket, dket);
+   sigma_2a2(cket, dket);
+ } else {
+   dket = dbra;
+ }
+ 
  // return compute_gamma12_last_step(dbra, dket, cbra);
 }//
 
