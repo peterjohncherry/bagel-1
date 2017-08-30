@@ -519,7 +519,8 @@ void CASPT2::CASPT2::solve_gradient(const int targetJ, const int targetI, shared
   } else {
     // in case when CASPT2 is not variational...
     MSCASPT2::MSCASPT2 ms(*this);
-    CASPT2_ALT::CASPT2_ALT CA(*this);
+    CASPT2_ALT::CASPT2_ALT CA(info_);
+    CA.test();
     
     ms.solve_gradient(targetJ, targetI, nocider);
     den1_ = ms.rdm11();

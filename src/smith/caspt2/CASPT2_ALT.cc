@@ -44,8 +44,9 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref
   norb_  = ref->ciwfn()->nact();
   nstate_ = ref->ciwfn()->nstates();
   cc_ = ref->ciwfn()->civectors();
-  auto all_gamma1 = make_shared<VecRDM<1>>()  ;
-  auto all_gamma2 = make_shared<VecRDM<2>>()  ;
+  det_ = ref->ciwfn()->civectors()->det();
+  all_gamma1 = make_shared<VecRDM<1>>()  ;
+  all_gamma2 = make_shared<VecRDM<2>>()  ;
 }
 
 /////////////////////////////////
@@ -53,45 +54,16 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 /////////////////////////////////
   auto weqn = make_shared<Equation<Tensor>>();
   weqn->equation_build();
+          
+  for (auto MM = 0 ; MM != nstate_ ; MM++){
+    for (auto NN = 0 ; NN != nstate_ ; NN++){
+        compute_gamma12( MM, NN ) ;
+    }
+  } 
+
   return;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-// Taken directly from src/ci/fci/knowles_compute.cc         
-//////////////////////////////////////////////////////////////////////////////////////////////
-void CASPT2_ALT::CASPT2_ALT::sigma_2a1(shared_ptr<const Civec> cc, shared_ptr<Dvec> d) const {
-//////////////////////////////////////////////////////////////////////////////////////////////
-  const int lb = d->lenb();
-  const int ij = d->ij();
-  const double* const source_base = cc->data();
-  for (int ip = 0; ip != ij; ++ip) {
-    double* const target_base = d->data(ip)->data();
-    for (auto& iter : cc->det()->phia(ip)) {
-      const double sign = static_cast<double>(iter.sign);
-      double* const target_array = target_base + iter.source*lb;
-      blas::ax_plus_y_n(sign, source_base + iter.target*lb, lb, target_array);
-    }
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// Taken directly from src/ci/fci/knowles_compute.cc         
-///////////////////////////////////////////////////////////////////////////////////////////////
-void CASPT2_ALT::CASPT2_ALT::sigma_2a2(shared_ptr<const Civec> cc, shared_ptr<Dvec> d) const {
-///////////////////////////////////////////////////////////////////////////////////////////////
-  const int la = d->lena();
-  const int ij = d->ij();
-  for (int i = 0; i < la; ++i) {
-    const double* const source_array0 = cc->element_ptr(0, i);
-    for (int ip = 0; ip != ij; ++ip) {
-      double* const target_array0 = d->data(ip)->element_ptr(0, i);
-      for (auto& iter : cc->det()->phib(ip)) {
-        const double sign = static_cast<double>(iter.sign);
-        target_array0[iter.source] += sign * source_array0[iter.target];
-      }
-    }
-  }
-}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
 // mangled version of routines in fci_rdm.cc
@@ -99,22 +71,23 @@ void CASPT2_ALT::CASPT2_ALT::sigma_2a2(shared_ptr<const Civec> cc, shared_ptr<Dv
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::compute_gamma12(const int MM, const int NN ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "compute_gamma12 MM = " << MM << " NN = " << NN  << endl;
 
- if (det_->compress()) { // uncompressing determinants
+  if (det_->compress()) { // uncompressing determinants
    auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
    cc_->set_det(detex);
- }
- shared_ptr<Civec> ccbra = make_shared<Civec>(*cc_->data(MM));
- shared_ptr<Civec> ccket = make_shared<Civec>(*cc_->data(NN));
-
- shared_ptr<RDM<1>> gamma1;
- shared_ptr<RDM<2>> gamma2;
- tie(gamma1, gamma2) = compute_gamma12_from_civec(ccbra, ccket);
-
- all_gamma1->emplace(MM,NN, gamma1);
- all_gamma2->emplace(MM,NN, gamma2);
-
- cc_->set_det(det_); 
+  }
+  shared_ptr<Civec> ccbra = make_shared<Civec>(*cc_->data(MM));
+  shared_ptr<Civec> ccket = make_shared<Civec>(*cc_->data(NN));
+ 
+  shared_ptr<RDM<1>> gamma1;
+  shared_ptr<RDM<2>> gamma2;
+  tie(gamma1, gamma2) = compute_gamma12_from_civec(ccbra, ccket);
+ 
+  all_gamma1->emplace(MM,NN, gamma1);
+  all_gamma2->emplace(MM,NN, gamma2);
+ 
+  cc_->set_det(det_); 
 
   return;
 }
@@ -123,6 +96,7 @@ void CASPT2_ALT::CASPT2_ALT::compute_gamma12(const int MM, const int NN ) {
 tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>>
 CASPT2_ALT::CASPT2_ALT::compute_gamma12_from_civec(shared_ptr<const Civec> cbra, shared_ptr<const Civec> cket) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //cout << "compute_gamma12_from_civec" << endl;
 
   auto dbra = make_shared<Dvec>(cbra->det(), norb_*norb_);
   sigma_2a1(cbra, dbra);
@@ -144,6 +118,7 @@ CASPT2_ALT::CASPT2_ALT::compute_gamma12_from_civec(shared_ptr<const Civec> cbra,
 tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>>
 CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, shared_ptr<const Dvec> dket, shared_ptr<const Civec> cibra) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "compute_gamma12_last_step" << endl;
 
   const int nri = cibra->asize()*cibra->lenb();
   const int ij  = norb_*norb_;
@@ -185,44 +160,64 @@ CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, s
   }
  
   return tie(gamma1, gamma2);
-// return;
 }
-////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Taken directly from src/ci/fci/knowles_compute.cc         
+//////////////////////////////////////////////////////////////////////////////////////////////
+void CASPT2_ALT::CASPT2_ALT::sigma_2a1(shared_ptr<const Civec> cc, shared_ptr<Dvec> d) const {
+//////////////////////////////////////////////////////////////////////////////////////////////
+  //cout << "sigma_2a1" << endl;
+  const int lb = d->lenb();
+  const int ij = d->ij();
+  const double* const source_base = cc->data();
+  for (int ip = 0; ip != ij; ++ip) {
+    double* const target_base = d->data(ip)->data();
+    for (auto& iter : cc->det()->phia(ip)) {
+      const double sign = static_cast<double>(iter.sign);
+      double* const target_array = target_base + iter.source*lb;
+      blas::ax_plus_y_n(sign, source_base + iter.target*lb, lb, target_array);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Taken directly from src/ci/fci/knowles_compute.cc         
+///////////////////////////////////////////////////////////////////////////////////////////////
+void CASPT2_ALT::CASPT2_ALT::sigma_2a2(shared_ptr<const Civec> cc, shared_ptr<Dvec> d) const {
+///////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "sigma_2a2" << endl;
+  const int la = d->lena();
+  const int ij = d->ij();
+  for (int i = 0; i < la; ++i) {
+    const double* const source_array0 = cc->element_ptr(0, i);
+    for (int ip = 0; ip != ij; ++ip) {
+      double* const target_array0 = d->data(ip)->element_ptr(0, i);
+      for (auto& iter : cc->det()->phib(ip)) {
+        const double sign = static_cast<double>(iter.sign);
+        target_array0[iter.source] += sign * source_array0[iter.target];
+      }
+    }
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 WICKTOOLS::WICKTOOLS::WICKTOOLS(std::shared_ptr<const SMITH_Info<double>> ref){
-////////////////////////////////////////////////////////////////////
-  nelea_ = ref->ciwfn()->det()->nelea();
-  neleb_ = ref->ciwfn()->det()->neleb();
-  ncore_ = ref->ciwfn()->ncore();
-  norb_  = ref->ciwfn()->nact();
-  nstate_ = ref->ciwfn()->nstates();
-  // det_ = ref->ciwfn()->det();
-  // cc_ = ref->ciwfn()->civectors();
+/////////////////////////////////////////////////////////////////////////////////
 }
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
-// mangled version of routines in fci_rdm.cc
-// can use RDM type for convenience, but everything by gamma2  is _not_ an rdm 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 void WICKTOOLS::WICKTOOLS::compute_gamma12(const int MM, const int NN ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
   return;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>>
-void
-WICKTOOLS::WICKTOOLS::compute_gamma12_from_civec(shared_ptr<const Civec> cbra, shared_ptr<const Civec> cket) const {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void WICKTOOLS::WICKTOOLS::compute_gamma12_from_civec(shared_ptr<const Civec> cbra, shared_ptr<const Civec> cket) const {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   return;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>>
-void
-WICKTOOLS::WICKTOOLS::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, shared_ptr<const Dvec> dket, shared_ptr<const Civec> cibra) const {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- return;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void WICKTOOLS::WICKTOOLS::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, shared_ptr<const Dvec> dket, shared_ptr<const Civec> cibra) const {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  return;
 }
 #endif
