@@ -30,6 +30,7 @@
 #include <src/smith/mrci/MRCI.h>
 #include <src/smith/relmrci/RelMRCI.h>
 #include <src/smith/caspt2/CASPT2.h>
+#include <src/smith/caspt2/CASPT2_ALT.h>
 #include <src/smith/caspt2/SPCASPT2.h>
 #include <src/smith/relcaspt2/RelCASPT2.h>
 #include <src/smith/casa/CASA.h>

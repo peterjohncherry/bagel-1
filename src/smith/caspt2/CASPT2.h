@@ -36,6 +36,8 @@
 #include <src/smith/queue.h>
 #include <src/smith/smith_info.h>
 #include <src/grad/nacmtype.h>
+#include <src/smith/wicktool/equation.h>
+#include <src/smith/caspt2/CASPT2_ALT.h>
 
 namespace bagel {
 namespace SMITH {
@@ -51,6 +53,7 @@ class CASPT2 : public SpinFreeMethod<double> {
   friend class MSCASPT2::MSCASPT2;
   friend class CASPT2_ALT::CASPT2_ALT;
   protected:
+    
     // these are tensors that are used internally
     std::shared_ptr<Tensor> t2;
     std::shared_ptr<Tensor> r;

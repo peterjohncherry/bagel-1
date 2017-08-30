@@ -31,7 +31,7 @@
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
-#include <src/smith/wicktool/equation.h>
+#include <src/smith/caspt2/CASPT2_ALT.h>
 
 using namespace std;
 using namespace bagel;
@@ -40,7 +40,7 @@ using namespace bagel::SMITH;
 CASPT2::CASPT2::CASPT2(shared_ptr<const SMITH_Info<double>> ref) : SpinFreeMethod(ref) {
   eig_ = f1_->diag();
   nstates_ = info_->nact() ? ref->ciwfn()->nstates() : 1;
-
+  
   // MS-CASPT2: t2 and s as MultiTensor (t2all, sall)
   for (int i = 0; i != nstates_; ++i) {
     auto tmp = make_shared<MultiTensor>(nstates_);
@@ -91,9 +91,6 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   rdm3all_ = cas.rdm3all_;
   rdm4all_ = cas.rdm4all_;
 
-  ////////////////////////WICK_TEST ////////////////////
-  auto weqn = make_shared<Equation<vector<double>>>();
-  weqn->equation_build();
 
 }
 
@@ -522,6 +519,8 @@ void CASPT2::CASPT2::solve_gradient(const int targetJ, const int targetI, shared
   } else {
     // in case when CASPT2 is not variational...
     MSCASPT2::MSCASPT2 ms(*this);
+    CASPT2_ALT::CASPT2_ALT CA(*this);
+    
     ms.solve_gradient(targetJ, targetI, nocider);
     den1_ = ms.rdm11();
     den2_ = ms.rdm12();
