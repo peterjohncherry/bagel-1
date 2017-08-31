@@ -45,8 +45,9 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref
   nstate_ = ref->ciwfn()->nstates();
   cc_ = ref->ciwfn()->civectors();
   det_ = ref->ciwfn()->civectors()->det();
-  all_gamma1 = make_shared<VecRDM<1>>()  ;
-  all_gamma2 = make_shared<VecRDM<2>>()  ;
+  all_gamma1 = make_shared<VecRDM<1>>();
+  all_gamma2 = make_shared<VecRDM<2>>();
+  all_gamma3 = make_shared<VecRDM<3>>();
 }
 
 /////////////////////////////////
@@ -74,18 +75,20 @@ void CASPT2_ALT::CASPT2_ALT::compute_gamma12(const int MM, const int NN ) {
   cout << "compute_gamma12 MM = " << MM << " NN = " << NN  << endl;
 
   if (det_->compress()) { // uncompressing determinants
-   auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
-   cc_->set_det(detex);
+    auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
+    cc_->set_det(detex);
   }
   shared_ptr<Civec> ccbra = make_shared<Civec>(*cc_->data(MM));
   shared_ptr<Civec> ccket = make_shared<Civec>(*cc_->data(NN));
  
   shared_ptr<RDM<1>> gamma1;
   shared_ptr<RDM<2>> gamma2;
-  tie(gamma1, gamma2) = compute_gamma12_from_civec(ccbra, ccket);
+  shared_ptr<RDM<3>> gamma3;
+  tie(gamma1, gamma2, gamma3) = compute_gamma12_from_civec(ccbra, ccket);
  
   all_gamma1->emplace(MM,NN, gamma1);
   all_gamma2->emplace(MM,NN, gamma2);
+  all_gamma3->emplace(MM,NN, gamma3);
  
   cc_->set_det(det_); 
 
@@ -93,7 +96,7 @@ void CASPT2_ALT::CASPT2_ALT::compute_gamma12(const int MM, const int NN ) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>>
+tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>, shared_ptr<RDM<3>> >
 CASPT2_ALT::CASPT2_ALT::compute_gamma12_from_civec(shared_ptr<const Civec> cbra, shared_ptr<const Civec> cket) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //cout << "compute_gamma12_from_civec" << endl;
@@ -115,7 +118,7 @@ CASPT2_ALT::CASPT2_ALT::compute_gamma12_from_civec(shared_ptr<const Civec> cbra,
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>>
+tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>, shared_ptr<RDM<3>> >
 CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, shared_ptr<const Dvec> dket, shared_ptr<const Civec> cibra) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "compute_gamma12_last_step" << endl;
@@ -127,6 +130,7 @@ CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, s
   // 2gamma \sum_I <0|\hat{E}|I> <I|\hat{E}|0>
   auto gamma1 = make_shared<RDM<1>>(norb_);
   auto gamma2 = make_shared<RDM<2>>(norb_);
+  auto gamma3 = make_shared<RDM<3>>(norb_);
 
   //section to be made recursive for arbitrary orders of gamma
   {
@@ -136,6 +140,7 @@ CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, s
     auto dket_data = make_shared<Matrix>(nri, ij);
     for (int i = 0; i != ij; ++i)
       copy_n(dket->data(i)->data(), nri, dket_data->element_ptr(0, i));
+ 
     auto gamma1t = btas::group(*gamma1,0,2);
     btas::contract(1.0, *dket_data, {0,1}, *cibra_data, {0}, 0.0, gamma1t, {1});
 
@@ -145,6 +150,27 @@ CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, s
       for (int i = 0; i != ij; ++i)
         copy_n(dbra->data(i)->data(), nri, dbra_data->element_ptr(0, i));
     }
+ 
+    //Very bad way of getting gamma3  [sum_{K}<I|i*j|K>.[sum_{L}<K|k*l|L>.<L|m*n|J>]]
+    auto dket_KLLJ_data = make_shared<Matrix>(nri, ij*ij);
+    for ( int q = 0; q!=ij ; q++){
+      auto dket_KLLJ_part = make_shared<Dvec>(dket->det(), norb_*norb_);
+      sigma_2a1(dket->data(q), dket_KLLJ_part);
+      sigma_2a2(dket->data(q), dket_KLLJ_part);
+      copy_n(dket_KLLJ_data->data()+q*ij, ij*nri, dket_KLLJ_part->data(0)->data());
+    }
+
+    auto gamma3_data = make_shared<Matrix>(ij, ij*ij);
+    const char   transa = 'N';
+    const char   transb = 'T';
+    const double alpha = 1.0;
+    const double beta = 0.0; 
+    const int    n4 = ij*ij;
+             
+    dgemm_( &transa, &transb, &nri, &ij, &n4, &alpha, dket_KLLJ_data->data(),
+            &ij, dbra->data(), &nri, &beta, gamma3->element_ptr(0,0,0,0,0,0), &n4);
+    //btas::contract(1.0, *dket, {0,1}, *dket_KLLJ_data, {0,2}, 0.0, *gamma3_data, {1,2});
+ 
     auto gamma2t = group(group(*gamma2, 2,4), 0,2);
     btas::contract(1.0, *dbra_data, {1,0}, *dket_data, {1,2}, 0.0, gamma2t, {0,2});
   }
@@ -159,21 +185,24 @@ CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, s
     }
   }
  
-  return tie(gamma1, gamma2);
+  return tie(gamma1, gamma2, gamma3);
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Taken directly from src/ci/fci/knowles_compute.cc         
 //////////////////////////////////////////////////////////////////////////////////////////////
-void CASPT2_ALT::CASPT2_ALT::sigma_2a1(shared_ptr<const Civec> cc, shared_ptr<Dvec> d) const {
+void CASPT2_ALT::CASPT2_ALT::sigma_2a1(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma) const {
 //////////////////////////////////////////////////////////////////////////////////////////////
   //cout << "sigma_2a1" << endl;
-  const int lb = d->lenb();
-  const int ij = d->ij();
-  const double* const source_base = cc->data();
+  const int lb = sigma->lenb();
+  const int ij = sigma->ij();
+  const double* const source_base = cvec->data();
+
   for (int ip = 0; ip != ij; ++ip) {
-    double* const target_base = d->data(ip)->data();
-    for (auto& iter : cc->det()->phia(ip)) {
+    double* const target_base = sigma->data(ip)->data();
+
+    for (auto& iter : cvec->det()->phia(ip)) {
       const double sign = static_cast<double>(iter.sign);
       double* const target_array = target_base + iter.source*lb;
       blas::ax_plus_y_n(sign, source_base + iter.target*lb, lb, target_array);
@@ -183,17 +212,21 @@ void CASPT2_ALT::CASPT2_ALT::sigma_2a1(shared_ptr<const Civec> cc, shared_ptr<Dv
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Taken directly from src/ci/fci/knowles_compute.cc         
+// I'm sure there was a version which used transposition of the civector; this looks slow.
 ///////////////////////////////////////////////////////////////////////////////////////////////
-void CASPT2_ALT::CASPT2_ALT::sigma_2a2(shared_ptr<const Civec> cc, shared_ptr<Dvec> d) const {
+void CASPT2_ALT::CASPT2_ALT::sigma_2a2(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "sigma_2a2" << endl;
-  const int la = d->lena();
-  const int ij = d->ij();
+  const int la = sigma->lena();
+  const int ij = sigma->ij();
+
   for (int i = 0; i < la; ++i) {
-    const double* const source_array0 = cc->element_ptr(0, i);
+    const double* const source_array0 = cvec->element_ptr(0, i);
+
     for (int ip = 0; ip != ij; ++ip) {
-      double* const target_array0 = d->data(ip)->element_ptr(0, i);
-      for (auto& iter : cc->det()->phib(ip)) {
+      double* const target_array0 = sigma->data(ip)->element_ptr(0, i);
+
+      for (auto& iter : cvec->det()->phib(ip)) {
         const double sign = static_cast<double>(iter.sign);
         target_array0[iter.source] += sign * source_array0[iter.target];
       }
