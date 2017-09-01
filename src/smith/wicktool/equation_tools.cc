@@ -116,8 +116,9 @@ shared_ptr<DType> contract_different_tensors( string T1name, string T2name, pair
       }
       
       std::unique_ptr<double[]> T_out_data(new double[T1_unc_block_size*T2_unc_block_size]);
-      
-      dgemm_("N", "N", T1_unc_block_size, T2_unc_block_size, ctr_block_size, 1.0, T1_data_new.get(), T1_unc_block_size, T2_data_new.get(), ctr_block_size, 1.0, T_out_data.get(), T1_unc_block_size);
+     
+      //should not use transpose; instead build T2_new_order backwards... 
+      dgemm_("N", "T", T1_unc_block_size, ctr_block_size,  T1_unc_block_size, 1.0, T1_data_new.get(), T1_unc_block_size, T2_data_new.get(), ctr_block_size, 1.0, T_out_data.get(), T1_unc_block_size);
       
 
       T_out->put_block( T_out_data, *T_out_rng_block );
