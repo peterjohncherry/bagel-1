@@ -35,6 +35,8 @@ namespace equation_tools {
 
     std::shared_ptr<std::vector<size_t>> get_sizes(std::shared_ptr<std::vector<Index>> Idvec);
 
+    std::shared_ptr<std::vector<int>> get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
+
     size_t get_block_size(std::shared_ptr<std::vector<Index>> Idvec, int startpos, int endpos) ;
 
     template<class DataType>

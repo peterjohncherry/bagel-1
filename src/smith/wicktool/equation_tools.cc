@@ -13,12 +13,23 @@ using namespace equation_tools;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class vtype>
+shared_ptr<vector<vtype>> inverse_reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  auto newvec = make_shared<vector<vtype>>(origvec->size());
+  for( int ii = 0; ii != origvec->size(); ii++ )
+    newvec->at(neworder->at(ii)) =  origvec->at(ii);
+
+  return newvec;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class vtype>
 shared_ptr<vector<vtype>> reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   auto newvec = make_shared<vector<vtype>>(origvec->size());
   for( int ii = 0; ii != origvec->size(); ii++ )
-     *newvec[ii] = *origvec[ii];
+     newvec->at(ii) = origvec->at(neworder->at(ii));
 
   return newvec;
 }
@@ -41,51 +52,46 @@ shared_ptr<DType> contract_different_tensors( string T1name, string T2name, pair
 
   auto T_out = make_shared<DType>(); 
 
-  auto maxs1 = make_shared<vector<int>>();
-  int  flen1 = 1;
-
   auto T1_new_order = make_shared<vector<int>>(0);
-  for (int ii = 0; ii !=T1->unc_pos->size(); ii++){
-    if (T1->unc_pos->at(ii) != ctr_todo.first){
+  for (int ii = 0; ii !=T1->unc_pos->size(); ii++)
+    if (T1->unc_pos->at(ii) != ctr_todo.first)
       T1_new_order->push_back(T1->unc_pos->at(ii));
-      maxs1->push_back(T1->org_rngs->at(ii)->size());
-      flen1 *= maxs1->back();
-    }
-  }
-  maxs1->push_back(T1->org_rngs->at(ctr_todo.first)->size());
-  flen1 *= maxs1->back();
-
+    
   T1_new_order->push_back(ctr_todo.first);
   auto T1_new_rngs = reorder_vector(T1_new_order, T1_org_rngs);
+  auto maxs1 = get_sizes(T1_new_rngs);
+  int T1_num_total_blocks = accumulate(maxs1->begin(), maxs1->end(), 1, multiplies<int>());
  
-  auto maxs2 = make_shared<vector<int>>();
-  int  flen2 = 1;
   auto T2_new_order = make_shared<vector<int>>(1,ctr_todo.second);
-  for (int ii = 0; ii !=T2->unc_pos->size(); ii++){
-    if (T2->unc_pos->at(ii) != ctr_todo.second){
+  for (int ii = 0; ii !=T2->unc_pos->size(); ii++)
+    if (T2->unc_pos->at(ii) != ctr_todo.second)
       T2_new_order->push_back(T2->unc_pos->at(ii));
-      maxs2->push_back(T2->org_rngs->at(ii)->size());
-      flen2 *= maxs2->back();
-    }
-  }
 
+  T2_new_order->push_back(ctr_todo.second);
   auto T2_new_rngs = reorder_vector(T2_new_order, T2_org_rngs);
+  auto maxs2 = get_sizes(T2_new_rngs);
+  maxs2->pop_back();
+  int T2_num_unc_blocks = accumulate(maxs1->begin(), maxs1->end(), 1, multiplies<int>());
+  
 
   auto Tout_unc_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);
   Tout_unc_rngs->insert(Tout_unc_rngs->end(), T1_new_rngs->begin(), T1_new_rngs->end()-1);
   Tout_unc_rngs->insert(Tout_unc_rngs->end(), T2_new_rngs->begin()+1, T2_new_rngs->end());
  
-  auto rng_block_pos1 = make_shared<vector<int>>(T1_new_order->size(),0);
-  for (int ii = 0 ; ii != flen1; ii++) { 
- 
+
+  //loops over all index blocks of T1 and  T2; inner loop for T2 has same final index as T2 due to contraction
+  auto T1_rng_block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
+  for (int ii = 0 ; ii != T1_num_total_blocks; ii++) { 
 
     std::unique_ptr<double[]> T1_data_new; 
     size_t ctr_block_size;
     size_t T1_unc_block_size;
     auto T_out_rng_block = make_shared<vector<Index>>();
+
     {
-    auto T1_org_rng_blocks = get_rng_blocks( rng_block_pos1, T1_org_rngs); 
-    auto T1_new_rng_blocks = reorder_vector(T1_new_order, T1_org_rng_blocks); 
+    auto T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, T1_new_rngs); 
+    auto T1_org_rng_blocks = inverse_reorder_vector(T1_new_order, T1_org_rng_blocks); 
+
     auto T1_new_rng_block_sizes = get_sizes(T1_new_rng_blocks);
     T_out_rng_block->insert(T_out_rng_block->end(), T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
     
@@ -96,16 +102,18 @@ shared_ptr<DType> contract_different_tensors( string T1name, string T2name, pair
     T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
     }
 
-    auto rng_block_pos2 = make_shared<vector<int>>(T2_new_order->size(),0);
-    for (int jj = 0 ; jj != flen2; jj++) { 
+
+    auto T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size()-1, 0);
+    for (int jj = 0 ; jj != T2_num_unc_blocks; jj++) { 
       
       std::unique_ptr<double[]> T2_data_new; 
       size_t T2_unc_block_size;
-     
-      
+      T2_rng_block_pos->push_back(T1_rng_block_pos->back());
+
       {
-      auto T2_org_rng_blocks = get_rng_blocks(rng_block_pos2, T2_org_rngs); 
-      auto T2_new_rng_blocks = reorder_vector(T2_new_order, T2_org_rng_blocks); 
+      auto T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
+      auto T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_org_rngs); 
+
       auto T2_new_rng_block_sizes = get_sizes(T2_new_rng_blocks);
       T_out_rng_block->insert(T_out_rng_block->end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
       
@@ -118,14 +126,15 @@ shared_ptr<DType> contract_different_tensors( string T1name, string T2name, pair
       std::unique_ptr<double[]> T_out_data(new double[T1_unc_block_size*T2_unc_block_size]);
      
       //should not use transpose; instead build T2_new_order backwards... 
-      dgemm_("N", "T", T1_unc_block_size, ctr_block_size,  T1_unc_block_size, 1.0, T1_data_new.get(), T1_unc_block_size, T2_data_new.get(), ctr_block_size, 1.0, T_out_data.get(), T1_unc_block_size);
+      dgemm_("N", "T", T1_unc_block_size, ctr_block_size,  T1_unc_block_size, 1.0, T1_data_new.get(), T1_unc_block_size,
+              T2_data_new.get(), ctr_block_size, 1.0, T_out_data.get(), T1_unc_block_size);
       
 
       T_out->put_block( T_out_data, *T_out_rng_block );
-
-      fvec_cycle(rng_block_pos2, maxs2 );
+      T2_rng_block_pos->pop_back(); //remove last index; contracted index is cycled in T1 loop
+      fvec_cycle(T2_rng_block_pos, maxs2 );
     }
-    fvec_cycle(rng_block_pos1, maxs1 );
+    fvec_cycle(T1_rng_block_pos, maxs1 );
   }                                                                                                                                              
   return T_out;
 }
@@ -163,6 +172,16 @@ shared_ptr<vector<Index>> get_rng_blocks(shared_ptr<vector<int>> forvec, shared_
      new_ids->push_back(old_ids->at(ii)->range(forvec->at(ii)));}
   return new_ids;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<int>> get_sizes(shared_ptr<vector<shared_ptr<const IndexRange>>> rngvec) {
+////////////////////////////////////////////////////////////////////////////////////////
+  auto size_vec = make_shared<vector<int>>(); 
+  for( auto elem : *rngvec ) 
+     size_vec->push_back(elem->size());
+  return size_vec;
+}
+////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<size_t>> get_sizes(shared_ptr<vector<Index>> Idvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
