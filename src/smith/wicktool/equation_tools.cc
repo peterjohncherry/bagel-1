@@ -39,90 +39,92 @@ shared_ptr<DType> contract_different_tensors( string T1name, string T2name, pair
   auto T1_org_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);//SHOULD BE TAKEN FROM CTP 
   auto T2_org_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);//SHOULD BE TAKEN FROM CTP
 
-  auto toi = [](char cc ){ return((int)(cc) - (int)('0')); } ; //there must be a better way.....
-  
   auto T_out = make_shared<DType>(); 
-  std::complex<double> cx_one = (1.0,0.0);
-  std::complex<double> cx_zero = (0.0,0.0);
- 
-  auto Tall_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);
- 
-  cout << "generating new order for T1 indexes with contracted indexes at the end " << endl;
+
+  auto maxs1 = make_shared<vector<int>>();
+  int  flen1 = 1;
+
   auto T1_new_order = make_shared<vector<int>>(0);
-  auto T1_new_rngs = make_shared<vector<shared_ptr<const IndexRange>>>();
   for (int ii = 0; ii !=T1->unc_pos->size(); ii++){
     if (T1->unc_pos->at(ii) != ctr_todo.first){
       T1_new_order->push_back(T1->unc_pos->at(ii));
-      T1_new_rngs->push_back(T1_org_rngs->at(T1->unc_pos->at(ii))); 
+      maxs1->push_back(T1->org_rngs->at(ii)->size());
+      flen1 *= maxs1->back();
     }
   }
-  Tall_rngs->insert(Tall_rngs->end(), T1_org_rngs->begin(), T1_org_rngs->end());
+  maxs1->push_back(T1->org_rngs->at(ctr_todo.first)->size());
+  flen1 *= maxs1->back();
+
+  T1_new_order->push_back(ctr_todo.first);
+  auto T1_new_rngs = reorder_vector(T1_new_order, T1_org_rngs);
  
-  cout << "generating new order for T2 indexes with contracted indexes at the end " << endl;
-  auto T2_new_order = make_shared<vector<int>>(0);
-  auto T2_new_rngs = make_shared<vector<shared_ptr<const IndexRange>>>();
-  for (int ii =T2->unc_pos->size()-1; ii !=-1; ii--){
+  auto maxs2 = make_shared<vector<int>>();
+  int  flen2 = 1;
+  auto T2_new_order = make_shared<vector<int>>(1,ctr_todo.second);
+  for (int ii = 0; ii !=T2->unc_pos->size(); ii++){
     if (T2->unc_pos->at(ii) != ctr_todo.second){
       T2_new_order->push_back(T2->unc_pos->at(ii));
-      T2_new_rngs->push_back(T2_org_rngs->at(T2->unc_pos->at(ii))); 
+      maxs2->push_back(T2->org_rngs->at(ii)->size());
+      flen2 *= maxs2->back();
     }
   }
-  Tall_rngs->insert(Tall_rngs->end(), T2_org_rngs->begin(), T2_org_rngs->end());
- 
-  int flen =1;
-  auto maxs  = make_shared<vector<int>>();
-  for (auto elem : *Tall_rngs) {
-     maxs->push_back(elem->size());
-     flen *= elem->size();
-  }
 
-  auto rng_block_pos = make_shared<vector<int>>(T1_new_order->size()+T2_new_order->size(),0);
-  for (int ii = 0 ; ii != flen; ii++) { 
-    for (int ll = 0 ; ll!= T1_new_rngs->back()->size(); ll++) { 
+  auto T2_new_rngs = reorder_vector(T2_new_order, T2_org_rngs);
+
+  auto Tout_unc_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);
+  Tout_unc_rngs->insert(Tout_unc_rngs->end(), T1_new_rngs->begin(), T1_new_rngs->end()-1);
+  Tout_unc_rngs->insert(Tout_unc_rngs->end(), T2_new_rngs->begin()+1, T2_new_rngs->end());
+ 
+  auto rng_block_pos1 = make_shared<vector<int>>(T1_new_order->size(),0);
+  for (int ii = 0 ; ii != flen1; ii++) { 
+ 
+
+    std::unique_ptr<double[]> T1_data_new; 
+    size_t ctr_block_size;
+    size_t T1_unc_block_size;
+    auto T_out_rng_block = make_shared<vector<Index>>();
+    {
+    auto T1_org_rng_blocks = get_rng_blocks( rng_block_pos1, T1_org_rngs); 
+    auto T1_new_rng_blocks = reorder_vector(T1_new_order, T1_org_rng_blocks); 
+    auto T1_new_rng_block_sizes = get_sizes(T1_new_rng_blocks);
+    T_out_rng_block->insert(T_out_rng_block->end(), T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
+    
+    ctr_block_size = T1_new_rng_blocks->back().size(); 
+    T1_unc_block_size = get_block_size( T1_new_rng_blocks, 0, T1_new_rng_blocks->size()); 
+    
+    auto T1_data_org = T1->get_block(*T1_org_rng_blocks);
+    T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
+    }
+
+    auto rng_block_pos2 = make_shared<vector<int>>(T2_new_order->size(),0);
+    for (int jj = 0 ; jj != flen2; jj++) { 
       
-      std::unique_ptr<double[]> T1_data_new; 
-      size_t ctr_block_size;
-      size_t T1_unc_block_size;
-      {
-      auto T1_org_rng_blocks = get_rng_blocks( rng_block_pos, T1_org_rngs); 
-      auto T1_new_rng_blocks = get_rng_blocks( rng_block_pos, T1_new_rngs); 
-      auto T1_new_rng_block_sizes = get_sizes(T1_new_rng_blocks);
-
-      ctr_block_size = T1_new_rng_blocks->back().size(); 
-      T1_unc_block_size = get_block_size( T1_new_rng_blocks, 0, T1_new_rng_blocks->size()-1); 
-
-      auto T1_data_org = T1->get_block(*T1_org_rngs);
-      T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
-      }
- 
       std::unique_ptr<double[]> T2_data_new; 
       size_t T2_unc_block_size;
- 
+     
+      
       {
-      auto T2_org_rng_blocks = get_rng_blocks( rng_block_pos, T2_org_rngs); 
-      auto T2_new_rng_blocks = get_rng_blocks( rng_block_pos, T2_new_rngs); 
+      auto T2_org_rng_blocks = get_rng_blocks(rng_block_pos2, T2_org_rngs); 
+      auto T2_new_rng_blocks = reorder_vector(T2_new_order, T2_org_rng_blocks); 
       auto T2_new_rng_block_sizes = get_sizes(T2_new_rng_blocks);
-
-      T2_unc_block_size = get_block_size( T2_new_rng_blocks, 0, T2_new_rng_blocks->size()-1); 
-
-      auto T2_data_org = T2->get_block(*T2_org_rngs);
+      T_out_rng_block->insert(T_out_rng_block->end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
+      
+      T2_unc_block_size = get_block_size( T2_new_rng_blocks, 0, T2_new_rng_blocks->size()); 
+      
+      auto T2_data_org = T2->get_block(*T2_org_rng_blocks);
       T2_data_new = reorder_tensor_data(T2_data_org.get(), get_block_size(T2_new_rng_blocks, 0, T2_new_rng_blocks->size()), *T2_new_order, *T2_new_rng_block_sizes); 
       }
-  
+      
       std::unique_ptr<double[]> T_out_data(new double[T1_unc_block_size*T2_unc_block_size]);
+      
+      dgemm_("N", "N", T1_unc_block_size, T2_unc_block_size, ctr_block_size, 1.0, T1_data_new.get(), T1_unc_block_size, T2_data_new.get(), ctr_block_size, 1.0, T_out_data.get(), T1_unc_block_size);
+      
 
-//      dgemm_("N", "N", T1_unc_block_size*T2_unc_block_size, ctr_block_size, 1.0, T1_data_new.get(), T1_unc_block_size*T2_unc_block_size, T2_data_new.get(), 1, 1.0, Tout_data.get(), 1)
+      T_out->put_block( T_out_data, *T_out_rng_block );
 
-// should get if for type switching
-//     zgemv_("N", T1_unc_block_size*T2_unc_block_size,  ctr_block_size, cx_one,                 
-//                 T1_data_new.get(), T1_unc_block_size*T2_unc_block_size,  T2_data_new.get(),                  
-//                 1, cx_one, T_out_data.get(), 1);                                                                   
-  
-      shared_ptr<vector<Index>> T_out_rng_block = get_rng_blocks(rng_block_pos, Tall_rngs); 
-      T_out->put_block( T_out_data, *Tall_rngs );
-  
-      fvec_cycle(rng_block_pos, maxs );
+      fvec_cycle(rng_block_pos2, maxs2 );
     }
+    fvec_cycle(rng_block_pos1, maxs1 );
   }                                                                                                                                              
   return T_out;
 }
