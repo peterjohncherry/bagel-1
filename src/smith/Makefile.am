@@ -24,7 +24,7 @@ caspt2/MSCASPT2_gen11.cc caspt2/MSCASPT2_gen12.cc \
 caspt2/MSCASPT2_tasks1.cc caspt2/MSCASPT2_tasks2.cc caspt2/MSCASPT2_tasks3.cc caspt2/MSCASPT2_tasks4.cc caspt2/MSCASPT2_tasks5.cc \
 caspt2/MSCASPT2_tasks6.cc caspt2/MSCASPT2_tasks7.cc caspt2/MSCASPT2_tasks8.cc caspt2/MSCASPT2_tasks9.cc caspt2/MSCASPT2_tasks10.cc \
 caspt2/MSCASPT2_tasks11.cc caspt2/MSCASPT2_tasks12.cc \
-caspt2/CASPT2_ALT.cc\
+caspt2/CASPT2_ALT.cc caspt2/CASPT2_ALT_eqn_info.cc \
 \
 caspt2/MSCASPT2_contract.cc caspt2/MSCASPT2_contract_tasks.cc caspt2/MSCASPT2_contract_gen.cc \
 mrci/MRCI.cc mrci/MRCI_gamma.cc mrci/MRCI_sourceq.cc mrci/MRCI_normq.cc \

@@ -30,6 +30,7 @@
 #include <src/smith/wicktool/equation.h>
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/ci/fci/fci.h>
+#include <src/smith/caspt2/CASPT2_ALT_eqn_info.h>
 
 namespace bagel {
 namespace SMITH { 
@@ -75,37 +76,6 @@ class CASPT2_ALT {
 
 };
 }//end CASPT2_ALT namespace
-
-
-namespace WICKTOOLS{
-
-class WICKTOOLS {
-  
-  public:
-    
-    std::shared_ptr<Dvec> cc_; 
-    int  nelea_ ;
-    int  neleb_ ;
-    int  ncore_ ;
-    int  norb_  ;
-    int  nstate_;
-    std::shared_ptr<Determinants> det_ ; 
-    WICKTOOLS(std::shared_ptr<const SMITH_Info<double>> ref_alt);
-    ~WICKTOOLS() {};
-    
-    void compute_gamma12(const int MM, const int NN ) ;
-
-    //std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>>
-    void
-    compute_gamma12_from_civec(std::shared_ptr<const Civec> cbra, std::shared_ptr<const Civec> cket) const ;
-
-//  std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>>
-    void
-    compute_gamma12_last_step(std::shared_ptr<const Dvec> dbra, std::shared_ptr<const Dvec> dket, std::shared_ptr<const Civec> cibra) const ;
-
-};
-}//end WICKTOOLS namespace
-
 
 }//end SMITH namespace 
 }//end bagel namespace

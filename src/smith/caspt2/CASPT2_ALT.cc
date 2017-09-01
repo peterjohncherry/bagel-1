@@ -29,6 +29,8 @@
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
+using namespace bagel::SMITH::CASPT2_ALT_EQN_INFO;
+
 
 ////////////////////////////////////////////////////////////////////
 CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) { 
@@ -50,12 +52,50 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref
   all_gamma3 = make_shared<VecRDM<3>>();
 }
 
-/////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::test() { 
-/////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
   auto weqn = make_shared<Equation<Tensor>>();
+
+  weqn->Initialize();
+  
+  //////////////////Initialization section/////////////////////////
+  ///////////This should be read in from an input file/////////////
+  //spinfree orbital ranges
+  vector<string> free     = {"cor", "act", "vir"};
+  vector<string> not_core = {"act", "vir"};
+  vector<string> not_act  = {"cor", "vir"};
+  vector<string> not_virt = {"cor", "act"};
+  vector<string> core = {"cor"};
+  vector<string> act  = {"act"};
+  vector<string> virt = {"vir"};
+ 
+  ///////////////////////////////////X Tensor ////////////////////////////////////////
+  string X_TimeSymm = "none";
+  auto X_factor = make_pair(1.0,1.0);
+  auto X_idxs = make_shared<vector<string>>(vector<string> {"X0", "X1", "X2", "X3"});
+  auto X_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false}); 
+  auto X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free }); 
+  std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> X_symmfuncs;// = set_2el_symmfuncs();
+  vector<bool(*)(shared_ptr<vector<string>>)> X_constraints;// = { &always_true };
+  shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>();  
+
+  auto XTens = weqn->Build_TensOp("X", X_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
+ 
+  ///////////////////////////////////////////////////// T Tensor /////////////////////////////////////////////////////////////////
+  string T_TimeSymm = "none";
+  auto T_factor = make_pair(1.0,1.0);
+  auto T_idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
+  auto T_aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} ); 
+  auto T_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });   
+  std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> T_symmfuncs;// = set_2el_symmfuncs();
+  vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = { &bagel::SMITH::CASPT2_ALT_EQN_INFO::NotAllAct };
+  shared_ptr<Tensor_<double>> T_data = make_shared<Tensor_<double>>();  
+
+  auto TTens = weqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   weqn->equation_build();
-          
+        
   for (auto MM = 0 ; MM != nstate_ ; MM++){
     for (auto NN = 0 ; NN != nstate_ ; NN++){
         compute_gamma12( MM, NN ) ;
@@ -67,7 +107,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
 // mangled version of routines in fci_rdm.cc
-// can use RDM type for convenience, but everything by gamma2  is _not_ an rdm 
+// can use RDM type for convenience, but everything by gamma1  is _not_ an rdm 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::compute_gamma12(const int MM, const int NN ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,23 +269,4 @@ void CASPT2_ALT::CASPT2_ALT::sigma_2a2(shared_ptr<const Civec> cvec, shared_ptr<
   }
 }
 
-/////////////////////////////////////////////////////////////////////////////////
-WICKTOOLS::WICKTOOLS::WICKTOOLS(std::shared_ptr<const SMITH_Info<double>> ref){
-/////////////////////////////////////////////////////////////////////////////////
-}
-//////////////////////////////////////////////////////////////////////////
-void WICKTOOLS::WICKTOOLS::compute_gamma12(const int MM, const int NN ) {
-//////////////////////////////////////////////////////////////////////////
-  return;
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void WICKTOOLS::WICKTOOLS::compute_gamma12_from_civec(shared_ptr<const Civec> cbra, shared_ptr<const Civec> cket) const {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  return;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void WICKTOOLS::WICKTOOLS::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, shared_ptr<const Dvec> dket, shared_ptr<const Civec> cibra) const {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  return;
-}
 #endif

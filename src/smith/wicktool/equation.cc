@@ -113,52 +113,16 @@ void  Equation<DType>::equation_build(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Into Equation" <<endl;
 
-  Initialize();
+//  Initialize();
 
-  //////////////////Initialization section/////////////////////////
-  ///////////This should be read in from an input file/////////////
+
+//  auto BraKet_Tensors = make_shared<vector<shared_ptr<TensOp<DType>>>>(vector<shared_ptr<TensOp<DType>>>{ XTens, TTens} );
+
+//  Build_BraKet( BraKet_Tensors );
   
-  //spinfree orbital ranges
-  vector<string> free     = {"cor", "act", "vir"};
-  vector<string> not_core = {"act", "vir"};
-  vector<string> not_act  = {"cor", "vir"};
-  vector<string> not_virt = {"cor", "act"};
-  vector<string> core = {"cor"};
-  vector<string> act  = {"act"};
-  vector<string> virt = {"vir"};
- 
-  ///////////////////////////////////X Tensor ////////////////////////////////////////
-  string X_TimeSymm = "none";
-  auto X_factor = make_pair(1.0,1.0);
-  auto X_idxs = make_shared<vector<string>>(vector<string> {"X0", "X1", "X2", "X3"});
-  auto X_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false}); 
-  auto X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free }); 
-  auto X_symmfuncs = set_2el_symmfuncs();
-  vector<bool(*)(shared_ptr<vector<string>>)> X_constraints = { &always_true };
-  shared_ptr<DType> X_data = make_shared<DType>();  
-
-  auto XTens = Build_TensOp("X", X_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
- 
-  /////////////////////////////////T Tensor ////////////////////////////////////////
-  string T_TimeSymm = "none";
-  auto T_factor = make_pair(1.0,1.0);
-  auto T_idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
-  auto T_aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} ); 
-  auto T_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });   
-  auto T_symmfuncs = set_2el_symmfuncs();
-  vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = { &NotAllAct };
-  shared_ptr<DType> T_data = make_shared<DType>();  
-
-  auto TTens = Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
-  ///////////////////////////////////////////////////////////////////////
-
-  auto BraKet_Tensors = make_shared<vector<shared_ptr<TensOp<DType>>>>(vector<shared_ptr<TensOp<DType>>>{ XTens, TTens} );
-
-  Build_BraKet( BraKet_Tensors );
-  
-  for (auto braket : BraKet_Terms){
-    Add_BraKet_Compute_Terms_CMTP( braket );
-  }
+//  for (auto braket : BraKet_Terms){
+//    Add_BraKet_Compute_Terms_CMTP( braket );
+//  }
 
   cout << "Leaving Equation" <<endl;
 
