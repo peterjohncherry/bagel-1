@@ -237,7 +237,6 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
   return;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Very similar to single tensor version; only difference in case where nothing relevant tensors are found.
 // This only works for Two tensors, must test for irreducibility when >2 tensors....

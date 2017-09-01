@@ -4,6 +4,7 @@
 
 //#include "WickUtils.h"
 
+
 template<class DType>
 class TensorPart{
    public:
@@ -153,8 +154,7 @@ class CtrMultiTensorPart : public TensorPart<DType> {
     std::shared_ptr<CtrTensorPart<DType>> Binary_Contract_diff_tensors(std::string T1, std::string T2, std::pair<int,int> ctr_todo,
                                                                                std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>>> > Tmap);
 
-   // std::shared_ptr<CtrTensorPart<DType>> Do_First_Cross_Contraction(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap);
-
 };
+
 
 #endif
