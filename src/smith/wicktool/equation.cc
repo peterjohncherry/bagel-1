@@ -47,7 +47,6 @@ cout << "TensOp::BuildTensOp" <<   endl;
 
   return New_Op;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adds terms associated with each gamma into the map
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,13 +56,10 @@ void Equation<DType>::Add_BraKet_Compute_Terms_CMTP(shared_ptr<BraKet<DType>> BK
   cout << "Add_BraKet_Compute_Terms_CMTP" << endl;  
 
   for (auto mapit = BK->GammaMap->begin(); mapit != BK->GammaMap->end(); mapit++) {
-
     for (int kk = 0 ; kk!= (get<0>(mapit->second))->size(); kk++){
-            
       auto Acontrib_loc = BK->Total_Op->CMTP_gamma_contribs->find( tie(mapit->first, *(get<0>(mapit->second))->at(kk), *(get<1>(mapit->second))->at(kk) ));  
       if ( Acontrib_loc == BK->Total_Op->CMTP_gamma_contribs->end() ) 
         continue;
-       
 
       for (auto CMTP_name : *Acontrib_loc->second){
         cout << endl<< CMTP_name <<endl; 

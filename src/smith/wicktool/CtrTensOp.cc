@@ -1,6 +1,5 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include <src/smith/wicktool/WickUtils.h>
 #include <src/smith/wicktool/CtrTensOp.h>
 
 //#include "WickUtils.h"
@@ -8,6 +7,7 @@
 
 using namespace std;
 using namespace bagel::SMITH;
+
 ////////////////////////////////////////////////////////////////////////////
 template<typename DType>
 void TensorPart<DType>::get_name(){
@@ -408,6 +408,7 @@ shared_ptr<DType> CtrTensorPart<DType>::Binary_Contract_same_tensor(pair<int,int
   CTdata = make_shared<DType> ();
   return bob;
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class TensorPart<std::vector<double>>;
 template class TensorPart<Tensor_<double>>;

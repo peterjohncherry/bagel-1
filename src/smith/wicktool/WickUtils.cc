@@ -456,7 +456,7 @@ shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> get_unique_pairs(shared_pt
 } 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>   set_2el_symmfuncs(){
+vector<tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>   set_2el_symmfuncs(){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Two_el_symmfuncs;

@@ -20,6 +20,7 @@
 #include <fstream>
 #include <numeric>
 #include <src/smith/smith.h>
+#include <src/smith/indexrange.h>
  
 namespace WickUtils {  
   using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
@@ -81,6 +82,7 @@ namespace WickUtils {
     std::cout << "]  " ;
     return;
   }
+
 
   template<class DataType>
   void print_pairvec(std::vector<std::pair<DataType,DataType>> invec, std::string name ="lazy"){

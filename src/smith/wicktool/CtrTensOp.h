@@ -40,7 +40,6 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
     std::shared_ptr<std::vector<std::string>> full_idxs;
     std::shared_ptr<std::vector<std::string>> full_id_ranges;
     std::shared_ptr<std::vector<int>> unc_pos;
-    std::shared_ptr<std::vector<int>> unc_ranges;
     std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos;      
     std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors; 
     std::shared_ptr<DType> CTdata ;
@@ -70,8 +69,8 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
      void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap );
      std::shared_ptr<DType> Binary_Contract_same_tensor(std::pair<int,int> ctr_todo);
 
-     std::shared_ptr<CtrTensorPart<DType>> Binary_Contract_same_tensor( std::string T1name , std::pair<int,int> ctr_todo , std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap  );
-
+     std::shared_ptr<CtrTensorPart<DType>> Binary_Contract_same_tensor( std::string T1name , std::pair<int,int> ctr_todo,
+                                                                        std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap );
 
     ~CtrTensorPart(){};
 };
@@ -79,8 +78,6 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
 
 template<class DType>
 class CtrMultiTensorPart : public TensorPart<DType> {
-   
-
    public :
 
    using TensorPart<DType>::idxs ;

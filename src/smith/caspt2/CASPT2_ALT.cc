@@ -64,7 +64,6 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 
   return;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
 // mangled version of routines in fci_rdm.cc
@@ -94,7 +93,6 @@ void CASPT2_ALT::CASPT2_ALT::compute_gamma12(const int MM, const int NN ) {
 
   return;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>, shared_ptr<RDM<3>> >
 CASPT2_ALT::CASPT2_ALT::compute_gamma12_from_civec(shared_ptr<const Civec> cbra, shared_ptr<const Civec> cket) const {
@@ -116,7 +114,6 @@ CASPT2_ALT::CASPT2_ALT::compute_gamma12_from_civec(shared_ptr<const Civec> cbra,
   
   return compute_gamma12_last_step(dbra, dket, cbra);
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>, shared_ptr<RDM<3>> >
 CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, shared_ptr<const Dvec> dket, shared_ptr<const Civec> cibra) const {
@@ -187,8 +184,6 @@ CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, s
  
   return tie(gamma1, gamma2, gamma3);
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Taken directly from src/ci/fci/knowles_compute.cc         
 //////////////////////////////////////////////////////////////////////////////////////////////
