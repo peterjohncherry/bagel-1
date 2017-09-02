@@ -23,7 +23,7 @@ class Equation {
       bool spinfree = false;
 
       //Equation builder
-      void equation_build(); 
+      void equation_build(std::shared_ptr<std::vector< std::shared_ptr<std::vector<std::shared_ptr<TensOp<DType>>>> >> BraKet_list);
 
       //Vector of BraKet terms which comprise the equation
       std::vector<std::shared_ptr<BraKet<DType>>> BraKet_Terms;

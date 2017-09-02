@@ -109,20 +109,18 @@ void Equation<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>>
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-void  Equation<DType>::equation_build(){
+void  Equation<DType>::equation_build(std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType> > >>>> BraKet_list){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Into Equation" <<endl;
 
-//  Initialize();
+  Initialize();
 
-
-//  auto BraKet_Tensors = make_shared<vector<shared_ptr<TensOp<DType>>>>(vector<shared_ptr<TensOp<DType>>>{ XTens, TTens} );
-
-//  Build_BraKet( BraKet_Tensors );
-  
-//  for (auto braket : BraKet_Terms){
-//    Add_BraKet_Compute_Terms_CMTP( braket );
-//  }
+  for (auto BraKet_Tensors : *BraKet_list) {
+    Build_BraKet( BraKet_Tensors );
+    for (auto braket : BraKet_Terms){
+      Add_BraKet_Compute_Terms_CMTP( braket );
+    }
+  }
 
   cout << "Leaving Equation" <<endl;
 

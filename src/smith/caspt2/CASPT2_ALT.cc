@@ -91,9 +91,18 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = { &NotAllAct };
   shared_ptr<Tensor_<double>> T_data = make_shared<Tensor_<double>>();  
 
-//  auto TTens = weqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
+  auto TTens = weqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  weqn->equation_build();
+
+  auto BraKet_Tensors1 = make_shared<vector< shared_ptr<TensOp<Tensor_<double>>> > >( vector<shared_ptr<TensOp<Tensor_<double>>>> { XTens,  TTens} );
+  auto BraKet_Tensors2 = make_shared<vector< shared_ptr<TensOp<Tensor_<double>>> > >( vector<shared_ptr<TensOp<Tensor_<double>>>> { XTens,  TTens} );
+
+  auto BraKet_List = make_shared<std::vector<std::shared_ptr<vector< shared_ptr<TensOp<Tensor_<double>>> > >>>();
+                         
+  BraKet_List->push_back(BraKet_Tensors1);
+  BraKet_List->push_back(BraKet_Tensors2);
+
+  weqn->equation_build(BraKet_List);
         
   for (auto MM = 0 ; MM != nstate_ ; MM++){
     for (auto NN = 0 ; NN != nstate_ ; NN++){
