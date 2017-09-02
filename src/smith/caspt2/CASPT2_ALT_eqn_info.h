@@ -30,7 +30,7 @@ namespace CASPT2_ALT_EQN_INFO {
    std::shared_ptr<std::vector<std::string>> identity(std::shared_ptr<std::vector<std::string>> invec) ;
    bool NotAllAct(std::shared_ptr<std::vector<std::string>> ranges);
    bool always_true(std::shared_ptr<std::vector<std::string>> ranges);
-   std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_2el_symmfuncs();
+   std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(bagel::SMITH::CASPT2_ALT::CASPT2_ALT::*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_2el_symmfuncs();
 
 }//end of CASPT2_EQN_INFO namespace:
 }

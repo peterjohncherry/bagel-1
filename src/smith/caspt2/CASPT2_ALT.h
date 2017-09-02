@@ -30,7 +30,7 @@
 #include <src/smith/wicktool/equation.h>
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/ci/fci/fci.h>
-#include <src/smith/caspt2/CASPT2_ALT_eqn_info.h>
+//#include <src/smith/caspt2/CASPT2_ALT_eqn_info.h>
 
 namespace bagel {
 namespace SMITH { 
@@ -73,6 +73,21 @@ class CASPT2_ALT {
 
     std::tuple< std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
     compute_gamma12_last_step(std::shared_ptr<const Dvec> dbra, std::shared_ptr<const Dvec> dket, std::shared_ptr<const Civec> cibra) const ;
+
+    static std::string flip(std::string idx);
+    static std::shared_ptr<std::vector<std::string>> ijkl_to_klij(std::shared_ptr<std::vector<std::string>> invec) ;
+    static std::shared_ptr<std::vector<std::string>> ijkl_to_jilk(std::shared_ptr<std::vector<std::string>> invec) ;
+    static std::shared_ptr<std::vector<std::string>> ijkl_to_lkji(std::shared_ptr<std::vector<std::string>> invec) ;
+    static std::shared_ptr<std::vector<std::string>> ijkl_to_ijlk_block(std::shared_ptr<std::vector<std::string>> invec) ;
+    static std::shared_ptr<std::vector<std::string>> ijkl_to_jikl_block(std::shared_ptr<std::vector<std::string>> invec) ;
+    static std::shared_ptr<std::vector<std::string>> ijkl_to_jilk_block(std::shared_ptr<std::vector<std::string>> invec) ;
+    static std::shared_ptr<std::vector<std::string>> bbbb_to_aaaa(std::shared_ptr<std::vector<std::string>> invec) ;
+    static std::shared_ptr<std::vector<std::string>> bbaa_to_aaaa(std::shared_ptr<std::vector<std::string>> invec) ;
+    static std::shared_ptr<std::vector<std::string>> aabb_to_aaaa(std::shared_ptr<std::vector<std::string>> invec) ;
+    static std::shared_ptr<std::vector<std::string>> identity(std::shared_ptr<std::vector<std::string>> invec) ;
+    static bool NotAllAct(std::shared_ptr<std::vector<std::string>> ranges);
+    static bool always_true(std::shared_ptr<std::vector<std::string>> ranges);
+    std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_2el_symmfuncs();
 
 };
 }//end CASPT2_ALT namespace

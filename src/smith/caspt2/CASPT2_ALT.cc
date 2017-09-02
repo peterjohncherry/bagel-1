@@ -29,8 +29,7 @@
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
-using namespace bagel::SMITH::CASPT2_ALT_EQN_INFO;
-
+//using namespace bagel::SMITH::CASPT2_ALT_EQN_INFO;
 
 ////////////////////////////////////////////////////////////////////
 CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) { 
@@ -76,8 +75,8 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   auto X_idxs = make_shared<vector<string>>(vector<string> {"X0", "X1", "X2", "X3"});
   auto X_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false}); 
   auto X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free }); 
-  std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> X_symmfuncs;// = set_2el_symmfuncs();
-  vector<bool(*)(shared_ptr<vector<string>>)> X_constraints;// = { &always_true };
+  auto X_symmfuncs = set_2el_symmfuncs();
+  vector<bool(*)(shared_ptr<vector<string>>)>  X_constraints = { &always_true };
   shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>();  
 
   auto XTens = weqn->Build_TensOp("X", X_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
@@ -88,11 +87,11 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   auto T_idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
   auto T_aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} ); 
   auto T_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });   
-  std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> T_symmfuncs;// = set_2el_symmfuncs();
-  vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = { &bagel::SMITH::CASPT2_ALT_EQN_INFO::NotAllAct };
+  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> T_symmfuncs = set_2el_symmfuncs();
+  vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = { &NotAllAct };
   shared_ptr<Tensor_<double>> T_data = make_shared<Tensor_<double>>();  
 
-  auto TTens = weqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
+//  auto TTens = weqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   weqn->equation_build();
         
