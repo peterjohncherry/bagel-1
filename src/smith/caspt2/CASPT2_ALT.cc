@@ -49,8 +49,19 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref
   all_gamma1 = make_shared<VecRDM<1>>();
   all_gamma2 = make_shared<VecRDM<2>>();
   all_gamma3 = make_shared<VecRDM<3>>();
-}
 
+  range_conversion_map = make_shared<map<string, shared_ptr<const IndexRange>>>();
+   
+  const int max = ref->maxtile();
+  auto closed_rng  =  make_shared<const IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
+  auto active_rng  =  make_shared<const IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
+  auto virtual_rng =  make_shared<const IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
+
+  range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
+  range_conversion_map->emplace("act", active_rng);
+  range_conversion_map->emplace("vir", virtual_rng);
+
+}
 /////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::test() { 
 /////////////////////////////////////////////////////////////////////////////////
@@ -104,14 +115,17 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 
   weqn->equation_build(BraKet_List);
         
-  for (auto MM = 0 ; MM != nstate_ ; MM++){
-    for (auto NN = 0 ; NN != nstate_ ; NN++){
-        compute_gamma12( MM, NN ) ;
-    }
-  } 
+  for (auto MM = 0 ; MM != nstate_ ; MM++)
+    for (auto NN = 0 ; NN != nstate_ ; NN++)
+      compute_gamma12( MM, NN ) ;
 
   return;
 }
+
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
 // mangled version of routines in fci_rdm.cc
@@ -171,8 +185,8 @@ CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, s
   const int nri = cibra->asize()*cibra->lenb();
   const int ij  = norb_*norb_;
  
-  // 1gamma c^dagger <I|\hat{E}|0>
-  // 2gamma \sum_I <0|\hat{E}|I> <I|\hat{E}|0>
+  // gamma1 c^dagger <I|\hat{E}|0>
+  // gamma2 \sum_I <0|\hat{E}|I> <I|\hat{E}|0>
   auto gamma1 = make_shared<RDM<1>>(norb_);
   auto gamma2 = make_shared<RDM<2>>(norb_);
   auto gamma3 = make_shared<RDM<3>>(norb_);
@@ -205,7 +219,6 @@ CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, s
       copy_n(dket_KLLJ_data->data()+q*ij, ij*nri, dket_KLLJ_part->data(0)->data());
     }
 
-    auto gamma3_data = make_shared<Matrix>(ij, ij*ij);
     const char   transa = 'N';
     const char   transb = 'T';
     const double alpha = 1.0;

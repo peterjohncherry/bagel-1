@@ -117,25 +117,13 @@ void  Equation<DType>::equation_build(std::shared_ptr<std::vector<std::shared_pt
 
   for (auto BraKet_Tensors : *BraKet_list) {
     Build_BraKet( BraKet_Tensors );
-    for (auto braket : BraKet_Terms){
+    for (auto braket : BraKet_Terms)
       Add_BraKet_Compute_Terms_CMTP( braket );
-    }
   }
-
   cout << "Leaving Equation" <<endl;
 
   return ;
 }
-
-//int main() {
-//
-//   Equation<vector<double>> CIDeriv;
-//
-//   CIDeriv.equation_build();
-//
-//   return 1; 
-//}
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Equation<std::vector<double>>;
 template class Equation<bagel::SMITH::Tensor_<double>>;

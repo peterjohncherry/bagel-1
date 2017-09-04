@@ -1,6 +1,5 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include <src/smith/wicktool/WickUtils.h>
 #include <src/smith/wicktool/CtrTensOp.h>
 #include <src/smith/indexrange.h>
 #include <src/smith/wicktool/equation_tools.h>
@@ -9,7 +8,6 @@ using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 using namespace equation_tools;
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class vtype>
@@ -33,6 +31,7 @@ shared_ptr<vector<vtype>> reorder_vector(shared_ptr<vector<int>> neworder , shar
 
   return newvec;
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Contracts tensors T1 and T2 over two specified indexes
 //T1_org_rg T2_org_rg are the original index ranges for the tensors (not necessarily normal ordered).
@@ -290,7 +289,7 @@ void build_range_conversion_map(std::shared_ptr<std::vector<pair<std::string, st
   range_conversion_map = make_shared<map< string, shared_ptr<IndexRange>>>();
   for (auto rng_pair : *range_conversion_pairs)
     range_conversion_map->emplace(rng_pair.first, rng_pair.second);
- 
+
   return;
 }
 

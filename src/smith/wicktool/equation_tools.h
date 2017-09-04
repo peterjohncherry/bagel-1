@@ -18,7 +18,7 @@ namespace SMITH {
 
 namespace equation_tools { 
 
-    std::shared_ptr<std::map<std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
 
     std::shared_ptr<std::vector<IndexRange>> convert_str_to_Bagel_Index(std::shared_ptr<std::vector<std::string>> ranges_str);
   

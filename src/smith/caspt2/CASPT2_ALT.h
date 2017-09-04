@@ -57,7 +57,7 @@ class CASPT2_ALT {
     std::shared_ptr<VecRDM<1>> all_gamma1;
     std::shared_ptr<VecRDM<2>> all_gamma2;
     std::shared_ptr<VecRDM<3>> all_gamma3;
-
+    std::shared_ptr<std::map<std::string, std::shared_ptr<const IndexRange>>> range_conversion_map ;
     CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref_alt);
 
     ~CASPT2_ALT() {};
