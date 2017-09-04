@@ -1,6 +1,5 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include <src/smith/wicktool/CtrTensOp.h>
 #include <src/smith/indexrange.h>
 #include <src/smith/wicktool/equation_tools.h>
 
@@ -8,6 +7,33 @@ using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<Tensor_<double>>> eqn_info_in ){
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  eqn_info =  eqn_info_in;
+
+  nelea_ = ref->ciwfn()->det()->nelea();
+  neleb_ = ref->ciwfn()->det()->neleb();
+  ncore_ = ref->ciwfn()->ncore();
+  norb_  = ref->ciwfn()->nact();
+  nstate_ = ref->ciwfn()->nstates();
+  cc_ = ref->ciwfn()->civectors();
+  det_ = ref->ciwfn()->civectors()->det();
+
+  range_conversion_map = make_shared<map<string, shared_ptr<const IndexRange>>>();
+  
+  //clearer this way, but find a nicer way. 
+  const int max = ref->maxtile();
+  auto closed_rng  =  make_shared<const IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
+  auto active_rng  =  make_shared<const IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
+  auto virtual_rng =  make_shared<const IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
+
+  range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
+  range_conversion_map->emplace("act", active_rng);
+  range_conversion_map->emplace("vir", virtual_rng);
+
+}  
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class vtype>
 shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::inverse_reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
@@ -135,32 +161,6 @@ shared_ptr<DType> Equation_Computer::Equation_Computer::contract_different_tenso
     fvec_cycle(T1_rng_block_pos, maxs1 );
   }                                                                                                                                              
   return T_out;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Gets a block of data from the original indexes, and reorders it so the indexes are in T_new_rng order
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType, class DType>
-unique_ptr<DataType[]>
-Equation_Computer::Equation_Computer::get_reordered_Tensor_data(shared_ptr<vector<int>> rng_block_pos, shared_ptr<vector<const IndexRange>> T_org_rng,
-                                                                 shared_ptr<vector<const IndexRange>> T_new_rng, shared_ptr<DType> Tens )  { 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// 
-// auto blocksize = [](shared_ptr<vector<size_t>> rb_sizes, int startpos, int endpos ){
-//      size_t tmp_sz = 0;
-//      for ( int ii = startpos ; ii!=endpos+1; ii++)
-//         tmp_sz += *rb_sizes[ii];
-//      return tmp_sz;
-//  };
-//
-// shared_ptr<vector<Index>> T_new_rng_blocks = get_rng_blocks( rng_block_pos, T_new_rng); 
-//
-// shared_ptr<vector<size_t>> T_new_rng_block_sizes = get_sizes(T_new_rng_blocks);
-//                                                                                                                          
-// shared_ptr<vector<Index>> T_org_rng_blocks = get_rng_blocks( fvec, T_org_rng); 
-//
-// std::unique_ptr<DataType[]> T_data_org = Tens->get_block(*T_org_idxs);
-// 
-// return  reorder_tensor_data(T_data_org.get(),  get_block_size(T_new_rng_blocks, T_new_rng_blocks->size() -1)  , *T_new_order, *T_idx_sizes); 
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<Index>> Equation_Computer::Equation_Computer::get_rng_blocks(shared_ptr<vector<int>> forvec, shared_ptr<vector<shared_ptr<const IndexRange>>> old_ids) {

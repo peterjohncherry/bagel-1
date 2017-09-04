@@ -67,7 +67,7 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
      void get_name() override;
      std::string myname(){ return name;};
      std::string get_next_name(std::shared_ptr<std::vector<std::pair<int,int>>> new_ctrs_pos);
-     void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap );
+     void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap, std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>> >> Acompute_list );
      std::shared_ptr<DType> Binary_Contract_same_tensor(std::pair<int,int> ctr_todo);
 
      std::shared_ptr<CtrTensorPart<DType>> Binary_Contract_same_tensor( std::string T1name , std::pair<int,int> ctr_todo,
@@ -129,10 +129,6 @@ class CtrMultiTensorPart : public TensorPart<DType> {
 
                        for (auto cctr : *cross_ctrs_pos_in){
                          all_ctrs_pos->push_back(std::make_pair(Tsizes_cml->at(cctr.first.first)+cctr.first.second, Tsizes_cml->at(cctr.second.first)+cctr.second.second));
-                       //  std::cout << "Tsizes_cml->at("<<cctr.first.first<<")+"<<cctr.first.second<<","<<" Tsizes_cml->at("<<cctr.second.first<<")+"<<cctr.second.second<<")) = ";
-                        // std::cout<<"("<< Tsizes_cml->at(cctr.first.first) << "+" <<cctr.first.second <<", "<<Tsizes_cml->at(cctr.second.first)<<"+"<<cctr.second.second<< ")"<<std::endl ;
-
-                          
                        }
                        ReIm_factors = std::make_shared<std::vector<std::pair<int,int>>>(all_ctrs_pos->size());
 
@@ -146,7 +142,7 @@ class CtrMultiTensorPart : public TensorPart<DType> {
 
     std::string get_next_name(std::shared_ptr<std::vector<std::pair<int,int>>> new_ctrs_pos);
 
-    void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap );
+    void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap, std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>> >> Acompute_list );
 
     std::shared_ptr<CtrMultiTensorPart<DType>> Binary_Contract_diff_tensors_MT(std::string T1, std::string T2, std::pair<int,int> ctr_todo,
                                                                                std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>>> > Tmap);

@@ -13,11 +13,12 @@ void Equation<DType>::Initialize(){
   CTP_map    = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
   CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
   Tparts_map = make_shared<map< string, shared_ptr<DType> >>();                   
-  
+  ACompute_list = make_shared<vector<tuple<string,string,pair<int,int>> >>(0); 
   CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
 
   return;
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
 shared_ptr<TensOp<DType>> Equation<DType>::Build_TensOp(string op_name,
@@ -63,7 +64,7 @@ void Equation<DType>::Add_BraKet_Compute_Terms_CMTP(shared_ptr<BraKet<DType>> BK
 
       for (auto CMTP_name : *Acontrib_loc->second){
         cout << endl<< CMTP_name <<endl; 
-        CMTP_map->at(CMTP_name)->FullContract(CTP_map);
+        CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list);
       }
 
       auto gamma_factor = make_pair( (get<2>(mapit->second))->at(kk),(get<2>(mapit->second))->at(kk) );

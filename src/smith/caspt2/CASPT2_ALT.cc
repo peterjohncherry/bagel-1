@@ -29,6 +29,7 @@
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
+using namespace bagel::SMITH::Equation_Computer; 
 //using namespace bagel::SMITH::CASPT2_ALT_EQN_INFO;
 
 ////////////////////////////////////////////////////////////////////
@@ -37,8 +38,10 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   orig_cpt2 = make_shared<CASPT2::CASPT2>(orig_cpt2_in);
 }
 ////////////////////////////////////////////////////////////////////
-CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref){
+CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref_in){
 ////////////////////////////////////////////////////////////////////
+  ref = ref_in;
+
   nelea_ = ref->ciwfn()->det()->nelea();
   neleb_ = ref->ciwfn()->det()->neleb();
   ncore_ = ref->ciwfn()->ncore();
@@ -119,6 +122,9 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   for (auto MM = 0 ; MM != nstate_ ; MM++)
     for (auto NN = 0 ; NN != nstate_ ; NN++)
       compute_gamma12( MM, NN ) ;
+
+
+  auto Eqn_computer = make_shared<Equation_Computer::Equation_Computer>(ref, weqn );
 
   return;
 }

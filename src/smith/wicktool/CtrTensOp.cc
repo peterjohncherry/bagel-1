@@ -169,7 +169,7 @@ void CtrTensorPart<DType>::get_ctp_idxs_ranges(){
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap ){
+void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap, std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>> >> ACompute_list ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////
   auto ctp_loc = Tmap->find(name);
   
@@ -210,7 +210,7 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
 
         auto new_ReIm_factors = make_shared<vector<pair<int,int>>>(ReIm_factors->begin(), ReIm_factors->end()-1); 
         auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, new_ctrs_pos, new_ReIm_factors ); 
-        new_CTP->FullContract(Tmap);
+        new_CTP->FullContract(Tmap, ACompute_list);
         CTdata = new_CTP->Binary_Contract_same_tensor(ctrs_pos->back());
         cout << name  << "  2" << endl;
         Tmap->emplace(name , make_shared<CtrTensorPart>(*this));
@@ -242,7 +242,7 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
 // This only works for Two tensors, must test for irreducibility when >2 tensors....
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-void CtrMultiTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap){
+void CtrMultiTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap, shared_ptr<vector<tuple<string,string,pair<int,int>> >> ACompute_list ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   auto ctp_loc = Tmap->find(name);
 
@@ -274,11 +274,11 @@ void CtrMultiTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<Ct
       } else {  
         auto new_CMTP = make_shared< CtrMultiTensorPart<DType> >(CTP_vec, new_cross_ctrs_pos); 
   //      cout << "Full MT contracting " << new_CMTP->name << endl;
-        new_CMTP->FullContract(Tmap);
+        new_CMTP->FullContract(Tmap,ACompute_list);
 
         auto new_CTP = make_shared< CtrTensorPart<DType> >(new_CMTP->full_idxs, new_CMTP->full_id_ranges, all_ctrs_pos, ReIm_factors ); 
   //      cout << "Full ST contracting " << new_CTP->name << endl;
-        new_CTP->FullContract(Tmap);
+        new_CTP->FullContract(Tmap, ACompute_list);
       }
      
     } else if(cross_ctrs_pos->size() == 1 ){
@@ -286,7 +286,7 @@ void CtrMultiTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<Ct
       if ( CTP_vec->size() == 2) {
 
         for (auto CTP : *CTP_vec) {
-          CTP->FullContract(Tmap);
+          CTP->FullContract(Tmap,ACompute_list);
         }
         
         auto new_CTP = Binary_Contract_diff_tensors(CTP_vec->at(cross_ctrs_pos->back().first.first)->myname(),
@@ -299,7 +299,7 @@ void CtrMultiTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<Ct
         auto new_CMTP = Binary_Contract_diff_tensors_MT(CTP_vec->at(cross_ctrs_pos->back().first.first)->myname(),
                                                         CTP_vec->at(cross_ctrs_pos->back().second.first)->myname(),
                                                         all_ctrs_pos->back(), Tmap);
-        new_CMTP->FullContract(Tmap);
+        new_CMTP->FullContract(Tmap, ACompute_list);
       }
     }
   }

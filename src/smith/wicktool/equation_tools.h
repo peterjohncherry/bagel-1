@@ -3,8 +3,8 @@
 
 #include <tuple>
 #include <src/smith/wicktool/equation.h>
-#include <src/smith/wicktool/CtrTensOp.h>
 #include <src/smith/caspt2/CASPT2.h>
+#include <src/smith/smith.h>
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
 
@@ -18,6 +18,19 @@ namespace SMITH {
 namespace Equation_Computer { 
 
 class Equation_Computer { 
+    public: 
+    Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<Tensor_<double>>> eqn_info_in );
+    ~Equation_Computer(){};
+  
+    int  nelea_ ;
+    int  neleb_ ;
+    int  ncore_ ;
+    int  norb_  ;
+    int  nstate_;
+    std::shared_ptr<const Dvec> cc_; 
+    std::shared_ptr<const Determinants> det_ ; 
+    std::shared_ptr<Equation<Tensor_<double>>> eqn_info;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<const IndexRange>>> range_conversion_map;
 
 
     template<class vtype>
@@ -26,13 +39,9 @@ class Equation_Computer {
     template<class vtype>
     std::shared_ptr<std::vector<vtype>> reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
 
-
     template<class DType>
     std::shared_ptr<DType> contract_different_tensors( std::string T1name, std::string T2name, std::pair<int,int> ctr_todo,
-                                                       std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
-
-
-    std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
+                                                       std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
 
     std::shared_ptr<std::vector<IndexRange>> convert_str_to_Bagel_Index(std::shared_ptr<std::vector<std::string>> ranges_str);
   
