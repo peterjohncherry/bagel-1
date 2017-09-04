@@ -53,18 +53,19 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref
   all_gamma2 = make_shared<VecRDM<2>>();
   all_gamma3 = make_shared<VecRDM<3>>();
 
-  range_conversion_map = make_shared<map<string, shared_ptr<const IndexRange>>>();
   
-  //clearer this way, but find a nicer way. 
   const int max = ref->maxtile();
-  auto closed_rng  =  make_shared<const IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
-  auto active_rng  =  make_shared<const IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
-  auto virtual_rng =  make_shared<const IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
+  auto closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
+  auto active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
+  auto virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
 
+  range_conversion_map = make_shared<map<string, shared_ptr<IndexRange>>>();
   range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
   range_conversion_map->emplace("act", active_rng);
   range_conversion_map->emplace("vir", virtual_rng);
 
+  CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  CTP_map = make_shared<map<string, shared_ptr<CtrTensorPart<Tensor_<double>>>>>();
 }
 /////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::test() { 
@@ -95,7 +96,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>();  
 
   auto XTens = Eqn->Build_TensOp("X", X_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
- 
+  CTP_data_map->emplace("X", X_data);
   ///////////////////////////////////////////////////// T Tensor /////////////////////////////////////////////////////////////////
   string T_TimeSymm = "none";
   auto T_factor = make_pair(1.0,1.0);
@@ -107,6 +108,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   shared_ptr<Tensor_<double>> T_data = make_shared<Tensor_<double>>();  
 
   auto TTens = Eqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
+  CTP_data_map->emplace("T", T_data);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   auto BraKet_Tensors1 = make_shared<vector< shared_ptr<TensOp<Tensor_<double>>> > >( vector<shared_ptr<TensOp<Tensor_<double>>>> { XTens,  TTens} );
@@ -118,34 +120,76 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   BraKet_List->push_back(BraKet_Tensors2);
 
   Eqn->equation_build(BraKet_List);
-  auto Eqn_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Eqn );
-  auto CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  
+  CTP_map = Eqn->CTP_map;
+
+  auto Eqn_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Eqn, CTP_data_map );
         
   for (auto MM = 0 ; MM != nstate_ ; MM++)
     for (auto NN = 0 ; NN != nstate_ ; NN++)
       compute_gamma12( MM, NN ) ;
 
 
-   for ( auto ctr_op : *(Eqn->ACompute_list)){
-     if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
-     cout <<"putting data for " << get<0>(ctr_op) << " into the map" << endl;
-//    CTP_data_map->emplace(get<3>(ctr_op), Eqn_computer->contract_different_tensors(get<2>(ctr_op),Eqn->CTP_map->at(get<0>(ctr_op)),Eqn->CTP_map->at(get<1>(ctr_op)),CTP_data_map->at(get<0>(ctr_op)),CTP_data_map->at(get<1>(ctr_op))); 
-     } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
-     cout <<"contracting " << get<0>(ctr_op) << " and  " << get<1>(ctr_op) << " over indexes " << (get<2>(ctr_op)).first << " and " <<  (get<2>(ctr_op)).second << " to get " << get<3>(ctr_op) << endl;
-//    CTP_data_map->emplace(get<3>(ctr_op),  Eqn_computer->contract_same_tensor( get<2>(ctr_op), Eqn->CTP_map->at(get<0>(ctr_op)), CTP_data_map->at(get<2>(ctr_op))); 
-     } else {
-     cout <<"contracting " << get<0>(ctr_op) << " over indexes " << (get<2>(ctr_op)).first << " and " <<  (get<2>(ctr_op)).second << " to get " << get<3>(ctr_op) << endl;
-//    CTP_data_map->emplace(get<3>(ctr_op),  Eqn_computer->contract_same_tensor( get<2>(ctr_op), Eqn->CTP_map->at(get<0>(ctr_op)), CTP_data_map->at(get<2>(ctr_op))); 
-     }
-   }
+  for ( auto ctr_op : *(Eqn->ACompute_list)){
+    if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
+      cout << " putting data for " << get<0>(ctr_op) << " into the map" << endl;
+      CTP_data_map->emplace(get<0>(ctr_op), Eqn_computer->get_block_Tensor(get<0>(ctr_op))); 
+    } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
+      cout << " contracting " << get<0>(ctr_op) << " and  " << get<1>(ctr_op) ;
+      cout << " over indexes (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")";
+      cout << " to get " << get<3>(ctr_op) << endl;
+    } else {
+      cout << " contracting " << get<0>(ctr_op);
+      cout << " over indexes (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")";
+      cout << " to get " << get<3>(ctr_op) << endl;
+//   New_Tdata =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), Eqn->CTP_map->at(get<0>(ctr_op)), CTP_data_map->at(get<2>(ctr_op))); 
+//   CTP_data_map->emplace(get<3>(ctr_op),  Eqn_computer->contract_same_tensor( get<2>(ctr_op), Eqn->CTP_map->at(get<0>(ctr_op)), CTP_data_map->at(get<2>(ctr_op))); 
+    }
+  }
 
 
   return;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Builds data map for use by contraction routines
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<Tensor_<double>> CASPT2_ALT::CASPT2_ALT::get_Tensor_data( string Tname ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  
+   shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(CTP_map->at(Tname)->id_ranges);
+  
+   shared_ptr<Tensor_<double>> Tblock = make_shared<Tensor_<double>>(*Bagel_id_ranges);  
+ 
+   //unique_ptr<double[]> Tblock_data = CTP_data_map->at(to_string(Tname[0]))->get_block(Bagel_id_ranges);
 
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   shared_ptr<Tensor_<double>> new_T = make_shared<Tensor_<double>>();
+
+   return new_T;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<shared_ptr<const IndexRange>>> CASPT2_ALT::CASPT2_ALT::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  auto ranges_Bagel = make_shared<vector<shared_ptr<const IndexRange>>>(0);
+  for ( auto rng : *ranges_str) 
+    ranges_Bagel->push_back(make_shared<const IndexRange>(*range_conversion_map->at(rng)));
+
+  return ranges_Bagel;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<IndexRange>> CASPT2_ALT::CASPT2_ALT::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  auto ranges_Bagel = make_shared<vector<IndexRange>>(0);
+  for ( auto rng : *ranges_str) 
+    ranges_Bagel->push_back(*range_conversion_map->at(rng));
+
+  return ranges_Bagel;
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}

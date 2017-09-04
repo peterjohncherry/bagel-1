@@ -58,12 +58,16 @@ class CASPT2_ALT {
     std::shared_ptr<VecRDM<1>> all_gamma1;
     std::shared_ptr<VecRDM<2>> all_gamma2;
     std::shared_ptr<VecRDM<3>> all_gamma3;
-    std::shared_ptr<std::map<std::string, std::shared_ptr<const IndexRange>>> range_conversion_map ;
-    CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref_alt);
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<Tensor_<double>>>>> CTP_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map ;
 
+    CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref_alt);
     ~CASPT2_ALT() {};
     
     void test();
+    void build_data_map();
+
     void compute_gamma12(const int MM, const int NN ) ;
 
     void sigma_2a1(std::shared_ptr<const Civec> cc, std::shared_ptr<Dvec> d) const ;
@@ -89,6 +93,9 @@ class CASPT2_ALT {
     static bool NotAllAct(std::shared_ptr<std::vector<std::string>> ranges);
     static bool always_true(std::shared_ptr<std::vector<std::string>> ranges);
     std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_2el_symmfuncs();
+    std::shared_ptr<std::vector<IndexRange>> Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
+    std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
+    std::shared_ptr<Tensor_<double>> get_Tensor_data( std::string Tname );
 
 };
 }//end CASPT2_ALT namespace

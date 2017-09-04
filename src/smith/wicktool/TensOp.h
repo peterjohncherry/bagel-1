@@ -33,13 +33,13 @@ class TensOp {
      std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DType>> > > CTP_map ;
 
      int factor;
+     void get_ctrs_pos() ;
      
      //map from original index range, to ranges and factors used in calculation
      //tuple contained 1: bool is_this_range_unique?, 2: unique range which needs to be calculated, 3: indexes for contraction of this range,  4: factor from transformation 
      std::shared_ptr<std::map< std::shared_ptr<std::vector<std::string>>, 
                      std::tuple<bool, std::shared_ptr<std::vector<std::string>>,  std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > >> all_ranges_;
 
-     void get_ctrs_pos() ;
 
      std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > >    plus_combs;
      std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > >    kill_combs;

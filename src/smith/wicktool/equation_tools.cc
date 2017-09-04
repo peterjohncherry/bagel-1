@@ -8,7 +8,8 @@ using namespace bagel;
 using namespace bagel::SMITH;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<Tensor_<double>>> eqn_info_in ){
+Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<Tensor_<double>>> eqn_info_in,
+                                                        std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map_in ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   eqn_info =  eqn_info_in;
@@ -21,40 +22,58 @@ Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SM
   cc_ = ref->ciwfn()->civectors();
   det_ = ref->ciwfn()->civectors()->det();
 
-  range_conversion_map = make_shared<map<string, shared_ptr<const IndexRange>>>();
+  range_conversion_map = make_shared<map<string, shared_ptr<IndexRange>>>();
   
-  //clearer this way, but find a nicer way. 
   const int max = ref->maxtile();
-  auto closed_rng  =  make_shared<const IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
-  auto active_rng  =  make_shared<const IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
-  auto virtual_rng =  make_shared<const IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
+  auto closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
+  auto active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
+  auto virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
 
   range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
   range_conversion_map->emplace("act", active_rng);
   range_conversion_map->emplace("vir", virtual_rng);
 
+  CTP_map = eqn_info_in->CTP_map;
+  CTP_data_map = CTP_data_map_in;
+
 }  
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class vtype>
-shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::inverse_reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  auto newvec = make_shared<vector<vtype>>(origvec->size());
-  for( int ii = 0; ii != origvec->size(); ii++ )
-    newvec->at(neworder->at(ii)) =  origvec->at(ii);
 
-  return newvec;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class vtype>
-shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tensor(string Tname){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  auto newvec = make_shared<vector<vtype>>(origvec->size());
-  for( int ii = 0; ii != origvec->size(); ii++ )
-     newvec->at(ii) = origvec->at(neworder->at(ii));
+   auto unc_ranges = make_shared<vector<string>>(0);
+   for (auto pos : *(CTP_map->at(Tname)->unc_pos))
+     unc_ranges->push_back( CTP_map->at(Tname)->id_ranges->at(pos));  
 
-  return newvec;
+   shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
+
+   auto Bagel_id_ranges_csptr = make_shared<vector<shared_ptr<const IndexRange>>>(0) ; 
+   auto range_lengths = make_shared<vector<int>>(0);
+   for (auto idrng : *Bagel_id_ranges){
+      Bagel_id_ranges_csptr->push_back(make_shared<const IndexRange>(idrng));
+      range_lengths->push_back(idrng.size());
+   }
+
+   auto block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
+   auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
+    
+   auto block_tensor = make_shared<Tensor_<double>>(*Bagel_id_ranges);
+   do {
+     
+     auto T_id_blocks = get_rng_blocks( block_pos, Bagel_id_ranges_csptr ); 
+     auto T_block_data = CTP_data_map->at(Tname)->get_block(*T_id_blocks);
+      
+     block_tensor->put_block(T_block_data, *T_id_blocks);
+
+   } while (fvec_cycle(block_pos, range_lengths, mins ));
+ 
+//unique_ptr<double[]> Tblock_data = CTP_data_map->at(to_string(Tname[0]))->get_block(Bagel_id_ranges);
+
+   return block_tensor;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +89,6 @@ Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> 
                                                                   shared_ptr<Tensor_<double>> CTP1_data,
                                                                   shared_ptr<Tensor_<double>> CTP2_data ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
  
   auto T1_org_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);//SHOULD BE TAKEN FROM CTP 
   auto T2_org_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);//SHOULD BE TAKEN FROM CTP
@@ -97,12 +115,10 @@ Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> 
   auto maxs2 = get_sizes(T2_new_rngs);
   maxs2->pop_back();
   int T2_num_unc_blocks = accumulate(maxs1->begin(), maxs1->end(), 1, multiplies<int>());
-  
 
   auto Tout_unc_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);
   Tout_unc_rngs->insert(Tout_unc_rngs->end(), T1_new_rngs->begin(), T1_new_rngs->end()-1);
   Tout_unc_rngs->insert(Tout_unc_rngs->end(), T2_new_rngs->begin()+1, T2_new_rngs->end());
- 
 
   //loops over all index blocks of T1 and  T2; inner loop for T2 has same final index as T2 due to contraction
   auto T1_rng_block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
@@ -283,7 +299,7 @@ unique_ptr<DataType[]>
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<IndexRange>> Equation_Computer::Equation_Computer::convert_str_to_Bagel_Index(shared_ptr<vector<string>> ranges_str){ 
+shared_ptr<vector<IndexRange>> Equation_Computer::Equation_Computer::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   auto ranges_Bagel = make_shared<vector<IndexRange>>(0);
@@ -292,6 +308,29 @@ shared_ptr<vector<IndexRange>> Equation_Computer::Equation_Computer::convert_str
 
   return ranges_Bagel;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class vtype>
+shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::inverse_reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  auto newvec = make_shared<vector<vtype>>(origvec->size());
+  for( int ii = 0; ii != origvec->size(); ii++ )
+    newvec->at(neworder->at(ii)) =  origvec->at(ii);
+
+  return newvec;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class vtype>
+shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  auto newvec = make_shared<vector<vtype>>(origvec->size());
+  for( int ii = 0; ii != origvec->size(); ii++ )
+     newvec->at(ii) = origvec->at(neworder->at(ii));
+
+  return newvec;
+}
+
 
 ////////////////////////////////////////////////////
 //template class CtrTensorPart<std::vector<double>>;

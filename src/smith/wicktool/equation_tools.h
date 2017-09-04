@@ -19,7 +19,8 @@ namespace Equation_Computer {
 
 class Equation_Computer { 
     public: 
-    Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<Tensor_<double>>> eqn_info_in );
+    Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<Tensor_<double>>> eqn_info,
+                      std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>> >> CTP_data_map );
     ~Equation_Computer(){};
   
     int  nelea_ ;
@@ -29,8 +30,11 @@ class Equation_Computer {
     int  nstate_;
     std::shared_ptr<const Dvec> cc_; 
     std::shared_ptr<const Determinants> det_ ; 
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<Tensor_<double>>>>> CTP_map;
+
     std::shared_ptr<Equation<Tensor_<double>>> eqn_info;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<const IndexRange>>> range_conversion_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
 
 
     template<class vtype>
@@ -45,7 +49,7 @@ class Equation_Computer {
                                                                 std::shared_ptr<Tensor_<double>> CTP1_data,
                                                                 std::shared_ptr<Tensor_<double>> CTP2_data ) ;
 
-    std::shared_ptr<std::vector<IndexRange>> convert_str_to_Bagel_Index(std::shared_ptr<std::vector<std::string>> ranges_str);
+    std::shared_ptr<std::vector<IndexRange>> Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
   
     void build_index_conversion_map(std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<IndexRange>>>> range_conversion_pairs );
 
@@ -53,17 +57,20 @@ class Equation_Computer {
     std::shared_ptr<DType> contract_different_tensors( std::string T1name, std::string T2name,  std::pair<int,int> ctr_todo,
                                                        std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
 
-    template<class DataType, class DType>
-    std::unique_ptr<DataType[]> get_reordered_Tensor_data(std::shared_ptr<std::vector<int>> rng_block_pos, std::shared_ptr<std::vector<const IndexRange>> T_org_rng,
-                                                                    std::shared_ptr<std::vector<const IndexRange>> T_new_rng, std::shared_ptr<DType> Tens )  ;
-
     std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> old_ids) ;
 
     std::shared_ptr<std::vector<size_t>> get_sizes(std::shared_ptr<std::vector<Index>> Idvec);
 
     std::shared_ptr<std::vector<int>> get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
 
+    std::shared_ptr<Tensor_<double>> get_block_Tensor(std::string Tname);
+
     size_t get_block_size(std::shared_ptr<std::vector<Index>> Idvec, int startpos, int endpos) ;
+
+    template<class DataType, class DType>
+    std::unique_ptr<DataType[]>
+    get_reordered_Tensor_data(std::shared_ptr<std::vector<int>> rng_block_pos, std::shared_ptr<std::vector<const IndexRange>> T_org_rng,
+                              std::shared_ptr<std::vector<const IndexRange>> T_new_rng, std::shared_ptr<DType> Tens )  ;
 
     template<class DataType>
     std::unique_ptr<DataType[]>
