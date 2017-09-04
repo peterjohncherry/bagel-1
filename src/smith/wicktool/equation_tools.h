@@ -39,9 +39,11 @@ class Equation_Computer {
     template<class vtype>
     std::shared_ptr<std::vector<vtype>> reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
 
-    template<class DType>
-    std::shared_ptr<DType> contract_different_tensors( std::string T1name, std::string T2name, std::pair<int,int> ctr_todo,
-                                                       std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
+    std::shared_ptr<Tensor_<double>> contract_different_tensors(std::pair<int,int> ctr_todo,
+                                                                std::shared_ptr<CtrTensorPart<Tensor_<double>>>  CTP1,
+                                                                std::shared_ptr<CtrTensorPart<Tensor_<double>>>  CTP2,
+                                                                std::shared_ptr<Tensor_<double>> CTP1_data,
+                                                                std::shared_ptr<Tensor_<double>> CTP2_data ) ;
 
     std::shared_ptr<std::vector<IndexRange>> convert_str_to_Bagel_Index(std::shared_ptr<std::vector<std::string>> ranges_str);
   

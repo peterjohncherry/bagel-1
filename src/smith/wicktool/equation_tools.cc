@@ -63,23 +63,24 @@ shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::reorder_vector(s
 //T2_new_rg T1_new_rg are the new ranges, with the contracted index at the end, and the rest in normal ordering.
 //T1_new_order and T2_new_order are the new order of indexes, and are used for rearranging the tensor data.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-shared_ptr<DType> Equation_Computer::Equation_Computer::contract_different_tensors( string T1name, string T2name, pair<int,int> ctr_todo,
-                                              shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap ) {
+shared_ptr<Tensor_<double>>
+Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> ctr_todo,
+                                                                  shared_ptr<CtrTensorPart<Tensor_<double>>>  CTP1,
+                                                                  shared_ptr<CtrTensorPart<Tensor_<double>>>  CTP2,
+                                                                  shared_ptr<Tensor_<double>> CTP1_data,
+                                                                  shared_ptr<Tensor_<double>> CTP2_data ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  auto T1 = Tmap->at(T1name);
-  auto T2 = Tmap->at(T2name);
  
   auto T1_org_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);//SHOULD BE TAKEN FROM CTP 
   auto T2_org_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);//SHOULD BE TAKEN FROM CTP
 
-  auto T_out = make_shared<DType>(); 
+  auto T_out = make_shared<Tensor_<double>>(); 
 
   auto T1_new_order = make_shared<vector<int>>(0);
-  for (int ii = 0; ii !=T1->unc_pos->size(); ii++)
-    if (T1->unc_pos->at(ii) != ctr_todo.first)
-      T1_new_order->push_back(T1->unc_pos->at(ii));
+  for (int ii = 0; ii !=CTP1->unc_pos->size(); ii++)
+    if (CTP1->unc_pos->at(ii) != ctr_todo.first)
+      T1_new_order->push_back(CTP1->unc_pos->at(ii));
     
   T1_new_order->push_back(ctr_todo.first);
   auto T1_new_rngs = reorder_vector(T1_new_order, T1_org_rngs);
@@ -87,9 +88,9 @@ shared_ptr<DType> Equation_Computer::Equation_Computer::contract_different_tenso
   int T1_num_total_blocks = accumulate(maxs1->begin(), maxs1->end(), 1, multiplies<int>());
  
   auto T2_new_order = make_shared<vector<int>>(1,ctr_todo.second);
-  for (int ii = 0; ii !=T2->unc_pos->size(); ii++)
-    if (T2->unc_pos->at(ii) != ctr_todo.second)
-      T2_new_order->push_back(T2->unc_pos->at(ii));
+  for (int ii = 0; ii !=CTP2->unc_pos->size(); ii++)
+    if (CTP2->unc_pos->at(ii) != ctr_todo.second)
+      T2_new_order->push_back(CTP2->unc_pos->at(ii));
 
   T2_new_order->push_back(ctr_todo.second);
   auto T2_new_rngs = reorder_vector(T2_new_order, T2_org_rngs);
@@ -114,7 +115,7 @@ shared_ptr<DType> Equation_Computer::Equation_Computer::contract_different_tenso
 
     {
     auto T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, T1_new_rngs); 
-    auto T1_org_rng_blocks = inverse_reorder_vector(T1_new_order, T1_org_rng_blocks); 
+    auto T1_org_rng_blocks = inverse_reorder_vector(T1_new_order, T1_new_rng_blocks); 
 
     auto T1_new_rng_block_sizes = get_sizes(T1_new_rng_blocks);
     T_out_rng_block->insert(T_out_rng_block->end(), T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
@@ -122,7 +123,7 @@ shared_ptr<DType> Equation_Computer::Equation_Computer::contract_different_tenso
     ctr_block_size = T1_new_rng_blocks->back().size(); 
     T1_unc_block_size = get_block_size( T1_new_rng_blocks, 0, T1_new_rng_blocks->size()); 
     
-    auto T1_data_org = T1->get_block(*T1_org_rng_blocks);
+    auto T1_data_org = CTP1_data->get_block(*T1_org_rng_blocks);
     T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
     }
 
@@ -136,14 +137,14 @@ shared_ptr<DType> Equation_Computer::Equation_Computer::contract_different_tenso
 
       {
       auto T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
-      auto T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_org_rngs); 
+      auto T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
 
       auto T2_new_rng_block_sizes = get_sizes(T2_new_rng_blocks);
       T_out_rng_block->insert(T_out_rng_block->end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
       
       T2_unc_block_size = get_block_size( T2_new_rng_blocks, 0, T2_new_rng_blocks->size()); 
       
-      auto T2_data_org = T2->get_block(*T2_org_rng_blocks);
+      auto T2_data_org = CTP2_data->get_block(*T2_org_rng_blocks);
       T2_data_new = reorder_tensor_data(T2_data_org.get(), get_block_size(T2_new_rng_blocks, 0, T2_new_rng_blocks->size()), *T2_new_order, *T2_new_rng_block_sizes); 
       }
       

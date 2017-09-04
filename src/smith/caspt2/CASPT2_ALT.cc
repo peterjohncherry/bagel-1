@@ -69,9 +69,9 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref
 /////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::test() { 
 /////////////////////////////////////////////////////////////////////////////////
-  auto weqn = make_shared<Equation<Tensor>>();
+  auto Eqn = make_shared<Equation<Tensor>>();
 
-  weqn->Initialize();
+  Eqn->Initialize();
   
   //////////////////Initialization section/////////////////////////
   ///////////This should be read in from an input file/////////////
@@ -94,7 +94,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   vector<bool(*)(shared_ptr<vector<string>>)>  X_constraints = { &always_true };
   shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>();  
 
-  auto XTens = weqn->Build_TensOp("X", X_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
+  auto XTens = Eqn->Build_TensOp("X", X_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
  
   ///////////////////////////////////////////////////// T Tensor /////////////////////////////////////////////////////////////////
   string T_TimeSymm = "none";
@@ -106,7 +106,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = { &NotAllAct };
   shared_ptr<Tensor_<double>> T_data = make_shared<Tensor_<double>>();  
 
-  auto TTens = weqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
+  auto TTens = Eqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   auto BraKet_Tensors1 = make_shared<vector< shared_ptr<TensOp<Tensor_<double>>> > >( vector<shared_ptr<TensOp<Tensor_<double>>>> { XTens,  TTens} );
@@ -117,14 +117,28 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   BraKet_List->push_back(BraKet_Tensors1);
   BraKet_List->push_back(BraKet_Tensors2);
 
-  weqn->equation_build(BraKet_List);
+  Eqn->equation_build(BraKet_List);
+  auto Eqn_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Eqn );
+  auto CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
         
   for (auto MM = 0 ; MM != nstate_ ; MM++)
     for (auto NN = 0 ; NN != nstate_ ; NN++)
       compute_gamma12( MM, NN ) ;
 
 
-  auto Eqn_computer = make_shared<Equation_Computer::Equation_Computer>(ref, weqn );
+   for ( auto ctr_op : *(Eqn->ACompute_list)){
+     if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
+     cout <<"putting data for " << get<0>(ctr_op) << " into the map" << endl;
+//    CTP_data_map->emplace(get<3>(ctr_op), Eqn_computer->contract_different_tensors(get<2>(ctr_op),Eqn->CTP_map->at(get<0>(ctr_op)),Eqn->CTP_map->at(get<1>(ctr_op)),CTP_data_map->at(get<0>(ctr_op)),CTP_data_map->at(get<1>(ctr_op))); 
+     } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
+     cout <<"contracting " << get<0>(ctr_op) << " and  " << get<1>(ctr_op) << " over indexes " << (get<2>(ctr_op)).first << " and " <<  (get<2>(ctr_op)).second << " to get " << get<3>(ctr_op) << endl;
+//    CTP_data_map->emplace(get<3>(ctr_op),  Eqn_computer->contract_same_tensor( get<2>(ctr_op), Eqn->CTP_map->at(get<0>(ctr_op)), CTP_data_map->at(get<2>(ctr_op))); 
+     } else {
+     cout <<"contracting " << get<0>(ctr_op) << " over indexes " << (get<2>(ctr_op)).first << " and " <<  (get<2>(ctr_op)).second << " to get " << get<3>(ctr_op) << endl;
+//    CTP_data_map->emplace(get<3>(ctr_op),  Eqn_computer->contract_same_tensor( get<2>(ctr_op), Eqn->CTP_map->at(get<0>(ctr_op)), CTP_data_map->at(get<2>(ctr_op))); 
+     }
+   }
+
 
   return;
 }

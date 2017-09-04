@@ -38,7 +38,7 @@ class Equation {
       std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DType> > >>CMTP_map   ;  
 
       // Vector containing the operations which need to be performed to calculate a given A-tensor
-      std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>> >> ACompute_list ;
+      std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>,std::string> >> ACompute_list ;
 
       // key : String identifying the Gamma or rdm      result : Vector of string vectors identifying A-Tensor contributions paired with corresponding ReIm factor 
       std::shared_ptr< std::map< std::vector<std::string>, std::shared_ptr<std::vector<std::pair< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> >>> >> CMTP_Eqn_Compute_List ;

@@ -13,7 +13,7 @@ void Equation<DType>::Initialize(){
   CTP_map    = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
   CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
   Tparts_map = make_shared<map< string, shared_ptr<DType> >>();                   
-  ACompute_list = make_shared<vector<tuple<string,string,pair<int,int>> >>(0); 
+  ACompute_list = make_shared<vector<tuple<string,string,pair<int,int>, string> >>(0); 
   CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
 
   return;
