@@ -51,7 +51,8 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref
   all_gamma3 = make_shared<VecRDM<3>>();
 
   range_conversion_map = make_shared<map<string, shared_ptr<const IndexRange>>>();
-   
+  
+  //clearer this way, but find a nicer way. 
   const int max = ref->maxtile();
   auto closed_rng  =  make_shared<const IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
   auto active_rng  =  make_shared<const IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));

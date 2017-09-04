@@ -7,11 +7,10 @@
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
-using namespace equation_tools;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class vtype>
-shared_ptr<vector<vtype>> inverse_reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
+shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::inverse_reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   auto newvec = make_shared<vector<vtype>>(origvec->size());
@@ -22,7 +21,7 @@ shared_ptr<vector<vtype>> inverse_reorder_vector(shared_ptr<vector<int>> neworde
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class vtype>
-shared_ptr<vector<vtype>> reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
+shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   auto newvec = make_shared<vector<vtype>>(origvec->size());
@@ -39,7 +38,7 @@ shared_ptr<vector<vtype>> reorder_vector(shared_ptr<vector<int>> neworder , shar
 //T1_new_order and T2_new_order are the new order of indexes, and are used for rearranging the tensor data.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-shared_ptr<DType> contract_different_tensors( string T1name, string T2name, pair<int,int> ctr_todo,
+shared_ptr<DType> Equation_Computer::Equation_Computer::contract_different_tensors( string T1name, string T2name, pair<int,int> ctr_todo,
                                               shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -142,7 +141,7 @@ shared_ptr<DType> contract_different_tensors( string T1name, string T2name, pair
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType, class DType>
 unique_ptr<DataType[]>
-get_reordered_Tensor_data(shared_ptr<vector<int>> rng_block_pos, shared_ptr<vector<const IndexRange>> T_org_rng,
+Equation_Computer::Equation_Computer::get_reordered_Tensor_data(shared_ptr<vector<int>> rng_block_pos, shared_ptr<vector<const IndexRange>> T_org_rng,
                                                                  shared_ptr<vector<const IndexRange>> T_new_rng, shared_ptr<DType> Tens )  { 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 
@@ -164,7 +163,7 @@ get_reordered_Tensor_data(shared_ptr<vector<int>> rng_block_pos, shared_ptr<vect
 // return  reorder_tensor_data(T_data_org.get(),  get_block_size(T_new_rng_blocks, T_new_rng_blocks->size() -1)  , *T_new_order, *T_idx_sizes); 
 }
 ////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<Index>> get_rng_blocks(shared_ptr<vector<int>> forvec, shared_ptr<vector<shared_ptr<const IndexRange>>> old_ids) {
+shared_ptr<vector<Index>> Equation_Computer::Equation_Computer::get_rng_blocks(shared_ptr<vector<int>> forvec, shared_ptr<vector<shared_ptr<const IndexRange>>> old_ids) {
 ////////////////////////////////////////////////////////////////////////////////////////
   auto new_ids = make_shared<vector<Index>>(); 
   for( int ii =0; ii != forvec->size(); ii++ ) {
@@ -173,7 +172,7 @@ shared_ptr<vector<Index>> get_rng_blocks(shared_ptr<vector<int>> forvec, shared_
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> get_sizes(shared_ptr<vector<shared_ptr<const IndexRange>>> rngvec) {
+shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_sizes(shared_ptr<vector<shared_ptr<const IndexRange>>> rngvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
   auto size_vec = make_shared<vector<int>>(); 
   for( auto elem : *rngvec ) 
@@ -182,7 +181,7 @@ shared_ptr<vector<int>> get_sizes(shared_ptr<vector<shared_ptr<const IndexRange>
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<size_t>> get_sizes(shared_ptr<vector<Index>> Idvec) {
+shared_ptr<vector<size_t>> Equation_Computer::Equation_Computer::get_sizes(shared_ptr<vector<Index>> Idvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
   auto size_vec = make_shared<vector<size_t>>(); 
   for( auto elem : *Idvec ) 
@@ -192,7 +191,7 @@ shared_ptr<vector<size_t>> get_sizes(shared_ptr<vector<Index>> Idvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
 //already a function for this.... so replace
 ////////////////////////////////////////////////////////////////////////////////////////
-size_t get_block_size(shared_ptr<vector<Index>> Idvec, int startpos, int endpos) {
+size_t Equation_Computer::Equation_Computer::get_block_size(shared_ptr<vector<Index>> Idvec, int startpos, int endpos) {
 ////////////////////////////////////////////////////////////////////////////////////////
   size_t block_size = 1; 
 //  for( int ii = startpos ; ii!=(endpos+1); ii++ ) 
@@ -205,7 +204,7 @@ size_t get_block_size(shared_ptr<vector<Index>> Idvec, int startpos, int endpos)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 unique_ptr<DataType[]>
-reorder_tensor_data(const DataType* orig_data,  size_t data_size, vector<int>  new_order_vec, vector<size_t> new_sizes_vec ) {
+ Equation_Computer::Equation_Computer::reorder_tensor_data(const DataType* orig_data,  size_t data_size, vector<int>  new_order_vec, vector<size_t> new_sizes_vec ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   const double fac1= 1.0;
@@ -283,18 +282,7 @@ reorder_tensor_data(const DataType* orig_data,  size_t data_size, vector<int>  n
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void build_range_conversion_map(std::shared_ptr<std::vector<pair<std::string, std::shared_ptr<IndexRange>>>> range_conversion_pairs ){
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  range_conversion_map = make_shared<map< string, shared_ptr<IndexRange>>>();
-  for (auto rng_pair : *range_conversion_pairs)
-    range_conversion_map->emplace(rng_pair.first, rng_pair.second);
-
-  return;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<IndexRange>> convert_str_to_Bagel_Index(shared_ptr<vector<string>> ranges_str){ 
+shared_ptr<vector<IndexRange>> Equation_Computer::Equation_Computer::convert_str_to_Bagel_Index(shared_ptr<vector<string>> ranges_str){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   auto ranges_Bagel = make_shared<vector<IndexRange>>(0);

@@ -11,12 +11,26 @@
 namespace bagel {
 namespace SMITH { 
 
-
 //namespace Tensor { template<class DataType> class Tensor_<DataType>; } 
 
 //namespace CtrTensors { class CtrTensorPart<DataType>; class CtrMultiTensorPart<DataType>; } 
 
-namespace equation_tools { 
+namespace Equation_Computer { 
+
+class Equation_Computer { 
+
+
+    template<class vtype>
+    std::shared_ptr<std::vector<vtype>> inverse_reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
+
+    template<class vtype>
+    std::shared_ptr<std::vector<vtype>> reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
+
+
+    template<class DType>
+    std::shared_ptr<DType> contract_different_tensors( std::string T1name, std::string T2name, std::pair<int,int> ctr_todo,
+                                                       std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
+
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
 
@@ -26,7 +40,8 @@ namespace equation_tools {
 
     template<class DataType, class DType>
     std::shared_ptr<DType> contract_different_tensors( std::string T1name, std::string T2name,  std::pair<int,int> ctr_todo,
-                                                                                  std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
+                                                       std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
+
     template<class DataType, class DType>
     std::unique_ptr<DataType[]> get_reordered_Tensor_data(std::shared_ptr<std::vector<int>> rng_block_pos, std::shared_ptr<std::vector<const IndexRange>> T_org_rng,
                                                                     std::shared_ptr<std::vector<const IndexRange>> T_new_rng, std::shared_ptr<DType> Tens )  ;
@@ -42,6 +57,7 @@ namespace equation_tools {
     template<class DataType>
     std::unique_ptr<DataType[]>
     reorder_tensor_data(const DataType* orig_data,  size_t data_size, std::vector<int>  new_order_vec, std::vector<size_t> new_sizes_vec ) ;
+};
 }
 }
 }
