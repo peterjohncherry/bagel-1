@@ -161,14 +161,17 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   
       for ( auto ctr_op : *(Eqn->ACompute_list)){
         if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
-          shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->get_block_Tensor( get<2>(ctr_op), get<0>(ctr_op))
+          cout << get<0> (ctr_op)<<  "==" <<  get<3>(ctr_op)  <<  " -->  no contraction" << endl; 
+          shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor( to_string(get<0>(ctr_op)[0]));
           CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
 
         } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
+          cout << get<0> (ctr_op)<<  "!=" <<  get<1>(ctr_op)  << " --> contract different tensors" << endl; 
           shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op))
           CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
 
         } else {
+          cout << get<0> (ctr_op)<<  "==" <<  get<1>(ctr_op)  << " --> contract on same tensor" <<  endl; 
           shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op)); 
           CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
         }
