@@ -86,7 +86,8 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref
   const int max = ref->maxtile();
   auto closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
   auto active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
-  auto virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
+  auto virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(),
+                                              ref->ncore()+closed_rng->size()+active_rng->size()));
 
   range_conversion_map = make_shared<map<string, shared_ptr<IndexRange>>>();
   range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
@@ -156,9 +157,8 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   for (auto MM = 0 ; MM != nstate_ ; MM++){
     for (auto NN = 0 ; NN != nstate_ ; NN++){
       compute_gamma12( MM, NN ) ;
-//      CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
-    }
-  }
+ //     CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
+  
       for ( auto ctr_op : *(Eqn->ACompute_list)){
         if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
           shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->get_block_Tensor( get<2>(ctr_op), get<0>(ctr_op))
@@ -173,7 +173,8 @@ void CASPT2_ALT::CASPT2_ALT::test() {
           CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
         }
       }
-
+    }
+  }
   return;
 }
 

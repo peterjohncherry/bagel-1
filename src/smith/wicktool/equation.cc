@@ -70,7 +70,6 @@ void Equation<DType>::Add_BraKet_Compute_Terms_CMTP(shared_ptr<BraKet<DType>> BK
 //     for (auto ctr_op : *ACompute_list)
 //       cout <<"need to  contract " << get<0>(ctr_op) << " and  " << get<1>(ctr_op) << " over indexes " << (get<2>(ctr_op)).first << " and " <<  (get<2>(ctr_op)).second << endl;
 
-
       auto gamma_factor = make_pair( (get<2>(mapit->second))->at(kk),(get<2>(mapit->second))->at(kk) );
       auto BraKet_Contrib = make_pair(Acontrib_loc->second, gamma_factor);
 
