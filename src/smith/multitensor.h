@@ -169,6 +169,7 @@ namespace RelCASA { using MultiTensor = MultiTensor_<std::complex<double>>; }
 namespace RelMRCI   { using MultiTensor = MultiTensor_<std::complex<double>>; }
 namespace RelMSCASPT2  { using MultiTensor = MultiTensor_<std::complex<double>>; }
 
+namespace CASPT2_ALT { using MultiTensor = MultiTensor_<double>; }
 }
 }
 

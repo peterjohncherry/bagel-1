@@ -36,6 +36,36 @@ using namespace bagel::SMITH::Equation_Computer;
 CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) { 
 ////////////////////////////////////////////////////////////////////
   orig_cpt2 = make_shared<CASPT2::CASPT2>(orig_cpt2_in);
+  ref = orig_cpt2_in.info_;
+
+  nelea_ = ref->ciwfn()->det()->nelea();
+  neleb_ = ref->ciwfn()->det()->neleb();
+  ncore_ = ref->ciwfn()->ncore();
+  norb_  = ref->ciwfn()->nact();
+  nstate_ = ref->ciwfn()->nstates();
+  cc_ = ref->ciwfn()->civectors();
+  det_ = ref->ciwfn()->civectors()->det();
+  all_gamma1 = make_shared<VecRDM<1>>();
+  all_gamma2 = make_shared<VecRDM<2>>();
+  all_gamma3 = make_shared<VecRDM<3>>();
+ 
+  T2_all     = orig_cpt2->t2all_;
+  lambda_all = orig_cpt2->lall_;
+  H_1el_all  = orig_cpt2->f1_;
+  H_2el_all  = orig_cpt2->v2_;
+ 
+  const int max = ref->maxtile();
+  auto closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
+  auto active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
+  auto virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
+
+  range_conversion_map = make_shared<map<string, shared_ptr<IndexRange>>>();
+  range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
+  range_conversion_map->emplace("act", active_rng);
+  range_conversion_map->emplace("vir", virtual_rng);
+
+  CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  CTP_map = make_shared<map<string, shared_ptr<CtrTensorPart<Tensor_<double>>>>>();
 }
 ////////////////////////////////////////////////////////////////////
 CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref_in){
@@ -52,7 +82,6 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref
   all_gamma1 = make_shared<VecRDM<1>>();
   all_gamma2 = make_shared<VecRDM<2>>();
   all_gamma3 = make_shared<VecRDM<3>>();
-
   
   const int max = ref->maxtile();
   auto closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
@@ -96,7 +125,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>();  
 
   auto XTens = Eqn->Build_TensOp("X", X_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
-  CTP_data_map->emplace("X", X_data);
+  CTP_data_map->emplace("X", H_2el_all );
   ///////////////////////////////////////////////////// T Tensor /////////////////////////////////////////////////////////////////
   string T_TimeSymm = "none";
   auto T_factor = make_pair(1.0,1.0);
@@ -108,8 +137,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   shared_ptr<Tensor_<double>> T_data = make_shared<Tensor_<double>>();  
 
   auto TTens = Eqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
-  CTP_data_map->emplace("T", T_data);
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   auto BraKet_Tensors1 = make_shared<vector< shared_ptr<TensOp<Tensor_<double>>> > >( vector<shared_ptr<TensOp<Tensor_<double>>>> { XTens,  TTens} );
   auto BraKet_Tensors2 = make_shared<vector< shared_ptr<TensOp<Tensor_<double>>> > >( vector<shared_ptr<TensOp<Tensor_<double>>>> { XTens,  TTens} );
@@ -125,38 +153,36 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 
   auto Eqn_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Eqn, CTP_data_map );
         
-  for (auto MM = 0 ; MM != nstate_ ; MM++)
-    for (auto NN = 0 ; NN != nstate_ ; NN++)
+  for (auto MM = 0 ; MM != nstate_ ; MM++){
+    for (auto NN = 0 ; NN != nstate_ ; NN++){
       compute_gamma12( MM, NN ) ;
-
-
-  for ( auto ctr_op : *(Eqn->ACompute_list)){
-    if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
-      cout << " putting data for " << get<0>(ctr_op) << " into the map" << endl;
-      CTP_data_map->emplace(get<0>(ctr_op), Eqn_computer->get_block_Tensor(get<0>(ctr_op))); 
-    } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
-      cout << " contracting " << get<0>(ctr_op) << " and  " << get<1>(ctr_op) ;
-      cout << " over indexes (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")";
-      cout << " to get " << get<3>(ctr_op) << endl;
-    } else {
-      cout << " contracting " << get<0>(ctr_op);
-      cout << " over indexes (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")";
-      cout << " to get " << get<3>(ctr_op) << endl;
-//   New_Tdata =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), Eqn->CTP_map->at(get<0>(ctr_op)), CTP_data_map->at(get<2>(ctr_op))); 
-//   CTP_data_map->emplace(get<3>(ctr_op),  Eqn_computer->contract_same_tensor( get<2>(ctr_op), Eqn->CTP_map->at(get<0>(ctr_op)), CTP_data_map->at(get<2>(ctr_op))); 
+//      CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
     }
   }
+      for ( auto ctr_op : *(Eqn->ACompute_list)){
+        if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
+          shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->get_block_Tensor( get<2>(ctr_op), get<0>(ctr_op))
+          CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
 
+        } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
+          shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op))
+          CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
+
+        } else {
+          shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op)); 
+          CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
+        }
+      }
 
   return;
 }
 
+//  CTP_data_map->emplace(get<3>(ctr_op),  Eqn_computer->contract_same_tensor( get<2>(ctr_op), Eqn->CTP_map->at(get<0>(ctr_op)), CTP_data_map->at(get<2>(ctr_op))); 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Builds data map for use by contraction routines
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>> CASPT2_ALT::CASPT2_ALT::get_Tensor_data( string Tname ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
   
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(CTP_map->at(Tname)->id_ranges);
   

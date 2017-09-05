@@ -7,6 +7,7 @@
 #include <src/smith/smith.h>
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
+#include <src/util/f77.h>
 
 namespace bagel {
 namespace SMITH { 
@@ -43,13 +44,14 @@ class Equation_Computer {
     template<class vtype>
     std::shared_ptr<std::vector<vtype>> reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
 
-    std::shared_ptr<Tensor_<double>> contract_different_tensors(std::pair<int,int> ctr_todo,
-                                                                std::shared_ptr<CtrTensorPart<Tensor_<double>>>  CTP1,
-                                                                std::shared_ptr<CtrTensorPart<Tensor_<double>>>  CTP2,
-                                                                std::shared_ptr<Tensor_<double>> CTP1_data,
-                                                                std::shared_ptr<Tensor_<double>> CTP2_data ) ;
+
+    std::shared_ptr<Tensor_<double>> contract_same_tensors( std::pair<int,int> ctr_todo, std::string Tname);
+
+    std::shared_ptr<Tensor_<double>> contract_different_tensors(std::pair<int,int> ctr_todo, std::string T1name, std::string T2name );
 
     std::shared_ptr<std::vector<IndexRange>> Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
+
+    std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
   
     void build_index_conversion_map(std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<IndexRange>>>> range_conversion_pairs );
 

@@ -31,6 +31,7 @@
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/ci/fci/fci.h>
 #include <src/smith/wicktool/equation_tools.h>
+#include <src/smith/multitensor.h>
 
 namespace bagel {
 namespace SMITH { 
@@ -61,6 +62,11 @@ class CASPT2_ALT {
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<Tensor_<double>>>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map ;
+
+    std::vector<std::shared_ptr<MultiTensor_<double>>> T2_all;
+    std::vector<std::shared_ptr<MultiTensor_<double>>> lambda_all;
+    std::shared_ptr<Tensor_<double>> H_1el_all;
+    std::shared_ptr<Tensor_<double>> H_2el_all;
 
     CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref_alt);
     ~CASPT2_ALT() {};
