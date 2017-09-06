@@ -52,7 +52,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   T2_all     = orig_cpt2->t2all_;
   lambda_all = orig_cpt2->lall_;
   H_1el_all  = orig_cpt2->f1_;
-  H_2el_all  = orig_cpt2->v2_;
+  H_2el_all  = orig_cpt2->H_2el_;
  
   const int max = ref->maxtile();
   auto closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
@@ -162,7 +162,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
       for ( auto ctr_op : *(Eqn->ACompute_list)){
         if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
           cout << get<0> (ctr_op)<<  "==" <<  get<3>(ctr_op)  <<  " -->  no contraction" << endl; 
-          shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor( to_string(get<0>(ctr_op)[0]));
+          shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor(get<0>(ctr_op));
           CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
 
         } else if ( get<0> (ctr_op) != get<1>(ctr_op)){

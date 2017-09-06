@@ -84,6 +84,7 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   h1_ = cas.h1_;
   f1_ = cas.f1_;
   v2_ = cas.v2_;
+  H_2el_ =  cas.H_2el_;
 
   rdm0all_ = cas.rdm0all_;
   rdm1all_ = cas.rdm1all_;

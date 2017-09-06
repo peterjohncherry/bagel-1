@@ -29,6 +29,9 @@ class Equation_Computer {
     int  ncore_ ;
     int  norb_  ;
     int  nstate_;
+    std::shared_ptr<IndexRange> virt_  ;
+    std::shared_ptr<IndexRange> active_  ;
+    std::shared_ptr<IndexRange> closed_  ;
     std::shared_ptr<const Dvec> cc_; 
     std::shared_ptr<const Determinants> det_ ; 
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
@@ -60,6 +63,8 @@ class Equation_Computer {
                                                        std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
 
     std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> old_ids) ;
+    std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr< IndexRange>>> old_ids) ;
+    std::vector<Index> get_rng_blocks_raw(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr< IndexRange>>> old_ids) ;
 
     std::shared_ptr<std::vector<size_t>> get_sizes(std::shared_ptr<std::vector<Index>> Idvec);
 

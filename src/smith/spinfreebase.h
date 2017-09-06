@@ -70,6 +70,7 @@ class SpinFreeMethod {
     std::shared_ptr<MatType> xmsmat_;
 
     std::shared_ptr<Tensor_<DataType>> v2_;
+    std::shared_ptr<Tensor_<DataType>> H_2el_;
     std::shared_ptr<Tensor_<DataType>> f1_;
     std::shared_ptr<Tensor_<DataType>> h1_;
 

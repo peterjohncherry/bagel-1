@@ -44,7 +44,8 @@ namespace CASPT2_ALT{
 class CASPT2_ALT {
   
   public:
-    
+   
+   
     std::shared_ptr<CASPT2::CASPT2> orig_cpt2;
     std::shared_ptr<const SMITH_Info<double>> ref;
 
@@ -66,7 +67,7 @@ class CASPT2_ALT {
     std::vector<std::shared_ptr<MultiTensor_<double>>> T2_all;
     std::vector<std::shared_ptr<MultiTensor_<double>>> lambda_all;
     std::shared_ptr<Tensor_<double>> H_1el_all;
-    std::shared_ptr<Tensor_<double>> H_2el_all;
+    std::shared_ptr<Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
 
     CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref_alt);
     ~CASPT2_ALT() {};
