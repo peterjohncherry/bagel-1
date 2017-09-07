@@ -55,14 +55,16 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   H_2el_all  = orig_cpt2->H_2el_;
  
   const int max = ref->maxtile();
-  auto closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
-  auto active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
-  auto virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
+  closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
+  active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
+  virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
+  free_rng    =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore()+ref->nact()+ref->nvirt(), max,0, ref->ncore()+closed_rng->size()+active_rng->size()));
 
   range_conversion_map = make_shared<map<string, shared_ptr<IndexRange>>>();
   range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
   range_conversion_map->emplace("act", active_rng);
   range_conversion_map->emplace("vir", virtual_rng);
+  range_conversion_map->emplace("free", free_rng);
 
   CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   CTP_map = make_shared<map<string, shared_ptr<CtrTensorPart<Tensor_<double>>>>>();
@@ -120,24 +122,29 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   auto X_factor = make_pair(1.0,1.0);
   auto X_idxs = make_shared<vector<string>>(vector<string> {"X0", "X1", "X2", "X3"});
   auto X_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false}); 
-  auto X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free }); 
+  auto X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free,free,free }); 
   auto X_symmfuncs = set_2el_symmfuncs();
   vector<bool(*)(shared_ptr<vector<string>>)>  X_constraints = { &always_true };
-  shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>();  
+  vector<IndexRange> TEMP_X_ranges = {*free_rng, *free_rng, *free_rng, *free_rng };
+  shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>( TEMP_X_ranges);  
 
   auto XTens = Eqn->Build_TensOp("X", X_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
-  CTP_data_map->emplace("X", H_2el_all );
+  CTP_data_map->emplace("X", X_data );
+  
   ///////////////////////////////////////////////////// T Tensor /////////////////////////////////////////////////////////////////
   string T_TimeSymm = "none";
   auto T_factor = make_pair(1.0,1.0);
   auto T_idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
   auto T_aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} ); 
-  auto T_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });   
+  auto T_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_virt, not_core, not_virt });   
   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> T_symmfuncs = set_2el_symmfuncs();
   vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = { &NotAllAct };
-  shared_ptr<Tensor_<double>> T_data = make_shared<Tensor_<double>>();  
+  vector<IndexRange> TEMP_T_ranges = {*free_rng, *free_rng, *free_rng, *free_rng };
+  shared_ptr<Tensor_<double>> T_data = make_shared<Tensor_<double>>(TEMP_T_ranges);  
 
   auto TTens = Eqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
+  CTP_data_map->emplace("T", T_data );
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   auto BraKet_Tensors1 = make_shared<vector< shared_ptr<TensOp<Tensor_<double>>> > >( vector<shared_ptr<TensOp<Tensor_<double>>>> { XTens,  TTens} );
@@ -157,9 +164,10 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   for (auto MM = 0 ; MM != nstate_ ; MM++){
     for (auto NN = 0 ; NN != nstate_ ; NN++){
       compute_gamma12( MM, NN ) ;
- //     CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
+  //    CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
   
       for ( auto ctr_op : *(Eqn->ACompute_list)){
+        cout <<" get<0>(ctr_op) = "<< get<0>(ctr_op) <<endl;
         if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
           cout << get<0> (ctr_op)<<  "==" <<  get<3>(ctr_op)  <<  " -->  no contraction" << endl; 
           shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor(get<0>(ctr_op));
@@ -167,7 +175,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 
         } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
           cout << get<0> (ctr_op)<<  "!=" <<  get<1>(ctr_op)  << " --> contract different tensors" << endl; 
-          shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op))
+          shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
           CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
 
         } else {

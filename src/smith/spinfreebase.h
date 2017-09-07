@@ -127,6 +127,7 @@ class SpinFreeMethod {
     void loop_over(std::function<void(const Index&, const Index&, const Index&, const Index&)>) const;
     // initialize t2 and r amplitude
     std::shared_ptr<Tensor_<DataType>> init_amplitude() const;
+    std::shared_ptr<Tensor_<DataType>> init_amplitude_allranges() const;
     std::shared_ptr<Tensor_<DataType>> init_residual() const;
 
   public:

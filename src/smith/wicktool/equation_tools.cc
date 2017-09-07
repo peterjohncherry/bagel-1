@@ -25,13 +25,16 @@ Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SM
   range_conversion_map = make_shared<map<string, shared_ptr<IndexRange>>>();
   
   const int max = ref->maxtile();
-  auto closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
-  auto active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
-  auto virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
+  auto closed_rng  = make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
+  auto active_rng  = make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
+  auto virtual_rng = make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
 
   range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
   range_conversion_map->emplace("act", active_rng);
   range_conversion_map->emplace("vir", virtual_rng);
+
+  auto free_rng =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore()+ref->nact()+ref->nvirt(), max, 0, ref->ncore()+closed_rng->size()+active_rng->size()));
+  range_conversion_map->emplace("free", free_rng);
 
   CTP_map = eqn_info_in->CTP_map;
   CTP_data_map = CTP_data_map_in;
@@ -43,8 +46,8 @@ Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tensor(string Tname){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer::Equation_Computer::get_block_Tensor" << endl;
-
+   cout << "Equation_Computer::Equation_Computer::get_block_Tensor" << Tname << endl;
+    
     ///std::shared_ptr<Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
    shared_ptr<vector<string>> unc_ranges = CTP_map->at(Tname)->id_ranges;  
 
@@ -64,12 +67,13 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
    auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
    do {
      
-     cout << "fvec = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
+     cout << "block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
 
      vector<Index> T_id_blocks(Bagel_id_ranges->size());
+      cout << " Bagel_id_ranges sizes = " ;
      for( int ii = 1 ;  ii != T_id_blocks.size(); ii++){
-     //  T_id_blocks[ii] =  Bagel_id_ranges->at(ii).range(block_pos->at(ii));
-       cout << " Bagel_id_ranges->at("<<ii<<").range().size() = " <<   Bagel_id_ranges->at(ii).range().size()<< endl;
+       T_id_blocks[ii] =  Bagel_id_ranges->at(ii).range(block_pos->at(ii));
+       cout <<  Bagel_id_ranges->at(ii).range().size() << endl;
      }    
      cout << "T_id_blocks sizes : " ; for (Index id : T_id_blocks){ cout << id.size() << " " ;}
 
@@ -378,7 +382,6 @@ shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::reorder_vector(s
 
   return newvec;
 }
-
 
 ////////////////////////////////////////////////////
 //template class CtrTensorPart<std::vector<double>>;

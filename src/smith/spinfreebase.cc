@@ -644,6 +644,16 @@ shared_ptr<Tensor_<DataType>> SpinFreeMethod<DataType>::init_amplitude() const {
   return make_shared<Tensor_<DataType>>(v2_->indexrange(), /*kramers*/false, sparse, /*alloc*/true);
 }
 
+template<typename DataType>
+shared_ptr<Tensor_<DataType>> SpinFreeMethod<DataType>::init_amplitude_allranges() const {
+  unordered_set<size_t> sparse;
+  auto put = [&sparse](const Index& i0, const Index& i1, const Index& i2, const Index& i3) {
+    sparse.insert(generate_hash_key(i0, i1, i2, i3));
+  };
+  loop_over(put);
+  return make_shared<Tensor_<DataType>>(v2_->indexrange(), /*kramers*/false, sparse, /*alloc*/true);
+}
+
 
 template<typename DataType>
 shared_ptr<Tensor_<DataType>> SpinFreeMethod<DataType>::init_residual() const {
