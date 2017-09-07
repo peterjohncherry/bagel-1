@@ -10,9 +10,9 @@ template <class DType>
 void Equation<DType>::Initialize(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  T_map  = make_shared<map< string, shared_ptr<TensOp<DType>>>>();
   CTP_map    = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
   CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
-  Tparts_map = make_shared<map< string, shared_ptr<DType> >>();                   
   ACompute_list = make_shared<vector<tuple<string,string,pair<int,int>, string> >>(0); 
   CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
 
@@ -116,8 +116,6 @@ template<class DType>
 void  Equation<DType>::equation_build(std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType> > >>>> BraKet_list){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Into Equation" <<endl;
-
-  Initialize();
 
   for (auto BraKet_Tensors : *BraKet_list) {
     Build_BraKet( BraKet_Tensors );

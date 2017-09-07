@@ -38,7 +38,6 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
     
     ///std::shared_ptr<Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
    shared_ptr<vector<string>> unc_ranges = CTP_map->at(Tname)->id_ranges;  
-   cout << "unc_ranges = " ; for (auto  elem : *unc_ranges) {cout << elem << " " ; }
 
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
@@ -57,7 +56,6 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 //  shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>( TEMP_X_ranges);  
 //  X_data->allocate();
 
-   cout << "fulltens->size_alloc()" << fulltens->size_alloc() <<"   fulltens->rank()" << fulltens->rank();
    auto block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
    auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
    do {
@@ -65,15 +63,12 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
      cout << "block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
 
      vector<Index> T_id_blocks(Bagel_id_ranges->size());
-      cout << " Bagel_id_ranges sizes = " ;
      for( int ii = 0 ;  ii != T_id_blocks.size(); ii++){
        T_id_blocks[ii] =  Bagel_id_ranges->at(ii).range(block_pos->at(ii));
-       cout <<  Bagel_id_ranges->at(ii).range().size()   << " " ;
      }    
      cout << endl << "T_id_blocks sizes : " ; for (Index id : T_id_blocks){ cout << id.size() << " " ;}
   
      unique_ptr<double[]> T_block_data = fulltens->get_block(T_id_blocks);
-     cout << " got data block "; for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
      block_tensor->put_block(T_block_data, T_id_blocks);
 
    } while (fvec_cycle(block_pos, range_lengths, mins ));

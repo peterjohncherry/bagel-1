@@ -154,7 +154,7 @@ shared_ptr<vector<shared_ptr<vector<bool>>>>  BraKet<DType>::all_spin_combinatio
      bfunc( 0, xvec, nel, length, all_sc); 
   }
 
-  auto svecs = make_shared<vector<shared_ptr<vector<bool>>>>() ;
+  auto svecs = make_shared<vector<shared_ptr<vector<bool>>>>(0) ;
   for (auto plus_vec : *all_sc){
     for (auto kill_vec : *all_sc){
       auto buffvec = make_shared<vector<bool>>();

@@ -22,14 +22,16 @@ class Equation {
       int norb = 5;
       bool spinfree = false;
 
+
       //Equation builder
       void equation_build(std::shared_ptr<std::vector< std::shared_ptr<std::vector<std::shared_ptr<TensOp<DType>>>> >> BraKet_list);
+
 
       //Vector of BraKet terms which comprise the equation
       std::vector<std::shared_ptr<BraKet<DType>>> BraKet_Terms;
     
-      // tensor data map
-      std::shared_ptr< std::map< std::string, std::shared_ptr<DType> >>Tparts_map ;
+      //Map containing original tensor operators info
+      std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp<DType> > >> T_map    ;      
 
       //contracted and uncontracted single tensor info
       std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DType> > >>CTP_map    ;      
@@ -50,7 +52,7 @@ class Equation {
       void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp<DType>>>> Tens_vec  );
       
       std::shared_ptr<TensOp<DType>> Build_TensOp(std::string op_name,
-                                std::shared_ptr<DType> tensor_data, //needs to be templated, should be Bagel tensor
+                                std::shared_ptr<DType> tensor_data,
                                 std::shared_ptr<std::vector<std::string>> op_idxs,
                                 std::shared_ptr<std::vector<bool>> op_aops, 
                                 std::shared_ptr<std::vector<std::vector<std::string>>> op_idx_ranges,

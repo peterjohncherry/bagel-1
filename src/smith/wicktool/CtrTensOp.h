@@ -45,6 +45,7 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
     std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors; 
     std::shared_ptr<DType> CTdata ;
     bool contracted; 
+    bool survive_independently;
 
     CtrTensorPart(){};   
   
@@ -113,7 +114,6 @@ class CtrMultiTensorPart : public TensorPart<DType> {
                        full_id_ranges  = std::make_shared<std::vector<std::string>>(0);
                        Tsizes_cml      = std::make_shared<std::vector<int>>(0);
                        all_ctrs_pos    = std::make_shared<std::vector<std::pair<int,int>>>(0); 
-                       
 
                        int cml_size = 0;
                        for (auto ctp : *CTP_vec){

@@ -150,6 +150,7 @@ void CtrTensorPart<DType>::get_ctp_idxs_ranges(){
     get_unc[ctrs_pos->at(ii).second] = false;
   }
 
+  bool survive_indep = true;
   unc_pos = make_shared<vector<int>>(0);
   id_ranges = make_shared<vector<string>>(0);
   idxs = make_shared<vector<string>>(0);
