@@ -21,7 +21,8 @@ namespace Equation_Computer {
 class Equation_Computer { 
     public: 
     Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<Tensor_<double>>> eqn_info,
-                      std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>> >> CTP_data_map );
+                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>> >> CTP_data_map,
+                      std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map);
     ~Equation_Computer(){};
   
     int  nelea_ ;

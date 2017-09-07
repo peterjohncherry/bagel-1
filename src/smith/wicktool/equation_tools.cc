@@ -9,8 +9,9 @@ using namespace bagel::SMITH;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<Tensor_<double>>> eqn_info_in,
-                                                        std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map_in ){
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                        std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map_in,
+                                                        std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   eqn_info =  eqn_info_in;
 
@@ -22,22 +23,9 @@ Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SM
   cc_ = ref->ciwfn()->civectors();
   det_ = ref->ciwfn()->civectors()->det();
 
-  range_conversion_map = make_shared<map<string, shared_ptr<IndexRange>>>();
-  
-  const int max = ref->maxtile();
-  auto closed_rng  = make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
-  auto active_rng  = make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
-  auto virtual_rng = make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
-
-  range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
-  range_conversion_map->emplace("act", active_rng);
-  range_conversion_map->emplace("vir", virtual_rng);
-
-  auto free_rng =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore()+ref->nact()+ref->nvirt(), max, 0, ref->ncore()+closed_rng->size()+active_rng->size()));
-  range_conversion_map->emplace("free", free_rng);
-
   CTP_map = eqn_info_in->CTP_map;
   CTP_data_map = CTP_data_map_in;
+  range_conversion_map = range_conversion_map_in;
 
 }  
 
@@ -50,6 +38,7 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
     
     ///std::shared_ptr<Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
    shared_ptr<vector<string>> unc_ranges = CTP_map->at(Tname)->id_ranges;  
+   cout << "unc_ranges = " ; for (auto  elem : *unc_ranges) {cout << elem << " " ; }
 
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
@@ -62,7 +51,13 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
    shared_ptr<Tensor_<double>> block_tensor = make_shared<Tensor_<double>>(*Bagel_id_ranges);
    block_tensor->allocate();
 
-   shared_ptr<Tensor_<double>> fulltens = CTP_data_map->at(Tname.substr(0,1));
+  shared_ptr<Tensor_<double>> fulltens = CTP_data_map->at(Tname.substr(0,1));
+// shared_ptr<Tensor_<double>> fulltens = make_shared<Tensor_<double>>(*Bagel_id_ranges); fulltens->allocate();
+//  vector<IndexRange> TEMP_X_ranges = {*free_rng, *free_rng, *free_rng, *free_rng };
+//  shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>( TEMP_X_ranges);  
+//  X_data->allocate();
+
+   cout << "fulltens->size_alloc()" << fulltens->size_alloc() <<"   fulltens->rank()" << fulltens->rank();
    auto block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
    auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
    do {
@@ -71,13 +66,14 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 
      vector<Index> T_id_blocks(Bagel_id_ranges->size());
       cout << " Bagel_id_ranges sizes = " ;
-     for( int ii = 1 ;  ii != T_id_blocks.size(); ii++){
+     for( int ii = 0 ;  ii != T_id_blocks.size(); ii++){
        T_id_blocks[ii] =  Bagel_id_ranges->at(ii).range(block_pos->at(ii));
-       cout <<  Bagel_id_ranges->at(ii).range().size() << endl;
+       cout <<  Bagel_id_ranges->at(ii).range().size()   << " " ;
      }    
-     cout << "T_id_blocks sizes : " ; for (Index id : T_id_blocks){ cout << id.size() << " " ;}
-
+     cout << endl << "T_id_blocks sizes : " ; for (Index id : T_id_blocks){ cout << id.size() << " " ;}
+  
      unique_ptr<double[]> T_block_data = fulltens->get_block(T_id_blocks);
+     cout << " got data block "; for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
      block_tensor->put_block(T_block_data, T_id_blocks);
 
    } while (fvec_cycle(block_pos, range_lengths, mins ));
