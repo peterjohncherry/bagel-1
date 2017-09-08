@@ -13,7 +13,7 @@ void Equation<DType>::Initialize(){
   T_map  = make_shared<map< string, shared_ptr<TensOp<DType>>>>();
   CTP_map    = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
   CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
-  ACompute_list = make_shared<vector<tuple<string,string,pair<int,int>, string> >>(0); 
+  ACompute_map = make_shared<map<string, shared_ptr<vector<tuple<string,string,pair<int,int>,string>> > >>(); 
   CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
 
   return;
@@ -62,9 +62,11 @@ void Equation<DType>::Add_BraKet_Compute_Terms_CMTP(shared_ptr<BraKet<DType>> BK
       if ( Acontrib_loc == BK->Total_Op->CMTP_gamma_contribs->end() ) 
         continue;
 
+      auto ACompute_list = make_shared<vector<tuple<string,string,pair<int,int>, string> >>(0); 
       for (auto CMTP_name : *Acontrib_loc->second){
         cout << endl<< CMTP_name <<endl; 
         CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list);
+        ACompute_map->emplace(CMTP_name, ACompute_list);
       }
 
 //     for (auto ctr_op : *ACompute_list)

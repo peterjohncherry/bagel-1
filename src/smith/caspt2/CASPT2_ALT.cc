@@ -136,34 +136,50 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 
   for (auto MM = 0 ; MM != nstate_ ; MM++){
     for (auto NN = 0 ; NN != nstate_ ; NN++){
-       Eqn_computer->compute_gamma12( MM, NN ) ;
-  //    CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
+       
+      for ( auto gidxs_loc = Eqn->CMTP_Eqn_Compute_List->begin(); gidxs_loc != Eqn->CMTP_Eqn_Compute_List->end(); gidxs_loc++ ){
+          
+        auto gamma_range = make_shared<vector<string>>(gidxs_loc->first);
+        auto gamma_ranges = make_shared<vector<shared_ptr<vector<string>>>>(1, gamma_range);
+        int  glength = gamma_range->size();
+        
+        for(int ii = 2 ; ii!= gamma_range->size(); ii -=2)
+          gamma_ranges->push_back(make_shared<vector<string>>(gamma_range->begin(), gamma_range->end()-ii));  
+        
+        shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors =  Eqn_computer->get_gammas( MM, NN, gamma_ranges ) ;
+        //  CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
       
-      for ( auto ctr_op : *(Eqn->ACompute_list)){
-        if ( CTP_data_map->find(get<3>(ctr_op)) == CTP_data_map->end() ){
-          if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
-            if ( CTP_map->at(get<0>(ctr_op))->id_ranges->size()  > Eqn->T_map->at(get<0>(ctr_op).substr(0,1))->idxs->size()){
-               cout << "uncontracted multi tensor, do not store" << endl;       
-            } else {
-              cout << get<0> (ctr_op)<< " -->  no contraction" << endl; 
-              shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor(get<0>(ctr_op));
-              CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
-            }
-          
-          } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
-            cout << get<0> (ctr_op)<<  "!=" <<  get<1>(ctr_op)  << " --> contract different tensors" << endl; 
-            shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
-            CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
-          
-          } else {
-            cout << get<0> (ctr_op)<<  "==" <<  get<1>(ctr_op)  << " --> contract on same tensor" <<  endl; 
-            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_on_same_tensor( get<2>(ctr_op), get<0>(ctr_op)); 
-            CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
-          }
-        } else {
-          shared_ptr<Tensor_<double>> Merged_Aterms ; // add new A term; 
-        } 
+        for ( auto A_contribs : *(Eqn->CMTP_Eqn_Compute_List->at(*gamma_range))){
+          pair<int,int> ctr_factor = A_contribs.second;
+          for (auto A_contrib : *A_contribs.first){
+            for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib))){
 
+              if ( CTP_data_map->find(get<3>(ctr_op)) == CTP_data_map->end() ){
+                if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
+                  if ( CTP_map->at(get<0>(ctr_op))->id_ranges->size()  > Eqn->T_map->at(get<0>(ctr_op).substr(0,1))->idxs->size()){
+                     cout << "uncontracted multi tensor, do not store" << endl;       
+                  } else {
+                    cout << get<0> (ctr_op)<< " -->  no contraction" << endl; 
+                    shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor(get<0>(ctr_op));
+                    CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
+                  }
+                
+                } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
+                  cout << get<0> (ctr_op)<<  "!=" <<  get<1>(ctr_op)  << " --> contract different tensors" << endl; 
+                  shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
+                  CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
+                
+                } else {
+                  cout << get<0> (ctr_op)<<  "==" <<  get<1>(ctr_op)  << " --> contract on same tensor" <<  endl; 
+                  shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_on_same_tensor( get<2>(ctr_op), get<0>(ctr_op)); 
+                  CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
+                }
+              } else {
+                shared_ptr<Tensor_<double>> Merged_Aterms ; // add new A term; 
+              } 
+            }
+          }
+        }   
       }
     }
   }

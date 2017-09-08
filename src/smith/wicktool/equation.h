@@ -9,6 +9,19 @@
 //#include "BraKet.h"
 //#include "TensOp.h"
 
+using pint_vec = std::vector<std::pair<int,int>>;
+using pstr_vec = std::vector<std::pair<std::string,std::string>>;
+
+using CombinedGammaMap   =  std::map<std::vector<std::string>, /*spins of gamma indexes*/ 
+                                     std::tuple< std::shared_ptr<std::vector< std::shared_ptr< std::vector<std::pair<std::string, std::string>> >>>, /* delta indexes  */  
+                                                 std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<std::string, std::string>> >>>, /* spins of delta indexes */  
+                                                 std::shared_ptr<std::vector<int>>  /* signs from reordering */ > >;
+
+using RelCombinedGammaMap = std::map< std::pair<std::vector<std::string>, std::pair<int,int>>,  /*spins of gamma_ids and original spinsector*/ 
+                                      std::tuple< std::shared_ptr<std::vector<std::shared_ptr<pstr_vec>>>, /* contractions from reordering to gamma */  
+                                                  std::shared_ptr<std::vector<std::shared_ptr<pstr_vec>>>, /* spins of contractions from reordering to gamma */  
+                                                  std::shared_ptr<std::vector<int>>  /* signs from reordering to gamma */ > >;
+
 
 template<class DType> 
 class Equation {
@@ -38,8 +51,8 @@ class Equation {
       // contracted and uncontracted multitensor info
       std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DType> > >>CMTP_map   ;  
 
-      // Vector containing the operations which need to be performed to calculate a given A-tensor
-      std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>,std::string> >> ACompute_list ;
+       // map from the name of a tensor, to the list of contractions which need to be performed to obtain it
+      std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>,std::string> >> >>  ACompute_map ;
 
       // key : String identifying the Gamma or rdm      result : Vector of string vectors identifying A-Tensor contributions paired with corresponding ReIm factor 
       std::shared_ptr< std::map< std::vector<std::string>, std::shared_ptr<std::vector<std::pair< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> >>> >> CMTP_Eqn_Compute_List ;
