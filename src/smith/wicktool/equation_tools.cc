@@ -267,41 +267,46 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vec
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Equation_Computer::Equation_Computer::get_gammas"  << endl;
 
-  vector<vector<IndexRange>> gamma_ranges (gamma_ranges_str->size());
-  for (int ii = 0 ; ii !=gamma_ranges.size(); ii++ ) 
-    gamma_ranges[ii] = *(Get_Bagel_IndexRanges( gamma_ranges_str->at(ii))); 
-
-  // fix this so it is done recursively
+  auto gamma_ranges =  vector<shared_ptr<vector<IndexRange>>>(gamma_ranges_str->size());
+  for (int ii = 0 ; ii !=gamma_ranges.size(); ii++ ){ 
+    gamma_ranges[ii] = Get_Bagel_IndexRanges( gamma_ranges_str->at(ii)); 
+    for (auto elem : *(gamma_ranges_str->at(ii))){  cout << elem << " " ;} 
+    cout << endl;
+  }
+  
+  // fix this so it 
   shared_ptr<RDM<1>> grdm1; 
   shared_ptr<RDM<2>> grdm2; 
   shared_ptr<RDM<3>> grdm3; 
   tie(grdm1, grdm2, grdm3) =  compute_gamma12( MM, NN ) ;
 
+  //must change get gamma function so it returns a matrix or similar
+  double* grdm_data = grdm1->element_ptr(0,0);
+
   auto gamma_tensors = make_shared<vector<shared_ptr<Tensor_<double>>>>(0);
 
-  for ( auto  gamma_range :  gamma_ranges ) {
+  for ( int ii = 0 ; ii != gamma_ranges.size(); ii++ ) {
 
      auto  range_lengths  = make_shared<vector<int>>(0); 
-     for (auto idrng : gamma_range ){
-        range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
+     for (auto idrng : *(gamma_ranges[ii]) ){
+       range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
      }
 
-     shared_ptr<Tensor_<double>> new_gamma_tensor = make_shared<Tensor_<double>>(gamma_range);
+     shared_ptr<Tensor_<double>> new_gamma_tensor = make_shared<Tensor_<double>>(*(gamma_ranges[ii]));
      new_gamma_tensor->allocate();
      
-     auto block_pos = make_shared<vector<int>>(gamma_range.size(),0);  
-     auto mins = make_shared<vector<int>>(gamma_range.size(),0);  
+     auto block_pos = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
+     auto mins = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
      do {
        
        cout << "block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
-     
-       vector<Index> gamma_id_blocks(gamma_range.size());
-       for( int ii = 0 ;  ii != gamma_id_blocks.size(); ii++)
-         gamma_id_blocks[ii] =  gamma_range[ii].range(block_pos->at(ii));
+       vector<Index> gamma_id_blocks(gamma_ranges[ii]->size());
+       for( int jj = 0 ;  jj != gamma_id_blocks.size(); jj++)
+         gamma_id_blocks[jj] =  gamma_ranges[ii]->at(jj).range(block_pos->at(jj));
 
-       cout << endl << "gamma_id_blocks sizes : " ; for (Index id : gamma_id_blocks){ cout << id.size() << " " ;}
+       cout << endl << "gamma_id_blocks sizes : " ; for (Index id : gamma_id_blocks){ cout << id.size() << " " ; cout.flush();}
     
-       unique_ptr<double[]> gamma_data; // = fulltens->get_block(gamma_id_blocks);
+       unique_ptr<double[]> gamma_data = get_block_of_data(grdm_data, gamma_ranges[ii], block_pos); 
        new_gamma_tensor->put_block(gamma_data, gamma_id_blocks);
      
      } while (fvec_cycle(block_pos, range_lengths, mins ));
@@ -311,9 +316,60 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vec
  
    return gamma_tensors;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+unique_ptr<double[]>
+Equation_Computer::Equation_Computer::get_block_of_data( double* data_ptr ,
+                                                         shared_ptr<vector<IndexRange>> id_ranges, 
+                                                         shared_ptr<vector<int>> block_pos) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+ //merge this to one loop, but keep until debugged, as this is likely to go wrong...
+  
+ // getting id position of id_block ; list of block sizes looks like [n,n,n,n,... , n-1, n-1 n-1] 
+  vector<size_t> id_pos(block_pos->size());
+  cout <<endl << "id_pos = ";
+  for (int ii = 0 ; ii != id_ranges->size() ; ii++){
 
+    const size_t range_size         = id_ranges->at(ii).size();
+    const size_t biggest_block_size = id_ranges->at(ii).range(0).size();
+    const size_t num_blocks         = id_ranges->at(ii).range().size();
+    const size_t remainder          = num_blocks * biggest_block_size - range_size;
 
+    if (block_pos->at(ii) <= remainder  ){
+       id_pos[ii] = num_blocks*block_pos->at(ii);//  + id_ranges->at(ii).range(block_pos->at(ii)).offset();
+
+    } else if ( block_pos->at(ii) > remainder ) {
+       id_pos[ii] = num_blocks*(range_size - remainder)+(num_blocks-1)*(remainder - block_pos->at(ii));// + id_ranges->at(ii).range(block_pos->at(ii)).offset(); 
+    }; 
+    cout << id_pos[ii] << " " ;
+  }
+
+  cout << endl << "range_sizes = " ;
+  // getting size of ranges (seems to be correctly offset for node)
+  vector<size_t> range_sizes(block_pos->size());
+  for (int ii = 0 ; ii != id_ranges->size() ; ii++){
+    range_sizes[ii]  = id_ranges->at(ii).size();
+    cout << range_sizes[ii] << " " ;
+  }
+
+  size_t data_block_size = 1;
+  size_t data_block_pos  = 1;
+  for (int ii = 0 ; ii != id_ranges->size()-1 ; ii++){
+    data_block_pos  *= id_pos[ii]*range_sizes[ii];
+    data_block_size *= id_ranges->at(ii).range(block_pos->at(ii)).size();
+  }
+
+  data_block_size *= id_ranges->back().range(block_pos->back()).size();
+ 
+  cout << "data_block_size = " << data_block_size << endl;
+  cout << "data_block_pos = "  << data_block_pos << endl;
+ 
+  unique_ptr<double[]> data_block(new double[data_block_size])  ;
+
+  copy_n(data_block.get(), data_block_size, data_ptr+data_block_pos);
+
+  return data_block; 
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
 // mangled version of routines in fci_rdm.cc

@@ -141,9 +141,9 @@ void CASPT2_ALT::CASPT2_ALT::test() {
           
         auto gamma_range = make_shared<vector<string>>(gidxs_loc->first);
         auto gamma_ranges = make_shared<vector<shared_ptr<vector<string>>>>(1, gamma_range);
-        int  glength = gamma_range->size();
+        cout << "gamma_range->size() = " << gamma_range->size();
         
-        for(int ii = 2 ; ii!= gamma_range->size(); ii -=2)
+        for(int ii = 2 ; ii!= gamma_range->size(); ii++)
           gamma_ranges->push_back(make_shared<vector<string>>(gamma_range->begin(), gamma_range->end()-ii));  
         
         shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors =  Eqn_computer->get_gammas( MM, NN, gamma_ranges ) ;

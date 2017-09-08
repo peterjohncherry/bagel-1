@@ -79,6 +79,11 @@ class Equation_Computer {
     std::unique_ptr<DataType[]>
     reorder_tensor_data(const DataType* orig_data,  size_t data_size, std::vector<int>  new_order_vec, std::vector<size_t> new_sizes_vec ) ;
 
+    
+    
+    std::unique_ptr<double[]> get_block_of_data( double* data_ptr, std::shared_ptr<std::vector<IndexRange>> id_ranges, 
+                                                              std::shared_ptr<std::vector<int>> block_pos) ;
+
 
     std::shared_ptr<std::vector<std::shared_ptr<Tensor_<double>>>>
     get_gammas(int MM , int NN, std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>> gamma_ranges_REMOVE_AFTER_DEBUG);
