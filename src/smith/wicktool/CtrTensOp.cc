@@ -227,11 +227,13 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
       auto unc_ctrs_pos = make_shared<vector<pair<int,int>>>(0);
       auto unc_ReIm_factors = make_shared<vector<pair<int,int>>>(0); 
       auto unc_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, unc_ctrs_pos, unc_ReIm_factors ); 
-      
-      //fix this hack
+
+      // Need to create a list of uncontracted tensors
       unc_CTP->CTdata = make_shared<DType>(); 
       Tmap->emplace(unc_CTP->name, unc_CTP);
-      ACompute_list->push_back(tie(unc_CTP->name, unc_CTP->name, ctrs_pos->back(), unc_CTP->name));
+
+      required_Tblocks->push_back(unc_CTP->name);
+//      ACompute_list->push_back(tie(unc_CTP->name, unc_CTP->name, unc_ctrs_pos->back(), unc_CTP->name));
 
       CTdata = unc_CTP->Binary_Contract_same_tensor(ctrs_pos->back(), ACompute_list);
       ACompute_list->push_back(tie(unc_CTP->name, unc_CTP->name, ctrs_pos->back(), name));

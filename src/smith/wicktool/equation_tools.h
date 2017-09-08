@@ -12,10 +12,6 @@
 namespace bagel {
 namespace SMITH { 
 
-//namespace Tensor { template<class DataType> class Tensor_<DataType>; } 
-
-//namespace CtrTensors { class CtrTensorPart<DataType>; class CtrMultiTensorPart<DataType>; } 
-
 namespace Equation_Computer { 
 
 class Equation_Computer { 
@@ -41,7 +37,6 @@ class Equation_Computer {
     std::shared_ptr<Equation<Tensor_<double>>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
 
-
     template<class vtype>
     std::shared_ptr<std::vector<vtype>> inverse_reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
 
@@ -49,7 +44,7 @@ class Equation_Computer {
     std::shared_ptr<std::vector<vtype>> reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
 
 
-    std::shared_ptr<Tensor_<double>> contract_same_tensors( std::pair<int,int> ctr_todo, std::string Tname);
+    std::shared_ptr<Tensor_<double>> contract_on_same_tensor( std::pair<int,int> ctr_todo, std::string Tname);
 
     std::shared_ptr<Tensor_<double>> contract_different_tensors(std::pair<int,int> ctr_todo, std::string T1name, std::string T2name );
 
@@ -83,6 +78,24 @@ class Equation_Computer {
     template<class DataType>
     std::unique_ptr<DataType[]>
     reorder_tensor_data(const DataType* orig_data,  size_t data_size, std::vector<int>  new_order_vec, std::vector<size_t> new_sizes_vec ) ;
+
+
+    std::shared_ptr<std::vector<std::shared_ptr<Tensor_<double>>>>
+    get_gammas(int MM , int NN, std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>> gamma_ranges_REMOVE_AFTER_DEBUG);
+
+    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
+    compute_gamma12(const int MM, const int NN ) ;
+ 
+    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
+    compute_gamma12_from_civec(std::shared_ptr<const Civec> cbra, std::shared_ptr<const Civec> cket) const ;
+ 
+    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
+    compute_gamma12_last_step(std::shared_ptr<const Dvec> dbra, std::shared_ptr<const Dvec> dket, std::shared_ptr<const Civec> cibra) const ;
+
+    void sigma_2a1(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
+
+    void sigma_2a2(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
+
 };
 }
 }

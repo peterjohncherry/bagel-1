@@ -44,8 +44,10 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
     std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos;      
     std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors; 
     std::shared_ptr<DType> CTdata ;
+    std::shared_ptr<std::vector<std::string>> required_Tblocks;
     bool contracted; 
     bool survive_independently;
+    
 
     CtrTensorPart(){};   
   
@@ -60,8 +62,9 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
                   ReIm_factors = ReIm_factors_in;
                   contracted = false;
                   get_ctp_idxs_ranges();
-                  get_name();;
+                  get_name();
                   CTdata = std::make_shared<DType>(); 
+                  required_Tblocks = std::make_shared<std::vector<std::string>>(0);
                 };
 
      void get_ctp_idxs_ranges();
@@ -96,6 +99,7 @@ class CtrMultiTensorPart : public TensorPart<DType> {
     std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos;      
     std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors;      
     std::shared_ptr<DType> CTdata ;
+    std::shared_ptr<std::vector<std::string>> required_Tblocks;
     bool contracted;
 
     std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart<DType>>>> CTP_vec; 

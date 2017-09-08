@@ -1,6 +1,5 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include <src/smith/indexrange.h>
 #include <src/smith/wicktool/equation_tools.h>
 
 using namespace std;
@@ -14,7 +13,6 @@ Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SM
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   eqn_info =  eqn_info_in;
-
   nelea_ = ref->ciwfn()->det()->nelea();
   neleb_ = ref->ciwfn()->det()->neleb();
   ncore_ = ref->ciwfn()->ncore();
@@ -36,9 +34,7 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Equation_Computer::Equation_Computer::get_block_Tensor" << Tname << endl;
     
-    ///std::shared_ptr<Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
-   shared_ptr<vector<string>> unc_ranges = CTP_map->at(Tname)->id_ranges;  
-
+   shared_ptr<vector<string>>     unc_ranges = CTP_map->at(Tname)->id_ranges;  
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
    cout << "range_lengths = " ;
@@ -47,14 +43,9 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
       range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
    }
     
+   shared_ptr<Tensor_<double>> fulltens = CTP_data_map->at(Tname.substr(0,1));
    shared_ptr<Tensor_<double>> block_tensor = make_shared<Tensor_<double>>(*Bagel_id_ranges);
    block_tensor->allocate();
-
-  shared_ptr<Tensor_<double>> fulltens = CTP_data_map->at(Tname.substr(0,1));
-// shared_ptr<Tensor_<double>> fulltens = make_shared<Tensor_<double>>(*Bagel_id_ranges); fulltens->allocate();
-//  vector<IndexRange> TEMP_X_ranges = {*free_rng, *free_rng, *free_rng, *free_rng };
-//  shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>( TEMP_X_ranges);  
-//  X_data->allocate();
 
    auto block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
    auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
@@ -73,26 +64,27 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 
    } while (fvec_cycle(block_pos, range_lengths, mins ));
  
-   //unique_ptr<double[]> Tblock_data = CTP_data_map->at(to_string(Tname[0]))->get_block(Bagel_id_ranges);
-
    return block_tensor;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>>
-Equation_Computer::Equation_Computer::contract_same_tensors( pair<int,int> ctr_todo, std::string Tname) {
+Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr_todo, std::string Tname) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
-  auto CTP = CTP_map->at(Tname);
-  auto CTP_data = CTP_data_map->at(Tname);
+  auto CTP = CTP_map->at(Tname); cout << "got " << CTP->name << " info" << endl;
+  auto CTP_data = CTP_data_map->at(Tname); cout << "got " << CTP->name << " data" << endl;
   shared_ptr<Tensor_<double>>  T_out;  
 
+   cout << "unc_pos = ";
   auto T1_new_order = make_shared<vector<int>>(0);
   for (int ii = 0; ii !=CTP->unc_pos->size(); ii++)
-    if (CTP->unc_pos->at(ii) != ctr_todo.first)
+    if (CTP->unc_pos->at(ii) != ctr_todo.first){
       T1_new_order->push_back(CTP->unc_pos->at(ii));
-    
-  T1_new_order->push_back(ctr_todo.first);
-  T1_new_order->push_back(ctr_todo.second);
+      cout <<CTP->unc_pos->at(ii)<< " " ; cout.flush();
+    }
+   
+  T1_new_order->push_back(ctr_todo.first); cout <<T1_new_order->back()<< " " ;
+  T1_new_order->push_back(ctr_todo.second);cout <<T1_new_order->back()<< " " ; cout <<endl;
 
   auto T1_org_rngs = Get_Bagel_const_IndexRanges(CTP->id_ranges);
 
@@ -114,7 +106,8 @@ Equation_Computer::Equation_Computer::contract_same_tensors( pair<int,int> ctr_t
   //loops over all index blocks of T1 and  T2; inner loop for T2 has same final index as T2 due to contraction
   auto T1_rng_block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
   for (int ii = 0 ; ii != T1_num_total_blocks; ii++) { 
-
+     
+    cout << "ii = " << ii << endl;
     std::unique_ptr<double[]> T1_data_new; 
     size_t ctr_block_size;
     size_t T1_unc_block_size;
@@ -264,6 +257,223 @@ Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> 
     fvec_cycle(T1_rng_block_pos, maxs1 );
   }                                                                                                                                              
   return T_out;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Gets the gammas in tensor format. 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<shared_ptr<Tensor_<double>>>>
+Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vector<shared_ptr<vector<string>>>> gamma_ranges_str){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Equation_Computer::Equation_Computer::get_gammas"  << endl;
+
+  vector<vector<IndexRange>> gamma_ranges (gamma_ranges_str->size());
+  for (int ii = 0 ; ii !=gamma_ranges.size(); ii++ ) 
+    gamma_ranges[ii] = *(Get_Bagel_IndexRanges( gamma_ranges_str->at(ii))); 
+
+  // fix this so it is done recursively
+  shared_ptr<RDM<1>> grdm1; 
+  shared_ptr<RDM<2>> grdm2; 
+  shared_ptr<RDM<3>> grdm3; 
+  tie(grdm1, grdm2, grdm3) =  compute_gamma12( MM, NN ) ;
+
+  auto gamma_tensors = make_shared<vector<shared_ptr<Tensor_<double>>>>(0);
+
+  for ( auto  gamma_range :  gamma_ranges ) {
+
+     auto  range_lengths  = make_shared<vector<int>>(0); 
+     for (auto idrng : gamma_range ){
+        range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
+     }
+
+     shared_ptr<Tensor_<double>> new_gamma_tensor = make_shared<Tensor_<double>>(gamma_range);
+     new_gamma_tensor->allocate();
+     
+     auto block_pos = make_shared<vector<int>>(gamma_range.size(),0);  
+     auto mins = make_shared<vector<int>>(gamma_range.size(),0);  
+     do {
+       
+       cout << "block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
+     
+       vector<Index> gamma_id_blocks(gamma_range.size());
+       for( int ii = 0 ;  ii != gamma_id_blocks.size(); ii++)
+         gamma_id_blocks[ii] =  gamma_range[ii].range(block_pos->at(ii));
+
+       cout << endl << "gamma_id_blocks sizes : " ; for (Index id : gamma_id_blocks){ cout << id.size() << " " ;}
+    
+       unique_ptr<double[]> gamma_data; // = fulltens->get_block(gamma_id_blocks);
+       new_gamma_tensor->put_block(gamma_data, gamma_id_blocks);
+     
+     } while (fvec_cycle(block_pos, range_lengths, mins ));
+
+     gamma_tensors->push_back(new_gamma_tensor);
+  }
+ 
+   return gamma_tensors;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
+// mangled version of routines in fci_rdm.cc
+// can use RDM type for convenience, but everything by gamma1  is _not_ an rdm 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>, shared_ptr<RDM<3>> >
+Equation_Computer::Equation_Computer::compute_gamma12(const int MM, const int NN ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "compute_gamma12 MM = " << MM << " NN = " << NN  << endl;
+
+  if (det_->compress()) { // uncompressing determinants
+    auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
+    cc_->set_det(detex);
+  }
+  shared_ptr<Civec> ccbra = make_shared<Civec>(*cc_->data(MM));
+  shared_ptr<Civec> ccket = make_shared<Civec>(*cc_->data(NN));
+ 
+  shared_ptr<RDM<1>> gamma1;
+  shared_ptr<RDM<2>> gamma2;
+  shared_ptr<RDM<3>> gamma3;
+  tie(gamma1, gamma2, gamma3) = compute_gamma12_from_civec(ccbra, ccket);
+ 
+  cc_->set_det(det_); 
+
+  return tie(gamma1, gamma2, gamma3);
+
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>, shared_ptr<RDM<3>> >
+Equation_Computer::Equation_Computer::compute_gamma12_from_civec(shared_ptr<const Civec> cbra, shared_ptr<const Civec> cket) const {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //cout << "compute_gamma12_from_civec" << endl;
+
+  auto dbra = make_shared<Dvec>(cbra->det(), norb_*norb_);
+  sigma_2a1(cbra, dbra);
+  sigma_2a2(cbra, dbra);
+  
+  shared_ptr<Dvec> dket;
+  if (cbra != cket) {
+    dket = make_shared<Dvec>(cket->det(), norb_*norb_);
+    sigma_2a1(cket, dket);
+    sigma_2a2(cket, dket);
+  } else {
+    dket = dbra;
+  }
+  
+  return compute_gamma12_last_step(dbra, dket, cbra);
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>, shared_ptr<RDM<3>> >
+Equation_Computer::Equation_Computer::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, shared_ptr<const Dvec> dket, shared_ptr<const Civec> cibra) const {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "compute_gamma12_last_step" << endl;
+
+  const int nri = cibra->asize()*cibra->lenb();
+  const int ij  = norb_*norb_;
+ 
+  // gamma1 c^dagger <I|\hat{E}|0>
+  // gamma2 \sum_I <0|\hat{E}|I> <I|\hat{E}|0>
+  auto gamma1 = make_shared<RDM<1>>(norb_);
+  auto gamma2 = make_shared<RDM<2>>(norb_);
+  auto gamma3 = make_shared<RDM<3>>(norb_);
+
+  //section to be made recursive for arbitrary orders of gamma
+  {
+    auto cibra_data = make_shared<VectorB>(nri);
+    copy_n(cibra->data(), nri, cibra_data->data());
+
+    auto dket_data = make_shared<Matrix>(nri, ij);
+    for (int i = 0; i != ij; ++i)
+      copy_n(dket->data(i)->data(), nri, dket_data->element_ptr(0, i));
+ 
+    auto gamma1t = btas::group(*gamma1,0,2);
+    btas::contract(1.0, *dket_data, {0,1}, *cibra_data, {0}, 0.0, gamma1t, {1});
+
+    auto dbra_data = dket_data;
+    if (dbra != dket) {
+      dbra_data = make_shared<Matrix>(nri, ij);
+      for (int i = 0; i != ij; ++i)
+        copy_n(dbra->data(i)->data(), nri, dbra_data->element_ptr(0, i));
+    }
+ 
+    //Very bad way of getting gamma3  [sum_{K}<I|i*j|K>.[sum_{L}<K|k*l|L>.<L|m*n|J>]]
+    auto dket_KLLJ_data = make_shared<Matrix>(nri, ij*ij);
+    for ( int q = 0; q!=ij ; q++){
+      auto dket_KLLJ_part = make_shared<Dvec>(dket->det(), norb_*norb_);
+      sigma_2a1(dket->data(q), dket_KLLJ_part);
+      sigma_2a2(dket->data(q), dket_KLLJ_part);
+      copy_n(dket_KLLJ_data->data()+q*ij, ij*nri, dket_KLLJ_part->data(0)->data());
+    }
+
+    const char   transa = 'N';
+    const char   transb = 'T';
+    const double alpha = 1.0;
+    const double beta = 0.0; 
+    const int    n4 = ij*ij;
+             
+    dgemm_( &transa, &transb, &nri, &ij, &n4, &alpha, dket_KLLJ_data->data(),
+            &ij, dbra->data(), &nri, &beta, gamma3->element_ptr(0,0,0,0,0,0), &n4);
+    //btas::contract(1.0, *dket, {0,1}, *dket_KLLJ_data, {0,2}, 0.0, *gamma3_data, {1,2});
+ 
+    auto gamma2t = group(group(*gamma2, 2,4), 0,2);
+    btas::contract(1.0, *dbra_data, {1,0}, *dket_data, {1,2}, 0.0, gamma2t, {0,2});
+  }
+ 
+  // sorting... a bit stupid but cheap anyway
+  // This is since we transpose operator pairs in dgemm - cheaper to do so after dgemm (usually Nconfig >> norb_**2).
+  unique_ptr<double[]> buf(new double[norb_*norb_]);
+  for (int i = 0; i != norb_; ++i) {
+    for (int k = 0; k != norb_; ++k) {
+      copy_n(&gamma2->element(0,0,k,i), norb_*norb_, buf.get());
+      blas::transpose(buf.get(), norb_, norb_, gamma2->element_ptr(0,0,k,i));
+    }
+  }
+ 
+  return tie(gamma1, gamma2, gamma3);
+}
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Taken directly from src/ci/fci/knowles_compute.cc         
+//////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::sigma_2a1(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma) const {
+//////////////////////////////////////////////////////////////////////////////////////////////
+  //cout << "sigma_2a1" << endl;
+  const int lb = sigma->lenb();
+  const int ij = sigma->ij();
+  const double* const source_base = cvec->data();
+
+  for (int ip = 0; ip != ij; ++ip) {
+    double* const target_base = sigma->data(ip)->data();
+
+    for (auto& iter : cvec->det()->phia(ip)) {
+      const double sign = static_cast<double>(iter.sign);
+      double* const target_array = target_base + iter.source*lb;
+      blas::ax_plus_y_n(sign, source_base + iter.target*lb, lb, target_array);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Taken directly from src/ci/fci/knowles_compute.cc         
+// I'm sure there was a version which used transposition of the civector; this looks slow.
+///////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::sigma_2a2(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma) const {
+///////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "sigma_2a2" << endl;
+  const int la = sigma->lena();
+  const int ij = sigma->ij();
+
+  for (int i = 0; i < la; ++i) {
+    const double* const source_array0 = cvec->element_ptr(0, i);
+
+    for (int ip = 0; ip != ij; ++ip) {
+      double* const target_array0 = sigma->data(ip)->element_ptr(0, i);
+
+      for (auto& iter : cvec->det()->phib(ip)) {
+        const double sign = static_cast<double>(iter.sign);
+        target_array0[iter.source] += sign * source_array0[iter.target];
+      }
+    }
+  }
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 vector<Index> Equation_Computer::Equation_Computer::get_rng_blocks_raw(shared_ptr<vector<int>> forvec, shared_ptr<vector<shared_ptr< IndexRange>>> old_ids) {

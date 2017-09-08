@@ -57,17 +57,16 @@ class CASPT2_ALT {
     int  norb_  ;
     int  nstate_;
     std::shared_ptr<const Determinants> det_ ; 
-    std::shared_ptr<VecRDM<1>> all_gamma1;
-    std::shared_ptr<VecRDM<2>> all_gamma2;
-    std::shared_ptr<VecRDM<3>> all_gamma3;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
+
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<Tensor_<double>>>>> CTP_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map ;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> gamma_data_map;
   
     std::shared_ptr<IndexRange> closed_rng; 
     std::shared_ptr<IndexRange> active_rng;  
     std::shared_ptr<IndexRange> virtual_rng;
     std::shared_ptr<IndexRange> free_rng  ; 
+    std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map ;
 
     std::vector<std::shared_ptr<MultiTensor_<double>>> T2_all;
     std::vector<std::shared_ptr<MultiTensor_<double>>> lambda_all;
@@ -79,17 +78,6 @@ class CASPT2_ALT {
     
     void test();
     void build_data_map();
-
-    void compute_gamma12(const int MM, const int NN ) ;
-
-    void sigma_2a1(std::shared_ptr<const Civec> cc, std::shared_ptr<Dvec> d) const ;
-    void sigma_2a2(std::shared_ptr<const Civec> cc, std::shared_ptr<Dvec> d) const ;
-
-    std::tuple< std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
-    compute_gamma12_from_civec(std::shared_ptr<const Civec> cbra, std::shared_ptr<const Civec> cket) const ;
-
-    std::tuple< std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
-    compute_gamma12_last_step(std::shared_ptr<const Dvec> dbra, std::shared_ptr<const Dvec> dket, std::shared_ptr<const Civec> cibra) const ;
 
     static std::string flip(std::string idx);
     static std::shared_ptr<std::vector<std::string>> ijkl_to_klij(std::shared_ptr<std::vector<std::string>> invec) ;

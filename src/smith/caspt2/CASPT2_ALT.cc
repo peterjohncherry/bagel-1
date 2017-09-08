@@ -45,9 +45,9 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   nstate_ = ref->ciwfn()->nstates();
   cc_ = ref->ciwfn()->civectors();
   det_ = ref->ciwfn()->civectors()->det();
-  all_gamma1 = make_shared<VecRDM<1>>();
-  all_gamma2 = make_shared<VecRDM<2>>();
-  all_gamma3 = make_shared<VecRDM<3>>();
+ // all_gamma1 = make_shared<VecRDM<1>>();
+ // all_gamma2 = make_shared<VecRDM<2>>();
+ // all_gamma3 = make_shared<VecRDM<3>>();
  
   T2_all     = orig_cpt2->t2all_;
   lambda_all = orig_cpt2->lall_;
@@ -63,11 +63,13 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   range_conversion_map = make_shared<map<string, shared_ptr<IndexRange>>>();
   range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
   range_conversion_map->emplace("act", active_rng);
+  range_conversion_map->emplace("A", active_rng); //fudge, but leave for now
   range_conversion_map->emplace("vir", virtual_rng);
   range_conversion_map->emplace("free", free_rng);
 
-  CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   CTP_map = make_shared<map<string, shared_ptr<CtrTensorPart<Tensor_<double>>>>>();
+  CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  gamma_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -118,9 +120,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   auto TTens = Eqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
   CTP_data_map->emplace("T", T_data );
   Eqn->T_map->emplace("T", TTens);
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
+  ////////////////////////////////////// rdms (no derivs) ////////////////////////////////////////////////////////////////
   auto BraKet_Tensors1 = make_shared<vector< shared_ptr<TensOp<Tensor_<double>>> > >( vector<shared_ptr<TensOp<Tensor_<double>>>> { XTens,  TTens} );
   auto BraKet_Tensors2 = make_shared<vector< shared_ptr<TensOp<Tensor_<double>>> > >( vector<shared_ptr<TensOp<Tensor_<double>>>> { XTens,  TTens} );
 
@@ -130,42 +130,47 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   BraKet_List->push_back(BraKet_Tensors2);
 
   Eqn->equation_build(BraKet_List);
-  
-
   CTP_map = Eqn->CTP_map;
 
   auto Eqn_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Eqn, CTP_data_map, range_conversion_map );
 
   for (auto MM = 0 ; MM != nstate_ ; MM++){
     for (auto NN = 0 ; NN != nstate_ ; NN++){
-      compute_gamma12( MM, NN ) ;
+       Eqn_computer->compute_gamma12( MM, NN ) ;
   //    CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
+      
       for ( auto ctr_op : *(Eqn->ACompute_list)){
-        if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
-
-          if ( CTP_map->at(get<0>(ctr_op))->id_ranges->size()  > Eqn->T_map->at(get<0>(ctr_op).substr(0,1))->idxs->size()){
-             cout << "uncontracted multi tensor, do not store" << endl;       
+        if ( CTP_data_map->find(get<3>(ctr_op)) == CTP_data_map->end() ){
+          if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
+            if ( CTP_map->at(get<0>(ctr_op))->id_ranges->size()  > Eqn->T_map->at(get<0>(ctr_op).substr(0,1))->idxs->size()){
+               cout << "uncontracted multi tensor, do not store" << endl;       
+            } else {
+              cout << get<0> (ctr_op)<< " -->  no contraction" << endl; 
+              shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor(get<0>(ctr_op));
+              CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
+            }
+          
+          } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
+            cout << get<0> (ctr_op)<<  "!=" <<  get<1>(ctr_op)  << " --> contract different tensors" << endl; 
+            shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
+            CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
+          
           } else {
-            cout << get<0> (ctr_op)<< " -->  no contraction" << endl; 
-            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor(get<0>(ctr_op));
-            CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
+            cout << get<0> (ctr_op)<<  "==" <<  get<1>(ctr_op)  << " --> contract on same tensor" <<  endl; 
+            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_on_same_tensor( get<2>(ctr_op), get<0>(ctr_op)); 
+            CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
           }
-
-        } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
-          cout << get<0> (ctr_op)<<  "!=" <<  get<1>(ctr_op)  << " --> contract different tensors" << endl; 
-          shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
-          CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
-
         } else {
-          cout << get<0> (ctr_op)<<  "==" <<  get<1>(ctr_op)  << " --> contract on same tensor" <<  endl; 
-          shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op)); 
-          CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
-        }
+          shared_ptr<Tensor_<double>> Merged_Aterms ; // add new A term; 
+        } 
+
       }
     }
   }
+  
   return;
 }
+
 
 //  CTP_data_map->emplace(get<3>(ctr_op),  Eqn_computer->contract_same_tensor( get<2>(ctr_op), Eqn->CTP_map->at(get<0>(ctr_op)), CTP_data_map->at(get<2>(ctr_op))); 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,6 +189,9 @@ shared_ptr<Tensor_<double>> CASPT2_ALT::CASPT2_ALT::get_Tensor_data( string Tnam
 
    return new_T;
 }
+
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<shared_ptr<const IndexRange>>> CASPT2_ALT::CASPT2_ALT::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
@@ -207,168 +215,5 @@ shared_ptr<vector<IndexRange>> CASPT2_ALT::CASPT2_ALT::Get_Bagel_IndexRanges(sha
   return ranges_Bagel;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
-// mangled version of routines in fci_rdm.cc
-// can use RDM type for convenience, but everything by gamma1  is _not_ an rdm 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CASPT2_ALT::CASPT2_ALT::compute_gamma12(const int MM, const int NN ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "compute_gamma12 MM = " << MM << " NN = " << NN  << endl;
-
-  if (det_->compress()) { // uncompressing determinants
-    auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
-    cc_->set_det(detex);
-  }
-  shared_ptr<Civec> ccbra = make_shared<Civec>(*cc_->data(MM));
-  shared_ptr<Civec> ccket = make_shared<Civec>(*cc_->data(NN));
- 
-  shared_ptr<RDM<1>> gamma1;
-  shared_ptr<RDM<2>> gamma2;
-  shared_ptr<RDM<3>> gamma3;
-  tie(gamma1, gamma2, gamma3) = compute_gamma12_from_civec(ccbra, ccket);
- 
-  all_gamma1->emplace(MM,NN, gamma1);
-  all_gamma2->emplace(MM,NN, gamma2);
-  all_gamma3->emplace(MM,NN, gamma3);
- 
-  cc_->set_det(det_); 
-
-  return;
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>, shared_ptr<RDM<3>> >
-CASPT2_ALT::CASPT2_ALT::compute_gamma12_from_civec(shared_ptr<const Civec> cbra, shared_ptr<const Civec> cket) const {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //cout << "compute_gamma12_from_civec" << endl;
-
-  auto dbra = make_shared<Dvec>(cbra->det(), norb_*norb_);
-  sigma_2a1(cbra, dbra);
-  sigma_2a2(cbra, dbra);
-  
-  shared_ptr<Dvec> dket;
-  if (cbra != cket) {
-    dket = make_shared<Dvec>(cket->det(), norb_*norb_);
-    sigma_2a1(cket, dket);
-    sigma_2a2(cket, dket);
-  } else {
-    dket = dbra;
-  }
-  
-  return compute_gamma12_last_step(dbra, dket, cbra);
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>, shared_ptr<RDM<3>> >
-CASPT2_ALT::CASPT2_ALT::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, shared_ptr<const Dvec> dket, shared_ptr<const Civec> cibra) const {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "compute_gamma12_last_step" << endl;
-
-  const int nri = cibra->asize()*cibra->lenb();
-  const int ij  = norb_*norb_;
- 
-  // gamma1 c^dagger <I|\hat{E}|0>
-  // gamma2 \sum_I <0|\hat{E}|I> <I|\hat{E}|0>
-  auto gamma1 = make_shared<RDM<1>>(norb_);
-  auto gamma2 = make_shared<RDM<2>>(norb_);
-  auto gamma3 = make_shared<RDM<3>>(norb_);
-
-  //section to be made recursive for arbitrary orders of gamma
-  {
-    auto cibra_data = make_shared<VectorB>(nri);
-    copy_n(cibra->data(), nri, cibra_data->data());
-
-    auto dket_data = make_shared<Matrix>(nri, ij);
-    for (int i = 0; i != ij; ++i)
-      copy_n(dket->data(i)->data(), nri, dket_data->element_ptr(0, i));
- 
-    auto gamma1t = btas::group(*gamma1,0,2);
-    btas::contract(1.0, *dket_data, {0,1}, *cibra_data, {0}, 0.0, gamma1t, {1});
-
-    auto dbra_data = dket_data;
-    if (dbra != dket) {
-      dbra_data = make_shared<Matrix>(nri, ij);
-      for (int i = 0; i != ij; ++i)
-        copy_n(dbra->data(i)->data(), nri, dbra_data->element_ptr(0, i));
-    }
- 
-    //Very bad way of getting gamma3  [sum_{K}<I|i*j|K>.[sum_{L}<K|k*l|L>.<L|m*n|J>]]
-    auto dket_KLLJ_data = make_shared<Matrix>(nri, ij*ij);
-    for ( int q = 0; q!=ij ; q++){
-      auto dket_KLLJ_part = make_shared<Dvec>(dket->det(), norb_*norb_);
-      sigma_2a1(dket->data(q), dket_KLLJ_part);
-      sigma_2a2(dket->data(q), dket_KLLJ_part);
-      copy_n(dket_KLLJ_data->data()+q*ij, ij*nri, dket_KLLJ_part->data(0)->data());
-    }
-
-    const char   transa = 'N';
-    const char   transb = 'T';
-    const double alpha = 1.0;
-    const double beta = 0.0; 
-    const int    n4 = ij*ij;
-             
-    dgemm_( &transa, &transb, &nri, &ij, &n4, &alpha, dket_KLLJ_data->data(),
-            &ij, dbra->data(), &nri, &beta, gamma3->element_ptr(0,0,0,0,0,0), &n4);
-    //btas::contract(1.0, *dket, {0,1}, *dket_KLLJ_data, {0,2}, 0.0, *gamma3_data, {1,2});
- 
-    auto gamma2t = group(group(*gamma2, 2,4), 0,2);
-    btas::contract(1.0, *dbra_data, {1,0}, *dket_data, {1,2}, 0.0, gamma2t, {0,2});
-  }
- 
-  // sorting... a bit stupid but cheap anyway
-  // This is since we transpose operator pairs in dgemm - cheaper to do so after dgemm (usually Nconfig >> norb_**2).
-  unique_ptr<double[]> buf(new double[norb_*norb_]);
-  for (int i = 0; i != norb_; ++i) {
-    for (int k = 0; k != norb_; ++k) {
-      copy_n(&gamma2->element(0,0,k,i), norb_*norb_, buf.get());
-      blas::transpose(buf.get(), norb_, norb_, gamma2->element_ptr(0,0,k,i));
-    }
-  }
- 
-  return tie(gamma1, gamma2, gamma3);
-}
-//////////////////////////////////////////////////////////////////////////////////////////////
-// Taken directly from src/ci/fci/knowles_compute.cc         
-//////////////////////////////////////////////////////////////////////////////////////////////
-void CASPT2_ALT::CASPT2_ALT::sigma_2a1(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma) const {
-//////////////////////////////////////////////////////////////////////////////////////////////
-  //cout << "sigma_2a1" << endl;
-  const int lb = sigma->lenb();
-  const int ij = sigma->ij();
-  const double* const source_base = cvec->data();
-
-  for (int ip = 0; ip != ij; ++ip) {
-    double* const target_base = sigma->data(ip)->data();
-
-    for (auto& iter : cvec->det()->phia(ip)) {
-      const double sign = static_cast<double>(iter.sign);
-      double* const target_array = target_base + iter.source*lb;
-      blas::ax_plus_y_n(sign, source_base + iter.target*lb, lb, target_array);
-    }
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// Taken directly from src/ci/fci/knowles_compute.cc         
-// I'm sure there was a version which used transposition of the civector; this looks slow.
-///////////////////////////////////////////////////////////////////////////////////////////////
-void CASPT2_ALT::CASPT2_ALT::sigma_2a2(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma) const {
-///////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "sigma_2a2" << endl;
-  const int la = sigma->lena();
-  const int ij = sigma->ij();
-
-  for (int i = 0; i < la; ++i) {
-    const double* const source_array0 = cvec->element_ptr(0, i);
-
-    for (int ip = 0; ip != ij; ++ip) {
-      double* const target_array0 = sigma->data(ip)->element_ptr(0, i);
-
-      for (auto& iter : cvec->det()->phib(ip)) {
-        const double sign = static_cast<double>(iter.sign);
-        target_array0[iter.source] += sign * source_array0[iter.target];
-      }
-    }
-  }
-}
 
 #endif
