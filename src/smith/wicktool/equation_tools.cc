@@ -42,7 +42,7 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
    for (auto idrng : *Bagel_id_ranges ){
       range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
    }
-    
+
    shared_ptr<Tensor_<double>> fulltens = CTP_data_map->at(Tname.substr(0,1));
    shared_ptr<Tensor_<double>> block_tensor = make_shared<Tensor_<double>>(*Bagel_id_ranges);
    block_tensor->allocate();
@@ -274,17 +274,11 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vec
     cout << endl;
   }
   
-  // fix this so it 
-  shared_ptr<RDM<1>> grdm1; 
-  shared_ptr<RDM<2>> grdm2; 
-  shared_ptr<RDM<3>> grdm3; 
-  tie(grdm1, grdm2, grdm3) =  compute_gamma12( MM, NN ) ;
-
-  //must change get gamma function so it returns a matrix or similar
-  double* grdm_data = grdm1->element_ptr(0,0);
+  //A fudge, needs to be changed so gammas are tensors 
+  shared_ptr<vector<shared_ptr<VectorB>>> gamma_data_vec = compute_gammas( MM, NN ) ;
 
   auto gamma_tensors = make_shared<vector<shared_ptr<Tensor_<double>>>>(0);
-
+ 
   for ( int ii = 0 ; ii != gamma_ranges.size(); ii++ ) {
 
      auto  range_lengths  = make_shared<vector<int>>(0); 
@@ -292,11 +286,12 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vec
        range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
      }
 
-     shared_ptr<Tensor_<double>> new_gamma_tensor = make_shared<Tensor_<double>>(*(gamma_ranges[ii]));
-     new_gamma_tensor->allocate();
+     Tensor_<double> new_gamma_tensor(*(gamma_ranges[ii]));
+     new_gamma_tensor.allocate();
      
      auto block_pos = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
      auto mins = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
+
      do {
        
        cout << "block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
@@ -305,16 +300,21 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vec
          gamma_id_blocks[jj] =  gamma_ranges[ii]->at(jj).range(block_pos->at(jj));
 
        cout << endl << "gamma_id_blocks sizes : " ; for (Index id : gamma_id_blocks){ cout << id.size() << " " ; cout.flush();}
-    
-       unique_ptr<double[]> gamma_data = get_block_of_data(grdm_data, gamma_ranges[ii], block_pos); 
-       new_gamma_tensor->put_block(gamma_data, gamma_id_blocks);
+  
+       { 
+       unique_ptr<double[]> gamma_data = get_block_of_data(gamma_data_vec->at(ii)->data(), gamma_ranges[ii], block_pos); 
+       }
+       cout << " got gamma data successfully " << endl;
+//       new_gamma_tensor.put_block( gamma_data, gamma_id_blocks);
+
+       cout << " put gamma data successfully " << endl;
      
      } while (fvec_cycle(block_pos, range_lengths, mins ));
-
-     gamma_tensors->push_back(new_gamma_tensor);
+//     gamma_tensors->push_back(make_shared<Tensor_<double>>(new_gamma_tensor));
   }
+  cout << "out of loop" << endl;
  
-   return gamma_tensors;
+  return gamma_tensors;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 unique_ptr<double[]>
@@ -323,8 +323,7 @@ Equation_Computer::Equation_Computer::get_block_of_data( double* data_ptr ,
                                                          shared_ptr<vector<int>> block_pos) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
- //merge this to one loop, but keep until debugged, as this is likely to go wrong...
-  
+ // merge this to one loop, but keep until debugged, as this is likely to go wrong...
  // getting id position of id_block ; list of block sizes looks like [n,n,n,n,... , n-1, n-1 n-1] 
   vector<size_t> id_pos(block_pos->size());
   cout <<endl << "id_pos = ";
@@ -368,7 +367,40 @@ Equation_Computer::Equation_Computer::get_block_of_data( double* data_ptr ,
 
   copy_n(data_block.get(), data_block_size, data_ptr+data_block_pos);
 
-  return data_block; 
+  return move(data_block); 
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
+// mangled version of routines in fci_rdm.cc
+// can use RDM type for convenience, but everything by gamma1  is _not_ an rdm 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<shared_ptr<VectorB>>> 
+Equation_Computer::Equation_Computer::compute_gammas(const int MM, const int NN ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "compute_gamma12 MM = " << MM << " NN = " << NN  << endl;
+
+  if (det_->compress()) { // uncompressing determinants
+    auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
+    cc_->set_det(detex);
+  }
+  shared_ptr<Civec> ccbra = make_shared<Civec>(*cc_->data(MM));
+  shared_ptr<Civec> ccket = make_shared<Civec>(*cc_->data(NN));
+ 
+  shared_ptr<RDM<1>> gamma1x;
+  shared_ptr<RDM<2>> gamma2x;
+  shared_ptr<RDM<3>> gamma3x;
+  tie(gamma1x, gamma2x, gamma3x) = compute_gamma12_from_civec(ccbra, ccket);
+ 
+  
+  auto  gamma1 = make_shared<VectorB>(norb_*norb_);
+  auto  gamma2 = make_shared<VectorB>(norb_*norb_*norb_*norb_);
+  auto  gamma3 = make_shared<VectorB>(norb_*norb_*norb_*norb_*norb_*norb_);
+  cc_->set_det(det_); 
+
+  auto gamma_vec = make_shared<vector<shared_ptr<VectorB>>>(vector<shared_ptr<VectorB>> { gamma1, gamma2, gamma3}) ;
+
+  return gamma_vec;
+
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}

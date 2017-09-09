@@ -43,7 +43,6 @@ class Equation_Computer {
     template<class vtype>
     std::shared_ptr<std::vector<vtype>> reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
 
-
     std::shared_ptr<Tensor_<double>> contract_on_same_tensor( std::pair<int,int> ctr_todo, std::string Tname);
 
     std::shared_ptr<Tensor_<double>> contract_different_tensors(std::pair<int,int> ctr_todo, std::string T1name, std::string T2name );
@@ -87,6 +86,9 @@ class Equation_Computer {
 
     std::shared_ptr<std::vector<std::shared_ptr<Tensor_<double>>>>
     get_gammas(int MM , int NN, std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>> gamma_ranges_REMOVE_AFTER_DEBUG);
+
+    
+    std::shared_ptr<std::vector<std::shared_ptr<VectorB>>> compute_gammas(const int MM, const int NN ) ;
 
     std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
     compute_gamma12(const int MM, const int NN ) ;

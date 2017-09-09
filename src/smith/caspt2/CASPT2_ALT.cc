@@ -137,18 +137,18 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   for (auto MM = 0 ; MM != nstate_ ; MM++){
     for (auto NN = 0 ; NN != nstate_ ; NN++){
        
-      for ( auto gidxs_loc = Eqn->CMTP_Eqn_Compute_List->begin(); gidxs_loc != Eqn->CMTP_Eqn_Compute_List->end(); gidxs_loc++ ){
+      for ( auto gidxs_loc = Eqn->CMTP_Eqn_Compute_List->rbegin(); gidxs_loc != Eqn->CMTP_Eqn_Compute_List->rend(); ++gidxs_loc ){
           
         auto gamma_range = make_shared<vector<string>>(gidxs_loc->first);
         auto gamma_ranges = make_shared<vector<shared_ptr<vector<string>>>>(1, gamma_range);
         cout << "gamma_range->size() = " << gamma_range->size();
         
-        for(int ii = 2 ; ii!= gamma_range->size(); ii++)
+        for(int ii = 2 ; ii!= gamma_range->size(); ii+=2)
           gamma_ranges->push_back(make_shared<vector<string>>(gamma_range->begin(), gamma_range->end()-ii));  
         
-        shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors =  Eqn_computer->get_gammas( MM, NN, gamma_ranges ) ;
+        auto gamma_tensors =  Eqn_computer->get_gammas( MM, NN, gamma_ranges ) ;
         //  CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
-      
+        cout << "got gammas" <<endl; 
         for ( auto A_contribs : *(Eqn->CMTP_Eqn_Compute_List->at(*gamma_range))){
           pair<int,int> ctr_factor = A_contribs.second;
           for (auto A_contrib : *A_contribs.first){
