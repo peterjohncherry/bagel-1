@@ -301,16 +301,16 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vec
 
        cout << endl << "gamma_id_blocks sizes : " ; for (Index id : gamma_id_blocks){ cout << id.size() << " " ; cout.flush();}
   
-       { 
-       unique_ptr<double[]> gamma_data = get_block_of_data(gamma_data_vec->at(ii)->data(), gamma_ranges[ii], block_pos); 
-       }
+        
+       unique_ptr<double[]> gamma_data =  get_block_of_data(gamma_data_vec->at(ii)->data(), gamma_ranges[ii], block_pos); 
+       
        cout << " got gamma data successfully " << endl;
-//       new_gamma_tensor.put_block( gamma_data, gamma_id_blocks);
+       new_gamma_tensor.put_block( gamma_data, gamma_id_blocks);
 
        cout << " put gamma data successfully " << endl;
      
      } while (fvec_cycle(block_pos, range_lengths, mins ));
-//     gamma_tensors->push_back(make_shared<Tensor_<double>>(new_gamma_tensor));
+     gamma_tensors->push_back(make_shared<Tensor_<double>>(new_gamma_tensor));
   }
   cout << "out of loop" << endl;
  

@@ -147,9 +147,11 @@ void CASPT2_ALT::CASPT2_ALT::test() {
           gamma_ranges->push_back(make_shared<vector<string>>(gamma_range->begin(), gamma_range->end()-ii));  
         
         auto gamma_tensors =  Eqn_computer->get_gammas( MM, NN, gamma_ranges ) ;
+
         //  CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
         cout << "got gammas" <<endl; 
-        for ( auto A_contribs : *(Eqn->CMTP_Eqn_Compute_List->at(*gamma_range))){
+        for ( auto A_contribs : *(Eqn->CMTP_Eqn_Compute_List->at(*gamma_range)) ){
+
           pair<int,int> ctr_factor = A_contribs.second;
           for (auto A_contrib : *A_contribs.first){
             for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib))){
