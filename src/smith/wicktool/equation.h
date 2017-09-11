@@ -54,7 +54,7 @@ class Equation {
        // map from the name of a tensor, to the list of contractions which need to be performed to obtain it
       std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>,std::string> >> >>  ACompute_map ;
 
-      // key : String identifying the Gamma or rdm      result : Vector of string vectors identifying A-Tensor contributions paired with corresponding ReIm factor 
+      // key : String identifying the Gamma or rdm      result : Vector of string vectors identifying A-Tensor and the corresponding ReIm factor 
       std::shared_ptr< std::map< std::vector<std::string>, std::shared_ptr<std::vector<std::pair< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> >>> >> CMTP_Eqn_Compute_List ;
 
       void Add_BraKet_Compute_Terms_CMTP(std::shared_ptr<BraKet<DType>> BK );

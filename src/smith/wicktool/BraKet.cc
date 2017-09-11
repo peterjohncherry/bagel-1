@@ -12,7 +12,7 @@ using namespace WickUtils;
       using pint_vec = std::vector<std::pair<int,int>>;
       using pstr_vec = std::vector<std::pair<std::string,std::string>>;
       
-      using CombinedGammaMap = std::map<std::vector<std::string>, /*spins of gamma_ids*/ 
+      using CombinedGammaMap = std::map<std::vector<std::string>, /*ranges of gamma_ids*/ 
                                         std::tuple< std::shared_ptr<std::vector<std::shared_ptr<pstr_vec>>>, /* contractions from reordering to gamma */  
                                                     std::shared_ptr<std::vector<std::shared_ptr<pstr_vec>>>, /* spins of contractions from reordering to gamma */  
                                                     std::shared_ptr<std::vector<int>>  /* signs from reordering to gamma */ > >;

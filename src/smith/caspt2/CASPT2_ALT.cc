@@ -148,12 +148,17 @@ void CASPT2_ALT::CASPT2_ALT::test() {
         auto gamma_tensors =  Eqn_computer->get_gammas( MM, NN, gamma_ranges ) ;
         cout << "got gammas" <<endl; 
         // CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
-        for ( auto A_contribs : *(Eqn->CMTP_Eqn_Compute_List->at(*gamma_range)) ){
+        for ( auto A_contribs : *(Eqn->CMTP_Eqn_Compute_List->at(*gamma_range)) ){ // cycles through A-tensor list
 
           pair<int,int> ctr_factor = A_contribs.second;
+          for (auto A_contrib : *A_contribs.first){            
+            for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib))){
+                    
+
+            }
+          }
           for (auto A_contrib : *A_contribs.first){
             for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib))){
-
               if ( CTP_data_map->find(get<3>(ctr_op)) == CTP_data_map->end() ){
                 if( get<2>(ctr_op).first == get<2>(ctr_op).second){                
                     cout << "uncontracted multitensor, do not store  " << endl;

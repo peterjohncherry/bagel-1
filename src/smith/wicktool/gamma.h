@@ -5,6 +5,19 @@
 //#include "WickUtils.h"
 using namespace WickUtils;
 
+class gamma { 
+    public : 
+      std::string name;
+      int nel;
+      std::vector<std::string> ids;
+      std::vector<std::string> id_ranges;
+      std::pair<int,int> ReImFactor;
+      gamma(std::string name_in, std::vector<std::string> ids_in, std::vector<std::string> id_ranges_in, std::pair<int,int> ReImFactor_in):
+                      name(name_in), ids(ids_in), id_ranges(id_ranges_in), ReImFactor(ReImFactor_in){};
+      ~gamma(){};
+
+    };
+
 class RDMderiv{ 
  
   public: 
@@ -39,6 +52,7 @@ class RDMderiv{
   std::shared_ptr<std::map< char, int>>   op_order ;
   std::shared_ptr<std::map< std::string, int>>  idx_order ;
   std::shared_ptr<std::map< std::string, bool>> aop_map   ;
+  std::shared_ptr<std::map< std::string, std::string>> range_map   ;
   
   bool ordering(std::pair<std::string,std::string> a, std::pair<std::string,std::string> b) { bool tim = (idx_order->at(a.first) < idx_order->at(b.first) ) ? true : false; return tim; };
 };

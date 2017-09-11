@@ -233,7 +233,7 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
       Tmap->emplace(unc_CTP->name, unc_CTP);
 
       required_Tblocks->push_back(unc_CTP->name);
-    //  ACompute_list->push_back(tie(unc_CTP->name, unc_CTP->name, unc_ctrs_pos->back(), unc_CTP->name));
+      ACompute_list->push_back(tie(unc_CTP->name, unc_CTP->name, unc_ctrs_pos->back(), unc_CTP->name));
 
       ACompute_list->push_back(tie(unc_CTP->name, unc_CTP->name, ctrs_pos->back(), name));
 

@@ -51,22 +51,19 @@ void RDMderiv::initialize(shared_ptr<vector<bool>> ac_init,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void RDMderiv::initialize(shared_ptr<vector<bool>> ac_init,
                           shared_ptr<vector<string>> ids_init, 
-                          shared_ptr<vector<string>> ids_spins){
+                          shared_ptr<vector<string>> id_ranges){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   orig_ids = ids_init; 
 
   spinfree = false; 
  
-  auto spin_ids = make_shared<vector<string>>(*ids_init);
-  for(int ii = 0; ii != ids_spins->size(); ii++) 
-    spin_ids->at(ii)+=ids_spins->at(ii);
-
   auto nodel = make_shared<pstr_vec>(0);
   allops = make_shared<vector<shared_ptr<vector<bool>>>>(1, ac_init);
-  allids = make_shared<vector<shared_ptr<vector<string>>>>(1, spin_ids);
+  allids = make_shared<vector<shared_ptr<vector<string>>>>(1, ids_init);
   alldeltas = make_shared<vector<shared_ptr<pstr_vec>>>(1,nodel); 
   allsigns  = make_shared<vector<int>>(1,1);
- 
+
+  //neeeded to keep ordering of contractions consistent 
   auto opname = orig_ids->at(0)[0];
   op_order = make_shared<map< char, int>>();
   int ii =0;
@@ -86,7 +83,13 @@ void RDMderiv::initialize(shared_ptr<vector<bool>> ac_init,
 
   aop_map = make_shared<map< string, bool>>();
   for ( int jj = 0 ;  jj !=orig_ids->size(); jj++ )
-    aop_map->emplace(spin_ids->at(jj), ac_init->at(jj));
+    aop_map->emplace(ids_init->at(jj), ac_init->at(jj));
+
+  range_map = make_shared<map< string, string>>();
+  for ( int jj = 0 ;  jj !=orig_ids->size(); jj++ )
+    range_map->emplace(ids_init->at(jj), id_ranges->at(jj));
+
+
 
   return;
 }
@@ -104,7 +107,7 @@ void RDMderiv::swap(shared_ptr<vector<bool>> ac, shared_ptr<vector<string>> ids,
   ac->at(jj) = a_buff;
   ids->at(jj) = idx_buff;
 
-  if (spinfree || (ids->at(jj).back() == ids->at(ii).back())){
+  if (spinfree || ( range_map->at(ids->at(jj)) == range_map->at(ids->at(ii)) )){
     auto new_deltas_tmp = make_shared<pstr_vec>(*dlist); 
     new_deltas_tmp->push_back(make_pair(ids->at(jj), ids->at(ii)));
     auto new_deltas = Standardize_delta_ordering( new_deltas_tmp ) ;
@@ -195,6 +198,8 @@ void RDMderiv::norm_order(){
   return;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//The ordering of the deltas is arbitrary, but must be consistent. If not, duplicate terms will arise elsewhere.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<pstr_vec> RDMderiv::Standardize_delta_ordering(shared_ptr<pstr_vec> delta_ids ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -327,7 +332,6 @@ shared_ptr<pstr_vec> alt_RDMderiv::strip_delta_spins(shared_ptr<pstr_vec> deltas
 shared_ptr<pint_vec> alt_RDMderiv::get_spinsector_path(shared_ptr<pstr_vec> gamma_spin_ids , pair<int,int> spinsector ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //note the spin sector is that of the  Bra, hence daggered ops will annihilate
-
 
   pair<int,int> sector = spinsector;
   auto ssector_path = make_shared<pint_vec>(0);
