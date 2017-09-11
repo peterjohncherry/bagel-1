@@ -224,7 +224,7 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
 
     } else if(ctrs_pos->size() == 1 ){ 
 
-      auto unc_ctrs_pos = make_shared<vector<pair<int,int>>>(0);
+      auto unc_ctrs_pos = make_shared<vector<pair<int,int>>>(1, make_pair(0,0) );
       auto unc_ReIm_factors = make_shared<vector<pair<int,int>>>(0); 
       auto unc_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, unc_ctrs_pos, unc_ReIm_factors ); 
 
@@ -233,12 +233,9 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
       Tmap->emplace(unc_CTP->name, unc_CTP);
 
       required_Tblocks->push_back(unc_CTP->name);
-//      ACompute_list->push_back(tie(unc_CTP->name, unc_CTP->name, unc_ctrs_pos->back(), unc_CTP->name));
+    //  ACompute_list->push_back(tie(unc_CTP->name, unc_CTP->name, unc_ctrs_pos->back(), unc_CTP->name));
 
-      CTdata = unc_CTP->Binary_Contract_same_tensor(ctrs_pos->back(), ACompute_list);
       ACompute_list->push_back(tie(unc_CTP->name, unc_CTP->name, ctrs_pos->back(), name));
-
-
 
       cout << name << "  3" <<  endl;
       Tmap->emplace(name, make_shared<CtrTensorPart>(*this));
@@ -308,7 +305,7 @@ void CtrMultiTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<Ct
                                                     CTP_vec->at(cross_ctrs_pos->back().second.first)->myname(),
                                                     all_ctrs_pos->back(), Tmap , ACompute_list);
         Tmap->emplace(new_CTP->name, new_CTP);
-    //    cout << "putting " << new_CTP->name << "into the map " << endl;
+        cout << "putting " << new_CTP->name << "into the map " << endl;
 
       } else {
         auto new_CMTP = Binary_Contract_diff_tensors_MT(CTP_vec->at(cross_ctrs_pos->back().first.first)->myname(),
@@ -386,10 +383,11 @@ shared_ptr<CtrTensorPart<DType>>
 
    //Should really link to MSRelCASPT2::BinaryContractArbitrary, or something similar 
    auto new_CTData = make_shared<DType>();
+   ACompute_list->push_back(tie(T1name, T2name, ctr_todo, new_CTP->name));
+
    new_CTP->CTdata= new_CTData;
    new_CTP->contracted = true;
 
-   ACompute_list->push_back(tie(T1name, T1name, ctr_todo,new_CTP->name));
    cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << ctr_todo.first << "," << ctr_todo.second << ") to get " << new_CTP->name << endl;
    return new_CTP;
 }
