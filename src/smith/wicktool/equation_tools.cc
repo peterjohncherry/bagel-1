@@ -33,7 +33,10 @@ Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SM
 shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tensor(string Tname){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Equation_Computer::Equation_Computer::get_block_Tensor" << Tname << endl;
-    
+  
+   if(  CTP_data_map->find(Tname) != CTP_data_map->end())
+     return CTP_data_map->at(Tname);
+  
    shared_ptr<vector<string>>     unc_ranges = CTP_map->at(Tname)->id_ranges;  
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
@@ -71,20 +74,23 @@ shared_ptr<Tensor_<double>>
 Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr_todo, std::string Tname) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
-  auto CTP = CTP_map->at(Tname); cout << "got " << CTP->name << " info" << endl;
-  auto CTP_data = CTP_data_map->at(Tname); cout << "got " << CTP->name << " data" << endl;
+  shared_ptr<CtrTensorPart<Tensor_<double>>> CTP = CTP_map->at(Tname); cout << "got " << CTP->name << " info" << endl;
+  shared_ptr<Tensor_<double>> CTP_data = get_block_Tensor(Tname); cout << "got " << CTP->name << " data" << endl;
   shared_ptr<Tensor_<double>>  T_out;  
 
-   cout << "unc_pos = ";
+  cout << "unc_pos = ";
   auto T1_new_order = make_shared<vector<int>>(0);
   for (int ii = 0; ii !=CTP->unc_pos->size(); ii++)
     if (CTP->unc_pos->at(ii) != ctr_todo.first){
       T1_new_order->push_back(CTP->unc_pos->at(ii));
-      cout <<CTP->unc_pos->at(ii)<< " " ; cout.flush();
+      cout << CTP->unc_pos->at(ii) << " " ; cout.flush();
     }
+  cout << endl;
    
-  T1_new_order->push_back(ctr_todo.first); cout <<T1_new_order->back()<< " " ;
-  T1_new_order->push_back(ctr_todo.second);cout <<T1_new_order->back()<< " " ; cout <<endl;
+  cout << "contraction = (" << ctr_todo.first << "," << ctr_todo.second << ")" << endl;
+
+  T1_new_order->push_back(ctr_todo.first);  cout << T1_new_order->back() << " " ;
+  T1_new_order->push_back(ctr_todo.second); cout << T1_new_order->back() << " " ; cout <<endl;
 
   auto T1_org_rngs = Get_Bagel_const_IndexRanges(CTP->id_ranges);
 
@@ -304,28 +310,21 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vec
        size_t gamma_block_size;
        size_t gamma_block_pos;
        tie(gamma_block_size, gamma_block_pos) = get_block_info( gamma_ranges[ii],  block_pos) ;
+
        cout << " gamma_block_size = " << gamma_block_size << endl;
-       cout << " gamma_block_pos = " << gamma_block_pos << endl;
+       cout << " gamma_block_pos = "  << gamma_block_pos << endl;
 
        double bob[gamma_block_size];        
        for (int qq = 0 ; qq != gamma_block_size; qq++ ) { bob[qq] = 1;}
 
        cout <<" gamma_data_vec->at("<<ii<<")->size() = "  << gamma_data_vec->at(ii)->size() << endl; 
-       cout <<" gamma_data_vec->at("<<ii<<")->data() = ";
-
-       for (int qq = 0 ; qq != gamma_block_size; qq++ ) { 
-          cout << *(gamma_data_vec->at(ii)->data()+gamma_block_pos+qq) << " " ; 
-        }
 
        cout << endl << gamma_data_vec->size()  << gamma_data_vec->size() << endl; 
        unique_ptr<double[]> gamma_data_block(new double[gamma_block_size])  ;
-        
        copy_n(gamma_data_block.get(), gamma_block_size, gamma_data_vec->at(ii)->data());
-//       copy_n(gamma_data_block.get(), gamma_block_size, bob);
        
        cout << " got gamma data successfully " << endl;
        new_gamma_tensor.put_block( gamma_data_block, gamma_id_blocks);
-
        cout << " put gamma data successfully " << endl;
      
      } while (fvec_cycle(block_pos, range_lengths, mins ));

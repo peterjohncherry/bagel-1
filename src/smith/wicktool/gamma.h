@@ -5,6 +5,46 @@
 //#include "WickUtils.h"
 using namespace WickUtils;
 
+class RDMderiv_new{ 
+ 
+  public: 
+
+  // variables
+  bool spinfree;
+  std::shared_ptr<std::vector<int>> signs_all  ;
+  std::shared_ptr<std::vector<bool>> full_aops ;
+  std::shared_ptr<std::vector<std::string>> full_ids ;
+  std::shared_ptr<std::vector<std::string>> full_id_ranges ;
+  std::shared_ptr<std::vector<std::shared_ptr<std::vector<bool>>>> aops_all ;
+  std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> ids_pos_all ;
+  std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>> deltas_pos_all; 
+
+  std::shared_ptr<std::map< char, int>>   op_order ;
+  std::shared_ptr<std::map< std::string, int>>  idx_order ;
+  
+  RDMderiv_new(){};
+  ~RDMderiv_new(){};
+
+ // functions
+  void initialize(std::shared_ptr<std::vector<bool>> ac_init,std::shared_ptr<std::vector<std::string>> ids_init,
+                  std::shared_ptr<std::vector<std::string>> id_ranges);
+
+  void initialize( std::shared_ptr<std::vector<bool>> ac_init, std::shared_ptr<std::vector<std::string>> ids_init,
+                   std::shared_ptr<std::vector<std::pair<int,int>>> deltas_init, int sign = 1);
+
+  void swap(std::shared_ptr<std::vector<bool>> ac, std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<pint_vec> deltas_pos, int ii, int jj, int kk );
+
+  void generic_reordering(std::shared_ptr<std::vector<int>> new_order );
+
+  void norm_order();
+  
+  void alt_order();
+
+  bool ordering(std::pair<std::string,std::string> a, std::pair<std::string,std::string> b) {
+       return( (idx_order->at(a.first) < idx_order->at(b.first) ) ? true : false ); };
+};
+
+
 class RDMderiv{ 
  
   public: 

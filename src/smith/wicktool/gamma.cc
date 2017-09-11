@@ -9,6 +9,243 @@
 using namespace std; 
 using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
+                              shared_ptr<vector<string>> ids_init, 
+                              shared_ptr<pint_vec> deltas_pos_init,
+                              int sign){
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  full_ids = ids_init; 
+  full_aops = ac_init;
+  spinfree = false; 
+
+  vector<bool>  unc_get(ids_init->size(), true);
+  for(int ii =0 ; ii != deltas_pos_init->size() ; ii++) {
+    unc_get[deltas_pos_init->at(ii).first] = false;
+    unc_get[deltas_pos_init->at(ii).second] = false;
+  }
+
+  shared_ptr<vector<int>> unc_pos(0);
+  shared_ptr<vector<string>> unc_ids(0);
+  for (int ii = 0 ; ii != unc_get.size(); ii++ ) {
+    if(unc_get[ii]){
+     unc_pos->push_back(ii);
+     unc_ids->push_back(full_ids->at(ii));
+    }
+  }
+
+  aops_all = make_shared<vector<shared_ptr<vector<bool>>>>(1,ac_init);
+  ids_pos_all = make_shared<vector<shared_ptr<vector<int>>>>(1, unc_pos);
+  deltas_pos_all = make_shared<vector<shared_ptr<pint_vec>>>(1, deltas_pos_init); 
+  signs_all  = make_shared<vector<int>>(1,sign);
+
+  auto opname = unc_ids->at(0)[0];
+  op_order = make_shared<map< char, int>>();
+  int ii =0;
+
+  op_order->emplace (opname, ii);
+  for ( auto elem : *unc_ids ){
+    if ( opname != elem[0] ){
+      opname = elem[0];
+      op_order->emplace(opname, ++ii);
+    }
+  }
+
+  ii=0;
+  idx_order = make_shared<map< string, int>>();
+  for ( auto elem : *unc_ids ){
+     idx_order->emplace(elem, ii);
+  }
+
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
+                              shared_ptr<vector<string>> ids_init, 
+                              shared_ptr<vector<string>> id_ranges){
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  full_ids = ids_init; 
+  full_id_ranges = id_ranges;
+  
+  spinfree = false; 
+
+  auto  ids_pos_init = make_shared<vector<int>>(id_ranges->size());
+  for (int ii = 0 ; ii != id_ranges->size() ; ii++) ids_pos_init->at(ii) = ii;
+ 
+  auto nodel = make_shared<pint_vec>(0);
+  aops_all = make_shared<vector<shared_ptr<vector<bool>>>>(1, ac_init);
+  ids_pos_all = make_shared<vector<shared_ptr<vector<int>>>>(1, ids_pos_init);
+  deltas_pos_all = make_shared<vector<shared_ptr<pint_vec>>>(1,nodel); 
+  signs_all  = make_shared<vector<int>>(1,1);
+
+  //neeeded to keep ordering of contractions consistent 
+  auto opname = full_ids->at(0)[0];
+  op_order = make_shared<map< char, int>>();
+  int ii =0;
+  op_order->emplace (opname, ii);
+  for ( auto elem : *full_ids ){
+    if ( opname != elem[0] ){
+      opname = elem[0];
+      op_order->emplace(opname, ++ii);
+    }
+  }
+
+  ii=0;
+  idx_order = make_shared<map< string, int>>();
+  for ( auto elem : *full_ids ){
+     idx_order->emplace(elem, ii);
+  }
+
+  return;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RDMderiv_new::swap(shared_ptr<vector<bool>> ac, shared_ptr<vector<int>> ids_pos, shared_ptr<pint_vec> deltas_pos, int ii, int jj, int kk ){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  bool a_buff = ac->at(ii);
+  int idx_buff = ids_pos->at(ii);
+
+  ac->at(ii) = ac->at(jj);
+  ids_pos->at(ii) = ids_pos->at(jj);
+  ac->at(jj) = a_buff;
+  ids_pos->at(jj) = idx_buff;
+
+  if (spinfree || ( full_id_ranges->at(ids_pos->at(jj)) == full_id_ranges->at(ids_pos->at(ii)) )){
+    auto new_deltas_tmp = make_shared<pint_vec>(*deltas_pos); 
+    new_deltas_tmp->push_back(make_pair(ids_pos->at(jj), ids_pos->at(ii)));
+//  auto new_deltas = Standardize_delta_ordering( new_deltas_tmp ) ;
+    deltas_pos_all->push_back(new_deltas_tmp);
+    
+    auto new_ac =  make_shared<vector<bool>>(*ac);   
+    new_ac->erase(new_ac->begin()+(jj-1)); 
+    new_ac->erase(new_ac->begin()+(jj-1)); 
+    aops_all->push_back(new_ac);
+    
+    auto new_ids_pos =  make_shared<vector<int>>(*ids_pos); 
+    new_ids_pos->erase(new_ids_pos->begin()+(jj-1)); 
+    new_ids_pos->erase(new_ids_pos->begin()+(jj-1)); 
+    ids_pos_all->push_back(new_ids_pos); 
+    int new_sign = signs_all->at(kk); 
+    signs_all->push_back(new_sign);
+  }
+  signs_all->at(kk) = -1 * signs_all->at(kk);
+  return ;
+}
+/////////////////////////////////////////////////////////////////////////
+void RDMderiv_new::generic_reordering(shared_ptr<vector<int>> new_order ){
+/////////////////////////////////////////////////////////////////////////  
+  int kk = 0;
+  while ( kk != aops_all->size()){
+    auto ac  = aops_all->at(kk);
+    auto ids_pos = ids_pos_all->at(kk);
+    auto deltas  = deltas_pos_all->at(kk);
+
+    for (int ii = ids_pos->size()-1 ; ii != -1; ii-- ){
+      if (ids_pos->at(ii) == new_order->at(ii))
+        continue;
+ 
+      while( ids_pos->at(ii) != new_order->at(ii) ){
+        for ( int jj = (ii-1); jj != -1 ; jj--) {
+           if (ids_pos->at(jj) == new_order->at(ii)){
+             swap(ac, ids_pos, deltas, jj, jj+1, kk);
+             break;
+           }
+        }
+      }
+    }
+    cout << endl;
+    kk++;
+  }
+  return;
+}
+
+//////////////////////////////////////////////////////
+void RDMderiv_new::norm_order(){
+//////////////////////////////////////////////////////  
+
+  int kk = 0;
+  while ( kk != aops_all->size()){
+    auto ac  = aops_all->at(kk);
+    auto ids_pos = ids_pos_all->at(kk);
+    auto deltas_pos  = deltas_pos_all->at(kk);
+    int num_pops = (ids_pos->size()/2)-1;
+
+    for (int ii = ids_pos->size()-1 ; ii != -1; ii-- ){
+      if (ii > num_pops) {
+        if (!ac->at(ii))
+          continue;
+ 
+        while(ac->at(ii)){
+          for ( int jj = (ii-1); jj != -1 ; jj--) {
+             if (!ac->at(jj)){
+               swap(ac, ids_pos, deltas_pos, jj, jj+1, kk);
+               break;
+             }
+          }
+        }
+      } else if (ii<=num_pops){
+          if (ac->at(ii))
+            continue;
+        while(!ac->at(ii)){
+          for ( int jj = (ii-1); jj != -1 ; jj--) {
+             if (ac->at(jj)){
+               swap(ac, ids_pos, deltas_pos, jj, jj+1, kk);
+               break;
+             }
+           }
+        }        
+      }
+    }
+    kk++;
+  }
+  return;
+}
+///////////////////////////////////////////////////////
+void RDMderiv_new::alt_order(){
+///////////////////////////////////////////////////////  
+
+  auto even = []( int pos) { return ( 0 == pos % 2);}; 
+  int kk = 0;
+  while ( kk != aops_all->size()){
+    auto ac  = aops_all->at(kk);
+    auto ids_pos = ids_pos_all->at(kk);
+    auto deltas_pos  = deltas_pos_all->at(kk);
+
+    for (int ii = ids_pos->size()-1 ; ii != -1; ii-- ){
+      if (!even(ii)) {
+        if (!ac->at(ii))
+          continue;
+ 
+        while(ac->at(ii)){
+          for ( int jj = (ii-1); jj != -1 ; jj--) {
+             if (!ac->at(jj)){
+               swap(ac, ids_pos, deltas_pos, jj, jj+1, kk);
+               break;
+             }
+          }
+        }
+      } else if (even(ii)){
+          if (ac->at(ii))
+            continue;
+        while(!ac->at(ii)){
+          for ( int jj = (ii-1); jj != -1 ; jj--) {
+             if (ac->at(jj)){
+               swap(ac, ids_pos, deltas_pos,  jj, jj+1, kk);
+               break;
+             }
+           }
+        }        
+      }
+    }
+    kk++;
+  }
+  return;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void RDMderiv::initialize(shared_ptr<vector<bool>> ac_init,
                           shared_ptr<vector<string>> ids_init, 
                           shared_ptr<pstr_vec> deltas_init,
@@ -236,8 +473,6 @@ shared_ptr<pstr_vec> RDMderiv::Standardize_delta_ordering(shared_ptr<pstr_vec> d
 void alt_RDMderiv::alt_order(){
 ///////////////////////////////////////////////////////  
 
-  auto toi = [](char let) { return  (int)(let) -(int)('0')  ; };
-  auto Sis_even = [&toi]( string idx) { return ( 0 == ( toi(idx[1] ) % 2));}; 
   auto even = []( int pos) { return ( 0 == pos % 2);}; 
   int kk = 0;
   while ( kk != allops->size()){
