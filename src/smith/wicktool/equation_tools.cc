@@ -279,8 +279,9 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vec
 
   auto gamma_tensors = make_shared<vector<shared_ptr<Tensor_<double>>>>(0);
  
-  for ( int ii = 0 ; ii != gamma_ranges.size(); ii++ ) {
-
+  for ( int ii = gamma_ranges.size()-1; ii != -1;  ii-- ) {
+ 
+     cout << "range_lengths = ";
      auto  range_lengths  = make_shared<vector<int>>(0); 
      for (auto idrng : *(gamma_ranges[ii]) ){
        range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
@@ -294,18 +295,36 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vec
 
      do {
        
-       cout << "block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
+       cout << endl << "block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
        vector<Index> gamma_id_blocks(gamma_ranges[ii]->size());
        for( int jj = 0 ;  jj != gamma_id_blocks.size(); jj++)
          gamma_id_blocks[jj] =  gamma_ranges[ii]->at(jj).range(block_pos->at(jj));
 
        cout << endl << "gamma_id_blocks sizes : " ; for (Index id : gamma_id_blocks){ cout << id.size() << " " ; cout.flush();}
-  
+       size_t gamma_block_size;
+       size_t gamma_block_pos;
+       tie(gamma_block_size, gamma_block_pos) = get_block_info( gamma_ranges[ii],  block_pos) ;
+       cout << " gamma_block_size = " << gamma_block_size << endl;
+       cout << " gamma_block_pos = " << gamma_block_pos << endl;
+
+       double bob[gamma_block_size];        
+       for (int qq = 0 ; qq != gamma_block_size; qq++ ) { bob[qq] = 1;}
+
+       cout <<" gamma_data_vec->at("<<ii<<")->size() = "  << gamma_data_vec->at(ii)->size() << endl; 
+       cout <<" gamma_data_vec->at("<<ii<<")->data() = ";
+
+       for (int qq = 0 ; qq != gamma_block_size; qq++ ) { 
+          cout << *(gamma_data_vec->at(ii)->data()+gamma_block_pos+qq) << " " ; 
+        }
+
+       cout << endl << gamma_data_vec->size()  << gamma_data_vec->size() << endl; 
+       unique_ptr<double[]> gamma_data_block(new double[gamma_block_size])  ;
         
-       unique_ptr<double[]> gamma_data =  get_block_of_data(gamma_data_vec->at(ii)->data(), gamma_ranges[ii], block_pos); 
+       copy_n(gamma_data_block.get(), gamma_block_size, gamma_data_vec->at(ii)->data());
+//       copy_n(gamma_data_block.get(), gamma_block_size, bob);
        
        cout << " got gamma data successfully " << endl;
-       new_gamma_tensor.put_block( gamma_data, gamma_id_blocks);
+       new_gamma_tensor.put_block( gamma_data_block, gamma_id_blocks);
 
        cout << " put gamma data successfully " << endl;
      
@@ -316,6 +335,54 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vec
  
   return gamma_tensors;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+tuple< size_t, size_t >
+Equation_Computer::Equation_Computer::get_block_info(shared_ptr<vector<IndexRange>> id_ranges, 
+                                                     shared_ptr<vector<int>> block_pos) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector<size_t> id_pos(block_pos->size());
+  cout <<endl << "id_pos = ";
+  for (int ii = 0 ; ii != id_ranges->size() ; ii++){
+
+    const size_t range_size         = id_ranges->at(ii).size();
+    const size_t biggest_block_size = id_ranges->at(ii).range(0).size();
+    const size_t num_blocks         = id_ranges->at(ii).range().size();
+    const size_t remainder          = num_blocks * biggest_block_size - range_size;
+
+    if (block_pos->at(ii) <= remainder  ){
+       id_pos[ii] = num_blocks*block_pos->at(ii);//  + id_ranges->at(ii).range(block_pos->at(ii)).offset();
+
+    } else if ( block_pos->at(ii) > remainder ) {
+       id_pos[ii] = num_blocks*(range_size - remainder)+(num_blocks-1)*(remainder - block_pos->at(ii));// + id_ranges->at(ii).range(block_pos->at(ii)).offset(); 
+    }; 
+    cout << id_pos[ii] << " " ;
+  }
+
+  cout << endl << "range_sizes = " ;
+  // getting size of ranges (seems to be correctly offset for node)
+  vector<size_t> range_sizes(block_pos->size());
+  for (int ii = 0 ; ii != id_ranges->size() ; ii++){
+    range_sizes[ii]  = id_ranges->at(ii).size();
+    cout << range_sizes[ii] << " " ;
+  }
+
+  size_t data_block_size = 1;
+  size_t data_block_pos  = 0;
+  for (int ii = 0 ; ii != id_ranges->size()-1 ; ii++){
+    data_block_pos  += id_pos[ii]*(pow(range_sizes[ii] , id_ranges->size()-ii));
+    data_block_size *= id_ranges->at(ii).range(block_pos->at(ii)).size();
+  }
+
+  data_block_size *= id_ranges->back().range(block_pos->back()).size();
+ 
+  return tie(data_block_size, data_block_pos);
+  
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 unique_ptr<double[]>
 Equation_Computer::Equation_Computer::get_block_of_data( double* data_ptr ,
@@ -367,7 +434,7 @@ Equation_Computer::Equation_Computer::get_block_of_data( double* data_ptr ,
 
   copy_n(data_block.get(), data_block_size, data_ptr+data_block_pos);
 
-  return move(data_block); 
+  return data_block; 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
