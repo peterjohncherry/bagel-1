@@ -15,7 +15,6 @@ class RDMderiv_new{
   std::shared_ptr<std::vector<bool>> full_aops ;
   std::shared_ptr<std::vector<std::string>> full_ids ;
   std::shared_ptr<std::vector<std::string>> full_id_ranges ;
-  std::shared_ptr<std::vector<std::shared_ptr<std::vector<bool>>>> aops_all ;
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> ids_pos_all ;
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>> deltas_pos_all; 
 

@@ -33,7 +33,6 @@ void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
     }
   }
 
-  aops_all = make_shared<vector<shared_ptr<vector<bool>>>>(1,ac_init);
   ids_pos_all = make_shared<vector<shared_ptr<vector<int>>>>(1, unc_pos);
   deltas_pos_all = make_shared<vector<shared_ptr<pint_vec>>>(1, deltas_pos_init); 
   signs_all  = make_shared<vector<int>>(1,sign);
@@ -73,7 +72,6 @@ void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
   for (int ii = 0 ; ii != id_ranges->size() ; ii++) ids_pos_init->at(ii) = ii;
  
   auto nodel = make_shared<pint_vec>(0);
-  aops_all = make_shared<vector<shared_ptr<vector<bool>>>>(1, ac_init);
   ids_pos_all = make_shared<vector<shared_ptr<vector<int>>>>(1, ids_pos_init);
   deltas_pos_all = make_shared<vector<shared_ptr<pint_vec>>>(1, nodel); 
   signs_all  = make_shared<vector<int>>(1,1);
@@ -99,45 +97,41 @@ void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
   return;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void RDMderiv_new::swap(shared_ptr<vector<int>> ids_pos,                                                                                             //   void RDMderiv::swap(shared_ptr<vector<bool>> ac, shared_ptr<vector<string>> ids, shared_ptr<pstr_vec> dlist,
-                        shared_ptr<pint_vec> deltas_pos, int ii, int jj, int kk ){                                                                   //                     int ii, int jj, int kk ){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                  //      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "RDMderiv_new::swap" << endl;                                                                                                           //      
-                                                                                                                                                  //        bool a_buff = ac->at(ii);
-  int idx_buff = ids_pos->at(ii);                                                                                                                 //      
-                                                                                                                                                  //        ac->at(ii) = ac->at(jj);
-  ids_pos->at(ii) = ids_pos->at(jj);                                                                                                              //        ac->at(jj) = a_buff;
-  ids_pos->at(jj) = idx_buff;                                                                                                                     //      
-                                                                                                                                                  //      
-  cout << " full_id_ranges->at(ids_pos->at("<<jj<<")) == full_id_ranges->at(ids_pos->at("<<ii<<")) )" <<endl;                                     //      
-  cout << " full_id_ranges->at("<< ids_pos->at(jj)<< ") == full_id_ranges->at(" << ids_pos->at(ii) <<")) )" <<endl;                               //      
-  cout << full_id_ranges->at(ids_pos->at(jj)) <<" == " << full_id_ranges->at(ids_pos->at(ii))  <<endl;                                            //      
-                                                                                                                                                  //      
-  if ( full_id_ranges->at(ids_pos->at(jj)) == full_id_ranges->at(ids_pos->at(ii)) &&                                                              //
-       full_aops->at( ids_pos->at(ii) ) !=  full_aops->at( ids_pos->at(jj) ) )  {                                                                 //      if (spinfree || (ids->at(jj).back() == ids->at(ii).back())){         
-    cout << "adding contraction" <<endl;                                                                                                          //           auto new_deltas_tmp = make_shared<pstr_vec>(*dlist);            
-    auto new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);                                                                                     //           new_deltas_tmp->push_back(make_pair(ids->at(jj), ids->at(ii))); 
-    new_deltas_tmp->push_back(make_pair(ids_pos->at(jj), ids_pos->at(ii)));                                                                       //           auto new_deltas = Standardize_delta_ordering( new_deltas_tmp ) ;
-    auto new_deltas = Standardize_delta_ordering( new_deltas_tmp ) ;                                                                              //           alldeltas->push_back(new_deltas);                               
-    deltas_pos_all->push_back(new_deltas);                                                                                                        //                                                                           
-                                                                                                                                                  //           auto new_ac =  make_shared<vector<bool>>(*ac);                  
-    auto new_ids_pos =  make_shared<vector<int>>(*ids_pos);                                                                                       //           new_ids->erase(new_ids->begin()+(jj-1));                        
-    new_ids_pos->erase(new_ids_pos->begin()+(jj-1));                                                                                              //           new_ids->erase(new_ids->begin()+(jj-1));                        
-    new_ids_pos->erase(new_ids_pos->begin()+(jj-1));                                                                                              //           allids->push_back(new_ids);                                     
-    ids_pos_all->push_back(new_ids_pos);                                                                                                          //           int new_sign = allsigns->at(kk);                                
-    int new_sign = signs_all->at(kk);                                                                                                             //           allsigns->push_back(new_sign);
-    signs_all->push_back(new_sign);                                                                                                               //         }
-  }                                                                                                                                               //         allsigns->at(kk) = -1 * allsigns->at(kk);
-  signs_all->at(kk) = -1 * signs_all->at(kk);                                                                                                     //         return ;
-  return ;                                                                                                                                        //       }
-}                                                                                                                                                 //
-/////////////////////////////////////////////////////////////////////////                                                                         //
-void RDMderiv_new::generic_reordering(shared_ptr<vector<int>> new_order ){                                                                        //
-/////////////////////////////////////////////////////////////////////////                                                                         //
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+void RDMderiv_new::swap(shared_ptr<vector<int>> ids_pos,                                                                            
+                        shared_ptr<pint_vec> deltas_pos, int ii, int jj, int kk ){                                                  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+  cout << "RDMderiv_new::swap" << endl;                                                                                             
+                                                                                                                                    
+  int idx_buff = ids_pos->at(ii);                                                                                                   
+                                                                                                                                    
+  ids_pos->at(ii) = ids_pos->at(jj);                                                                                                
+  ids_pos->at(jj) = idx_buff;                                                                                                       
+                                                                                                                                    
+                                                                                                                                    
+  if ( full_id_ranges->at(ids_pos->at(jj)) == full_id_ranges->at(ids_pos->at(ii)) &&                                                
+       full_aops->at( ids_pos->at(ii) ) !=  full_aops->at( ids_pos->at(jj) ) )  {                                                   
+    cout << "adding contraction" <<endl;                                                                                            
+    auto new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);                                                                       
+    new_deltas_tmp->push_back(make_pair(ids_pos->at(jj), ids_pos->at(ii)));                                                         
+    auto new_deltas = Standardize_delta_ordering( new_deltas_tmp ) ;                                                                
+    deltas_pos_all->push_back(new_deltas);                                                                                          
+                                                                                                                                    
+    auto new_ids_pos =  make_shared<vector<int>>(*ids_pos);                                                                         
+    new_ids_pos->erase(new_ids_pos->begin()+(jj-1));                                                                                
+    new_ids_pos->erase(new_ids_pos->begin()+(jj-1));                                                                                
+    ids_pos_all->push_back(new_ids_pos);                                                                                            
+    int new_sign = signs_all->at(kk);                                                                                               
+    signs_all->push_back(new_sign);                                                                                                 
+  }                                                                                                                                 
+  signs_all->at(kk) = -1 * signs_all->at(kk);                                                                                       
+  return ;                                                                                                                          
+}                                                                                                                                   
+/////////////////////////////////////////////////////////////////////////                                                           
+void RDMderiv_new::generic_reordering(shared_ptr<vector<int>> new_order ){                                                          
+/////////////////////////////////////////////////////////////////////////                                                           
   int kk = 0;
-  while ( kk != aops_all->size()){
-    auto ac      = aops_all->at(kk);     
+  while ( kk != ids_pos_all->size()){
     auto ids_pos = ids_pos_all->at(kk);
     auto deltas  = deltas_pos_all->at(kk);
 
@@ -160,50 +154,50 @@ void RDMderiv_new::generic_reordering(shared_ptr<vector<int>> new_order ){      
   return;
 }
 
-/////////////////////////////////////////////////////                                                                 //////////////////////////////////////////////////////
-void RDMderiv_new::norm_order(){                                                                                    //  void RDMderiv::norm_order(){
-//////////////////////////////////////////////////////                                                                //////////////////////////////////////////////////////  
-  cout << "RDMderiv_New::norm_order() " << endl;                                                                      
-  int kk = 0;                                                                                                        //   int kk = 0;
-  cout << "full_aops = "  ; for (bool aops_ : *full_aops ) { cout << aops_ << " " ; } cout << endl;                  //   while ( kk != allops->size()){
-  while ( kk != aops_all->size()){                                                                                    //    auto ac  = allops->at(kk);
-    auto ids_pos = ids_pos_all->at(kk);        cout << "ids_pos->size() = " <<  ids_pos->size() << endl;             //     auto deltas  = alldeltas->at(kk);
-    auto deltas_pos  = deltas_pos_all->at(kk); cout << "deltas_pos->size() = " <<  deltas_pos->size() << endl;       //     int num_pops = (ids->size()/2)-1;
-    int  num_pops = (ids_pos->size()/2)-1;     cout << "num_pops = " << num_pops << endl;                             
-                                                                                                                     
+/////////////////////////////////////////////////////                                                              
+void RDMderiv_new::norm_order(){                                                                                   
+//////////////////////////////////////////////////////                                                               
+  cout << "RDMderiv_New::norm_order() " << endl;                                                                   
+  int kk = 0;                                                                                                      
+  cout << "full_aops = "  ; for (bool aops_ : *full_aops ) { cout << aops_ << " " ; } cout << endl;                
+  while ( kk != ids_pos_all->size()){                                                                                 
+    auto ids_pos = ids_pos_all->at(kk);        
+    auto deltas_pos  = deltas_pos_all->at(kk); 
+    int  num_pops = (ids_pos->size()/2)-1;     
+                                                                                                                   
     cout << "full_aops->size() = "; cout.flush(); cout  << full_aops->size() << endl;                                
                                                                                                                      
-    for (int ii = ids_pos->size()-1 ; ii != -1; ii--){                //     for (int ii = ids->size()-1 ; ii != -1; ii-- ){                                                     
-      cout << "ii = " << ii << endl;                                  //       if (ii > num_pops) {                                                                              
-      if ( ii > num_pops ) {                                          //         if (!ac->at(ii))                                                                                
-        if (!full_aops->at(ids_pos->at(ii)))                          
-          continue;                                                   
-                                                                      
-        while(full_aops->at( ids_pos->at(ii) )){                      //         while(ac->at(ii)){                                                                              
-          for ( int jj = (ii-1); jj != -1 ; jj--) {                   //           for ( int jj = (ii-1); jj != -1 ; jj--) {                                                     
-            if (!full_aops->at( ids_pos->at(jj) )){                   //              if (!ac->at(jj)){                                                                          
-              swap( ids_pos, deltas_pos, jj, jj+1, kk);            //                swap(ac, ids, deltas, jj, jj+1, kk);                                                     
-              break;                                                  //                break;                                                                                   
-            }                                                         //              }                                                                                          
-          }                                                           //           }                                                                                             
-        }                                                             //         }                                                                                               
-      } else if (ii<=num_pops){                                       //      } else if (ii<=num_pops){                                                                         
-                                                                      //           if (ac->at(ii))                                                                               
-          if (full_aops->at(ids_pos->at(ii)))                         //             continue;                                                                                   
-            continue;                                                 //         while(!ac->at(ii)){                                                                             
-                                                                      //           for ( int jj = (ii-1); jj != -1 ; jj--) {                                                     
-        while(!full_aops->at(ids_pos->at(ii))){                       //              if (ac->at(jj)){                                                                           
-          for ( int jj = (ii-1); jj != -1 ; jj--) {                   //                swap(ac, ids, deltas, jj, jj+1, kk);                                                     
-             if(full_aops->at(ids_pos->at(jj)) ){                     //                break;                                                                                   
-               swap( ids_pos, deltas_pos, jj, jj+1, kk);           //              }                                                                                          
-               break;                                                 //            }                                                                                            
-             }                                                        //         }                                                                                               
-           }                                                          //       }                                                                                                 
-        }                                                             //     }                                                                                                   
-      }                                                               //     kk++;                                                                                               
-    }                                                                 //   }                                                                                                      
-    kk++;                                                             //   return;
-  }                                                                   // }
+    for (int ii = ids_pos->size()-1 ; ii != -1; ii--){            
+      cout << "ii = " << ii << endl;                              
+      if ( ii > num_pops ) {                                      
+        if (!full_aops->at(ids_pos->at(ii)))                      
+          continue;                                               
+                                                                  
+        while(full_aops->at( ids_pos->at(ii) )){                  
+          for ( int jj = (ii-1); jj != -1 ; jj--) {               
+            if (!full_aops->at( ids_pos->at(jj) )){               
+              swap( ids_pos, deltas_pos, jj, jj+1, kk);           
+              break;                                              
+            }                                                     
+          }                                                       
+        }                                                         
+      } else if (ii<=num_pops){                                   
+                                                                  
+          if (full_aops->at(ids_pos->at(ii)))                     
+            continue;                                             
+                                                                  
+        while(!full_aops->at(ids_pos->at(ii))){                   
+          for ( int jj = (ii-1); jj != -1 ; jj--) {               
+             if(full_aops->at(ids_pos->at(jj)) ){                 
+               swap( ids_pos, deltas_pos, jj, jj+1, kk);          
+               break;                                             
+             }                                                    
+           }                                                      
+        }                                                         
+      }                                                           
+    }                                                             
+    kk++;                                                         
+  }                                                               
   return;
 }
 ///////////////////////////////////////////////////////                           
@@ -212,7 +206,7 @@ void RDMderiv_new::alt_order(){
 
   auto even = []( int pos) { return ( 0 == pos % 2);}; 
   int kk = 0;
-  while ( kk != aops_all->size()){
+  while ( kk != ids_pos_all->size()){
     auto ids_pos = ids_pos_all->at(kk);
     auto deltas_pos  = deltas_pos_all->at(kk);
 
@@ -260,7 +254,6 @@ shared_ptr<pint_vec> RDMderiv_new::Standardize_delta_ordering(shared_ptr<pint_ve
    }
 
    //sort(dtmp->begin(), dtmp->end() );
-
    // note that by construction only the last element of dtmp could be in the wrong place.
    int ii = 0;
    while (ii < dtmp->size()-1) {
