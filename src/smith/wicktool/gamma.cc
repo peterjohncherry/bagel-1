@@ -103,7 +103,6 @@ void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
 void RDMderiv_new::swap(shared_ptr<vector<int>> ids_pos,                                                                            
                         shared_ptr<pint_vec> deltas_pos, int ii, int jj, int kk ){                                                  
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
-  cout << "RDMderiv_new::swap" << endl;                                                                                             
                                                                                                                                     
   int idx_buff = ids_pos->at(ii);                                                                                                   
                                                                                                                                     
@@ -113,7 +112,6 @@ void RDMderiv_new::swap(shared_ptr<vector<int>> ids_pos,
                                                                                                                                     
   if ( full_id_ranges->at(ids_pos->at(jj)) == full_id_ranges->at(ids_pos->at(ii)) &&                                                
        full_aops->at( ids_pos->at(ii) ) !=  full_aops->at( ids_pos->at(jj) ) )  {                                                   
-    cout << "adding contraction" <<endl;                                                                                            
     auto new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);                                                                       
     new_deltas_tmp->push_back(make_pair(ids_pos->at(jj), ids_pos->at(ii)));                                                         
     auto new_deltas = Standardize_delta_ordering( new_deltas_tmp ) ;                                                                
@@ -167,10 +165,8 @@ void RDMderiv_new::norm_order(){
     auto deltas_pos  = deltas_pos_all->at(kk); 
     int  num_pops = (ids_pos->size()/2)-1;     
                                                                                                                    
-    cout << "full_aops->size() = "; cout.flush(); cout  << full_aops->size() << endl;                                
                                                                                                                      
     for (int ii = ids_pos->size()-1 ; ii != -1; ii--){            
-      cout << "ii = " << ii << endl;                              
       if ( ii > num_pops ) {                                      
         if (!full_aops->at(ids_pos->at(ii)))                      
           continue;                                               

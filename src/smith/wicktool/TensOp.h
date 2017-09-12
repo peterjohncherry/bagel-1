@@ -125,14 +125,14 @@ class MultiTensOp : public TensOp<DType> {
      ~MultiTensOp() {};
 
 
-
-
-
-   private:
      //Multi Tensor analogue of all_ranges; same as normal tensor but with vector of factors. The ordering of these factors is the same as that of the operators in the tensor
      std::shared_ptr<std::map< std::shared_ptr<std::vector<std::string>>,
                                std::tuple<bool, std::shared_ptr<std::vector<std::string>>, std::shared_ptr<std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> combined_ranges;
 
+
+
+
+   private:
      //Similar to all_ranges, but has the ranges associated with the different operators split up, this may be useful for decomposition, so keep for now
      std::shared_ptr<std::map< std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>>, 
                      std::tuple< std::shared_ptr<std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> split_ranges;

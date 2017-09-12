@@ -324,29 +324,38 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
 
   cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
   
-  auto aops_dupe  = make_shared<vector<bool>>(*aops );
+  auto aops_buff  = make_shared<vector<bool>>(*aops );
   rdmd->initialize(aops, idxs, spins);
   rdmd->norm_order();
 
   auto rdmd_new  = make_shared<RDMderiv_new>(); 
 
-  cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
-  cout << "aops_dupe = " ; for (bool aop : *aops_dupe) { cout << aop << " " ; } cout << endl;
+  cout << "hello" << endl;
+  for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
+    auto aops_dupe  = make_shared<vector<bool>>(*aops_buff );
 
-  rdmd_new->initialize(aops_dupe, idxs, spins);
-  rdmd_new->norm_order();
-  cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
-  cout << "aops_dupe = " ; for (bool aop : *aops_dupe) { cout << aop << " " ; } cout << endl;
-
+    cout << " orb_ranges = " ;
+    for ( int ii = 0 ; ii != range_map_it->first->size(); ii++)
+      cout << range_map_it->first->at(ii) << " " ; 
+    cout << endl;
+//   auto new_id_ranges = make_shared<vector<string>>(vector<string> range_map_it->first );
+     rdmd_new->initialize(aops_dupe, idxs, range_map_it->first);
+     rdmd_new->norm_order();
+  }
 
   print_vecX<string>(*rdmd_new->full_ids, "full_ids");cout << endl;
   for ( int kk =0 ; kk != rdmd_new->ids_pos_all->size() ; kk++) {
-    cout << "kk = " << kk << endl;
     print_vecX<int>(*rdmd_new->ids_pos_all->at(kk), "ids_pos");cout << endl;
     print_pairvec<int>(*rdmd_new->deltas_pos_all->at(kk), "deltas_pos");cout <<endl;
+
     cout << " aops = " ;
     for ( int ii = 0 ; ii !=  rdmd_new->ids_pos_all->at(kk)->size(); ii++)
       cout << rdmd_new->full_aops->at(rdmd_new->ids_pos_all->at(kk)->at(ii)) << " " ; 
+    cout << endl;
+   
+    cout << " full_id_ranges = " ;
+    for ( int ii = 0 ; ii !=  rdmd_new->ids_pos_all->at(kk)->size(); ii++)
+      cout << rdmd_new->full_id_ranges->at(rdmd_new->ids_pos_all->at(kk)->at(ii)) << " " ; 
     cout << endl;
   } 
 
