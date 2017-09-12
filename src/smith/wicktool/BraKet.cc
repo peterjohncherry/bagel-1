@@ -273,7 +273,6 @@ void BraKet<DType>::Build_Gamma_WithSpin(shared_ptr<vector<bool>> aops, shared_p
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Build_Gamma_WithSpin" << endl;
   auto rdmd  = make_shared<RDMderiv>(); 
-  auto nodel = make_shared<vector<pair<string,string>>>(0);
 
   get_string_spin_paths();  
   for (auto spin_sec : *spin_sectors){
@@ -319,13 +318,40 @@ void BraKet<DType>::Build_Gamma_WithSpin(shared_ptr<vector<bool>> aops, shared_p
 template<class DType>
 void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_ptr<vector<string>> idxs){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+  cout << "Build_Gamma_SpinFree" << endl;
   auto rdmd  = make_shared<RDMderiv>(); 
-  auto nodel = make_shared<vector<pair<string,string>>>(0);
   auto spins = make_shared<vector<string>>(vector<string> {"A","A","A","A","A","A","A","A"} );
 
+  cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
+  
+  auto aops_dupe  = make_shared<vector<bool>>(*aops );
   rdmd->initialize(aops, idxs, spins);
   rdmd->norm_order();
+
+  auto rdmd_new  = make_shared<RDMderiv_new>(); 
+
+  cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
+  cout << "aops_dupe = " ; for (bool aop : *aops_dupe) { cout << aop << " " ; } cout << endl;
+
+  rdmd_new->initialize(aops_dupe, idxs, spins);
+  rdmd_new->norm_order();
+  cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
+  cout << "aops_dupe = " ; for (bool aop : *aops_dupe) { cout << aop << " " ; } cout << endl;
+
+
+  print_vecX<string>(*rdmd_new->full_ids, "full_ids");cout << endl;
+  for ( int kk =0 ; kk != rdmd_new->aops_all->size() ; kk++) {
+    cout << "kk = " << kk << endl;
+    print_vecX<int>(*rdmd_new->ids_pos_all->at(kk), "ids_pos");cout << endl;
+    print_pairvec<int>(*rdmd_new->deltas_pos_all->at(kk), "deltas_pos");cout <<endl;
+    
+  } 
+
+//auto gammas_new = make_shared<RDMderiv_new>(); 
+//gammas_new->initialize(rdmd_new->aops_all->at(kk), rdmd_new->full_ids,  rdmd_new->deltas_pos_all->at(kk),  rdmd_new->signs_all->at(kk));
+//gammas_new->alt_order();
+
+
 
   for ( int kk =0 ; kk != rdmd->allops->size() ; kk++) {
     auto gammas = make_shared<alt_RDMderiv>(); 

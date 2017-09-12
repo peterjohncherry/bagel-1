@@ -64,7 +64,7 @@ void Equation<DType>::Add_BraKet_Compute_Terms_CMTP(shared_ptr<BraKet<DType>> BK
 
       auto ACompute_list = make_shared<vector<tuple<string,string,pair<int,int>, string> >>(0); 
       for (auto CMTP_name : *Acontrib_loc->second){
-        cout << endl<< CMTP_name <<endl; 
+//        cout << endl<< CMTP_name <<endl; 
         CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list);
         ACompute_map->emplace(CMTP_name, ACompute_list);
       }
@@ -86,7 +86,7 @@ void Equation<DType>::Add_BraKet_Compute_Terms_CMTP(shared_ptr<BraKet<DType>> BK
   }
 
   for (auto mapit = BK->GammaMap->begin(); mapit != BK->GammaMap->end(); mapit++) {
-    print_vecX<string>(mapit->first , "gamma_spins");
+    print_vecX<string>(mapit->first , "gamma_spins");cout << endl;
     for (int kk = 0 ; kk!= (get<0>(mapit->second))->size(); kk++){
       print_pairvec<string>(*(get<0>(mapit->second))->at(kk), "gamma_ctrs");
       print_pairvec<string>(*(get<1>(mapit->second))->at(kk), "gamma_ctr_spins"); cout <<endl;
@@ -106,6 +106,7 @@ void Equation<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>>
   New_Term->Build_TotalOp();
   New_Term->initialize(nact, norb, nidxs, spinfree );
 //  New_Term->Total_Op->print_gamma_contribs();
+  cout << "New_Term->Total_Op->aops = " ; for (bool aop : *New_Term->Total_Op->aops) { cout << aop << " " ; } cout << endl;
   New_Term->Build_Gamma_SpinFree(New_Term->Total_Op->aops, New_Term->Total_Op->idxs); 
 
   CMTP_map->insert(New_Term->Total_Op->CMTP_map->begin(), New_Term->Total_Op->CMTP_map->end());

@@ -177,14 +177,14 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
   
  //search for tensor in map if not there, search for ones with fewer contraction (rubbish at present; involves repetitive searching)
   if ( (ctp_loc != Tmap->end())  ){ 
-    cout << name << " is already contracted" << endl;
+//    cout << name << " is already contracted" << endl;
     contracted = true;
     return;    
   }
 
   if(ctp_loc == Tmap->end()){
     if(ctrs_pos->size() == 0) { 
-      cout << "getting data for " << name <<endl;
+  //    cout << "getting data for " << name <<endl;
       auto new_ctrs_pos = make_shared<vector<pair<int,int>>>(0);
       auto new_ReIm_factors = make_shared<vector<pair<int,int>>>(0); 
       auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, new_ctrs_pos, new_ReIm_factors ); 
@@ -205,7 +205,7 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
 
         CTdata = new_ctp_loc->second->Binary_Contract_same_tensor(ctrs_pos->back(), ACompute_list);
         ACompute_list->push_back(tie(new_name, new_name , ctrs_pos->back(), name));
-        cout << name  << "  1" << endl;
+  //      cout << name  << "  1" << endl;
         Tmap->emplace(name , make_shared<CtrTensorPart>(*this));
       //  cout << "putting " << name << "into the map " << endl;
 
@@ -215,7 +215,7 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
         auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, new_ctrs_pos, new_ReIm_factors ); 
         new_CTP->FullContract(Tmap, ACompute_list);
         CTdata = new_CTP->Binary_Contract_same_tensor(ctrs_pos->back(), ACompute_list);
-        cout << name  << "  2" << endl;
+//        cout << name  << "  2" << endl;
         Tmap->emplace(name , make_shared<CtrTensorPart>(*this));
         ACompute_list->push_back(tie(new_name, new_name , ctrs_pos->back(), name));
       //  cout << "putting " << name << "into the map " << endl;
@@ -237,7 +237,7 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
 
       ACompute_list->push_back(tie(unc_CTP->name, unc_CTP->name, ctrs_pos->back(), name));
 
-      cout << name << "  3" <<  endl;
+//      cout << name << "  3" <<  endl;
       Tmap->emplace(name, make_shared<CtrTensorPart>(*this));
 //      cout << "putting " << name << "into the map " << endl;
     }
@@ -257,7 +257,7 @@ void CtrMultiTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<Ct
   auto ctp_loc = Tmap->find(name);
 
   if (ctp_loc != Tmap->end() ) {
-    cout << name << " is already contracted" << endl;
+//    cout << name << " is already contracted" << endl;
     contracted = true;
     return;    
   }
@@ -280,7 +280,7 @@ void CtrMultiTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<Ct
         new_CTP->CTdata = new_ctp_loc->second->Binary_Contract_same_tensor(all_ctrs_pos->back(), ACompute_list);
         ACompute_list->push_back(tie(new_name, new_name, all_ctrs_pos->back(), new_CTP->name));
         
-        cout << new_CTP->name  << "  4" << endl;
+  //      cout << new_CTP->name  << "  4" << endl;
 
       
       } else {  
@@ -305,7 +305,7 @@ void CtrMultiTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<Ct
                                                     CTP_vec->at(cross_ctrs_pos->back().second.first)->myname(),
                                                     all_ctrs_pos->back(), Tmap , ACompute_list);
         Tmap->emplace(new_CTP->name, new_CTP);
-        cout << "putting " << new_CTP->name << "into the map " << endl;
+  //      cout << "putting " << new_CTP->name << "into the map " << endl;
 
       } else {
         auto new_CMTP = Binary_Contract_diff_tensors_MT(CTP_vec->at(cross_ctrs_pos->back().first.first)->myname(),
@@ -388,7 +388,7 @@ shared_ptr<CtrTensorPart<DType>>
    new_CTP->CTdata= new_CTData;
    new_CTP->contracted = true;
 
-   cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << ctr_todo.first << "," << ctr_todo.second << ") to get " << new_CTP->name << endl;
+   //cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << ctr_todo.first << "," << ctr_todo.second << ") to get " << new_CTP->name << endl;
    return new_CTP;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -397,7 +397,7 @@ shared_ptr<CtrTensorPart<DType>> CtrTensorPart<DType>::Binary_Contract_same_tens
                                                                                     shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap,
                                                                                     shared_ptr<vector<tuple<string,string,pair<int,int>,string> >> ACompute_list ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "BCST contracting  "; cout.flush(); cout << name << " over (" << ctr_todo.first << "," << ctr_todo.second << ") to get " ; cout.flush();
+//  cout << "BCST contracting  "; cout.flush(); cout << name << " over (" << ctr_todo.first << "," << ctr_todo.second << ") to get " ; cout.flush();
   auto T1 = Tmap->at(T1name);
   cout << "  "<< endl;
 
@@ -416,7 +416,7 @@ shared_ptr<CtrTensorPart<DType>> CtrTensorPart<DType>::Binary_Contract_same_tens
 template<class DType>
 shared_ptr<DType> CtrTensorPart<DType>::Binary_Contract_same_tensor(pair<int,int> ctr_todo, std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>,string> >> ACompute_list ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "BCST contracting  "; cout.flush(); cout << name <<  " over (" << ctr_todo.first << "," << ctr_todo.second << ") to get " ; cout.flush();
+//  cout << "BCST contracting  "; cout.flush(); cout << name <<  " over (" << ctr_todo.first << "," << ctr_todo.second << ") to get " ; cout.flush();
 
 //  string c1_idx = full_idxs->at(ctr_todo.first);  cout << "c1_idx = " <<c1_idx << endl;
 //  string c2_idx = full_idxs->at(ctr_todo.second); cout << "c2_idx = " <<c2_idx << endl;
