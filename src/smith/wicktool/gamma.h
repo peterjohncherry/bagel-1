@@ -5,16 +5,23 @@
 //#include "WickUtils.h"
 using namespace WickUtils;
 
+
+
 class RDMderiv_new{ 
  
   public: 
 
   // variables
   bool spinfree;
-  std::shared_ptr<std::vector<int>> signs_all  ;
+  int  my_sign ;
   std::shared_ptr<std::vector<bool>> full_aops ;
   std::shared_ptr<std::vector<std::string>> full_ids ;
   std::shared_ptr<std::vector<std::string>> full_id_ranges ;
+
+  std::shared_ptr<std::vector<int>> ids_pos ;
+  std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos; 
+
+  std::shared_ptr<std::vector<int>> signs_all  ;
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> ids_pos_all ;
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>> deltas_pos_all; 
 
@@ -41,9 +48,16 @@ class RDMderiv_new{
   
   void alt_order();
 
+  void norm_order_recursive(std::shared_ptr<std::vector<std::shared_ptr<RDMderiv_new>>> rdm_vec );
+ 
+  void swap_recursive(std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<pint_vec> deltas_pos, int ii, int jj, int kk,
+                      std::shared_ptr<std::vector<std::shared_ptr<RDMderiv_new>>> rdm_vec  );
+
   bool ordering(std::pair<std::string,std::string> a, std::pair<std::string,std::string> b) {
        return( (idx_order->at(a.first) < idx_order->at(b.first) ) ? true : false ); };
 };
+
+
 
 
 class RDMderiv{ 

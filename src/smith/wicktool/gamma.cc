@@ -154,6 +154,80 @@ void RDMderiv_new::generic_reordering(shared_ptr<vector<int>> new_order ){
   return;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+//Swaps indexes round, flips sign, and if ranges are the same puts new density matrix in the list. 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+void RDMderiv_new::swap_recursive(shared_ptr<vector<int>> ids_pos,                                                                            
+                                  shared_ptr<pint_vec> deltas_pos, int ii, int jj, int kk,
+                                  shared_ptr<vector<shared_ptr<RDMderiv_new>>> rdm_vec  ){                                                  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+                                                                                                                                    
+  int idx_buff = ids_pos->at(ii);                                                                                                   
+                                                                                                                                    
+  ids_pos->at(ii) = ids_pos->at(jj);                                                                                                
+  ids_pos->at(jj) = idx_buff;                                                                                                       
+                                                                                                                                    
+  if ( full_id_ranges->at(ids_pos->at(jj)) == full_id_ranges->at(ids_pos->at(ii)) &&                                                
+       full_aops->at( ids_pos->at(ii) ) !=  full_aops->at( ids_pos->at(jj) ) )  {                                                   
+    auto new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);                                                                       
+    new_deltas_tmp->push_back(make_pair(ids_pos->at(jj), ids_pos->at(ii)));                                                         
+    auto new_deltas = Standardize_delta_ordering( new_deltas_tmp ) ;                                                                
+
+    int new_sign = signs_all->at(kk);                                                                                               
+
+    auto new_rdm =   make_shared<RDMderiv_new>();
+    new_rdm->initialize(full_aops, full_ids, full_id_ranges, new_deltas, my_sign);
+    rdm_vec->push_back(new_rdm);
+  }                                                                                                                                 
+  my_sign *= -1;
+  return ;                                                                                                                          
+}                        
+/////////////////////////////////////////////////////                                                              
+void RDMderiv_new::norm_order_recursive(shared_ptr<vector<shared_ptr<RDMderiv_new>>> rdm_vec ){                                                                                   
+//////////////////////////////////////////////////////                                                               
+  cout << "RDMderiv_New::norm_order() " << endl;                                                                   
+  int kk = 0;                                                                                                      
+  cout << "full_aops = "  ; for (bool aops_ : *full_aops ) { cout << aops_ << " " ; } cout << endl;                
+
+  while ( kk != rdm_vec->size()){                                                                                 
+    auto ids_pos = rdm_vec->at(kk)->ids_pos;        
+    auto deltas_pos = rdm_vec->at(kk)->deltas_pos; 
+    int  num_pops = (ids_pos->size()/2)-1;     
+                                                                                                                   
+                                                                                                                     
+    for (int ii = ids_pos->size()-1 ; ii != -1; ii--){            
+      if ( ii > num_pops ) {                                      
+        if (!full_aops->at(ids_pos->at(ii)))                      
+          continue;                                               
+                                                                  
+        while(full_aops->at( ids_pos->at(ii) )){                  
+          for ( int jj = (ii-1); jj != -1 ; jj--) {               
+            if (!full_aops->at( ids_pos->at(jj) )){               
+              swap_recursive( ids_pos, deltas_pos, jj, jj+1, kk, rdm_vec);           
+              break;                                              
+            }                                                     
+          }                                                       
+        }                                                         
+      } else if (ii<=num_pops){                                   
+                                                                  
+          if (full_aops->at(ids_pos->at(ii)))                     
+            continue;                                             
+                                                                  
+        while(!full_aops->at(ids_pos->at(ii))){                   
+          for ( int jj = (ii-1); jj != -1 ; jj--) {               
+             if(full_aops->at(ids_pos->at(jj)) ){                 
+               swap_recursive( ids_pos, deltas_pos, jj, jj+1, kk, rdm_vec);          
+               break;                                             
+             }                                                    
+           }                                                      
+        }                                                         
+      }                                                           
+    }                                                             
+    kk++;                                                         
+  }                                                               
+  return;
+}
+
 /////////////////////////////////////////////////////                                                              
 void RDMderiv_new::norm_order(){                                                                                   
 //////////////////////////////////////////////////////                                                               
