@@ -151,9 +151,14 @@ void CASPT2_ALT::CASPT2_ALT::test() {
         for ( auto A_contribs : *(Eqn->CMTP_Eqn_Compute_List->at(*gamma_range)) ){
 
           pair<int,int> ctr_factor = A_contribs.second;
+          for (auto A_contrib : *A_contribs.first){            
+            for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib))){
+                    
+
+            }
+          }
           for (auto A_contrib : *A_contribs.first){
             for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib))){
-
               if ( CTP_data_map->find(get<3>(ctr_op)) == CTP_data_map->end() ){
                 if( get<2>(ctr_op).first == get<2>(ctr_op).second){                
                     cout << "uncontracted multitensor, do not store  " << endl;
