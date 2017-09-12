@@ -36,7 +36,6 @@
 #include <src/smith/queue.h>
 #include <src/smith/smith_info.h>
 #include <src/grad/nacmtype.h>
-#include <src/smith/wicktool/equation.h>
 
 namespace bagel {
 namespace SMITH {
