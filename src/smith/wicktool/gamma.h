@@ -28,7 +28,7 @@ class RDMderiv_new{
   void initialize(std::shared_ptr<std::vector<bool>> ac_init,std::shared_ptr<std::vector<std::string>> ids_init,
                   std::shared_ptr<std::vector<std::string>> id_ranges);
 
-  void initialize( std::shared_ptr<std::vector<bool>> ac_init, std::shared_ptr<std::vector<std::string>> ids_init,
+  void initialize( std::shared_ptr<std::vector<bool>> ac_init,  std::shared_ptr<std::vector<std::string>> id_ranges, std::shared_ptr<std::vector<std::string>> ids_init,
                    std::shared_ptr<std::vector<std::pair<int,int>>> deltas_init, int sign = 1);
 
   void swap(std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<pint_vec> deltas_pos, int ii, int jj, int kk );

@@ -11,11 +11,13 @@ using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
                               shared_ptr<vector<string>> ids_init, 
+                              shared_ptr<vector<string>> id_ranges,
                               shared_ptr<pint_vec> deltas_pos_init,
                               int sign){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   full_ids = ids_init; 
   full_aops = ac_init;
+  full_id_ranges = id_ranges;
   spinfree = false; 
 
   vector<bool>  unc_get(ids_init->size(), true);
