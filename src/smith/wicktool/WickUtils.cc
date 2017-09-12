@@ -365,5 +365,25 @@ string get_name(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>>
   return name ;
 };
 
+/////////////////////////////////////////////////////////////////////////////
+string get_name_rdm(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_idx_ranges, 
+                    shared_ptr<vector<pair<int,int>>> all_deltas_pos ){
+/////////////////////////////////////////////////////////////////////////////
+  string  name = "";
+  for(string idx : *full_idxs)
+    name += idx;
+  name+="_"; 
+
+  for(string idx_range : *full_idx_ranges)
+    name += idx_range[0];
+
+  if (all_deltas_pos->size() !=0){
+    name+="_"; 
+    for(pair<int,int> delta : *all_deltas_pos)
+      name += to_string(delta.first)+to_string(delta.second);
+  }
+  return name;
+};
+
 }//end of namespace:
 #endif

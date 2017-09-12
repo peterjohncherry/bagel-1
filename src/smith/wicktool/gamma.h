@@ -14,6 +14,8 @@ class RDMderiv_new{
   // variables
   bool spinfree;
   int  my_sign ;
+  std::string name;
+
   std::shared_ptr<std::vector<bool>> full_aops ;
   std::shared_ptr<std::vector<std::string>> full_ids ;
   std::shared_ptr<std::vector<std::string>> full_id_ranges ;
@@ -55,6 +57,20 @@ class RDMderiv_new{
 
   bool ordering(std::pair<std::string,std::string> a, std::pair<std::string,std::string> b) {
        return( (idx_order->at(a.first) < idx_order->at(b.first) ) ? true : false ); };
+
+    
+  bool gamma_survives(std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<std::vector<std::string>> id_ranges);
+  
+  bool gamma_constraints(std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<std::vector<std::string>> id_ranges, std::shared_ptr<std::vector<bool>> full_aops);
+  
+
+  std::string get_Aname(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
+                        std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
+
+  std::string get_gamma_name(std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> orig_aops,
+                             std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
+
+
 };
 
 

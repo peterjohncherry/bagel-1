@@ -53,6 +53,9 @@ namespace WickUtils {
 
   std::string get_name(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_id_ranges,  std::shared_ptr<pint_vec> all_ctrs_pos) ;
 
+  std::string get_name_rdm(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
+                           std::shared_ptr<std::vector<std::pair<int,int>>> all_deltas_pos ); 
+
   template<class DataType>
   void print_vecX(std::vector<DataType> invec, std::string name ="lazy"){
     std::cout << name <<" = [ ";

@@ -334,10 +334,10 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
   for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
     auto aops_dupe  = make_shared<vector<bool>>(*aops_buff );
 
-    cout << " orb_ranges = " ;
-    for ( int ii = 0 ; ii != range_map_it->first->size(); ii++)
-      cout << range_map_it->first->at(ii) << " " ; 
-    cout << endl;
+//    cout << " orb_ranges = " ;
+//    for ( int ii = 0 ; ii != range_map_it->first->size(); ii++)
+//      cout << range_map_it->first->at(ii) << " " ; 
+//    cout << endl;
 //   auto new_id_ranges = make_shared<vector<string>>(vector<string> range_map_it->first );
      rdmd_new->initialize(aops_dupe, idxs, range_map_it->first);
      rdmd_new->norm_order();
