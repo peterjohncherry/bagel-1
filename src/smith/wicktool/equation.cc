@@ -22,13 +22,13 @@ void Equation<DType>::Initialize(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
 shared_ptr<TensOp<DType>> Equation<DType>::Build_TensOp(string op_name,
-                                          shared_ptr<DType> tensor_data, //needs to be templated, should be Bagel tensor
-                                          shared_ptr<vector<string>> op_idxs,
-                                          shared_ptr<vector<bool>> op_aops, 
-                                          shared_ptr<vector<vector<string>>> op_idx_ranges,
-                                          vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
-                                          vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
-                                          pair<double,double> factor, string Tsymmetry, bool hconj ) {
+                                                        shared_ptr<DType> tensor_data, //needs to be templated, should be Bagel tensor
+                                                        shared_ptr<vector<string>> op_idxs,
+                                                        shared_ptr<vector<bool>> op_aops, 
+                                                        shared_ptr<vector<vector<string>>> op_idx_ranges,
+                                                        vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
+                                                        vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
+                                                        pair<double,double> factor, string Tsymmetry, bool hconj ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp::BuildTensOp" <<   endl;
 

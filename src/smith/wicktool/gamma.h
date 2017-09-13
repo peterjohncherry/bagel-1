@@ -68,7 +68,7 @@ class RDMderiv_new{
                         std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
 
   std::string get_gamma_name(std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> orig_aops,
-                             std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
+                             std::shared_ptr<std::vector<int>> all_idxs_pos );
 
 
 };
