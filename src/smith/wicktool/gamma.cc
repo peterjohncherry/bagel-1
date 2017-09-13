@@ -41,9 +41,7 @@ void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
   deltas_pos_all = make_shared<vector<shared_ptr<pint_vec>>>(1, deltas_pos_init); 
   signs_all  = make_shared<vector<int>>(1,sign);
 
-
   name = WickUtils::get_name_rdm(full_ids, full_id_ranges, deltas_pos_init );
-
 
   auto opname = unc_ids->at(0)[0];
   op_order = make_shared<map< char, int>>();
@@ -78,11 +76,11 @@ void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
  
   spinfree = false; 
   ids_pos = make_shared<vector<int>>(id_ranges->size());
+  deltas_pos = make_shared<pint_vec>(0);
   for (int ii = 0 ; ii != id_ranges->size() ; ii++) ids_pos->at(ii) = ii;
  
-  auto nodel = make_shared<pint_vec>(0);
   ids_pos_all = make_shared<vector<shared_ptr<vector<int>>>>(1, ids_pos);
-  deltas_pos_all = make_shared<vector<shared_ptr<pint_vec>>>(1, nodel); 
+  deltas_pos_all = make_shared<vector<shared_ptr<pint_vec>>>(1, deltas_pos); 
   signs_all  = make_shared<vector<int>>(1,1);
 
   //neeeded to keep ordering of contractions consistent 
@@ -148,15 +146,14 @@ void RDMderiv_new::norm_order(){
 	}                                                         
       }                                                           
     }                                                             
-    cout << endl;
 
-    if (gamma_survives(ids_pos, full_id_ranges))   cout << "------------ KEEP ------------ " << endl ;
+    if (gamma_survives(ids_pos, full_id_ranges)){
+    cout << "------------ KEEP ------------ " << endl ;
     cout << "Start Aname   = " << Aname_init << endl;
     cout << "Finish Aname  = " << get_Aname(full_ids, full_id_ranges, deltas_pos ) << endl;
     cout << "Start Gname   = " << Gname_init << endl;
-    cout << "Finish Gname  = " << get_gamma_name( full_id_ranges, full_aops , ids_pos ) << endl;
-    if (gamma_survives(ids_pos, full_id_ranges))   cout << "------------ KEEP ------------ " << endl ;
- 
+    cout << "Finish Gname  = " << get_gamma_name( full_id_ranges, full_aops , ids_pos ) << endl<< endl << endl;
+    } 
     kk++;                                                         
   }                                                               
   return;
@@ -165,7 +162,6 @@ void RDMderiv_new::norm_order(){
 ///////////////////////////////////////////////////////                           
 void RDMderiv_new::alt_order(){
 ///////////////////////////////////////////////////////  
-  cout << "alt_order" <<endl;
   auto even = []( int pos) { return ( 0 == pos % 2);}; 
   int kk = 0;
   while ( kk != ids_pos_all->size()){
@@ -202,13 +198,13 @@ void RDMderiv_new::alt_order(){
       }
     }
 
-    if (gamma_survives(ids_pos, full_id_ranges))   cout <<  "------------ KEEP ------------ "  << endl;
-    cout << "Start Aname  alt = " << Aname_init << endl;
-    cout << "Finish Aname alt = " << get_Aname(full_ids, full_id_ranges, deltas_pos ) << endl;
-    cout << "Start Gname  alt = " << Gname_init << endl;
-    cout << "Finish Gname alt = " << get_gamma_name( full_id_ranges, full_aops , ids_pos ) << endl;
-    if (gamma_survives(ids_pos, full_id_ranges))   cout << "------------ KEEP ------------ "  << endl ;
- 
+    if (gamma_survives(ids_pos, full_id_ranges)){
+      cout <<  "------------ KEEP ------------ "  << endl;
+      cout << "Start Aname  alt = " << Aname_init << endl;
+      cout << "Finish Aname alt = " << get_Aname(full_ids, full_id_ranges, deltas_pos ) << endl;
+      cout << "Start Gname  alt = " << Gname_init << endl;
+      cout << "Finish Gname alt = " << get_gamma_name( full_id_ranges, full_aops , ids_pos ) << endl <<endl << endl;
+    } 
     kk++;
   }
   return;
@@ -246,17 +242,14 @@ void RDMderiv_new::swap(shared_ptr<vector<int>> ids_pos,
 string RDMderiv_new::get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_idx_ranges, 
                               shared_ptr<vector<pair<int,int>>> all_ctrs_pos ){
 /////////////////////////////////////////////////////////////////////////////
- cout << "get Aname" << endl;
   string  name = "";
   for(string idx : *full_idxs)
     name += idx;
   name+="_"; 
 
-  cout << "XXX" <<endl;
   for(string idx_range : *full_idx_ranges)
     name += idx_range[0];
 
-  cout << "YYY" <<endl;
   if (all_ctrs_pos->size() !=0 ){
     name+="_"; 
     for(pair<int,int> delta : *all_ctrs_pos)
@@ -268,7 +261,6 @@ string RDMderiv_new::get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<
 string RDMderiv_new::get_gamma_name(shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> full_aops_,
                                     shared_ptr<vector<int>> idxs_pos ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "get gammaname" << endl;
   string  name = "";
   
   for (int pos : *idxs_pos ) 
@@ -395,25 +387,16 @@ shared_ptr<pint_vec> RDMderiv_new::Standardize_delta_ordering(shared_ptr<pint_ve
 /////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
 void RDMderiv_new::norm_order_recursive(shared_ptr<vector<shared_ptr<RDMderiv_new>>> rdm_vec ){                                                                                   
 //////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
-  cout << "RDMderiv_new::norm_order_recursive" << endl;
   int kk = 0;                                                                                                      
 
   while ( kk != rdm_vec->size()){                                                                                 
-    cout << " kk1 = " << kk << endl;
     auto ids_pos = rdm_vec->at(kk)->ids_pos;        
-    cout << " kk2 = " << kk << endl;
     auto deltas_pos = rdm_vec->at(kk)->deltas_pos; 
-    cout << " kk3 = " << kk << endl;
     int  num_pops = ( ids_pos->size()/2 )-1;     
  
-    cout << " kk4 = " << kk << endl;
-    string Aname_init = get_Aname(rdm_vec->at(kk)->full_ids, rdm_vec->at(kk)->full_id_ranges, rdm_vec->at(kk)->deltas_pos );     
-    cout << " kk5 = " << kk << endl;
+    string Aname_init = get_Aname(rdm_vec->at(kk)->full_ids, rdm_vec->at(kk)->full_id_ranges, rdm_vec->at(kk)->deltas_pos );   
     string Gname_init = get_gamma_name( rdm_vec->at(kk)->full_id_ranges, rdm_vec->at(kk)->full_aops, rdm_vec->at(kk)->ids_pos );
-    cout << " kk6 = " << kk << endl;
                                             
-    cout << "Aname_init = " << Aname_init << endl;                                                                         
-    cout << "Gname_init = " << Gname_init << endl;                                                                         
     for (int ii = ids_pos->size()-1 ; ii != -1; ii--){            
       if ( ii > num_pops ) {                                      
         if (!full_aops->at(ids_pos->at(ii)))                      
@@ -442,13 +425,13 @@ void RDMderiv_new::norm_order_recursive(shared_ptr<vector<shared_ptr<RDMderiv_ne
         }                                                         
       }                                                           
     }
-    if (gamma_survives(ids_pos, full_id_ranges))   cout <<  "------------ KEEP ------------ "  << endl;
-    cout << "Start Aname  alt = " << Aname_init << endl;
-    cout << "Finish Aname alt = " << get_Aname(rdm_vec->at(kk)->full_ids, rdm_vec->at(kk)->full_id_ranges, deltas_pos ) << endl;
-    cout << "Start Gname  alt = " << Gname_init << endl;
-    cout << "Finish Gname alt = " << get_gamma_name( rdm_vec->at(kk)->full_id_ranges, rdm_vec->at(kk)->full_aops , ids_pos ) << endl;
-    if (gamma_survives(ids_pos, full_id_ranges))   cout << "------------ KEEP ------------ "  << endl ;
-                                                       
+    if (gamma_survives(ids_pos, full_id_ranges)){
+      cout <<  "------------ KEEP ------------ "  << endl;
+      cout << "Start Aname  alt = " << Aname_init << endl;
+      cout << "Finish Aname alt = " << get_Aname(rdm_vec->at(kk)->full_ids, rdm_vec->at(kk)->full_id_ranges, rdm_vec->at(kk)->deltas_pos ) << endl;
+      cout << "Start Gname  alt = " << Gname_init << endl;
+      cout << "Finish Gname alt = " << get_gamma_name( rdm_vec->at(kk)->full_id_ranges, rdm_vec->at(kk)->full_aops , rdm_vec->at(kk)->ids_pos ) << endl << endl<<endl;
+    }                                                       
     kk++;                                                         
   }                                                               
   return;
@@ -478,7 +461,7 @@ void RDMderiv_new::swap_recursive(shared_ptr<vector<int>> ids_pos,
 
     auto new_ids_pos = make_shared<vector<int>>();
     for( int qq = 0 ; qq !=ids_pos->size() ; qq++)
-      if ( (qq ==ii) || (qq==jj))
+      if ( (qq !=ii) && (qq!=jj))
         new_ids_pos->push_back(ids_pos->at(qq));
 
     auto new_rdm = make_shared<RDMderiv_new>( rdm_vec->at(kk)->full_aops, rdm_vec->at(kk)->full_ids, rdm_vec->at(kk)->full_id_ranges,

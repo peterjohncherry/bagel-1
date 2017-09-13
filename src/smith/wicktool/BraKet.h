@@ -82,6 +82,8 @@ class BraKet  {
 
      void Build_Gamma_SpinFree(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs);
 
+     void Build_Gamma_SpinFree_New(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs);
+
      void get_string_spin_paths(); //should not be needed...
 
      void Build_Tensor_Contraction_list_CMTP();

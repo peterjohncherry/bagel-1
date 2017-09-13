@@ -314,19 +314,15 @@ void BraKet<DType>::Build_Gamma_WithSpin(shared_ptr<vector<bool>> aops, shared_p
   }
   return;
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_ptr<vector<string>> idxs){
+void BraKet<DType>::Build_Gamma_SpinFree_New(shared_ptr<vector<bool>> aops, shared_ptr<vector<string>> idxs){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Build_Gamma_SpinFree" << endl;
   auto rdmd  = make_shared<RDMderiv>(); 
-  auto spins = make_shared<vector<string>>(vector<string> {"A","A","A","A","A","A","A","A"} );
   cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
   auto aops_buff  = make_shared<vector<bool>>(*aops );
-
-  rdmd->initialize(aops, idxs, spins);
-  rdmd->norm_order();
-  
 
   for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
     auto aops_dupe  = make_shared<vector<bool>>(*aops_buff );
@@ -341,6 +337,43 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
     rdmd_vec->push_back(rdmd_new);
 
     rdmd_test->norm_order_recursive(rdmd_vec);
+  }
+  return; 
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
+void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_ptr<vector<string>> idxs){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Build_Gamma_SpinFree" << endl;
+  auto rdmd  = make_shared<RDMderiv>(); 
+  auto spins = make_shared<vector<string>>(vector<string> {"A","A","A","A","A","A","A","A"} );
+  cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
+  auto aops_buff  = make_shared<vector<bool>>(*aops );
+
+  rdmd->initialize(aops, idxs, spins);
+  rdmd->norm_order();
+  for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
+    string combrng = "";
+    for (auto rng : *(range_map_it->first))
+      combrng+=rng[0]; 
+   
+    cout <<  "11001100" << endl;
+    cout <<  combrng << endl;
+
+    auto aops_dupe  = make_shared<vector<bool>>(*aops_buff );
+    auto rdmd_new = make_shared<RDMderiv_new>(); 
+    rdmd_new->initialize(aops_dupe, idxs, range_map_it->first);
+
+    aops_dupe  = make_shared<vector<bool>>(*aops_buff );
+    auto rdmd_test = make_shared<RDMderiv_new>(); 
+    rdmd_test->initialize(aops_dupe, idxs, range_map_it->first);
+
+    auto rdmd_vec  = make_shared<vector<shared_ptr<RDMderiv_new>>>(0);
+    rdmd_vec->push_back(rdmd_new);
+
+    rdmd_test->norm_order();
+    //rdmd_test->norm_order_recursive(rdmd_vec);
   }
   
   for ( int kk =0 ; kk != rdmd->allops->size() ; kk++) {
