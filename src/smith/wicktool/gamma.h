@@ -13,7 +13,6 @@ class RDMderiv_new{
 
   // variables
   bool spinfree;
-  int  my_sign ;
   std::string name;
 
   std::shared_ptr<std::vector<bool>> full_aops ;
@@ -30,7 +29,13 @@ class RDMderiv_new{
   std::shared_ptr<std::map< char, int>>   op_order ;
   std::shared_ptr<std::map< std::string, int>>  idx_order ;
   
+  int  my_sign ;
+
   RDMderiv_new(){};
+  RDMderiv_new( std::shared_ptr<std::vector<bool>> full_aops_in , std::shared_ptr<std::vector<std::string>> full_ids_in ,  std::shared_ptr<std::vector<std::string>> full_id_ranges_in ,
+                std::shared_ptr<std::vector<int>> ids_pos_in ,  std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in, int sign_in ) :
+                full_aops(full_aops_in), full_ids(full_ids_in), full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), my_sign(sign_in) {};
+
   ~RDMderiv_new(){};
 
  // functions
@@ -39,6 +44,9 @@ class RDMderiv_new{
 
   void initialize( std::shared_ptr<std::vector<bool>> ac_init,  std::shared_ptr<std::vector<std::string>> id_ranges, std::shared_ptr<std::vector<std::string>> ids_init,
                    std::shared_ptr<std::vector<std::pair<int,int>>> deltas_init, int sign = 1);
+
+
+ 
 
   void swap(std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<pint_vec> deltas_pos, int ii, int jj, int kk );
 
