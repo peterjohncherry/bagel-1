@@ -328,16 +328,20 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
   rdmd->norm_order();
   
 
-  auto rdmd_vec  = make_shared<vector<shared_ptr<RDMderiv_new>>>(0); 
   for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
     auto aops_dupe  = make_shared<vector<bool>>(*aops_buff );
     auto rdmd_new = make_shared<RDMderiv_new>(); 
     rdmd_new->initialize(aops_dupe, idxs, range_map_it->first);
+
+    aops_dupe  = make_shared<vector<bool>>(*aops_buff );
     auto rdmd_test = make_shared<RDMderiv_new>(); 
+    rdmd_test->initialize(aops_dupe, idxs, range_map_it->first);
 
+    auto rdmd_vec  = make_shared<vector<shared_ptr<RDMderiv_new>>>(0);
+    rdmd_vec->push_back(rdmd_new);
+
+    rdmd_test->norm_order_recursive(rdmd_vec);
   }
-
-
   
   for ( int kk =0 ; kk != rdmd->allops->size() ; kk++) {
     auto gammas = make_shared<alt_RDMderiv>(); 

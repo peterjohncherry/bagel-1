@@ -36,6 +36,7 @@ void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
     }
   }
 
+  ids_pos = unc_pos;
   ids_pos_all = make_shared<vector<shared_ptr<vector<int>>>>(1, unc_pos);
   deltas_pos_all = make_shared<vector<shared_ptr<pint_vec>>>(1, deltas_pos_init); 
   signs_all  = make_shared<vector<int>>(1,sign);
@@ -73,13 +74,14 @@ void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
   full_ids = ids_init; 
   full_id_ranges = id_ranges;
   full_aops = ac_init;
-  
+ 
+ 
   spinfree = false; 
-  auto  ids_pos_init = make_shared<vector<int>>(id_ranges->size());
-  for (int ii = 0 ; ii != id_ranges->size() ; ii++) ids_pos_init->at(ii) = ii;
+  ids_pos = make_shared<vector<int>>(id_ranges->size());
+  for (int ii = 0 ; ii != id_ranges->size() ; ii++) ids_pos->at(ii) = ii;
  
   auto nodel = make_shared<pint_vec>(0);
-  ids_pos_all = make_shared<vector<shared_ptr<vector<int>>>>(1, ids_pos_init);
+  ids_pos_all = make_shared<vector<shared_ptr<vector<int>>>>(1, ids_pos);
   deltas_pos_all = make_shared<vector<shared_ptr<pint_vec>>>(1, nodel); 
   signs_all  = make_shared<vector<int>>(1,1);
 
@@ -242,19 +244,22 @@ void RDMderiv_new::swap(shared_ptr<vector<int>> ids_pos,
 }
 /////////////////////////////////////////////////////////////////////////////
 string RDMderiv_new::get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_idx_ranges, 
-                              shared_ptr<vector<pair<int,int>>> all_deltas_pos ){
+                              shared_ptr<vector<pair<int,int>>> all_ctrs_pos ){
 /////////////////////////////////////////////////////////////////////////////
+ cout << "get Aname" << endl;
   string  name = "";
   for(string idx : *full_idxs)
     name += idx;
   name+="_"; 
 
+  cout << "XXX" <<endl;
   for(string idx_range : *full_idx_ranges)
     name += idx_range[0];
 
-  if (all_deltas_pos->size() !=0){
+  cout << "YYY" <<endl;
+  if (all_ctrs_pos->size() !=0 ){
     name+="_"; 
-    for(pair<int,int> delta : *all_deltas_pos)
+    for(pair<int,int> delta : *all_ctrs_pos)
       name += to_string(delta.first)+to_string(delta.second);
   }
   return name;
@@ -263,6 +268,7 @@ string RDMderiv_new::get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<
 string RDMderiv_new::get_gamma_name(shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> full_aops_,
                                     shared_ptr<vector<int>> idxs_pos ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ cout << "get gammaname" << endl;
   string  name = "";
   
   for (int pos : *idxs_pos ) 
@@ -389,16 +395,25 @@ shared_ptr<pint_vec> RDMderiv_new::Standardize_delta_ordering(shared_ptr<pint_ve
 /////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
 void RDMderiv_new::norm_order_recursive(shared_ptr<vector<shared_ptr<RDMderiv_new>>> rdm_vec ){                                                                                   
 //////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
+  cout << "RDMderiv_new::norm_order_recursive" << endl;
   int kk = 0;                                                                                                      
 
   while ( kk != rdm_vec->size()){                                                                                 
+    cout << " kk1 = " << kk << endl;
     auto ids_pos = rdm_vec->at(kk)->ids_pos;        
+    cout << " kk2 = " << kk << endl;
     auto deltas_pos = rdm_vec->at(kk)->deltas_pos; 
-    int  num_pops = (ids_pos->size()/2)-1;     
+    cout << " kk3 = " << kk << endl;
+    int  num_pops = ( ids_pos->size()/2 )-1;     
  
-    string Aname_init = get_Aname(full_ids, full_id_ranges, deltas_pos );     
-    string Gname_init = get_gamma_name( full_id_ranges, full_aops , ids_pos );
-                                                                                                                     
+    cout << " kk4 = " << kk << endl;
+    string Aname_init = get_Aname(rdm_vec->at(kk)->full_ids, rdm_vec->at(kk)->full_id_ranges, rdm_vec->at(kk)->deltas_pos );     
+    cout << " kk5 = " << kk << endl;
+    string Gname_init = get_gamma_name( rdm_vec->at(kk)->full_id_ranges, rdm_vec->at(kk)->full_aops, rdm_vec->at(kk)->ids_pos );
+    cout << " kk6 = " << kk << endl;
+                                            
+    cout << "Aname_init = " << Aname_init << endl;                                                                         
+    cout << "Gname_init = " << Gname_init << endl;                                                                         
     for (int ii = ids_pos->size()-1 ; ii != -1; ii--){            
       if ( ii > num_pops ) {                                      
         if (!full_aops->at(ids_pos->at(ii)))                      
@@ -429,9 +444,9 @@ void RDMderiv_new::norm_order_recursive(shared_ptr<vector<shared_ptr<RDMderiv_ne
     }
     if (gamma_survives(ids_pos, full_id_ranges))   cout <<  "------------ KEEP ------------ "  << endl;
     cout << "Start Aname  alt = " << Aname_init << endl;
-    cout << "Finish Aname alt = " << get_Aname(full_ids, full_id_ranges, deltas_pos ) << endl;
+    cout << "Finish Aname alt = " << get_Aname(rdm_vec->at(kk)->full_ids, rdm_vec->at(kk)->full_id_ranges, deltas_pos ) << endl;
     cout << "Start Gname  alt = " << Gname_init << endl;
-    cout << "Finish Gname alt = " << get_gamma_name( full_id_ranges, full_aops , ids_pos ) << endl;
+    cout << "Finish Gname alt = " << get_gamma_name( rdm_vec->at(kk)->full_id_ranges, rdm_vec->at(kk)->full_aops , ids_pos ) << endl;
     if (gamma_survives(ids_pos, full_id_ranges))   cout << "------------ KEEP ------------ "  << endl ;
                                                        
     kk++;                                                         
@@ -452,21 +467,22 @@ void RDMderiv_new::swap_recursive(shared_ptr<vector<int>> ids_pos,
   ids_pos->at(ii) = ids_pos->at(jj);                                                                                                
   ids_pos->at(jj) = idx_buff;                                                                                                       
                                                                                                                                     
-  if ( full_id_ranges->at(ids_pos->at(jj)) == full_id_ranges->at(ids_pos->at(ii)) &&                                                
-       full_aops->at( ids_pos->at(ii) ) !=  full_aops->at( ids_pos->at(jj) ) )  {                                                   
+  if ( rdm_vec->at(kk)->full_id_ranges->at(ids_pos->at(jj)) == rdm_vec->at(kk)->full_id_ranges->at(ids_pos->at(ii)) &&                                                
+       rdm_vec->at(kk)->full_aops->at( ids_pos->at(ii) ) !=  rdm_vec->at(kk)->full_aops->at( ids_pos->at(jj) ) )  {                                                   
 
     auto new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);                                                                       
     new_deltas_tmp->push_back(make_pair(ids_pos->at(jj), ids_pos->at(ii)));                                                         
     auto new_deltas = Standardize_delta_ordering( new_deltas_tmp ) ;                                                                
 
-    int new_sign = signs_all->at(kk);                                                                                               
+    int new_sign = rdm_vec->at(kk)->my_sign;                                                                                               
 
     auto new_ids_pos = make_shared<vector<int>>();
     for( int qq = 0 ; qq !=ids_pos->size() ; qq++)
       if ( (qq ==ii) || (qq==jj))
         new_ids_pos->push_back(ids_pos->at(qq));
 
-    auto new_rdm =  make_shared<RDMderiv_new>( full_aops, full_ids, full_id_ranges, new_ids_pos, new_deltas, new_sign );
+    auto new_rdm = make_shared<RDMderiv_new>( rdm_vec->at(kk)->full_aops, rdm_vec->at(kk)->full_ids, rdm_vec->at(kk)->full_id_ranges,
+                                              new_ids_pos, new_deltas, new_sign );
     rdm_vec->push_back(new_rdm);
 
   }                                                                                                                                 
