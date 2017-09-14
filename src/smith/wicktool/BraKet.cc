@@ -340,6 +340,24 @@ void BraKet<DType>::Build_Gamma_SpinFree_New(shared_ptr<vector<bool>> aops, shar
   }
   return; 
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
+void BraKet<DType>::Generate_Gammas(shared_ptr<vector<bool>> aops, shared_ptr<vector<string>> idxs){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Generate_Gammas" << endl;
+  cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
+  auto aops_buff  = make_shared<vector<bool>>(*aops );
+
+  auto gamma_generator = make_shared<GammaGenerator>(aops, Total_Op->idxs);
+
+  for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
+     gamma_generator->add_gamma(range_map_it->first, 1);
+     gamma_generator->norm_order();
+     gamma_generator->alt_order();     
+  }
+  return; 
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
@@ -353,14 +371,8 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
 
   rdmd->initialize(aops, idxs, spins);
   rdmd->norm_order();
-  for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
-    string combrng = "";
-    for (auto rng : *(range_map_it->first))
-      combrng+=rng[0]; 
-   
-    cout <<  "11001100" << endl;
-    cout <<  combrng << endl;
 
+  for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
     auto aops_dupe  = make_shared<vector<bool>>(*aops_buff );
     auto rdmd_new = make_shared<RDMderiv_new>(); 
     rdmd_new->initialize(aops_dupe, idxs, range_map_it->first);
@@ -373,7 +385,6 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
     rdmd_vec->push_back(rdmd_new);
 
     rdmd_test->norm_order();
-    //rdmd_test->norm_order_recursive(rdmd_vec);
   }
   
   for ( int kk =0 ; kk != rdmd->allops->size() ; kk++) {
