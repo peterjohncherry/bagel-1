@@ -118,10 +118,15 @@ void GammaGenerator::Contract_remaining_indexes(int kk){
   shared_ptr<vector<string>> full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
 
-  vector<string> diff_rngs(0);
-  make_shared<vector<shared_ptr<vector<int>>>> make_ops_pos(0);
-  make_shared<vector<shared_ptr<vector<int>>>> kill_ops_pos(0);
 
+  //vector of different index ranges, and vectors containing list of index positions
+  //associated with each of these ranges
+  vector<string> diff_rngs(0);
+  shared_ptr<vector<shared_ptr<vector<int>>>> make_ops_pos(0);
+  shared_ptr<vector<shared_ptr<vector<int>>>> kill_ops_pos(0);
+
+  // get the positions of the creation and annihilation operators associated with
+  // each different range
   for ( int jj = 0;  jj !=full_id_ranges->size() ; jj++){
     int ii = 0;
  
@@ -152,14 +157,18 @@ void GammaGenerator::Contract_remaining_indexes(int kk){
     } while (true);
   } 
 
-  vector<vector<pair<int,int>>> new_contractions(make_ops_pos->size()); 
 
-  vector<shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> new_contractions(diff_rngs.size());
+//  vector<vector<pair<int,int>>> new_contractions(make_ops_pos->size()); 
+
+  // first index  = range.
+  // second index = pair vector defining possible way of contracting indexes with that range.
+  // third index  = pair defining contraction of indexes with the same range.
+  vector<shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>> new_contractions(diff_rngs.size());
 
 
   //CHECK THE CONTRACTIONS ARE STILL IN STANDARD ORDERING AND NOT GETTING DUPLICATES
-  for (int ii =0 ; ii != new_contractions->size(); ii++)
-    new_contractions[ii] = get_unique_pairs( make_op_pos->at(ii),  kill_op_pos->at(ii), make_op_pos->size());
+  for (int ii =0 ; ii != new_contractions.size(); ii++)
+    new_contractions[ii] = get_unique_pairs( make_ops_pos->at(ii),  kill_ops_pos->at(ii), make_ops_pos->size());
   
   auto forvec = make_shared<vector<int>>(0,diff_rngs.size()) ;
   auto min = make_shared<vector<int>>(0,diff_rngs.size()) ;
@@ -186,11 +195,11 @@ void GammaGenerator::Contract_remaining_indexes(int kk){
       }
     }
 
-    auto new_gamma = make_shared<GammaMat>(full_id_ranges_in, orig_aops, new_ids_pos, new_deltas_pos, my_sign); 
+    auto new_gamma = make_shared<GammaMat>(full_id_ranges, orig_aops, new_ids_pos, new_deltas_pos, gamma_vec->at(kk)->my_sign); 
 
     final_gamma_vec->push_back(new_gamma);
 
-  } while fvec_cycle( forvec, max , min) ;
+  } while (fvec_cycle( forvec, max , min)) ;
  
   return;
 }
