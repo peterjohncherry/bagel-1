@@ -107,10 +107,9 @@ template<class DType>
 bool TensOp<DType>::apply_symmetry(shared_ptr<vector<string>> ranges_1, shared_ptr<vector<string>> ranges_2  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "TensOp::apply_symmetry" <<   endl;
-  auto prvec = [](shared_ptr<vector<string>> invec){ cout << "[ " ; for (auto elem : *invec) { cout << elem << " " ;} cout << "]" ;};
 
   for (auto symmop : symmfuncs_) {
-    if( *ranges_1 == *(get<0>(symmop)(ranges_2))){
+    if( *ranges_1 == *(get<0>(symmop)(ranges_2)) ){
       bool fbool = false; 
       pair<int,int> sfac(get<1>(symmop), get<2>(symmop));
       shared_ptr<vector<string>> transformed_idxs = make_shared<vector<string>>(*(get<0>(symmop)(idxs)));

@@ -3,6 +3,7 @@
 #include <src/smith/indexrange.h>
 #include <src/smith/wicktool/equation_tools.h>
 
+//#include "equation_tools.h"
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;

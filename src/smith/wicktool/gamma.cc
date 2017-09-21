@@ -8,6 +8,9 @@
 
 using namespace std; 
 using namespace WickUtils;
+using namespace bagel;
+using namespace bagel::SMITH;
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void RDMderiv_new::initialize(shared_ptr<vector<bool>> ac_init,
@@ -805,11 +808,4 @@ shared_ptr<pint_vec> alt_RDMderiv::get_spinsector_path(shared_ptr<pstr_vec> gamm
 
   return ssector_path;
 }
-
-
 #endif
-
-//    cout << "aops = [ "; for (int ii = 0 ; ii != ids_pos->size() ; ii++ ) {  cout << full_aops->at(ids_pos->at(ii)) << " " ; } cout << "]"<< endl;                
-//    cout << "idxs = [ "; for (int ii = 0 ; ii != ids_pos->size() ; ii++ ) {  cout << full_ids->at(ids_pos->at(ii)) << " " ; } cout << "]" << endl;                
-//    cout << "rngs = [ "; for (int ii = 0 ; ii != ids_pos->size() ; ii++ ) {  cout << full_id_ranges->at(ids_pos->at(ii)) << " " ; } cout << "]" <<  endl;                
-//    cout << "ctrs = ( "; for (int ii = 0 ; ii != deltas_pos->size() ; ii++ ) {  cout << "(" << deltas_pos->at(ii).first << "," << deltas_pos->at(ii).second << ") " ; } cout << ")" <<  endl;

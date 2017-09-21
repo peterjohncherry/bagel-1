@@ -3,18 +3,26 @@
 #include <src/smith/wicktool/WickUtils.h>
 #include <src/smith/wicktool/gamma_generator.h>
 
+//#include "WickUtils.h"
+//#include "gamma_generator.h"
+#include <unordered_map>
 using namespace std; 
 using namespace WickUtils;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-GammaGenerator::GammaGenerator(shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init){
+GammaGenerator::GammaGenerator(shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init, 
+                               shared_ptr< unordered_map<string, shared_ptr< unordered_map<string, pair<int,int> > >>> G_to_A_map_in){
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_GammaGenerator
+cout << "GammaGenerator::GammaGenerator" << endl; 
+#endif 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   orig_aops = ac_init;
   orig_ids = ids_init; 
 
   gamma_vec = make_shared<vector<shared_ptr<GammaMat>>>(0);
   final_gamma_vec = make_shared<vector<shared_ptr<GammaMat>>>(0);
-  G_to_A_map = make_shared<std::map<std::string, shared_ptr<vector<std::string>>>>();
+  G_to_A_map = G_to_A_map_in;
 
   //neeeded to keep ordering of contractions consistent 
   auto opname = orig_ids->at(0)[0];
@@ -26,7 +34,7 @@ GammaGenerator::GammaGenerator(shared_ptr<vector<bool>> ac_init, shared_ptr<vect
       opname = elem[0];
       op_order->emplace(opname, ++ii);
     }
-  }
+  } 
 
   ii=0;
   idx_order = make_shared<map< string, int>>();
@@ -39,16 +47,23 @@ GammaGenerator::GammaGenerator(shared_ptr<vector<bool>> ac_init, shared_ptr<vect
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::add_gamma(shared_ptr<vector<string>> full_id_ranges_in, int my_sign_in) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::add_gamma" << endl; 
+#endif 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   if(RangeCheck(full_id_ranges_in)){
+
     auto ids_pos_init =  make_shared<vector<int>>(full_id_ranges_in->size());
+
     for ( int ii = 0; ii != full_id_ranges_in->size(); ii++)
         ids_pos_init->at(ii) = ii; 
     
     int my_sign_in = 1;
     auto deltas_pos_in = make_shared<vector<pair<int,int>>>(0);
+
+    gamma_vec->push_back( make_shared<GammaMat>(full_id_ranges_in, orig_aops, ids_pos_init, deltas_pos_in, my_sign_in)); 
     
-    auto new_gamma = make_shared<GammaMat>(full_id_ranges_in, orig_aops, ids_pos_init, deltas_pos_in, my_sign_in); 
   }
 
   return; 
@@ -58,6 +73,10 @@ void GammaGenerator::add_gamma(shared_ptr<vector<string>> full_id_ranges_in, int
 //void GammaGenerator::norm_order(shared_ptr<vector<shared_ptr<GammaMat>>> gamma_vec ){                                                                                   
 void GammaGenerator::norm_order( ){                                                                                   
 //////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::norm_order" << endl; 
+#endif 
+//////////////////////////////////////////////////////////////////////////////////////
   int kk = 0;                                                                                                      
 
   while ( kk != gamma_vec->size()){                                               
@@ -69,8 +88,8 @@ void GammaGenerator::norm_order( ){
     int  num_pops = ( ids_pos->size()/2 )-1;     
  
     string Aname_init = get_Aname(orig_ids, full_id_ranges, deltas_pos );   
-    string Gname_init = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
-                                            
+    string Gname_init = get_gamma_name( full_id_ranges, full_aops, ids_pos );
+                                       
     for (int ii = ids_pos->size()-1 ; ii != -1; ii--){            
       if ( ii > num_pops ) {                                      
         if (!full_aops->at(ids_pos->at(ii)))                      
@@ -99,107 +118,114 @@ void GammaGenerator::norm_order( ){
         }                                                         
       }                                                           
     }
-    if (!gamma_survives(ids_pos, full_id_ranges)){
+    if (!gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
+//       cout <<  Aname_init  ;
+//       cout << "          " <<  Gname_init  << endl;
+//       cout << "====================================================================== " << endl;
        Contract_remaining_indexes(kk);
     } else {
       final_gamma_vec->push_back(gamma_vec->at(kk));
     } 
     kk++;                                                         
   }                                                               
+  gamma_vec = final_gamma_vec;
   return;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::Contract_remaining_indexes(int kk){
 //////////////////////////////////////////////////////////////////////////////////////  
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::Contract_remaining_indexes" << endl; 
+#endif 
+//////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<vector<bool>> full_aops = gamma_vec->at(kk)->full_aops;        
   shared_ptr<vector<int>>  ids_pos = gamma_vec->at(kk)->ids_pos;        
   shared_ptr<vector<string>> full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
-
+  int my_sign = gamma_vec->at(kk)->my_sign;
 
   //vector of different index ranges, and vectors containing list of index positions
   //associated with each of these ranges
   vector<string> diff_rngs(0);
-  shared_ptr<vector<shared_ptr<vector<int>>>> make_ops_pos(0);
-  shared_ptr<vector<shared_ptr<vector<int>>>> kill_ops_pos(0);
+  auto make_ops_pos =  make_shared<vector<shared_ptr<vector<int>>>>(0);
+  auto kill_ops_pos =  make_shared<vector<shared_ptr<vector<int>>>>(0);
+
+  int start_pos = 0;
+  while( start_pos!= ids_pos->size()  ){
+    if (full_id_ranges->at(ids_pos->at(start_pos))!= "act")
+      break;
+    start_pos++;
+  }
 
   // get the positions of the creation and annihilation operators associated with
   // each different range
-  for ( int jj = 0;  jj !=full_id_ranges->size() ; jj++){
+  for ( int jj = start_pos;  jj != ids_pos->size() ; jj++){
     int ii = 0;
- 
-    string rng = full_id_ranges->at(jj);
-    do {
-
-      if( rng == diff_rngs[ii] ){
-        if ( orig_aops->at(jj) ){
-          make_ops_pos->at(ii)->push_back(jj);
-        } else {
-          kill_ops_pos->at(ii)->push_back(jj);
+    string rng = full_id_ranges->at(ids_pos->at(jj));
+    if (rng != "act" ) {
+      do  {
+        if( jj != start_pos  &&  rng == diff_rngs[ii] ){
+          if ( full_aops->at(ids_pos->at(jj)) ){
+            make_ops_pos->at(ii)->push_back(ids_pos->at(jj));
+          } else {
+            kill_ops_pos->at(ii)->push_back(ids_pos->at(jj));
+          }
+          break;
         }
-        break;
-      }
-
-      if ( ii == diff_rngs.size()-1 ){
-        diff_rngs.push_back(rng);
-        if ( orig_aops->at(jj) ){
-          auto new_make_vec = make_shared<vector<int>>(1,jj);
-          make_ops_pos->push_back(new_make_vec);
-        } else {
-          auto new_kill_vec = make_shared<vector<int>>(1,jj);
-          kill_ops_pos->push_back(new_kill_vec);
+                                  
+        if (jj == start_pos || ii == diff_rngs.size()-1 ){
+          diff_rngs.push_back(rng);
+          auto init_vec1_ = make_shared<vector<int>>(1,ids_pos->at(jj));
+          auto init_vec2_ = make_shared<vector<int>>(0);
+          if ( full_aops->at(ids_pos->at(jj)) ){
+            make_ops_pos->push_back(init_vec1_);
+            kill_ops_pos->push_back(init_vec2_);
+          } else {
+            make_ops_pos->push_back(init_vec2_);
+            kill_ops_pos->push_back(init_vec1_);
+          }
+          break;
         }
-        break;
-      }
-      ii++;
-    } while (true);
+        ii++; 
+      }while (ii != diff_rngs.size()); 
+    }
   } 
-
-
-//  vector<vector<pair<int,int>>> new_contractions(make_ops_pos->size()); 
 
   // first index  = range.
   // second index = pair vector defining possible way of contracting indexes with that range.
   // third index  = pair defining contraction of indexes with the same range.
   vector<shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>> new_contractions(diff_rngs.size());
 
-
-  //CHECK THE CONTRACTIONS ARE STILL IN STANDARD ORDERING AND NOT GETTING DUPLICATES
+  //Contractions are not in "standard" ordering. This shouldn't break anything, but maybe change later to improve merging of terms.
   for (int ii =0 ; ii != new_contractions.size(); ii++)
-    new_contractions[ii] = get_unique_pairs( make_ops_pos->at(ii),  kill_ops_pos->at(ii), make_ops_pos->size());
-  
-  auto forvec = make_shared<vector<int>>(0,diff_rngs.size()) ;
-  auto min = make_shared<vector<int>>(0,diff_rngs.size()) ;
-  auto max = make_shared<vector<int>>(0,diff_rngs.size()) ;
+    new_contractions[ii] = get_unique_pairs( make_ops_pos->at(ii),  kill_ops_pos->at(ii), make_ops_pos->at(ii)->size());
 
-  for ( int ii = 0 ; ii != diff_rngs.size(); ii++ ) 
-    max->at(ii) = new_contractions[ii]->size()-1;
+  auto forvec = make_shared<vector<int>>(diff_rngs.size(),0) ;
+  auto min = make_shared<vector<int>>(diff_rngs.size(),0) ;
+  auto max = make_shared<vector<int>>(diff_rngs.size()) ;
+
+  for (int ii = 0; ii != max->size();  ii++)
+    max->at(ii) = make_ops_pos->at(ii)->size()-1;
+   
 
   do {
-    
-    auto new_deltas_pos = make_shared<vector<pair<int,int>>>(*deltas_pos);
+
+    auto new_deltas_pos_tmp = make_shared<vector<pair<int,int>>>(*deltas_pos);
     for ( int qq = 0; qq != forvec->size(); qq++)
-      new_deltas_pos->insert(new_deltas_pos->begin(), new_contractions[qq]->at(forvec->at(qq))->begin(), new_contractions[qq]->at(forvec->at(qq))->begin()); 
+      new_deltas_pos_tmp->insert(new_deltas_pos_tmp->end(), new_contractions[qq]->at(forvec->at(qq))->begin(), new_contractions[qq]->at(forvec->at(qq))->end()); 
 
-    auto new_ids_pos = make_shared<vector<int>>(*ids_pos);
+    auto new_deltas_pos = Standardize_delta_ordering_generic( new_deltas_pos_tmp ) ;                                                                
+    shared_ptr<vector<int>> new_ids_pos =  get_unc_ids_from_deltas_ids_comparison( ids_pos , new_deltas_pos );
+    
+//    cout << get_Aname(orig_ids, full_id_ranges, new_deltas_pos ) <<  "         " <<  get_gamma_name( full_id_ranges, orig_aops, new_ids_pos ) << endl;
 
-    for ( int qq = 0; qq != new_deltas_pos->size(); qq++ ){ 
-      for ( int xx = 0; xx != new_ids_pos->size(); xx++){
-        if (new_deltas_pos->at(qq).first == new_ids_pos->at(xx)){
-           new_ids_pos->erase(new_ids_pos->begin()+xx); 
-        } else if (new_deltas_pos->at(qq).second == new_ids_pos->at(xx)) {
-          new_ids_pos->erase(new_ids_pos->begin()+xx); 
-        }
-      }
-    }
+    final_gamma_vec->push_back(make_shared<GammaMat>(full_id_ranges, orig_aops, new_ids_pos, new_deltas_pos, my_sign)); 
+   
+  } while ( fvec_cycle(forvec, max, min) ) ;
 
-    auto new_gamma = make_shared<GammaMat>(full_id_ranges, orig_aops, new_ids_pos, new_deltas_pos, gamma_vec->at(kk)->my_sign); 
-
-    final_gamma_vec->push_back(new_gamma);
-
-  } while (fvec_cycle( forvec, max , min)) ;
+//  cout << "====================================================================== " << endl << endl;
  
   return;
 }
@@ -208,38 +234,42 @@ void GammaGenerator::Contract_remaining_indexes(int kk){
 //void GammaGenerator::alt_order(shared_ptr<vector<shared_ptr<GammaMat>>> gamma_vec ){
 void GammaGenerator::alt_order(){
 //////////////////////////////////////////////////////////////////////////////////////  
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::alt_order" << endl; 
+#endif 
+///////////////////////////////////////////////////////////////////////////////////////
 
   auto even = []( int pos) { return ( 0 == pos % 2);}; 
+    
   int kk = 0;
   while ( kk != gamma_vec->size()){
     shared_ptr<vector<bool>> full_aops = gamma_vec->at(kk)->full_aops;        
     shared_ptr<vector<int>>  ids_pos = gamma_vec->at(kk)->ids_pos;        
     shared_ptr<vector<string>> full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
     shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
-    int  num_pops = ( ids_pos->size()/2 )-1;     
- 
-    string Aname_init = get_Aname( orig_ids, full_id_ranges, deltas_pos );   
-    string Gname_init = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
 
-    for (int ii = orig_ids->size()-1 ; ii != -1; ii-- ){
+    int my_sign  = gamma_vec->at(kk)->my_sign ;
+    int num_pops = ( ids_pos->size()/2 )-1 ;     
+  
+    for (int ii = ids_pos->size()-1 ; ii != -1; ii-- ){
       if (!even(ii)) {
-        if (!full_aops->at(ii))
+        if (!full_aops->at(ids_pos->at(ii)))
           continue;
- 
-        while(full_aops->at(ii)){
+  
+        while(full_aops->at(ids_pos->at(ii))){
           for ( int jj = (ii-1); jj != -1 ; jj--) {
-             if (!full_aops->at(jj)){
+             if (!full_aops->at(ids_pos->at(jj))){
                swap(jj, jj+1, kk, gamma_vec);
                break;
              }
           }
         }
       } else if (even(ii)){
-          if (full_aops->at(ii))
+          if (full_aops->at(ids_pos->at(ii)))
             continue;
-        while(!full_aops->at(ii)){
+        while(!full_aops->at(ids_pos->at(ii))){
           for ( int jj = (ii-1); jj != -1 ; jj--) {
-             if (full_aops->at(jj)){
+             if (full_aops->at(ids_pos->at(jj))){
                swap(jj, jj+1, kk, gamma_vec);
                break;
              }
@@ -248,6 +278,24 @@ void GammaGenerator::alt_order(){
       }
     }
     kk++;
+  
+    string Aname_alt = get_Aname( orig_ids, full_id_ranges, deltas_pos );   
+    string Gname_alt = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
+ //   cout << " Aname_alt  = " << Aname_alt  << "           Gname_alt = " << Gname_alt << endl; 
+      
+    auto loc_in_map = G_to_A_map->find(Gname_alt);
+    if ( loc_in_map == G_to_A_map->end() ) {
+      auto A_factor_map = make_shared< unordered_map<string, pair<int,int> > >(); 
+      G_to_A_map->emplace(Gname_alt, A_factor_map);
+    } 
+    
+    auto Aloc_in_map = G_to_A_map->at(Gname_alt)->find(Aname_alt);                                           
+    if ( Aloc_in_map == G_to_A_map->at(Gname_alt)->end() ) {
+      G_to_A_map->at(Gname_alt)->emplace ( Aname_alt, make_pair(my_sign, my_sign)) ;
+    } else {
+      Aloc_in_map->second.first  += my_sign;
+      Aloc_in_map->second.second += my_sign;
+    }
   }
   return;
 }
@@ -256,12 +304,15 @@ void GammaGenerator::alt_order(){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
 void GammaGenerator::swap( int ii, int jj, int kk, shared_ptr<vector<shared_ptr<GammaMat>>> gamma_vec  ){                                                  
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::swap" << endl; 
+#endif 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   shared_ptr<vector<bool>> full_aops = gamma_vec->at(kk)->full_aops;        
   shared_ptr<vector<int>>  ids_pos = gamma_vec->at(kk)->ids_pos;        
   shared_ptr<vector<string>> full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
-
 
   int idx_buff = ids_pos->at(ii);                                                                                                   
   ids_pos->at(ii) = ids_pos->at(jj);                                                                                                
@@ -272,7 +323,7 @@ void GammaGenerator::swap( int ii, int jj, int kk, shared_ptr<vector<shared_ptr<
 
     auto new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);                                                                       
     new_deltas_tmp->push_back(make_pair(ids_pos->at(jj), ids_pos->at(ii)));                                                         
-    auto new_deltas = Standardize_delta_ordering( new_deltas_tmp ) ;                                                                
+    auto new_deltas = Standardize_delta_ordering_generic( new_deltas_tmp ) ;                                                                
 
     int new_sign = gamma_vec->at(kk)->my_sign;                                                                                               
 
@@ -293,6 +344,10 @@ void GammaGenerator::swap( int ii, int jj, int kk, shared_ptr<vector<shared_ptr<
 string GammaGenerator::get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_idx_ranges, 
                                  shared_ptr<vector<pair<int,int>>> all_ctrs_pos ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::get_Aname" << endl; 
+#endif 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   string  name = "";
   for(string idx : *full_idxs)
     name += idx;
@@ -312,26 +367,99 @@ string GammaGenerator::get_Aname(shared_ptr<vector<string>> full_idxs, shared_pt
 string GammaGenerator::get_gamma_name(shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> aops_vec,
                                       shared_ptr<vector<int>> idxs_pos ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::get_gamma_name" << endl; 
+#endif 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  string  name = "";
+ 
+  if (idxs_pos->size() == 0 ) {
+     name = "totally_contracted" ;
+  } else {  
+    for (int pos : *idxs_pos ) 
+        name+=full_idx_ranges->at(pos)[0];
+    
+    name+='_';
+    for (int pos : *idxs_pos ) {
+      if(aops_vec->at(pos)){ 
+        name += '1';
+      } else {
+        name += '0';
+      }
+    } 
+  }
+  
+  return name;
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+string GammaGenerator::get_gamma_name(shared_ptr<vector<bool>> aops_vec, shared_ptr<vector<string>> full_idx_ranges,  
+                                      shared_ptr<vector<pair<int,int>>> deltas_pos ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::get_gamma_name" << endl; 
+#endif 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   string  name = "";
   
-  for (int pos : *idxs_pos ) 
-      name+=full_idx_ranges->at(pos)[0];
+  vector<bool> unc_get(full_idx_ranges->size(), true);
+  for ( pair<int,int > del : *deltas_pos ){  
+     unc_get[del.first] = false;
+     unc_get[del.second] = false;
+  }
+
+  for ( int ii = 0; ii != unc_get.size() ; ii++)
+    if (unc_get[ii]) 
+      name+=full_idx_ranges->at(ii)[0];
 
   name+='_';
-  for (int pos : *idxs_pos ) {
-    if(aops_vec->at(pos)){ 
-      name += '1';
-    } else {
-      name += '0';
+  for ( int ii = 0; ii != unc_get.size() ; ii++){
+    if (unc_get[ii]){ 
+      if(aops_vec->at(ii)){ 
+        name += '1';
+      } else {
+        name += '0';
+      }
     }
   } 
   
   return name;
 };
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<pint_vec>  GammaGenerator::Standardize_delta_ordering_generic(shared_ptr<pint_vec> deltas_pos ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::Standardize_delta_ordering" << endl; 
+#endif 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+ shared_ptr<vector<pair<int,int>>> new_deltas_pos;
+
+ if (deltas_pos->size() > 1 ) {
+   new_deltas_pos =  make_shared <vector<pair<int,int>>>( deltas_pos->size());
+   vector<int> posvec(deltas_pos->size(),0);
+   for (int ii = 0 ; ii != deltas_pos->size() ; ii++) 
+     for (int jj = 0 ; jj != deltas_pos->size() ; jj++) 
+       if (deltas_pos->at(ii).first > deltas_pos->at(jj).first )
+         posvec[ii]++ ;      
+   
+   for (int ii = 0 ; ii != deltas_pos->size() ; ii++) 
+     new_deltas_pos->at(posvec[ii]) = deltas_pos->at(ii);
+
+ } else { 
+   new_deltas_pos = deltas_pos;
+ }
+  return new_deltas_pos;   
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<pint_vec> GammaGenerator::Standardize_delta_ordering(shared_ptr<pint_vec> deltas_pos ) {
-//////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::Standardize_delta_ordering" << endl; 
+#endif 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
    bool(GammaGenerator::*orderfunc)(pair<string,string>, pair<string,string>) = &GammaGenerator::ordering;
 
@@ -372,6 +500,10 @@ shared_ptr<pint_vec> GammaGenerator::Standardize_delta_ordering(shared_ptr<pint_
 ///////////////////////////////////////////////////////////////////////////////                                   
 bool GammaGenerator::gamma_survives(shared_ptr<vector<int>> ids_pos, shared_ptr<vector<string>> id_ranges) {
 ///////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::gamma_survives" << endl; 
+#endif 
+///////////////////////////////////////////////////////////////////////////////
 
    for (int pos : *ids_pos )
      if (id_ranges->at(pos) != "act")
@@ -381,41 +513,46 @@ bool GammaGenerator::gamma_survives(shared_ptr<vector<int>> ids_pos, shared_ptr<
 
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::RangeCheck(shared_ptr<vector<string>> full_id_ranges) {
-//////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+#if defined DBG_GammaGenerator || defined DBG_all  
+cout << "GammaGenerator::RangeCheck" << endl; 
+#endif 
+//////////////////////////////////////////////////////////////////////////////
 
-   vector<string> diff_rngs(0);
-   vector<int> updown(0);
+   vector<string> diff_rngs(1, full_id_ranges->at(0) );
+   vector<int> updown(1, ( orig_aops->at(0) ? 1 : -1)  );
 
-   for ( int jj = 0;  jj !=full_id_ranges->size() ; jj++){
+   for ( int jj = 1;  jj !=full_id_ranges->size() ; jj++){
      int ii = 0;
- 
-     string rng = full_id_ranges->at(jj);
-     do {
 
+     string rng = full_id_ranges->at(jj);
+
+     do {
        if(rng == diff_rngs[ii]){
          if ( orig_aops->at(jj)){
-           updown[jj]+=1;
-         } else {
-           updown[jj]-=1;
+           updown[ii]+=1;
+         } else {         
+           updown[ii]-=1;
          }
          break;
        }
-
        if ( ii == diff_rngs.size()-1){
          diff_rngs.push_back(rng);
          if ( orig_aops->at(jj)){
-           updown.push_back(1);
+           updown.push_back(1);  
          } else {
-           updown.push_back(-1);
+           updown.push_back(-1); 
+
          }
          break;
        }
+
        ii++;
      } while (true);
    } 
-  
+
    for (int ac : updown ) 
      if (ac != 0 )
        return false;
@@ -424,10 +561,3 @@ bool GammaGenerator::RangeCheck(shared_ptr<vector<string>> full_id_ranges) {
 
 } 
 #endif
-//      cout <<  "------------ KEEP ------------ "  << endl;
-//      cout << "Start Aname  alt = " << Aname_init << endl;
-//      cout << "Finish Aname alt = " << get_Aname(orig_ids, full_id_ranges, deltas_pos ) << endl;
-//      cout << "Start Gname  alt = " << Gname_init << endl;
-//      cout << "Finish Gname alt = " << get_gamma_name( full_id_ranges, orig_aops, ids_pos ) << endl << endl << endl;
-//    }                                                       
-

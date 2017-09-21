@@ -1,8 +1,9 @@
-#include <src/smith/wicktool/WickUtils.h>
-#ifndef __SRC_SMITH_Gamma_Generator_H
-#define __SRC_SMITH_Gamma_Generator_H
+ #include <src/smith/wicktool/WickUtils.h>
+ #ifndef __SRC_SMITH_Gamma_Generator_H
+ #define __SRC_SMITH_Gamma_Generator_H
 
-//#include "WickUtils.h"
+ //#include "WickUtils.h"
+ //#include <unordered_map>
 using namespace WickUtils;
 
 class GammaMat {
@@ -32,15 +33,16 @@ class GammaGenerator{
     std::shared_ptr<std::vector<bool>> orig_aops ;
     std::shared_ptr<std::vector<std::string>> orig_ids ;
     
-    std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::string>>>> G_to_A_map ;
+    std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::pair<int,int> > >>> G_to_A_map;
     std::shared_ptr<std::vector<std::shared_ptr<GammaMat>>> gamma_vec;
     std::shared_ptr<std::vector<std::shared_ptr<GammaMat>>> final_gamma_vec;
 
     std::shared_ptr<std::map< char, int>>   op_order ;
     std::shared_ptr<std::map< std::string, int>>  idx_order ;
-    
+
     // functions
-    GammaGenerator(std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init);
+    GammaGenerator(std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
+                   std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::pair<int,int> > >>> G_to_A_map_init );
     ~GammaGenerator(){};
 
     void add_gamma(std::shared_ptr<std::vector<std::string>> full_id_ranges_in, int my_sign_in) ;
@@ -69,6 +71,12 @@ class GammaGenerator{
     bool RangeCheck(std::shared_ptr<std::vector<std::string>> full_id_ranges) ;
     
     bool gamma_survives( std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<std::vector<std::string>> id_ranges) ;
+
+     
+    std::string get_gamma_name(std::shared_ptr<std::vector<bool>> aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
+                               std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
+
+    std::shared_ptr<std::vector<std::pair<int,int>>> Standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ) ;
 
  };
  #endif

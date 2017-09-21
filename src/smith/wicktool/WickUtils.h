@@ -57,6 +57,12 @@ namespace WickUtils {
   std::string get_name_rdm(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
                            std::shared_ptr<std::vector<std::pair<int,int>>> all_deltas_pos ); 
 
+
+  std::shared_ptr<std::vector<int>> get_unc_ids_from_deltas_ids_comparison(std::shared_ptr<std::vector<int>> ids , std::shared_ptr<std::vector<std::pair<int,int>>> deltas );
+
+  std::shared_ptr<std::vector<int>> get_unc_ids_from_deltas_ids(std::shared_ptr<std::vector<int>> ids , std::shared_ptr<std::vector<std::pair<int,int>>> deltas );
+
+
   template<class DataType>
   void print_vecX(std::vector<DataType> invec, std::string name ="lazy"){
     std::cout << name <<" = [ ";
@@ -85,4 +91,12 @@ namespace WickUtils {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }
+
+ //namespace bagel {
+ //namespace SMITH {
+ //   template <typename DataType>
+ //   struct Tensor_  : public std::vector<DataType> {} ;
+ //   typedef std::vector<int> IndexRange ;
+ //}
+ //}  
 #endif

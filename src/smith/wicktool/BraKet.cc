@@ -319,45 +319,31 @@ void BraKet<DType>::Build_Gamma_WithSpin(shared_ptr<vector<bool>> aops, shared_p
 template<class DType>
 void BraKet<DType>::Build_Gamma_SpinFree_New(shared_ptr<vector<bool>> aops, shared_ptr<vector<string>> idxs){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Build_Gamma_SpinFree" << endl;
+  cout << "Build_Gamma_SpinFree_New" << endl;
   auto rdmd  = make_shared<RDMderiv>(); 
   cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
   auto aops_buff  = make_shared<vector<bool>>(*aops );
 
+  auto G_to_A_map = make_shared< unordered_map<string, shared_ptr< unordered_map<string, pair<int,int> > >>>(); 
   for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
-    auto aops_dupe  = make_shared<vector<bool>>(*aops_buff );
-    auto rdmd_new = make_shared<RDMderiv_new>(); 
-    rdmd_new->initialize(aops_dupe, idxs, range_map_it->first);
-
-    aops_dupe  = make_shared<vector<bool>>(*aops_buff );
-    auto rdmd_test = make_shared<RDMderiv_new>(); 
-    rdmd_test->initialize(aops_dupe, idxs, range_map_it->first);
-
-    auto rdmd_vec  = make_shared<vector<shared_ptr<RDMderiv_new>>>(0);
-    rdmd_vec->push_back(rdmd_new);
-
-    rdmd_test->norm_order_recursive(rdmd_vec);
+    auto GGen = make_shared<GammaGenerator>(aops_buff, idxs, G_to_A_map); 
+    GGen->add_gamma(range_map_it->first, 1) ;
+    GGen->norm_order();
+    GGen->alt_order();
   }
+ 
+  for( auto map_it = G_to_A_map->begin() ; map_it != G_to_A_map->end(); map_it++){
+    cout << endl;
+    cout << "====================================================" << endl;
+    cout << map_it->first << endl;
+    cout << "====================================================" << endl;
+    for( auto A_map_it = map_it->second->begin() ; A_map_it != map_it->second->end();  A_map_it++){
+      cout <<  A_map_it->first  << "  (" << A_map_it->second.first  << "," <<  A_map_it->second.second << ")" << endl;
+    }
+  }
+
   return; 
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void BraKet<DType>::Generate_Gammas(shared_ptr<vector<bool>> aops, shared_ptr<vector<string>> idxs){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Generate_Gammas" << endl;
-  cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
-  auto aops_buff  = make_shared<vector<bool>>(*aops );
-
-  auto gamma_generator = make_shared<GammaGenerator>(aops, Total_Op->idxs);
-
-  for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
-     gamma_generator->add_gamma(range_map_it->first, 1);
-     gamma_generator->norm_order();
-     gamma_generator->alt_order();     
-  }
-  return; 
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
@@ -369,24 +355,10 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
   cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
   auto aops_buff  = make_shared<vector<bool>>(*aops );
 
-  rdmd->initialize(aops, idxs, spins);
+  rdmd->initialize(aops_buff, idxs, spins);
+  aops_buff  = make_shared<vector<bool>>(*aops );
   rdmd->norm_order();
-
-  for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
-    auto aops_dupe  = make_shared<vector<bool>>(*aops_buff );
-    auto rdmd_new = make_shared<RDMderiv_new>(); 
-    rdmd_new->initialize(aops_dupe, idxs, range_map_it->first);
-
-    aops_dupe  = make_shared<vector<bool>>(*aops_buff );
-    auto rdmd_test = make_shared<RDMderiv_new>(); 
-    rdmd_test->initialize(aops_dupe, idxs, range_map_it->first);
-
-    auto rdmd_vec  = make_shared<vector<shared_ptr<RDMderiv_new>>>(0);
-    rdmd_vec->push_back(rdmd_new);
-
-    rdmd_test->norm_order();
-  }
-  
+ 
   for ( int kk =0 ; kk != rdmd->allops->size() ; kk++) {
     auto gammas = make_shared<alt_RDMderiv>(); 
     gammas->initialize(rdmd->allops->at(kk), rdmd->allids->at(kk),  rdmd->alldeltas->at(kk),  rdmd->allsigns->at(kk));
@@ -455,58 +427,4 @@ void BraKet<DType>::Build_Tensor_Contraction_list_CMTP(){
 template class BraKet<std::vector<double>>;
 template class BraKet<Tensor_<double>>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Pairs up each gamma term (defined by a spin pathway,and spin sector)  with relevant CtrMultiTensOp
-// (i.e. contributions to A).
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//void BraKet::Build_Tensor_Contraction_list_Rel(){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "Build Tensor Contraction list Rel " << endl;
- // BK_Compute_List_Rel = make_shared< map< pair< vector<string>,pair<int,int> >, shared_ptr<vector<pair<shared_ptr<vector<shared_ptr<CtrMultiTensOp>>>, pair<int,int> >>> >>();
- // 
- // for (auto mapit = RelGammaMap->begin(); mapit != RelGammaMap->end(); mapit++) {
- //   for (int kk = 0 ; kk!= (get<0>(mapit->second))->size(); kk++){
- //           
- //     auto Acontrib_loc = Total_Op->gamma_contribs->find(tie(mapit->first.first, *(get<0>(mapit->second))->at(kk), *(get<1>(mapit->second))->at(kk) ));  
- //     if ( Acontrib_loc == Total_Op->gamma_contribs->end() ) {
- //       continue;
- //     } 
- //     auto gamma_factor = make_pair( (get<2>(mapit->second))->at(kk),(get<2>(mapit->second))->at(kk) );
- //     auto BraKet_Contrib = make_pair(Acontrib_loc->second, gamma_factor);
- //     
- //     auto loc_in_map = BK_Compute_List_Rel->find(mapit->first);  
- //     if ( loc_in_map == BK_Compute_List_Rel->end() ) {
- //      auto BraKet_Contrib_vec = make_shared<vector<pair<shared_ptr<vector<shared_ptr<CtrMultiTensOp>>>, pair<int,int> >>>(1,BraKet_Contrib);
- //      BK_Compute_List_Rel->emplace(mapit->first, BraKet_Contrib_vec);
- //     } else {
- //       loc_in_map->second->push_back(BraKet_Contrib);
- //     }
- //   }
- // }
- //  return;
- //}
-
 #endif
-
-
-//  cout <<" getting compute list" << endl;
-//  cout << " [" ; cout.flush();
-//  for( auto elem :  mapit->first)
-//    cout << elem << " "  ;
-//  cout <<  "] ( ";cout.flush();
-//  for ( auto elem :  *(get<0>(mapit->second))->at(kk))
-//    cout << "(" << elem.first << "," << elem.second  << ") " ;
-//  cout << ") ( ";
-//  for (auto elem : *(get<1>(mapit->second))->at(kk))
-//    cout <<"("<< elem.first << "," << elem.second <<") "  ;
-//  cout << ")   ";cout.flush();
-         
-//  spin orbital ranges
-//  vector<string> spinor_free     = {"corA", "actA", "virA","corB", "actB", "virB" };
-//  vector<string> spinor_not_core = {"actA", "virA","actB", "virB"};
-//  vector<string> spinor_not_act  = {"corA", "virA","corB", "virB"};
-//  vector<string> spinor_not_virt = {"corA", "actA","corB", "actB"};
-//  vector<string> spinor_core = {"corA","corB"};
-//  vector<string> spinor_act  = {"actA","actB"};
-//  vector<string> spinor_virt = {"virA","virB"};

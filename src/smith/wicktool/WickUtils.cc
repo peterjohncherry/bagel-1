@@ -1,8 +1,8 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
 #include <src/smith/wicktool/WickUtils.h>
-//#include "WickUtils.h"
 
+//#include "WickUtils.h"
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
@@ -105,9 +105,6 @@ bool constrained_fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<in
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   int ii = forvec->size()-1;
-
-//  cout << "in [ "; for( auto  elem  : *forvec ) cout << elem << " " ; cout << "]"<< endl;
-
   if (forvec->at(ii)+1 <= max->at(ii)){
    forvec->at(ii)++; 
    return true;
@@ -169,6 +166,10 @@ bool fvec_cycle(shared_ptr<vector<It_Type>> forvec, shared_ptr<vector<It_Type>> 
 template<class T1>
 shared_ptr<vector<shared_ptr<vector<T1>>>> combgen( shared_ptr<vector<T1>> invec){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if defined DBG_WickUtils || defined DBG_all 
+cout << "combgen" << endl;
+#endif
+//////////////////////////////////////////////////////////////////////////////////////////////
 
   auto all_combs = make_shared<vector<shared_ptr<vector<T1>>>>(0);
   if( invec->size() ==0 )
@@ -205,6 +206,10 @@ shared_ptr<vector<shared_ptr<vector<T1>>>> combgen( shared_ptr<vector<T1>> invec
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<shared_ptr<vector<int>>>> get_N_in_M_combsX( shared_ptr<vector<int>> vec1, int NN ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if defined DBG_WickUtils || defined DBG_all 
+cout << "get_N_in_M_combsX" << endl;
+#endif
+//////////////////////////////////////////////////////////////////////////////////////////////
   if (NN == 0 )
     return make_shared<vector<shared_ptr<vector<int>>>>(0);
 
@@ -242,6 +247,10 @@ shared_ptr<vector<shared_ptr<vector<int>>>> get_N_in_M_combsX( shared_ptr<vector
 template<class DT1>
 shared_ptr<vector<shared_ptr<vector<DT1>>>> get_N_in_M_combsX( shared_ptr<vector<DT1>> vec1, int NN ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if defined DBG_WickUtils || defined DBG_all 
+cout << "get_N_in_M_combsX" << endl;
+#endif
+//////////////////////////////////////////////////////////////////////////////////////////////
   if (NN == 0 )
     return make_shared<vector<shared_ptr<vector<DT1>>>>(0);
 
@@ -277,6 +286,10 @@ shared_ptr<vector<shared_ptr<vector<DT1>>>> get_N_in_M_combsX( shared_ptr<vector
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void print_pvec (pint_vec pvec) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if defined DBG_WickUtils || defined DBG_all 
+cout << "print_pvec" << endl;
+#endif
+//////////////////////////////////////////////////////////////////////////////////////////////
   cout << " [ ";
   for (auto elem : pvec)
     cout << "[" << to_string(elem.first)  << "," << to_string(elem.second) << "] ";
@@ -288,6 +301,10 @@ void print_pvec (pint_vec pvec) {
 template<class DT>
 void print_vec(vector<DT> invec , string vecname){
 ///////////////////////////////////////////////////////////////////////////////////////
+#if defined DBG_WickUtils || defined DBG_all 
+cout << "print_vec" << endl;
+#endif
+//////////////////////////////////////////////////////////////////////////////////////////////
   cout << vecname << " : [ " ;
   for ( auto elem : invec ) cout << elem << " " ;
   cout << "] " << endl;
@@ -297,6 +314,10 @@ void print_vec(vector<DT> invec , string vecname){
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> get_unique_pairs(shared_ptr<vector<int>> ids1 , shared_ptr<vector<int>> ids2 , int num_pairs){
+//////////////////////////////////////////////////////////////////////////////////////////////
+#if defined DBG_WickUtils || defined DBG_all 
+cout << "get_unique_pairs" << endl;
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////
 
   auto pairs_vec = make_shared<vector<shared_ptr<vector<pair<int,int>>>>>(0);
@@ -385,5 +406,46 @@ string get_name_rdm(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<stri
   return name;
 };
 
+/////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<int>> get_unc_ids_from_deltas_ids(shared_ptr<vector<int>> ids , shared_ptr<vector<pair<int,int>>> deltas ){
+/////////////////////////////////////////////////////////////////////////////
+ 
+   vector<bool> contracted(ids->size(),false);
+   for ( pair<int,int> del : *deltas){
+     contracted[del.first] = true ;
+     contracted[del.second] = true ;
+   }
+
+  vector<int> unc_ids(ids->size() - deltas->size() *2);
+  
+  int ii =0; int jj =0;
+   while ( ii != unc_ids.size()){
+      if (!contracted[jj]) {
+        unc_ids[ii] = ids->at(jj);
+        ii++;
+      }
+      jj++;
+   } 
+
+   return make_shared<vector<int>>(unc_ids);
+}
+/////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<int>> get_unc_ids_from_deltas_ids_comparison(shared_ptr<vector<int>> ids , shared_ptr<vector<pair<int,int>>> deltas ){
+/////////////////////////////////////////////////////////////////////////////
+ 
+   vector<int> unc_ids(0);
+   for ( int jj =0 ; jj != ids->size(); jj++){
+     for ( int ii =0 ; ii != deltas->size(); ii++){
+       if ( ids->at(jj) == deltas->at(ii).first || ids->at(jj) == deltas->at(ii).second ) {
+         break;
+       } else if ( ii == deltas->size()-1 ){
+         unc_ids.push_back(ids->at(jj));
+       }
+     }
+   }
+
+//   cout << "unc_ids = [ " ;   for ( int pos : unc_ids) {cout << pos << " " ; } cout << "] " << endl;
+   return make_shared<vector<int>>(unc_ids);
+}
 }//end of namespace:
 #endif

@@ -1,8 +1,8 @@
-#include <src/smith/wicktool/WickUtils.h>
-#ifndef __SRC_SMITH_Gamma_H
-#define __SRC_SMITH_Gamma_H
+ #include <src/smith/wicktool/WickUtils.h>
+ #ifndef __SRC_SMITH_Gamma_H
+ #define __SRC_SMITH_Gamma_H
 
-//#include "WickUtils.h"
+// #include "WickUtils.h"
 using namespace WickUtils;
 
 

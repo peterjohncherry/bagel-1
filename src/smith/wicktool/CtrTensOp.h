@@ -1,7 +1,7 @@
-#include <src/smith/wicktool/WickUtils.h>
 #ifndef __SRC_SMITH_CtrTensOp_H
 #define __SRC_SMITH_CtrTensOp_H
 
+  #include <src/smith/wicktool/WickUtils.h>
 //#include "WickUtils.h"
 
 

@@ -1,13 +1,14 @@
 #ifndef __SRC_SMITH_BraKet_H
 #define __SRC_SMITH_BraKet_H
-#include <src/smith/wicktool/WickUtils.h>
-#include <src/smith/wicktool/gamma.h>
-#include <src/smith/wicktool/gamma_generator.h>
-#include <src/smith/wicktool/TensOp.h>
+ #include <src/smith/wicktool/WickUtils.h>
+ #include <src/smith/wicktool/gamma.h>
+ #include <src/smith/wicktool/gamma_generator.h>
+ #include <src/smith/wicktool/TensOp.h>
 
-//#include "WickUtils.h"
-//#include "gamma.h"
-//#include "TensOp.h"
+// #include "WickUtils.h"
+// #include "gamma.h"
+// #include "gamma_generator.h"
+// #include "TensOp.h"
 
 template<class DType> 
 class BraKet  {
@@ -80,8 +81,6 @@ class BraKet  {
      void bfunc(int xx, std::shared_ptr<std::vector<bool>> xvec, int nel, int length, std::shared_ptr<std::vector<std::shared_ptr<std::vector<bool>>>> all_sc);
    
      void Build_Gamma_WithSpin(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs);
-
-     void Generate_Gammas(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs);
 
      void Build_Gamma_SpinFree(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs);
 
