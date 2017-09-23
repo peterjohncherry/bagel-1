@@ -93,9 +93,6 @@ class CASPT2_ALT {
     static bool NotAllAct(std::shared_ptr<std::vector<std::string>> ranges);
     static bool always_true(std::shared_ptr<std::vector<std::string>> ranges);
     std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_2el_symmfuncs();
-    std::shared_ptr<std::vector<IndexRange>> Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
-    std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
-    std::shared_ptr<Tensor_<double>> get_Tensor_data( std::string Tname );
 
 };
 }//end CASPT2_ALT namespace

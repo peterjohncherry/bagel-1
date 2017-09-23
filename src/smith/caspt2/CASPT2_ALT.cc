@@ -193,48 +193,6 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 }
 
 
-//  CTP_data_map->emplace(get<3>(ctr_op),  Eqn_computer->contract_same_tensor( get<2>(ctr_op), Eqn->CTP_map->at(get<0>(ctr_op)), CTP_data_map->at(get<2>(ctr_op))); 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Builds data map for use by contraction routines
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<Tensor_<double>> CASPT2_ALT::CASPT2_ALT::get_Tensor_data( string Tname ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-   shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(CTP_map->at(Tname)->id_ranges);
-  
-   shared_ptr<Tensor_<double>> Tblock = make_shared<Tensor_<double>>(*Bagel_id_ranges);  
- 
-   //unique_ptr<double[]> Tblock_data = CTP_data_map->at(to_string(Tname[0]))->get_block(Bagel_id_ranges);
-
-   shared_ptr<Tensor_<double>> new_T = make_shared<Tensor_<double>>();
-
-   return new_T;
-}
-
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<shared_ptr<const IndexRange>>> CASPT2_ALT::CASPT2_ALT::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  auto ranges_Bagel = make_shared<vector<shared_ptr<const IndexRange>>>(0);
-  for ( auto rng : *ranges_str) 
-    ranges_Bagel->push_back(make_shared<const IndexRange>(*range_conversion_map->at(rng)));
-
-  return ranges_Bagel;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<IndexRange>> CASPT2_ALT::CASPT2_ALT::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  auto ranges_Bagel = make_shared<vector<IndexRange>>(0);
-  for ( auto rng : *ranges_str) 
-    ranges_Bagel->push_back(*range_conversion_map->at(rng));
-
-  return ranges_Bagel;
-}
 
 
 #endif

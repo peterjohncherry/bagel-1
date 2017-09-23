@@ -738,8 +738,4 @@ shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::reorder_vector(s
   return newvec;
 }
 
-////////////////////////////////////////////////////
-//template class CtrTensorPart<std::vector<double>>;
-//template class CtrTensorPart<Tensor_<double>>;
-///////////////////////////////////////////////////
 #endif
