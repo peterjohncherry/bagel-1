@@ -1,9 +1,9 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include <src/smith/wicktool/equation.h>
+  #include <src/smith/wicktool/equation.h>
+  // #include "equation.h"
 
 
-// #include "equation.h"
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
@@ -18,6 +18,8 @@ void Equation<DType>::Initialize(){
   CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
   ACompute_map = make_shared<map<string, shared_ptr<vector<tuple<string,string,pair<int,int>,string>> > >>(); 
   CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
+  G_to_A_map = make_shared< unordered_map<string, shared_ptr< unordered_map<string, pair<int,int> > >>>(); 
+  GammaMap = make_shared< unordered_map<string, shared_ptr<GammaInfo> > >(); 
 
   return;
 }
@@ -51,75 +53,7 @@ cout << "TensOp::BuildTensOp" <<   endl;
 
   return New_Op;
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Adds terms associated with each gamma into the map
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void Equation<DType>::Add_BraKet_Compute_Terms_CMTP(shared_ptr<BraKet<DType>> BK  ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Add_BraKet_Compute_Terms_CMTP" << endl;  
 
-  for (auto mapit = BK->GammaMap->begin(); mapit != BK->GammaMap->end(); mapit++) {
-    for (int kk = 0 ; kk!= (get<0>(mapit->second))->size(); kk++){
-      auto Acontrib_loc = BK->Total_Op->CMTP_gamma_contribs->find( tie(mapit->first, *(get<0>(mapit->second))->at(kk), *(get<1>(mapit->second))->at(kk) ));  
-      if ( Acontrib_loc == BK->Total_Op->CMTP_gamma_contribs->end() ) 
-        continue;
-
-      auto ACompute_list = make_shared<vector<tuple<string,string,pair<int,int>, string> >>(0); 
-      for (auto CMTP_name : *Acontrib_loc->second){
-        cout << endl<< CMTP_name <<endl; 
-        CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list);
-        ACompute_map->emplace(CMTP_name, ACompute_list);
-      }
-
-     for (auto ctr_op : *ACompute_list)
-       cout <<"need to  contract " << get<0>(ctr_op) << " and  " << get<1>(ctr_op) << " over indexes " << (get<2>(ctr_op)).first << " and " <<  (get<2>(ctr_op)).second << endl;
-
-      auto gamma_factor = make_pair( (get<2>(mapit->second))->at(kk),(get<2>(mapit->second))->at(kk) );
-      auto BraKet_Contrib = make_pair(Acontrib_loc->second, gamma_factor);
-
-      auto loc_in_map = CMTP_Eqn_Compute_List->find(mapit->first);  
-      if ( loc_in_map == CMTP_Eqn_Compute_List->end() ) {
-        auto init = make_shared<vector< pair<shared_ptr<vector<string>>,pair<int,int>> >>(1,BraKet_Contrib);
-        CMTP_Eqn_Compute_List->emplace(mapit->first, init );
-      } else {
-        loc_in_map->second->push_back(BraKet_Contrib);
-      }
-    }
-  }
-
-  for (auto mapit = BK->GammaMap->begin(); mapit != BK->GammaMap->end(); mapit++) {
-    print_vecX<string>(mapit->first , "gamma_spins");cout << endl;
-    for (int kk = 0 ; kk!= (get<0>(mapit->second))->size(); kk++){
-      print_pairvec<string>(*(get<0>(mapit->second))->at(kk), "gamma_ctrs");
-      print_pairvec<string>(*(get<1>(mapit->second))->at(kk), "gamma_ctr_spins"); cout <<endl;
-    }
-  } 
-
-  return;
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void Equation<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>> Tens_vec ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  auto New_Term = make_shared<BraKet<DType>>();
-  New_Term->Sub_Ops = Tens_vec;
- 
-  New_Term->Build_TotalOp();
-  New_Term->initialize(nact, norb, nidxs, spinfree );
-  //New_Term->Total_Op->print_gamma_contribs();
-
-  cout << "New_Term->Total_Op->aops = " ; for (bool aop : *New_Term->Total_Op->aops) { cout << aop << " " ; } cout << endl;
-  New_Term->Build_Gamma_SpinFree(New_Term->Total_Op->aops, New_Term->Total_Op->idxs); 
-  cout << "out of old gamma build " << endl;
-  New_Term->Build_Gamma_SpinFree_New(New_Term->Total_Op->aops, New_Term->Total_Op->idxs); 
-
-  CMTP_map->insert(New_Term->Total_Op->CMTP_map->begin(), New_Term->Total_Op->CMTP_map->end());
-  BraKet_Terms.push_back(New_Term);   
-
-  return;
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
 void  Equation<DType>::equation_build(std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType> > >>>> BraKet_list){
@@ -128,14 +62,62 @@ void  Equation<DType>::equation_build(std::shared_ptr<std::vector<std::shared_pt
 
   for (auto BraKet_Tensors : *BraKet_list) {
     Build_BraKet( BraKet_Tensors );
-//    for (auto braket : BraKet_Terms)
-//      Add_BraKet_Compute_Terms_CMTP( braket );
+    for (auto braket : BraKet_Terms)
+      Get_CMTP_Compute_Terms();
   }
   cout << "Leaving Equation" <<endl;
 
   return ;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
+void Equation<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>> Tens_vec ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  auto New_BraKet = make_shared<BraKet<DType>>(G_to_A_map, GammaMap );
+  New_BraKet->Sub_Ops = Tens_vec;
+ 
+  New_BraKet->Build_TotalOp();
+  New_BraKet->Build_Gamma_SpinFree(New_BraKet->Total_Op->aops, New_BraKet->Total_Op->idxs); 
+
+  CMTP_map->insert(New_BraKet->Total_Op->CMTP_map->begin(), New_BraKet->Total_Op->CMTP_map->end());
+  BraKet_Terms.push_back(New_BraKet);   
+
+  return;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Adds terms associated with each gamma into the map
+// Note this 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
+void Equation<DType>::Get_CMTP_Compute_Terms(){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Add_BraKet_Compute_Terms_CMTP" << endl;  
+
+  //loop through G_to_A_map ; get all A-tensors associated with a given gamma
+  for (auto  G2A_mapit =G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
+    
+    // loop through 
+    auto A_map = G2A_mapit->second;
+    for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
+
+      string   CMTP_name  = A_map_it->first;
+      pair<int,int> Asign = A_map_it->second;
+
+      auto ACompute_list = make_shared<vector<tuple<string,string,pair<int,int>, string> >>(0); 
+
+      if ( CMTP_map->find(CMTP_name) == CMTP_map->end())
+        cout << CMTP_name << " is not yet in the map ....." << endl;
+
+      CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list);
+      ACompute_map->emplace(CMTP_name, ACompute_list);
+
+    }
+  }
+
+  return;
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Equation<std::vector<double>>;
 template class Equation<bagel::SMITH::Tensor_<double>>;

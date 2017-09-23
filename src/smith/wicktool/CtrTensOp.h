@@ -2,7 +2,7 @@
 #define __SRC_SMITH_CtrTensOp_H
 
   #include <src/smith/wicktool/WickUtils.h>
-//#include "WickUtils.h"
+//  #include "WickUtils.h"
 
 
 template<class DType>
@@ -122,8 +122,10 @@ class CtrMultiTensorPart : public TensorPart<DType> {
                        int cml_size = 0;
                        for (auto ctp : *CTP_vec){
                          Tsizes_cml->push_back(cml_size);
-                         full_idxs->insert(full_idxs->begin() , ctp->full_idxs->begin(), ctp->full_idxs->end());
-                         full_id_ranges->insert(full_id_ranges->begin(),  ctp->full_id_ranges->begin(), ctp->full_id_ranges->end());
+                           
+                         full_idxs->insert(full_idxs->end() , ctp->full_idxs->begin(), ctp->full_idxs->end());
+                         
+                         full_id_ranges->insert(full_id_ranges->end(),  ctp->full_id_ranges->begin(), ctp->full_id_ranges->end());
 
                          for (auto relctr : *ctp->ctrs_pos )
                            all_ctrs_pos->push_back( std::make_pair(relctr.first+Tsizes_cml->back(), relctr.second+Tsizes_cml->back()));
@@ -131,6 +133,7 @@ class CtrMultiTensorPart : public TensorPart<DType> {
                          cml_size+=ctp->full_idxs->size(); 
                          
                        }
+                       std::cout << std::endl;
 
                        for (auto cctr : *cross_ctrs_pos_in){
                          all_ctrs_pos->push_back(std::make_pair(Tsizes_cml->at(cctr.first.first)+cctr.first.second, Tsizes_cml->at(cctr.second.first)+cctr.second.second));
@@ -138,11 +141,13 @@ class CtrMultiTensorPart : public TensorPart<DType> {
                        ReIm_factors = std::make_shared<std::vector<std::pair<int,int>>>(all_ctrs_pos->size());
 
                        get_name();
-                       //std::cout << "MTname = " << name << std::endl << std::endl;
                      };
                                 
     std::string myname(){ return name;};
+    // NOTE : the order of the contractions in the name from get_name does _not_ match the ordering of the tensors. 
+    // This greatly simplifies mapping from the gammas to the A-tensors
     void get_name() override;
+    void get_name_orig();
     void get_name_readable();
 
     std::string get_next_name(std::shared_ptr<std::vector<std::pair<int,int>>> new_ctrs_pos);

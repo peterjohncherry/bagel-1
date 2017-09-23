@@ -127,72 +127,63 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   auto BraKet_List = make_shared<std::vector<std::shared_ptr<vector< shared_ptr<TensOp<Tensor_<double>>> > >>>();
                          
   BraKet_List->push_back(BraKet_Tensors1);
-  BraKet_List->push_back(BraKet_Tensors2);
 
   Eqn->equation_build(BraKet_List);
   CTP_map = Eqn->CTP_map;
-
   auto Eqn_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Eqn, CTP_data_map, range_conversion_map );
 
-  for (auto MM = 0 ; MM != nstate_ ; MM++){
-    for (auto NN = 0 ; NN != nstate_ ; NN++){
-       
-      for ( auto gidxs_loc = Eqn->CMTP_Eqn_Compute_List->rbegin(); gidxs_loc != Eqn->CMTP_Eqn_Compute_List->rend(); ++gidxs_loc ){
+  //Get Amap for each gamma
+  for ( auto G_to_A_map_it : *(Eqn->G_to_A_map) ){
+    //Calculate Gamma                           
+    string Gamma_name = G_to_A_map_it.first;
+    auto gamma_tensors = Eqn_computer->get_gammas( 0, 0, Gamma_name );
+
+    // Build A_tensor to hold sums of different A-tensors
+    shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Eqn_computer->Get_Bagel_IndexRanges(Eqn->GammaMap->at(Gamma_name)->id_ranges)) );
+    A_combined_data->allocate();
+
+    //auto A_contrib_data = make_shared<Tensor_<double>();
+    // Loop through A-tensors needed for this gamma,
+    for ( auto A_contrib : *(G_to_A_map_it.second)){
+      pair<int,int> A_factor = A_contrib.second;
+      
+      cout << "=========================================================================================================" << endl;
+      cout << A_contrib.first << endl;
+      cout << "=========================================================================================================" << endl;
+      // Loop through compute list for this A-Tensor
+      for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib.first))){
+
+        cout << "[" << get<0>(ctr_op) << " , " << get<1>(ctr_op) << " , (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")" << " , " << (get<3>(ctr_op)) << " ] " ;
+
+        // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
+        if ( (get<2>(ctr_op).first != get<2>(ctr_op).second) && (CTP_data_map->find(get<3>(ctr_op)) == CTP_data_map->end()) ){
+      
+          if ( get<0> (ctr_op) == get<3>(ctr_op)){  cout << " : no contraction, fetch this tensor part" << endl; 
+            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor(get<0>(ctr_op));
+            CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
+      
+          } else if ( get<0> (ctr_op) != get<1>(ctr_op)){ cout << " : contract different tensors" << endl; 
+            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_different_tensors( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
+
+            CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
           
-        auto gamma_range = make_shared<vector<string>>(gidxs_loc->first);
-        auto gamma_ranges = make_shared<vector<shared_ptr<vector<string>>>>(gamma_range->size()/2);
-        for(int ii = 0; ii != gamma_ranges->size(); ii++)
-          gamma_ranges->at(ii) = make_shared<vector<string>>(gamma_range->begin(), gamma_range->begin()+(ii+1)*2);  
-       
-
-        auto gamma_tensors =  Eqn_computer->get_gammas( MM, NN, gamma_ranges ) ;
-        cout << "got gammas" <<endl; 
-        // CTP_data_map->emplace("T", T2_all[MM]->at(NN) );
-        for ( auto A_contribs : *(Eqn->CMTP_Eqn_Compute_List->at(*gamma_range)) ){
-
-          pair<int,int> ctr_factor = A_contribs.second;
-          for (auto A_contrib : *A_contribs.first){            
-            for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib))){
-                    
-
-            }
+          } else if ( (get<0> (ctr_op) ==  get<1>(ctr_op)) && ( get<2>(ctr_op).first != get<2>(ctr_op).second )) { cout << " : contract on same tensor" <<  endl; 
+            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_on_same_tensor( get<2>(ctr_op), get<0>(ctr_op)); 
+            CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
           }
-          for (auto A_contrib : *A_contribs.first){
-            for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib))){
-              if ( CTP_data_map->find(get<3>(ctr_op)) == CTP_data_map->end() ){
-                if( get<2>(ctr_op).first == get<2>(ctr_op).second){                
-                    cout << "uncontracted multitensor, do not store  " << endl;
-
-                } else if ( get<0> (ctr_op) == get<3>(ctr_op)){ 
-                    cout << get<0> (ctr_op)<< " -->  no contraction, fetch this tensor part" << endl; 
-                    shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor(get<0>(ctr_op));
-                    CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
-
-                } else if ( get<0> (ctr_op) != get<1>(ctr_op)){
-                  cout << get<0> (ctr_op)<<  "!=" <<  get<1>(ctr_op)  << " --> contract different tensors" << endl; 
-                  shared_ptr<Tensor_<double>>  New_Tdata ; // =  Eqn_computer->contract_same_tensor( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
-                  CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
-                
-                } else if ( (get<0> (ctr_op) ==  get<1>(ctr_op)) && ( get<2>(ctr_op).first != get<2>(ctr_op).second )) {
-                  cout << get<2> (ctr_op).first<<  "!=" <<  get<2>(ctr_op).second  << " --> contraction " << endl;
-                  cout << get<0> (ctr_op)<<  "==" <<  get<1>(ctr_op)  << " --> contract on same tensor" <<  endl; 
-                  shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_on_same_tensor( get<2>(ctr_op), get<0>(ctr_op)); 
-                  CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
-                }
-              } else {
-                shared_ptr<Tensor_<double>> Merged_Aterms ; // add new A term; 
-              } 
-            }
-          }
-        }   
+        } else { 
+          cout << endl;
+        }
       }
+      cout << "=========================================================================================================" << endl << endl;
+     // add this contribution to the A_tensors
+      A_combined_data->ax_plus_y(A_factor.first, *(CTP_data_map->at(A_contrib.first)) );
+    
     }
-  }
-  
+  }   
+
   return;
 }
-
-
 
 
 #endif

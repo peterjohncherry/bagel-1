@@ -78,22 +78,6 @@ class TensOp {
 template<class DType>
 class MultiTensOp : public TensOp<DType> {
    public: 
- 
-//     using TensOp<DType>::name_;
-//     using TensOp<DType>::plus_ops;
-//     using TensOp<DType>::kill_ops;
-//     using TensOp<DType>::orb_ranges;
-//     using TensOp<DType>::CTP_map ;
-//     using TensOp<DType>::factor;
-//     using TensOp<DType>::data; 
-//     using TensOp<DType>::contracted;
-//     using TensOp<DType>::spinfree;
-//     using TensOp<DType>::aops;
-//     using TensOp<DType>::idx_ranges;
-//     using TensOp<DType>::idxs;
-
-
-
 
      std::string name_;
      std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs_;

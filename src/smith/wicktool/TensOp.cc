@@ -1,10 +1,10 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include <src/smith/wicktool/WickUtils.h>
-#include <src/smith/wicktool/TensOp.h>
+ #include <src/smith/wicktool/WickUtils.h>
+ #include <src/smith/wicktool/TensOp.h>
 
-//#include "WickUtils.h"
-//#include "TensOp.h"
+ //#include "WickUtils.h"
+ //#include "TensOp.h"
 
 using namespace std;
 using namespace WickUtils;
@@ -15,7 +15,10 @@ template<class DType>
 void TensOp<DType>::initialize(vector<string> orig_idxs, vector<vector<string>> orig_idx_ranges,
                 vector<bool> orig_aops, int orig_factor, string orig_Tsymm, string orig_psymm  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_TensOp 
 cout << "TensOp::initialize" <<   endl;
+#endif 
+//////////////////////////////////////////////////////////////////////////////////////
            
    Tsymm_     = orig_Tsymm;
    psymm_     = orig_psymm;
@@ -57,7 +60,11 @@ cout << "TensOp::initialize" <<   endl;
 template<class DType>
 void TensOp<DType>::generate_ranges( shared_ptr<vector<vector<string>>> idx_ranges, string symm_type){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_TensOp 
 cout << "TensOp::generate_ranges" <<   endl;
+#endif 
+//////////////////////////////////////////////////////////////////////////////////////
+
   //set up loop utils
   auto prvec = [](shared_ptr<vector<string>> invec){ cout << "[ " ; for (auto elem : *invec) { cout << elem << " " ;} cout << "]" ;};
   auto fvec = make_shared<vector<int>>(idx_ranges->size(), 0); 
@@ -106,6 +113,7 @@ cout << "TensOp::generate_ranges" <<   endl;
 template<class DType>
 bool TensOp<DType>::apply_symmetry(shared_ptr<vector<string>> ranges_1, shared_ptr<vector<string>> ranges_2  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //cout << "TensOp::apply_symmetry" <<   endl;
 
   for (auto symmop : symmfuncs_) {
@@ -131,7 +139,11 @@ bool TensOp<DType>::apply_symmetry(shared_ptr<vector<string>> ranges_1, shared_p
 template<class DType>
 void TensOp<DType>::get_ctrs_tens_ranges() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_TensOp 
   cout << "TensOp get_ctrs_tens_ranges" << endl;
+#endif 
+//////////////////////////////////////////////////////////////////////////////////////
+
 
   //puts uncontracted ranges into map 
   auto noctrs = make_shared<vector<pair<int,int>>>(0);
@@ -203,19 +215,18 @@ void TensOp<DType>::hconj() {
 template<class DType>
 void MultiTensOp<DType>::initialize(std::vector<std::shared_ptr<TensOp<DType>>> orig_tensors ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_TensOp 
 cout << "MultiTensOp::initialize" << endl;
+#endif 
+//////////////////////////////////////////////////////////////////////////////////////
 
 //Loosely speaking, MultiTensOp has two kinds of members:
 //1) Members inherited from the derived class /obtained by merging the members (e.g. the indexes and position
 //of creation and annihilation operators) from the TensOps from which the MultiTensOp is constructed. 
-//2) "Split" members; vectors where eeach element corresponds to a constituent TensOp of the MultiTensor.
+//2) "Split" members; vectors where each element corresponds to a constituent TensOp of the MultiTensor.
 //   The split members are needed to keep  track of signs resulting from symmetry operations.
 
   orig_tensors_=orig_tensors;
-
-//  for (int ii = 0 ; ii !=Hconj.size();ii++)
-//    if (Hconj[ii])
-//      orig_tensors_[ii]->hconj();
 
   split_idxs     = make_shared<vector<shared_ptr<vector<string>>>>(0) ;
   split_plus_ops = make_shared<vector<shared_ptr<vector<int>>>>(0) ;
@@ -261,8 +272,6 @@ cout << "MultiTensOp::initialize" << endl;
 
   generate_ranges();
  
-  CMTP_gamma_contribs = make_shared<map< tuple<vector<string>, pstr_vec, pstr_vec >, shared_ptr<vector<string>> >>();
-
   plus_combs = make_shared< vector< shared_ptr< vector< shared_ptr<vector<int> > > > > >(plus_ops->size()+1);
   kill_combs = make_shared< vector< shared_ptr< vector< shared_ptr<vector<int> > > > > >(kill_ops->size()+1);
  
@@ -280,7 +289,10 @@ cout << "MultiTensOp::initialize" << endl;
 template<class DType>
 void MultiTensOp<DType>::generate_ranges(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::generate_ranges()" << endl;
+#ifdef DBG_TensOp 
+cout << "MultiTensOp::generate_ranges()" << endl;
+#endif 
+//////////////////////////////////////////////////////////////////////////////////////
 
   auto prvec = [](shared_ptr<vector<string>> invec){ cout << "[ " ; for (auto elem : *invec) { cout << elem << " " ;} cout << "]" ;};
 
@@ -368,8 +380,11 @@ void MultiTensOp<DType>::generate_ranges(){
 template<class DType>
 void MultiTensOp<DType>::get_ctrs_tens_ranges() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp get_ctrs_tens_ranges" << endl;
-  auto ss = [](bool spin ) { return spin ?  "A" : "B" ; };
+#ifdef DBG_TensOp 
+cout << "MultiTensOp get_ctrs_tens_ranges" << endl;
+#endif 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   //puts uncontracted ranges into map 
   auto noctrs = make_shared<vector<pair<int,int>>>(0);
   int counterer = 0;
@@ -378,16 +393,16 @@ void MultiTensOp<DType>::get_ctrs_tens_ranges() {
   for (auto rng_it = combined_ranges->begin(); rng_it != combined_ranges->end(); rng_it++) {
     bool check = true;
     for (int xx = 0; xx !=rng_it->first->size() ; xx++ ) {
-       if (rng_it->first->at(xx) != "act") {
-         check=false;
-         break;
-       }
-     }
-     if(!check){
-       continue;
-     } else {
-     enter_into_CMTP_map(*noctrs, get<3>(rng_it->second), rng_it->first );
-     }
+      if (rng_it->first->at(xx) != "act") {
+        check=false;
+        break;
+      }
+    }
+    if(!check){
+      continue;
+    } else {
+      enter_into_CMTP_map(*noctrs, get<3>(rng_it->second), rng_it->first );
+    }
   }
 
   //puts_contractions, with specified ranges, into the map
@@ -409,8 +424,9 @@ void MultiTensOp<DType>::get_ctrs_tens_ranges() {
         if (!valid) 
           continue;
 
-        if (valid){//checks all uncontracted indexes are active. Should call constraint functions instead
-	  vector<bool> unc_get(rng_it->first->size(),true);
+         //checks all uncontracted indexes are active. Should call constraint functions instead
+        if (valid){	 
+          vector<bool> unc_get(rng_it->first->size(),true);
           for (auto ctr_pos : *ctr_vec){
             unc_get[ctr_pos.first]  = false;
             unc_get[ctr_pos.second] = false;
@@ -423,7 +439,7 @@ void MultiTensOp<DType>::get_ctrs_tens_ranges() {
           }
         } 
 
-        if (valid) {//spinfree 
+        if (valid) { 
           enter_into_CMTP_map(*ctr_vec, get<3>(rng_it->second), rng_it->first );
         }
       }
@@ -435,6 +451,10 @@ void MultiTensOp<DType>::get_ctrs_tens_ranges() {
 template<class DType>
 void MultiTensOp<DType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_ptr<vector<pair<int,int>>> ReIm_factors, shared_ptr<vector<string>> id_ranges ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_TensOp 
+cout << "MultiTensOp::enter_into_CMTP_map" << endl;
+#endif 
+//////////////////////////////////////////////////////////////////////////////////////
   auto ctr_idxs_in   = make_shared<pstr_vec>(0);
   auto ctr_ranges_in = make_shared<pstr_vec>(0);
   auto ctr_spins_in = make_shared<pstr_vec>(0);
@@ -446,7 +466,8 @@ void MultiTensOp<DType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_ptr<v
   auto CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart<DType>> >> (0); 
   vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
   vector<vector<pair<int,int>>> sameT_ctrs_pos(orig_tensors_.size(),  pint_vec(0));
-  
+
+ 
   //seperate contractions into those on the same tensor, and those between different tensors 
   for ( auto ctr_pos : ctr_pos_list ) {
 
@@ -476,68 +497,21 @@ void MultiTensOp<DType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_ptr<v
 
   //get_ranges for individual tensors
   for (int ii = 0 ; ii !=orig_tensors_.size() ; ii++ ){ 
-
+       
      auto TS_id_ranges = make_shared<vector<string>>(0);
-     for(int jj = cmlsizevec->at(ii) ; jj != cmlsizevec->at(ii)+orig_tensors_[ii]->idxs->size(); jj++)
+     for(int jj = cmlsizevec->at(ii) ; jj != cmlsizevec->at(ii)+orig_tensors_[ii]->idxs->size(); jj++){
        TS_id_ranges->push_back(id_ranges->at(jj));
-
-     CTP_vec->push_back(make_shared< CtrTensorPart<DType> >(orig_tensors_[ii]->idxs, TS_id_ranges,
-                                                                     make_shared<vector<pair<int,int>>>(sameT_ctrs_pos.at(ii)),
-                                                                     make_shared<vector<pair<int,int>>>(1, ReIm_factors->at(ii)))); 
+     }
+  
+     CTP_vec->push_back(make_shared< CtrTensorPart<DType> >( orig_tensors_[ii]->idxs, TS_id_ranges,
+                                                             make_shared<vector<pair<int,int>>>(sameT_ctrs_pos.at(ii)),
+                                                             make_shared<vector<pair<int,int>>>(1, ReIm_factors->at(ii)) ) ); 
   }
-
   auto CMTP = make_shared<CtrMultiTensorPart<DType> >(CTP_vec, make_shared<vector<pair<pair<int,int>,pair<int,int>>>>(diffT_ctrs_pos)); 
 
   CMTP_map->emplace(CMTP->myname(), CMTP); 
-  //get info to connect with gamma
-  vector<bool> get_unc(id_ranges->size(), true);
-  for (auto ctr : ctr_pos_list){
-    ctr_idxs_in->push_back(make_pair(idxs->at(ctr.first), idxs->at(ctr.second)));
-    ctr_spins_in->push_back(make_pair("A", "A"));
-    get_unc[ctr.first ]  = false;
-    get_unc[ctr.second] = false;
-  }
-
-  auto unc_ranges = make_shared<vector<string>>(0); 
-  for ( int ii = 0; ii != id_ranges->size(); ii++ )
-    if(get_unc[ii])
-      unc_ranges->push_back(id_ranges->at(ii));
-
-  auto loc_in_gmap = CMTP_gamma_contribs->find(tie(*unc_ranges, *ctr_idxs_in, *ctr_spins_in));  
-  if ( loc_in_gmap == CMTP_gamma_contribs->end() ) {
-    auto CMTP_vec = make_shared< vector<string> >(1, CMTP->myname());
-    CMTP_gamma_contribs->emplace(tie(*unc_ranges, *ctr_idxs_in, *ctr_spins_in), CMTP_vec);
-  } else {
-    loc_in_gmap->second->push_back(CMTP->myname());
-  }
 
   return;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void MultiTensOp<DType>::print_gamma_contribs(){
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
- for(auto mapit = CMTP_gamma_contribs->begin() ; mapit != CMTP_gamma_contribs->end(); mapit++){
-   cout << "( " ;
-   for (auto ctr : get<1>(mapit->first))
-     cout << "(" << ctr.first <<"," << ctr.second << ") " ; 
-   cout << ")   ( ";
-   for (auto ctr : get<2>(mapit->first))
-     cout << "(" << ctr.first <<"," << ctr.second << ") " ; 
-   cout << ")   [ ";
-   for (auto uncid :get<0>(mapit->first))
-     cout << uncid << " " ; 
-   cout << "]" << endl;
-
-    cout << "( ";
-   for (auto CMTP_name : *mapit->second)
-        cout << CMTP_name << " ";
-    cout << ") " << endl;
-   
- }  
- return;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

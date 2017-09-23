@@ -1,27 +1,16 @@
  #include <src/smith/wicktool/BraKet.h>
  #include <src/smith/wicktool/WickUtils.h>
  #include <src/smith/wicktool/TensOp.h>
- #include <src/smith/tensor.h>
+  #include <src/smith/tensor.h>
  #ifndef __SRC_SMITH_EQUATION_H
  #define __SRC_SMITH_EQUATION_H
 
  //#include "WickUtils.h"
  //#include "BraKet.h"
  //#include "TensOp.h"
- 
+ //
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
-
-using CombinedGammaMap   =  std::map<std::vector<std::string>, /*spins of gamma indexes*/ 
-                                     std::tuple< std::shared_ptr<std::vector< std::shared_ptr< std::vector<std::pair<std::string, std::string>> >>>, /* delta indexes  */  
-                                                 std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<std::string, std::string>> >>>, /* spins of delta indexes */  
-                                                 std::shared_ptr<std::vector<int>>  /* signs from reordering */ > >;
-
-using RelCombinedGammaMap = std::map< std::pair<std::vector<std::string>, std::pair<int,int>>,  /*spins of gamma_ids and original spinsector*/ 
-                                      std::tuple< std::shared_ptr<std::vector<std::shared_ptr<pstr_vec>>>, /* contractions from reordering to gamma */  
-                                                  std::shared_ptr<std::vector<std::shared_ptr<pstr_vec>>>, /* spins of contractions from reordering to gamma */  
-                                                  std::shared_ptr<std::vector<int>>  /* signs from reordering to gamma */ > >;
-
 
 template<class DType> 
 class Equation {
@@ -57,7 +46,10 @@ class Equation {
       // key : String identifying the Gamma or rdm      result : Vector of string vectors identifying A-Tensor contributions paired with corresponding ReIm factor 
       std::shared_ptr< std::map< std::vector<std::string>, std::shared_ptr<std::vector<std::pair< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> >>> >> CMTP_Eqn_Compute_List ;
 
-      void Add_BraKet_Compute_Terms_CMTP(std::shared_ptr<BraKet<DType>> BK );
+      //Takes each gamma name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors
+      std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::pair<int,int> > >>> G_to_A_map;
+       
+      std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<GammaInfo> > > GammaMap; 
 
       void Initialize();
 
@@ -71,6 +63,10 @@ class Equation {
                                 std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> Symmetry_Funcs,
                                 std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>)> Constraint_Funcs,
                                 std::pair<double,double> factor, std::string Tsymmetry, bool hconj ) ;
+
+     
+      void Get_CMTP_Compute_Terms();
+
 
 };
 #endif

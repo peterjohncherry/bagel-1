@@ -21,11 +21,14 @@ Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SM
   cc_ = ref->ciwfn()->civectors();
   det_ = ref->ciwfn()->civectors()->det();
 
+  GammaMap = eqn_info->GammaMap;
   CTP_map = eqn_info_in->CTP_map;
   CTP_data_map = CTP_data_map_in;
+  
   range_conversion_map = range_conversion_map_in;
 
 }  
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
@@ -227,7 +230,6 @@ Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> 
     //T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
     }
 
-
     auto T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size()-1, 0);
     for (int jj = 0 ; jj != T2_num_unc_blocks; jj++) { 
       
@@ -253,7 +255,6 @@ Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> 
       //should not use transpose; instead build T2_new_order backwards... 
       dgemm_("N", "T", T1_unc_block_size, ctr_block_size,  T1_unc_block_size, 1.0, T1_data_new.get(), T1_unc_block_size,
               T2_data_new.get(), ctr_block_size, 1.0, T_out_data.get(), T1_unc_block_size);
-      
 
       T_out->put_block( T_out_data, *T_out_rng_block );
       T2_rng_block_pos->pop_back(); //remove last index; contracted index is cycled in T1 loop
@@ -265,20 +266,24 @@ Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> 
   return T_out;
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets the gammas in tensor format. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<shared_ptr<Tensor_<double>>>>
-Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, shared_ptr<vector<shared_ptr<vector<string>>>> gamma_ranges_str){
+Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_name){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Equation_Computer::Equation_Computer::get_gammas"  << endl;
 
-  auto gamma_ranges =  vector<shared_ptr<vector<IndexRange>>>(gamma_ranges_str->size());
-  for (int ii = 0 ; ii !=gamma_ranges.size(); ii++ ){ 
-    gamma_ranges[ii] = Get_Bagel_IndexRanges( gamma_ranges_str->at(ii)); 
-    for (auto elem : *(gamma_ranges_str->at(ii))){  cout << elem << " " ;} 
+
+  shared_ptr<vector<string>> gamma_ranges_str  = GammaMap->at(gamma_name)->id_ranges;
+  auto gamma_ranges =  vector<shared_ptr<vector<IndexRange>>>(gamma_ranges_str->size()/2);
+  for (int ii = 0 ; ii !=gamma_ranges.size()/2; ii++ ){ 
+    auto gamma_ranges_str_tmp = make_shared<vector<string>>(gamma_ranges_str->begin(), gamma_ranges_str->end()-ii*2);
+    gamma_ranges[ii] = Get_Bagel_IndexRanges( gamma_ranges_str_tmp); 
+    for (auto elem : *gamma_ranges_str_tmp){  cout << elem << " " ;} 
     cout << endl;
-  }
+} 
   
   //A fudge, needs to be changed so gammas are tensors 
   shared_ptr<vector<shared_ptr<VectorB>>> gamma_data_vec = compute_gammas( MM, NN ) ;

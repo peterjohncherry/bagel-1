@@ -1,16 +1,33 @@
 #include <bagel_config.h>
-#ifdef COMPILE_SMITH
-#include <src/smith/wicktool/WickUtils.h>
-#include <src/smith/wicktool/gamma_generator.h>
-
-//#include "WickUtils.h"
-//#include "gamma_generator.h"
 #include <unordered_map>
+#ifdef COMPILE_SMITH
+ #include <src/smith/wicktool/WickUtils.h>
+ #include <src/smith/wicktool/gamma_generator.h>
+
+// #include "WickUtils.h"
+// #include "gamma_generator.h"
 using namespace std; 
 using namespace WickUtils;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<string>> full_idx_ranges, 
+                      shared_ptr<vector<int>> idxs_pos) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  id_ranges = make_shared<vector<string>>(idxs_pos->size());
+  aops = make_shared<vector<bool>>(idxs_pos->size());
+
+  for (int ii = 0 ; ii != idxs_pos->size(); ii++ ) 
+    id_ranges->at(ii) = full_idx_ranges->at(idxs_pos->at(ii));     
+                                         
+  for (int ii = 0 ; ii != idxs_pos->size(); ii++ ) 
+    aops->at(ii) = full_aops_vec->at(idxs_pos->at(ii));     
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaGenerator::GammaGenerator(shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init, 
+                               shared_ptr<unordered_map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
                                shared_ptr< unordered_map<string, shared_ptr< unordered_map<string, pair<int,int> > >>> G_to_A_map_in){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_GammaGenerator
@@ -20,9 +37,10 @@ cout << "GammaGenerator::GammaGenerator" << endl;
   orig_aops = ac_init;
   orig_ids = ids_init; 
 
-  gamma_vec = make_shared<vector<shared_ptr<GammaMat>>>(0);
-  final_gamma_vec = make_shared<vector<shared_ptr<GammaMat>>>(0);
+  gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
+  final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
   G_to_A_map = G_to_A_map_in;
+  Gamma_map = Gamma_map_in;
 
   //neeeded to keep ordering of contractions consistent 
   auto opname = orig_ids->at(0)[0];
@@ -62,7 +80,7 @@ cout << "GammaGenerator::add_gamma" << endl;
     int my_sign_in = 1;
     auto deltas_pos_in = make_shared<vector<pair<int,int>>>(0);
 
-    gamma_vec->push_back( make_shared<GammaMat>(full_id_ranges_in, orig_aops, ids_pos_init, deltas_pos_in, my_sign_in)); 
+    gamma_vec->push_back( make_shared<GammaIntermediate>(full_id_ranges_in, orig_aops, ids_pos_init, deltas_pos_in, my_sign_in)); 
     
   }
 
@@ -70,7 +88,7 @@ cout << "GammaGenerator::add_gamma" << endl;
 
 }                     
 /////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
-//void GammaGenerator::norm_order(shared_ptr<vector<shared_ptr<GammaMat>>> gamma_vec ){                                                                                   
+//void GammaGenerator::norm_order(shared_ptr<vector<shared_ptr<GammaIntermediate>>> gamma_vec ){                                                                                   
 void GammaGenerator::norm_order( ){                                                                                   
 //////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
 #ifdef DBG_GammaGenerator 
@@ -118,13 +136,17 @@ cout << "GammaGenerator::norm_order" << endl;
         }                                                         
       }                                                           
     }
+    
     if (!gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
-//       cout <<  Aname_init  ;
-//       cout << "          " <<  Gname_init  << endl;
-//       cout << "====================================================================== " << endl;
        Contract_remaining_indexes(kk);
     } else {
+      string Gname = get_gamma_name( full_id_ranges, full_aops, ids_pos ) ;
+      cout << "No further contractions for ";
+      cout <<  get_Aname(orig_ids, full_id_ranges, deltas_pos ) << " and  ";
+      cout <<  Gname << endl;
       final_gamma_vec->push_back(gamma_vec->at(kk));
+      if ( Gamma_map->find(Gname) == Gamma_map->end() ) 
+        Gamma_map->emplace( Gname, make_shared<GammaInfo>(full_aops, full_id_ranges, ids_pos) ) ;
     } 
     kk++;                                                         
   }                                                               
@@ -198,7 +220,6 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
   // third index  = pair defining contraction of indexes with the same range.
   vector<shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>> new_contractions(diff_rngs.size());
 
-  //Contractions are not in "standard" ordering. This shouldn't break anything, but maybe change later to improve merging of terms.
   for (int ii =0 ; ii != new_contractions.size(); ii++)
     new_contractions[ii] = get_unique_pairs( make_ops_pos->at(ii),  kill_ops_pos->at(ii), make_ops_pos->at(ii)->size());
 
@@ -218,20 +239,15 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
 
     auto new_deltas_pos = Standardize_delta_ordering_generic( new_deltas_pos_tmp ) ;                                                                
     shared_ptr<vector<int>> new_ids_pos =  get_unc_ids_from_deltas_ids_comparison( ids_pos , new_deltas_pos );
-    
-//    cout << get_Aname(orig_ids, full_id_ranges, new_deltas_pos ) <<  "         " <<  get_gamma_name( full_id_ranges, orig_aops, new_ids_pos ) << endl;
-
-    final_gamma_vec->push_back(make_shared<GammaMat>(full_id_ranges, orig_aops, new_ids_pos, new_deltas_pos, my_sign)); 
+    final_gamma_vec->push_back(make_shared<GammaIntermediate>(full_id_ranges, orig_aops, new_ids_pos, new_deltas_pos, my_sign)); 
    
   } while ( fvec_cycle(forvec, max, min) ) ;
-
-//  cout << "====================================================================== " << endl << endl;
  
   return;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-//void GammaGenerator::alt_order(shared_ptr<vector<shared_ptr<GammaMat>>> gamma_vec ){
+//void GammaGenerator::alt_order(shared_ptr<vector<shared_ptr<GammaIntermediate>>> gamma_vec ){
 void GammaGenerator::alt_order(){
 //////////////////////////////////////////////////////////////////////////////////////  
 #ifdef DBG_GammaGenerator 
@@ -283,11 +299,9 @@ cout << "GammaGenerator::alt_order" << endl;
     string Gname_alt = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
  //   cout << " Aname_alt  = " << Aname_alt  << "           Gname_alt = " << Gname_alt << endl; 
       
-    auto loc_in_map = G_to_A_map->find(Gname_alt);
-    if ( loc_in_map == G_to_A_map->end() ) {
-      auto A_factor_map = make_shared< unordered_map<string, pair<int,int> > >(); 
-      G_to_A_map->emplace(Gname_alt, A_factor_map);
-    } 
+    if ( G_to_A_map->find(Gname_alt) == G_to_A_map->end() ) 
+      G_to_A_map->emplace(Gname_alt, make_shared< unordered_map<string, pair<int,int> > >());
+     
     
     auto Aloc_in_map = G_to_A_map->at(Gname_alt)->find(Aname_alt);                                           
     if ( Aloc_in_map == G_to_A_map->at(Gname_alt)->end() ) {
@@ -296,13 +310,17 @@ cout << "GammaGenerator::alt_order" << endl;
       Aloc_in_map->second.first  += my_sign;
       Aloc_in_map->second.second += my_sign;
     }
+    if ( Gamma_map->find(Gname_alt) == Gamma_map->end() ) 
+      Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>(full_aops, full_id_ranges, ids_pos) ) ;
+    
   }
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
 //Swaps indexes round, flips sign, and if ranges are the same puts new density matrix in the list. 
+//CAREFUL : always keep creation operator as the left index in the contraction . 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
-void GammaGenerator::swap( int ii, int jj, int kk, shared_ptr<vector<shared_ptr<GammaMat>>> gamma_vec  ){                                                  
+void GammaGenerator::swap( int ii, int jj, int kk, shared_ptr<vector<shared_ptr<GammaIntermediate>>> gamma_vec  ){                                                  
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
 #ifdef DBG_GammaGenerator 
 cout << "GammaGenerator::swap" << endl; 
@@ -322,7 +340,9 @@ cout << "GammaGenerator::swap" << endl;
        (orig_aops->at(ids_pos->at(ii)) !=  orig_aops->at(ids_pos->at(jj))) )  {                                                   
 
     auto new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);                                                                       
-    new_deltas_tmp->push_back(make_pair(ids_pos->at(jj), ids_pos->at(ii)));                                                         
+
+    pair<int,int> new_delta = orig_aops->at(ids_pos->at(jj)) ? make_pair(ids_pos->at(jj), ids_pos->at(ii)) : make_pair(ids_pos->at(ii), ids_pos->at(jj));
+    new_deltas_tmp->push_back(new_delta);                                                         
     auto new_deltas = Standardize_delta_ordering_generic( new_deltas_tmp ) ;                                                                
 
     int new_sign = gamma_vec->at(kk)->my_sign;                                                                                               
@@ -332,7 +352,7 @@ cout << "GammaGenerator::swap" << endl;
       if ( (qq !=ii) && (qq!=jj))
         new_ids_pos->push_back(ids_pos->at(qq));
 
-    auto new_gamma = make_shared<GammaMat>(full_id_ranges, orig_aops, new_ids_pos, new_deltas, new_sign); 
+    auto new_gamma = make_shared<GammaIntermediate>(full_id_ranges, orig_aops, new_ids_pos, new_deltas, new_sign); 
     gamma_vec->push_back(new_gamma);
 
   }                                                                                                                                 

@@ -33,6 +33,7 @@ class Equation_Computer {
     std::shared_ptr<const Determinants> det_ ; 
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<Tensor_<double>>>>> CTP_map;
+    std::shared_ptr<std::unordered_map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
 
     std::shared_ptr<Equation<Tensor_<double>>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
@@ -87,7 +88,7 @@ class Equation_Computer {
 
 
     std::shared_ptr<std::vector<std::shared_ptr<Tensor_<double>>>>
-    get_gammas(int MM , int NN, std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>> gamma_ranges_REMOVE_AFTER_DEBUG);
+    get_gammas(int MM , int NN, std::string gamma_name);
 
     
     std::shared_ptr<std::vector<std::shared_ptr<VectorB>>> compute_gammas(const int MM, const int NN ) ;

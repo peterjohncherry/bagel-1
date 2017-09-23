@@ -19,7 +19,7 @@
 #include <iostream>
 #include <fstream>
 #include <numeric>
-#include <src/smith/smith.h>
+ #include <src/smith/smith.h>
  
 namespace WickUtils {  
   using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
@@ -92,11 +92,4 @@ namespace WickUtils {
 
 }
 
- //namespace bagel {
- //namespace SMITH {
- //   template <typename DataType>
- //   struct Tensor_  : public std::vector<DataType> {} ;
- //   typedef std::vector<int> IndexRange ;
- //}
- //}  
 #endif
