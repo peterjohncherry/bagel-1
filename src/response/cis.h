@@ -1,6 +1,6 @@
 //
 // BAGEL - Brilliantly Advanced General Electronic Structure Library
-// Filename: nacmtype.h
+// Filename: cis.cc
 // Copyright (C) 2017 Toru Shiozaki
 //
 // Author: Toru Shiozaki <shiozaki@northwestern.edu>
@@ -22,38 +22,42 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#ifndef __SRC_RESPONSE_CIS_H
+#define __SRC_RESPONSE_CIS_H
 
-#ifndef __SRC_GRAD_NACMTYPE_H
-#define __SRC_GRAD_NACMTYPE_H
+#include <src/wfn/method.h>
 
 namespace bagel {
 
-enum Nacms { full, interstate, etf, noweight };
-
-class NacmType {
+// perform CI singles
+class CIS : public Method {
   protected:
-    Nacms type_;
+    const int nstate_;
+    const int nocc_;
+    const int nvirt_;
+    const int maxiter_;
+
+    const double thresh_;
+
+    // orbital energies
+    VectorB eig_;
+    // CIS energies
+    std::vector<double> energy_;
+
+    std::shared_ptr<const DFHalfDist> half_;
+    std::shared_ptr<const DFFullDist> fulljj_;
+    std::shared_ptr<const Matrix> coeff_; // coeff internally used
+
+    std::vector<std::shared_ptr<const Matrix>> amp_;
 
   public:
-    NacmType() : type_(Nacms::full) { }
-    NacmType(std::string input) {
-      if (input == "full") {
-        type_ = Nacms::full;
-      } else if (input == "interstate") {
-        type_ = Nacms::interstate;
-      } else if (input == "etf") {
-        type_ = Nacms::etf;
-      } else if (input == "noweight") {
-        type_ = Nacms::noweight;
-      } else {
-        throw std::logic_error ("Available nacmtype: \"full\", \"interstate\", \"etf\", or \"noweight\".");
-      }
-    }
+    CIS(std::shared_ptr<const PTree>, std::shared_ptr<const Geometry>, std::shared_ptr<const Reference>);
 
-    bool is_full() const { return type_ == Nacms::full; }
-    bool is_interstate() const { return type_ == Nacms::interstate; }
-    bool is_etf() const { return type_ == Nacms::etf; }
-    bool is_noweight() const { return type_ == Nacms::noweight; }
+    void compute();
+    std::shared_ptr<const Reference> conv_to_ref() const { return ref_; } 
+
+    double energy() const { return energy_[0] + ref_->energy(0); }
+    std::vector<double> excitation_energy() const { return energy_; }
 };
 
 }
