@@ -136,7 +136,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   for ( auto G_to_A_map_it : *(Eqn->G_to_A_map) ){
     //Calculate Gamma                           
     string Gamma_name = G_to_A_map_it.first;
-    auto gamma_tensors = Eqn_computer->get_gammas( 0, 0, Gamma_name );
+    //auto gamma_tensors = Eqn_computer->get_gammas( 0, 0, Gamma_name );
 
     // Build A_tensor to hold sums of different A-tensors
     shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Eqn_computer->Get_Bagel_IndexRanges(Eqn->GammaMap->at(Gamma_name)->id_ranges)) );
@@ -163,7 +163,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
             CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
       
           } else if ( get<0> (ctr_op) != get<1>(ctr_op)){ cout << " : contract different tensors" << endl; 
-            shared_ptr<Tensor_<double>>  New_Tdata;//  =  Eqn_computer->contract_different_tensors( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
+            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_different_tensors( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
 
             CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
           
