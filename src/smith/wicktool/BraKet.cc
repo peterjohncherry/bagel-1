@@ -91,6 +91,24 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
 
   return; 
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
+void BraKet<DType>::Generate_Gammas(shared_ptr<vector<bool>> aops, shared_ptr<vector<string>> idxs){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Generate_Gammas" << endl;
+  cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
+  auto aops_buff  = make_shared<vector<bool>>(*aops );
+
+  auto gamma_generator = make_shared<GammaGenerator>(aops, Total_Op->idxs);
+
+  for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
+     gamma_generator->add_gamma(range_map_it->first, 1);
+     gamma_generator->norm_order();
+     gamma_generator->alt_order();     
+  }
+  return; 
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
