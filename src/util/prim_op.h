@@ -151,6 +151,11 @@ void sort_indices<1,0,1,1,-1,1>(const std::complex<double>* unsorted, std::compl
 template<int i, int j, int an, int ad, int fn, int fd, class T>
 void sort_indices(const std::unique_ptr<T[]>& unsorted, std::unique_ptr<T[]>& sorted,
                          const int c,const int b) { // according to unsorted
+
+std::cout <<"template<int i, int j, int an, int ad, int fn, int fd, class T>                      " << std::endl; 
+std::cout <<"void sort_indices(const std::unique_ptr<T[]>& unsorted, std::unique_ptr<T[]>& sorted, " << std::endl;
+std::cout <<"                         const int c,const int b) { // according to unsorted" <<  std::endl;
+
   sort_indices<i,j,an,ad,fn,fd>(unsorted.get(), sorted.get(), c, b);
 }
 
@@ -158,6 +163,10 @@ void sort_indices(const std::unique_ptr<T[]>& unsorted, std::unique_ptr<T[]>& so
 template<int i, int j, int k, int an, int ad, int fn, int fd, class T>
 void sort_indices(const T* const unsorted, T* const sorted,
                          const int d,const int c,const int b) { // according to unsorted
+std::cout << " template<int i, int j, int k, int an, int ad, int fn, int fd, class T>" << std::endl;
+std::cout << " void sort_indices(const T* const unsorted, T* const sorted"<< std::endl;
+std::cout << "  const int d,const int c,const int b) "<< std::endl;
+
   static_assert(ad != 0 && fd != 0, "sort_indices, prefactor");
   const T afac = static_cast<T>(an) /static_cast<T>(ad);
   const T factor = static_cast<T>(fn) /static_cast<T>(fd);
@@ -336,6 +345,10 @@ void sort_indices(const std::unique_ptr<T[]>& unsorted, std::unique_ptr<T[]>& so
 template<int i, int j, int k, int l, int an, int ad, int fn, int fd, class T>
 void sort_indices(const T* unsorted, T* sorted,
                          const int d, const int c, const int b, const int a) { // according to unsorted
+std::cout <<"template<int i, int j, int k, int l, int an, int ad, int fn, int fd, class T>"<< std::endl;
+std::cout <<"void sort_indices(const T* unsorted, T* sorted,"<< std::endl;
+std::cout <<"                         const int d, const int c, const int b, const int a) { // according to unsorted" << std::endl;
+
   static_assert(ad != 0 && fd != 0, "sort_indices, prefactor");
   const T afac = static_cast<T>(an) /static_cast<T>(ad);
   const T factor = static_cast<T>(fn) /static_cast<T>(fd);
@@ -734,6 +747,12 @@ void sort_indices(const std::unique_ptr<T[]>& unsorted, std::unique_ptr<T[]>& so
 template<int i, int j, int k, int l, int m, int an, int ad, int fn, int fd, class T>
 void sort_indices(const T* unsorted, T* sorted,
                          const int e, const int d, const int c, const int b, const int a) { // according to unsorted
+
+std::cout <<" template<int i, int j, int k, int l, int m, int an, int ad, int fn, int fd, class T>                                "<< std::endl;
+std::cout <<" void sort_indices(const T* unsorted, T* sorted,                                                                     "<< std::endl;
+std::cout <<"                          const int e, const int d, const int c, const int b, const int a) { // according to unsorted"<< std::endl;
+
+
   static_assert(ad != 0 && fd != 0, "sort_indices, prefactor");
   const T afac = static_cast<T>(an) /static_cast<T>(ad);
   const T factor = static_cast<T>(fn) /static_cast<T>(fd);
@@ -774,6 +793,18 @@ void sort_indices(const std::unique_ptr<T[]>& unsorted, std::unique_ptr<T[]>& so
 template<int i, int j, int k, int l, int m, int n, int an, int ad, int fn, int fd, class T>
 void sort_indices(const T* unsorted, T* sorted,
                          const int f, const int e, const int d, const int c, const int b, const int a) { // according to unsorted
+
+
+std::cout <<" template<int i, int j, int k, int l, int m, int n, int an, int ad, int fn, int fd, class T>                                      "<< std::endl;
+std::cout <<" void sort_indices(const T* unsorted, T* sorted,                                                                                  "<< std::endl;
+std::cout <<"                          const int f, const int e, const int d, const int c, const int b, const int a) { // according to unsorted"<< std::endl;
+
+
+
+
+
+
+
   static_assert(ad != 0 && fd != 0, "sort_indices, prefactor");
   const T afac = static_cast<T>(an) /static_cast<T>(ad);
   const T factor = static_cast<T>(fn) /static_cast<T>(fd);
@@ -817,6 +848,9 @@ void sort_indices(const std::unique_ptr<T[]>& unsorted, std::unique_ptr<T[]>& so
 template<int i, int j, int k, int l, int m, int n, int o, int an, int ad, int fn, int fd, class T>
 void sort_indices(const T* unsorted, T* sorted,
                          const int g, const int f, const int e, const int d, const int c, const int b, const int a) { // according to unsorted
+std::cout <<" template<int i, int j, int k, int l, int m, int n, int o, int an, int ad, int fn, int fd, class T>                                            "<< std::endl;
+std::cout <<" void sort_indices(const T* unsorted, T* sorted,                                                                                               "<< std::endl;
+std::cout <<"                          const int g, const int f, const int e, const int d, const int c, const int b, const int a) { // according to unsorted"<< std::endl;
   static_assert(ad != 0 && fd != 0, "sort_indices, prefactor");
   const T afac = static_cast<T>(an) /static_cast<T>(ad);
   const T factor = static_cast<T>(fn) /static_cast<T>(fd);
@@ -926,6 +960,11 @@ void sort_indices(const std::unique_ptr<T[]>& unsorted, std::unique_ptr<T[]>& so
 template<int i, int j, int k, int l, int m, int n, int o, int p, int an, int ad, int fn, int fd, class T>
 void sort_indices(const T* unsorted, T* sorted,
                          const int h, const int g, const int f, const int e, const int d, const int c, const int b, const int a) { // according to unsorted
+
+std::cout <<" template<int i, int j, int k, int l, int m, int n, int o, int p, int an, int ad, int fn, int fd, class T>                                                  "<< std::endl;
+std::cout <<" void sort_indices(const T* unsorted, T* sorted,                                                                                                            "<< std::endl;
+std::cout <<"                          const int h, const int g, const int f, const int e, const int d, const int c, const int b, const int a) { // according to unsorted"<< std::endl;
+
   static_assert(ad != 0 && fd != 0, "sort_indices, prefactor");
   const T afac = static_cast<T>(an) /static_cast<T>(ad);
   const T factor = static_cast<T>(fn) /static_cast<T>(fd);
