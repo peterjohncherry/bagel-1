@@ -11,8 +11,6 @@ using namespace WickUtils;
 
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
-      
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Spin_Manager::set_spin_info() {

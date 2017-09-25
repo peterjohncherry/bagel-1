@@ -127,6 +127,7 @@ void CtrMultiTensorPart<DType>::get_name_readable(){
   }
   return ;
 };
+
 /////////////////////////////////////////////////////////////////////////////
 template<class DType>
 string CtrTensorPart<DType>::get_next_name(shared_ptr<vector<pair<int,int>>> new_ctrs_pos){
@@ -211,7 +212,6 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
 cout << "CtrTensorPart<DType>::FullContract" << endl; 
 #endif 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
   auto ctp_loc = Tmap->find(name);
   
@@ -415,7 +415,6 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
   
    auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, full_ctrs, make_shared<vector<pair<int,int>>>(1, make_pair(1,1) )); 
 
-   //Should really link to MSRelCASPT2::BinaryContractArbitrary, or something similar 
    auto new_CTData = make_shared<DType>();
    ACompute_list->push_back(tie(T1name, T2name, ctr_todo, new_CTP->name));
 
@@ -437,7 +436,6 @@ cout << "CtrTensorPart<DType>::Binary_Contract_same_tensor (returns CTP)" << end
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "BCST contracting  "; cout.flush(); cout << name << " over (" << ctr_todo.first << "," << ctr_todo.second << ") to get " ; cout.flush();
   auto T1 = Tmap->at(T1name);
-  cout << "  "<< endl;
 
   auto new_ctrs_pos = T1->ctrs_pos;
   auto new_ReIm_factors = T1->ReIm_factors;

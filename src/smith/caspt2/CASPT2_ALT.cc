@@ -163,7 +163,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
             CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
       
           } else if ( get<0> (ctr_op) != get<1>(ctr_op)){ cout << " : contract different tensors" << endl; 
-            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_different_tensors( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
+            shared_ptr<Tensor_<double>>  New_Tdata;//  =  Eqn_computer->contract_different_tensors( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
 
             CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
           
@@ -176,7 +176,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
         }
       }
       cout << "=========================================================================================================" << endl << endl;
-     // add this contribution to the A_tensors
+      // add this contribution to the A_tensors
       A_combined_data->ax_plus_y(A_factor.first, *(CTP_data_map->at(A_contrib.first)) );
     
     }

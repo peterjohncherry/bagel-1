@@ -274,7 +274,7 @@ cout << "get_N_in_M_combsX" << endl;
        perm->push_back(vec1->at(pos[fvec->at(ii)]));       
        pos.erase(pos.begin()+fvec->at(ii));
     }
-    cout << " perm = " ; for (auto elem : *perm) { cout << elem <<  " " ; } cout << endl;
+//    cout << " perm = " ; for (auto elem : *perm) { cout << elem <<  " " ; } cout << endl;
     N_in_M_combs->push_back(perm);
   } while (fvec_cycle(fvec, maxs, mins));
  

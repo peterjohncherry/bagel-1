@@ -297,7 +297,6 @@ cout << "GammaGenerator::alt_order" << endl;
   
     string Aname_alt = get_Aname( orig_ids, full_id_ranges, deltas_pos );   
     string Gname_alt = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
- //   cout << " Aname_alt  = " << Aname_alt  << "           Gname_alt = " << Gname_alt << endl; 
       
     if ( G_to_A_map->find(Gname_alt) == G_to_A_map->end() ) 
       G_to_A_map->emplace(Gname_alt, make_shared< unordered_map<string, pair<int,int> > >());

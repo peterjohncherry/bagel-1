@@ -63,7 +63,7 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
      for( int ii = 0 ;  ii != T_id_blocks.size(); ii++){
        T_id_blocks[ii] =  Bagel_id_ranges->at(ii).range(block_pos->at(ii));
      }    
-     cout << endl << "T_id_blocks sizes : " ; for (Index id : T_id_blocks){ cout << id.size() << " " ;}
+     cout << "T_id_blocks sizes : " ; for (Index id : T_id_blocks){ cout << id.size() << " " ;} cout << endl;
   
      unique_ptr<double[]> T_block_data = fulltens->get_block(T_id_blocks);
      block_tensor->put_block(T_block_data, T_id_blocks);
@@ -76,7 +76,7 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 shared_ptr<Tensor_<double>>
 Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr_todo, std::string Tname) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- 
+cout << "Equation_Computer::contract_on_same_tensor" <<endl; 
   shared_ptr<CtrTensorPart<Tensor_<double>>> CTP = CTP_map->at(Tname); cout << "got " << CTP->name << " info" << endl;
   shared_ptr<Tensor_<double>> CTP_data = get_block_Tensor(Tname); cout << "got " << CTP->name << " data" << endl;
   shared_ptr<Tensor_<double>>  T_out;  
@@ -84,7 +84,7 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
   cout << "unc_pos = ";
   auto T1_new_order = make_shared<vector<int>>(0);
   for (int ii = 0; ii !=CTP->unc_pos->size(); ii++)
-    if (CTP->unc_pos->at(ii) != ctr_todo.first){
+    if ((CTP->unc_pos->at(ii) != ctr_todo.first) && (CTP->unc_pos->at(ii) != ctr_todo.second)){
       T1_new_order->push_back(CTP->unc_pos->at(ii));
       cout << CTP->unc_pos->at(ii) << " " ; cout.flush();
     }
@@ -111,13 +111,12 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
   
   T_out = make_shared<Tensor_<double>>(*Tout_unc_rngs_raw); 
   }
+  T_out->allocate();
 
-  //loops over all index blocks of T1 and  T2; inner loop for T2 has same final index as T2 due to contraction
   auto T1_rng_block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
   for (int ii = 0 ; ii != T1_num_total_blocks; ii++) { 
      
     cout << "ii = " << ii << endl;
-    std::unique_ptr<double[]> T1_data_new; 
     size_t ctr_block_size;
     size_t T1_unc_block_size;
     auto T_out_rng_block = make_shared<vector<Index>>();
@@ -127,13 +126,13 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
     auto T1_org_rng_blocks = inverse_reorder_vector(T1_new_order, T1_new_rng_blocks); 
 
     auto T1_new_rng_block_sizes = get_sizes(T1_new_rng_blocks);
-    T_out_rng_block->insert(T_out_rng_block->end(), T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-2);
     
     ctr_block_size = T1_new_rng_blocks->back().size(); 
     T1_unc_block_size = get_block_size( T1_new_rng_blocks, 0, T1_new_rng_blocks->size()); 
     
-    auto T1_data_org = CTP_data->get_block(*T1_org_rng_blocks);
-    //T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
+    std::unique_ptr<double[]>  T1_data_org(new double[ctr_block_size*T1_unc_block_size]);
+    std::unique_ptr<double[]> T1_data_new(new double[ctr_block_size*T1_unc_block_size]);
+    T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
 
     const int one = 1;
     const double one_d = 1.0;
@@ -142,9 +141,9 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
 
     for (int kk = 0; kk != ctr_block_size; kk++ ) 
       cout <<" fix lapack problem" << endl;
-//       daxpy_(const int*, const double*, const double*, const int*, double*, const int*);
-       //daxpy_(&T1_ubs_int, &one_d, T1_data_new.get(), &one, T_out_data.get()+(kk*T1_unc_block_size), 1.0, &one);
-//void daxpy_(const int*, const double*, const double*, const int*, double*, const int*);
+      // daxpy_(const int*, const double*, const double*, const int*, double*, const int*);
+      // daxpy_(&T1_ubs_int, &one_d, T1_data_new.get(), &one, T_out_data.get()+(kk*T1_unc_block_size), 1.0, &one);
+      // void daxpy_(const int*, const double*, const double*, const int*, double*, const int*);
     
     T_out->put_block( T_out_data, *T1_new_rng_blocks  );       
     }
@@ -163,42 +162,76 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
 shared_ptr<Tensor_<double>>
 Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> ctr_todo, std::string T1name, std::string T2name){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- 
+cout << "Equation_Computer::contract_on_different_tensor" <<endl; 
+  cout << T1name << " " << T2name << endl; 
   auto CTP1 = CTP_map->at(T1name);
+  cout << "got info for " <<  T1name << endl;
   auto CTP2 = CTP_map->at(T2name);
-  std::shared_ptr<Tensor_<double>> CTP1_data = CTP_data_map->at(T1name);
-  std::shared_ptr<Tensor_<double>> CTP2_data = CTP_data_map->at(T2name);
+  cout << "got info for " << T2name << endl; 
+
+  // shift second contraction index.
+  pair<int,int> ctr_todo_rel = make_pair(ctr_todo.first, ctr_todo.second - CTP1->full_idxs->size());
+  cout << "ctr_todo_rel = (" << ctr_todo.first << ","<<ctr_todo.second << ")" << endl;
+
+  shared_ptr<Tensor_<double>> CTP1_data;
+  shared_ptr<Tensor_<double>> CTP2_data;
+  {
+  auto CTP_data_loc =  CTP_data_map->find(T1name); 
+  if ( CTP_data_loc == CTP_data_map->end() ){
+    CTP1_data = get_block_Tensor(T1name); 
+  } else {
+    CTP1_data = CTP_data_loc->second;
+  }
+  cout << "got data for " << T1name << endl; 
+  
+  CTP_data_loc =  CTP_data_map->find(T2name); 
+  if ( CTP_data_loc == CTP_data_map->end() ){
+    CTP2_data = get_block_Tensor(T2name); 
+  } else {
+    CTP2_data = CTP_data_loc->second;
+  }
+  cout << "got data for " << T2name << endl; 
+  }
 
   auto T1_org_rngs = Get_Bagel_const_IndexRanges(CTP1->id_ranges) ;
   auto T2_org_rngs = Get_Bagel_const_IndexRanges(CTP2->id_ranges) ;
 
   shared_ptr<Tensor_<double>> T_out;  
 
+  cout << " A1" ; cout.flush();
   auto T1_new_order = make_shared<vector<int>>(0);
   for (int ii = 0; ii !=CTP1->unc_pos->size(); ii++)
-    if (CTP1->unc_pos->at(ii) != ctr_todo.first)
+    if (CTP1->unc_pos->at(ii) != ctr_todo_rel.first)
       T1_new_order->push_back(CTP1->unc_pos->at(ii));
     
-  T1_new_order->push_back(ctr_todo.first);
+  cout << " A2" ; cout.flush();
+  T1_new_order->push_back(ctr_todo_rel.first);
   auto T1_new_rngs = reorder_vector(T1_new_order, T1_org_rngs);
   auto maxs1 = get_sizes(T1_new_rngs);
   int T1_num_total_blocks = accumulate(maxs1->begin(), maxs1->end(), 1, multiplies<int>());
  
-  auto T2_new_order = make_shared<vector<int>>(1,ctr_todo.second);
+  cout << " A3" ; cout.flush();
+  auto T2_new_order = make_shared<vector<int>>(0);
   for (int ii = 0; ii !=CTP2->unc_pos->size(); ii++)
-    if (CTP2->unc_pos->at(ii) != ctr_todo.second)
+    if (CTP2->unc_pos->at(ii) != ctr_todo_rel.second)
       T2_new_order->push_back(CTP2->unc_pos->at(ii));
 
-  T2_new_order->push_back(ctr_todo.second);
+  cout << " A4" ; cout.flush();
+  T2_new_order->push_back(ctr_todo_rel.second);
+  cout << "T2_new_order = " ; for (auto elem : *T2_new_order) { cout << elem << " " ; }
+  
   auto T2_new_rngs = reorder_vector(T2_new_order, T2_org_rngs);
   auto maxs2 = get_sizes(T2_new_rngs);
+  
   maxs2->pop_back();
-  int T2_num_unc_blocks = accumulate(maxs1->begin(), maxs1->end(), 1, multiplies<int>());
+  int T2_num_unc_blocks = accumulate(maxs2->begin(), maxs2->end(), 1, multiplies<int>());
 
+  cout << " A5" ; cout.flush();
   auto Tout_unc_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);
   Tout_unc_rngs->insert(Tout_unc_rngs->end(), T1_new_rngs->begin(), T1_new_rngs->end()-1);
   Tout_unc_rngs->insert(Tout_unc_rngs->end(), T2_new_rngs->begin()+1, T2_new_rngs->end());
 
+  cout << " A6"; cout.flush();
   {
   auto Tout_unc_rngs_raw = make_shared<vector<IndexRange>>(0); 
   for (auto id_rng : *Tout_unc_rngs)
@@ -207,65 +240,80 @@ Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> 
   T_out = make_shared<Tensor_<double>>(*Tout_unc_rngs_raw); 
   }
 
+  cout << " A7"; cout.flush();
   //loops over all index blocks of T1 and  T2; inner loop for T2 has same final index as T2 due to contraction
   auto T1_rng_block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
   for (int ii = 0 ; ii != T1_num_total_blocks; ii++) { 
 
-    std::unique_ptr<double[]> T1_data_new; 
+    cout << " A8"; cout.flush();
     size_t ctr_block_size;
     size_t T1_unc_block_size;
     auto T_out_rng_block = make_shared<vector<Index>>();
-
-    {
     auto T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, T1_new_rngs); 
     auto T1_org_rng_blocks = inverse_reorder_vector(T1_new_order, T1_new_rng_blocks); 
-
+   
     auto T1_new_rng_block_sizes = get_sizes(T1_new_rng_blocks);
     T_out_rng_block->insert(T_out_rng_block->end(), T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
     
     ctr_block_size = T1_new_rng_blocks->back().size(); 
     T1_unc_block_size = get_block_size( T1_new_rng_blocks, 0, T1_new_rng_blocks->size()); 
     
-    auto T1_data_org = CTP1_data->get_block(*T1_org_rng_blocks);
-    //T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
-    }
+    std::unique_ptr<double[]> T1_data_org(new double[ get_block_size(T1_org_rng_blocks, 0, T1_org_rng_blocks->size()) ]);
 
-    auto T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size()-1, 0);
+    std::unique_ptr<double[]> T1_data_new(new double[ get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()) ]);
+    T1_data_new = CTP1_data->get_block(*T1_org_rng_blocks);
+//    sort_indices<0,1,2,3,4,0,1,1,1>(T1_data_org, T1_data_new, ci0.size(), x2.size(), x3.size(), x4.size(), x5.size());
+//    T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
+
+    shared_ptr<vector<int>> T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size()-1, 0);
+
     for (int jj = 0 ; jj != T2_num_unc_blocks; jj++) { 
       
-      std::unique_ptr<double[]> T2_data_new; 
       size_t T2_unc_block_size;
-      T2_rng_block_pos->push_back(T1_rng_block_pos->back());
+      T2_rng_block_pos->push_back(T2_rng_block_pos->back());
+
+      cout << " A10d1" ; cout.flush();
+      auto T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
+      std::unique_ptr<double[]> T2_data_new(new double[ get_block_size(T2_new_rng_blocks, 0, T2_new_rng_blocks->size()) ]);
 
       {
-      auto T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
-      auto T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
-
-      auto T2_new_rng_block_sizes = get_sizes(T2_new_rng_blocks);
-      T_out_rng_block->insert(T_out_rng_block->end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
-      
-      T2_unc_block_size = get_block_size( T2_new_rng_blocks, 0, T2_new_rng_blocks->size()); 
-      
-      auto T2_data_org = CTP2_data->get_block(*T2_org_rng_blocks);
-//      T2_data_new = reorder_tensor_data(T2_data_org.get(), get_block_size(T2_new_rng_blocks, 0, T2_new_rng_blocks->size()), *T2_new_order, *T2_new_rng_block_sizes); 
+        auto T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
+        cout << " A10f" ; cout.flush();
+        
+        auto T2_new_rng_block_sizes = get_sizes(T2_new_rng_blocks);
+        cout << " A10g" ; cout.flush();
+        T_out_rng_block->insert(T_out_rng_block->end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
+        cout << " A10h" ; cout.flush();
+        
+        T2_unc_block_size = get_block_size( T2_new_rng_blocks, 0, T2_new_rng_blocks->size()); 
+        cout << " A10i" ; cout.flush();
+        
+        auto T2_data_org = CTP2_data->get_block(*T2_org_rng_blocks);
+        T2_data_new = reorder_tensor_data(T2_data_org.get(), get_block_size(T2_new_rng_blocks, 0, T2_new_rng_blocks->size()), *T2_new_order, *T2_new_rng_block_sizes); 
       }
+      cout << " A11" ; cout.flush();
       
       std::unique_ptr<double[]> T_out_data(new double[T1_unc_block_size*T2_unc_block_size]);
      
+      cout << " A11a" ; cout.flush();
       //should not use transpose; instead build T2_new_order backwards... 
-      dgemm_("N", "T", T1_unc_block_size, ctr_block_size,  T1_unc_block_size, 1.0, T1_data_new.get(), T1_unc_block_size,
+      dgemm_("N", "T", T1_unc_block_size, ctr_block_size,  T1_unc_block_size, 1.0, T1_data_new.get(), T2_unc_block_size,
               T2_data_new.get(), ctr_block_size, 1.0, T_out_data.get(), T1_unc_block_size);
 
+      cout << " A11b" ; cout.flush();
       T_out->put_block( T_out_data, *T_out_rng_block );
+      cout << " A11c" ; cout.flush();
       T2_rng_block_pos->pop_back(); //remove last index; contracted index is cycled in T1 loop
+      cout << " A11d" ; cout.flush();
 
+      cout << " A12" ; cout.flush();
       fvec_cycle(T2_rng_block_pos, maxs2 );
     }
     fvec_cycle(T1_rng_block_pos, maxs1 );
+  cout << " A13"; cout.flush();
   }                                                                                                                                              
   return T_out;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets the gammas in tensor format. 
@@ -282,7 +330,6 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_n
     auto gamma_ranges_str_tmp = make_shared<vector<string>>(gamma_ranges_str->begin(), gamma_ranges_str->end()-ii*2);
     gamma_ranges[ii] = Get_Bagel_IndexRanges( gamma_ranges_str_tmp); 
     for (auto elem : *gamma_ranges_str_tmp){  cout << elem << " " ;} 
-    cout << endl;
 } 
   
   //A fudge, needs to be changed so gammas are tensors 
@@ -346,7 +393,7 @@ tuple< size_t, size_t >
 Equation_Computer::Equation_Computer::get_block_info(shared_ptr<vector<IndexRange>> id_ranges, 
                                                      shared_ptr<vector<int>> block_pos) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+cout << "Equation_Computer::get_block_info" << endl;
   vector<size_t> id_pos(block_pos->size());
   cout <<endl << "id_pos = ";
   for (int ii = 0 ; ii != id_ranges->size() ; ii++){
@@ -393,6 +440,7 @@ Equation_Computer::Equation_Computer::get_block_of_data( double* data_ptr ,
                                                          shared_ptr<vector<IndexRange>> id_ranges, 
                                                          shared_ptr<vector<int>> block_pos) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Equation_Computer::get_block_of_data" << endl;
 
  // merge this to one loop, but keep until debugged, as this is likely to go wrong...
  // getting id position of id_block ; list of block sizes looks like [n,n,n,n,... , n-1, n-1 n-1] 
@@ -525,7 +573,7 @@ Equation_Computer::Equation_Computer::compute_gamma12_from_civec(shared_ptr<cons
 tuple<shared_ptr<RDM<1>>, shared_ptr<RDM<2>>, shared_ptr<RDM<3>> >
 Equation_Computer::Equation_Computer::compute_gamma12_last_step(shared_ptr<const Dvec> dbra, shared_ptr<const Dvec> dket, shared_ptr<const Civec> cibra) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "compute_gamma12_last_step" << endl;
+  cout << "compute_gamma12_last_step" << endl;
 
   const int nri = cibra->asize()*cibra->lenb();
   const int ij  = norb_*norb_;
@@ -649,18 +697,21 @@ vector<Index> Equation_Computer::Equation_Computer::get_rng_blocks_raw(shared_pt
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<Index>> Equation_Computer::Equation_Computer::get_rng_blocks(shared_ptr<vector<int>> forvec, shared_ptr<vector<shared_ptr<const IndexRange>>> old_ids) {
 ////////////////////////////////////////////////////////////////////////////////////////
+cout << "Equation_Computer::get_rng_blocks constver" << endl;
+
   auto new_ids = make_shared<vector<Index>>(); 
   for( int ii =0; ii != forvec->size(); ii++ ) {
      new_ids->push_back(old_ids->at(ii)->range(forvec->at(ii)));
      cout << "new_ids->push_back<<old_ids->at("<<ii<<")->range("<<forvec->at(ii)<<"));" << endl;
-     
   }
-
+  cout << "why " << endl;
   return new_ids;
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<Index>> Equation_Computer::Equation_Computer::get_rng_blocks(shared_ptr<vector<int>> forvec, shared_ptr<vector<shared_ptr<IndexRange>>> old_ids) {
 ////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Equation_Computer::get_rng_blocks " << endl;
+
   auto new_ids = make_shared<vector<Index>>(); 
   for( int ii =0; ii != forvec->size(); ii++ ) {
      new_ids->push_back(old_ids->at(ii)->range(forvec->at(ii)));
@@ -742,5 +793,99 @@ shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::reorder_vector(s
 
   return newvec;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//This would be best put in another part, probably CTP
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+unique_ptr<DataType[]>
+ Equation_Computer::Equation_Computer::reorder_tensor_data(const DataType* orig_data,  size_t data_size, vector<int>  new_order_vec, vector<size_t> new_sizes_vec ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Equation_Computer::reorder_tensor_data" << endl;
+  const double fac1= 1.0;
+  const double fac2= 1.0;
+
+  unique_ptr<DataType[]> reordered_data(new DataType[data_size]);
+  cout << "R1" << endl;
+  // Converts to arrays; sort_indices fixed size (defined in template) arrays, so I now have this ugly mess,
+  if (new_order_vec.size() == 2 ){
+    array<int,2> new_order_arr; 
+    array<int,2> new_sizes_arr; 
+    for (auto ii = 0; ii != new_order_vec.size(); ii++)
+      new_order_arr[ii] = new_order_vec[ii];
+    for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
+      new_sizes_arr[ii] = new_sizes_vec[ii];
+    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
+
+  }
+  else if (new_order_vec.size() == 3 ){
+      array<int,3> new_order_arr;  
+      array<int,3> new_sizes_arr; 
+      for (auto ii = 0; ii != new_order_vec.size(); ii++)
+        new_order_arr[ii] = new_order_vec[ii];
+      for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
+        new_sizes_arr[ii] = new_sizes_vec[ii];
+    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(), new_order_arr) ;
+ 
+  } else if (new_order_vec.size() == 4 ){
+  cout << endl <<  "R1"; cout.flush();
+      array<int,4> new_order_arr;  
+      array<int,4> new_sizes_arr; 
+    
+      for (auto ii = 0; ii != new_order_vec.size(); ii++){
+        new_order_arr[ii] = new_order_vec[ii];
+        cout << new_order_arr[ii]  << " " ;
+      }
+      cout <<endl;
+  cout << "R2 "; cout.flush();
+     for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
+        new_sizes_arr[ii] = new_sizes_vec[ii];
+
+  cout << "R3 "; cout.flush();
+    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
+
+  cout << "R4 "; cout.flush();
+ 
+  } else if (new_order_vec.size() == 5 ){
+      array<int,5> new_order_arr;  
+      array<int,5> new_sizes_arr; 
+      for (auto ii = 0; ii != new_order_vec.size(); ii++)
+        new_order_arr[ii] = new_order_vec[ii];
+      for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
+        new_sizes_arr[ii] = new_sizes_vec[ii];
+    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
+ 
+  } else if (new_order_vec.size() == 6 ){
+      array<int,6> new_order_arr;  
+      array<int,6> new_sizes_arr; 
+      for (auto ii = 0; ii != new_order_vec.size(); ii++)
+        new_order_arr[ii] = new_order_vec[ii];
+      for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
+        new_sizes_arr[ii] = new_sizes_vec[ii];
+    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
+ 
+  } else if (new_order_vec.size() == 7 ){
+      array<int,7> new_order_arr;  
+      array<int,7> new_sizes_arr; 
+      for (auto ii = 0; ii != new_order_vec.size(); ii++)
+        new_order_arr[ii] = new_order_vec[ii];
+      for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
+        new_sizes_arr[ii] = new_sizes_vec[ii];
+    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
+ 
+  } else if (new_order_vec.size() == 8 ){
+      array<int,8> new_order_arr;   
+      array<int,8> new_sizes_arr; 
+      for (auto ii = 0; ii != new_order_vec.size(); ii++)
+        new_order_arr[ii] = new_order_vec[ii];
+      for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
+       new_sizes_arr[ii] = new_sizes_vec[ii];
+   sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
+  }
+ 
+  return reordered_data;
+
+}
+
 
 #endif

@@ -93,7 +93,7 @@ void Equation<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>>
 template<class DType>
 void Equation<DType>::Get_CMTP_Compute_Terms(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Add_BraKet_Compute_Terms_CMTP" << endl;  
+  cout << "Get_CMTP_Computer_Terms" << endl;  
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto  G2A_mapit =G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
