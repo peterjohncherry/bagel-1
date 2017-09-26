@@ -1,10 +1,9 @@
-#ifndef __SRC_SMITH_WICKTOOL_INTERFACE_H
-#define __SRC_SMITH_WICKTOOL_INTERFACE_H
+#ifndef __SRC_SMITH_WICKTOOL_EQN_COMPUTER_H
+#define __SRC_SMITH_WICKTOOL_EQN_COMPUTER_H
 
 #include <tuple>
 #include <src/smith/wicktool/equation.h>
-#include <src/smith/caspt2/CASPT2.h>
-#include <src/smith/smith.h>
+#include <src/smith/smith_info.h>
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
 #include <src/util/f77.h>
@@ -16,7 +15,7 @@ namespace Equation_Computer {
 
 class Equation_Computer { 
     public: 
-    Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<Tensor_<double>>> eqn_info,
+    Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>> >> CTP_data_map,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map);
     ~Equation_Computer(){};
@@ -32,10 +31,10 @@ class Equation_Computer {
     std::shared_ptr<const Dvec> cc_; 
     std::shared_ptr<const Determinants> det_ ; 
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<Tensor_<double>>>>> CTP_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
     std::shared_ptr<std::unordered_map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
 
-    std::shared_ptr<Equation<Tensor_<double>>> eqn_info;
+    std::shared_ptr<Equation<double>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
 
     template<class vtype>
@@ -89,7 +88,6 @@ class Equation_Computer {
     
     std::unique_ptr<double[]> get_block_of_data( double* data_ptr, std::shared_ptr<std::vector<IndexRange>> id_ranges, 
                                                               std::shared_ptr<std::vector<int>> block_pos) ;
-
 
     std::shared_ptr<std::vector<std::shared_ptr<Tensor_<double>>>>
     get_gammas(int MM , int NN, std::string gamma_name);

@@ -3,8 +3,6 @@
  #include <src/smith/wicktool/WickUtils.h>
  // #include "WickUtils.h"
 using namespace std;
-using namespace bagel;
-using namespace bagel::SMITH;
 
 namespace WickUtils {
 

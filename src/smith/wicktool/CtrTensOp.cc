@@ -10,7 +10,6 @@
  //#include "gamma_generator.h"
 
 using namespace std;
-using namespace bagel::SMITH;
 
 ////////////////////////////////////////////////////////////////////////////
 template<typename DType>
@@ -469,12 +468,9 @@ cout << "CtrTensorPart<DType>::Binary_Contract_same_tensor (returns data)" << en
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template class TensorPart<std::vector<double>>;
-template class TensorPart<Tensor_<double>>;
-template class CtrTensorPart<std::vector<double>>;
-template class CtrTensorPart<Tensor_<double>>;
-template class CtrMultiTensorPart<std::vector<double>>;
-template class CtrMultiTensorPart<Tensor_<double>>;
+template class TensorPart<double>;
+template class CtrTensorPart<double>;
+template class CtrMultiTensorPart<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
     
 #endif

@@ -67,7 +67,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   range_conversion_map->emplace("vir", virtual_rng);
   range_conversion_map->emplace("free", free_rng);
 
-  CTP_map = make_shared<map<string, shared_ptr<CtrTensorPart<Tensor_<double>>>>>();
+  CTP_map = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
   CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   gamma_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
 }
@@ -75,7 +75,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
 /////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::test() { 
 /////////////////////////////////////////////////////////////////////////////////
-  auto Eqn = make_shared<Equation<Tensor>>();
+  auto Eqn = make_shared<Equation<double>>();
 
   Eqn->Initialize();
   
@@ -100,9 +100,10 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   vector<bool(*)(shared_ptr<vector<string>>)>  X_constraints = { &always_true };
   vector<IndexRange> TEMP_X_ranges = {*free_rng, *free_rng, *free_rng, *free_rng };
   shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>( TEMP_X_ranges);  
+  shared_ptr<double> X_dummy_data;
   X_data->allocate();
 
-  auto XTens = Eqn->Build_TensOp("X", X_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
+  auto XTens = Eqn->Build_TensOp("X", X_dummy_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
   CTP_data_map->emplace("X", X_data );
   Eqn->T_map->emplace("X", XTens);
   ///////////////////////////////////////////////////// T Tensor /////////////////////////////////////////////////////////////////
@@ -115,16 +116,17 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = { &NotAllAct };
   vector<IndexRange> TEMP_T_ranges = {*free_rng, *free_rng, *free_rng, *free_rng };
   shared_ptr<Tensor_<double>> T_data = make_shared<Tensor_<double>>( TEMP_T_ranges );  
+  shared_ptr<double> T_dummy_data;
   T_data->allocate();
 
-  auto TTens = Eqn->Build_TensOp("T", T_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
+  auto TTens = Eqn->Build_TensOp("T", T_dummy_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
   CTP_data_map->emplace("T", T_data );
   Eqn->T_map->emplace("T", TTens);
   ////////////////////////////////////// rdms (no derivs) ////////////////////////////////////////////////////////////////
-  auto BraKet_Tensors1 = make_shared<vector< shared_ptr<TensOp<Tensor_<double>>> > >( vector<shared_ptr<TensOp<Tensor_<double>>>> { XTens,  TTens} );
-  auto BraKet_Tensors2 = make_shared<vector< shared_ptr<TensOp<Tensor_<double>>> > >( vector<shared_ptr<TensOp<Tensor_<double>>>> { XTens,  TTens} );
+  auto BraKet_Tensors1 = make_shared<vector< shared_ptr<TensOp<double>> > >( vector<shared_ptr<TensOp<double>>> { XTens,  TTens} );
+  auto BraKet_Tensors2 = make_shared<vector< shared_ptr<TensOp<double>> > >( vector<shared_ptr<TensOp<double>>> { XTens,  TTens} );
 
-  auto BraKet_List = make_shared<std::vector<std::shared_ptr<vector< shared_ptr<TensOp<Tensor_<double>>> > >>>();
+  auto BraKet_List = make_shared<std::vector<std::shared_ptr<vector< shared_ptr<TensOp<double>> > >>>();
                          
   BraKet_List->push_back(BraKet_Tensors1);
 

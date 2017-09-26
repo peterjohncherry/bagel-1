@@ -6,8 +6,6 @@
 #include<sstream>
 #include<stdlib.h>
 #include<math.h>
-#include<bitset>
-#include<array>
 #include<vector>
 #include<algorithm>
 #include<utility>
@@ -15,11 +13,8 @@
 #include<string>
 #include<memory>
 #include<map>
-#include<sstream>
 #include <iostream>
-#include <fstream>
 #include <numeric>
- #include <src/smith/smith.h>
  
 namespace WickUtils {  
   using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
@@ -81,14 +76,6 @@ namespace WickUtils {
     std::cout << ")  " ;
     return;
   }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//template void print_vecX<int>(vector<int> invec, string );
-//template void print_vecX<bool>(vector<bool> invec, string);
-//template void print_vecX<string>(vector<string> invec, string );
-//template void print_pairvec<int>(vector<pair<int,int>> invec, string );
-//template void print_pairvec<bool>(vector<pair<bool,bool>> invec, string );
-//template void print_pairvec<string>(vector<pair<string,string>> invec, string );
-///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }
 

@@ -4,8 +4,6 @@
  //#include "BraKet.h"
 
 using namespace std;
-using namespace bagel;
-using namespace bagel::SMITH;
 using namespace WickUtils;
 
 using pint_vec = std::vector<std::pair<int,int>>;
@@ -108,7 +106,6 @@ void BraKet<DType>::Build_Tensor_Contraction_list_CMTP(){
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template class BraKet<std::vector<double>>;
-template class BraKet<Tensor_<double>>;
+template class BraKet<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif

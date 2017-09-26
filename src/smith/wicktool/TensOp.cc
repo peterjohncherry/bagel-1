@@ -8,8 +8,6 @@
 
 using namespace std;
 using namespace WickUtils;
-using namespace bagel;
-using namespace bagel::SMITH;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
 void TensOp<DType>::initialize(vector<string> orig_idxs, vector<vector<string>> orig_idx_ranges,
@@ -515,9 +513,7 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template class TensOp<std::vector<double>>;
-template class TensOp<Tensor_<double>>;
-template class MultiTensOp<std::vector<double>>;
-template class MultiTensOp<Tensor_<double>>;
+template class TensOp<double>;
+template class MultiTensOp<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif

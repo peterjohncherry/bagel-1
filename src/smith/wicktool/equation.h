@@ -1,9 +1,9 @@
+ #ifndef __SRC_SMITH_EQUATION_H
+ #define __SRC_SMITH_EQUATION_H
  #include <src/smith/wicktool/BraKet.h>
  #include <src/smith/wicktool/WickUtils.h>
  #include <src/smith/wicktool/TensOp.h>
-  #include <src/smith/tensor.h>
- #ifndef __SRC_SMITH_EQUATION_H
- #define __SRC_SMITH_EQUATION_H
+ #include <src/smith/tensor.h>
 
  //#include "WickUtils.h"
  //#include "BraKet.h"

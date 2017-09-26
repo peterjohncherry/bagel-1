@@ -7,7 +7,7 @@ using namespace bagel;
 using namespace bagel::SMITH;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<Tensor_<double>>> eqn_info_in,
+Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info_in,
                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map_in,
                                                         std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ shared_ptr<Tensor_<double>>
 Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr_todo, std::string Tname) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Equation_Computer::contract_on_same_tensor" <<endl; 
-  shared_ptr<CtrTensorPart<Tensor_<double>>> CTP = CTP_map->at(Tname); cout << "got " << CTP->name << " info" << endl;
+  shared_ptr<CtrTensorPart<double>> CTP = CTP_map->at(Tname); cout << "got " << CTP->name << " info" << endl;
   shared_ptr<Tensor_<double>> CTP_data = get_block_Tensor(Tname); cout << "got " << CTP->name << " data" << endl;
   shared_ptr<Tensor_<double>>  T_out;  
 
@@ -349,8 +349,9 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_n
   for (int ii = 0 ; ii !=gamma_ranges.size()/2; ii++ ){ 
     auto gamma_ranges_str_tmp = make_shared<vector<string>>(gamma_ranges_str->begin(), gamma_ranges_str->end()-ii*2);
     gamma_ranges[ii] = Get_Bagel_IndexRanges( gamma_ranges_str_tmp); 
-    for (auto elem : *gamma_ranges_str_tmp){  cout << elem << " " ;} 
-} 
+    cout << "gamma_ranges["<<ii<<"]  = [ "; cout.flush();
+    for (auto elem : *gamma_ranges_str_tmp){  cout << elem << " " ;} cout<<  "]"<< endl;
+  } 
   
   //A fudge, needs to be changed so gammas are tensors 
   shared_ptr<vector<shared_ptr<VectorB>>> gamma_data_vec = compute_gammas( MM, NN ) ;

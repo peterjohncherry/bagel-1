@@ -4,8 +4,6 @@
   //#include "spin_manager.h"
 
 using namespace std;
-using namespace bagel;
-using namespace bagel::SMITH;
 using namespace WickUtils;
 
 
