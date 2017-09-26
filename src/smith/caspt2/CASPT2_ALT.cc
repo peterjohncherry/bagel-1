@@ -136,7 +136,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   for ( auto G_to_A_map_it : *(Eqn->G_to_A_map) ){
     //Calculate Gamma                           
     string Gamma_name = G_to_A_map_it.first;
-    //auto gamma_tensors = Eqn_computer->get_gammas( 0, 0, Gamma_name );
+    auto gamma_tensors = Eqn_computer->get_gammas( 0, 0, Gamma_name );
 
     // Build A_tensor to hold sums of different A-tensors
     shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Eqn_computer->Get_Bagel_IndexRanges(Eqn->GammaMap->at(Gamma_name)->id_ranges)) );

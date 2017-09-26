@@ -30,6 +30,7 @@
 #include <memory>
 #include <vector>
 #include <cassert>
+#include <iostream>
 #include <src/util/math/algo.h>
 #include <src/util/f77.h>
 

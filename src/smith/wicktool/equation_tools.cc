@@ -39,10 +39,19 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
   
    if(  CTP_data_map->find(Tname) != CTP_data_map->end())
      return CTP_data_map->at(Tname);
-  
+ 
+
+
    shared_ptr<vector<string>>     unc_ranges = CTP_map->at(Tname)->id_ranges;  
+   cout << "gamma unc_ranges = [ " << endl;
+   for  ( auto rng :  *unc_ranges )
+      cout << rng << " " ;
+   cout << " ] " << endl;
+
+
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
+   cout << "Bagel_id_ranges->size() = "<< Bagel_id_ranges->size() << endl;
    cout << "range_lengths = " ;
    auto  range_lengths  = make_shared<vector<int>>(0); 
    for (auto idrng : *Bagel_id_ranges ){
@@ -53,6 +62,7 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
    shared_ptr<Tensor_<double>> block_tensor = make_shared<Tensor_<double>>(*Bagel_id_ranges);
    block_tensor->allocate();
 
+   cout << "allocated tensor" << endl;
    auto block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
    auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
    do {
@@ -351,7 +361,7 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_n
  
   for ( int ii = gamma_ranges.size()-1; ii != -1;  ii-- ) {
  
-     cout << "range_lengths = ";
+     cout << "get_gammas range_lengths = ";
      auto  range_lengths  = make_shared<vector<int>>(0); 
      for (auto idrng : *(gamma_ranges[ii]) ){
        range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
@@ -365,12 +375,12 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_n
 
      do {
        
-       cout << endl << "block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
+       cout << endl << "get_gammas block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
        vector<Index> gamma_id_blocks(gamma_ranges[ii]->size());
        for( int jj = 0 ;  jj != gamma_id_blocks.size(); jj++)
          gamma_id_blocks[jj] =  gamma_ranges[ii]->at(jj).range(block_pos->at(jj));
 
-       cout << endl << "gamma_id_blocks sizes : " ; for (Index id : gamma_id_blocks){ cout << id.size() << " " ; cout.flush();}
+       cout << endl << "get_gammas gamma_id_blocks sizes : " ; for (Index id : gamma_id_blocks){ cout << id.size() << " " ; cout.flush();}
        size_t gamma_block_size;
        size_t gamma_block_pos;
        tie(gamma_block_size, gamma_block_pos) = get_block_info( gamma_ranges[ii],  block_pos) ;
@@ -516,20 +526,59 @@ Equation_Computer::Equation_Computer::compute_gammas(const int MM, const int NN 
   }
   shared_ptr<Civec> ccbra = make_shared<Civec>(*cc_->data(MM));
   shared_ptr<Civec> ccket = make_shared<Civec>(*cc_->data(NN));
- 
+
   shared_ptr<RDM<1>> gamma1x;
   shared_ptr<RDM<2>> gamma2x;
   shared_ptr<RDM<3>> gamma3x;
   tie(gamma1x, gamma2x, gamma3x) = compute_gamma12_from_civec(ccbra, ccket);
- 
   
   auto  gamma1 = make_shared<VectorB>(norb_*norb_);
+  copy_n(gamma1x->data(), norb_*norb_, gamma1->data());
+
   auto  gamma2 = make_shared<VectorB>(norb_*norb_*norb_*norb_);
+  copy_n(gamma2x->data(), norb_*norb_*norb_*norb_, gamma2->data());
+
   auto  gamma3 = make_shared<VectorB>(norb_*norb_*norb_*norb_*norb_*norb_);
+  copy_n(gamma3x->data(), norb_*norb_*norb_*norb_*norb_*norb_, gamma3->data());
   cc_->set_det(det_); 
 
   auto gamma_vec = make_shared<vector<shared_ptr<VectorB>>>(vector<shared_ptr<VectorB>> { gamma1, gamma2, gamma3}) ;
 
+  int n1 = norb_;  
+  int n2 = norb_*norb_;  
+  int n3 = n2*norb_;  
+  int n4 = n3*norb_;  
+  int n5 = n4*norb_;  
+                        
+  cout << "gamma3 " << endl;
+  for (int i = 0; i != norb_; ++i) 
+    for (int j = 0; j != norb_; ++j) 
+      for (int k = 0; k != norb_; ++k) 
+        for (int l = 0; l != norb_; ++l) 
+          for (int m = 0; m != norb_; ++m) {
+            cout << endl << i << " " << j << " "<<  k << " " << l << " " << m << "  ";
+            for (int n = 0; n != norb_; ++n){
+              cout << *(gamma3->data()+(i*n5 + j*n4 + k*n3 + l*n2 + m*n1 +n )) << " ";
+             }
+          }
+
+  cout << "gamma2 " << endl;
+  for (int k = 0; k != norb_; ++k) 
+    for (int l = 0; l != norb_; ++l) 
+      for (int m = 0; m != norb_; ++m) {
+        cout << endl << k << " " << l << " " << m << "  ";
+        for (int n = 0; n != norb_; ++n){ 
+          cout << *(gamma2->data()+ (k*n3 + l*n2 + m*n1 +n))  << " " ;
+        }                        
+      }
+
+  cout << "gamma1 " << endl;
+  for (int m = 0; m != norb_; ++m) {
+    cout << endl << m << " " ;
+    for (int n = 0; n != norb_; ++n){ 
+      cout << *(gamma1->data()+ ( m*n1 +n )) << " "; 
+    }
+  }                    
   return gamma_vec;
 
 }
@@ -614,26 +663,44 @@ Equation_Computer::Equation_Computer::compute_gamma12_last_step(shared_ptr<const
       for (int i = 0; i != ij; ++i)
         copy_n(dbra->data(i)->data(), nri, dbra_data->element_ptr(0, i));
     }
- 
-    //Very bad way of getting gamma3  [sum_{K}<I|i*j|K>.[sum_{L}<K|k*l|L>.<L|m*n|J>]]
-    auto dket_KLLJ_data = make_shared<Matrix>(nri, ij*ij);
-    for ( int q = 0; q!=ij ; q++){
-      auto dket_KLLJ_part = make_shared<Dvec>(dket->det(), norb_*norb_);
-      sigma_2a1(dket->data(q), dket_KLLJ_part);
-      sigma_2a2(dket->data(q), dket_KLLJ_part);
-      copy_n(dket_KLLJ_data->data()+q*ij, ij*nri, dket_KLLJ_part->data(0)->data());
-    }
 
     const char   transa = 'N';
     const char   transb = 'T';
     const double alpha = 1.0;
     const double beta = 0.0; 
-    const int    n4 = ij*ij;
-             
-    dgemm_( &transa, &transb, &nri, &ij, &n4, &alpha, dket_KLLJ_data->data(),
-            &ij, dbra->data(), &nri, &beta, gamma3->element_ptr(0,0,0,0,0,0), &n4);
-    //btas::contract(1.0, *dket, {0,1}, *dket_KLLJ_data, {0,2}, 0.0, *gamma3_data, {1,2});
+    const int n1 = norb_;  
+    const int n2 = n1*norb_;  
+    const int n3 = n2*norb_;  
+    const int n4 = ij*ij;
  
+    //Very bad way of getting gamma3  [sum_{K}<I|i*j|K>.[sum_{L}<K|k*l|L>.<L|m*n|J>]]
+    for ( int q = 0; q!=ij ; q++){
+      int i = q/n1;
+      int j = q-(i*n1);
+      auto dket_ijkl = make_shared<Dvec>(dket->det(), ij);
+      sigma_2a1(dket->data(q), dket_ijkl);
+      sigma_2a2(dket->data(q), dket_ijkl);
+
+      cout << endl <<  "dket_data " << endl;
+      for (int m = 0; m != norb_; m++) {
+        for (int n = 0; n != norb_; n++){ 
+          cout <<   m << "  " << n << " : ";
+          for (int c = 0; c != nri; c++){ 
+            cout << *(dket_ijkl->data( m*n1 + n )->data()+c)  << " " ;
+          }
+          cout << endl;
+        }                        
+      }
+
+      for ( int r = 0; r!=ij ; r++){
+        int k = r/n1 ;    
+        int l = r-k*n1 ;
+        cout << " i, j, k, l = " <<  i << j << k << l << endl;
+        dgemm_( &transa, &transb, &n2, &n2, &nri, &alpha, dket_ijkl->data(0)->data(),
+                &n2, dbra->data(), &n2, &beta, gamma3->element_ptr(0,0,i,j,k,l), &n2);
+      }
+    }
+
     auto gamma2t = group(group(*gamma2, 2,4), 0,2);
     btas::contract(1.0, *dbra_data, {1,0}, *dket_data, {1,2}, 0.0, gamma2t, {0,2});
   }

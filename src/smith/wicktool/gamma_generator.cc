@@ -247,6 +247,7 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+//void GammaGenerator::alt_order(shared_ptr<vector<shared_ptr<GammaIntermediate>>> gamma_vec ){
 void GammaGenerator::alt_order(){
 //////////////////////////////////////////////////////////////////////////////////////  
 #ifdef DBG_GammaGenerator 
@@ -579,10 +580,3 @@ cout << "GammaGenerator::RangeCheck" << endl;
 
 } 
 #endif
-//      cout <<  "------------ KEEP ------------ "  << endl;
-//      cout << "Start Aname  alt = " << Aname_init << endl;
-//      cout << "Finish Aname alt = " << get_Aname(orig_ids, full_id_ranges, deltas_pos ) << endl;
-//      cout << "Start Gname  alt = " << Gname_init << endl;
-//      cout << "Finish Gname alt = " << get_gamma_name( full_id_ranges, orig_aops, ids_pos ) << endl << endl << endl;
-//    }                                                       
-

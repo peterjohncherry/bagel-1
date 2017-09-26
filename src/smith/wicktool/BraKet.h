@@ -51,8 +51,6 @@ class BraKet  {
        
        void Build_TotalOp();
        
-       void Generate_Gammas(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs);
-
        void Build_Gamma_WithSpin(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs);
        
        void Build_Gamma_SpinFree(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs); 
