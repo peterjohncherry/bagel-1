@@ -15,10 +15,13 @@ class GammaInfo {
      std::shared_ptr<std::vector<bool>> spins ; 
      std::shared_ptr<std::vector<std::pair<std::pair<int,int>,std::pair<int,int>>>> ssector_sequence;
      std::pair<int,int> factor ;
+     std::string name;     
+     std::shared_ptr<std::vector<std::string>> one_el_gammas;
 
      GammaInfo(std::shared_ptr<std::vector<std::string>> id_ranges_in, std::shared_ptr<std::vector<bool>> aops_in) :
                id_ranges(id_ranges_in), aops(aops_in) {}; 
      GammaInfo(std::shared_ptr<std::vector<bool>> full_aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges, std::shared_ptr<std::vector<int>> idxs_pos);
+
 
      GammaInfo(){};
      ~GammaInfo(){};
@@ -45,7 +48,7 @@ class GammaIntermediate {
 };
 
 class GammaGenerator{ 
- 
+  friend GammaInfo; 
   public : 
 
     // variables
@@ -89,7 +92,7 @@ class GammaGenerator{
     std::string get_Aname(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges, 
                           std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
    
-    std::string get_gamma_name(std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> full_aops,
+    static std::string get_gamma_name(std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> full_aops,
                                std::shared_ptr<std::vector<int>> idxs_pos );
 
     bool RangeCheck(std::shared_ptr<std::vector<std::string>> full_id_ranges) ;

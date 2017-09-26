@@ -444,5 +444,79 @@ shared_ptr<vector<int>> get_unc_ids_from_deltas_ids_comparison(shared_ptr<vector
 //   cout << "unc_ids = [ " ;   for ( int pos : unc_ids) {cout << pos << " " ; } cout << "] " << endl;
    return make_shared<vector<int>>(unc_ids);
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+string get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_idx_ranges, 
+                                 shared_ptr<vector<pair<int,int>>> all_ctrs_pos ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  string  name = "";
+  for(string idx : *full_idxs)
+    name += idx;
+  name+="_"; 
+
+  for(string idx_range : *full_idx_ranges)
+    name += idx_range[0];
+
+  if (all_ctrs_pos->size() !=0 ){
+    name+="_"; 
+    for(pair<int,int> delta : *all_ctrs_pos)
+      name += to_string(delta.first)+to_string(delta.second);
+  }
+  return name;
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+string get_gamma_name(shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> aops_vec,
+                                      shared_ptr<vector<int>> idxs_pos ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  string  name = "";
+ 
+  if (idxs_pos->size() == 0 ) {
+     name = "totally_contracted" ;
+  } else {  
+    for (int pos : *idxs_pos ) 
+        name+=full_idx_ranges->at(pos)[0];
+    
+    name+='_';
+    for (int pos : *idxs_pos ) {
+      if(aops_vec->at(pos)){ 
+        name += '1';
+      } else {
+        name += '0';
+      }
+    } 
+  }
+  
+  return name;
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+string get_gamma_name(shared_ptr<vector<bool>> aops_vec, shared_ptr<vector<string>> full_idx_ranges,  
+                                      shared_ptr<vector<pair<int,int>>> deltas_pos ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  string  name = "";
+  
+  vector<bool> unc_get(full_idx_ranges->size(), true);
+  for ( pair<int,int > del : *deltas_pos ){  
+     unc_get[del.first] = false;
+     unc_get[del.second] = false;
+  }
+
+  for ( int ii = 0; ii != unc_get.size() ; ii++)
+    if (unc_get[ii]) 
+      name+=full_idx_ranges->at(ii)[0];
+
+  name+='_';
+  for ( int ii = 0; ii != unc_get.size() ; ii++){
+    if (unc_get[ii]){ 
+      if(aops_vec->at(ii)){ 
+        name += '1';
+      } else {
+        name += '0';
+      }
+    }
+  } 
+  
+  return name;
+};
+
 }//end of namespace:
 #endif

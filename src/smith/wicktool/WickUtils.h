@@ -57,6 +57,15 @@ namespace WickUtils {
 
   std::shared_ptr<std::vector<int>> get_unc_ids_from_deltas_ids(std::shared_ptr<std::vector<int>> ids , std::shared_ptr<std::vector<std::pair<int,int>>> deltas );
 
+  std::string get_Aname(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges, 
+                        std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
+
+  std::string get_gamma_name(std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> aops_vec,
+                             std::shared_ptr<std::vector<int>> idxs_pos );
+
+  std::string get_gamma_name(std::shared_ptr<std::vector<bool>> aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,  
+                             std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
+ 
 
   template<class DataType>
   void print_vecX(std::vector<DataType> invec, std::string name ="lazy"){

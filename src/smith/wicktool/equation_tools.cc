@@ -87,7 +87,6 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
 cout << "Equation_Computer::contract_on_same_tensor" <<endl; 
   shared_ptr<CtrTensorPart<double>> CTP = CTP_map->at(Tname); cout << "got " << CTP->name << " info" << endl;
   shared_ptr<Tensor_<double>> CTP_data = get_block_Tensor(Tname); cout << "got " << CTP->name << " data" << endl;
-  shared_ptr<Tensor_<double>>  T_out;  
 
   cout << "unc_pos = ";
   auto T1_new_order = make_shared<vector<int>>(0);
@@ -112,6 +111,7 @@ cout << "Equation_Computer::contract_on_same_tensor" <<endl;
   auto Tout_unc_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);
   Tout_unc_rngs->insert(Tout_unc_rngs->end(), T1_new_rngs->begin(), T1_new_rngs->end()-2);
 
+  shared_ptr<Tensor_<double>>  T_out;  
   {
   auto Tout_unc_rngs_raw = make_shared<vector<IndexRange>>(0); 
   for (auto id_rng : *Tout_unc_rngs)
@@ -138,7 +138,7 @@ cout << "Equation_Computer::contract_on_same_tensor" <<endl;
     ctr_block_size = T1_new_rng_blocks->back().size(); 
     T1_unc_block_size = get_block_size( T1_new_rng_blocks, 0, T1_new_rng_blocks->size()); 
     
-    std::unique_ptr<double[]>  T1_data_org(new double[ctr_block_size*T1_unc_block_size]);
+    std::unique_ptr<double[]> T1_data_org(new double[ctr_block_size*T1_unc_block_size]);
     std::unique_ptr<double[]> T1_data_new(new double[ctr_block_size*T1_unc_block_size]);
     T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
 
@@ -210,9 +210,8 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   auto T1_org_rngs = Get_Bagel_const_IndexRanges(CTP1->id_ranges) ;
   auto T2_org_rngs = Get_Bagel_const_IndexRanges(CTP2->id_ranges) ;
 
-  shared_ptr<Tensor_<double>> T_out;  
 
-  cout << " A1" ; cout.flush();
+  cout << " A1" ; cout.flush(); cout << endl;
   auto T1_new_order = make_shared<vector<int>>(0);
   for (int ii = 0; ii !=CTP1->unc_pos->size(); ii++)
     if (CTP1->unc_pos->at(ii) != ctr_todo_rel.first)
@@ -222,13 +221,12 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
 
   cout << "T1_new_order = [" ; for (auto elem : *T1_new_order) { cout << elem << " " ; } cout << " ]"<< endl;
     
-  cout << " A2" ; cout.flush();
+  cout << " A2" ; cout.flush(); cout << endl;
   auto T1_new_rngs = reorder_vector(T1_new_order, T1_org_rngs);
   auto maxs1 = get_sizes(T1_new_rngs);
   int T1_num_total_blocks = accumulate(maxs1->begin(), maxs1->end(), 1, multiplies<int>());
  
-  auto T2_new_order = make_shared<vector<int>>(T2_org_rngs->size());
-  T2_new_order->at(0) = ctr_todo_rel.second;
+  auto T2_new_order = make_shared<vector<int>>(1, ctr_todo_rel.second);
   for (int ii = 0; ii !=CTP2->unc_pos->size(); ii++)
     if (CTP2->unc_pos->at(ii) != ctr_todo_rel.second)
       T2_new_order->push_back(CTP2->unc_pos->at(ii));
@@ -246,6 +244,7 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   Tout_unc_rngs->insert(Tout_unc_rngs->end(), T2_new_rngs->begin()+1, T2_new_rngs->end());
 
   cout << " A6"; cout.flush();
+  shared_ptr<Tensor_<double>> T_out;  
   {
   auto Tout_unc_rngs_raw = make_shared<vector<IndexRange>>(0); 
   for (auto id_rng : *Tout_unc_rngs)
@@ -253,6 +252,8 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   
   T_out = make_shared<Tensor_<double>>(*Tout_unc_rngs_raw); 
   }
+
+  T_out->allocate();
 
   cout << " A7"; cout.flush();
   //loops over all index blocks of T1 and  T2; inner loop for T2 has same final index as T2 due to contraction
@@ -271,19 +272,15 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
     
     ctr_block_size = T1_new_rng_blocks->back().size(); 
     T1_unc_block_size = get_block_size( T1_new_rng_blocks, 0, T1_new_rng_blocks->size()); 
-    
-    std::unique_ptr<double[]> T1_data_org(new double[ get_block_size(T1_org_rng_blocks, 0, T1_org_rng_blocks->size()) ]);
+   
+    size_t T1_org_size =  get_block_size(T1_org_rng_blocks, 0, T1_org_rng_blocks->size()); cout << " T1_org_size = " << T1_org_size << endl; 
+    size_t T1_new_size =  get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()); cout << " T1_new_size = " << T1_new_size << endl; 
 
-    std::unique_ptr<double[]> T1_data_new(new double[ get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()) ]);
+    std::unique_ptr<double[]> T1_data_org(new double[ T1_org_size  ]);
+    std::unique_ptr<double[]> T1_data_new(new double[ T1_new_size  ]);
+
     T1_data_new = CTP1_data->get_block(*T1_org_rng_blocks);
-    sort_indices<0,1,2,3,0,1,1,1>(T1_data_org, T1_data_new, 
-                                                 T1_new_rng_block_sizes->at(0),
-                                                 T1_new_rng_block_sizes->at(1),
-                                                 T1_new_rng_block_sizes->at(2),
-                                                 T1_new_rng_block_sizes->at(3));
-
-    //sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
-  //  T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
+    T1_data_new = reorder_tensor_data( T1_data_org.get(), T1_new_size,  *T1_new_order, *T1_new_rng_block_sizes); 
 
     shared_ptr<vector<int>> T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size()-1, 0);
 
@@ -294,22 +291,19 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
 
       cout << " A10d1" ; cout.flush();
       auto T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
-      std::unique_ptr<double[]> T2_data_new(new double[ get_block_size(T2_new_rng_blocks, 0, T2_new_rng_blocks->size()) ]);
+ 
+      size_t T2_new_size =  get_block_size(T2_new_rng_blocks, 0, T2_new_rng_blocks->size());
+      std::unique_ptr<double[]> T2_data_new(  new double[ T2_new_size ]);
 
       {
         auto T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
-        cout << " A10f" ; cout.flush();
-        
         auto T2_new_rng_block_sizes = get_sizes(T2_new_rng_blocks);
-        cout << " A10g" ; cout.flush();
         T_out_rng_block->insert(T_out_rng_block->end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
-        cout << " A10h" ; cout.flush();
-        
         T2_unc_block_size = get_block_size( T2_new_rng_blocks, 0, T2_new_rng_blocks->size()); 
-        cout << " A10i" ; cout.flush();
         
         auto T2_data_org = CTP2_data->get_block(*T2_org_rng_blocks);
-        T2_data_new = reorder_tensor_data(T2_data_org.get(), get_block_size(T2_new_rng_blocks, 0, T2_new_rng_blocks->size()), *T2_new_order, *T2_new_rng_block_sizes); 
+        cout << " A10i" ; cout.flush();
+        T2_data_new = reorder_tensor_data(T2_data_org.get(), T2_new_size, *T2_new_order, *T2_new_rng_block_sizes); 
       }
       cout << " A11" ; cout.flush();
       
@@ -322,12 +316,10 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
 
       cout << " A11b" ; cout.flush();
       T_out->put_block( T_out_data, *T_out_rng_block );
-      cout << " A11c" ; cout.flush();
-      T2_rng_block_pos->pop_back(); //remove last index; contracted index is cycled in T1 loop
-      cout << " A11d" ; cout.flush();
 
-      cout << " A12" ; cout.flush();
-      fvec_cycle(T2_rng_block_pos, maxs2 );
+      //remove last index; contracted index is cycled in T1 loop
+      T2_rng_block_pos->pop_back(); 
+      fvec_cycle(T2_rng_block_pos, maxs2 ); cout << "T2_rng_block_pos  = " << T2_rng_block_pos << endl;
     }
     fvec_cycle(T1_rng_block_pos, maxs1 );
   cout << " A13"; cout.flush();
@@ -342,22 +334,23 @@ shared_ptr<vector<shared_ptr<Tensor_<double>>>>
 Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_name){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Equation_Computer::Equation_Computer::get_gammas"  << endl;
+   cout << "Gamma name = " << gamma_name << endl;
 
 
+  //Gets list of necessary gammas which are needed by truncating the gamma_range vector
+  //e.g. [a,a,a,a,a,a] --> [a,a,a,a] --> [a,a]
   shared_ptr<vector<string>> gamma_ranges_str  = GammaMap->at(gamma_name)->id_ranges;
   auto gamma_ranges =  vector<shared_ptr<vector<IndexRange>>>(gamma_ranges_str->size()/2);
-  for (int ii = 0 ; ii !=gamma_ranges.size()/2; ii++ ){ 
+  for (int ii = 0 ; ii !=gamma_ranges.size(); ii++ ){ 
     auto gamma_ranges_str_tmp = make_shared<vector<string>>(gamma_ranges_str->begin(), gamma_ranges_str->end()-ii*2);
     gamma_ranges[ii] = Get_Bagel_IndexRanges( gamma_ranges_str_tmp); 
     cout << "gamma_ranges["<<ii<<"]  = [ "; cout.flush();
     for (auto elem : *gamma_ranges_str_tmp){  cout << elem << " " ;} cout<<  "]"<< endl;
   } 
   
-  //A fudge, needs to be changed so gammas are tensors 
+  //Gamma data in vector format 
   shared_ptr<vector<shared_ptr<VectorB>>> gamma_data_vec = compute_gammas( MM, NN ) ;
-
   auto gamma_tensors = make_shared<vector<shared_ptr<Tensor_<double>>>>(0);
- 
   for ( int ii = gamma_ranges.size()-1; ii != -1;  ii-- ) {
  
      cout << "get_gammas range_lengths = ";
@@ -386,22 +379,19 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_n
 
        cout << " gamma_block_size = " << gamma_block_size << endl;
        cout << " gamma_block_pos = "  << gamma_block_pos << endl;
-
-       double bob[gamma_block_size];        
-       for (int qq = 0 ; qq != gamma_block_size; qq++ ) { bob[qq] = 1;}
-
        cout <<" gamma_data_vec->at("<<ii<<")->size() = "  << gamma_data_vec->at(ii)->size() << endl; 
 
        cout << endl << gamma_data_vec->size()  << gamma_data_vec->size() << endl; 
        unique_ptr<double[]> gamma_data_block(new double[gamma_block_size])  ;
-       copy_n(gamma_data_block.get(), gamma_block_size, gamma_data_vec->at(ii)->data());
+//       copy_n(gamma_data_block.get(), gamma_block_size, gamma_data_vec->at(ii)->data());
        
        cout << " got gamma data successfully " << endl;
-       new_gamma_tensor.put_block( gamma_data_block, gamma_id_blocks);
+    //   new_gamma_tensor.put_block( gamma_data_block, gamma_id_blocks);
        cout << " put gamma data successfully " << endl;
      
      } while (fvec_cycle(block_pos, range_lengths, mins ));
-     gamma_tensors->push_back(make_shared<Tensor_<double>>(new_gamma_tensor));
+     shared_ptr<Tensor_<double>> new_gamma_tensor_ptr = make_shared<Tensor_<double>>(new_gamma_tensor);
+     gamma_tensors->push_back(new_gamma_tensor_ptr);
   }
   cout << "out of loop" << endl;
  
@@ -542,43 +532,8 @@ Equation_Computer::Equation_Computer::compute_gammas(const int MM, const int NN 
   cc_->set_det(det_); 
 
   auto gamma_vec = make_shared<vector<shared_ptr<VectorB>>>(vector<shared_ptr<VectorB>> { gamma1, gamma2, gamma3}) ;
-
-  int n1 = norb_;  
-  int n2 = norb_*norb_;  
-  int n3 = n2*norb_;  
-  int n4 = n3*norb_;  
-  int n5 = n4*norb_;  
-                        
-  cout << endl<< "gamma3 " << endl;
-  for (int i = 0; i != norb_; ++i) 
-    for (int j = 0; j != norb_; ++j) 
-      for (int k = 0; k != norb_; ++k) 
-        for (int l = 0; l != norb_; ++l) 
-          for (int m = 0; m != norb_; ++m) {
-            cout << endl << i << " " << j << " "<<  k << " " << l << " " << m << "  ";
-            for (int n = 0; n != norb_; ++n){
-              cout << *(gamma3->data()+(i*n5 + j*n4 + k*n3 + l*n2 + m*n1 +n )) << " ";
-             }
-          }
-
-  cout <<endl<<"gamma2 " << endl;
-  for (int k = 0; k != norb_; ++k) 
-    for (int l = 0; l != norb_; ++l) 
-      for (int m = 0; m != norb_; ++m) {
-        cout << endl << k << " " << l << " " << m << "  ";
-        for (int n = 0; n != norb_; ++n){ 
-          cout << *(gamma2->data()+ (k*n3 + l*n2 + m*n1 +n))  << " " ;
-        }                        
-      }
-
-  cout << endl << "gamma1 " << endl;
-  for (int m = 0; m != norb_; ++m) {
-    cout << endl << m << " " ;
-    for (int n = 0; n != norb_; ++n){ 
-      cout << *(gamma1->data()+ ( m*n1 +n )) << " "; 
-    }
-  }                    
-  return gamma_vec;
+                    
+ return gamma_vec;
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -672,9 +627,8 @@ Equation_Computer::Equation_Computer::compute_gamma12_last_step(shared_ptr<const
     const int n4 = n2*n2;
  
     //Very bad way of getting gamma3  [sum_{K}<I|i*j|K>.[sum_{L}<K|k*l|L>.<L|m*n|J>]]
-    {
-    Matrix gamma3_klmn(n2, n2);// = group(group(*gamma2, 2,4), 0,2);
     for ( int mn = 0; mn!=n2 ; mn++){
+      Matrix gamma3_klmn(n2, n2);
       int m = mn/n1;
       int n = mn-(m*n1);
       auto dket_klmn = make_shared<Dvec>(dket->det(), n2);
@@ -687,17 +641,6 @@ Equation_Computer::Equation_Computer::compute_gamma12_last_step(shared_ptr<const
         copy_n(dbra->data(kl)->data(), nri, dket_data_klmn->element_ptr(0, kl));
       btas::contract(1.0, *dbra_data, {1,0}, *dket_data_klmn, {1,2}, 0.0, gamma3_klmn, {0,2});
        
-      cout << endl <<  "dket_data " << endl;
-      for (int x = 0; x != norb_; x++) {
-        for (int y = 0; y != norb_; y++){ 
-          cout <<   x << "  " << y << " : ";
-          for (int c = 0; c != nri; c++){ 
-            cout << *(dket_klmn->data( x*n1 + y )->data()+c)  << " " ;
-          }
-          cout << endl;
-        }                        
-      }
-
       //copy gamma3_klmn block into gamma3 and undo transpose of dbra in btas::contract
       unique_ptr<double[]> buf(new double[norb_*norb_]);
       for (int k = 0; k != n1; ++k) {
@@ -706,7 +649,6 @@ Equation_Computer::Equation_Computer::compute_gamma12_last_step(shared_ptr<const
           blas::transpose(buf.get(), n1, n1, gamma3->element_ptr(0,0,k,l,m,n));
         }
       }
-    }
     }
 
     auto gamma2t = group(group(*gamma2, 2,4), 0,2);
@@ -995,3 +937,39 @@ cout << "Equation_Computer::reorder_tensor_data" << endl;
 
 
 #endif
+
+ // int n1 = norb_;  
+ // int n2 = norb_*norb_;  
+ // int n3 = n2*norb_;  
+ // int n4 = n3*norb_;  
+ // int n5 = n4*norb_;  
+ //                       
+//  cout << endl<< "gamma3 " << endl;
+//  for (int i = 0; i != norb_; ++i) 
+//    for (int j = 0; j != norb_; ++j) 
+//      for (int k = 0; k != norb_; ++k) 
+//        for (int l = 0; l != norb_; ++l) 
+//          for (int m = 0; m != norb_; ++m) {
+//            cout << endl << i << " " << j << " "<<  k << " " << l << " " << m << "  ";
+//            for (int n = 0; n != norb_; ++n){
+//              cout << *(gamma3->data()+(i*n5 + j*n4 + k*n3 + l*n2 + m*n1 +n )) << " ";
+//             }
+//          }
+
+ // cout <<endl<<"gamma2 " << endl;
+ // for (int k = 0; k != norb_; ++k) 
+ //   for (int l = 0; l != norb_; ++l) 
+ //     for (int m = 0; m != norb_; ++m) {
+ //       cout << endl << k << " " << l << " " << m << "  ";
+ //       for (int n = 0; n != norb_; ++n){ 
+ //         cout << *(gamma2->data()+ (k*n3 + l*n2 + m*n1 +n))  << " " ;
+ ////       }                        
+ ////     }
+ ////
+ //// cout << endl << "gamma1 " << endl;
+ // for (int m = 0; m != norb_; ++m) {
+ //   cout << endl << m << " " ;
+ //   for (int n = 0; n != norb_; ++n){ 
+ //     cout << *(gamma1->data()+ ( m*n1 +n )) << " "; 
+ //   }
+ // }

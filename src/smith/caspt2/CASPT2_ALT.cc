@@ -135,9 +135,19 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   auto Eqn_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Eqn, CTP_data_map, range_conversion_map );
 
   //Get Amap for each gamma
+  vector<string> Gname_vec(Eqn->G_to_A_map->size());
+  {
+  compare_string_length csl;
+  int ii = 0 ; 
   for ( auto G_to_A_map_it : *(Eqn->G_to_A_map) ){
-    //Calculate Gamma                           
-    string Gamma_name = G_to_A_map_it.first;
+    Gname_vec[ii] = G_to_A_map_it.first;
+    ii++;
+  }
+  std::sort(Gname_vec.begin(), Gname_vec.end(), csl); 
+  cout << "sorted gamma_names = [ "; cout.flush();
+  for (auto gname_ : Gname_vec ) {cout << gname_ << " " ; cout.flush(); } cout << "]" << endl;  
+  }
+  for ( string Gamma_name : Gname_vec ) {
     auto gamma_tensors = Eqn_computer->get_gammas( 0, 0, Gamma_name );
 
     // Build A_tensor to hold sums of different A-tensors
@@ -146,7 +156,8 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 
     //auto A_contrib_data = make_shared<Tensor_<double>();
     // Loop through A-tensors needed for this gamma,
-    for ( auto A_contrib : *(G_to_A_map_it.second)){
+    for ( auto A_contrib : *(Eqn->G_to_A_map->at(Gamma_name))){
+
       pair<int,int> A_factor = A_contrib.second;
       
       cout << "=========================================================================================================" << endl;
