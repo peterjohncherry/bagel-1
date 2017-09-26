@@ -39,8 +39,6 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
   
    if(  CTP_data_map->find(Tname) != CTP_data_map->end())
      return CTP_data_map->at(Tname);
- 
-
 
    shared_ptr<vector<string>>     unc_ranges = CTP_map->at(Tname)->id_ranges;  
    cout << "gamma unc_ranges = [ " << endl;
@@ -550,7 +548,7 @@ Equation_Computer::Equation_Computer::compute_gammas(const int MM, const int NN 
   int n4 = n3*norb_;  
   int n5 = n4*norb_;  
                         
-  cout << "gamma3 " << endl;
+  cout << endl<< "gamma3 " << endl;
   for (int i = 0; i != norb_; ++i) 
     for (int j = 0; j != norb_; ++j) 
       for (int k = 0; k != norb_; ++k) 
@@ -562,7 +560,7 @@ Equation_Computer::Equation_Computer::compute_gammas(const int MM, const int NN 
              }
           }
 
-  cout << "gamma2 " << endl;
+  cout <<endl<<"gamma2 " << endl;
   for (int k = 0; k != norb_; ++k) 
     for (int l = 0; l != norb_; ++l) 
       for (int m = 0; m != norb_; ++m) {
@@ -572,7 +570,7 @@ Equation_Computer::Equation_Computer::compute_gammas(const int MM, const int NN 
         }                        
       }
 
-  cout << "gamma1 " << endl;
+  cout << endl << "gamma1 " << endl;
   for (int m = 0; m != norb_; ++m) {
     cout << endl << m << " " ;
     for (int n = 0; n != norb_; ++n){ 
@@ -637,7 +635,8 @@ Equation_Computer::Equation_Computer::compute_gamma12_last_step(shared_ptr<const
   cout << "compute_gamma12_last_step" << endl;
 
   const int nri = cibra->asize()*cibra->lenb();
-  const int ij  = norb_*norb_;
+  const int n1 = norb_;  
+  const int n2 = n1*norb_;  
  
   // gamma1 c^dagger <I|\hat{E}|0>
   // gamma2 \sum_I <0|\hat{E}|I> <I|\hat{E}|0>
@@ -650,8 +649,8 @@ Equation_Computer::Equation_Computer::compute_gamma12_last_step(shared_ptr<const
     auto cibra_data = make_shared<VectorB>(nri);
     copy_n(cibra->data(), nri, cibra_data->data());
 
-    auto dket_data = make_shared<Matrix>(nri, ij);
-    for (int i = 0; i != ij; ++i)
+    auto dket_data = make_shared<Matrix>(nri, n2);
+    for (int i = 0; i != n2; ++i)
       copy_n(dket->data(i)->data(), nri, dket_data->element_ptr(0, i));
  
     auto gamma1t = btas::group(*gamma1,0,2);
@@ -659,8 +658,8 @@ Equation_Computer::Equation_Computer::compute_gamma12_last_step(shared_ptr<const
 
     auto dbra_data = dket_data;
     if (dbra != dket) {
-      dbra_data = make_shared<Matrix>(nri, ij);
-      for (int i = 0; i != ij; ++i)
+      dbra_data = make_shared<Matrix>(nri, n2);
+      for (int i = 0; i != n2; ++i)
         copy_n(dbra->data(i)->data(), nri, dbra_data->element_ptr(0, i));
     }
 
@@ -668,37 +667,45 @@ Equation_Computer::Equation_Computer::compute_gamma12_last_step(shared_ptr<const
     const char   transb = 'T';
     const double alpha = 1.0;
     const double beta = 0.0; 
-    const int n1 = norb_;  
-    const int n2 = n1*norb_;  
     const int n3 = n2*norb_;  
-    const int n4 = ij*ij;
+    const int n4 = n2*n2;
  
     //Very bad way of getting gamma3  [sum_{K}<I|i*j|K>.[sum_{L}<K|k*l|L>.<L|m*n|J>]]
-    for ( int q = 0; q!=ij ; q++){
-      int i = q/n1;
-      int j = q-(i*n1);
-      auto dket_ijkl = make_shared<Dvec>(dket->det(), ij);
-      sigma_2a1(dket->data(q), dket_ijkl);
-      sigma_2a2(dket->data(q), dket_ijkl);
+    {
+    Matrix gamma3_klmn(n2, n2);// = group(group(*gamma2, 2,4), 0,2);
+    for ( int mn = 0; mn!=n2 ; mn++){
+      int m = mn/n1;
+      int n = mn-(m*n1);
+      auto dket_klmn = make_shared<Dvec>(dket->det(), n2);
+      sigma_2a1(dket->data(mn), dket_klmn);
+      sigma_2a2(dket->data(mn), dket_klmn);
 
+      //make gamma3_klmn block
+      auto dket_data_klmn = make_shared<Matrix>(nri, n2);
+      for (int kl = 0; kl != n2; kl++)
+        copy_n(dbra->data(kl)->data(), nri, dket_data_klmn->element_ptr(0, kl));
+      btas::contract(1.0, *dbra_data, {1,0}, *dket_data_klmn, {1,2}, 0.0, gamma3_klmn, {0,2});
+       
       cout << endl <<  "dket_data " << endl;
-      for (int m = 0; m != norb_; m++) {
-        for (int n = 0; n != norb_; n++){ 
-          cout <<   m << "  " << n << " : ";
+      for (int x = 0; x != norb_; x++) {
+        for (int y = 0; y != norb_; y++){ 
+          cout <<   x << "  " << y << " : ";
           for (int c = 0; c != nri; c++){ 
-            cout << *(dket_ijkl->data( m*n1 + n )->data()+c)  << " " ;
+            cout << *(dket_klmn->data( x*n1 + y )->data()+c)  << " " ;
           }
           cout << endl;
         }                        
       }
 
-      for ( int r = 0; r!=ij ; r++){
-        int k = r/n1 ;    
-        int l = r-k*n1 ;
-        cout << " i, j, k, l = " <<  i << j << k << l << endl;
-        dgemm_( &transa, &transb, &n2, &n2, &nri, &alpha, dket_ijkl->data(0)->data(),
-                &n2, dbra->data(), &n2, &beta, gamma3->element_ptr(0,0,i,j,k,l), &n2);
+      //copy gamma3_klmn block into gamma3 and undo transpose of dbra in btas::contract
+      unique_ptr<double[]> buf(new double[norb_*norb_]);
+      for (int k = 0; k != n1; ++k) {
+        for (int l = 0; l != n1; ++l) {
+          copy_n(gamma3_klmn.data(), n2, buf.get());
+          blas::transpose(buf.get(), n1, n1, gamma3->element_ptr(0,0,k,l,m,n));
+        }
       }
+    }
     }
 
     auto gamma2t = group(group(*gamma2, 2,4), 0,2);
