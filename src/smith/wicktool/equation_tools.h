@@ -7,6 +7,8 @@
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
 #include <src/util/f77.h>
+#include <src/util/kramers.h>
+#include <src/smith/storage.h>
 
 namespace bagel {
 namespace SMITH { 
@@ -14,6 +16,8 @@ namespace SMITH {
 namespace Equation_Computer { 
 
 class Equation_Computer { 
+
+
     public: 
     Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>> >> CTP_data_map,
@@ -83,9 +87,17 @@ class Equation_Computer {
     template<class DataType>
     std::unique_ptr<DataType[]>
     reorder_tensor_data(const DataType* orig_data,  size_t data_size, std::vector<int>  new_order_vec, std::vector<size_t> new_sizes_vec ) ;
+   
+    
+    template<class DataType>
+    std::unique_ptr<DataType[]>
+    reorder_tensor_data(const DataType* orig_data, std::shared_ptr<std::vector<int>>  new_order_vec, std::shared_ptr<std::vector<Index>> orig_index_blocks ) ;
+    
 
     
-    
+    template<int N> 
+    std::pair<std::vector<int>, std::pair<double,bool>> find_permutation(const KTag<N>& tag) const ;
+
     std::unique_ptr<double[]> get_block_of_data( double* data_ptr, std::shared_ptr<std::vector<IndexRange>> id_ranges, 
                                                               std::shared_ptr<std::vector<int>> block_pos) ;
 

@@ -414,7 +414,7 @@ cout << "GammaGenerator::get_gamma_name" << endl;
   string  name = "";
  
   if (idxs_pos->size() == 0 ) {
-     name = "totally_contracted" ;
+     name = "ID" ;
   } else {  
     for (int pos : *idxs_pos ) 
         name+=full_idx_ranges->at(pos)[0];

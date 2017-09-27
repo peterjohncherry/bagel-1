@@ -97,7 +97,7 @@ class CASPT2_ALT {
 
     struct compare_string_length {
       bool operator()(const std::string& first, const std::string& second) {
-          return first.size() < second.size();
+          return first.size() > second.size();
       }
     };
 
