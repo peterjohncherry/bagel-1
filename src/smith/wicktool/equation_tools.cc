@@ -324,12 +324,13 @@ shared_ptr<vector<int>> Equation_Computer::Equation_Computer::put_ctr_at_back(sh
  cout << "ctr_pos = "<< ctr_pos<< endl; 
   vector<int> new_pos(orig_pos->size());
   
+  vector<int>::iterator new_pos_it = new_pos.begin();
   for (int ii = 0; ii !=orig_pos->size(); ii++)
     if (orig_pos->at(ii) != ctr_pos ){
       cout << "orig_pos->at("<<ii<<") = "<<  orig_pos->at(ii) << " != " <<ctr_pos << " " <<  endl;
-      new_pos[ii] = orig_pos->at(ii);
+      *new_pos_it++ = orig_pos->at(ii);
     }
-  new_pos.back() = ctr_pos;
+  *new_pos_it = ctr_pos;
 
   return make_shared<vector<int>>(new_pos);
 }
