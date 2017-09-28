@@ -9,6 +9,7 @@
 #include <src/util/f77.h>
 #include <src/util/kramers.h>
 #include <src/smith/storage.h>
+#include <src/smith/wicktool/tensor_sorter.h>
 
 namespace bagel {
 namespace SMITH { 
@@ -94,6 +95,10 @@ class Equation_Computer {
     reorder_tensor_data(const DataType* orig_data, std::shared_ptr<std::vector<int>>  new_order_vec, std::shared_ptr<std::vector<Index>> orig_index_blocks ) ;
     
 
+    template<class DataType>
+    std::unique_ptr<DataType[]>
+    reorder_tensor_data_X( const DataType* orig_data, std::shared_ptr<std::vector<int>>  new_order_vec,
+                           std::shared_ptr<std::vector<Index>> orig_index_blocks ) ;
     
     template<int N> 
     std::pair<std::vector<int>, std::pair<double,bool>> find_permutation(const KTag<N>& tag) const ;

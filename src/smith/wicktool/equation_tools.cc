@@ -5,6 +5,7 @@
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
+using namespace bagel::SMITH::Tensor_Sorter;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info_in,
@@ -140,7 +141,7 @@ cout << "Equation_Computer::contract_on_same_tensor" <<endl;
     
     std::unique_ptr<double[]> T1_data_org(new double[ctr_block_size*T1_unc_block_size]);
     std::unique_ptr<double[]> T1_data_new(new double[ctr_block_size*T1_unc_block_size]);
-    T1_data_new = reorder_tensor_data( T1_data_org.get(), get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()),  *T1_new_order, *T1_new_rng_block_sizes); 
+    T1_data_new = reorder_tensor_data_X( T1_data_org.get(), T1_new_order, T1_org_rng_blocks); 
 
     const int one = 1;
     const double one_d = 1.0;
@@ -271,17 +272,15 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
     T_out_rng_block->insert(T_out_rng_block->end(), T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
     
     ctr_block_size = T1_new_rng_blocks->back().size(); 
-    T1_unc_block_size = get_block_size( T1_new_rng_blocks, 0, T1_new_rng_blocks->size()); 
+    T1_unc_block_size = get_block_size( T1_new_rng_blocks, 0, T1_new_rng_blocks->size()-1); 
    
-    size_t T1_org_size =  get_block_size(T1_org_rng_blocks, 0, T1_org_rng_blocks->size()); cout << " T1_org_size = " << T1_org_size << endl; 
-    size_t T1_new_size =  get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()); cout << " T1_new_size = " << T1_new_size << endl; 
+    size_t T1_org_size =  get_block_size(T1_org_rng_blocks, 0, T1_org_rng_blocks->size()-1); cout << " T1_org_size = " << T1_org_size << endl; 
+    size_t T1_new_size =  get_block_size(T1_new_rng_blocks, 0, T1_new_rng_blocks->size()-1); cout << " T1_new_size = " << T1_new_size << endl; 
 
     std::unique_ptr<double[]> T1_data_org(new double[ T1_org_size  ]);
     std::unique_ptr<double[]> T1_data_new(new double[ T1_new_size  ]);
 
-    // T1_data_new = CTP1_data->get_block(*T1_org_rng_blocks);
-    // T1_data_new = reorder_tensor_data( T1_data_org.get(), T1_new_size,  *T1_new_order, *T1_new_rng_block_sizes); 
-    T1_data_new = reorder_tensor_data(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
+    T1_data_new = reorder_tensor_data_X(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
 
     shared_ptr<vector<int>> T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size()-1, 0);
 
@@ -293,18 +292,18 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
       cout << " A10d1" ; cout.flush();
       auto T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
  
-      size_t T2_new_size =  get_block_size(T2_new_rng_blocks, 0, T2_new_rng_blocks->size());
+      size_t T2_new_size =  get_block_size(T2_new_rng_blocks, 0, T2_new_rng_blocks->size()-1);
       std::unique_ptr<double[]> T2_data_new(  new double[ T2_new_size ]);
 
       {
         auto T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
         auto T2_new_rng_block_sizes = get_sizes(T2_new_rng_blocks);
         T_out_rng_block->insert(T_out_rng_block->end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
-        T2_unc_block_size = get_block_size( T2_new_rng_blocks, 0, T2_new_rng_blocks->size()); 
+        T2_unc_block_size = get_block_size( T2_new_rng_blocks, 0, T2_new_rng_blocks->size()-1); 
         
         auto T2_data_org = CTP2_data->get_block(*T2_org_rng_blocks);
         cout << " A10i" ; cout.flush();
-        T2_data_new = reorder_tensor_data(T2_data_org.get(), T2_new_size, *T2_new_order, *T2_new_rng_block_sizes); 
+        T2_data_new = reorder_tensor_data_X(T2_data_org.get(), T2_new_order, T2_org_rng_blocks); 
       }
       cout << " A11" ; cout.flush();
       
@@ -793,8 +792,8 @@ shared_ptr<vector<size_t>> Equation_Computer::Equation_Computer::get_sizes(share
 size_t Equation_Computer::Equation_Computer::get_block_size(shared_ptr<vector<Index>> Idvec, int startpos, int endpos) {
 ////////////////////////////////////////////////////////////////////////////////////////
   size_t block_size = 1; 
-//  for( int ii = startpos ; ii!=(endpos+1); ii++ ) 
-//   block_size *= Idvec->at(ii).size();
+  for( int ii = startpos ; ii!=(endpos+1); ii++ ) 
+    block_size *= Idvec->at(ii).size();
   return  block_size;
 }
 
@@ -848,223 +847,39 @@ shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::reorder_vector(s
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 unique_ptr<DataType[]>
-Equation_Computer::Equation_Computer::reorder_tensor_data(const DataType* orig_data, shared_ptr<vector<int>>  new_order_vec,
-                                                           shared_ptr<vector<Index>> orig_index_blocks ) {
+Equation_Computer::Equation_Computer::reorder_tensor_data_X(const DataType* orig_data, shared_ptr<vector<int>>  new_order_vec,
+                                                            shared_ptr<vector<Index>> orig_index_blocks ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//void sort_indices(const std::array<int,N>& o, const double a, const double b, const DataType* in, DataType* out, const std::array<int,N>& d) {
-cout << "Equation_Computer::reorder_tensor_data" << endl;
-  const double fac1= 1.0;
-  const double fac2= 1.0;
- 
-  size_t tag = generate_hash_key(*orig_index_blocks);
-  pair<vector<int>, pair<double,bool>> trans_info; // = find_permutation<double>(tag);
-  vector<int> trans_info_vec = trans_info.first;
+  
+  shared_ptr<vector<size_t>> rlen = get_sizes(orig_index_blocks);
+  shared_ptr<vector<size_t>> new_order_st = make_shared<vector<size_t>>(new_order_vec->size());   
+  size_t block_size = get_block_size(orig_index_blocks, 0 , (orig_index_blocks->size()-1));
+  array<int,4> sort_options = {0,1,1,1};
 
-  size_t data_size = 1;
-  for ( auto elem : *orig_index_blocks)
-    data_size*=elem.size();         
+  unique_ptr<DataType[]> reordered_data(new DataType[block_size]);
 
+   for ( int ii = 0 ; ii != new_order_vec->size(); ii++) 
+     new_order_st->at(ii) = new_order_vec->at(ii);
 
-  unique_ptr<DataType[]> reordered_data(new DataType[data_size]);
-  cout << "R1" << endl;
-  // Converts to arrays; sort_indices fixed size (defined in template) arrays, so I now have this ugly mess,
-  if (new_order_vec->size() == 2 ){
-    array<int,2> new_order_arr; 
-    array<int,2> trans_info_arr; 
-    for (auto ii = 0; ii != new_order_vec->size(); ii++)
-      new_order_arr[ii] = new_order_vec->at(ii);
-    for (auto ii = 0; ii != trans_info_vec.size(); ii++)
-      trans_info_arr[ii] = trans_info_vec[ii];
-    sort_indices( trans_info_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
+  Tensor_Sorter::Tensor_Sorter<double> TS ;
 
+  size_t num_ids =  orig_index_blocks->size();
+  if ( num_ids == 2) { 
+    TS.sort_indices_2( new_order_st, rlen, sort_options, orig_data, reordered_data.get() ) ;
+  } else if ( num_ids == 3 ) {
+    TS.sort_indices_3( new_order_st, rlen, sort_options, orig_data, reordered_data.get() ) ;
+  } else if ( num_ids == 4 ) {
+    TS.sort_indices_4( new_order_st, rlen, sort_options, orig_data, reordered_data.get() ) ;
+  } else if ( num_ids == 5 ) {
+    TS.sort_indices_5( new_order_st, rlen, sort_options, orig_data, reordered_data.get() ) ;
+  } else if ( num_ids == 6 ) {
+    TS.sort_indices_6( new_order_st, rlen, sort_options, orig_data, reordered_data.get() ) ;
+  } else if ( num_ids == 7 ) {
+    TS.sort_indices_7( new_order_st, rlen, sort_options, orig_data, reordered_data.get() ) ;
   }
-  else if (new_order_vec->size() == 3 ){
-      array<int,3> new_order_arr;  
-      array<int,3> trans_info_arr; 
-      for (auto ii = 0; ii != new_order_vec->size(); ii++)
-        new_order_arr[ii] = new_order_vec->at(ii);
-      for (auto ii = 0; ii != trans_info_vec.size(); ii++)
-        trans_info_arr[ii] = trans_info_vec[ii];
-    sort_indices( trans_info_arr, fac1, fac2, orig_data, reordered_data.get(), new_order_arr) ;
- 
-  } else if (new_order_vec->size() == 4 ){
-  cout << endl <<  "R1"; cout.flush();
-      array<int,4> new_order_arr;  
-      array<int,4> trans_info_arr; 
-    
-      for (auto ii = 0; ii != new_order_vec->size(); ii++){
-        new_order_arr[ii] = new_order_vec->at(ii);
-        cout << new_order_arr[ii]  << " " ;
-      }
-      cout <<endl;
-  cout << "R2 "; cout.flush();
-     for (auto ii = 0; ii != trans_info_vec.size(); ii++)
-        trans_info_arr[ii] = trans_info_vec[ii];
 
-  cout << "R3 "; cout.flush();
-    sort_indices( trans_info_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
-
-  cout << "R4 "; cout.flush();
- 
-  } else if (new_order_vec->size() == 5 ){
-      array<int,5> new_order_arr;  
-      array<int,5> trans_info_arr; 
-      for (auto ii = 0; ii != new_order_vec->size(); ii++)
-        new_order_arr[ii] = new_order_vec->at(ii);
-      for (auto ii = 0; ii != trans_info_vec.size(); ii++)
-        trans_info_arr[ii] = trans_info_vec[ii];
-    sort_indices( trans_info_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
- 
-  } else if (new_order_vec->size() == 6 ){
-      array<int,6> new_order_arr;  
-      array<int,6> trans_info_arr; 
-      for (auto ii = 0; ii != new_order_vec->size(); ii++)
-        new_order_arr[ii] = new_order_vec->at(ii);
-      for (auto ii = 0; ii != trans_info_vec.size(); ii++)
-        trans_info_arr[ii] = trans_info_vec[ii];
-    sort_indices( trans_info_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
- 
-  } else if (new_order_vec->size() == 7 ){
-      array<int,7> new_order_arr;  
-      array<int,7> trans_info_arr; 
-      for (auto ii = 0; ii != new_order_vec->size(); ii++)
-        new_order_arr[ii] = new_order_vec->at(ii);
-      for (auto ii = 0; ii != trans_info_vec.size(); ii++)
-        trans_info_arr[ii] = trans_info_vec[ii];
-    sort_indices( trans_info_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
- 
-  } else if (new_order_vec->size() == 8 ){
-      array<int,8> new_order_arr;   
-      array<int,8> trans_info_arr; 
-      for (auto ii = 0; ii != new_order_vec->size(); ii++)
-        new_order_arr[ii] = new_order_vec->at(ii);
-      for (auto ii = 0; ii != trans_info_vec.size(); ii++)
-       trans_info_arr[ii] = trans_info_vec[ii];
-   sort_indices( trans_info_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
-  }
- 
   return reordered_data;
-
 }
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<int N> 
-std::pair<std::vector<int>, std::pair<double,bool>>
-Equation_Computer::Equation_Computer::find_permutation(const KTag<N>& tag) const {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "std::pair<std::vector<int>, std::pair<double,bool>> find_permutation(const KTag<N>& tag) const" << endl;
-
-  std::list<std::vector<bool>> stored_sectors_;
-  std::map<std::vector<int>, std::pair<double,bool>> perm_;
-
-  auto trans = std::make_pair(std::vector<int>{0}, std::make_pair(0.0,false));
-  for (auto& i : perm_)
-    for (auto& j : stored_sectors_) {
-      const KTag<N> ctag(j);
-      if (tag == ctag.perm(i.first)) {
-        trans = i;
-        goto end;
-      }
-    }
-  end:
-  return trans;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//This would be best put in another part, probably CTP
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-unique_ptr<DataType[]>
- Equation_Computer::Equation_Computer::reorder_tensor_data(const DataType* orig_data,  size_t data_size, vector<int>  new_order_vec, vector<size_t> new_sizes_vec ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//void sort_indices(const std::array<int,N>& o, const double a, const double b, const DataType* in, DataType* out, const std::array<int,N>& d) {
-cout << "Equation_Computer::reorder_tensor_data" << endl;
-  const double fac1= 1.0;
-  const double fac2= 1.0;
-
-  unique_ptr<DataType[]> reordered_data(new DataType[data_size]);
-  cout << "R1" << endl;
-  // Converts to arrays; sort_indices fixed size (defined in template) arrays, so I now have this ugly mess,
-  if (new_order_vec.size() == 2 ){
-    array<int,2> new_order_arr; 
-    array<int,2> new_sizes_arr; 
-    for (auto ii = 0; ii != new_order_vec.size(); ii++)
-      new_order_arr[ii] = new_order_vec[ii];
-    for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
-      new_sizes_arr[ii] = new_sizes_vec[ii];
-    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
-
-  }
-  else if (new_order_vec.size() == 3 ){
-      array<int,3> new_order_arr;  
-      array<int,3> new_sizes_arr; 
-      for (auto ii = 0; ii != new_order_vec.size(); ii++)
-        new_order_arr[ii] = new_order_vec[ii];
-      for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
-        new_sizes_arr[ii] = new_sizes_vec[ii];
-    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(), new_order_arr) ;
- 
-  } else if (new_order_vec.size() == 4 ){
-  cout << endl <<  "R1"; cout.flush();
-      array<int,4> new_order_arr;  
-      array<int,4> new_sizes_arr; 
-    
-      for (auto ii = 0; ii != new_order_vec.size(); ii++){
-        new_order_arr[ii] = new_order_vec[ii];
-        cout << new_order_arr[ii]  << " " ;
-      }
-      cout <<endl;
-  cout << "R2 "; cout.flush();
-     for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
-        new_sizes_arr[ii] = new_sizes_vec[ii];
-
-  cout << "R3 "; cout.flush();
-    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
-
-  cout << "R4 "; cout.flush();
- 
-  } else if (new_order_vec.size() == 5 ){
-      array<int,5> new_order_arr;  
-      array<int,5> new_sizes_arr; 
-      for (auto ii = 0; ii != new_order_vec.size(); ii++)
-        new_order_arr[ii] = new_order_vec[ii];
-      for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
-        new_sizes_arr[ii] = new_sizes_vec[ii];
-    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
- 
-  } else if (new_order_vec.size() == 6 ){
-      array<int,6> new_order_arr;  
-      array<int,6> new_sizes_arr; 
-      for (auto ii = 0; ii != new_order_vec.size(); ii++)
-        new_order_arr[ii] = new_order_vec[ii];
-      for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
-        new_sizes_arr[ii] = new_sizes_vec[ii];
-    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
- 
-  } else if (new_order_vec.size() == 7 ){
-      array<int,7> new_order_arr;  
-      array<int,7> new_sizes_arr; 
-      for (auto ii = 0; ii != new_order_vec.size(); ii++)
-        new_order_arr[ii] = new_order_vec[ii];
-      for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
-        new_sizes_arr[ii] = new_sizes_vec[ii];
-    sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
- 
-  } else if (new_order_vec.size() == 8 ){
-      array<int,8> new_order_arr;   
-      array<int,8> new_sizes_arr; 
-      for (auto ii = 0; ii != new_order_vec.size(); ii++)
-        new_order_arr[ii] = new_order_vec[ii];
-      for (auto ii = 0; ii != new_sizes_vec.size(); ii++)
-       new_sizes_arr[ii] = new_sizes_vec[ii];
-   sort_indices( new_sizes_arr, fac1, fac2, orig_data, reordered_data.get(),  new_order_arr) ;
-  }
- 
-  return reordered_data;
-
-}
-
 
 #endif
 
