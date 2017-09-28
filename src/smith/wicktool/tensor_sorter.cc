@@ -2,6 +2,7 @@
 #ifdef COMPILE_SMITH
 #include <src/smith/wicktool/tensor_sorter.h>
 
+
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
@@ -88,6 +89,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_2( std::shared_ptr<std
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+cout << "sort_indices_2" << endl;
   size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   size_t perm_id = get_perm_idnum( new_id_order ) ; 
 
@@ -116,6 +118,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_2( std::shared_ptr<std
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
+  std::cout << "leaving sort_indices_2" <<endl;
   return;
 }
 
@@ -126,7 +129,7 @@ template<typename DataType>
                                                             std::array<int,4>& sort_options, 
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+cout << "sort_indices_3" << endl;
   size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   size_t perm_id = get_perm_idnum( new_id_order ) ; 
 
@@ -171,6 +174,7 @@ template<typename DataType>
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
+  cout << "leaving sort_indices_3" <<endl;
   return;
 }
 
@@ -182,6 +186,7 @@ template<typename DataType>
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+cout << "sort_indices_4" << endl;
   size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   size_t perm_id = get_perm_idnum( new_id_order ) ; 
 
@@ -298,17 +303,19 @@ template<typename DataType>
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
+  cout << "leaving sort_indices_4" <<endl;
   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
  void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_5( std::shared_ptr<std::vector<size_t>> new_id_order,
-                                                            std::shared_ptr<std::vector<size_t>> rlen,
-                                                            std::array<int,4>& sort_options, 
-                                                            const DataType* in, DataType* out ) {
+                                                              std::shared_ptr<std::vector<size_t>> rlen,
+                                                              std::array<int,4>& sort_options, 
+                                                              const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+cout << "sort_indices_5" << endl;
   size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   size_t perm_id = get_perm_idnum( new_id_order ) ; 
 
@@ -1049,6 +1056,7 @@ template<typename DataType>
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
+  cout << "leaving sort_indices_5" <<endl;
   return;
 }
 
@@ -1059,6 +1067,7 @@ template<typename DataType>
                                                             std::array<int,4>& sort_options, 
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "sort_indices_6" <<endl;
 
   size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   size_t perm_id = get_perm_idnum( new_id_order ) ; 
@@ -5400,6 +5409,7 @@ template<typename DataType>
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
+  cout << "leaving sort_indices_6" <<endl;
   return;
 }
 
@@ -5411,6 +5421,7 @@ template<typename DataType>
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  cout << "sort_indices_7" <<endl;
   size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   size_t perm_id = get_perm_idnum( new_id_order ) ; 
 
@@ -35671,6 +35682,7 @@ template<typename DataType>
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
+  cout << "leaving sort_indices_7" <<endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////

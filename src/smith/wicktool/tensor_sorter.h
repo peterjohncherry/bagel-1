@@ -2,6 +2,7 @@
 #define __SRC_SMITH_WICKTOOL_TENSOR_SORTER_H
 
 #include <src/util/prim_op.h>
+#include <iostream>
 namespace bagel {
 namespace SMITH { 
 

@@ -80,6 +80,15 @@ class Equation_Computer {
 
     size_t get_block_size(std::shared_ptr<std::vector<Index>> Idvec, int startpos, int endpos) ;
 
+    std::shared_ptr<std::vector<int>> put_ctr_at_front(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
+    
+    std::shared_ptr<std::vector<int>> put_ctr_at_back(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
+    
+    std::shared_ptr<Tensor_<double>> find_or_get_CTP_data(std::string CTP_name);
+
+ 
+    std::pair<int,int> relativize_ctr_positions(std::pair <int,int> ctr_todo, int T1size);
+
     template<class DataType, class DType>
     std::unique_ptr<DataType[]>
     get_reordered_Tensor_data(std::shared_ptr<std::vector<int>> rng_block_pos, std::shared_ptr<std::vector<const IndexRange>> T_org_rng,
@@ -121,12 +130,11 @@ class Equation_Computer {
     std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
     compute_gamma12_last_step(std::shared_ptr<const Dvec> dbra, std::shared_ptr<const Dvec> dket, std::shared_ptr<const Civec> cibra) const ;
 
-    size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ) 
+    size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
 
     void sigma_2a1(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
 
     void sigma_2a2(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
-
 };
 }
 }
