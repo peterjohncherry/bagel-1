@@ -181,7 +181,7 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   cout << "ctr_todo_rel = (" << ctr_todo_rel.first << ","<<ctr_todo_rel.second << ")" << endl;
 
   shared_ptr<Tensor_<double>> CTP1_data = find_or_get_CTP_data(T1name);
-  shared_ptr<Tensor_<double>> CTP2_data = find_or_get_CTP_data(T1name);
+  shared_ptr<Tensor_<double>> CTP2_data = find_or_get_CTP_data(T2name);
 
   auto T1_org_rngs = Get_Bagel_const_IndexRanges(CTP1->id_ranges) ;
   shared_ptr<vector<int>> T1_new_order  = put_ctr_at_back( CTP1->unc_pos, ctr_todo_rel.first);
@@ -218,65 +218,56 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   //loops over all index blocks of T1 and  T2; final index of T1 is same as first index of T2 due to contraction
   auto T1_rng_block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
   for (int ii = 0 ; ii != T1_num_total_blocks; ii++) { 
-
     cout << " A8"; cout.flush();
-    size_t ctr_block_size;
-    size_t T1_unc_block_size;
     shared_ptr<vector<Index>> T_out_rng_block = make_shared<vector<Index>>(0);
     shared_ptr<vector<Index>> T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, T1_new_rngs); 
     shared_ptr<vector<Index>> T1_org_rng_blocks = inverse_reorder_vector(T1_new_order, T1_new_rng_blocks); 
-   
-    shared_ptr<vector<size_t>> T1_new_rng_block_sizes = get_sizes(T1_new_rng_blocks);
     T_out_rng_block->insert(T_out_rng_block->end(), T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
     
-    ctr_block_size = T1_new_rng_blocks->back().size(); 
-    T1_unc_block_size = get_block_size( T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1); 
-   
-    size_t T1_org_size =  get_block_size(T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); cout << " T1_org_size = " << T1_org_size << endl; 
-    size_t T1_new_size =  get_block_size(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()); cout << " T1_new_size = " << T1_new_size << endl; 
+    size_t ctr_block_size = T1_new_rng_blocks->back().size(); 
+    size_t T1_unc_block_size = get_block_size( T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1); 
+    size_t T1_block_size =  get_block_size(T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); cout << " T1_block_size = " << T1_block_size << endl; 
 
-    std::unique_ptr<double[]> T1_data_org(new double[ T1_org_size  ]);
-    std::unique_ptr<double[]> T1_data_new(new double[ T1_new_size  ]);
 
+    std::unique_ptr<double[]> T1_data_new(new double[ T1_block_size  ]);
+    {
+    std::unique_ptr<double[]> T1_data_org = CTP1_data->get_block(*T1_org_rng_blocks);
     T1_data_new = reorder_tensor_data_X(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
+    }
 
     shared_ptr<vector<int>> T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size(), 0);
-
+    T2_rng_block_pos->front() = T1_rng_block_pos->back();
     for (int jj = 0 ; jj != T2_num_unc_blocks; jj++) { 
       
-      size_t T2_unc_block_size;
-      T2_rng_block_pos->push_back(T1_rng_block_pos->back());
-
-      cout << " A10d1" ; cout.flush();
       auto T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
- 
-      size_t T2_new_size = 1;
-      std::unique_ptr<double[]> T2_data_new(  new double[ T2_new_size ]);
+      size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end() );
+      cout << "T2_unc_block_size = " << T2_unc_block_size << endl;
+       
+      std::unique_ptr<double[]> T2_data_new(  new double[ T2_unc_block_size*ctr_block_size]);
+      cout << "T2_data_new got " << endl;
 
       {
-        auto T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
+        shared_ptr<vector<Index>> T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
         T_out_rng_block->insert(T_out_rng_block->end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
-        T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin(), T2_new_rng_blocks->end()); 
-        
-        auto T2_data_org = CTP2_data->get_block(*T2_org_rng_blocks);
-        cout << " A10i" ; cout.flush();
+        cout << "T2_data_org " <<  endl;
+        std::unique_ptr<double[]> T2_data_org = CTP2_data->get_block(*T2_org_rng_blocks);
+        cout << "got T2_data_org " <<  endl;
         T2_data_new = reorder_tensor_data_X(T2_data_org.get(), T2_new_order, T2_org_rng_blocks); 
+        cout << "got T2_data_new " <<  endl;
       }
-      cout << " A11" ; cout.flush();
-      
+       
       std::unique_ptr<double[]> T_out_data(new double[T1_unc_block_size*T2_unc_block_size]);
      
-      cout << " A11a" ; cout.flush();
+      cout << "Into dgemm" ; cout.flush();
       //should not use transpose; instead build T2_new_order backwards... 
       dgemm_("N", "T", T1_unc_block_size, ctr_block_size,  T1_unc_block_size, 1.0, T1_data_new.get(), T2_unc_block_size,
               T2_data_new.get(), ctr_block_size, 1.0, T_out_data.get(), T1_unc_block_size);
 
-      cout << " A11b" ; cout.flush();
+      cout << " Out of dgemm" ; cout.flush();
       T_out->put_block( T_out_data, *T_out_rng_block );
 
       //remove last index; contracted index is cycled in T1 loop
-      T2_rng_block_pos->pop_back(); 
-      fvec_cycle(T2_rng_block_pos, maxs2 ); cout << "T2_rng_block_pos  = " << T2_rng_block_pos << endl;
+      fvec_cycle_skipper(T2_rng_block_pos, maxs2, 0 ) ;
     }
     fvec_cycle(T1_rng_block_pos, maxs1 );
   cout << " A13"; cout.flush();
@@ -356,9 +347,8 @@ shared_ptr<vector<int>> Equation_Computer::Equation_Computer::put_ctr_at_front(s
 shared_ptr<vector<shared_ptr<Tensor_<double>>>>
 Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_name){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer::Equation_Computer::get_gammas"  << endl;
-   cout << "Gamma name = " << gamma_name << endl;
-
+  cout << "Equation_Computer::Equation_Computer::get_gammas"  << endl;
+  cout << "Gamma name = " << gamma_name << endl;
 
   //Gets list of necessary gammas which are needed by truncating the gamma_range vector
   //e.g. [a,a,a,a,a,a] --> [a,a,a,a] --> [a,a]
