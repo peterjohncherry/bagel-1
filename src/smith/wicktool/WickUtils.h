@@ -65,7 +65,12 @@ namespace WickUtils {
 
   std::string get_gamma_name(std::shared_ptr<std::vector<bool>> aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,  
                              std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
+
+  
+  bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max,
+                          std::shared_ptr<std::vector<int>> min,  int fixed_index_position );
  
+  bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max, int fixed_index_position );
 
   template<class DataType>
   void print_vecX(std::vector<DataType> invec, std::string name ="lazy"){

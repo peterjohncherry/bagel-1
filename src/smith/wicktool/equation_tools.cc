@@ -30,7 +30,6 @@ Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SM
 
 }  
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,7 +41,7 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
      return CTP_data_map->at(Tname);
 
    shared_ptr<vector<string>>     unc_ranges = CTP_map->at(Tname)->id_ranges;  
-   cout << "gamma unc_ranges = [ " << endl;
+   cout << "gamma_unc_ranges = [ " ; cout.flush();
    for  ( auto rng :  *unc_ranges )
       cout << rng << " " ;
    cout << " ] " << endl;
@@ -291,7 +290,7 @@ Equation_Computer::Equation_Computer::relativize_ctr_positions(pair <int,int> ct
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  cout << "Equation_Computer::Equation_Computer::find_or_get_CTP_data" << endl;
 
-   if (ctr_todo.first > T1size ){ 
+   if (ctr_todo.first >= T1size ){ 
      return  make_pair(ctr_todo.second, ctr_todo.first-T1size);
    } else {
      return  make_pair(ctr_todo.first, ctr_todo.second-T1size);
@@ -338,13 +337,16 @@ shared_ptr<vector<int>> Equation_Computer::Equation_Computer::put_ctr_at_back(sh
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Equation_Computer::Equation_Computer::put_ctr_at_front(shared_ptr<vector<int>> orig_pos , int ctr_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "put_ctr_at_front " << endl; 
-  vector<int> new_pos(1,ctr_pos);
+ cout << "put_ctr_at_front" << endl;
+ cout << "ctr_pos = "<< ctr_pos<< endl; 
+  vector<int> new_pos(orig_pos->size());
   
-  for (int ii = 0; ii !=orig_pos->size(); ii++)
-    if (orig_pos->at(ii) != ctr_pos )
-      new_pos.push_back(orig_pos->at(ii));
-
+  vector<int>::reverse_iterator new_pos_it = new_pos.rbegin();
+  for (int ii =orig_pos->size()-1; ii !=-1 ;  ii--)
+    if (orig_pos->at(ii) != ctr_pos ){
+      cout << "orig_pos->at("<<ii<<") = "<<  orig_pos->at(ii) << " != " <<ctr_pos << " " <<  endl;
+      *new_pos_it++ = orig_pos->at(ii);
+    }
   return make_shared<vector<int>>(new_pos);
 
 }
