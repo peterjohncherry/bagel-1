@@ -76,12 +76,9 @@ size_t Tensor_Sorter::Tensor_Sorter<DataType>::get_sort_options_idnum(array<int,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
  size_t idnum =0; 
- cout << "sort_options = [ " ;
  for ( int ii = 0 ; ii != 4 ; ii++){  
    idnum += pow(4, ii)*(sort_options[ii]+1);
-   cout << sort_options[ii] <<" " ;
  }
- cout << " ] --> " <<  idnum << endl;
  return idnum ;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

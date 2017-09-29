@@ -31,8 +31,17 @@ namespace WickUtils {
  
   //routines for mimicking for loop of arbitrary depth
   void fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max ) ;
+  bool fvec_cycle_test(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max ) ;
   bool fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max , std::shared_ptr<std::vector<int>> min) ;
   bool constrained_fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max) ;
+ 
+  bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max,
+                          std::shared_ptr<std::vector<int>> min,  int fixed_index_position );
+ 
+  bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max, int fixed_index_position );
+
+
+
 
   template<class T1>
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<T1>>>> combgen( std::shared_ptr<std::vector<T1>> invec);
@@ -66,13 +75,7 @@ namespace WickUtils {
   std::string get_gamma_name(std::shared_ptr<std::vector<bool>> aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,  
                              std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
 
-  
-  bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max,
-                          std::shared_ptr<std::vector<int>> min,  int fixed_index_position );
- 
-  bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max, int fixed_index_position );
-
-  template<class DataType>
+   template<class DataType>
   void print_vecX(std::vector<DataType> invec, std::string name ="lazy"){
     std::cout << name <<" = [ ";
     for (auto  elem : invec)
