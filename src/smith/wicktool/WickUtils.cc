@@ -535,19 +535,19 @@ string get_gamma_name(shared_ptr<vector<bool>> aops_vec, shared_ptr<vector<strin
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//same as normal fvec_cycle, but will not iterate the index at fixed_index_position
+//same as normal fvec_cycle, but improved to allow skipping. I expect this should be included everywhere, to guard 
+//against max==min problem.....
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min,
-                        int fixed_index_position ) {
+bool fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   for(int ii = forvec->size()-1; ii!=-1 ; ii--) {
-    if ( ii == fixed_index_position ) 
-      continue;
-    if (forvec->at(ii) == max->at(ii)) {
+    if ( max->at(ii) == min->at(ii) ) {
+      if ( ii == 0 )
+        return false;
+    } else if (forvec->at(ii) == max->at(ii)) {
       if (ii == 0) 
         return false;    
       forvec->at(ii) = min->at(ii);
-      continue;
     } else {
       forvec->at(ii) = forvec->at(ii)+ 1;
       break;
@@ -561,13 +561,13 @@ bool fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> 
 bool fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max, int fixed_index_position ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   for(int ii = forvec->size()-1; ii!=-1 ; ii--) {
-    if ( ii == fixed_index_position ) 
-      continue;
-    if (forvec->at(ii) == max->at(ii)) {
+    if ( ii == fixed_index_position ) {
+      if ( ii == 0 )
+        return false;
+    } else if (forvec->at(ii) == max->at(ii)) {
       if (ii == 0) 
         return false;    
       forvec->at(ii) = 0;
-      continue;
     } else {
       forvec->at(ii) = forvec->at(ii)+ 1;
       break;

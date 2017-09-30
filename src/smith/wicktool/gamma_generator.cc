@@ -15,18 +15,12 @@ GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaInfo::GammaInfo" <<  endl;
 
-    cout << "1" << endl;
   id_ranges = make_shared<vector<string>>(idxs_pos->size());
-    cout << "2" << endl;
   aops = make_shared<vector<bool>>(idxs_pos->size());
-    cout << "3" << endl;
 
   for (int ii = 0 ; ii != idxs_pos->size(); ii++ ){ 
-    cout << "4" << endl;
     id_ranges->at(ii) = full_idx_ranges->at(idxs_pos->at(ii));     
-    cout << "5" << endl;
     aops->at(ii) = full_aops_vec->at(idxs_pos->at(ii));     
-    cout << "6" << endl;
   }
 
   //depends on floor in integer division
@@ -34,13 +28,9 @@ GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<
   name = GammaGenerator::get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos );
   if ( idxs_pos->size() != 0 ) { 
     one_el_gammas = make_shared<vector<string>>(idxs_pos->size()/2);
-    cout << "idxs_pos->size() = " << idxs_pos->size() << endl;
     for (int ii = 0 ; ii != idxs_pos->size() ; ii+=2 ) {
-      cout << "7" << endl;
       shared_ptr<vector<int>> gamma_1el_pos =  make_shared<vector<int>>(vector<int> { idxs_pos->at(ii), idxs_pos->at(ii+1)});   
-      cout << "8" << endl;
       one_el_gammas->at(ii/2) =  GammaGenerator::get_gamma_name( full_idx_ranges, full_aops_vec, gamma_1el_pos );
-      cout << "9" << endl;
     }
   } else { 
     one_el_gammas = make_shared<vector<string>>(0);

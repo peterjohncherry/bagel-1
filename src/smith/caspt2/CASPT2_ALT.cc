@@ -185,13 +185,14 @@ void CASPT2_ALT::CASPT2_ALT::test() {
             CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
           }
         } else { 
-          cout << endl;
+          cout << " did not satisfy any if .... " <<  endl;
         }
+        cout << "A_contrib.first = " << A_contrib.first << endl;
+        cout << "get<3>(ctr_op) =  " << get<3>(ctr_op) << endl;
       }
+      cout << "added " << A_contrib.first << endl; 
       cout << "=========================================================================================================" << endl << endl;
-      // add this contribution to the A_tensors
-      A_combined_data->ax_plus_y(A_factor.first, *(CTP_data_map->at(A_contrib.first)) );
-    
+      // add this contribution to the merged A_tensor
     }
   }   
 

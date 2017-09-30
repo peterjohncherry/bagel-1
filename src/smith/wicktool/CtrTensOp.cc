@@ -180,9 +180,11 @@ cout << "CtrTensorPart<DType>::get_ctp_idxs_ranges" << endl;
 
   vector<bool> get_unc(full_idxs->size(), true);
   for (int ii =0; ii<ctrs_pos->size() ; ii++){
+    if ( ctrs_pos->at(ii).first == ctrs_pos->at(ii).second)
+      break;
     get_unc[ctrs_pos->at(ii).first] = false;
     get_unc[ctrs_pos->at(ii).second] = false;
-  }
+   }
 
   bool survive_indep = true;
   unc_pos = make_shared<vector<int>>(0);

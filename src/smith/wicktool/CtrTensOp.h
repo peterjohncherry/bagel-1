@@ -129,7 +129,7 @@ class CtrMultiTensorPart : public TensorPart<DType> {
 
                          for (auto relctr : *ctp->ctrs_pos )
                            all_ctrs_pos->push_back( std::make_pair(relctr.first+Tsizes_cml->back(), relctr.second+Tsizes_cml->back()));
-
+                         
                          cml_size+=ctp->full_idxs->size(); 
                          
                        }
