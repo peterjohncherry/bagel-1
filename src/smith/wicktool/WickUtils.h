@@ -40,6 +40,8 @@ namespace WickUtils {
  
   bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max, int fixed_index_position );
 
+  bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max ,
+                          std::shared_ptr<std::vector<int>> min ) ;
 
 
 

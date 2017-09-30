@@ -42,52 +42,89 @@ class Equation_Computer {
     std::shared_ptr<Equation<double>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
 
-    template<class vtype>
-    std::shared_ptr<std::vector<vtype>> inverse_reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
+    ////////////////////////////////////
+    std::shared_ptr<Tensor_<double>>
+    get_block_Tensor(std::string Tname);
 
-    template<class vtype>
-    std::shared_ptr<std::vector<vtype>> reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
+    std::shared_ptr<Tensor_<double>>
+    contract_on_same_tensor( std::pair<int,int> ctr_todo, std::string Tname);
 
-    std::shared_ptr<Tensor_<double>> contract_on_same_tensor( std::pair<int,int> ctr_todo, std::string Tname);
-
-    std::shared_ptr<Tensor_<double>> contract_different_tensors(std::pair<int,int> ctr_todo, std::string T1name, std::string T2name );
-
-    std::shared_ptr<std::vector<IndexRange>> Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
-
-    std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
-
-    std::tuple< size_t, size_t > get_block_info(std::shared_ptr<std::vector<IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos) ;
-
-    void build_index_conversion_map(std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<IndexRange>>>> range_conversion_pairs );
+    std::shared_ptr<Tensor_<double>>
+    contract_different_tensors(std::pair<int,int> ctr_todo, std::string T1name, std::string T2name );
 
     template<class DataType, class DType>
     std::shared_ptr<DType> contract_different_tensors( std::string T1name, std::string T2name,  std::pair<int,int> ctr_todo,
                                                        std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
+    //////////////////////////////
 
-    std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> old_ids) ;
-    std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr< IndexRange>>> old_ids) ;
-    std::vector<Index> get_rng_blocks_raw(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr< IndexRange>>> old_ids) ;
+    template<class vtype>
+    std::shared_ptr<std::vector<vtype>>
+    inverse_reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
 
-    std::shared_ptr<std::vector<size_t>> get_sizes(std::shared_ptr<std::vector<Index>> Idvec);
+    template<class vtype>
+    std::shared_ptr<std::vector<vtype>>
+    reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
 
-    std::shared_ptr<std::vector<int>> get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
+    std::shared_ptr<std::vector<IndexRange>>
+    Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
 
-    std::shared_ptr<std::vector<size_t>> get_sizes(std::shared_ptr<std::vector<Index>> Idvec, int skip_id);
+    std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>>
+    Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
 
-    std::shared_ptr<std::vector<int>> get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec, int skip_id) ;
+    std::tuple< size_t, size_t >
+    get_block_info(std::shared_ptr<std::vector<IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos) ;
 
-    std::shared_ptr<Tensor_<double>> get_block_Tensor(std::string Tname);
+    void
+    build_index_conversion_map(std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<IndexRange>>>> range_conversion_pairs );
+
+    std::shared_ptr<std::vector<Index>>
+    get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> old_ids) ;
+   
+    std::shared_ptr<std::vector<Index>>
+    get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr< IndexRange>>> old_ids) ;
+
+    std::vector<Index>
+    get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::vector<IndexRange>& id_ranges) ;
+  
+    std::vector<Index>
+    get_rng_blocks_raw(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr< IndexRange>>> old_ids) ;
+
+    std::shared_ptr<std::vector<size_t>>
+    get_sizes(std::shared_ptr<std::vector<Index>> Idvec);
+
+    std::shared_ptr<std::vector<int>>
+    get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
+
+    std::shared_ptr<std::vector<size_t>>
+    get_sizes(std::shared_ptr<std::vector<Index>> Idvec, int skip_id);
+
+    std::shared_ptr<std::vector<int>>
+    get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec, int skip_id) ;
+
+    size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
+
+    size_t get_unc_block_size( std::vector<Index>& idvec, std::pair<int,int> ctr ) ;
 
     size_t get_block_size(std::shared_ptr<std::vector<Index>> Idvec, int startpos, int endpos) ;
 
-    std::shared_ptr<std::vector<int>> put_ctr_at_front(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
+    std::shared_ptr<std::vector<int>>
+    put_ctr_at_front(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
     
-    std::shared_ptr<std::vector<int>> put_ctr_at_back(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
+    std::shared_ptr<std::vector<int>>
+    put_ctr_at_back(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
     
-    std::shared_ptr<Tensor_<double>> find_or_get_CTP_data(std::string CTP_name);
+    std::shared_ptr<Tensor_<double>>
+    find_or_get_CTP_data(std::string CTP_name);
 
+    std::shared_ptr<std::vector<int>>
+    get_num_index_blocks_vec(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
  
-    std::pair<int,int> relativize_ctr_positions(std::pair <int,int> ctr_todo, int T1size);
+    std::vector<int>
+    get_num_index_blocks_vec(std::vector<IndexRange>& rngvec);
+   
+    std::pair<int,int>
+    relativize_ctr_positions(std::pair <int,int> ctr_todo, std::shared_ptr<CtrTensorPart<double>>  CTP1,
+                                                           std::shared_ptr<CtrTensorPart<double>>  CTP2);
 
     template<class DataType, class DType>
     std::unique_ptr<DataType[]>
@@ -129,8 +166,6 @@ class Equation_Computer {
  
     std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
     compute_gamma12_last_step(std::shared_ptr<const Dvec> dbra, std::shared_ptr<const Dvec> dket, std::shared_ptr<const Civec> cibra) const ;
-
-    size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
 
     void sigma_2a1(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
 
