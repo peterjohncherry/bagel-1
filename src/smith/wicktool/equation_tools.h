@@ -71,6 +71,10 @@ class Equation_Computer {
     std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>>
     Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
 
+    
+    std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>>
+    Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str, std::shared_ptr<std::vector<int>> unc_pos);
+
     std::tuple< size_t, size_t >
     get_block_info(std::shared_ptr<std::vector<IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos) ;
 

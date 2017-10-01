@@ -168,6 +168,11 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 
         cout << "[" << get<0>(ctr_op) << " , " << get<1>(ctr_op) << " , (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")" << " , " << (get<3>(ctr_op)) << " ] " ;
 
+        string CTP1_name = get<0>(ctr_op);
+        string CTP2_name = get<1>(ctr_op);
+        string CTPout_name = get<3>(ctr_op);
+        pair<int,int> ctr_todo = get<2>(ctr_op);
+
         // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
         if ( (get<2>(ctr_op).first != get<2>(ctr_op).second) && (CTP_data_map->find(get<3>(ctr_op)) == CTP_data_map->end()) ){
       
@@ -180,7 +185,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 
             CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
           
-          } else if ( (get<0> (ctr_op) ==  get<1>(ctr_op)) && ( get<2>(ctr_op).first != get<2>(ctr_op).second )) { cout << " : contract on same tensor" <<  endl; 
+          } else if ( (get<0> (ctr_op) ==  get<1>(ctr_op)) && ( CTP1_name.substr( CTP1_name.length() - 2 ) != "00") ) { cout << " : contract on same tensor" <<  endl; 
             shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_on_same_tensor( get<2>(ctr_op), get<0>(ctr_op)); 
             CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
           }

@@ -162,21 +162,27 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   // shift contraction indexes.
   pair<int,int> ctr_todo_rel = relativize_ctr_positions( ctr_todo, CTP1, CTP2 );
 
-  cout << T1name << " " << T2name << " with relativized contraction : ("; cout.flush();
-  cout << ctr_todo_rel.first << ","<<ctr_todo_rel.second << ")" << endl;
+  cout << "orig_ctr = ( " << ctr_todo.first << ","<<ctr_todo.second << ")" << endl;
+  cout << "rel  ctr = ( " << ctr_todo_rel.first << ","<<ctr_todo_rel.second << ")" << endl;
 
   shared_ptr<Tensor_<double>> CTP1_data = find_or_get_CTP_data(T1name);
   shared_ptr<vector<int>> T1_new_order  = put_ctr_at_back( CTP1->unc_pos, ctr_todo_rel.first);
-  shared_ptr<vector<shared_ptr<const IndexRange>>> T1_org_rngs = Get_Bagel_const_IndexRanges(CTP1->id_ranges) ;
+  shared_ptr<vector<shared_ptr<const IndexRange>>> T1_org_rngs = Get_Bagel_const_IndexRanges(CTP1->full_id_ranges, CTP1->unc_pos) ;
+  cout << "X1" << endl; 
   shared_ptr<vector<shared_ptr<const IndexRange>>> T1_new_rngs = reorder_vector(T1_new_order, T1_org_rngs);
+  cout << "X2" << endl; 
   shared_ptr<vector<int>> maxs1 = get_num_index_blocks_vec(T1_new_rngs) ;
 
   cout << "T1_new_order = [" ; for (auto elem : *T1_new_order) { cout << elem << " " ; } cout << "]"<< endl;
   shared_ptr<Tensor_<double>> CTP2_data = find_or_get_CTP_data(T2name);
   shared_ptr<vector<int>> T2_new_order  = put_ctr_at_front( CTP2->unc_pos, ctr_todo_rel.second);
-  shared_ptr<vector<shared_ptr<const IndexRange>>> T2_org_rngs = Get_Bagel_const_IndexRanges(CTP2->id_ranges) ;
+  cout << "X3" << endl; 
+  shared_ptr<vector<shared_ptr<const IndexRange>>> T2_org_rngs = Get_Bagel_const_IndexRanges(CTP2->full_id_ranges, CTP2->unc_pos) ;
+  cout << "X4" << endl; 
   shared_ptr<vector<shared_ptr<const IndexRange>>> T2_new_rngs = reorder_vector(T2_new_order, T2_org_rngs);
+  cout << "X5" << endl; 
   shared_ptr<vector<int>> maxs2 = get_num_index_blocks_vec(T2_new_rngs) ;
+  cout << "X6" << endl; 
 
   auto Tout_unc_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);
   Tout_unc_rngs->insert(Tout_unc_rngs->end(), T1_new_rngs->begin(), T1_new_rngs->end()-1);
@@ -315,7 +321,8 @@ shared_ptr<vector<int>> Equation_Computer::Equation_Computer::put_ctr_at_back(sh
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Equation_Computer::Equation_Computer::put_ctr_at_front(shared_ptr<vector<int>> orig_pos , int ctr_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "put_ctr_at_front" << endl;
+ cout << "put_ctr_at_front  : " << "rel_ctr_pos = " << ctr_pos << "  " ; cout.flush();
+ cout << "orig_pos = [ " ; for (int ii : *orig_pos ) {cout << ii << " " ;} cout << "]"<<endl;
   vector<int> new_pos(orig_pos->size());
   new_pos[0] = ctr_pos;
   vector<int>::reverse_iterator new_pos_it = new_pos.rbegin();
@@ -857,6 +864,7 @@ size_t Equation_Computer::Equation_Computer::get_block_size(shared_ptr<vector<In
 shared_ptr<vector<shared_ptr<const IndexRange>>>
  Equation_Computer::Equation_Computer::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Get_Bagel_const_IndexRanges 1arg" << endl;
 
   auto ranges_Bagel = make_shared<vector<shared_ptr<const IndexRange>>>(0);
   for ( auto rng : *ranges_str) 
@@ -866,9 +874,25 @@ shared_ptr<vector<shared_ptr<const IndexRange>>>
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<shared_ptr<const IndexRange>>>
+ Equation_Computer::Equation_Computer::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str, shared_ptr<vector<int>> unc_pos){ 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Get_Bagel_const_IndexRanges 2arg" << endl;
+
+  vector<shared_ptr<const IndexRange>>  ranges_Bagel(unc_pos->size());
+  for ( int ii = 0 ; ii != unc_pos->size() ; ii++) 
+    ranges_Bagel[ii]=(make_shared<const IndexRange>(*range_conversion_map->at(ranges_str->at(unc_pos->at(ii)))));
+
+  return make_shared<vector<shared_ptr<const IndexRange>>>(ranges_Bagel);
+}
+
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<IndexRange>> Equation_Computer::Equation_Computer::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Get_Bagel_IndexRanges 1arg" << endl;
 
   auto ranges_Bagel = make_shared<vector<IndexRange>>(0);
   for ( auto rng : *ranges_str) 
@@ -880,6 +904,7 @@ shared_ptr<vector<IndexRange>> Equation_Computer::Equation_Computer::Get_Bagel_I
 template<class vtype>
 shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::inverse_reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "inverse_reorder_vector" << endl;
 
   auto newvec = make_shared<vector<vtype>>(origvec->size());
   for( int ii = 0; ii != origvec->size(); ii++ )
@@ -891,6 +916,7 @@ shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::inverse_reorder_
 template<class vtype>
 shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "reorder_vector" << endl;
 
   auto newvec = make_shared<vector<vtype>>(origvec->size());
   for( int ii = 0; ii != origvec->size(); ii++ )
@@ -907,7 +933,8 @@ unique_ptr<DataType[]>
 Equation_Computer::Equation_Computer::reorder_tensor_data_X(const DataType* orig_data, shared_ptr<vector<int>>  new_order_vec,
                                                             shared_ptr<vector<Index>> orig_index_blocks ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+cout << "reorder_tensor_data_X" << endl;
+
   shared_ptr<vector<size_t>> rlen = get_sizes(orig_index_blocks);
   shared_ptr<vector<size_t>> new_order_st = make_shared<vector<size_t>>(new_order_vec->size());   
   size_t block_size = get_block_size(orig_index_blocks->begin(), orig_index_blocks->end());
