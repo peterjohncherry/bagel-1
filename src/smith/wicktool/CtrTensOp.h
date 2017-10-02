@@ -4,6 +4,57 @@
   #include <src/smith/wicktool/WickUtils.h>
 //  #include "WickUtils.h"
 
+//Classes for defining contraction operations
+//ctr_abs pos is the position of the contracted index in the totally uncontracted tensor
+//ctr_rel_pos is the position of the contracted index in the contracted tensor
+class CtrOp_base {
+   public : 
+      const std::string Tout_name;
+      const std::string ctr_type;
+
+      CtrOp_base(){};
+      ~CtrOp_base(){};
+};
+
+ 
+class CtrOp_diff_T : public CtrOp_base {
+   public : 
+      const std::string T1name;
+      const std::string T2name;
+      const std::string Tout_name;
+      const int T1_ctr_abs_pos; 
+      const int T2_ctr_abs_pos;
+      const int T1_ctr_rel_pos; 
+      const int T2_ctr_rel_pos;
+      const std::string ctr_type;
+
+      CtrOp_diff_T(std::string T1name_in, std::string T2name_in , std::string Tout_name_in , int T1_ctr_abs_pos_in, int T2_ctr_abs_pos_in,
+                   int T1_ctr_rel_pos_in, int T2_ctr_rel_pos_in, std::string ctr_type_in ):
+      T1name(T1name_in), T2name(T2name_in) , Tout_name(Tout_name_in),  T1_ctr_abs_pos(T1_ctr_abs_pos_in),  T2_ctr_abs_pos(T2_ctr_abs_pos_in), 
+      T1_ctr_rel_pos(T1_ctr_rel_pos_in),  T2_ctr_rel_pos(T2_ctr_rel_pos_in), ctr_type(ctr_type_in) {};
+
+      ~CtrOp_diff_T(){};
+};
+  
+class CtrOp_same_T : public CtrOp_base {
+   public : 
+      const std::string T1name;
+      const std::string Tout_name;
+      const std::pair<int,int> ctr_abs_pos;
+      const std::pair<int,int> ctr_rel_pos;
+      const std::string ctr_type;
+
+      CtrOp_same_T(std::string T1name_in, std::string Tout_name_in, std::pair<int,int> ctr_abs_pos_in,
+                   std::pair<int,int> ctr_rel_pos_in, std::string ctr_type_in ):
+      T1name(T1name_in), Tout_name(Tout_name_in),  ctr_abs_pos(ctr_abs_pos_in),  ctr_rel_pos(ctr_rel_pos_in), ctr_type(ctr_type_in) {};
+
+      ~CtrOp_same_T(){};
+};      
+
+
+
+
+
 
 template<class DType>
 class TensorPart{
@@ -41,6 +92,7 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
     std::shared_ptr<std::vector<std::string>> full_idxs;
     std::shared_ptr<std::vector<std::string>> full_id_ranges;
     std::shared_ptr<std::vector<int>> unc_pos;
+    std::shared_ptr<std::map<int,int>> unc_rel_pos;
     std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos;      
     std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors; 
     std::shared_ptr<DType> CTdata ;
@@ -77,6 +129,9 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
 
      void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
                        std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>, std::string> >> Acompute_list );
+
+     void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
+                       std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>> ACompute_list );
     
      std::shared_ptr<std::vector<int>> unc_id_ordering_with_ctr_at_back(int ctr_pos);
 
@@ -175,53 +230,5 @@ class CtrMultiTensorPart : public TensorPart<DType> {
                                                                                std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>,std::string> >> Acompute_list );
 
 };
-
-
-//Classes for defining contraction operations
-//ctr_abs pos is the position of the contracted index in the totally uncontracted tensor
-//ctr_rel_pos is the position of the contracted index in the contracted tensor
-class CtrOp_base {
-   public : 
-      const std::string Tout_name;
-      const std::string ctr_type;
-
-      CtrOp_base(){};
-      ~CtrOp_base(){};
-};
-
- 
-class CtrOp_diff_T : public CtrOp_base {
-   public : 
-      const std::string T1name;
-      const std::string T2name;
-      const std::string Tout_name;
-      const int T1_ctr_abs_pos; 
-      const int T2_ctr_abs_pos;
-      const int T1_ctr_rel_pos; 
-      const int T2_ctr_rel_pos;
-      const std::string ctr_type;
-
-      CtrOp_diff_T(std::string T1name_in, std::string T2name_in , std::string Tout_name_in , int T1_ctr_abs_pos_in, int T2_ctr_abs_pos_in,
-                   int T1_ctr_rel_pos_in, int T2_ctr_rel_pos_in, std::string ctr_type_in ):
-      T1name(T1name_in), T2name(T2name_in) , Tout_name(Tout_name_in),  T1_ctr_abs_pos(T1_ctr_abs_pos_in),  T2_ctr_abs_pos(T2_ctr_abs_pos_in), 
-      T1_ctr_rel_pos(T1_ctr_rel_pos_in),  T2_ctr_rel_pos(T2_ctr_rel_pos_in), ctr_type(ctr_type_in) {};
-
-      ~CtrOp_diff_T(){};
-};
-  
-class CtrOp_same_T {
-   public : 
-      const std::string T1name;
-      const std::string Tout_name;
-      const std::pair<int,int> ctr_abs_pos;
-      const std::pair<int,int> ctr_rel_pos;
-      const std::string ctr_type;
-
-      CtrOp_same_T(std::string T1name_in, std::string Tout_name_in, std::pair<int,int> ctr_abs_pos_in, std::pair<int,int> ctr_rel_pos_in, std::string ctr_type_in ):
-      T1name(T1name_in), Tout_name(Tout_name_in),  ctr_abs_pos(ctr_abs_pos_in),  ctr_rel_pos(ctr_rel_pos_in), ctr_type(ctr_type_in) {};
-
-      ~CtrOp_same_T(){};
-};      
-
 
 #endif
