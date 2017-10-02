@@ -180,8 +180,6 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
 
 
 
-
-
   shared_ptr<Tensor_<double>> CTP2_data = find_or_get_CTP_data(T2name);
   shared_ptr<vector<int>> T2_new_order  = CTP2->unc_id_ordering_with_ctr_at_front( ctr_todo_rel.second);
   cout << "T2_new_order = [" ; for (auto elem : *T2_new_order) { cout << elem << " " ; } cout << "]"<< endl;

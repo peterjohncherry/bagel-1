@@ -163,6 +163,12 @@ void CASPT2_ALT::CASPT2_ALT::test() {
       cout << "=========================================================================================================" << endl;
       cout << A_contrib.first << endl;
       cout << "=========================================================================================================" << endl;
+
+      for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib.first))){
+          cout << "[" << get<0>(ctr_op) << " , " << get<1>(ctr_op) << " , (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")" << " , " << (get<3>(ctr_op)) << " ] " ;
+      }
+      cout << "=========================================================================================================" << endl;
+
       // Loop through compute list for this A-Tensor
       for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib.first))){
 

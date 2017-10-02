@@ -160,11 +160,11 @@ class CtrMultiTensorPart : public TensorPart<DType> {
     // This greatly simplifies mapping from the gammas to the A-tensors
     void get_name() override;
     void get_name_orig();
-    void get_name_readable();
 
     std::string get_next_name(std::shared_ptr<std::vector<std::pair<int,int>>> new_ctrs_pos);
 
-    void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap, std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>, std::string> >> Acompute_list );
+    void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
+                      std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>, std::string> >> Acompute_list );
 
     std::shared_ptr<CtrMultiTensorPart<DType>> Binary_Contract_diff_tensors_MT(std::string T1, std::string T2, std::pair<int,int> ctr_todo,
                                                                                std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>>> > Tmap,

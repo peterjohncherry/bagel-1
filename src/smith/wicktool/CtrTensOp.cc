@@ -95,38 +95,6 @@ void CtrMultiTensorPart<DType>::get_name(){
   return;
 };
 
-
-/////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void CtrMultiTensorPart<DType>::get_name_readable(){
-/////////////////////////////////////////////////////////////////////////////
-  name = "";
-  for(auto idxs : *full_idxs)
-    name += idxs;// + '-'; 
-
-  name+='_'; 
-  for(string id : *full_id_ranges)
-    name += id[0]; //+ '-';
-
-  for (auto CTP : *CTP_vec){
-    if (CTP->ctrs_pos->size() !=0){
-      name+='_'; 
-      for(pair<int,int> ctr : *CTP->ctrs_pos)
-         name +="("+ CTP->full_idxs->at(ctr.first)+"."
-                     + CTP->full_idxs->at(ctr.second)+")";
-    }
-  }
-
-  if (cross_ctrs_pos->size() !=0){
-    name+='_'; 
-    for(pair<pair<int,int>,pair<int,int>> ctr : *cross_ctrs_pos){
-      name +="["+ CTP_vec->at(ctr.first.first)->full_idxs->at(ctr.first.second)+"."
-                  + CTP_vec->at(ctr.second.first)->full_idxs->at(ctr.second.second)+"]";
-    }
-  }
-  return ;
-};
-
 /////////////////////////////////////////////////////////////////////////////
 template<class DType>
 string CtrTensorPart<DType>::get_next_name(shared_ptr<vector<pair<int,int>>> new_ctrs_pos){
@@ -322,15 +290,24 @@ cout << "CtrMultiTensorPart<DType>::FullContract" << endl;
       }
      
     } else if(cross_ctrs_pos->size() == 1 ){
-
+        //check to ensure that the Tensors appear in the compute list in an order consistent with that in the original MultiTensOp
+        int T1loc, T2loc;
+       // if ( cross_ctrs_pos->back().first.first > cross_ctrs_pos->back().second.first) {
+      //     T1loc = cross_ctrs_pos->back().second.first;
+      //     T2loc = cross_ctrs_pos->back().first.first;
+      //  } else  { 
+           T1loc = cross_ctrs_pos->back().first.first;
+           T2loc = cross_ctrs_pos->back().second.first;
+       // }
+ 
       if ( CTP_vec->size() == 2) {
 
         for (auto CTP : *CTP_vec) {
           CTP->FullContract(Tmap,ACompute_list);
         }
-        
-        auto new_CTP = Binary_Contract_diff_tensors(CTP_vec->at(cross_ctrs_pos->back().first.first)->myname(),
-                                                    CTP_vec->at(cross_ctrs_pos->back().second.first)->myname(),
+          
+        auto new_CTP = Binary_Contract_diff_tensors(CTP_vec->at(T1loc)->myname(),
+                                                    CTP_vec->at(T2loc)->myname(),
                                                     all_ctrs_pos->back(), Tmap , ACompute_list);
         Tmap->emplace(new_CTP->name, new_CTP);
 
@@ -356,6 +333,8 @@ CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT(string T1name, string
 cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl; 
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl; 
+  
 
    auto T1T2_ctrd =  Binary_Contract_diff_tensors(T1name, T2name, ctr_todo, Tmap, ACompute_list);
    Tmap->emplace(T1T2_ctrd->name, T1T2_ctrd);
@@ -385,6 +364,7 @@ shared_ptr<CtrTensorPart<DType>>
 cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl; 
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl; 
    auto T1 = Tmap->at(T1name);
    auto T2 = Tmap->at(T2name);
     
@@ -414,7 +394,7 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
 
    full_ctrs->push_back(ctr_todo);
   
-   auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, full_ctrs, make_shared<vector<pair<int,int>>>(1, make_pair(1,1) )); 
+   auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, full_ctrs, make_shared<vector<pair<int,int>>>(1, make_pair(0,0) )); 
 
    auto new_CTData = make_shared<DType>();
    ACompute_list->push_back(tie(T1name, T2name, ctr_todo, new_CTP->name));

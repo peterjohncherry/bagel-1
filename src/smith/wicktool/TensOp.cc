@@ -464,7 +464,7 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
   auto unc_ranges_in = make_shared<vector<shared_ptr<vector<string>>>>(0);
   auto unc_aops_in = make_shared<vector<shared_ptr<vector<bool>>>>(0);
 
-  auto CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart<DType>> >> (0); 
+  auto CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart<DType>> >> (orig_tensors_.size()); 
   vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
   vector<vector<pair<int,int>>> sameT_ctrs_pos(orig_tensors_.size(),  pint_vec(0));
 
@@ -503,10 +503,10 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
      for(int jj = cmlsizevec->at(ii) ; jj != cmlsizevec->at(ii)+orig_tensors_[ii]->idxs->size(); jj++){
        TS_id_ranges->push_back(id_ranges->at(jj));
      }
-  
-     CTP_vec->push_back(make_shared< CtrTensorPart<DType> >( orig_tensors_[ii]->idxs, TS_id_ranges,
-                                                             make_shared<vector<pair<int,int>>>(sameT_ctrs_pos.at(ii)),
-                                                             make_shared<vector<pair<int,int>>>(1, ReIm_factors->at(ii)) ) ); 
+   
+     CTP_vec->at(ii) = make_shared< CtrTensorPart<DType> >( orig_tensors_[ii]->idxs, TS_id_ranges,
+                                                            make_shared<vector<pair<int,int>>>(sameT_ctrs_pos.at(ii)),
+                                                            make_shared<vector<pair<int,int>>>(1, ReIm_factors->at(ii)) ) ; 
   }
   auto CMTP = make_shared<CtrMultiTensorPart<DType> >(CTP_vec, make_shared<vector<pair<pair<int,int>,pair<int,int>>>>(diffT_ctrs_pos)); 
 
