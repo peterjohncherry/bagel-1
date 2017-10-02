@@ -148,41 +148,26 @@ void TensOp<DType>::get_ctrs_tens_ranges() {
 
   //puts uncontracted ranges into map 
   auto noctrs = make_shared<vector<pair<int,int>>>(0);
-  int counterer = 0;
-  cout << "A1" << endl;
   for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
-    cout << "A1a" << endl;
     auto ReIm_factors = make_shared<vector<pair<int,int>>>(1, get<3>(rng_it->second)); 
-    cout << "A1b" << endl;
     auto CTP = make_shared< CtrTensorPart<DType> >(idxs, rng_it->first, noctrs, ReIm_factors ); 
-    cout << "CTP->myname() = " << CTP->myname() << endl;
     CTP_map->emplace(CTP->myname(), CTP); //maybe should be addded in with ctr_idxs.
   }
-  cout << "A2" << endl;
 
   //puts_contracted ranges into map
   for ( int nctrs = 1 ; nctrs != (idxs->size()/2)+1 ; nctrs++ ){
-    cout << "A3" << endl;
     auto  ctr_lists = get_unique_pairs(plus_ops, kill_ops, nctrs);
     for (auto ctr_vec : *ctr_lists) {
-      cout << "A4" << endl;
-
       for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
-        cout << "A5" << endl;
-
-
         bool valid =true;
         for (int ii = 0 ; ii != ctr_vec->size(); ii++){
-          cout << "A6" << endl;
           if ( rng_it->first->at(ctr_vec->at(ii).first) != rng_it->first->at(ctr_vec->at(ii).second)){
-            cout << "A7" << endl;
             valid = false;
             break;
           }
         }
 
         if (valid) {
-          cout << "A8" << endl;
           auto ReIm_factors = make_shared<vector<pair<int,int>>>(1, get<3>(rng_it->second)); 
           auto CTP = make_shared< CtrTensorPart<DType> >(idxs, rng_it->first, ctr_vec, ReIm_factors ); 
           cout << "CTP->myname() = " << CTP->myname() << endl;
@@ -404,7 +389,6 @@ cout << "MultiTensOp get_ctrs_tens_ranges" << endl;
 cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
   //puts uncontracted ranges into map 
   auto noctrs = make_shared<vector<pair<int,int>>>(0);
-  int counterer = 0;
   
   //silly, should just test {act,act,....} against contraints, and check if act in each ranges... 
   for (auto rng_it = combined_ranges->begin(); rng_it != combined_ranges->end(); rng_it++) {

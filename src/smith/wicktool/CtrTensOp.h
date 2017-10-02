@@ -78,10 +78,6 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
      void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
                        std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>, std::string> >> Acompute_list );
     
-     std::shared_ptr<std::vector<int>> put_ctr_at_front_and_shift(int ctr_pos);
-   
-     std::shared_ptr<std::vector<int>> put_ctr_at_back_and_shift(int ctr_pos);
-
      std::shared_ptr<std::vector<int>> unc_id_ordering_with_ctr_at_back(int ctr_pos);
 
      std::shared_ptr<std::vector<int>> unc_id_ordering_with_ctr_at_front(int ctr_pos);
