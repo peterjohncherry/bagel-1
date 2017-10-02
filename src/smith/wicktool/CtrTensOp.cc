@@ -469,6 +469,90 @@ cout << "CtrTensorPart<DType>::Binary_Contract_same_tensor (returns data)" << en
   return bob;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
+shared_ptr<vector<int>> CtrTensorPart<DType>::put_ctr_at_front_and_shift(int ctr_pos){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "put_ctr_at_front  : " << "rel_ctr_pos = " << ctr_pos << "  " ; cout.flush();
+  cout << "orig_unc_pos = [ " ; for (int ii : *unc_pos ) {cout << ii << " " ;} cout << "]"<<endl;
+
+  vector<int> new_pos(unc_pos->size());
+  size_t shift = full_idxs->size() - unc_pos->size();
+  new_pos[0] = ctr_pos;
+  vector<int>::reverse_iterator new_pos_it = new_pos.rbegin();
+  for (int ii =unc_pos->size()-1; ii !=0 ;  ii--)
+    if (unc_pos->at(ii) != ctr_pos )
+      *new_pos_it++ = unc_pos->at(ii)-shift;
+    
+  return make_shared<vector<int>>(new_pos);
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
+shared_ptr<vector<int>> CtrTensorPart<DType>::unc_id_ordering_with_ctr_at_front(int ctr_pos){
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector<int> new_order(unc_pos->size(),0);
+  for (int pos : *unc_pos){
+    if ( pos  == ctr_pos )
+      break;
+    new_order[0] = new_order[0]+1;
+  }
+
+  int rel_pos = 1;
+  for( int ii = 0 ; ii != unc_pos->size() ; ii++){
+    if ( unc_pos->at(ii) != ctr_pos){
+      new_order[rel_pos] = ii;
+      rel_pos++;
+    }
+  }
+  cout << "new_order = [ " ; cout.flush(); for ( int ii : new_order ) { cout << ii << " " ; cout.flush(); }; cout << "]" << endl;
+  return make_shared<vector<int>>(new_order);
+   
+}     
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
+shared_ptr<vector<int>> CtrTensorPart<DType>::unc_id_ordering_with_ctr_at_back(int ctr_pos){
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector<int> new_order(unc_pos->size(),0);
+  for (int pos : *unc_pos){
+    if ( pos  == ctr_pos )
+      break;
+    new_order.back() = new_order.back()+1;
+  }
+
+  int rel_pos = 0;
+  for( int ii = 0 ; ii != new_order.back() ; ii++)
+    new_order[ii] = ii;
+  
+  for( int ii = new_order.back() ; ii != unc_pos->size()-1 ; ii++)
+    new_order[ii] = ii+1;
+  
+  cout << "new_order = [ " ; cout.flush(); for ( int ii : new_order ) { cout << ii << " " ; cout.flush(); }; cout << "]" << endl;
+ 
+  return make_shared<vector<int>>(new_order);
+}     
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//rearranges position vector  to have ctr pos at back
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
+shared_ptr<vector<int>> CtrTensorPart<DType>::put_ctr_at_back_and_shift(int ctr_pos){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ cout << "put_ctr_at_back" << endl;
+  size_t shift = full_idxs->size() - unc_pos->size();
+  vector<int> new_pos(unc_pos->size());
+  vector<int>::iterator new_pos_it = new_pos.begin();
+  for (int ii = 0; ii !=unc_pos->size(); ii++)
+    if (unc_pos->at(ii) != ctr_pos ){
+      *new_pos_it++ = unc_pos->at(ii)-shift;
+    }
+  *new_pos_it = ctr_pos;
+
+  return make_shared<vector<int>>(new_pos);
+}
+
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class TensorPart<double>;
 template class CtrTensorPart<double>;
