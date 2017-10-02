@@ -177,4 +177,51 @@ class CtrMultiTensorPart : public TensorPart<DType> {
 };
 
 
+//Classes for defining contraction operations
+//ctr_abs pos is the position of the contracted index in the totally uncontracted tensor
+//ctr_rel_pos is the position of the contracted index in the contracted tensor
+class CtrOp_base {
+   public : 
+      const std::string Tout_name;
+      const std::string ctr_type;
+
+      CtrOp_base(){};
+      ~CtrOp_base(){};
+};
+
+ 
+class CtrOp_diff_T : public CtrOp_base {
+   public : 
+      const std::string T1name;
+      const std::string T2name;
+      const std::string Tout_name;
+      const int T1_ctr_abs_pos; 
+      const int T2_ctr_abs_pos;
+      const int T1_ctr_rel_pos; 
+      const int T2_ctr_rel_pos;
+      const std::string ctr_type;
+
+      CtrOp_diff_T(std::string T1name_in, std::string T2name_in , std::string Tout_name_in , int T1_ctr_abs_pos_in, int T2_ctr_abs_pos_in,
+                   int T1_ctr_rel_pos_in, int T2_ctr_rel_pos_in, std::string ctr_type_in ):
+      T1name(T1name_in), T2name(T2name_in) , Tout_name(Tout_name_in),  T1_ctr_abs_pos(T1_ctr_abs_pos_in),  T2_ctr_abs_pos(T2_ctr_abs_pos_in), 
+      T1_ctr_rel_pos(T1_ctr_rel_pos_in),  T2_ctr_rel_pos(T2_ctr_rel_pos_in), ctr_type(ctr_type_in) {};
+
+      ~CtrOp_diff_T(){};
+};
+  
+class CtrOp_same_T {
+   public : 
+      const std::string T1name;
+      const std::string Tout_name;
+      const std::pair<int,int> ctr_abs_pos;
+      const std::pair<int,int> ctr_rel_pos;
+      const std::string ctr_type;
+
+      CtrOp_same_T(std::string T1name_in, std::string Tout_name_in, std::pair<int,int> ctr_abs_pos_in, std::pair<int,int> ctr_rel_pos_in, std::string ctr_type_in ):
+      T1name(T1name_in), Tout_name(Tout_name_in),  ctr_abs_pos(ctr_abs_pos_in),  ctr_rel_pos(ctr_rel_pos_in), ctr_type(ctr_type_in) {};
+
+      ~CtrOp_same_T(){};
+};      
+
+
 #endif
