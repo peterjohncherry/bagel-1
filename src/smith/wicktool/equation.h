@@ -40,11 +40,8 @@ class Equation {
       // contracted and uncontracted multitensor info
       std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DType> > >>CMTP_map   ;  
 
-       // map from the name of a tensor, to the list of contractions which need to be performed to obtain it
-      std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::tuple<std::string,std::string,std::pair<int,int>,std::string> >> >>  ACompute_map ;
-
-       // map from the name of a tensor, to the list of contractions which need to be performed to obtain it NEWVER
-      std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >>  ACompute_map_new ;
+       // map from the name of a tensor, to the list of contractions which need to be performed to obtain it NEW
+      std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >>  ACompute_map ;
 
       // key : String identifying the Gamma or rdm      result : Vector of string vectors identifying A-Tensor contributions paired with corresponding ReIm factor 
       std::shared_ptr< std::map< std::vector<std::string>, std::shared_ptr<std::vector<std::pair< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> >>> >> CMTP_Eqn_Compute_List ;

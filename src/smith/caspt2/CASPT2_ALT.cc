@@ -161,18 +161,9 @@ void CASPT2_ALT::CASPT2_ALT::test() {
       pair<int,int> A_factor = A_contrib.second;
       
       cout << "=========================================================================================================" << endl;
-      cout << A_contrib.first << "  ORIG_ACLIST" << endl;
+      cout << A_contrib.first << endl;
       cout << "=========================================================================================================" << endl;
-
-      for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib.first))){
-          cout << "[" << get<0>(ctr_op) << " , " << get<1>(ctr_op) << " ,"; cout.flush();
-          cout << " (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")" << " , " << (get<3>(ctr_op)) << " ] " << endl;
-      }
-
-      cout << "=========================================================================================================" << endl;
-      cout << A_contrib.first << "  NEW_ACLIST" << endl;
-      cout << "=========================================================================================================" << endl;
-      for (shared_ptr<CtrOp_base> ctr_op : *(Eqn->ACompute_map_new->at(A_contrib.first))){
+      for (shared_ptr<CtrOp_base> ctr_op : *(Eqn->ACompute_map->at(A_contrib.first))){
         if ( ctr_op->ctr_type()[0] == 'd' ){
           cout << "[" << ctr_op->T1name() << " , " << ctr_op->T2name() << " , (";
           cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T2_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ;
@@ -188,7 +179,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
       cout << "=========================================================================================================" << endl;
 
       // Loop through compute list for this A-Tensor
-      for (shared_ptr<CtrOp_base> ctr_op : *(Eqn->ACompute_map_new->at(A_contrib.first))){
+      for (shared_ptr<CtrOp_base> ctr_op : *(Eqn->ACompute_map->at(A_contrib.first))){
 
         string CTP1_name = ctr_op->T1name();
         string CTPout_name = ctr_op->Tout_name();
