@@ -254,7 +254,9 @@ class CtrMultiTensorPart : public TensorPart<DType> {
     std::shared_ptr<CtrTensorPart<DType>>
     Binary_Contract_diff_tensors( std::string T1name, std::string T2name, std::pair<int,int> ctr_todo,
                                   std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
-                                  std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base> >> ACompute_list);
+                                  std::shared_ptr<std::vector<std::tuple<std::string,std::string,std::pair<int,int>,std::string> >> ACompute_list,
+                                  std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base> >> ACompute_list_new);
+
 
 
 };

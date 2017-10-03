@@ -111,10 +111,9 @@ void Equation<DType>::Get_CMTP_Compute_Terms(){
       if ( CMTP_map->find(CMTP_name) == CMTP_map->end())
         cout << CMTP_name << " is not yet in the map ....." << endl;
 
-      CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list);
-      //CMTP_map_new->at(CMTP_name)->FullContract(CTP_map_new, ACompute_list_new);
+      CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list, ACompute_list_new);
       ACompute_map->emplace(CMTP_name, ACompute_list);
-     // ACompute_map_new->emplace(CMTP_name, ACompute_list_new);
+      ACompute_map_new->emplace(CMTP_name, ACompute_list_new);
 
     }
   }
