@@ -57,11 +57,11 @@ void  Equation<DType>::equation_build(std::shared_ptr<std::vector<std::shared_pt
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Into Equation" <<endl;
 
-  for (auto BraKet_Tensors : *BraKet_list) {
+  for (auto BraKet_Tensors : *BraKet_list) 
     Build_BraKet( BraKet_Tensors );
-    for (auto braket : BraKet_Terms)
-      Get_CMTP_Compute_Terms();
-  }
+  
+  for (auto braket : BraKet_Terms)
+    Get_CMTP_Compute_Terms();
   cout << "Leaving Equation" <<endl;
 
   return ;
@@ -92,6 +92,9 @@ void Equation<DType>::Get_CMTP_Compute_Terms(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Get_CMTP_Compute_Terms" << endl;  
 
+  auto CTP_map_new = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>(*CTP_map);    
+  auto CMTP_map_new   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(*CMTP_map); 
+
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto  G2A_mapit =G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
     
@@ -109,9 +112,9 @@ void Equation<DType>::Get_CMTP_Compute_Terms(){
         cout << CMTP_name << " is not yet in the map ....." << endl;
 
       CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list);
-      CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list_new);
+      //CMTP_map_new->at(CMTP_name)->FullContract(CTP_map_new, ACompute_list_new);
       ACompute_map->emplace(CMTP_name, ACompute_list);
-      ACompute_map_new->emplace(CMTP_name, ACompute_list_new);
+     // ACompute_map_new->emplace(CMTP_name, ACompute_list_new);
 
     }
   }

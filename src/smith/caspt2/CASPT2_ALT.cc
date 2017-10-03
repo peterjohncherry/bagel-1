@@ -165,27 +165,28 @@ void CASPT2_ALT::CASPT2_ALT::test() {
       cout << "=========================================================================================================" << endl;
 
       for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib.first))){
-          cout << "[" << get<0>(ctr_op) << " , " << get<1>(ctr_op) << " , (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")" << " , " << (get<3>(ctr_op)) << " ] " ;
+          cout << "[" << get<0>(ctr_op) << " , " << get<1>(ctr_op) << " ,"; cout.flush();
+          cout << " (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")" << " , " << (get<3>(ctr_op)) << " ] " << endl;
       }
 
-      for (shared_ptr<CtrOp_base> ctr_op : *(Eqn->ACompute_map_new->at(A_contrib.first))){
-        if ( ctr_op->ctr_type()[0] == 'd' ){
-//          cout << "[" << ctr_op->T1name << " , " << ctr_op->T2name << " , (";
-//          cout << ctr_op->T1_ctr_abs_pos << "," <<  ctr_op->T1_ctr_abs_pos << ")" << " , " << ctr_op->Tout_name << " ] " ;
-          cout << ctr_op->Tout_name() << endl;
-        } else if (ctr_op->ctr_type()[0] == 's' ){
-          cout << ctr_op->Tout_name() << endl;
-//          cout << "[" << ctr_op->T1name << " , " << ctr_op->T1name << " , (";
-//          cout << ctr_op->ctr_abs_pos.first << "," <<  ctr_op->ctr_abs_pos.second << ")" << " , " << ctr_op->Tout_name << " ] " ;
-        }
-      }
+//      for (shared_ptr<CtrOp_base> ctr_op : *(Eqn->ACompute_map_new->at(A_contrib.first))){
+//        cout << "hello" <<  endl;
+//        if ( ctr_op->ctr_type()[0] == 'd' ){
+//          cout << "[" << ctr_op->T1name() << " , " << ctr_op->T2name() << " , (";
+//          cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T1_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ;
+//          cout << ctr_op->ctr_type() << endl;
+//        } else if (ctr_op->ctr_type()[0] == 's' ){
+//          cout << ctr_op->Tout_name() << endl;
+//          cout << "[" << ctr_op->T1name() << " , " << ctr_op->T1name() << " , (";
+//          cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;
+//          cout << ctr_op->ctr_type() << endl;
+//        }
+//      }
 
       cout << "=========================================================================================================" << endl;
 
       // Loop through compute list for this A-Tensor
       for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib.first))){
-
-        cout << "[" << get<0>(ctr_op) << " , " << get<1>(ctr_op) << " , (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")" << " , " << (get<3>(ctr_op)) << " ] " ;
 
         string CTP1_name = get<0>(ctr_op);
         cout << "CTP1_name = " << CTP1_name << "    last two =  " << CTP1_name.substr( CTP1_name.length() - 2 ) << endl;
