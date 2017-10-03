@@ -167,6 +167,19 @@ void CASPT2_ALT::CASPT2_ALT::test() {
       for (auto ctr_op : *(Eqn->ACompute_map->at(A_contrib.first))){
           cout << "[" << get<0>(ctr_op) << " , " << get<1>(ctr_op) << " , (" << (get<2>(ctr_op)).first << "," <<  (get<2>(ctr_op)).second << ")" << " , " << (get<3>(ctr_op)) << " ] " ;
       }
+
+      for (shared_ptr<CtrOp_base> ctr_op : *(Eqn->ACompute_map_new->at(A_contrib.first))){
+        if ( ctr_op->ctr_type()[0] == 'd' ){
+//          cout << "[" << ctr_op->T1name << " , " << ctr_op->T2name << " , (";
+//          cout << ctr_op->T1_ctr_abs_pos << "," <<  ctr_op->T1_ctr_abs_pos << ")" << " , " << ctr_op->Tout_name << " ] " ;
+          cout << ctr_op->Tout_name() << endl;
+        } else if (ctr_op->ctr_type()[0] == 's' ){
+          cout << ctr_op->Tout_name() << endl;
+//          cout << "[" << ctr_op->T1name << " , " << ctr_op->T1name << " , (";
+//          cout << ctr_op->ctr_abs_pos.first << "," <<  ctr_op->ctr_abs_pos.second << ")" << " , " << ctr_op->Tout_name << " ] " ;
+        }
+      }
+
       cout << "=========================================================================================================" << endl;
 
       // Loop through compute list for this A-Tensor
@@ -181,26 +194,26 @@ void CASPT2_ALT::CASPT2_ALT::test() {
         pair<int,int> ctr_todo = get<2>(ctr_op);
 
         // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
-        if ( (get<2>(ctr_op).first != get<2>(ctr_op).second) && (CTP_data_map->find(get<3>(ctr_op)) == CTP_data_map->end()) ){
+        if( ( ctr_todo.first != ctr_todo.second) && (CTP_data_map->find(CTPout_name) == CTP_data_map->end())) {
       
-          if ( get<0> (ctr_op) == get<3>(ctr_op)){  cout << " : no contraction, fetch this tensor part" << endl; 
-            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor(get<0>(ctr_op));
-            CTP_data_map->emplace(get<0>(ctr_op), New_Tdata); 
+          if ( CTP1_name == get<3>(ctr_op)){  cout << " : no contraction, fetch this tensor part" << endl; 
+            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor(CTP1_name);
+            CTP_data_map->emplace(CTP1_name, New_Tdata); 
       
-          } else if ( (get<0> (ctr_op) != get<1>(ctr_op)) ||  CTP1_name.substr( CTP1_name.length() - 2 ) == "00" ){ cout << " : contract different tensors" << endl; 
-            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_different_tensors( get<2>(ctr_op), get<0>(ctr_op), get<1>(ctr_op));
+          } else if ( (CTP1_name != CTP2_name) ||  CTP1_name.substr( CTP1_name.length() - 2 ) == "00" ){ cout << " : contract different tensors" << endl; 
+            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_different_tensors( ctr_todo, CTP1_name, CTP2_name);
 
             CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
           
-          } else if ( (get<0> (ctr_op) ==  get<1>(ctr_op)) ) { cout << " : contract on same tensor" <<  endl; 
-            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_on_same_tensor( get<2>(ctr_op), get<0>(ctr_op)); 
+          } else if ( (CTP1_name ==  CTP2_name) ) { cout << " : contract on same tensor" <<  endl; 
+            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_on_same_tensor( ctr_todo, CTP1_name); 
             CTP_data_map->emplace(get<3>(ctr_op), New_Tdata); 
           }
         } else { 
           cout << " did not satisfy any if .... " <<  endl;
         }
         cout << "A_contrib.first = " << A_contrib.first << endl;
-        cout << "get<3>(ctr_op) =  " << get<3>(ctr_op) << endl;
+        cout << "get<3>(ctr_op) =  " << CTPout_name << endl;
       }
       cout << "added " << A_contrib.first << endl; 
       cout << "=========================================================================================================" << endl << endl;

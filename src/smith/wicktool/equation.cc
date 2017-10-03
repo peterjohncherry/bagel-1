@@ -3,7 +3,6 @@
   #include <src/smith/wicktool/equation.h>
   // #include "equation.h"
 
-
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,13 +14,13 @@ void Equation<DType>::Initialize(){
   CTP_map    = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
   CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
   ACompute_map = make_shared<map<string, shared_ptr<vector<tuple<string,string,pair<int,int>,string>> > >>(); 
+  ACompute_map_new = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
   CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
   G_to_A_map = make_shared< unordered_map<string, shared_ptr< unordered_map<string, pair<int,int> > >>>(); 
   GammaMap = make_shared< unordered_map<string, shared_ptr<GammaInfo> > >(); 
 
   return;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
 shared_ptr<TensOp<DType>> Equation<DType>::Build_TensOp(string op_name,
@@ -91,7 +90,7 @@ void Equation<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>>
 template<class DType>
 void Equation<DType>::Get_CMTP_Compute_Terms(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Get_CMTP_Computer_Terms" << endl;  
+  cout << "Get_CMTP_Compute_Terms" << endl;  
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto  G2A_mapit =G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
@@ -104,12 +103,15 @@ void Equation<DType>::Get_CMTP_Compute_Terms(){
       pair<int,int> Asign = A_map_it->second;
 
       auto ACompute_list = make_shared<vector<tuple<string,string,pair<int,int>, string> >>(0); 
+      auto ACompute_list_new = make_shared<vector<shared_ptr<CtrOp_base> >>(0); 
 
       if ( CMTP_map->find(CMTP_name) == CMTP_map->end())
         cout << CMTP_name << " is not yet in the map ....." << endl;
 
       CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list);
+      CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list_new);
       ACompute_map->emplace(CMTP_name, ACompute_list);
+      ACompute_map_new->emplace(CMTP_name, ACompute_list_new);
 
     }
   }
