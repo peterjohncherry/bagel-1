@@ -50,28 +50,6 @@ void CtrTensorPart<DType>::get_name(){
   return;
 };
 
-
-/////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void CtrMultiTensorPart<DType>::get_name_orig(){
-/////////////////////////////////////////////////////////////////////////////
-  name = "";
-  for(string id : *full_idxs)
-    name += id;
-  name+="_"; 
-
-  for(string id : *full_id_ranges)
-    name += id[0];
-
-  if (all_ctrs_pos->size() !=0){
-    name+="_"; 
-    for(pair<int,int> ctr : *all_ctrs_pos)
-      name += to_string(ctr.first)+to_string(ctr.second);
-  }
-  return;
-};
-
-
 /////////////////////////////////////////////////////////////////////////////
 template<class DType>
 void CtrMultiTensorPart<DType>::get_name(){
@@ -399,7 +377,7 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    int T2ctr = cross_ctr.second.second;
 
    //Swapping tensors round to maintain consistent ordering
-   if (cross_ctr.first.first > cross_ctr.second.first) {
+   if (cross_ctr.first.first < cross_ctr.second.first) {
      T1 = CTP_vec->at(cross_ctr.first.first);
      T2 = CTP_vec->at(cross_ctr.second.first);
    } else { 
@@ -418,13 +396,11 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    cout << "T1name = "<< T1name << "    "  << "T1pos = "<< T1pos << "    " << "T1ctr = "<< T1ctr << endl;
    cout << "T2name = "<< T2name << "    "  << "T2pos = "<< T2pos << "    " << "T2ctr = "<< T2ctr << endl;
 
-   auto full_id_ranges = make_shared<vector<string>>(0);
-   full_id_ranges->insert(full_id_ranges->begin(), T1->full_id_ranges->begin(), T1->full_id_ranges->end()) ;
-   full_id_ranges->insert(full_id_ranges->begin(), T2->full_id_ranges->begin(), T2->full_id_ranges->end()); 
+   auto full_id_ranges = make_shared<vector<string>>(T1->full_id_ranges->begin(), T1->full_id_ranges->end()) ;
+   full_id_ranges->insert(full_id_ranges->end(), T2->full_id_ranges->begin(), T2->full_id_ranges->end()); 
 
-   auto full_idxs = make_shared<vector<string>>(0);
-   full_idxs->insert(full_idxs->begin(), T1->full_idxs->begin(), T1->full_idxs->end()) ;
-   full_idxs->insert(full_idxs->begin(), T2->full_idxs->begin(), T2->full_idxs->end()) ;
+   auto full_idxs = make_shared<vector<string>>(T1->full_idxs->begin(), T1->full_idxs->end()) ;
+   full_idxs->insert(full_idxs->end(), T2->full_idxs->begin(), T2->full_idxs->end()) ;
 
    auto full_ctrs = make_shared<vector<pair<int,int>>>(0);
    cout << " getting cml pos " << endl;

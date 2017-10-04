@@ -496,10 +496,15 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
     }
 
   }
+   
+//  cout << "orig_tensors names = [ " ; cout.flush(); 
+//  for (int ii = 0 ; ii !=orig_tensors_.size() ; ii++ ){ 
+//   cout << orig_tensors_[ii]->name() << " " ; cout.flush(); 
+//  }
+//  cout<< endl;
 
   //get_ranges for individual tensors
   for (int ii = 0 ; ii !=orig_tensors_.size() ; ii++ ){ 
-       
      auto TS_id_ranges = make_shared<vector<string>>(0);
      for(int jj = cmlsizevec->at(ii) ; jj != cmlsizevec->at(ii)+orig_tensors_[ii]->idxs->size(); jj++){
        TS_id_ranges->push_back(id_ranges->at(jj));

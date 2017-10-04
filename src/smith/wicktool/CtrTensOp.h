@@ -218,7 +218,6 @@ class CtrMultiTensorPart : public TensorPart<DType> {
     // NOTE : the order of the contractions in the name from get_name does _not_ match the ordering of the tensors. 
     // This greatly simplifies mapping from the gammas to the A-tensors
     void get_name() override;
-    void get_name_orig();
 
     void get_cmtp_idxs_ranges();
 

@@ -166,13 +166,10 @@ void CASPT2_ALT::CASPT2_ALT::test() {
       for (shared_ptr<CtrOp_base> ctr_op : *(Eqn->ACompute_map->at(A_contrib.first))){
         if ( ctr_op->ctr_type()[0] == 'd' ){
           cout << "[" << ctr_op->T1name() << " , " << ctr_op->T2name() << " , (";
-          cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T2_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ;
-          cout << ctr_op->ctr_type() << endl;
+          cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T2_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ; cout << ctr_op->ctr_type() << endl;
         } else if (ctr_op->ctr_type()[0] == 's' ){
-          cout << ctr_op->Tout_name() << endl;
           cout << "[" << ctr_op->T1name() << " , " << ctr_op->T1name() << " , (";
-          cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;
-          cout << ctr_op->ctr_type() << endl;
+          cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;   cout << ctr_op->ctr_type() << endl;
         }
       }
 
@@ -212,7 +209,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
             CTP_data_map->emplace(CTPout_name, New_Tdata); 
           }
         } else { 
-          cout << " did not satisfy any if .... " <<  endl;
+          throw std::runtime_error(" unknown contraction type : " + ctr_op->ctr_type() ) ;
         }
         cout << "A_contrib.first = " << A_contrib.first << endl;
         cout << "CTPout_name =  " << CTPout_name << endl;
