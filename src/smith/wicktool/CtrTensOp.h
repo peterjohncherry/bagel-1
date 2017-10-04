@@ -167,6 +167,7 @@ class CtrMultiTensorPart : public TensorPart<DType> {
 
     std::shared_ptr<std::vector<int>> Tsizes_cml;
     std::shared_ptr<std::vector<int>> all_unc_pos;
+    std::shared_ptr<std::map<int,int>> all_unc_rel_pos;
     std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos;      
     std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors;      
     std::shared_ptr<DType> CTdata ;
@@ -209,7 +210,7 @@ class CtrMultiTensorPart : public TensorPart<DType> {
                          all_ctrs_pos->push_back(std::make_pair(Tsizes_cml->at(cctr.first.first)+cctr.first.second, Tsizes_cml->at(cctr.second.first)+cctr.second.second));
                        }
                        ReIm_factors = std::make_shared<std::vector<std::pair<int,int>>>(all_ctrs_pos->size());
-
+                       get_cmtp_idxs_ranges();
                        get_name();
                      };
                                 
@@ -218,6 +219,8 @@ class CtrMultiTensorPart : public TensorPart<DType> {
     // This greatly simplifies mapping from the gammas to the A-tensors
     void get_name() override;
     void get_name_orig();
+
+    void get_cmtp_idxs_ranges();
 
     std::string get_next_name(std::shared_ptr<std::vector<std::pair<int,int>>> new_ctrs_pos);
 

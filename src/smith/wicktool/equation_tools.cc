@@ -160,8 +160,9 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   shared_ptr<CtrTensorPart<double>> CTP2 = CTP_map->at(T2name);  cout << "got info for " << T2name << endl; 
 
   // shift contraction indexes.
-  pair<int,int> ctr_todo_rel = relativize_ctr_positions( ctr_todo, CTP1, CTP2 );
+//  pair<int,int> ctr_todo_rel = relativize_ctr_positions( ctr_todo, CTP1, CTP2 );
 
+  pair<int,int> ctr_todo_rel = ctr_todo;
   cout << "orig_ctr = ( " << ctr_todo.first << ","<<ctr_todo.second << ")" << endl;
   cout << "rel  ctr = ( " << ctr_todo_rel.first << ","<<ctr_todo_rel.second << ")" << endl;
 
@@ -177,7 +178,6 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
 
   shared_ptr<vector<int>> maxs1 = get_num_index_blocks_vec(T1_new_rngs) ;
   cout << "maxs1 =  [" ; for (auto elem : *maxs1) { cout << elem << " " ; } cout << "]"<< endl;
-
 
 
   shared_ptr<Tensor_<double>> CTP2_data = find_or_get_CTP_data(T2name);
