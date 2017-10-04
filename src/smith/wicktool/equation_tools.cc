@@ -87,24 +87,14 @@ cout << "Equation_Computer::contract_on_same_tensor" <<endl;
    shared_ptr<Tensor_<double>> CTP_data_old = find_or_get_CTP_data(Tname);
 
    // get original uncontracted ranges and positions of Ctrs relative to the current tensor
-   pair<int,int> rel_ctr_todo;
-   vector<int> unc_pos_new(0);
+   pair<int,int> rel_ctr_todo = ctr_todo;
    vector<IndexRange> unc_ranges_old = CTP_data_old->indexrange(); 
    vector<IndexRange> unc_ranges_new(unc_ranges_old.size()-2);  
 
-   vector<IndexRange>::iterator urn_iter = unc_ranges_new.begin();
-   for ( int ii = 0 ; ii != CTP_old->unc_pos->size() ; ii++ ){
-     if ( (CTP_old->unc_pos->at(ii) != ctr_todo.first) && (CTP_old->unc_pos->at(ii) != ctr_todo.second) ) {
-       unc_pos_new.push_back(ii);
-       *urn_iter++ = unc_ranges_old[ii];
-     } else if (CTP_old->unc_pos->at(ii) == ctr_todo.first) {
-       rel_ctr_todo.first  = ii;
-     } else {
-       rel_ctr_todo.second = ii;
-     }
-   }
-
-   cout << "unc_pos_new = [ " ; cout.flush();  for  ( auto rng :  unc_pos_new ) {cout << rng << " " ;} cout << " ] " << endl;
+    vector<IndexRange>::iterator urn_iter = unc_ranges_new.begin();
+    for ( int ii = 0 ; ii != CTP_old->unc_pos->size() ; ii++ )
+      if ( (ii != rel_ctr_todo.first) && (ii != rel_ctr_todo.second) ) 
+        *urn_iter++ = unc_ranges_old[ii];
  
    shared_ptr<Tensor_<double>> CTP_data_new = make_shared<Tensor_<double>>(unc_ranges_new);
    CTP_data_new->allocate();
@@ -139,7 +129,6 @@ cout << "Equation_Computer::contract_on_same_tensor" <<endl;
        // daxpy_(&T1_ubs_int, &one_d, T1_data_new.get(), &one, T_out_data.get()+(kk*T1_unc_block_size), 1.0, &one);
        // void daxpy_(const int*, const double*, const double*, const int*, double*, const int*);
      } while (fvec_cycle_skipper(block_pos, maxs, mins ));
-
    
   } 
   return CTP_data_new;
@@ -167,7 +156,9 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   cout << "rel  ctr = ( " << ctr_todo_rel.first << ","<<ctr_todo_rel.second << ")" << endl;
 
   shared_ptr<Tensor_<double>> CTP1_data = find_or_get_CTP_data(T1name);
-  shared_ptr<vector<int>> T1_new_order  = CTP1->unc_id_ordering_with_ctr_at_back( ctr_todo_rel.first);
+//  shared_ptr<vector<int>> T1_new_order  = CTP1->unc_id_ordering_with_ctr_at_back( ctr_todo_rel.first);
+  cout << "T1_org_order = [" ; for (auto elem : *CTP1->unc_pos) { cout << elem << " " ; } cout << "]"<< "  T1_rel_ctr = " << ctr_todo_rel.first << endl;
+  shared_ptr<vector<int>> T1_new_order  = put_ctr_at_back(CTP1->unc_pos , CTP1->unc_pos->at(ctr_todo_rel.first));
   cout << "T1_new_order = [" ; for (auto elem : *T1_new_order) { cout << elem << " " ; } cout << "]"<< endl;
 
   shared_ptr<vector<shared_ptr<const IndexRange>>> T1_org_rngs = Get_Bagel_const_IndexRanges(CTP1->full_id_ranges, CTP1->unc_pos) ;
@@ -181,14 +172,16 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
 
 
   shared_ptr<Tensor_<double>> CTP2_data = find_or_get_CTP_data(T2name);
-  shared_ptr<vector<int>> T2_new_order  = CTP2->unc_id_ordering_with_ctr_at_front( ctr_todo_rel.second);
+  cout << "got_data... for T2 : " <<  T2name << endl;
+  cout << "T2_org_order = [" ; for (auto elem : *CTP2->unc_pos) { cout << elem << " " ; } cout << "]"<< "  T2_rel_ctr = " << ctr_todo_rel.second << endl;
+  shared_ptr<vector<int>> T2_new_order  = put_ctr_at_front(CTP2->unc_pos , CTP2->unc_pos->at(ctr_todo_rel.second));
   cout << "T2_new_order = [" ; for (auto elem : *T2_new_order) { cout << elem << " " ; } cout << "]"<< endl;
 
   shared_ptr<vector<shared_ptr<const IndexRange>>> T2_org_rngs = Get_Bagel_const_IndexRanges(CTP2->full_id_ranges, CTP2->unc_pos) ;
   cout << "T2_org_rngs = [" ; for (auto elem : *T2_org_rngs) { cout << elem << " " ; } cout << "]"<< endl;
 
   shared_ptr<vector<shared_ptr<const IndexRange>>> T2_new_rngs = reorder_vector(T2_new_order, T2_org_rngs);
-  cout << "T2_new_rngs = [" ; for (auto elem : *T2_org_rngs) { cout << elem << " " ; } cout << "]"<< endl;
+  cout << "T2_new_rngs = [" ; for (auto elem : *T2_new_rngs) { cout << elem << " " ; } cout << "]"<< endl;
 
   shared_ptr<vector<int>> maxs2 = get_num_index_blocks_vec(T2_new_rngs) ;
   cout << "maxs2 =  [" ; for (auto elem : *maxs2) { cout << elem << " " ; } cout << "]"<< endl;
@@ -238,6 +231,7 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
         shared_ptr<vector<Index>> T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
         std::unique_ptr<double[]> T2_data_org = CTP2_data->get_block(*T2_org_rng_blocks);
         T2_data_new = reorder_tensor_data_X(T2_data_org.get(), T2_new_order, T2_org_rng_blocks); 
+        cout <<  " got data " << endl;
       }
        
       std::unique_ptr<double[]> T_out_data(new double[T1_unc_block_size*T2_unc_block_size]);
@@ -309,37 +303,62 @@ Equation_Computer::Equation_Computer::find_or_get_CTP_data(string CTP_name){
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//rearranges position vector  to have ctr pos at back
+//rearranges position vector to have ctr pos at back
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Equation_Computer::Equation_Computer::put_ctr_at_back(shared_ptr<vector<int>> orig_pos , int ctr_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "put_ctr_at_back" << endl;
-  vector<int> new_pos(orig_pos->size());
-  
-  vector<int>::iterator new_pos_it = new_pos.begin();
-  for (int ii = 0; ii !=orig_pos->size(); ii++)
-    if (orig_pos->at(ii) != ctr_pos ){
-      *new_pos_it++ = orig_pos->at(ii);
-    }
-  *new_pos_it = ctr_pos;
+  cout << "put_ctr_at_back" << endl;
 
-  return make_shared<vector<int>>(new_pos);
+  if (ctr_pos == orig_pos->back()){
+ 
+   return make_shared<vector<int>>(*orig_pos);
+ 
+  } else {
+   
+   vector<int> new_pos = *orig_pos;
+   int ii =0;
+   for (  ; ii != orig_pos->size(); ii++)
+     if ( orig_pos->at(ii) == ctr_pos ) 
+       break; 
+ 
+   new_pos.erase(new_pos.begin()+ii);
+   new_pos.push_back(ctr_pos); 
+ 
+   if (new_pos.size() != orig_pos->size())
+     throw runtime_error("something has gone wrong in index reshffling");
+ 
+   return make_shared<vector<int>>(new_pos);
+ 
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//rearranges position vector to have ctr pos at front
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Equation_Computer::Equation_Computer::put_ctr_at_front(shared_ptr<vector<int>> orig_pos , int ctr_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "put_ctr_at_front  : " << "rel_ctr_pos = " << ctr_pos << "  " ; cout.flush();
- cout << "orig_pos = [ " ; for (int ii : *orig_pos ) {cout << ii << " " ;} cout << "]"<<endl;
-  vector<int> new_pos(orig_pos->size());
-  new_pos[0] = ctr_pos;
-  vector<int>::reverse_iterator new_pos_it = new_pos.rbegin();
+cout << "put_ctr_at_front" <<  endl;  
+  if (ctr_pos == orig_pos->front()){
+ 
+   return make_shared<vector<int>>(*orig_pos);
+ 
+  } else {
+ 
+    vector<int> tmp_pos = *orig_pos;
+    int ii =0;
+    for (  ; ii != orig_pos->size(); ii++)
+      if ( tmp_pos[ii] == ctr_pos ) 
+        break; 
+    
+    tmp_pos.erase(tmp_pos.begin()+ii);
+    vector<int> new_pos(1,  ctr_pos);
+    new_pos.insert(new_pos.end(), tmp_pos.begin(), tmp_pos.end() );
+   
+    if (new_pos.size() != orig_pos->size())
+      throw runtime_error("something has gone wrong in index reshffling");
 
-  for (int ii =orig_pos->size()-1; ii !=0 ;  ii--)
-    if (orig_pos->at(ii) != ctr_pos ){
-      *new_pos_it++ = orig_pos->at(ii);
-    }
-  return make_shared<vector<int>>(new_pos);
+    return make_shared<vector<int>>(new_pos);
+  }
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
