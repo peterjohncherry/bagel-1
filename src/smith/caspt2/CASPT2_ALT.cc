@@ -189,10 +189,10 @@ void CASPT2_ALT::CASPT2_ALT::test() {
         cout << "CTP1_name = " << CTP1_name << "    last two =  " << CTP1_name.substr( CTP1_name.length() - 2 ) << endl;
         if (ctr_op->ctr_type()[0] == 's'){
           CTP2_name = ctr_op->T1name();
-          ctr_todo = ctr_op->ctr_abs_pos();
+          ctr_todo = ctr_op->ctr_rel_pos();
         } else if (ctr_op->ctr_type()[0] == 'd'){
           CTP2_name = ctr_op->T2name();
-          ctr_todo = make_pair(ctr_op->T1_ctr_abs_pos(), ctr_op->T2_ctr_abs_pos());
+          ctr_todo = make_pair(ctr_op->T1_ctr_rel_pos(), ctr_op->T2_ctr_rel_pos());
         }  
 
         // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
