@@ -182,7 +182,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
         if( CTP_data_map->find(ctr_op->Tout_name()) == CTP_data_map->end() ) {
            shared_ptr<Tensor_<double>>  New_Tdata; 
 
-          if ( ctr_op->T1name() == ctr_op->Tout_name()){  cout << " : no contraction, fetch this tensor part" << endl; 
+          if ( ctr_op->ctr_type()[0] == 'g'){  cout << " : no contraction, fetch this tensor part" << endl; 
             New_Tdata =  Eqn_computer->get_block_Tensor(ctr_op->Tout_name());
             CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
       
