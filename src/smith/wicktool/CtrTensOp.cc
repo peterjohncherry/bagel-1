@@ -312,6 +312,7 @@ cout << "CtrMultiTensorPart<DType>::FullContract" << endl;
         Tmap->emplace(new_CTP->name, new_CTP);
 
       } else {
+        cout << "USING MT BINARY CONTRACT DIFF TENSORS" << endl;
         auto new_CMTP = Binary_Contract_diff_tensors_MT(CTP_vec->at(cross_ctrs_pos->back().first.first)->myname(),CTP_vec->at(cross_ctrs_pos->back().second.first)->myname(),
                                                         all_ctrs_pos->back(), Tmap, ACompute_list);
         new_CMTP->FullContract(Tmap, ACompute_list);
@@ -336,7 +337,7 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl;
    cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl; 
   
 
-   auto T1T2_ctrd =  Binary_Contract_diff_tensors(T1name, T2name, ctr_todo, Tmap, ACompute_list );
+   auto T1T2_ctrd =  Binary_Contract_diff_tensors(cross_ctrs_pos->back(), ctr_todo, Tmap, ACompute_list );
    Tmap->emplace(T1T2_ctrd->name, T1T2_ctrd);
 
    auto new_CTP_vec = make_shared<vector<shared_ptr<CtrTensorPart<DType>>>>(0);
@@ -434,155 +435,6 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << ctr_todo.first << "," << ctr_todo.second << ") to get " << new_CTP->name << endl;
    return new_CTP;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-shared_ptr<CtrTensorPart<DType>>
- CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors( string T1name_in, string T2name_in, pair<int,int> ctr_todo,
-                                                          shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap,
-                                                          shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_CtrMultiTensorPart
-cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl; 
-#endif 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl; 
-   cout << "my name = " << name << endl; 
-    string T1name; cout <<" T1name_in = " << T1name_in << endl; 
-    string T2name; cout <<" T2name_in = " << T2name_in << endl;
-
-   //This is some annoting juggling; the ordering of the names as input here might not correspond to the 
-   //ordering of the contractions. Awkward, but including elsewhere will be worse I think...
-//   if (ctr_todo.first < ctr_todo.second) {
-      T1name = T1name_in;
-      T2name = T2name_in;
-//   } else {
-//      T1name = T2name_in;
-//      T2name = T1name_in;
-//   }
-   cout <<  "looking for " << T1name << endl;
-   shared_ptr<CtrTensorPart<DType>> T1 = Tmap->at(T1name);
-   cout <<  "found " << T1name << " ... looking for " << T2name << endl;
-   shared_ptr<CtrTensorPart<DType>> T2 = Tmap->at(T2name);
-   cout <<  "found " << T2name << endl;
-
-   int T1pos = 0;  
-   cout << "getting T1pos" <<  endl;
-   for (   ; T1pos != CTP_vec->size() ; T1pos++) { if (T1name == CTP_vec->at(T1pos)->name) { break;}}
-   
-   int T2pos = 0;  
-   cout << "getting T2pos" <<  endl;
-   for (   ; T2pos != CTP_vec->size() ; T2pos++) { if (T2name == CTP_vec->at(T2pos)->name) { break;}}
- 
-   auto full_id_ranges = make_shared<vector<string>>(0);
-   full_id_ranges->insert(full_id_ranges->begin(), T1->full_id_ranges->begin(), T1->full_id_ranges->end()) ;
-   full_id_ranges->insert(full_id_ranges->begin(), T2->full_id_ranges->begin(), T2->full_id_ranges->end()); 
-
-   auto full_idxs = make_shared<vector<string>>(0);
-   full_idxs->insert(full_idxs->begin(), T1->full_idxs->begin(), T1->full_idxs->end()) ;
-   full_idxs->insert(full_idxs->begin(), T2->full_idxs->begin(), T2->full_idxs->end()) ;
-
-   auto full_ctrs = make_shared<vector<pair<int,int>>>(0);
-   cout << " getting cml pos " << endl;
-   cout << " T1shift =  Tsizes_cml->at("<<T1pos<<")"<< endl;
-   int T1shift =  Tsizes_cml->at(T1pos);
-   cout << " T2shift =  Tsizes_cml->at("<<T2pos<<")"<< endl;
-   int T2shift =  Tsizes_cml->at(T2pos);
-   cout << " got cmlpos"<< endl;
-
-   for (auto ctr : *T1->ctrs_pos)
-      full_ctrs->push_back( make_pair(ctr.first+T1shift, ctr.second+T1shift));
-
-   for (auto ctr : *T2->ctrs_pos)
-      full_ctrs->push_back( make_pair(ctr.first+T2shift, ctr.second+T2shift));
-
-   full_ctrs->push_back(ctr_todo);
-
-   cout << " getting relative positions " ;
-   cout << "T1->unc_rel_pos->at("<< ctr_todo.first << "-" << T1shift <<") " << endl;
-   int T1_ctr_rel_pos = T1->unc_rel_pos->at(ctr_todo.first-T1shift);
-   cout << "T2->unc_rel_pos->at("<< ctr_todo.second << "-" << T2shift <<") " << endl;
-   int T2_ctr_rel_pos = T2->unc_rel_pos->at(ctr_todo.second-T2shift);
-
-   auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, full_ctrs, make_shared<vector<pair<int,int>>>(1, ctr_todo )); 
-   ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, new_CTP->name,  ctr_todo.first, ctr_todo.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
-   auto new_CTData = make_shared<DType>();
-   new_CTP->contracted = true;
-
-   cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << ctr_todo.first << "," << ctr_todo.second << ") to get " << new_CTP->name << endl;
-   return new_CTP;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-shared_ptr<vector<int>> CtrTensorPart<DType>::unc_id_ordering_with_ctr_at_front(int ctr_pos){
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "unc_id_ordering_with_ctr_at_front" << endl;
-  cout << "unc_pos = [" ;for (int elem : *unc_pos ) {cout << elem << " " ; } cout << "]     ctr_pos = " << ctr_pos << endl;
-
-  vector<int> new_order(unc_pos->size(),0);
-  for (int pos : *unc_pos){
-    cout << "pos = "<< pos << "   ctr_pos = " << ctr_pos <<  "     rel_pos = " << new_order.front() << endl;
-    if ( pos  == ctr_pos ) {
-      cout << "found  ctr_pos"<< endl;
-      break;
-    }
-    new_order.front() = new_order.front()+1;
-  }
-
-  cout << "new_orderA = [ " ; cout.flush(); for ( int ii : new_order ) { cout << ii << " " ; cout.flush(); }; cout << "]" << endl;
-  int ii = 1;
-  while ( ii < new_order.front()+1){
-    new_order[ii] = ii-1;
-    ii++;
-  }
-
-  cout << "new_orderB = [ " ; cout.flush(); for ( int ii : new_order ) { cout << ii << " " ; cout.flush(); }; cout << "]" << endl;
-  while ( ii < new_order.size()  ){
-    new_order[ii] = ii;
-    ii++;
-  }
-  
-  cout << "new_orderC = [ " ; cout.flush(); for ( int ii : new_order ) { cout << ii << " " ; cout.flush(); }; cout << "]" << endl;
-  return make_shared<vector<int>>(new_order);
-   
-}     
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-shared_ptr<vector<int>> CtrTensorPart<DType>::unc_id_ordering_with_ctr_at_back(int ctr_pos){
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "unc_id_ordering_with_ctr_at_back" << endl;
-  cout << "unc_pos = [" ; for (int elem : *unc_pos ) {cout << elem << " " ; } cout << "]     ctr_pos = " << ctr_pos << endl;
-  vector<int> new_order(unc_pos->size(),0);
-  for (int pos : *unc_pos){
-    cout << "pos = "<< pos << "   ctr_pos = " << ctr_pos <<  "     rel_pos = " << new_order.front() << endl;
-    if ( pos  == ctr_pos ){
-      cout << "found  ctr_pos"<< endl;
-      break;
-    }
-    new_order.back() = new_order.back()+1;
-  }
- 
-  cout << "new_orderA = [ " ; cout.flush(); for ( int ii : new_order ) { cout << ii << " " ; cout.flush(); }; cout << "]" << endl;
-  int ii = 0;
-  while ( ii < new_order.back()){
-    new_order[ii] = ii;
-    cout <<" first loop ii =  " << ii << endl;
-    ii++;
-  }
-
-  cout << "new_orderB = [ " ; cout.flush(); for ( int ii : new_order ) { cout << ii << " " ; cout.flush(); }; cout << "]" << endl;
-  while ( ii < new_order.size()-1 ){
-    cout <<" second loop ii =  " << ii << endl;
-    new_order[ii] = ii+1;
-    ii++;
-  }
-  
-  cout << "new_orderC = [ " ; cout.flush(); for ( int ii : new_order ) { cout << ii << " " ; cout.flush(); }; cout << "]" << endl;
- 
-  return make_shared<vector<int>>(new_order);
-}     
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class TensorPart<double>;

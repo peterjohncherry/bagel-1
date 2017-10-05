@@ -171,8 +171,8 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   for (int ii =0 ; ii != T2_org_order->size(); ii++) { T2_org_order->at(ii) = ii ;}
 
   shared_ptr<Tensor_<double>> CTP1_data = find_or_get_CTP_data(T1name);
-  cout << "T1_org_order = [" ; for (auto elem : *CTP1->unc_pos) { cout << elem << " " ; } cout << "]"<< "  T1_rel_ctr = " << ctr_todo_rel.first << endl;
-  shared_ptr<vector<int>> T1_new_order  = put_ctr_at_back( T1_org_order , CTP1->unc_pos->at(ctr_todo_rel.first));
+  cout << "T1_org_order = [" ; for (auto elem : *T1_org_order) { cout << elem << " " ; } cout << "]"<< "  T1_rel_ctr = " << ctr_todo_rel.first << endl;
+  shared_ptr<vector<int>> T1_new_order  = put_ctr_at_back( T1_org_order , ctr_todo_rel.first);
   cout << "T1_new_order = [" ; for (auto elem : *T1_new_order) { cout << elem << " " ; } cout << "]"<< endl;
 
   shared_ptr<vector<shared_ptr<const IndexRange>>> T1_org_rngs = Get_Bagel_const_IndexRanges(CTP1->full_id_ranges, CTP1->unc_pos) ;
@@ -187,8 +187,8 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
 
   shared_ptr<Tensor_<double>> CTP2_data = find_or_get_CTP_data(T2name);
   cout << "got_data... for T2 : " <<  T2name << endl;
-  cout << "T2_org_order = [" ; for (auto elem : *CTP2->unc_pos) { cout << elem << " " ; } cout << "]"<< "  T2_rel_ctr = " << ctr_todo_rel.second << endl;
-  shared_ptr<vector<int>> T2_new_order  = put_ctr_at_front( T2_org_order , CTP2->unc_pos->at(ctr_todo_rel.second));
+  cout << "T2_org_order = [" ; for (auto elem : *T2_org_order) { cout << elem << " " ; } cout << "]"<< "  T2_rel_ctr = " << ctr_todo_rel.second << endl;
+  shared_ptr<vector<int>> T2_new_order  = put_ctr_at_front( T2_org_order , ctr_todo_rel.second);
   cout << "T2_new_order = [" ; for (auto elem : *T2_new_order) { cout << elem << " " ; } cout << "]"<< endl;
 
   shared_ptr<vector<shared_ptr<const IndexRange>>> T2_org_rngs = Get_Bagel_const_IndexRanges(CTP2->full_id_ranges, CTP2->unc_pos) ;

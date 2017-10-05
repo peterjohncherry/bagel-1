@@ -180,21 +180,22 @@ void CASPT2_ALT::CASPT2_ALT::test() {
 
         // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
         if( CTP_data_map->find(ctr_op->Tout_name()) == CTP_data_map->end() ) {
-      
+           shared_ptr<Tensor_<double>>  New_Tdata; 
+
           if ( ctr_op->T1name() == ctr_op->Tout_name()){  cout << " : no contraction, fetch this tensor part" << endl; 
-            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->get_block_Tensor(ctr_op->Tout_name());
+            New_Tdata =  Eqn_computer->get_block_Tensor(ctr_op->Tout_name());
             CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
       
           } else if ( ctr_op->ctr_type()[0] == 'd' ){ cout << " : contract different tensors" << endl; 
-            shared_ptr<Tensor_<double>> New_Tdata = Eqn_computer->contract_different_tensors( make_pair(ctr_op->T1_ctr_rel_pos(), ctr_op->T2_ctr_rel_pos()), ctr_op->T1name(), ctr_op->T2name());
+            New_Tdata = Eqn_computer->contract_different_tensors( make_pair(ctr_op->T1_ctr_rel_pos(), ctr_op->T2_ctr_rel_pos()), ctr_op->T1name(), ctr_op->T2name());
             CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
           
           } else if ( ctr_op->ctr_type()[0] == 's' ) { cout << " : contract on same tensor" <<  endl; 
-            shared_ptr<Tensor_<double>>  New_Tdata  =  Eqn_computer->contract_on_same_tensor( ctr_op->ctr_rel_pos(), ctr_op->T1name()); 
+            New_Tdata = Eqn_computer->contract_on_same_tensor( ctr_op->ctr_rel_pos(), ctr_op->T1name()); 
             CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+          } else { 
+            throw std::runtime_error(" unknown contraction type : " + ctr_op->ctr_type() ) ;
           }
-        } else { 
-          throw std::runtime_error(" unknown contraction type : " + ctr_op->ctr_type() ) ;
         }
         cout << "A_contrib.first = " << A_contrib.first << endl;
         cout << "CTPout_name =  " << ctr_op->Tout_name() << endl;
