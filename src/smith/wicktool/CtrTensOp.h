@@ -109,12 +109,14 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
     std::shared_ptr<std::vector<int>> unc_pos;
     std::shared_ptr<std::map<int,int>> unc_rel_pos;
     std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos;      
+    std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_todo;      
     std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors; 
     std::shared_ptr<DType> CTdata ;
     std::shared_ptr<std::vector<std::string>> required_Tblocks;
-    bool contracted; 
+    int skipped_ctrs;
+    bool got_data; 
     bool survive_independently;
-    
+      
 
     CtrTensorPart(){};   
   
@@ -126,12 +128,14 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
                   full_id_ranges = full_id_ranges_in; 
                   full_idxs = full_idxs_in;
                   ctrs_pos = ctrs_pos_in;
+                  ctrs_todo = ctrs_pos_in;
                   ReIm_factors = ReIm_factors_in;
-                  contracted = false;
+                  got_data = false;
                   get_ctp_idxs_ranges();
                   get_name();
                   CTdata = std::make_shared<DType>(); 
                   required_Tblocks = std::make_shared<std::vector<std::string>>(0);
+                  skipped_ctrs = 0 ;
                 };
 
      void get_ctp_idxs_ranges();

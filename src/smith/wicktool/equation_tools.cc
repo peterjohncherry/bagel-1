@@ -30,6 +30,39 @@ Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SM
 
 }  
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << " Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib_name )" << endl;
+
+  for (shared_ptr<CtrOp_base> ctr_op : *(eqn_info->ACompute_map->at(A_contrib))){
+ 
+    // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
+    if( CTP_data_map->find(ctr_op->Tout_name()) == CTP_data_map->end() ) {
+       shared_ptr<Tensor_<double>>  New_Tdata; 
+ 
+      if ( ctr_op->ctr_type()[0] == 'g'){  cout << " : no contraction, fetch this tensor part" << endl; 
+        New_Tdata =  get_block_Tensor(ctr_op->Tout_name());
+        CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+  
+      } else if ( ctr_op->ctr_type()[0] == 'd' ){ cout << " : contract different tensors" << endl; 
+        New_Tdata = contract_different_tensors( make_pair(ctr_op->T1_ctr_rel_pos(), ctr_op->T2_ctr_rel_pos()), ctr_op->T1name(), ctr_op->T2name(), ctr_op->Tout_name());
+        CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+      
+      } else if ( ctr_op->ctr_type()[0] == 's' ) { cout << " : contract on same tensor" <<  endl; 
+        New_Tdata = contract_on_same_tensor( ctr_op->ctr_rel_pos(), ctr_op->T1name(), ctr_op->Tout_name()); 
+        CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+      } else { 
+        throw std::runtime_error(" unknown contraction type : " + ctr_op->ctr_type() ) ;
+      }
+    }
+    cout << "A_contrib.first = " << A_contrib << endl;
+    cout << "CTPout_name =  " << ctr_op->Tout_name() << endl;
+  }
+  
+  return;
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +110,7 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>>
-Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr_todo, std::string Tname) {
+Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Equation_Computer::contract_on_same_tensor" <<endl; 
 
@@ -141,6 +174,7 @@ cout << "Equation_Computer::contract_on_same_tensor" <<endl;
      } while (fvec_cycle_skipper(block_pos, maxs, mins ));
    
   } 
+  CTP_map->at(Tname)->got_data = true; 
   return CTP_data_out;
 }
 
@@ -151,7 +185,8 @@ cout << "Equation_Computer::contract_on_same_tensor" <<endl;
 //T1_new_order and T2_new_order are the new order of indexes, and are used for rearranging the tensor data.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>>
-Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> ctr_todo, std::string T1name, std::string T2name){
+Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> ctr_todo, std::string T1name, std::string T2name,
+                                                                  std::string Tout_name){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Equation_Computer::contract_on_different_tensor" <<endl; 
 
@@ -261,6 +296,9 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
       //remove last index; contracted index is cycled in T1 loop
     } while(fvec_cycle_skipper(T2_rng_block_pos, maxs2, 0 )) ;
   } while (fvec_cycle_test(T1_rng_block_pos, maxs1 ));
+
+  CTP_map->at(Tout_name)->got_data = true; 
+
   return T_out;
 }
 

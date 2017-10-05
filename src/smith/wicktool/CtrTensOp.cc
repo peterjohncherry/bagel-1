@@ -198,64 +198,56 @@ void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTens
 cout << "CtrTensorPart<DType>::FullContract" << endl; 
 #endif 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "CtrTensorPart<DType> " << endl;
-
+cout << "CtrTensorPart<DType>::FullContract -- name =  " << name << endl;
+ 
   auto ctp_loc = Tmap->find(name);
   if(ctp_loc == Tmap->end())
     Tmap->emplace(name , make_shared<CtrTensorPart>(*this));
-  cout << "A1" << endl;
   
-  if(ctrs_pos->size() == 0) { 
+  if( ctrs_todo->size() == 0 ) { 
+    cout << "hello" << endl;
     auto new_ctrs_pos = make_shared<vector<pair<int,int>>>(0);
     auto new_ReIm_factors = make_shared<vector<pair<int,int>>>(0); 
+    cout << "hello1" <<  endl;
     auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, new_ctrs_pos, new_ReIm_factors ); 
-    string new_name = get_next_name(new_ctrs_pos);
+    cout << "hello2" <<  endl;
+    string new_name = get_next_name(new_ctrs_pos); cout << "new_name for unc_block = " <<   new_name << endl;
     ACompute_list->push_back(make_shared<CtrOp_base>(new_name, "get_block"));
     Tmap->emplace(new_name, new_CTP);
   }
 
-  cout << "A2" << endl;
-  
-  if(ctrs_pos->size() > 1) { 
-    cout << "A3a" << endl;
+  if( ctrs_todo->size() > 1) { 
+    cout << "hello3" << endl;
     auto new_ctrs_pos = make_shared<vector<pair<int,int>>>(ctrs_pos->begin(), ctrs_pos->end()-1);
-    cout << "A3aa" << endl;
+    auto new_ctrs_todo = make_shared<vector<pair<int,int>>>(ctrs_todo->begin(), ctrs_todo->end()-1);
     auto new_ReIm_factors = make_shared<vector<pair<int,int>>>(ReIm_factors->begin(), ReIm_factors->end()); 
-    cout << "A3b" << endl;
     string new_name = get_next_name(new_ctrs_pos);
-    cout << "A3c" << endl;
     shared_ptr<CtrTensorPart<DType>> new_CTP; 
     // if find one less, contract it.
-    cout << "A3d" << endl;
     if ( Tmap->find(new_name) == Tmap->end() ){ 
       new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, new_ctrs_pos, new_ReIm_factors ); 
-      cout << "A3e" << endl;
+      new_CTP->ctrs_todo = new_ctrs_todo;
     } else {
       new_CTP = Tmap->at(new_name);
-      cout << "A3f" << endl;
     }
-    cout << "A4" << endl;
-    pair<int,int> ctrs_rel_pos = make_pair(new_CTP->unc_rel_pos->at(ctrs_pos->back().first), new_CTP->unc_rel_pos->at(ctrs_pos->back().second));
-    ACompute_list->push_back(make_shared<CtrOp_same_T> (new_name, name, ctrs_pos->back(), ctrs_rel_pos, "same_T C" ));
-    cout << "A5" << endl;
+
+    pair<int,int> ctrs_rel_pos = make_pair(new_CTP->unc_rel_pos->at(ctrs_todo->back().first), new_CTP->unc_rel_pos->at(ctrs_todo->back().second));
+    ACompute_list->push_back(make_shared<CtrOp_same_T> (new_name, name, ctrs_todo->back(), ctrs_rel_pos, "same_T C" ));
     new_CTP->FullContract(Tmap,  ACompute_list);
-    cout << "A6" << endl;
     
-  } else if(ctrs_pos->size() == 1 ){ 
+  } else if( ctrs_todo->size() == 1 ){ 
+    cout << "hello4" << endl;
     auto unc_ctrs_pos = make_shared<vector<pair<int,int>>>(1, make_pair(0,0) );
     auto unc_ReIm_factors = make_shared<vector<pair<int,int>>>(0); 
     auto unc_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, unc_ctrs_pos, unc_ReIm_factors ); 
 
-    cout << "A7" << endl;
     // Need to create a list of uncontracted tensors
     unc_CTP->CTdata = make_shared<DType>(); 
     Tmap->emplace(unc_CTP->name, unc_CTP);
     required_Tblocks->push_back(unc_CTP->name);
-    pair<int,int> ctrs_rel_pos = make_pair(unc_CTP->unc_rel_pos->at(ctrs_pos->back().first), unc_CTP->unc_rel_pos->at(ctrs_pos->back().second));
+    pair<int,int> ctrs_rel_pos = make_pair(unc_CTP->unc_rel_pos->at(ctrs_todo->back().first), unc_CTP->unc_rel_pos->at(ctrs_todo->back().second));
 
-    cout << "A8" << endl;
-    ACompute_list->push_back(make_shared<CtrOp_same_T> (unc_CTP->name, name, ctrs_pos->back(), ctrs_rel_pos, "same_T B" ));
-    cout << "A9" << endl;
+    ACompute_list->push_back(make_shared<CtrOp_same_T> (unc_CTP->name, name, ctrs_todo->back(), ctrs_rel_pos, "same_T B" ));
 
   }
   return;
@@ -273,24 +265,25 @@ cout << "CtrMultiTensorPart<DType>::FullContract" << endl;
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "CtrMultiTensorPart<DType>::FullContract" << endl; 
-
+cout << "CMTP name = " << myname() << endl;
 
    if (all_ctrs_pos->size() > 0 ) {
      int T1loc, T2loc;
      T1loc = cross_ctrs_pos->back().first.first;
      T2loc = cross_ctrs_pos->back().second.first;
     
-     if ( CTP_vec->size() == 2) {
+     if ( (CTP_vec->size() == 2) && ( cross_ctrs_pos->size() > 0 ) ) {
      
        shared_ptr<CtrTensorPart<DType>> new_CTP = Binary_Contract_diff_tensors(cross_ctrs_pos->back(), all_ctrs_pos->back(), Tmap,  ACompute_list);
-     
+       cout << " new_CTP->myname()  = " << new_CTP->myname() << endl;
+
        cout << "done binary contraction" << endl;
        if (Tmap->find(new_CTP->name) == Tmap->end()){
          Tmap->emplace(new_CTP->name, new_CTP);
          cout << "put " << name << " into Tmap" << endl;
+       } else {
+         cout << "did not put " << myname() << " into Tmap" << endl;
        }
-       cout << "did not put " << myname() << " into Tmap" << endl;
-     
        if ( cross_ctrs_pos->size() >1 )   
          new_CTP->FullContract(Tmap, ACompute_list);
  
@@ -309,7 +302,7 @@ cout << "CtrMultiTensorPart<DType>::FullContract" << endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
 shared_ptr<CtrMultiTensorPart<DType>>
-CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT(string T1name, string T2name, pair<int,int> ctr_todo,
+CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT(string T1name, string T2name, pair<int,int> ctr,
                                                            shared_ptr< map<string, shared_ptr<CtrTensorPart<DType>>> > Tmap,
                                                            shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -319,7 +312,7 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl; 
 
-   auto T1T2_ctrd =  Binary_Contract_diff_tensors(cross_ctrs_pos->back(), ctr_todo, Tmap, ACompute_list );
+   auto T1T2_ctrd =  Binary_Contract_diff_tensors(cross_ctrs_pos->back(), ctr, Tmap, ACompute_list );
    Tmap->emplace(T1T2_ctrd->name, T1T2_ctrd);
 
    auto new_CTP_vec = make_shared<vector<shared_ptr<CtrTensorPart<DType>>>>(0);
@@ -340,7 +333,7 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl;
 template<class DType>
 shared_ptr<CtrTensorPart<DType>>
  CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors( pair<pair<int,int>, pair<int,int>> cross_ctr,// These two arguments should be 
-                                                          pair<int,int> ctr_todo,                      // equivalent ! 
+                                                          pair<int,int> abs_ctr,                      // equivalent ! 
                                                           shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap,
                                                           shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -361,6 +354,7 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
 
    CTP_vec->at(T1pos)->FullContract(Tmap, ACompute_list);
    CTP_vec->at(T2pos)->FullContract(Tmap, ACompute_list);
+   int num_internal_ctrs = CTP_vec->at(T1pos)->ctrs_pos->size() + CTP_vec->at(T2pos)->ctrs_pos->size();
 
    //Swapping tensors round to maintain consistent ordering
    if (cross_ctr.first.first < cross_ctr.second.first) {
@@ -402,7 +396,7 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    for (auto ctr : *T2->ctrs_pos)
       full_ctrs->push_back( make_pair(ctr.first+T2shift, ctr.second+T2shift));
       
-   cout << "("<< T1ctr+T1shift <<","<< T2ctr+T2shift << ")  ?= (" << ctr_todo.first <<"," << ctr_todo.second << ")" << endl; 
+   cout << "("<< T1ctr+T1shift <<","<< T2ctr+T2shift << ")  ?= (" << abs_ctr.first <<"," << abs_ctr.second << ")" << endl; 
 
    full_ctrs->push_back( make_pair(T1ctr+T1shift, T2ctr+T2shift) );
 
@@ -412,11 +406,13 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    cout << "T2->unc_rel_pos->at("<< T2ctr<<") " << endl;
    int T2_ctr_rel_pos = T2->unc_rel_pos->at(T2ctr);
 
-   auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, full_ctrs, make_shared<vector<pair<int,int>>>(1, ctr_todo )); 
-   ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, new_CTP->name,  ctr_todo.first, ctr_todo.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+
+   auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, full_ctrs, make_shared<vector<pair<int,int>>>(1, abs_ctr )); 
+   new_CTP->skipped_ctrs = num_internal_ctrs;
+   ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, new_CTP->name,  abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
    auto new_CTData = make_shared<DType>();
 
-   cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << ctr_todo.first << "," << ctr_todo.second << ") to get " << new_CTP->name << endl;
+   cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << abs_ctr.first << "," << abs_ctr.second << ") to get " << new_CTP->name << endl;
    return new_CTP;
 }
 

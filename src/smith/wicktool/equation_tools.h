@@ -47,15 +47,17 @@ class Equation_Computer {
     get_block_Tensor(std::string Tname);
 
     std::shared_ptr<Tensor_<double>>
-    contract_on_same_tensor( std::pair<int,int> ctr_todo, std::string Tname);
+    contract_on_same_tensor( std::pair<int,int> ctr_todo, std::string Tname, std::string Tout);
 
     std::shared_ptr<Tensor_<double>>
-    contract_different_tensors(std::pair<int,int> ctr_todo, std::string T1name, std::string T2name );
+    contract_different_tensors(std::pair<int,int> ctr_todo, std::string T1name, std::string T2name, std::string Tout_name);
 
     template<class DataType, class DType>
     std::shared_ptr<DType> contract_different_tensors( std::string T1name, std::string T2name,  std::pair<int,int> ctr_todo,
                                                        std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
     //////////////////////////////
+
+    void Calculate_CTP(std::string A_contrib_name );
 
     template<class vtype>
     std::shared_ptr<std::vector<vtype>>
@@ -158,7 +160,6 @@ class Equation_Computer {
 
     std::shared_ptr<std::vector<std::shared_ptr<Tensor_<double>>>>
     get_gammas(int MM , int NN, std::string gamma_name);
-
     
     std::shared_ptr<std::vector<std::shared_ptr<VectorB>>> compute_gammas(const int MM, const int NN ) ;
 
