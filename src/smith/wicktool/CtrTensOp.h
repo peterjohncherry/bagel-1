@@ -128,7 +128,7 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
                   full_id_ranges = full_id_ranges_in; 
                   full_idxs = full_idxs_in;
                   ctrs_pos = ctrs_pos_in;
-                  ctrs_todo = ctrs_pos_in;
+                  ctrs_todo = std::make_shared<std::vector<std::pair<int,int>>>(*ctrs_pos_in);
                   ReIm_factors = ReIm_factors_in;
                   got_data = false;
                   get_ctp_idxs_ranges();
