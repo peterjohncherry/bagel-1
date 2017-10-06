@@ -233,6 +233,21 @@ class CtrMultiTensorPart : public TensorPart<DType> {
     void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
                       std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list_new );
 
+     void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
+                       std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
+                       std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map);
+
+    std::shared_ptr<CtrTensorPart<DType>>
+    Binary_Contract_diff_tensors( std::pair<std::pair<int,int>, std::pair<int,int>> cross_ctr,
+                                  std::pair<int,int>  ctr_todo,
+                                  std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
+                                  std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base> >> ACompute_list,
+                                  std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map);
+
+
+
+
+
     std::shared_ptr<CtrMultiTensorPart<DType>>
     Binary_Contract_diff_tensors_MT( std::string T1, std::string T2, std::pair<int,int> ctr_todo,
                                      std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>>> > Tmap,
