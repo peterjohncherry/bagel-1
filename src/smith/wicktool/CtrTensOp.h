@@ -2,6 +2,7 @@
 #define __SRC_SMITH_CtrTensOp_H
 
   #include <src/smith/wicktool/WickUtils.h>
+  #include <unordered_set>
 //  #include "WickUtils.h"
 
 //Classes for defining contraction operations
@@ -114,6 +115,8 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
     std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors; 
     std::shared_ptr<DType> CTdata ;
     std::shared_ptr<std::vector<std::string>> required_Tblocks;
+    std::unordered_set<std::string> dependents;
+    std::unordered_set<std::string> dependencies;
     int skipped_ctrs;
     bool got_data; 
     bool got_compute_list; 

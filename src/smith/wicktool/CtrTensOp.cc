@@ -215,13 +215,13 @@ cout << endl <<  "CtrTensorPart<DType>::FullContract NEWVER : CTP name =  " << n
       shared_ptr<vector<pair<int,int>>> ctrs_pos_in = make_shared<vector<pair<int,int>>>(*ctrs_todo);
       shared_ptr<vector<pair<int,int>>> new_ReIm_factors = make_shared<vector<pair<int,int>>>(1, make_pair(1,1));
       CTP_in = make_shared< CtrTensorPart<DType> >( full_idxs, full_id_ranges, ctrs_pos_in, new_ReIm_factors );
+      Tmap->emplace(CTP_in->name,  CTP_in);
+      Tmap->emplace(CTP_in->name,  CTP_in);
     } else {
       CTP_in = Tmap->at(CTP_in_name);
     }
-
-    cout << "ctrs_done = ( " ; cout.flush();  for ( pair<int,int> ctr : *ctrs_done)  {  cout << "(" <<  ctr.first << "," <<  ctr.second << ") " ; }  cout << " ) " << endl;
-    cout << "ctrs_todo = ( " ; cout.flush();  for ( pair<int,int> ctr : *ctrs_todo)  {  cout << "(" <<  ctr.first << "," <<  ctr.second << ") " ; }  cout << " ) " << endl;
-
+    CTP_in->dependents.emplace(name);
+  
     cout <<" (CTP_in->unc_rel_pos->at("<<ctrs_done->back().first<<"), CTP_in->unc_rel_pos->at("<<ctrs_done->back().second<<")) = ";
     cout <<"("<< CTP_in->unc_rel_pos->at(ctrs_done->back().first)<<","<< CTP_in->unc_rel_pos->at(ctrs_done->back().second) << ")"<<endl;   
     pair<int,int> ctrs_rel_pos_in = make_pair(CTP_in->unc_rel_pos->at(ctrs_done->back().first), CTP_in->unc_rel_pos->at(ctrs_done->back().second));   
@@ -232,6 +232,7 @@ cout << endl <<  "CtrTensorPart<DType>::FullContract NEWVER : CTP name =  " << n
     }
     cout << "Contract " << CTP_in_name << " over  (" << ctrs_done->back().first << ","<< ctrs_done->back().second << ") to get " << CTP_out_name <<  endl;
     ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done->back(), ctrs_rel_pos_in, "same_T new" ));
+    dependencies.emplace(CTP_in_name);
   } 
   ACompute_map->emplace(myname(), ACompute_list);
   return;
