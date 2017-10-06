@@ -167,9 +167,10 @@ void CASPT2_ALT::CASPT2_ALT::test() {
         if ( ctr_op->ctr_type()[0] == 'd' ){
           cout << "[" << ctr_op->T1name() << " , " << ctr_op->T2name() << " , (";
           cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T2_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ; cout << ctr_op->ctr_type() << endl;
+
         } else if (ctr_op->ctr_type()[0] == 's' ){
           cout << "[" << ctr_op->T1name() << " , " << ctr_op->T1name() << " , (";
-          cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;   cout << ctr_op->ctr_type() << endl;
+          cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;   cout << ctr_op->ctr_type()  << endl;
         }
       }
       cout << "=========================================================================================================" << endl;
