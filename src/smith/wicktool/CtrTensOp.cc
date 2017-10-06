@@ -202,63 +202,35 @@ cout << "CtrTensorPart<DType>::FullContract new" << endl;
 cout << endl <<  "CtrTensorPart<DType>::FullContract NEWVER : CTP name =  " << name << endl;
 
   cout << "ctrs_todo = ( " ; cout.flush();
-  for ( pair<int,int> ctr : *ctrs_todo){
-    cout << "(" <<  ctr.first << "," <<  ctr.second << ") " ;   cout.flush();
-  }
+  for ( pair<int,int> ctr : *ctrs_todo)
+    cout << "(" <<  ctr.first << "," <<  ctr.second << ") " ;   
   cout <<")" << "     ctrs_todo->size() = " << ctrs_todo->size() <<  endl;
 
 
   while ( ctrs_todo->size() != 0 ){ 
-    cout << "A1"  << endl;;
-    string CTP_out_name = get_next_name(ctrs_todo);
-    
-    cout << "A2"  << endl;
+    string CTP_in_name = get_next_name(ctrs_done);
     ctrs_done->push_back(ctrs_todo->back());
-    cout << "A3"  << endl;
+    string CTP_out_name = get_next_name(ctrs_done);
     ctrs_todo->pop_back();
-    cout << "A4"  << endl;
-    shared_ptr<vector<pair<int,int>>> ctrs_pos_in = make_shared<vector<pair<int,int>>>(*ctrs_todo);
-    cout << "A5"  << endl;
-    string CTP_in_name = get_next_name(ctrs_pos_in);
-    cout << "A6"  << endl;
 
     shared_ptr<CtrTensorPart<DType>> CTP_in;
-    cout << "A7"  << endl;
     if ( Tmap->find(CTP_in_name) == Tmap->end()) {
-       cout << "A8"  << endl;
+      shared_ptr<vector<pair<int,int>>> ctrs_pos_in = make_shared<vector<pair<int,int>>>(*ctrs_todo);
       shared_ptr<vector<pair<int,int>>> new_ReIm_factors = make_shared<vector<pair<int,int>>>(1, make_pair(1,1));
-      cout << "A9"  << endl;
       CTP_in = make_shared< CtrTensorPart<DType> >( full_idxs, full_id_ranges, ctrs_pos_in, new_ReIm_factors );
-      cout << "A0"  << endl;
     } else {
-    cout << "A10"  << endl;
       CTP_in = Tmap->at(CTP_in_name);
-    cout << "A11"  << endl;
     }
-   cout << "A0a" << endl;
     pair<int,int> ctrs_rel_pos_in = make_pair(CTP_in->unc_rel_pos->at(ctrs_done->back().first), CTP_in->unc_rel_pos->at(ctrs_done->back().second));   
-    cout << "A12"  << endl;
 
-    if ( ACompute_map->find(CTP_in_name) == ACompute_map->end()) {                                                       cout << "A13"  << endl;
-      shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list_new = make_shared<vector<shared_ptr<CtrOp_base> >>(0);   cout << "A14"  << endl;
-      CTP_in->FullContract(Tmap, ACompute_list_new, ACompute_map);                                                       cout << "A15"  << endl;
+    if ( ACompute_map->find(CTP_in_name) == ACompute_map->end()) {                                                       
+      shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list_new = make_shared<vector<shared_ptr<CtrOp_base> >>(0);   
+      CTP_in->FullContract(Tmap, ACompute_list_new, ACompute_map);                                                       
     }
-    cout << "A16"  << endl;
-    cout << "CTP_in_name  = " << CTP_in_name <<  endl;
-    cout << "CTP_out_name = " << CTP_out_name <<  endl;
-    cout << "ctrs_done->back() = (" << ctrs_done->back().first << "," <<   ctrs_done->back().second<< ")"<<endl ;
-    cout << "ctrs_rel_pos_in = (" << ctrs_rel_pos_in.first << "," <<   ctrs_rel_pos_in.second<< ")"<<endl ;
-
-    cout << CTP_in_name  << CTP_in_name <<  endl;
-    auto bobtest = make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done->back(), ctrs_rel_pos_in, "same_T new" );
-    cout << "A16a"  << endl;
-    cout << " ACompute_list->size()  =  " << ACompute_list->size() << endl;
+    cout << "Contract " << CTP_in_name << " over  (" << ctrs_done->back().first << ","<< ctrs_done->back().second << ") to get " << CTP_out_name <<  endl;
     ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done->back(), ctrs_rel_pos_in, "same_T new" ));
-    cout << "A17"  << endl;
   } 
-  cout << "A18" << endl;
   ACompute_map->emplace(myname(), ACompute_list);
-  cout << "A19" << endl;
   return;
 }
 
@@ -379,7 +351,8 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, full_ctrs, make_shared<vector<pair<int,int>>>(1, abs_ctr )); 
    new_CTP->ctrs_todo = ctrs_todo;
    new_CTP->ctrs_done = ctrs_done;
-   ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, new_CTP->name,  abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+   
+   ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, new_CTP->get_next_name(new_CTP->ctrs_done),  abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
    auto new_CTData = make_shared<DType>();
     
    if (Tmap->find(new_CTP->name) == Tmap->end()){
