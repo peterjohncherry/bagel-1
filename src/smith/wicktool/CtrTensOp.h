@@ -110,11 +110,13 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
     std::shared_ptr<std::map<int,int>> unc_rel_pos;
     std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos;      
     std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_todo;      
+    std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_done;      
     std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors; 
     std::shared_ptr<DType> CTdata ;
     std::shared_ptr<std::vector<std::string>> required_Tblocks;
     int skipped_ctrs;
     bool got_data; 
+    bool got_compute_list; 
     bool survive_independently;
       
 
@@ -129,6 +131,7 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
                   full_idxs = full_idxs_in;
                   ctrs_pos = ctrs_pos_in;
                   ctrs_todo = std::make_shared<std::vector<std::pair<int,int>>>(*ctrs_pos_in);
+                  ctrs_done = std::make_shared<std::vector<std::pair<int,int>>>(0);
                   ReIm_factors = ReIm_factors_in;
                   got_data = false;
                   get_ctp_idxs_ranges();
@@ -147,7 +150,11 @@ class CtrTensorPart : public TensorPart<DType> /*, public: std::enable_shared_fr
      std::string get_next_name(std::shared_ptr<std::vector<std::pair<int,int>>> new_ctrs_pos);
 
      void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
-                       std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list_new );
+                       std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list );
+     
+     void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
+                       std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
+                       std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map);
     
     ~CtrTensorPart(){};
 };

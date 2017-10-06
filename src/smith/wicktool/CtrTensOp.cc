@@ -191,6 +191,44 @@ cout << "CtrMultiTensorPart<DType>::get_ctp_idxs_ranges" << endl;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
+void CtrTensorPart<DType>::FullContract( shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap,
+                                         shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
+                                         shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_CtrTensorPart
+cout << "CtrTensorPart<DType>::FullContract new" << endl; 
+#endif 
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << endl <<  "CtrTensorPart<DType>::FullContract new : CTP name =  " << name << endl;
+
+  while ( ctrs_todo->size() != 0 ){ 
+    string CTP_out_name = get_next_name(ctrs_todo);
+    
+    ctrs_done->push_back(ctrs_todo->back());
+    ctrs_todo->pop_back();
+    shared_ptr<vector<pair<int,int>>> ctrs_pos_in = make_shared<vector<pair<int,int>>>(*ctrs_todo);
+
+    string CTP_in_name = get_next_name(ctrs_pos_in);
+
+    shared_ptr<vector<pair<int,int>>> new_ReIm_factors = make_shared<vector<pair<int,int>>>(1, make_pair(1,1));
+    auto CTP_in = make_shared< CtrTensorPart<DType> >( full_idxs, full_id_ranges, ctrs_pos_in, new_ReIm_factors );
+
+    pair<int,int> ctrs_rel_pos_in = make_pair(CTP_in->unc_rel_pos->at(ctrs_pos_in->back().first), CTP_in->unc_rel_pos->at(ctrs_pos_in->back().second));   
+    ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_pos_in->back(), ctrs_rel_pos_in, "same_T new" ));
+
+    if ( ACompute_map->find(CTP_in_name) == ACompute_map->end()) {
+      shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list_new = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
+      CTP_in->FullContract(Tmap, ACompute_list_new, ACompute_map);
+    }
+  }
+
+  ACompute_map->emplace(myname(), ACompute_list);
+  return;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
 void CtrTensorPart<DType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap,
                                         shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -375,21 +413,14 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    auto full_idxs = make_shared<vector<string>>(T1->full_idxs->begin(), T1->full_idxs->end()) ;
    full_idxs->insert(full_idxs->end(), T2->full_idxs->begin(), T2->full_idxs->end()) ;
 
-   auto full_ctrs = make_shared<vector<pair<int,int>>>(0);
-   cout << " getting cml pos " << endl;
-   cout << " T1shift =  Tsizes_cml->at("<<T1pos<<")"<< endl;
+   shared_ptr<vector<pair<int,int>>> ctrs_done = make_shared<vector<pair<int,int>>>(0);
+   
    int T1shift =  Tsizes_cml->at(T1pos);
-   cout << " T2shift =  Tsizes_cml->at("<<T2pos<<")"<< endl;
    int T2shift =  Tsizes_cml->at(T2pos);
-   cout << " got cmlpos"<< endl;
-
    for (auto ctr : *T1->ctrs_pos)
-      full_ctrs->push_back( make_pair(ctr.first+T1shift, ctr.second+T1shift));
-
+     ctrs_done->push_back( make_pair(ctr.first+T1shift, ctr.second+T1shift));
    for (auto ctr : *T2->ctrs_pos)
-      full_ctrs->push_back( make_pair(ctr.first+T2shift, ctr.second+T2shift));
-      
-   cout << "("<< T1ctr+T1shift <<","<< T2ctr+T2shift << ")  ?= (" << abs_ctr.first <<"," << abs_ctr.second << ")" << endl; 
+     ctrs_done->push_back( make_pair(ctr.first+T2shift, ctr.second+T2shift));
 
    shared_ptr<vector<pair<int,int>>> ctrs_todo = make_shared<vector<pair<int,int>>>(cross_ctrs_pos->size()-1);
    for (int ii = 0 ;  ii != ctrs_todo->size() ; ii++) 
@@ -397,12 +428,11 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
        ctrs_todo->at(ii) = make_pair(Tsizes_cml->at(cross_ctrs_pos->at(ii).first.first)  +  cross_ctrs_pos->at(ii).first.second,
                                      Tsizes_cml->at(cross_ctrs_pos->at(ii).second.first) +  cross_ctrs_pos->at(ii).second.second);
 
+   auto full_ctrs = make_shared<vector<pair<int,int>>>(0);
+   full_ctrs->insert(full_ctrs->end(), ctrs_done->begin(), ctrs_done->end());
    full_ctrs->insert(full_ctrs->end(), ctrs_todo->begin(), ctrs_todo->end());
 
-   cout << " getting relative positions " ;
-   cout << "T1->unc_rel_pos->at("<< T1ctr<<") " << endl;
    int T1_ctr_rel_pos = T1->unc_rel_pos->at(T1ctr);
-   cout << "T2->unc_rel_pos->at("<< T2ctr<<") " << endl;
    int T2_ctr_rel_pos = T2->unc_rel_pos->at(T2ctr);
 
    auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, full_ctrs, make_shared<vector<pair<int,int>>>(1, abs_ctr )); 
