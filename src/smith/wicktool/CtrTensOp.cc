@@ -11,22 +11,6 @@
 
 using namespace std;
 
-////////////////////////////////////////////////////////////////////////////
-template<typename DType>
-void TensorPart<DType>::get_name(){
-////////////////////////////////////////////////////////////////////////////
- name = "";
-
- for(std::string id : *idxs)
-   name += id;
- name+="_"; 
-
- for(std::string id : *id_ranges)
-   name += id[0];
-
- return;
-};
-
 /////////////////////////////////////////////////////////////////////////////
 template<class DType>
 void CtrTensorPart<DType>::get_name(){
@@ -40,29 +24,6 @@ void CtrTensorPart<DType>::get_name(){
     name += id[0];
 
   auto ctrs_buff = make_shared<vector<pair<int,int>>>(*ctrs_pos);
-  auto ctrs_buff_standard = GammaGenerator::Standardize_delta_ordering_generic(ctrs_buff ) ;
-
-  if (ctrs_buff_standard->size() !=0){
-    name+="_"; 
-    for(pair<int,int> ctr : *ctrs_buff_standard)
-      name += to_string(ctr.first)+to_string(ctr.second);
-  }
-  return;
-};
-
-/////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void CtrMultiTensorPart<DType>::get_name(){
-/////////////////////////////////////////////////////////////////////////////
-  name = "";
-  for(string id : *full_idxs)
-    name += id;
-  name+="_"; 
-
-  for(string id : *full_id_ranges)
-    name += id[0];
-
-  auto ctrs_buff = make_shared<vector<pair<int,int>>>(*all_ctrs_pos);
   auto ctrs_buff_standard = GammaGenerator::Standardize_delta_ordering_generic(ctrs_buff ) ;
 
   if (ctrs_buff_standard->size() !=0){
@@ -96,30 +57,6 @@ string CtrTensorPart<DType>::get_next_name(shared_ptr<vector<pair<int,int>>> new
 
   return new_name;
 }
-/////////////////////////////////////////////////////////////////////////////
-template<class DType>
-string CtrMultiTensorPart<DType>::get_next_name(shared_ptr<vector<pair<int,int>>> new_ctrs_pos){
-/////////////////////////////////////////////////////////////////////////////
-  string new_name = "";
-  for(string id : *full_idxs)
-    new_name += id;
-  new_name+="_"; 
-
-  for(string id : *full_id_ranges)
-    new_name += id[0];
-
-
-  auto ctrs_buff = make_shared<vector<pair<int,int>>>(*new_ctrs_pos);
-  auto ctrs_buff_standard = GammaGenerator::Standardize_delta_ordering_generic(ctrs_buff ) ;
-
-  if (ctrs_buff_standard->size() !=0){
-    new_name+="_"; 
-    for(pair<int,int> ctr : *ctrs_buff_standard)
-      new_name += to_string(ctr.first)+to_string(ctr.second);
-  }
-
-  return new_name;
-};
 //////////////////////////////////////////////////////////////////////////////
 template<typename DType>
 void CtrTensorPart<DType>::get_ctp_idxs_ranges(){
@@ -139,12 +76,12 @@ cout << "CtrTensorPart<DType>::get_ctp_idxs_ranges" << endl;
 
   bool survive_indep = true;
   unc_pos = make_shared<vector<int>>(0);
-  id_ranges = make_shared<vector<string>>(0);
-  idxs = make_shared<vector<string>>(0);
+  unc_id_ranges = make_shared<vector<string>>(0);
+  unc_idxs = make_shared<vector<string>>(0);
   for ( int ii = 0 ; ii !=get_unc.size() ; ii++ ) {
     if (get_unc[ii]){
-      id_ranges->push_back(full_id_ranges->at(ii));
-      idxs->push_back(full_idxs->at(ii));
+      unc_id_ranges->push_back(full_id_ranges->at(ii));
+      unc_idxs->push_back(full_idxs->at(ii));
       unc_pos->push_back(ii);
     }
   } 
@@ -152,41 +89,6 @@ cout << "CtrTensorPart<DType>::get_ctp_idxs_ranges" << endl;
   unc_rel_pos = make_shared<map<int,int>>();
   for( int ii =0 ; ii != unc_pos->size(); ii++) 
     unc_rel_pos->emplace(unc_pos->at(ii), ii);
-
-//  vprint(*unc_pos, "unc_pos"); 
-//  vprint(*idxs, "idxs"); 
-//  vprint(*id_ranges, "id_ranges"); 
- 
-  return; 
-}
-//////////////////////////////////////////////////////////////////////////////
-template<typename DType>
-void CtrMultiTensorPart<DType>::get_cmtp_idxs_ranges(){
-//////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_CtrMultiTensorPart
-cout << "CtrMultiTensorPart<DType>::get_ctp_idxs_ranges" << endl; 
-#endif 
-//////////////////////////////////////////////////////////////////////////////
-
-  vector<bool> get_unc(full_idxs->size(), true);
-  for (int ii =0; ii<all_ctrs_pos->size() ; ii++){
-    if ( all_ctrs_pos->at(ii).first == all_ctrs_pos->at(ii).second)
-      break;
-    get_unc[all_ctrs_pos->at(ii).first] = false;
-    get_unc[all_ctrs_pos->at(ii).second] = false;
-   }
-
-  bool survive_indep = true;
-  all_unc_pos = make_shared<vector<int>>(0);
-  for ( int ii = 0 ; ii !=get_unc.size() ; ii++ ) {
-    if (get_unc[ii]){
-      all_unc_pos->push_back(ii);
-    }
-  } 
-  
-  all_unc_rel_pos = make_shared<map<int,int>>();
-  for( int ii =0 ; ii != all_unc_pos->size(); ii++) 
-    all_unc_rel_pos->emplace(all_unc_pos->at(ii), ii);
 
 //  vprint(*unc_pos, "unc_pos"); 
 //  vprint(*idxs, "idxs"); 
@@ -255,23 +157,23 @@ cout << "CtrMultiTensorPart<DType>::FullContract" << endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << endl << "CtrMultiTensorPart<DType>::FullContract NEWVER :   CMTP name = " << myname() << endl;
 
-   if (all_ctrs_pos->size() > 0 ) {
+   if (ctrs_pos->size() > 0 ) {
      int T1loc, T2loc;
      T1loc = cross_ctrs_pos->back().first.first;
      T2loc = cross_ctrs_pos->back().second.first;
     
      if ( (CTP_vec->size() == 2) && ( cross_ctrs_pos->size() > 0 ) ) {
      
-       shared_ptr<CtrTensorPart<DType>> new_CTP = Binary_Contract_diff_tensors(cross_ctrs_pos->back(), all_ctrs_pos->back(), Tmap,  ACompute_list, ACompute_map);
+       shared_ptr<CtrTensorPart<DType>> new_CTP = Binary_Contract_diff_tensors(cross_ctrs_pos->back(), ctrs_pos->back(), Tmap,  ACompute_list, ACompute_map);
          
        if ( cross_ctrs_pos->size() >1 )   {
-     //    cout << "Obtaining contraction list for " << new_CTP->myname() << " using single tensor approach" <<endl;  
+         //  cout << "Obtaining contraction list for " << new_CTP->myname() << " using single tensor approach" <<endl;  
          new_CTP->FullContract(Tmap, ACompute_list, ACompute_map);
        }
      } else {
        cout << "USING MT BINARY CONTRACT DIFF TENSORS" << endl;
        auto new_CMTP = Binary_Contract_diff_tensors_MT(CTP_vec->at(cross_ctrs_pos->back().first.first)->myname(),CTP_vec->at(cross_ctrs_pos->back().second.first)->myname(),
-                                                       all_ctrs_pos->back(), Tmap, ACompute_list, ACompute_map);
+                                                       ctrs_pos->back(), Tmap, ACompute_list, ACompute_map);
        new_CMTP->FullContract(Tmap, ACompute_list, ACompute_map);
      }
   }
@@ -403,7 +305,6 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl;
    return new_CMTP;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template class TensorPart<double>;
 template class CtrTensorPart<double>;
 template class CtrMultiTensorPart<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

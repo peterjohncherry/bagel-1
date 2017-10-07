@@ -514,7 +514,8 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
                                                             make_shared<vector<pair<int,int>>>(sameT_ctrs_pos.at(ii)),
                                                             make_shared<vector<pair<int,int>>>(1, ReIm_factors->at(ii)) ) ; 
   }
-  auto CMTP = make_shared<CtrMultiTensorPart<DType> >(CTP_vec, make_shared<vector<pair<pair<int,int>,pair<int,int>>>>(diffT_ctrs_pos)); 
+  
+  shared_ptr<CtrMultiTensorPart<DType>> CMTP = make_shared<CtrMultiTensorPart<DType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos)); 
 
   CMTP_map->emplace(CMTP->myname(), CMTP); 
 

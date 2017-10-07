@@ -73,7 +73,7 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
    if(  CTP_data_map->find(Tname) != CTP_data_map->end())
      return CTP_data_map->at(Tname);
 
-   shared_ptr<vector<string>>     unc_ranges = CTP_map->at(Tname)->id_ranges;  
+   shared_ptr<vector<string>>     unc_ranges = CTP_map->at(Tname)->unc_id_ranges;  
    cout << "unc_ranges = [ " ; cout.flush();  for  ( auto rng :  *unc_ranges )cout << rng << " " ; cout << " ] " << endl;
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
@@ -124,15 +124,14 @@ cout << "Equation_Computer::contract_on_same_tensor" <<endl;
    vector<IndexRange> unc_ranges_old = CTP_data_old->indexrange(); 
    vector<IndexRange> unc_ranges_new(unc_ranges_old.size()-2);  
    vector<int> unc_pos_new(unc_ranges_old.size()-2);  
-
    
-    vector<IndexRange>::iterator urn_iter = unc_ranges_new.begin();
-    vector<int>::iterator upn_iter = unc_pos_new.begin();
-    for ( int ii = 0 ; ii != CTP_old->unc_pos->size() ; ii++ )
-      if ( (ii != rel_ctr_todo.first) && (ii != rel_ctr_todo.second) ){ 
-        *urn_iter++ = unc_ranges_old[ii];
-        *upn_iter++ = ii;
-      }
+   vector<IndexRange>::iterator urn_iter = unc_ranges_new.begin();
+   vector<int>::iterator upn_iter = unc_pos_new.begin();
+   for ( int ii = 0 ; ii != CTP_old->unc_pos->size() ; ii++ )
+     if ( (ii != rel_ctr_todo.first) && (ii != rel_ctr_todo.second) ){ 
+       *urn_iter++ = unc_ranges_old[ii];
+       *upn_iter++ = ii;
+     }
 
    shared_ptr<Tensor_<double>> CTP_data_out = make_shared<Tensor_<double>>(unc_ranges_new);
    CTP_data_out->allocate();

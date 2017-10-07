@@ -174,7 +174,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
         }
       }
       cout << "=========================================================================================================" << endl;
-     // Eqn_computer->Calculate_CTP(A_contrib.first);
+      Eqn_computer->Calculate_CTP(A_contrib.first);
       cout << "added " << A_contrib.first << endl; 
       cout << "=========================================================================================================" << endl << endl;
       // add this contribution to the merged A_tensor
