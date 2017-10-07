@@ -85,11 +85,13 @@ string CtrTensorPart<DType>::get_next_name(shared_ptr<vector<pair<int,int>>> new
   for(string id : *full_id_ranges)
     new_name += id[0];
 
-  if (new_ctrs_pos->size() >=1){
+  auto ctrs_buff = make_shared<vector<pair<int,int>>>(*new_ctrs_pos);
+  auto ctrs_buff_standard = GammaGenerator::Standardize_delta_ordering_generic(ctrs_buff ) ;
+
+  if (ctrs_buff_standard->size() !=0){
     new_name+="_"; 
-    for(int ii=0;  ii!= new_ctrs_pos->size(); ii++){
-      new_name += to_string(new_ctrs_pos->at(ii).first)+to_string(new_ctrs_pos->at(ii).second);
-    }
+    for(pair<int,int> ctr : *ctrs_buff_standard)
+      new_name += to_string(ctr.first)+to_string(ctr.second);
   }
 
   return new_name;
@@ -106,11 +108,14 @@ string CtrMultiTensorPart<DType>::get_next_name(shared_ptr<vector<pair<int,int>>
   for(string id : *full_id_ranges)
     new_name += id[0];
 
-  if (new_ctrs_pos->size() >=1){
+
+  auto ctrs_buff = make_shared<vector<pair<int,int>>>(*new_ctrs_pos);
+  auto ctrs_buff_standard = GammaGenerator::Standardize_delta_ordering_generic(ctrs_buff ) ;
+
+  if (ctrs_buff_standard->size() !=0){
     new_name+="_"; 
-    for(int ii=0;  ii!= new_ctrs_pos->size(); ii++){
-      new_name += to_string(new_ctrs_pos->at(ii).first)+to_string(new_ctrs_pos->at(ii).second);
-    }
+    for(pair<int,int> ctr : *ctrs_buff_standard)
+      new_name += to_string(ctr.first)+to_string(ctr.second);
   }
 
   return new_name;
