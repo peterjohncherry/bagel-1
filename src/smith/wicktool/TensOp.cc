@@ -282,6 +282,7 @@ cout << "MultiTensOp::initialize" << endl;
     kill_combs->at(ii) =  get_N_in_M_combsX( kill_ops, ii );
   }
 
+  CTP_map = make_shared< map< string, shared_ptr<CtrTensorPart<DType>> >>();
   CMTP_map = make_shared< map< string, shared_ptr<CtrMultiTensorPart<DType>> >>();
   cout << "MultiTensOp::initialize endl;" << endl;
   return;
@@ -513,11 +514,14 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
      CTP_vec->at(ii) = make_shared< CtrTensorPart<DType> >( orig_tensors_[ii]->idxs, TS_id_ranges,
                                                             make_shared<vector<pair<int,int>>>(sameT_ctrs_pos.at(ii)),
                                                             make_shared<vector<pair<int,int>>>(1, ReIm_factors->at(ii)) ) ; 
+
+     CTP_map->emplace(CTP_vec->at(ii)->name, CTP_vec->at(ii)); 
   }
   
   shared_ptr<CtrMultiTensorPart<DType>> CMTP = make_shared<CtrMultiTensorPart<DType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos)); 
 
   CMTP_map->emplace(CMTP->myname(), CMTP); 
+  CTP_map->emplace(CMTP->myname(), CMTP); 
 
   return;
 }

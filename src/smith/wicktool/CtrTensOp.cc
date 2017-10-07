@@ -165,6 +165,9 @@ cout << endl << "CtrMultiTensorPart<DType>::FullContract NEWVER :   CMTP name = 
      if ( (CTP_vec->size() == 2) && ( cross_ctrs_pos->size() > 0 ) ) {
      
        shared_ptr<CtrTensorPart<DType>> new_CTP = Binary_Contract_diff_tensors(cross_ctrs_pos->back(), ctrs_pos->back(), Tmap,  ACompute_list, ACompute_map);
+    
+       if (Tmap->find(new_CTP->name) == Tmap->end())
+         Tmap->emplace(new_CTP->name, new_CTP);
          
        if ( cross_ctrs_pos->size() >1 )   {
          //  cout << "Obtaining contraction list for " << new_CTP->myname() << " using single tensor approach" <<endl;  
@@ -256,17 +259,21 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    int T2_ctr_rel_pos = T2->unc_rel_pos->at(T2ctr);
 
    auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, full_ctrs, make_shared<vector<pair<int,int>>>(1, abs_ctr )); 
+   auto intermediate_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, ctrs_done, make_shared<vector<pair<int,int>>>(1, abs_ctr )); 
+
    new_CTP->ctrs_todo = ctrs_todo;
    new_CTP->ctrs_done = ctrs_done;
    
    ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, new_CTP->get_next_name(new_CTP->ctrs_done),  abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
    auto new_CTData = make_shared<DType>();
     
-   if (Tmap->find(new_CTP->name) == Tmap->end()){
+   if (Tmap->find(new_CTP->name) == Tmap->end())
      Tmap->emplace(new_CTP->name, new_CTP);
-   } else {
-     cout << "did not put " << myname() << " into Tmap" << endl;
-   }
+   
+   if (Tmap->find(intermediate_CTP->name) == Tmap->end())
+     Tmap->emplace(intermediate_CTP->name, intermediate_CTP);
+    
+   
 
    cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << abs_ctr.first << "," << abs_ctr.second << ") to get " << get_next_name(new_CTP->ctrs_done) << endl;
    return new_CTP;
@@ -299,7 +306,6 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl;
    
    CTP_vec->push_back(T1T2_ctrd);
    auto new_cross_ctrs_pos = make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(cross_ctrs_pos->begin(), cross_ctrs_pos->end()-1);
-
    auto new_CMTP = make_shared< CtrMultiTensorPart<DType> >(new_CTP_vec, new_cross_ctrs_pos); 
 
    return new_CMTP;

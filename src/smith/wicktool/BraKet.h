@@ -24,7 +24,7 @@ class BraKet  {
        int nact_el;
        int nidxs;
        
-       bool spinfree_;
+       bool spinfree;
        int spin_max ;
        int spin_min ;
        

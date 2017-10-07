@@ -296,8 +296,9 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
     } while(fvec_cycle_skipper(T2_rng_block_pos, maxs2, 0 )) ;
   } while (fvec_cycle_test(T1_rng_block_pos, maxs1 ));
 
+  cout << "looking for " << Tout_name << " in the map ..... " ; cout.flush();
   CTP_map->at(Tout_name)->got_data = true; 
-
+  cout << "found it! " << endl;
   return T_out;
 }
 

@@ -87,42 +87,14 @@ class MultiTensOp : public TensOp<DType> {
      std::shared_ptr<std::vector<bool>> aops;
      std::shared_ptr<DType> data;
      bool contracted;
-     bool spinfree;
+     int factor;
 
      std::shared_ptr<std::vector<int>> plus_ops;
      std::shared_ptr<std::vector<int>> kill_ops;
-     std::shared_ptr< std::map< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > > orb_ranges;
-     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DType>> > > CTP_map ;
-
-     int factor;
-
      std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > >    plus_combs;
      std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > >    kill_combs;
 
-   public: 
-     MultiTensOp() {};
-     MultiTensOp(std::string name, bool spinfree) : name_(name), spinfree_(spinfree) {}; // spin free construction
-     MultiTensOp<DType>(std::string name, std::shared_ptr<std::vector<std::pair<int,int>>> spin_sectors,
-                 std::shared_ptr<std::map< std::pair< int, std::pair<int,int> > , std::shared_ptr<std::vector<std::shared_ptr<std::vector<bool>>>> >> spin_paths)
-                 : name_(name), spin_sectors_(spin_sectors), spin_paths_(spin_paths), spinfree_(false) {};
-
-     ~MultiTensOp() {};
-
-
-     //Multi Tensor analogue of all_ranges; same as normal tensor but with vector of factors. The ordering of these factors is the same as that of the operators in the tensor
-     std::shared_ptr<std::map< std::shared_ptr<std::vector<std::string>>,
-                               std::tuple<bool, std::shared_ptr<std::vector<std::string>>, std::shared_ptr<std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> combined_ranges;
-
-
-
-
-   private:
-     //Similar to all_ranges, but has the ranges associated with the different operators split up, this may be useful for decomposition, so keep for now
-     std::shared_ptr<std::map< std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>>, 
-                     std::tuple< std::shared_ptr<std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> split_ranges;
-
-   public: 
-
+     std::vector<std::shared_ptr<TensOp<DType>>> orig_tensors_;
      std::shared_ptr<std::vector<int>> Tsizes ;
      std::shared_ptr<std::vector<int>> cmlsizevec ;
      std::shared_ptr<std::vector<std::string>> names;
@@ -131,25 +103,48 @@ class MultiTensOp : public TensOp<DType> {
      std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> split_plus_ops;
      std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> split_kill_ops;
 
-     std::shared_ptr<std::vector<std::pair<int,int>>> spin_sectors_;
      std::shared_ptr<std::map< std::pair< int, std::pair<int,int> > , std::shared_ptr<std::vector<std::shared_ptr<std::vector<bool>>>> >> spin_paths_;
+     std::shared_ptr<std::vector<std::pair<int,int>>> spin_sectors_;
+     bool spinfree;
      bool spinfree_;
+
+     std::shared_ptr< std::map< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > > orb_ranges;
+
+     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DType>> > > CTP_map ;
+     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DType>> >> CMTP_map; 
 
      //takes from pair of unc _range_ (defines gamma) and ctr_indexes (defines A contrib) 
      std::shared_ptr<std::map< std::tuple< std::vector<std::string>, pstr_vec, pstr_vec >, std::shared_ptr<std::vector<std::string>> >> CMTP_gamma_contribs;
 
-     std::vector<std::shared_ptr<TensOp<DType>>> orig_tensors_;
+   private:
+     //Similar to all_ranges, but has the ranges associated with the different operators split up, this may be useful for decomposition, so keep for now
+     std::shared_ptr<std::map< std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>>, 
+                     std::tuple< std::shared_ptr<std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> split_ranges;
 
-     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DType>> >> CMTP_map; 
+   public: 
+     MultiTensOp() {};
 
+     MultiTensOp(std::string name, bool spinfree) : name_(name), spinfree_(spinfree) {}; // spin free construction
+
+//     MultiTensOp<DType>(std::string name, std::shared_ptr<std::vector<std::pair<int,int>>> spin_sectors,
+//                 std::shared_ptr<std::map< std::pair< int, std::pair<int,int> > , std::shared_ptr<std::vector<std::shared_ptr<std::vector<bool>>>> >> spin_paths)
+//                 : name_(name), spin_sectors_(spin_sectors), spin_paths_(spin_paths), spinfree_(false) {};
+
+     ~MultiTensOp() {};
+
+     //Multi Tensor analogue of all_ranges; same as normal tensor but with vector of factors. The ordering of these factors is the same as that of the operators in the tensor
+     std::shared_ptr<std::map< std::shared_ptr<std::vector<std::string>>,
+                               std::tuple<bool, std::shared_ptr<std::vector<std::string>>, std::shared_ptr<std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> combined_ranges;
+   public: 
     
     void initialize(std::vector<std::shared_ptr<TensOp<DType> >> orig_tensors);
+
     void generate_ranges();
 
     void enter_into_CMTP_map(pint_vec ctr_pos_list, std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors, std::shared_ptr<std::vector<std::string>> id_ranges );
 
     void get_ctrs_tens_ranges() override; 
-   
+
     void print_gamma_contribs();
     
 }; 
