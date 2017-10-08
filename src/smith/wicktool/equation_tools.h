@@ -131,26 +131,10 @@ class Equation_Computer {
     std::pair<int,int>
     relativize_ctr_positions(std::pair <int,int> ctr_todo, std::shared_ptr<CtrTensorPart<double>>  CTP1,
                                                            std::shared_ptr<CtrTensorPart<double>>  CTP2);
-
-    template<class DataType, class DType>
-    std::unique_ptr<DataType[]>
-    get_reordered_Tensor_data(std::shared_ptr<std::vector<int>> rng_block_pos, std::shared_ptr<std::vector<const IndexRange>> T_org_rng,
-                              std::shared_ptr<std::vector<const IndexRange>> T_new_rng, std::shared_ptr<DType> Tens )  ;
-
     template<class DataType>
     std::unique_ptr<DataType[]>
-    reorder_tensor_data(const DataType* orig_data,  size_t data_size, std::vector<int>  new_order_vec, std::vector<size_t> new_sizes_vec ) ;
-   
-    
-    template<class DataType>
-    std::unique_ptr<DataType[]>
-    reorder_tensor_data(const DataType* orig_data, std::shared_ptr<std::vector<int>>  new_order_vec, std::shared_ptr<std::vector<Index>> orig_index_blocks ) ;
-    
-
-    template<class DataType>
-    std::unique_ptr<DataType[]>
-    reorder_tensor_data_X( const DataType* orig_data, std::shared_ptr<std::vector<int>>  new_order_vec,
-                           std::shared_ptr<std::vector<Index>> orig_index_blocks ) ;
+    reorder_tensor_data( const DataType* orig_data, std::shared_ptr<std::vector<int>>  new_order_vec,
+                         std::shared_ptr<std::vector<Index>> orig_index_blocks ) ;
     
     template<int N> 
     std::pair<std::vector<int>, std::pair<double,bool>> find_permutation(const KTag<N>& tag) const ;

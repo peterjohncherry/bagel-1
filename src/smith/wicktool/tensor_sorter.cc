@@ -6,30 +6,6 @@
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//This would be best put in another part, probably CTP
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-unique_ptr<DataType[]>
-Tensor_Sorter::Tensor_Sorter<DataType>::reorder_tensor_data(const DataType* orig_data,  size_t data_size,
-                                                  shared_ptr<vector<int>>  new_order_vec ,
-                                                  shared_ptr<vector<size_t>>  old_order_range_lengths ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  const DataType fac1= 1.0;
-  const DataType fac2= 1.0;
-
-  int nbase = new_order_vec->size();
-  int id_num = 0;
-  for (int ii = 0; ii!=new_order_vec->size(); ii++)
-    id_num+= pow(nbase, ii)*new_order_vec->at(ii); 
-
-  unique_ptr<DataType[]> reordered_data(new DataType[data_size]);
- 
-  return reordered_data;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 std::string Tensor_Sorter::Tensor_Sorter<DataType>::get_comb_str(shared_ptr<vector<size_t>> invec){

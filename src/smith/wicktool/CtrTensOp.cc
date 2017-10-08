@@ -123,7 +123,6 @@ cout << endl <<  "CtrTensorPart<DType>::FullContract NEWVER : CTP name =  " << n
       shared_ptr<vector<pair<int,int>>> new_ReIm_factors = make_shared<vector<pair<int,int>>>(1, make_pair(1,1));
       CTP_in = make_shared< CtrTensorPart<DType> >( full_idxs, full_id_ranges, ctrs_pos_in, new_ReIm_factors );
       Tmap->emplace(CTP_in->name,  CTP_in);
-      Tmap->emplace(CTP_in->name,  CTP_in);
     } else {
       CTP_in = Tmap->at(CTP_in_name);
     }
@@ -137,6 +136,28 @@ cout << endl <<  "CtrTensorPart<DType>::FullContract NEWVER : CTP name =  " << n
       shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list_new = make_shared<vector<shared_ptr<CtrOp_base> >>(0);   
       CTP_in->FullContract(Tmap, ACompute_list_new, ACompute_map);                                                       
     }
+
+
+      cout << " x0a " <<endl;
+    shared_ptr<CtrTensorPart<DType>> CTP_out;
+      cout << " x0b " <<endl;
+    if ( Tmap->find(CTP_out_name) == Tmap->end()) {
+      cout << " x1 " <<endl;
+      shared_ptr<vector<pair<int,int>>> ctrs_pos_in = make_shared<vector<pair<int,int>>>(*ctrs_done);
+      cout << " x2 " <<endl;
+      shared_ptr<vector<pair<int,int>>> new_ReIm_factors = make_shared<vector<pair<int,int>>>(1, make_pair(1,1));
+      cout << " x3 " <<endl;
+      CTP_out = make_shared< CtrTensorPart<DType> >( full_idxs, full_id_ranges, ctrs_done, new_ReIm_factors );
+      cout << " x4 " <<endl;
+      Tmap->emplace(CTP_out_name,  CTP_out); 
+      cout << "put " << CTP_out->name << " into the map XX" << endl; 
+
+    } else {
+      CTP_out = Tmap->at(CTP_out_name);
+    }
+    CTP_out->dependencies.emplace(name);
+
+
     cout << "Contract " << CTP_in_name << " over  (" << ctrs_done->back().first << ","<< ctrs_done->back().second << ") to get " << CTP_out_name <<  endl;
     ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done->back(), ctrs_rel_pos_in, "same_T new" ));
     dependencies.emplace(CTP_in_name);
@@ -258,25 +279,23 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    int T1_ctr_rel_pos = T1->unc_rel_pos->at(T1ctr);
    int T2_ctr_rel_pos = T2->unc_rel_pos->at(T2ctr);
 
-   auto new_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, full_ctrs, make_shared<vector<pair<int,int>>>(1, abs_ctr )); 
-   auto intermediate_CTP = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, ctrs_done, make_shared<vector<pair<int,int>>>(1, abs_ctr )); 
+   auto CTP_new = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, full_ctrs, make_shared<vector<pair<int,int>>>(1, abs_ctr )); 
+   auto CTP_intermediate = make_shared< CtrTensorPart<DType> >(full_idxs, full_id_ranges, ctrs_done, make_shared<vector<pair<int,int>>>( 1, abs_ctr )); 
 
-   new_CTP->ctrs_todo = ctrs_todo;
-   new_CTP->ctrs_done = ctrs_done;
+   CTP_new->ctrs_todo = ctrs_todo;
+   CTP_new->ctrs_done = ctrs_done;
    
-   ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, new_CTP->get_next_name(new_CTP->ctrs_done),  abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+   ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done),  abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
    auto new_CTData = make_shared<DType>();
     
-   if (Tmap->find(new_CTP->name) == Tmap->end())
-     Tmap->emplace(new_CTP->name, new_CTP);
+   if (Tmap->find(CTP_new->name) == Tmap->end()){
+     Tmap->emplace(CTP_new->name, CTP_new); cout << "put " << CTP_new->name << "into map" << endl; }
    
-   if (Tmap->find(intermediate_CTP->name) == Tmap->end())
-     Tmap->emplace(intermediate_CTP->name, intermediate_CTP);
+   if (Tmap->find(CTP_intermediate->name) == Tmap->end()) {
+     Tmap->emplace(CTP_intermediate->name, CTP_intermediate); cout << "put " << CTP_intermediate->name << "into map" << endl; }
     
-   
-
-   cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << abs_ctr.first << "," << abs_ctr.second << ") to get " << get_next_name(new_CTP->ctrs_done) << endl;
-   return new_CTP;
+   cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << abs_ctr.first << "," << abs_ctr.second << ") to get " << get_next_name(CTP_new->ctrs_done) << endl;
+   return CTP_new;
 }
 
 
