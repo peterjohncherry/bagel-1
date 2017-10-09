@@ -65,7 +65,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_2( std::shared_ptr<std
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  cout << "sort_indices_2 "<< endl;
+//  cout << "sort_indices_2 "<< endl;
   const size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   const size_t perm_id = get_perm_idnum( new_id_order ) ; 
 
@@ -94,7 +94,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_2( std::shared_ptr<std
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
-  cout << "sort_indices_2 "<< endl;
+//  cout << "sort_indices_2 "<< endl;
   return;
 }
 
@@ -162,7 +162,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_4( std::shared_ptr<std
                                                             std::array<int,4>& sort_options, 
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "sort_indices_4 "<< endl;
+//  cout << "sort_indices_4 "<< endl;
 
   const size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   const size_t perm_id = get_perm_idnum( new_id_order ) ; 
@@ -280,7 +280,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_4( std::shared_ptr<std
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
-  cout << "sort_indices_4 "<< endl;
+//  cout << "sort_indices_4 "<< endl;
   return;
 }
 
@@ -1045,7 +1045,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_6( std::shared_ptr<std
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  cout << "sort_indices_6 "<< endl;
+//  cout << "sort_indices_6 "<< endl;
   const size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   const size_t perm_id = get_perm_idnum( new_id_order ) ; 
 
@@ -5386,7 +5386,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_6( std::shared_ptr<std
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
-  cout << "sort_indices_6 "<< endl;
+//  cout << "sort_indices_6 "<< endl;
   return;
 }
 
