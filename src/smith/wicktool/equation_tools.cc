@@ -159,12 +159,10 @@ cout << "Equation_Computer::contract_on_same_tensor : " << Tname << "  (" << ctr
        
        cout << "block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
        vector<Index> CTP_id_blocks = get_rng_blocks(block_pos, unc_ranges_old); 
-    //   cout << "CTP_id_blocks sizes : " ; for (Index id : CTP_id_blocks){ cout << id.size() << " " ;} cout << endl;
+       size_t CTP_block_size = get_block_size(CTP_id_blocks->begin(), CTP_id_blocks->end() );
        unique_ptr<double[]> T_block_data = CTP_data_old->get_block(CTP_id_blocks);
      
-       // daxpy_(const int*, const double*, const double*, const int*, double*, const int*);
-       // daxpy_(&T1_ubs_int, &one_d, T1_data_new.get(), &one, T_out_data.get()+(kk*T1_unc_block_size), 1.0, &one);
-       // void daxpy_(const int*, const double*, const double*, const int*, double*, const int*);
+       daxpy_(CTP_block_size, 1,0, T_block_data.get()+ii, 1.0, &one);
        vector<Index> CTP_out_id_blocks(CTP_id_blocks.size() -2);
        for ( int jj = 0; jj != unc_pos_new.size(); jj++ )
          CTP_out_id_blocks[jj] = CTP_id_blocks[unc_pos_new[jj]]; 
@@ -261,14 +259,16 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
     
     size_t ctr_block_size = T1_new_rng_blocks->back().size(); 
     size_t T1_unc_block_size = get_block_size( T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1); 
+    cout << " T1_unc_block_size = " << T1_unc_block_size << endl;
     size_t T1_block_size =  get_block_size(T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); 
 
-    std::unique_ptr<double[]> T1_data_new(new double[ T1_block_size  ]);
+    //std::unique_ptr<double[]> T1_data_new(new double[ T1_block_size  ]);
+    std::unique_ptr<double[]> T1_data_new;
     {
       std::unique_ptr<double[]> T1_data_org = CTP1_data->get_block(*T1_org_rng_blocks);
       T1_data_new = reorder_tensor_data(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
     }
-
+    
     shared_ptr<vector<int>> T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size(), 0);
     T2_rng_block_pos->front() = T1_rng_block_pos->back();
 
@@ -277,7 +277,8 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
       shared_ptr<vector<Index>> T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
       size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end() );
        
-      std::unique_ptr<double[]> T2_data_new(  new double[ T2_unc_block_size*ctr_block_size]);
+//      std::unique_ptr<double[]> T2_data_new(  new double[ T2_unc_block_size*ctr_block_size]);
+      std::unique_ptr<double[]> T2_data_new;
       {
         shared_ptr<vector<Index>> T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
         std::unique_ptr<double[]> T2_data_org = CTP2_data->get_block(*T2_org_rng_blocks);
@@ -286,11 +287,12 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
       }
        
       std::unique_ptr<double[]> T_out_data(new double[T1_unc_block_size*T2_unc_block_size]);
-     
       //should not use transpose; instead build T2_new_order backwards... 
-      //dgemm_("N", "T", T1_unc_block_size, ctr_block_size,  T1_unc_block_size, 1.0, T1_data_new.get(), T2_unc_block_size,
-      //        T2_data_new.get(), ctr_block_size, 1.0, T_out_data.get(), T1_unc_block_size);
-   
+      cout << "into dgemm" << endl;
+      dgemm_("N", "N", T1_unc_block_size, T2_unc_block_size, ctr_block_size, 1.0, T1_data_new, T1_unc_block_size,
+              T2_data_new, ctr_block_size, 0.0, T_out_data, T1_unc_block_size );
+      cout << "done dgemm" << endl;
+
       vector<Index> T_out_rng_block(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
       T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
       T_out->put_block( T_out_data, T_out_rng_block );
@@ -1095,5 +1097,31 @@ Equation_Computer::Equation_Computer::reorder_tensor_data( const DataType* orig_
  //   }
  //   cout << "]" << endl;
  // }
-
-
+ //        cout << "hello" << endl;
+  //    cout << " T1_unc_block_size = " << T1_unc_block_size << endl;
+  //    cout << " T2_unc_block_size = " << T2_unc_block_size << endl;
+  //    cout << " T_out_data.get() = " <<  T_out_data.get()  << endl;
+  //    cout << " ctr_block_size = " << ctr_block_size << endl;
+  //    cout << " T1_data_new.get() = " <<  T1_data_new.get()  << endl;
+  //    cout << " T1_data_new  = "; cout.flush();
+  //    for (int ii = 0 ; ii != T1_block_size ; ii++ ){
+  //      cout << *(T1_data_new.get()+ii) << "  " ;
+  //      if (!(ii%10)) cout << endl;
+  //    } 
+  //
+  //    cout << endl << endl << " T2_data_new  = "; cout.flush();
+  //    for (int ii = 0 ; ii != T2_unc_block_size*ctr_block_size ; ii++ ){
+  //      cout << *(T2_data_new.get()+ii) << "  " ;
+  //      if (!(ii%10)) cout << endl;
+  //    } 
+  //
+  //    cout << endl << endl << " T_out_data  = "; cout.flush();
+  //    for (int ii = 0 ; ii != (T1_unc_block_size*T2_unc_block_size) ; ii++ ){
+  //      cout << *(T_out_data.get()+ii) << "  " ;
+  //      if (!(ii%10)) cout << endl;
+  //    } 
+  //    cout << "done " << endl;
+  //
+  //
+  //
+  //
