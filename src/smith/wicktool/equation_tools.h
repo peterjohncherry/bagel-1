@@ -60,7 +60,12 @@ class Equation_Computer {
   
     std::shared_ptr<std::vector<int>> get_CTens_strides( std::shared_ptr<std::vector<int>> range_sizes, int ctr1 , int ctr2 ) ;
 
-    int contract_on_same_tensor_new( std::pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) ;
+    std::shared_ptr<std::vector<int>> get_CTens_strides( std::vector<int>& range_sizes, int ctr1 , int ctr2 ) ;
+
+    std::shared_ptr<Tensor_<double>>
+    contract_on_same_tensor_new( std::pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) ;
+
+    std::vector<int> get_sizes(std::vector<Index>& Idvec) ;
 
     void Calculate_CTP(std::string A_contrib_name );
 

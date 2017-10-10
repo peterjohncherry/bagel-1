@@ -1,7 +1,7 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
 #include <src/smith/wicktool/equation_tools.h>
-
+#include <src/util/f77.h>
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
@@ -49,7 +49,7 @@ void Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib )
         CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
       
       } else if ( ctr_op->ctr_type()[0] == 's' ) { cout << " : contract on same tensor" <<  endl; 
-        New_Tdata = contract_on_same_tensor( ctr_op->ctr_rel_pos(), ctr_op->T1name(), ctr_op->Tout_name()); 
+        New_Tdata = contract_on_same_tensor_new( ctr_op->ctr_rel_pos(), ctr_op->T1name(), ctr_op->Tout_name()); 
         CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
       } else { 
         throw std::runtime_error(" unknown contraction type : " + ctr_op->ctr_type() ) ;
@@ -109,21 +109,38 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_Tens_strides(vector<int> range_sizes) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "get_Tens_strides " << endl;
+// cout << "get_Tens_strides " << endl;
 
  shared_ptr<vector<int>> Tens_strides= make_shared<vector<int>>(range_sizes.size(), 1);
  for ( int ii = 0  ; ii!= range_sizes.size(); ii++ ) 
    for ( int jj = ii-1  ; jj!= -1; jj-- ) 
       Tens_strides->at(ii) *= range_sizes[jj];
   
- cout << "Tens_strides = [ " ; cout.flush(); for (int elem : *Tens_strides)  { cout << elem << " " ;} ; cout << " ] " << endl;
+// cout << "Tens_strides = [ " ; cout.flush(); for (int elem : *Tens_strides)  { cout << elem << " " ;} ; cout << " ] " << endl;
  return Tens_strides;
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_CTens_strides( vector<int>& range_sizes, int ctr1 , int ctr2 ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//cout << "get_CTens_strides " <<  endl;
+
+  shared_ptr<vector<int>>  CTens_strides = make_shared<vector<int>>(range_sizes.size(), 1); 
+  for ( int ii = 0  ; ii!= range_sizes.size(); ii++ ) 
+    for ( int jj = ii-1  ; jj!= -1; jj-- ) 
+      if (jj!= ctr1 && jj!=ctr2) 
+        CTens_strides->at(ii) *= range_sizes[jj];
+  
+  CTens_strides->at(ctr1) = 0;
+  CTens_strides->at(ctr2) = 0;
+
+  return CTens_strides;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_CTens_strides( shared_ptr<vector<int>> range_sizes, int ctr1 , int ctr2 ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "get_CTens_strides " <<  endl;
+//cout << "get_CTens_strides " <<  endl;
 
   shared_ptr<vector<int>>  CTens_strides = make_shared<vector<int>>(range_sizes->size(), 1); 
   for ( int ii = 0  ; ii!= range_sizes->size(); ii++ ) 
@@ -133,107 +150,109 @@ cout << "get_CTens_strides " <<  endl;
   
   CTens_strides->at(ctr1) = 0;
   CTens_strides->at(ctr2) = 0;
-  cout <<  "CTens_strides = [ " ; cout.flush();   for (int elem  :  *CTens_strides)     cout << elem << " " ;  cout << "]" << endl; 
 
   return CTens_strides;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int Equation_Computer::Equation_Computer::contract_on_same_tensor_new( pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) {
+shared_ptr<Tensor_<double>>
+Equation_Computer::Equation_Computer::contract_on_same_tensor_new( pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Equation_Computer::Equation_Computer::contract_on_same_tensor_new" << endl;
+   cout << "ctr_todo  = (" << ctr_todo.first << "," << ctr_todo.second << ")" << endl;
+
+   shared_ptr<CtrTensorPart<double>> CTP_old = CTP_map->at(Tname);
+   shared_ptr<Tensor_<double>> CTP_data_old = find_or_get_CTP_data(Tname);
+
+
+   // get original uncontracted ranges and positions of Ctrs relative to the current tensor
+   pair<int,int> rel_ctr_todo = ctr_todo;
+   int ctr1 = rel_ctr_todo.first;
+   int ctr2 = rel_ctr_todo.second;
+   vector<IndexRange> unc_ranges_old = CTP_data_old->indexrange(); 
+   vector<IndexRange> unc_ranges_new(unc_ranges_old.size()-2);  
+   vector<int> unc_pos_new(unc_ranges_old.size()-2);  
+         
+   vector<IndexRange>::iterator urn_iter = unc_ranges_new.begin();
+   vector<int>::iterator upn_iter = unc_pos_new.begin();
+   for ( int ii = 0 ; ii != CTP_old->unc_pos->size() ; ii++ )
+     if ( (ii != rel_ctr_todo.first) && (ii != rel_ctr_todo.second) ){ 
+       *urn_iter++ = unc_ranges_old[ii];
+       *upn_iter++ = ii;
+     }
+
+   shared_ptr<Tensor_<double>> CTP_data_out = make_shared<Tensor_<double>>(unc_ranges_new);
+   CTP_data_out->allocate();
+
+   int num_ctr_blocks = unc_ranges_old[rel_ctr_todo.first].range().size();
+
+   for (int ii = 0 ; ii != num_ctr_blocks ; ii++){ 
+     shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(unc_ranges_old.size(),0);  
+     shared_ptr<vector<int>> mins = make_shared<vector<int>>(unc_ranges_old.size(),0);  
+     shared_ptr<vector<int>> maxs = make_shared<vector<int>>(unc_ranges_old.size(),0);  
+     for ( int jj = 0 ; jj != unc_ranges_old.size() ; jj++ ) 
+        maxs->at(jj) = unc_ranges_old[jj].range().size()-1;
  
-  vector<int> range_sizes = {2,3,2,3,4};
-  int total_size = accumulate( range_sizes.begin(), range_sizes.end(), 1, std::multiplies<int>() );
-  shared_ptr<vector<int>> Tens_strides = get_Tens_strides(range_sizes);
-  shared_ptr<vector<int>> maxs = make_shared<vector<int>>(range_sizes);
-  for (int ii = 0 ; ii != maxs->size(); ii++) 
-    maxs->at(ii) = range_sizes[ii]-1;
-   
-  shared_ptr<vector<int>> mins = make_shared<vector<int>>(maxs->size(), 0); 
-  shared_ptr<vector<int>> fvec = make_shared<vector<int>>(*mins); 
-  vector<int> Tens;// = get_Tens(range_sizes, Tens_strides, total_size) ;
+     mins->at(rel_ctr_todo.first)  = ii;
+     mins->at(rel_ctr_todo.second) = ii; 
+     maxs->at(rel_ctr_todo.first)  = ii;
+     maxs->at(rel_ctr_todo.second) = ii;
+     block_pos->at(rel_ctr_todo.first)  = ii;
+     block_pos->at(rel_ctr_todo.second) = ii;
+     
+     const int ione = 1; 
+     const double done = 1.0; 
+     do {
+       
+       vector<Index> CTP_id_blocks_old = get_rng_blocks(block_pos, unc_ranges_old); 
+       vector<Index> CTP_id_blocks_new(CTP_id_blocks_old.size()-2);
+       for (int kk = 0 ; kk != unc_pos_new.size(); kk++)       
+         CTP_id_blocks_new[kk] = CTP_id_blocks_old[unc_pos_new[kk]];
+     
+       vector<int> range_sizes = get_sizes(CTP_id_blocks_old);
+       int total_size = accumulate( range_sizes.begin(), range_sizes.end(), 1, std::multiplies<int>() );
 
-  cout << "maxs = [ ";   for ( auto elem : *maxs ) { cout << elem << "  " ; } cout << "] " << endl;  
-  cout << "mins = [ ";   for ( auto elem : *mins ) { cout << elem << "  " ; } cout << "] " << endl;  
-  cout << "fvec = [ ";   for ( auto elem : *fvec ) { cout << elem << "  " ; } cout << "] " << endl;  
+       shared_ptr<vector<int>> Tens_strides = get_Tens_strides(range_sizes);
+       shared_ptr<vector<int>> maxs2 = make_shared<vector<int>>(range_sizes.size(),0);
+       shared_ptr<vector<int>> mins2 = make_shared<vector<int>>(maxs->size(), 0); 
+       shared_ptr<vector<int>> fvec2 = make_shared<vector<int>>(*mins); 
+       for (int jj = 0 ; jj != maxs2->size(); jj++) 
+         maxs2->at(jj) = range_sizes[jj]-1;
+       
+       int ctr1_rlen = range_sizes[ctr1];          
+       int tmp = total_size/(ctr1_rlen*ctr1_rlen); 
+       unique_ptr<double[]> CTP_data_block_old = CTP_data_old->get_block(CTP_id_blocks_old);
+       std::unique_ptr<double[]> CTP_data_block_new(new double[tmp]);
+       shared_ptr<vector<int>> CTens_strides   =  get_CTens_strides( range_sizes, ctr1, ctr2 );
+       int inner_stride = Tens_strides->at(ctr1) < Tens_strides->at(ctr2) ? Tens_strides->at(ctr1) : Tens_strides->at(ctr2);
+       
+       for ( int jj = 0 ; jj != ctr1_rlen ; jj++ ) {
 
-  int ctr1 = 1;
-  int ctr2 = 3;
-  int ctr1_rlen = range_sizes[ctr1];          cout << " ctr1_rlen = " << ctr1_rlen << endl;
-  int tmp = total_size/(ctr1_rlen*ctr1_rlen); cout << " tmp = " << tmp <<  endl;
+         fill(fvec2->begin(), fvec2->end(), 0);
+         for ( int  kk = ctr1-1; kk != -1 ; kk-- ) 
+           maxs2->at(kk) = 0; 
 
-  vector<int> CTens(tmp,0);
-  vector<int> CTens2(tmp,0);
-  shared_ptr<vector<int>> range_sizes_tmp =  make_shared<vector<int>>(range_sizes);
-  shared_ptr<vector<int>> CTens_strides   =  get_CTens_strides( range_sizes_tmp, ctr1, ctr2 );
-  int inner_stride = Tens_strides->at(ctr1) < Tens_strides->at(ctr2) ? Tens_strides->at(ctr1) : Tens_strides->at(ctr2);
+         maxs2->at(ctr1) = jj; 
+         maxs2->at(ctr2) = jj; 
+         mins2->at(ctr1) = jj;  
+         mins2->at(ctr2) = jj; 
+         fvec2->at(ctr1) = jj; 
+         fvec2->at(ctr2) = jj; 
 
-  vector<vector<int>> CTens_check(0);
-  for (int ii =0 ; ii != tmp; ii++) {
-    vector<int> bob(0) ;
-    CTens_check.push_back(bob);
-  }
+         do { 
+           int pos   = inner_product( fvec2->begin(), fvec2->end(), CTens_strides->begin(), 0); 
+           int inpos = inner_product( fvec2->begin(), fvec2->end(), Tens_strides->begin(),  0); 
+//           blas::ax_plus_y_n(&inner_stride, &done, CTP_data_block_old.get()+inpos, &ione,  CTP_data_block_new.get()+pos, &ione);
+           blas::ax_plus_y_n(1.0, CTP_data_block_old.get()+inpos, inner_stride, CTP_data_block_new.get()+pos);
+//           transform(CTens2.begin()+pos, CTens2.begin()+pos+inner_stride,  Tens.begin()+inpos, CTens2.begin()+pos, std::plus<int>());
+         } while (fvec_cycle_skipper_f2b(fvec2, maxs2, mins2));
+       }
+ 
+       CTP_data_out->put_block( CTP_data_block_new, CTP_id_blocks_new );
+     } while (fvec_cycle_skipper(block_pos, maxs, mins ));
+  } 
+  CTP_map->at(Tname)->got_data = true; 
 
-  cout << "inner_stride = " << inner_stride << endl;
-
-  for ( int ii = 0 ; ii != ctr1_rlen ; ii++ ) {
-    fill(fvec->begin(), fvec->end(), 0);
-    for ( int  jj = ctr1-1; jj != -1 ; jj-- ) {maxs->at(jj) = 0; }  ; 
-    maxs->at(ctr1) = ii; 
-    maxs->at(ctr2) = ii; 
-    mins->at(ctr1) = ii;  
-    mins->at(ctr2) = ii; 
-    fvec->at(ctr1) = ii; 
-    fvec->at(ctr2) = ii; 
-    do { 
-      cout << "fvec          = [ ";   for ( auto elem : *fvec ) { cout << elem << "  " ; } cout << "]    " ;
-      cout << "CTens_strides = [ ";   for ( auto elem : *CTens_strides ) { cout << elem << "  " ; } cout << "]    " ;
-      int pos   = inner_product( fvec->begin(), fvec->end(), CTens_strides->begin(), 0); cout << "CTens_pos = " << pos  << "    " ;
-      int inpos = inner_product( fvec->begin(), fvec->end(), Tens_strides->begin(),  0); cout << "Tens_pos = " << inpos << endl;
-      for (int ii = 0 ; ii != inner_stride; ii++){
-        CTens[pos+ii] += Tens[inpos+ii]; 
-        CTens_check[pos+ii].push_back(Tens[inpos+ii]);  
-      }
-      transform(CTens2.begin()+pos, CTens2.begin()+pos+inner_stride,  Tens.begin()+inpos, CTens2.begin()+pos, std::plus<int>());
-    } while (fvec_cycle_skipper_f2b(fvec, maxs, mins));
-  }
-  cout <<" range_sizes[0] = " << range_sizes[0] << endl;
-  cout <<" range_sizes[3] = " << range_sizes[3] << endl;
-  cout << "CTens = " << endl;
-  
-  for (int ii =0; ii!=range_sizes[0] ; ii++ ) {
-
-    for (int jj =0; jj!=range_sizes[2] ; jj++ ){
-
-      for (int kk =0; kk!=range_sizes[4] ; kk++ ) 
-        cout <<CTens2[ii*range_sizes[0] + jj*range_sizes[2] + kk ] << " " ;
-      cout << "                            ";
-
-      for (int kk =0; kk!=range_sizes[4] ; kk++ ) 
-        cout <<CTens2[ii*range_sizes[0] + jj*range_sizes[2] + kk ] << " " ;
-
-      cout << endl;
-    }
-    cout << endl;
-  }
-  
-  cout << "CTens = " << endl;
-  for (int ii =0; ii!=range_sizes[0] ; ii++ ) {
-    for (int kk =0; kk!=range_sizes[3] ; kk++ ) 
-    cout << endl;
-  }
-
-
-  for (int ii = 0 ; ii != tmp ; ii++ ){
-    cout << CTens[ii] << " =  [ "  ;
-    vector<int> bob = CTens_check[ii];
-    for (int jj =0 ; jj != bob.size(); jj++){
-      cout  << bob[jj] << "  " ;     
-    }
-    cout << " ] " <<  endl;
- }
-
-  cout << "hello"<< endl;
-  return 0;
+  return CTP_data_out;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>>
@@ -392,7 +411,6 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
     cout << " T1_unc_block_size = " << T1_unc_block_size << endl;
     size_t T1_block_size =  get_block_size(T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); 
 
-    //std::unique_ptr<double[]> T1_data_new(new double[ T1_block_size  ]);
     std::unique_ptr<double[]> T1_data_new;
     {
       std::unique_ptr<double[]> T1_data_org = CTP1_data->get_block(*T1_org_rng_blocks);
@@ -407,7 +425,6 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
       shared_ptr<vector<Index>> T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
       size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end() );
        
-//      std::unique_ptr<double[]> T2_data_new(  new double[ T2_unc_block_size*ctr_block_size]);
       std::unique_ptr<double[]> T2_data_new;
       {
         shared_ptr<vector<Index>> T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
@@ -1034,6 +1051,14 @@ shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_sizes(shared_p
   auto size_vec = make_shared<vector<int>>(); 
   for( auto elem : *rngvec ) 
      size_vec->push_back(elem->size());
+  return size_vec;
+}
+////////////////////////////////////////////////////////////////////////////////////////
+vector<int> Equation_Computer::Equation_Computer::get_sizes(vector<Index>& Idvec) {
+////////////////////////////////////////////////////////////////////////////////////////
+  vector<int> size_vec(Idvec.size()); 
+  for( int ii = 0 ; ii != Idvec.size() ; ii++ ) 
+     size_vec[ii] = Idvec[ii].size();
   return size_vec;
 }
 ////////////////////////////////////////////////////////////////////////////////////////
