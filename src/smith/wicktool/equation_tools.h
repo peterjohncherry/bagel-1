@@ -56,6 +56,11 @@ class Equation_Computer {
     std::shared_ptr<DType> contract_different_tensors( std::string T1name, std::string T2name,  std::pair<int,int> ctr_todo,
                                                        std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
     //////////////////////////////
+    std::shared_ptr<std::vector<int>> get_Tens_strides ( std::vector<int> range_sizes) ;
+  
+    std::shared_ptr<std::vector<int>> get_CTens_strides( std::shared_ptr<std::vector<int>> range_sizes, int ctr1 , int ctr2 ) ;
+
+    int contract_on_same_tensor_new( std::pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) ;
 
     void Calculate_CTP(std::string A_contrib_name );
 

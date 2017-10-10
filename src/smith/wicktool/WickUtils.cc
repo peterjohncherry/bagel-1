@@ -576,6 +576,25 @@ bool fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> 
   return true;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool fvec_cycle_skipper_f2b(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  for(int ii = 0; ii!=forvec->size(); ii++) {
+    if ( max->at(ii) == min->at(ii) ) {
+      if ( ii == forvec->size()-1 )
+        return false;
+    } else if (forvec->at(ii) == max->at(ii)) {
+      if (ii == forvec->size()-1) 
+        return false;    
+      forvec->at(ii) = min->at(ii);
+    } else {
+      forvec->at(ii) = forvec->at(ii)+ 1;
+      break;
+    }
+  }
+  return true;
+}
+
+
 
 
 
