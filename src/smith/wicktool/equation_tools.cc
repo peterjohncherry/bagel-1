@@ -185,6 +185,7 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor_new( pair<int,int>
 
    int num_ctr_blocks = unc_ranges_old[rel_ctr_todo.first].range().size();
 
+   //loops over index blocks where ctr1 = ctr2 
    for (int ii = 0 ; ii != num_ctr_blocks ; ii++){ 
      shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(unc_ranges_old.size(),0);  
      shared_ptr<vector<int>> mins = make_shared<vector<int>>(unc_ranges_old.size(),0);  
@@ -212,25 +213,26 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor_new( pair<int,int>
        int total_size = accumulate( range_sizes.begin(), range_sizes.end(), 1, std::multiplies<int>() );
 
        shared_ptr<vector<int>> Tens_strides = get_Tens_strides(range_sizes);
+       int inner_stride = Tens_strides->at(ctr1) < Tens_strides->at(ctr2) ? Tens_strides->at(ctr1) : Tens_strides->at(ctr2);
+
        shared_ptr<vector<int>> maxs2 = make_shared<vector<int>>(range_sizes.size(),0);
        shared_ptr<vector<int>> mins2 = make_shared<vector<int>>(maxs->size(), 0); 
        shared_ptr<vector<int>> fvec2 = make_shared<vector<int>>(*mins); 
-       for (int jj = 0 ; jj != maxs2->size(); jj++) 
-         maxs2->at(jj) = range_sizes[jj]-1;
+
+       //within index block, loop through data copying chunks where ctr1 = ctr2 
+       //Has odd striding; probably very inefficient when ctr1 or ctr2 are the leading index.
+       for (int jj = ctr1+1 ; jj != maxs2->size(); jj++) 
+         maxs2->at(jj) = range_sizes[jj]-1; // note, copying inner block as vector, so want max = min = 0 for those indexes;
        
        int ctr1_rlen = range_sizes[ctr1];          
        int tmp = total_size/(ctr1_rlen*ctr1_rlen); 
-       unique_ptr<double[]> CTP_data_block_old = CTP_data_old->get_block(CTP_id_blocks_old);
+       unique_ptr<double[]>      CTP_data_block_old = CTP_data_old->get_block(CTP_id_blocks_old);
        std::unique_ptr<double[]> CTP_data_block_new(new double[tmp]);
-       shared_ptr<vector<int>> CTens_strides   =  get_CTens_strides( range_sizes, ctr1, ctr2 );
-       int inner_stride = Tens_strides->at(ctr1) < Tens_strides->at(ctr2) ? Tens_strides->at(ctr1) : Tens_strides->at(ctr2);
+       shared_ptr<vector<int>>   CTens_strides   =  get_CTens_strides( range_sizes, ctr1, ctr2 );
        
        for ( int jj = 0 ; jj != ctr1_rlen ; jj++ ) {
 
          fill(fvec2->begin(), fvec2->end(), 0);
-         for ( int  kk = ctr1-1; kk != -1 ; kk-- ) 
-           maxs2->at(kk) = 0; 
-
          maxs2->at(ctr1) = jj; 
          maxs2->at(ctr2) = jj; 
          mins2->at(ctr1) = jj;  
@@ -241,9 +243,7 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor_new( pair<int,int>
          do { 
            int pos   = inner_product( fvec2->begin(), fvec2->end(), CTens_strides->begin(), 0); 
            int inpos = inner_product( fvec2->begin(), fvec2->end(), Tens_strides->begin(),  0); 
-//           blas::ax_plus_y_n(&inner_stride, &done, CTP_data_block_old.get()+inpos, &ione,  CTP_data_block_new.get()+pos, &ione);
            blas::ax_plus_y_n(1.0, CTP_data_block_old.get()+inpos, inner_stride, CTP_data_block_new.get()+pos);
-//           transform(CTens2.begin()+pos, CTens2.begin()+pos+inner_stride,  Tens.begin()+inpos, CTens2.begin()+pos, std::plus<int>());
          } while (fvec_cycle_skipper_f2b(fvec2, maxs2, mins2));
        }
  
