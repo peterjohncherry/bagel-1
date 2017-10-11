@@ -62,6 +62,60 @@ void Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib )
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Returns a tensor with ranges specified by unc_ranges, where all values are equal to XX  
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_uniform_Tensor(shared_ptr<vector<string>> unc_ranges, double XX ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Equation_Computer::Equation_Computer::get_block_Tensor" << endl;
+
+   cout << "unc_ranges = [ " ; cout.flush();  for  ( auto rng :  *unc_ranges )cout << rng << " " ; cout << " ] " << endl;
+   shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
+
+   cout << "Bagel_id_ranges->size() = "<< Bagel_id_ranges->size() << endl;
+   cout << "range_lengths = " ;
+   auto  range_lengths  = make_shared<vector<int>>(0); 
+   for (auto idrng : *Bagel_id_ranges ){
+      range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
+   } 
+
+   shared_ptr<Tensor_<double>> block_tensor = make_shared<Tensor_<double>>(*Bagel_id_ranges);
+   block_tensor->allocate();
+
+   cout << "allocated tensor" << endl;
+   auto block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
+   auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
+   do {
+
+     vector<Index> T_id_blocks(Bagel_id_ranges->size());
+     for( int ii = 0 ;  ii != T_id_blocks.size(); ii++)
+       T_id_blocks[ii] =  Bagel_id_ranges->at(ii).range(block_pos->at(ii));
+     
+     int out_size = 1;
+     for ( Index id : T_id_blocks)
+        out_size*= id.size();
+     
+     cout << "out_size = " << out_size << endl;
+
+     unique_ptr<double[]> T_block_data( new double[out_size] );
+   
+     cout << "Tblock_data" << endl; 
+     double* dit = T_block_data.get() ;
+     for ( int qq =0 ; qq != out_size; qq++ ) {
+        T_block_data[qq] = XX; 
+        cout << T_block_data[qq]  << " " ;
+        if ( !(qq % 10) )
+          cout << endl;
+      } cout << endl << endl;
+      
+     block_tensor->put_block(T_block_data, T_id_blocks);
+
+   } while (fvec_cycle(block_pos, range_lengths, mins ));
+   cout  << "block_tensor->norm() = "  << block_tensor->norm() << endl;
+   cout  << "block_tensor->rms() = "  << block_tensor->rms() << endl;
+   return block_tensor;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tensor(string Tname){
@@ -162,7 +216,7 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor_new( pair<int,int>
 
    shared_ptr<CtrTensorPart<double>> CTP_old = CTP_map->at(Tname);
    shared_ptr<Tensor_<double>> CTP_data_old = find_or_get_CTP_data(Tname);
-
+   cout << "CTP_data_old->rms()  = " + Tname + "->rms() =" << CTP_data_old->rms() << endl;
 
    // get original uncontracted ranges and positions of Ctrs relative to the current tensor
    pair<int,int> rel_ctr_todo = ctr_todo;
@@ -250,7 +304,8 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor_new( pair<int,int>
        CTP_data_out->put_block( CTP_data_block_new, CTP_id_blocks_new );
      } while (fvec_cycle_skipper(block_pos, maxs, mins ));
   } 
-  CTP_map->at(Tname)->got_data = true; 
+  CTP_map->at(Tout_name)->got_data = true; 
+  cout << "CTP_data_out->rms()  = " + Tout_name + "->rms() =" << CTP_data_out->rms() << endl;
 
   return CTP_data_out;
 }
@@ -1207,9 +1262,7 @@ Equation_Computer::Equation_Computer::reorder_tensor_data( const DataType* orig_
 
   return reordered_data;
 }
-
 #endif
-
  // int n1 = norb_;  
  // int n2 = norb_*norb_;  
  // int n3 = n2*norb_;  

@@ -78,7 +78,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   auto Eqn = make_shared<Equation<double>>();
 
   Eqn->Initialize();
-  
+ 
   //////////////////Initialization section/////////////////////////
   ///////////This should be read in from an input file/////////////
   //spinfree orbital ranges
@@ -134,6 +134,15 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   CTP_map = Eqn->CTP_map;
   auto Eqn_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Eqn, CTP_data_map, range_conversion_map );
 
+  shared_ptr<vector<string>> free_ranges = make_shared<vector<string>>(vector<string> {"free", "free", "free", "free"});
+  shared_ptr<Tensor_<double>> All_ones_tens = Eqn_computer->get_uniform_Tensor(free_ranges, 1.0 );
+  cout << "All_ones_tens->norm() = " << All_ones_tens->norm() << endl;
+  cout << "All_ones_tens->rms() = " << All_ones_tens->rms() << endl;
+  CTP_data_map->at("X") =  All_ones_tens ;
+    
+  cout << "CTP_data_map->at(X)->norm() = " << CTP_data_map->at("X")->norm() << endl;
+  cout << "CTP_data_map->at(X)->rms()  = " << CTP_data_map->at("X")->rms()  << endl;
+
   //Get Amap for each gamma
   vector<string> Gname_vec(Eqn->G_to_A_map->size());
   {
@@ -180,6 +189,11 @@ void CASPT2_ALT::CASPT2_ALT::test() {
       // add this contribution to the merged A_tensor
     }
   }   
+ 
+//  cout << "T2_all->norm()      = "<< T2_all->norm()     << endl; 
+//  cout << "lambda_all->norm()  = "<< lambda_all.norm() << endl;
+//  cout << "H_1el_all->norm()   = "<< H_1el_all.norm()  << endl;
+//  cout << "H_2el_all->norm()   = "<< H_2el_all.norm()  << endl;
 
   return;
 }

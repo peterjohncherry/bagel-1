@@ -25,11 +25,11 @@ class Equation_Computer {
                       std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map);
     ~Equation_Computer(){};
   
-    int  nelea_ ;
-    int  neleb_ ;
-    int  ncore_ ;
-    int  norb_  ;
-    int  nstate_;
+    int nelea_ ;
+    int neleb_ ;
+    int ncore_ ;
+    int norb_  ;
+    int nstate_;
     std::shared_ptr<IndexRange> virt_  ;
     std::shared_ptr<IndexRange> active_  ;
     std::shared_ptr<IndexRange> closed_  ;
@@ -61,6 +61,8 @@ class Equation_Computer {
     std::shared_ptr<std::vector<int>> get_CTens_strides( std::shared_ptr<std::vector<int>> range_sizes, int ctr1 , int ctr2 ) ;
 
     std::shared_ptr<std::vector<int>> get_CTens_strides( std::vector<int>& range_sizes, int ctr1 , int ctr2 ) ;
+
+    std::shared_ptr<Tensor_<double>> get_uniform_Tensor(std::shared_ptr<std::vector<std::string>> unc_ranges, double XX );
 
     std::shared_ptr<Tensor_<double>>
     contract_on_same_tensor_new( std::pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) ;
