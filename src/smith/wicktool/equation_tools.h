@@ -47,7 +47,7 @@ class Equation_Computer {
     get_block_Tensor(std::string Tname);
 
     std::shared_ptr<Tensor_<double>>
-    contract_on_same_tensor( std::pair<int,int> ctr_todo, std::string Tname, std::string Tout);
+    contract_on_same_tensor( std::pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) ;
 
     std::shared_ptr<Tensor_<double>>
     contract_different_tensors(std::pair<int,int> ctr_todo, std::string T1name, std::string T2name, std::string Tout_name);
@@ -64,8 +64,7 @@ class Equation_Computer {
 
     std::shared_ptr<Tensor_<double>> get_uniform_Tensor(std::shared_ptr<std::vector<std::string>> unc_ranges, double XX );
 
-    std::shared_ptr<Tensor_<double>>
-    contract_on_same_tensor_new( std::pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) ;
+    void Print_Tensor(std::string Tname) ;
 
     std::vector<int> get_sizes(std::vector<Index>& Idvec) ;
 

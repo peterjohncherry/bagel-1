@@ -49,7 +49,7 @@ void Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib )
         CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
       
       } else if ( ctr_op->ctr_type()[0] == 's' ) { cout << " : contract on same tensor" <<  endl; 
-        New_Tdata = contract_on_same_tensor_new( ctr_op->ctr_rel_pos(), ctr_op->T1name(), ctr_op->Tout_name()); 
+        New_Tdata = contract_on_same_tensor( ctr_op->ctr_rel_pos(), ctr_op->T1name(), ctr_op->Tout_name()); 
         CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
       } else { 
         throw std::runtime_error(" unknown contraction type : " + ctr_op->ctr_type() ) ;
@@ -207,11 +207,74 @@ shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_CTens_strides(
 
   return CTens_strides;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::Print_Tensor( string Tname ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Equation_Computer::Equation_Computer::Print_Tensor " << endl;
+
+   shared_ptr<Tensor_<double>> Tens = CTP_data_map->at(Tname);
+
+   vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
+
+   shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(Tens->indexrange().size()); 
+   vector<int>  range_lengths_cuml(Tens->indexrange().size()); 
+   range_lengths->at(0) =  Tens->indexrange()[0].size()-1 ;
+   range_lengths_cuml[0] =  Tens->indexrange()[0].size();
+   for (int ii = 0 ; ii != range_lengths->size(); ii++){
+      range_lengths->at(0) =  Tens->indexrange().size()-1;
+      range_lengths_cuml[ii] =   Tens->indexrange().size()*range_lengths_cuml[ii-1]; 
+   } 
+   cout << "range_lengths      = [" ; for (int elem : *range_lengths) { cout << elem << " " ; } cout << " ]" << endl; 
+   cout << "range_lengths_cuml = [" ; for (int elem : range_lengths_cuml) { cout << elem << " " ; } cout << " ]" << endl; 
+
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
+   vector<int> block_id_start(block_pos->size());
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
+
+   do {
+     
+     std::transform(block_pos->begin() , block_pos->end(), range_lengths_cuml.begin(), block_id_start.begin(), std::multiplies<int>() ) ;
+     cout << "block_pos       = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
+     cout << "block_id_start  = " ;cout.flush();  for (auto elem : block_id_start) { cout <<  elem <<  " "  ; } cout << endl;
+
+     vector<Index> id_blocks(range_lengths->size());
+     vector<int> id_blocks_sizes(range_lengths->size());
+     shared_ptr<vector<int>> id_blocks_maxs = make_shared<vector<int>>(range_lengths->size());
+     for( int ii = 0 ;  ii != id_blocks.size(); ii++){
+       id_blocks[ii] = Tens->indexrange()[ii].range(block_pos->at(ii));
+       id_blocks_sizes[ii] = Tens->indexrange()[ii].range(block_pos->at(ii)).size();
+       id_blocks_maxs->at(ii) = id_blocks_sizes[ii]-1;
+     }
+     
+  
+     shared_ptr<vector<int>> id_pos = make_shared<vector<int>>(range_lengths->size(),0);
+     int id_block_size = accumulate(id_blocks_sizes.begin(), id_blocks_sizes.end(), 0 , std::multiplies<int>());
+     
+     unique_ptr<double[]>  T_data_block = Tens->get_block(id_blocks);
+     shared_ptr<vector<int>> Tens_strides = get_Tens_strides(id_blocks_sizes);
+   
+     int pos =0; 
+     double*  Tdata_ptr = T_data_block.get();
+     for ( int jj =0 ; jj != id_block_size ; jj++) {
+       cout << *Tdata_ptr++ << " ";
+       for ( vector<int>::iterator Titer =  Tens_strides->begin()+1;  Titer != Tens_strides->end(); Titer++ ) {
+         if  ( (jj % *Titer) == 0)  
+           cout << endl;
+     }
+  
+     } while (fvec_cycle_skipper_f2b(id_pos, id_blocks_maxs, mins ));
+
+   } while (fvec_cycle(block_pos, range_lengths, mins ));
+ 
+   return ;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>>
-Equation_Computer::Equation_Computer::contract_on_same_tensor_new( pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) {
+Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer::Equation_Computer::contract_on_same_tensor_new" << endl;
+   cout << "Equation_Computer::Equation_Computer::contract_on_same_tensor" << endl;
    cout << "ctr_todo  = (" << ctr_todo.first << "," << ctr_todo.second << ")" << endl;
 
    shared_ptr<CtrTensorPart<double>> CTP_old = CTP_map->at(Tname);
@@ -309,77 +372,6 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor_new( pair<int,int>
 
   return CTP_data_out;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<Tensor_<double>>
-Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Equation_Computer::contract_on_same_tensor : " << Tname << "  (" << ctr_todo.first << ","  << ctr_todo.second << ")" << endl;
-
-   cout << "Tname = " << Tname << endl;
-
-   shared_ptr<CtrTensorPart<double>> CTP_old = CTP_map->at(Tname);
-   shared_ptr<Tensor_<double>> CTP_data_old = find_or_get_CTP_data(Tname);
-
-   // get original uncontracted ranges and positions of Ctrs relative to the current tensor
-   pair<int,int> rel_ctr_todo = ctr_todo;
-   vector<IndexRange> unc_ranges_old = CTP_data_old->indexrange(); 
-   vector<IndexRange> unc_ranges_new(unc_ranges_old.size()-2);  
-   vector<int> unc_pos_new(unc_ranges_old.size()-2);  
-   
-   vector<IndexRange>::iterator urn_iter = unc_ranges_new.begin();
-   vector<int>::iterator upn_iter = unc_pos_new.begin();
-   for ( int ii = 0 ; ii != CTP_old->unc_pos->size() ; ii++ )
-     if ( (ii != rel_ctr_todo.first) && (ii != rel_ctr_todo.second) ){ 
-       *urn_iter++ = unc_ranges_old[ii];
-       *upn_iter++ = ii;
-     }
-
-   shared_ptr<Tensor_<double>> CTP_data_out = make_shared<Tensor_<double>>(unc_ranges_new);
-   CTP_data_out->allocate();
-
-   cout << "rel_ctr_todo  = (" << rel_ctr_todo.first << "," << rel_ctr_todo.second << ")" << endl;
-
-   int num_ctr_blocks = unc_ranges_old[rel_ctr_todo.first].range().size();
-   cout << " num_ctr_blocks =  " << num_ctr_blocks << endl; 
-   for (int ii = 0 ; ii != num_ctr_blocks ; ii++){ 
-     shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(unc_ranges_old.size(),0);  
-     shared_ptr<vector<int>> mins = make_shared<vector<int>>(unc_ranges_old.size(),0);  
-     shared_ptr<vector<int>> maxs = make_shared<vector<int>>(unc_ranges_old.size(),0);  
-     for ( int ii = 0 ; ii != unc_ranges_old.size() ; ii++ ) 
-        maxs->at(ii) = unc_ranges_old[ii].range().size()-1;
-
-     mins->at(rel_ctr_todo.first)  = ii;
-     mins->at(rel_ctr_todo.second) = ii; 
-     maxs->at(rel_ctr_todo.first)  = ii;
-     maxs->at(rel_ctr_todo.second) = ii;
-     block_pos->at(rel_ctr_todo.first)  = ii;
-     block_pos->at(rel_ctr_todo.second) = ii;
-
-     cout << "maxs = [ " ; cout.flush();  for  ( auto sz :  *maxs) {cout << sz << " " ;} cout << " ] " << endl;
-     cout << "mins = [ " ; cout.flush();  for  ( auto sz :  *mins) {cout << sz << " " ;} cout << " ] " << endl;
-     
-     int one = 1; 
-     do {
-       
-       cout << "block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
-       vector<Index> CTP_id_blocks = get_rng_blocks(block_pos, unc_ranges_old); 
-       size_t CTP_block_size = get_block_size(CTP_id_blocks.begin(), CTP_id_blocks.end() );
-       unique_ptr<double[]> T_block_data = CTP_data_old->get_block(CTP_id_blocks);
-     
-      // daxpy_(CTP_block_size, 1,0, T_block_data.get()+ii, 1.0, &one);
-       vector<Index> CTP_out_id_blocks(CTP_id_blocks.size() -2);
-       for ( int jj = 0; jj != unc_pos_new.size(); jj++ )
-         CTP_out_id_blocks[jj] = CTP_id_blocks[unc_pos_new[jj]]; 
-
-       CTP_data_out->put_block( T_block_data, CTP_out_id_blocks );
-     } while (fvec_cycle_skipper(block_pos, maxs, mins ));
-   
-  } 
-  CTP_map->at(Tname)->got_data = true; 
-  return CTP_data_out;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Contracts tensors T1 and T2 over two specified indexes
