@@ -64,7 +64,7 @@ class Equation_Computer {
 
     std::shared_ptr<Tensor_<double>> get_uniform_Tensor(std::shared_ptr<std::vector<std::string>> unc_ranges, double XX );
 
-    void Print_Tensor(std::string Tname) ;
+    void Print_Tensor(std::shared_ptr<Tensor_<double>> Tens) ;
 
     std::vector<int> get_sizes(std::vector<Index>& Idvec) ;
 
