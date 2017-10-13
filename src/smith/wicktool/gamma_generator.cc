@@ -24,7 +24,6 @@ GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<
   }
 
   //depends on floor in integer division
-   
   name = GammaGenerator::get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos );
   if ( idxs_pos->size() != 0 ) { 
     one_el_gammas = make_shared<vector<string>>(idxs_pos->size()/2);
@@ -84,13 +83,13 @@ cout << "GammaGenerator::add_gamma" << endl;
 
   if(RangeCheck(full_id_ranges_in)){
 
-    auto ids_pos_init =  make_shared<vector<int>>(full_id_ranges_in->size());
+    shared_ptr<vector<int>> ids_pos_init =  make_shared<vector<int>>(full_id_ranges_in->size());
 
     for ( int ii = 0; ii != full_id_ranges_in->size(); ii++)
         ids_pos_init->at(ii) = ii; 
     
     int my_sign_in = 1;
-    auto deltas_pos_in = make_shared<vector<pair<int,int>>>(0);
+    shared_ptr<vector<pair<int,int>>> deltas_pos_in = make_shared<vector<pair<int,int>>>(0);
 
     gamma_vec->push_back( make_shared<GammaIntermediate>(full_id_ranges_in, orig_aops, ids_pos_init, deltas_pos_in, my_sign_in)); 
     
@@ -100,8 +99,7 @@ cout << "GammaGenerator::add_gamma" << endl;
 
 }                     
 /////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
-//void GammaGenerator::norm_order(shared_ptr<vector<shared_ptr<GammaIntermediate>>> gamma_vec ){                                                                                   
-void GammaGenerator::norm_order( ){                                                                                   
+void GammaGenerator::norm_order(){                                                                                   
 //////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
 #ifdef DBG_GammaGenerator 
 cout << "GammaGenerator::norm_order" << endl; 
