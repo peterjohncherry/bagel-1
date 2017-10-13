@@ -149,18 +149,8 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   shared_ptr<Tensor_<double>> All_ones_tens_free = Eqn_computer->get_uniform_Tensor(free_ranges, 1.0 );
   shared_ptr<Tensor_<double>> All_twos_tens_omega = Eqn_computer->get_uniform_Tensor(omega_ranges, 2.0 );
   
-  cout << "closed_rng->size()  = " << closed_rng->size() << endl;
-  cout << "active_rng->size()  = " << active_rng->size() << endl;
-  cout << "virtual_rng->size() = " << virtual_rng->size() << endl;
-  cout << "free_rng->size()    = " << free_rng->size() << endl;
-
-  cout << "All_ones_tens_free->rms()  = " << All_ones_tens_free->rms() << endl;
-  cout << "All_ones_tens_omega->rms() = " << All_twos_tens_omega->rms() << endl;
   CTP_data_map->at("X") =  All_ones_tens_free ;
   CTP_data_map->at("T") =  All_twos_tens_omega ;
-
-  cout << "CTP_data_map->at(X)->rms()  = " << CTP_data_map->at("X")->rms()  << endl;
-  cout << "CTP_data_map->at(T)->rms()  = " << CTP_data_map->at("T")->rms()  << endl;
 
   //Get Amap for each gamma
   vector<string> Gname_vec(Eqn->G_to_A_map->size());
@@ -172,8 +162,6 @@ void CASPT2_ALT::CASPT2_ALT::test() {
     ii++;
   }
   std::sort(Gname_vec.begin(), Gname_vec.end(), csl); 
-  cout << "sorted gamma_names = [ "; cout.flush();
-  for (auto gname_ : Gname_vec ) {cout << gname_ << " " ; cout.flush(); } cout << "]" << endl;  
   }
   for ( string Gamma_name : Gname_vec ) {
     auto gamma_tensors = Eqn_computer->get_gammas( 0, 0, Gamma_name );
@@ -205,7 +193,6 @@ void CASPT2_ALT::CASPT2_ALT::test() {
       Eqn_computer->Calculate_CTP(A_contrib.first);
       cout << "added " << A_contrib.first << endl; 
       cout << "=========================================================================================================" << endl << endl;
-      // add this contribution to the merged A_tensor
     }
   }   
  

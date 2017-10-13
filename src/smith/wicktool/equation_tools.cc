@@ -66,22 +66,17 @@ void Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib )
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_uniform_Tensor(shared_ptr<vector<string>> unc_ranges, double XX ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer::Equation_Computer::get_block_Tensor" << endl;
+   cout << "Equation_Computer::Equation_Computer::get_uniform_Tensor" << endl;
 
-   cout << "unc_ranges = [ " ; cout.flush();  for  ( auto rng :  *unc_ranges )cout << rng << " " ; cout << " ] " << endl;
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
-   cout << "Bagel_id_ranges->size() = "<< Bagel_id_ranges->size() << endl;
-   cout << "range_lengths = " ; cout.flush();
    auto  range_lengths  = make_shared<vector<int>>(0); 
-   for (auto idrng : *Bagel_id_ranges ){
-      range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
-   } 
+   for (auto idrng : *Bagel_id_ranges )
+      range_lengths->push_back(idrng.range().size()-1); 
 
    shared_ptr<Tensor_<double>> block_tensor = make_shared<Tensor_<double>>(*Bagel_id_ranges);
    block_tensor->allocate();
 
-   cout << "allocated tensor" << endl;
    auto block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
    auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
    do {
@@ -93,8 +88,6 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_uniform_Te
      int out_size = 1;
      for ( Index id : T_id_blocks)
         out_size*= id.size();
-     
- //    cout << "out_size = " << out_size << endl;
 
      unique_ptr<double[]> T_block_data( new double[out_size] );
    
@@ -105,8 +98,6 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_uniform_Te
      block_tensor->put_block(T_block_data, T_id_blocks);
 
    } while (fvec_cycle(block_pos, range_lengths, mins ));
-//   cout  << "block_tensor->norm() = "  << block_tensor->norm() << endl;
-//   cout  << "block_tensor->rms() = "  << block_tensor->rms() << endl;
    return block_tensor;
 }
 
@@ -120,44 +111,34 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
    if(  CTP_data_map->find(Tname) != CTP_data_map->end())
      return CTP_data_map->at(Tname);
 
-   shared_ptr<vector<string>>     unc_ranges = CTP_map->at(Tname)->unc_id_ranges;  
-   cout << "unc_ranges = [ " ; cout.flush();  for  ( auto rng :  *unc_ranges ) { cout << rng << " " ; } cout << " ] " << endl;
+   shared_ptr<vector<string>> unc_ranges = CTP_map->at(Tname)->unc_id_ranges;  
 
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
-   cout << "Bagel_id_ranges->size() = "<< Bagel_id_ranges->size() << endl;
-   cout << "range_lengths = " ;
    auto  range_lengths  = make_shared<vector<int>>(0); 
-   for (auto idrng : *Bagel_id_ranges ){
-      range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
-   }
+   for (auto idrng : *Bagel_id_ranges )
+      range_lengths->push_back(idrng.range().size()-1); 
+   
 
    shared_ptr<Tensor_<double>> fulltens = CTP_data_map->at(Tname.substr(0,1));
    shared_ptr<Tensor_<double>> block_tensor = make_shared<Tensor_<double>>(*Bagel_id_ranges);
    block_tensor->allocate();
    block_tensor->zero();
 
-   cout << "allocated tensor" << endl;
    auto block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
    auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
    do {
      
-     cout << "block_pos = " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout << endl;
      vector<Index> T_id_blocks(Bagel_id_ranges->size());
-     cout << "hello : ii = " << endl;
-     for( int ii = 0 ;  ii != T_id_blocks.size(); ii++){
-       cout <<  ii << " "; cout.flush() ; 
+     for( int ii = 0 ;  ii != T_id_blocks.size(); ii++)
        T_id_blocks[ii] =  Bagel_id_ranges->at(ii).range(block_pos->at(ii));
-     }
-     cout << "T_id_blocks sizes : " ; cout.flush(); for (Index id : T_id_blocks){ cout << id.size() << " " ;} cout << endl;
+     
   
      unique_ptr<double[]> T_block_data = fulltens->get_block(T_id_blocks);
-     cout << "got data from " << Tname <<  endl;
      block_tensor->put_block(T_block_data, T_id_blocks);
 
    } while (fvec_cycle(block_pos, range_lengths, mins ));
 
-   cout << "out of get block" << endl; 
    return block_tensor;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +151,6 @@ shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_Tens_strides(v
  for ( int ii = 1  ; ii!= range_sizes.size(); ii++ ) 
    Tens_strides->at(ii) = Tens_strides->at(ii-1) * range_sizes[ii-1];
   
-// cout << "Tens_strides = [ " ; cout.flush(); for (int elem : *Tens_strides)  { cout << elem << " " ;} ; cout << " ] " << endl;
  return Tens_strides;
 
 }
@@ -219,8 +199,6 @@ void Equation_Computer::Equation_Computer::Print_Tensor( shared_ptr<Tensor_<doub
    for (int ii = 0 ; ii != range_lengths->size(); ii++)
       range_lengths->at(ii) =  Tens->indexrange()[ii].range().size()-1;
     
-//   cout << "range_lengths      = [" ; for (int elem : *range_lengths) { cout << elem << " " ; } cout << " ]" << endl; 
-
    shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
    shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
    vector<vector<int>> all_id_block_pos(0);
@@ -238,21 +216,16 @@ void Equation_Computer::Equation_Computer::Print_Tensor( shared_ptr<Tensor_<doub
         id_block_sizes_part[jj] = Tens->indexrange()[ii].range(jj).size();
      }
 
-//     cout << "id_block_sizes_part  = [ " ;cout.flush();  for (auto elem : id_block_sizes_part ) { cout <<  elem <<  " "  ; } cout <<"] " <<  endl;
-//     cout << "id_block_pos_part    = [ " ;cout.flush();  for (auto elem : id_block_pos_part ) { cout <<  elem <<  " "  ; } cout <<"] " <<  endl;
-
      all_id_block_pos.push_back(id_block_pos_part);
      all_id_block_sizes.push_back(id_block_sizes_part);
    } 
 
+   cout << "Tdata_block : " << endl; 
    do {
 
      vector<int> block_id_start(block_pos->size());
      for ( int ii = 0 ; ii != block_id_start.size(); ii++)
        block_id_start[ii] = all_id_block_pos[ii].at(block_pos->at(ii));
-    
-//     cout << "block_pos       = [ " ;cout.flush();  for (auto elem : *block_pos) { cout <<  elem <<  " "  ; } cout <<"] " <<  endl;
-//     cout << "block_id_start  = [ " ;cout.flush();  for (auto elem : block_id_start) { cout <<  elem <<  " "  ; } cout <<"] " <<  endl;
     
      vector<Index> id_blocks( block_pos->size() );
      for( int ii = 0 ;  ii != id_blocks.size(); ii++)
@@ -265,23 +238,16 @@ void Equation_Computer::Equation_Computer::Print_Tensor( shared_ptr<Tensor_<doub
        id_blocks_maxs->at(ii) = id_blocks[ii].size()-1;
      }
     
-//     cout << "id_blocks_sizes  = [ " ; cout.flush();  for (auto elem : id_blocks_sizes) { cout <<  elem <<  " "  ; } cout << "] " << endl;
-//     cout << "id_blocks_maxs   = [ " ;  cout.flush();  for (auto elem : *id_blocks_maxs) { cout <<  elem <<  " "  ; } cout << "] " << endl;
-    
      shared_ptr<vector<int>> id_pos = make_shared<vector<int>>(range_lengths->size(),0);
      int id_block_size = accumulate(id_blocks_sizes.begin(), id_blocks_sizes.end(), 1 , std::multiplies<int>());
 
      unique_ptr<double[]>    T_data_block = Tens->get_block(id_blocks);
      shared_ptr<vector<int>> Tens_strides = get_Tens_strides(id_blocks_sizes);
-     
-//     cout << "Tens_strides = [ " ; cout.flush();  for (auto elem : *Tens_strides) { cout <<  elem <<  " "  ; } cout << "] " << endl;
-//     cout << " id_block_size =  " << id_block_size << endl; 
 
      for ( int jj = 0 ; jj != id_block_size ; jj++) {
        cout <<  T_data_block[jj] << " "; cout.flush();
        for ( vector<int>::iterator Titer =  Tens_strides->begin()+1;  Titer != Tens_strides->end(); Titer++ ) {
          if ( (jj > 0) && ( ( (jj+1) % *Titer) == 0) ){ 
-         //  cout << "Tripped jj = " << jj << "*Titer = " << *Titer ; cout << endl;
            cout << endl;
          }
        }
@@ -297,11 +263,9 @@ shared_ptr<Tensor_<double>>
 Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Equation_Computer::Equation_Computer::contract_on_same_tensor" << endl;
-   cout << "ctr_todo  = (" << ctr_todo.first << "," << ctr_todo.second << ")" << endl;
 
    shared_ptr<CtrTensorPart<double>> CTP_old = CTP_map->at(Tname);
    shared_ptr<Tensor_<double>> CTP_data_old = find_or_get_CTP_data(Tname); cout <<  endl;
-   //cout << "CTP_data_old->rms()  = " + Tname + "->rms() =" << CTP_data_old->rms() << endl;
 
    // get original uncontracted ranges and positions of Ctrs relative to the current tensor
    pair<int,int> rel_ctr_todo = ctr_todo;
@@ -387,24 +351,14 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
            for ( int xx = inpos ; xx != inpos+inner_stride ; xx++ ) 
              total+=CTP_data_block_old[xx];
 
-         //  cout << " CTP_data_block_old = [ " ; for ( int xx = inpos ; xx != inpos+inner_stride ; xx++ ){   cout << CTP_data_block_old[xx] << " " ; }  cout << "]" << endl; 
-         //  cout << " CTP_data_block_new = [ " ; for ( int xx = pos ; xx != pos+inner_stride ; xx++ ) cout << CTP_data_block_new[xx] << " " ;  cout << "]" << endl; 
-         //  cout << " pos =  " << pos << " inpos =  " << inpos << " total = " << total << " jj = " << jj <<  endl;
-
            blas::ax_plus_y_n(1.0, CTP_data_block_old.get()+inpos, inner_stride, CTP_data_block_new.get()+pos);
 
-         //  cout << " CTP_data_block_new = [ " ; for ( int xx = pos ; xx != pos+inner_stride ; xx++ ) cout << CTP_data_block_new[xx] << " " ; cout << "]" << endl<< endl; 
          } while (fvec_cycle_skipper_f2b(fvec2, maxs2, mins2));
        }
  
        CTP_data_out->add_block( CTP_data_block_new, CTP_id_blocks_new );
      } while (fvec_cycle_skipper(block_pos, maxs, mins ));
   } 
- 
-//  if (Tout_name.substr(0,9) == "X0X1X2X3_" ) {
-//    cout << "Printing " <<  Tout_name << " ....... "  <<  Tname.substr(0,9) << " == X0X1X2X3_" << endl;
-//    Print_Tensor( CTP_data_out ) ;
-//  }
 
   CTP_map->at(Tout_name)->got_data = true; 
   cout << "CTP_data_out->rms()  = " + Tout_name + "->rms() =" << CTP_data_out->rms() << endl;
@@ -424,13 +378,10 @@ Equation_Computer::Equation_Computer::contract_different_tensors( pair<int,int> 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Equation_Computer::contract_on_different_tensor" <<endl; 
 
-  shared_ptr<CtrTensorPart<double>> CTP1 = CTP_map->at(T1name);  cout << "got info for " <<  T1name << endl;
-  shared_ptr<CtrTensorPart<double>> CTP2 = CTP_map->at(T2name);  cout << "got info for " << T2name << endl; 
+  shared_ptr<CtrTensorPart<double>> CTP1 = CTP_map->at(T1name); 
+  shared_ptr<CtrTensorPart<double>> CTP2 = CTP_map->at(T2name); 
 
   pair<int,int> ctr_todo_rel = ctr_todo;
-//  cout << "orig_ctr = ( " << ctr_todo.first << ","<<ctr_todo.second << ")" << endl;
-//  cout << "rel  ctr = ( " << ctr_todo_rel.first << ","<<ctr_todo_rel.second << ")" << endl;
-
   shared_ptr<vector<int>> T1_org_order= make_shared<vector<int>>(CTP1->unc_pos->size());
   for (int ii =0 ; ii != T1_org_order->size(); ii++) { T1_org_order->at(ii) = ii ;}
 
@@ -438,36 +389,16 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   for (int ii =0 ; ii != T2_org_order->size(); ii++) { T2_org_order->at(ii) = ii ;}
 
   shared_ptr<Tensor_<double>> CTP1_data = find_or_get_CTP_data(T1name);
-
-//  cout << "T1_org_order = [" ; for (auto elem : *T1_org_order) { cout << elem << " " ; } cout << "]"<< "  T1_rel_ctr = " << ctr_todo_rel.first << endl;
   shared_ptr<vector<int>> T1_new_order  = put_ctr_at_back( T1_org_order , ctr_todo_rel.first);
-//  cout << "T1_new_order = [" ; for (auto elem : *T1_new_order) { cout << elem << " " ; } cout << "]"<< endl;
-
   shared_ptr<vector<shared_ptr<const IndexRange>>> T1_org_rngs = Get_Bagel_const_IndexRanges(CTP1->full_id_ranges, CTP1->unc_pos) ;
-//  cout << "T1_org_rngs = [" ; for (auto elem : *T1_org_rngs) { cout << elem << " " ; } cout << "]"<< endl;
-
   shared_ptr<vector<shared_ptr<const IndexRange>>> T1_new_rngs = reorder_vector(T1_new_order, T1_org_rngs);
-//  cout << "T1_new_rngs = [" ; for (auto elem : *T1_new_rngs) { cout << elem << " " ; } cout << "]"<< endl;
-
   shared_ptr<vector<int>> maxs1 = get_num_index_blocks_vec(T1_new_rngs) ;
-//  cout << "maxs1 =  [" ; for (auto elem : *maxs1) { cout << elem << " " ; } cout << "]"<< endl;
-
 
   shared_ptr<Tensor_<double>> CTP2_data = find_or_get_CTP_data(T2name);
-//  cout << "got_data... for T2 : " <<  T2name << endl;
-
-//  cout << "T2_org_order = [" ; for (auto elem : *T2_org_order) { cout << elem << " " ; } cout << "]"<< "  T2_rel_ctr = " << ctr_todo_rel.second << endl;
   shared_ptr<vector<int>> T2_new_order  = put_ctr_at_front( T2_org_order , ctr_todo_rel.second);
-//  cout << "T2_new_order = [" ; for (auto elem : *T2_new_order) { cout << elem << " " ; } cout << "]"<< endl;
-
   shared_ptr<vector<shared_ptr<const IndexRange>>> T2_org_rngs = Get_Bagel_const_IndexRanges(CTP2->full_id_ranges, CTP2->unc_pos) ;
-//  cout << "T2_org_rngs = [" ; for (auto elem : *T2_org_rngs) { cout << elem << " " ; } cout << "]"<< endl;
-
   shared_ptr<vector<shared_ptr<const IndexRange>>> T2_new_rngs = reorder_vector(T2_new_order, T2_org_rngs);
-//  cout << "T2_new_rngs = [" ; for (auto elem : *T2_new_rngs) { cout << elem << " " ; } cout << "]"<< endl;
-
   shared_ptr<vector<int>> maxs2 = get_num_index_blocks_vec(T2_new_rngs) ;
-//  cout << "maxs2 =  [" ; for (auto elem : *maxs2) { cout << elem << " " ; } cout << "]"<< endl;
 
   auto Tout_unc_rngs = make_shared<vector<shared_ptr<const IndexRange>>>(0);
   Tout_unc_rngs->insert(Tout_unc_rngs->end(), T1_new_rngs->begin(), T1_new_rngs->end()-1);
@@ -504,24 +435,6 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
     shared_ptr<vector<int>> T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size(), 0);
     T2_rng_block_pos->front() = T1_rng_block_pos->back();
  
-    cout << "T1_new_block_sizes = [" ; for (auto T1block : *T1_new_rng_blocks) { cout << T1block.size() << " " ; } cout << "]"<< endl;
-    cout << "T1 data : " <<  endl;
-    double test = 0.0;
-    for (int qq = 0 ; qq!=T1_unc_block_size  /*ctr_block_size*/ ; qq++) { 
-      cout << T1_data_new[qq] << "  "; cout.flush(); 
-      if ( !(qq+1 % T1_unc_block_size) )
-        cout << endl;
-    }
-    
-    for (int qq = 1 ; qq!=T1_unc_block_size*ctr_block_size ; qq++) { 
-      if ( T1_data_new[qq] != T1_data_new[qq-1] ){
-        cout << "Error : " <<" T1_data_new["<<qq-1<<"] = " << T1_data_new[qq-1] << " ) != " ;cout.flush();
-        cout << T1_data_new[qq] << "=  T1_data_new["<<qq<<"] )" ;cout.flush();
-      }
-    }
-
-    cout << endl;
- 
     do { 
 
       shared_ptr<vector<Index>> T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
@@ -533,47 +446,12 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
         T2_data_new = reorder_tensor_data(T2_data_org.get(), T2_new_order, T2_org_rng_blocks); 
       }
        
-      cout << "T2_new_block_sizes = [" ; for (auto T2block : *T2_new_rng_blocks) { cout << T2block.size() << " " ; } cout << "]"<< endl;
-      cout << "ctr_block_size = " << ctr_block_size ; cout.flush(); cout << "   ctr_range_name = " << CTP1->unc_id_ranges->at(ctr_todo.first) << endl;
-
-      cout << "T2 data : " <<  endl;
-      for (int qq = 0 ; qq!=T2_unc_block_size /*ctr_block_size*/ ; qq++) { 
-        cout << T2_data_new[qq] << "  "; cout.flush(); 
-        if ( !(qq+1 % T2_unc_block_size) )
-          cout << endl;
-      }
-      cout << endl;
- 
-      for (int qq = 1 ; qq!=T2_unc_block_size*ctr_block_size ; qq++) { 
-        if ( T2_data_new[qq] != T2_data_new[qq-1] ){
-          cout << "Error : " <<" T2_data_new["<<qq-1<<"] = " << T2_data_new[qq-1] << " ) != " ;cout.flush();
-          cout << T2_data_new[qq] << "=  T2_data_new["<<qq<<"] )" ;cout.flush();
-        }
-      }
-      cout << endl;
-    
       std::unique_ptr<double[]> T_out_data(new double[T1_unc_block_size*T2_unc_block_size]);
       std::fill_n(T_out_data.get(), T1_unc_block_size*T2_unc_block_size, 0.0);
       //should not use transpose; instead build T2_new_order backwards... 
       dgemm_("N", "N", T1_unc_block_size, T2_unc_block_size, ctr_block_size, 1.0, T1_data_new, T1_unc_block_size,
               T2_data_new, ctr_block_size, 0.0, T_out_data, T1_unc_block_size );
 
-      cout << "T_out_data : " <<  endl;
-      for (int qq = 0 ; qq!= T1_unc_block_size/*T2_unc_block_size*/ ; qq++) { 
-        cout << T_out_data[qq] << "  "; cout.flush(); 
-        if ( !(qq+1 % T1_unc_block_size ) )
-          cout << endl;
-      }
-      cout << endl;
- 
-      for (int qq = 1 ; qq!=T2_unc_block_size*T1_unc_block_size ; qq++) { 
-        if ( T_out_data[qq] != T_out_data[qq-1] ){
-          cout << "Error : " <<" T_out_data["<<qq-1<<"] = " << T_out_data[qq-1] << " ) != " ;cout.flush();
-          cout << T_out_data[qq] << "=  T_out_data["<<qq<<"] )" ;cout.flush();
-        }
-      }
-      cout << endl;
-      
       vector<Index> T_out_rng_block(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
       T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
       T_out->add_block( T_out_data, T_out_rng_block );
@@ -583,17 +461,10 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
 
   } while (fvec_cycle_test(T1_rng_block_pos, maxs1 ));
 
-
-  cout << "Printing " <<  Tout_name << endl;
-//  Print_Tensor( T_out ) ;
-  
-  //cout << "looking for " << Tout_name << " in the map ..... " ; cout.flush();
- 
-  cout << "CTP1->rms()  = " + T1name + "->rms() =" << CTP1_data->rms() << endl;
-  cout << "CTP2->rms()  = " + T2name + "->rms() =" << CTP2_data->rms() << endl;
-  cout << "T_out->rms()  = " + Tout_name + "->rms() =" << T_out->rms() << endl;
+  cout << "CTP1_data->rms()  = " + T1name + "->rms() =" << CTP1_data->rms() << endl;
+  cout << "CTP2_data->rms()  = " + T2name + "->rms() =" << CTP2_data->rms() << endl;
+  cout << "CTP_data_out->rms()  = " + Tout_name + "->rms() =" << T_out->rms() << endl;
   CTP_map->at(Tout_name)->got_data = true; 
-  // cout << "found it! " << endl;
   return T_out;
 }
 
@@ -635,15 +506,13 @@ Equation_Computer::Equation_Computer::relativize_ctr_positions(pair <int,int> ct
 shared_ptr<Tensor_<double>>
 Equation_Computer::Equation_Computer::find_or_get_CTP_data(string CTP_name){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "Equation_Computer::Equation_Computer::find_or_get_CTP_data" << endl;
+ cout << "Equation_Computer::Equation_Computer::find_or_get_CTP_data  : " <<  CTP_name <<  endl;
 
   shared_ptr<Tensor_<double>> CTP_data;
   auto CTP_data_loc =  CTP_data_map->find(CTP_name); 
   if ( CTP_data_loc == CTP_data_map->end() ){
-    cout << "get data block for " << CTP_name << endl;
     CTP_data = get_block_Tensor(CTP_name);   
   } else {
-    cout << "already found " << CTP_name << " in map"<< endl;
     CTP_data = CTP_data_loc->second;
   }
   
