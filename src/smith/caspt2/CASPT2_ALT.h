@@ -66,6 +66,11 @@ class CASPT2_ALT {
     std::shared_ptr<IndexRange> active_rng;  
     std::shared_ptr<IndexRange> virtual_rng;
     std::shared_ptr<IndexRange> free_rng  ; 
+    std::shared_ptr<IndexRange> not_closed_rng ; 
+    std::shared_ptr<IndexRange> not_active_rng  ;
+    std::shared_ptr<IndexRange> not_virtual_rng ;
+
+
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map ;
 
     std::vector<std::shared_ptr<MultiTensor_<double>>> T2_all;
