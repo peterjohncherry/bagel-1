@@ -590,6 +590,7 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_n
   //Gets list of necessary gammas which are needed by truncating the gamma_range vector
   //e.g. [a,a,a,a,a,a] --> [a,a,a,a] --> [a,a]
   shared_ptr<vector<string>> gamma_ranges_str  = GammaMap->at(gamma_name)->id_ranges;
+
   auto gamma_ranges =  vector<shared_ptr<vector<IndexRange>>>(gamma_ranges_str->size()/2);
   for (int ii = 0 ; ii !=gamma_ranges.size(); ii++ ){ 
     auto gamma_ranges_str_tmp = make_shared<vector<string>>(gamma_ranges_str->begin(), gamma_ranges_str->end()-ii*2);
@@ -609,8 +610,8 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_n
        range_lengths->push_back(idrng.range().size()-1); cout << idrng.range().size() << " " ;
      }
 
-     Tensor_<double> new_gamma_tensor(*(gamma_ranges[ii]));
-     new_gamma_tensor.allocate();
+     shared_ptr<Tensor_<double>> new_gamma_tensor= make_shared<Tensor_<double>>(*(gamma_ranges[ii]));
+     new_gamma_tensor->allocate();
      
      auto block_pos = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
      auto mins = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
@@ -633,21 +634,20 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_n
 
        cout << endl << gamma_data_vec->size()  << gamma_data_vec->size() << endl; 
        unique_ptr<double[]> gamma_data_block(new double[gamma_block_size])  ;
-//       copy_n(gamma_data_block.get(), gamma_block_size, gamma_data_vec->at(ii)->data());
+       blas::ax_plus_y_n(1.0, gamma_data_block.get(), gamma_block_size, gamma_data_vec->at(ii)->data()+gamma_block_pos);
+       std::fill_n(gamma_data_block.get(), gamma_block_size, 0.0);
        
        cout << " got gamma data successfully " << endl;
-    //   new_gamma_tensor.put_block( gamma_data_block, gamma_id_blocks);
+       new_gamma_tensor->put_block( gamma_data_block, gamma_id_blocks);
        cout << " put gamma data successfully " << endl;
      
      } while (fvec_cycle(block_pos, range_lengths, mins ));
-     shared_ptr<Tensor_<double>> new_gamma_tensor_ptr = make_shared<Tensor_<double>>(new_gamma_tensor);
-     gamma_tensors->push_back(new_gamma_tensor_ptr);
+     gamma_tensors->push_back(new_gamma_tensor);
   }
   cout << "out of loop" << endl;
  
   return gamma_tensors;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 tuple< size_t, size_t >

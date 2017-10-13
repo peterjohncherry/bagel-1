@@ -163,9 +163,10 @@ void CASPT2_ALT::CASPT2_ALT::test() {
   }
   std::sort(Gname_vec.begin(), Gname_vec.end(), csl); 
   }
-  for ( string Gamma_name : Gname_vec ) {
-    auto gamma_tensors = Eqn_computer->get_gammas( 0, 0, Gamma_name );
+  shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Eqn_computer->get_gammas( 0, 0, Gname_vec[0] );
+  cout << "returned from get_gammas in tact " << endl;
 
+  for ( string Gamma_name : Gname_vec ) {
     // Build A_tensor to hold sums of different A-tensors
     shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Eqn_computer->Get_Bagel_IndexRanges(Eqn->GammaMap->at(Gamma_name)->id_ranges)) );
     A_combined_data->allocate();
