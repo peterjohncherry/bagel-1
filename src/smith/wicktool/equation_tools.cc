@@ -8,9 +8,9 @@ using namespace bagel::SMITH;
 using namespace bagel::SMITH::Tensor_Sorter;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info_in,
-                                                        std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map_in,
-                                                        std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in){
+Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info_in,
+                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map_in,
+                                                         std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   eqn_info =  eqn_info_in;
@@ -33,6 +33,8 @@ Equation_Computer::Equation_Computer::Equation_Computer(std::shared_ptr<const SM
 void Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << " Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib_name )" << endl;
+  if (eqn_info->ACompute_map->at(A_contrib)->size() == 0 )
+    cout << "THIS COMPUTE LIST IS EMPTY" << endl;
 
   for (shared_ptr<CtrOp_base> ctr_op : *(eqn_info->ACompute_map->at(A_contrib))){
  

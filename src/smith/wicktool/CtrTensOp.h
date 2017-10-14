@@ -104,6 +104,7 @@ class CtrTensorPart /*, public: std::enable_shared_from_this<CtrTensorPart>*/ {
                     ctrs_todo      = std::make_shared<std::vector<std::pair<int,int>>>(0);
                     ReIm_factors = std::make_shared<std::vector<std::pair<int,int>>>(ctrs_pos->size());
                     contracted = false;
+                    got_compute_list = false;
                    };   
   
     CtrTensorPart(std::shared_ptr<std::vector<std::string>> full_idxs_in,
@@ -176,7 +177,8 @@ class CtrMultiTensorPart : public CtrTensorPart<DType>  {
                          cross_ctrs_pos = cross_ctrs_pos_in;
                          Tsizes_cml     = std::make_shared<std::vector<int>>(0);
                          ctrs_pos       = std::make_shared<std::vector<std::pair<int,int>>>(0); 
-                         
+                         got_compute_list =false;                         
+ 
                          int cml_size = 0;
                          for (std::shared_ptr<CtrTensorPart<DType>> ctp : *CTP_vec){
                            Tsizes_cml->push_back(cml_size);

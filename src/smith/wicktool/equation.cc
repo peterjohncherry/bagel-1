@@ -22,14 +22,14 @@ void Equation<DType>::Initialize(){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-shared_ptr<TensOp<DType>> Equation<DType>::Build_TensOp(string op_name,
-                                                        shared_ptr<DType> tensor_data, //needs to be templated, should be Bagel tensor
-                                                        shared_ptr<vector<string>> op_idxs,
-                                                        shared_ptr<vector<bool>> op_aops, 
-                                                        shared_ptr<vector<vector<string>>> op_idx_ranges,
-                                                        vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
-                                                        vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
-                                                        pair<double,double> factor, string Tsymmetry, bool hconj ) {
+shared_ptr<TensOp<DType>> Equation<DType>::Build_TensOp( string op_name,
+                                                         shared_ptr<DType> tensor_data, //needs to be templated, should be Bagel tensor
+                                                         shared_ptr<vector<string>> op_idxs,
+                                                         shared_ptr<vector<bool>> op_aops, 
+                                                         shared_ptr<vector<vector<string>>> op_idx_ranges,
+                                                         vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
+                                                         vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
+                                                         pair<double,double> factor, string Tsymmetry, bool hconj ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp::BuildTensOp" <<   endl;
 
@@ -96,23 +96,33 @@ void Equation<DType>::Get_CMTP_Compute_Terms(){
   for (auto  G2A_mapit =G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
     
     auto A_map = G2A_mapit->second;
-    auto ACompute_map_new = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
-
-      string   CMTP_name  = A_map_it->first;
+      
+      string CMTP_name  = A_map_it->first;
       pair<int,int> Asign = A_map_it->second;
-
-      auto ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0); 
-
+  
+      shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list; 
       if ( CMTP_map->find(CMTP_name) == CMTP_map->end())
-        cout << CMTP_name << " is not yet in the map ....." << endl;
+        throw std::logic_error( CMTP_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
 
-      CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list, ACompute_map);
-      ACompute_map->emplace(CMTP_name, ACompute_list);
+      auto ACompute_list_loc = ACompute_map->find(CMTP_name);
+      if ( ACompute_list_loc != ACompute_map->end() ){
+        cout << "Equation::Get_CMTP_Compute_Terms::already built compute list for " << CMTP_name << " during generation of earlier compute list" << endl;
+        cout << CMTP_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map->at(CMTP_name)->size() << "  --- Still in if " << endl;
+        continue;
+      } else {  
+        ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
+        CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list, ACompute_map);
+        ACompute_map->emplace(CMTP_name, ACompute_list);
+        CMTP_map->at(CMTP_name)->got_compute_list =true; 
+      }
+  
+      cout << CMTP_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map->at(CMTP_name)->size() << endl;
 
     }
+    cout << "X" << endl;
   }
-
+  cout << "leaving Get_CMTP_compute_Terms" << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
