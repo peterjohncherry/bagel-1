@@ -593,7 +593,18 @@ bool fvec_cycle_skipper_f2b(shared_ptr<vector<int>> forvec, shared_ptr<vector<in
   }
   return true;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<int>> reorder_vector(vector<int>& neworder , const vector<int>& origvec ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  vector<int> newvec(origvec.size());
+  vector<int>::iterator newvec_it = newvec.begin();
+
+  for( int pos : neworder )
+     *newvec_it++ = origvec[pos];
+
+  return make_shared<vector<int>>(newvec);
+}
 
 
 

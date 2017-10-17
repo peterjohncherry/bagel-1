@@ -64,8 +64,6 @@ class GammaGenerator{
     std::shared_ptr<std::map< char, int>>   op_order ;
     std::shared_ptr<std::map< std::string, int>>  idx_order ;
 
-    
-
     // functions
     GammaGenerator(std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
                    std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
@@ -73,13 +71,13 @@ class GammaGenerator{
     ~GammaGenerator(){};
 
     void add_gamma(std::shared_ptr<std::vector<std::string>> full_id_ranges_in, int my_sign_in) ;
-                                                                                                                                                                          
-    //void norm_order(std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec );                                                                                  
+    
     void norm_order();
     
-    //void alt_order(std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec );
     void alt_order();
  
+    void optimized_alt_order();
+
     void Contract_remaining_indexes(int kk);
    
     void swap( int ii, int jj, int kk, std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec );
@@ -102,7 +100,14 @@ class GammaGenerator{
     std::string get_gamma_name(std::shared_ptr<std::vector<bool>> aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
                                std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
 
-    static std::shared_ptr<std::vector<std::pair<int,int>>> Standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ) ;
+    static std::shared_ptr<std::vector<std::pair<int,int>>>
+           Standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ) ;
+
+    std::vector<int> sort_ranges(const std::vector<std::string> &rngs) ;
+
+    std::vector<int> get_standard_order (const std::vector<std::string>& rngs ); 
+
+    std::vector<int> get_standard_alt_order_from_norm_order (const  std::vector<std::string>& rngs ) ;
 
  };
  #endif

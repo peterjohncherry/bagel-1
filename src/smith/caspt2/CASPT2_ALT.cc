@@ -122,6 +122,21 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   vector<string> act  = {"act"};
   vector<string> virt = {"vir"};
 
+  /* ---- 2el Excitation Op  ----  */
+  pair<double,double>                 X_factor = make_pair(1.0,1.0);
+  shared_ptr<vector<string>>          X_idxs = make_shared<vector<string>>(vector<string> {"X0", "X1", "X2", "X3"});
+  shared_ptr<vector<bool>>            X_aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true }); 
+  shared_ptr<vector<vector<string>>>  X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt, not_virt, not_core, not_core }); 
+  vector<IndexRange>                  X_bagel_ranges = {*not_closed_rng , *not_closed_rng, *not_virtual_rng, *not_virtual_rng} ;
+  shared_ptr<double>                  X_dummy_data;
+  string                              X_TimeSymm = "none";
+
+  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  X_symmfuncs = Expr_Info->set_2el_symmfuncs();
+  vector<bool(*)(shared_ptr<vector<string>>)>  X_constraints = { &Expression_Info<double>::Expression_Info::NotAllAct };
+
+  shared_ptr<TensOp<double>> XTens = Expr_Info->Build_TensOp("X", X_dummy_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
+  Expr_Info->T_map->emplace("X", XTens);
+
   /* ---- H Tensor ----  */
   pair<double,double>                H_factor = make_pair(1.0,1.0);
   shared_ptr<vector<string>>         H_idxs = make_shared<vector<string>>(vector<string> {"H0", "H1", "H2", "H3"});

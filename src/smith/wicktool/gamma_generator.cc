@@ -324,6 +324,79 @@ cout << "GammaGenerator::alt_order" << endl;
   }
   return;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////
+//This is absurdly inefficient; will probably need to be replaced.
+///////////////////////////////////////////////////////////////////////////////////////
+void GammaGenerator::optimized_alt_order(){
+//////////////////////////////////////////////////////////////////////////////////////  
+#ifdef DBG_GammaGenerator 
+cout << "GammaGenerator::optimized_alt_order" << endl; 
+#endif 
+///////////////////////////////////////////////////////////////////////////////////////
+  int kk = 0;
+  while ( kk != gamma_vec->size()){
+    shared_ptr<vector<bool>> full_aops = gamma_vec->at(kk)->full_aops;
+    shared_ptr<vector<int>>  ids_pos = gamma_vec->at(kk)->ids_pos;
+    shared_ptr<vector<string>> full_id_ranges = gamma_vec->at(kk)->full_id_ranges;
+    shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos;
+
+    int my_sign  = gamma_vec->at(kk)->my_sign ;
+    
+    vector<string> unc_ids(full_id_ranges->size() - 2*deltas_pos->size());
+    vector<string>::iterator unc_ids_it = unc_ids.begin();
+    cout << "unc_ids = [ " ; cout.flush(); 
+    for (int pos : *ids_pos ) {
+      cout << orig_ids->at(pos) <<  " " ; cout.flush();
+      *unc_ids_it++ = orig_ids->at(pos);
+    }
+    cout << "]" << endl;
+    cout << "ids_pos    = [ " ; for (int pos : *ids_pos ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
+
+    vector<int> opt_order = get_standard_alt_order_from_norm_order ( unc_ids ) ;
+    cout << "opt_order  = [ " ; for (int pos : opt_order ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
+
+    shared_ptr<vector<int>> new_ids_pos = reorder_vector( opt_order, *ids_pos) ;    
+    cout << "new_ids_pos  = [ " ; for (int pos : *new_ids_pos ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
+
+    for (int ii = ids_pos->size()-1 ; ii != -1; ii-- ){
+      if (ids_pos->at(ii) == new_ids_pos->at(ii))
+        continue;
+
+      while( ids_pos->at(ii) != new_ids_pos->at(ii) ){
+        for ( int jj = (ii-1); jj != -1 ; jj--) {
+          if (ids_pos->at(jj) == new_ids_pos->at(ii)){
+            swap( jj, jj+1, kk, gamma_vec);
+            break;
+          }
+        }
+      }
+    }
+    cout << endl;
+    kk++;
+
+    cout << "post_ids_pos = [ " ; for (int pos : *ids_pos ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
+    string Aname_alt = get_Aname( orig_ids, full_id_ranges, deltas_pos );
+    string Gname_alt = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
+    
+    if ( G_to_A_map->find(Gname_alt) == G_to_A_map->end() )
+      G_to_A_map->emplace(Gname_alt, make_shared< unordered_map<string, pair<int,int> > >());
+    
+    auto Aloc_in_map = G_to_A_map->at(Gname_alt)->find(Aname_alt);
+    if ( Aloc_in_map == G_to_A_map->at(Gname_alt)->end() ) {
+      G_to_A_map->at(Gname_alt)->emplace ( Aname_alt, make_pair(my_sign, my_sign)) ;
+    } else {
+      Aloc_in_map->second.first  += my_sign;
+      Aloc_in_map->second.second += my_sign;
+    }
+    if ( Gamma_map->find(Gname_alt) == Gamma_map->end() )
+      Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>(full_aops, full_id_ranges, new_ids_pos));
+
+  }
+
+  return;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
 //Swaps indexes round, flips sign, and if ranges are the same puts new density matrix in the list. 
 //CAREFUL : always keep creation operator as the left index in the contraction . 
@@ -588,4 +661,59 @@ cout << "GammaGenerator::RangeCheck" << endl;
    return true;
 
 } 
+
+//////////////////////////////////////////////////////////////////////////////
+vector<int> GammaGenerator::sort_ranges(const vector<string> &rngs) {
+//////////////////////////////////////////////////////////////////////////////
+  
+  vector<int> pos(rngs.size());
+  iota(pos.begin(), pos.end(), 0);
+  
+  sort(pos.begin(), pos.end(), [&rngs](int i1, int i2){
+                                 if ( rngs[i1][0] == 'X' ){
+                                   return false;
+                                 } else {
+                                   return (bool)( rngs[i1] < rngs[i2] );
+                                 }});
+  
+  return pos;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+vector<int> GammaGenerator::get_standard_order ( const vector<string>& rngs ) { 
+//////////////////////////////////////////////////////////////////////////////
+
+   vector<string> new_rngs(rngs.size());
+   vector<string>::iterator new_rngs_it = new_rngs.begin();
+   vector<int> new_order = sort_ranges(rngs) ;
+   for ( int pos : new_order ) { *new_rngs_it++ = rngs[pos] ; }
+   return new_order;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+vector<int> GammaGenerator::get_standard_alt_order_from_norm_order ( const vector<string>& rngs ) {
+//////////////////////////////////////////////////////////////////////////////
+
+   vector<string> rngs1(rngs.begin(), rngs.begin()+(rngs.size()/2) );
+   vector<string> rngs2(rngs.begin()+(rngs.size()/2), rngs.end() );
+   
+   cout << "creators     = [ " ;   for ( string elem : rngs1 ) { cout << elem << " " ; }  cout << "]" <<  endl; 
+   cout << "annihilators = [ " ;   for ( string elem : rngs2 ) { cout << elem << " " ; }  cout << "]" <<  endl; 
+
+   vector<int> new_order1 = get_standard_order(rngs1) ; 
+   vector<int> new_order2 = get_standard_order(rngs2) ; 
+
+   vector<int> new_order(rngs.size());
+   vector<int>::iterator new_order_it = new_order.begin() ;
+
+   for ( int ii = 0 ; ii!=new_order1.size() ; ii++){ 
+     *new_order_it++ = new_order1[ii];
+     *new_order_it++ = new_order2[ii]+new_order1.size();
+   }
+   cout << "new rng order = [ " ;   for ( int elem : new_order ) { cout << rngs[elem] << " " ; }  cout << "]" <<  endl; 
+   
+   return new_order;
+}
+
+
 #endif
