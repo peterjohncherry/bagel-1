@@ -224,6 +224,7 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   auto T1_rng_block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
 
   do { 
+    cout << T1name << " block pos =  [ " ;    for (int block_num : *T1_rng_block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
     shared_ptr<vector<Index>> T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, T1_new_rngs); 
     shared_ptr<vector<Index>> T1_org_rng_blocks = inverse_reorder_vector(T1_new_order, T1_new_rng_blocks); 
     
@@ -242,6 +243,7 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
  
     do { 
 
+      cout << T2name << " block pos =  [ " ;    for (int block_num : *T2_rng_block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
       shared_ptr<vector<Index>> T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
       shared_ptr<vector<Index>> T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
       size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end() );
@@ -286,10 +288,9 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
-   auto  range_lengths  = make_shared<vector<int>>(0); 
+   shared_ptr<vector<int>> range_lengths = make_shared<vector<int>>(0); 
    for (auto idrng : *Bagel_id_ranges )
-      range_lengths->push_back(idrng.range().size()-1); 
-   
+     range_lengths->push_back(idrng.range().size()-1); 
 
    shared_ptr<Tensor_<double>> fulltens = CTP_data_map->at(Tname.substr(0,1));
    shared_ptr<Tensor_<double>> block_tensor = make_shared<Tensor_<double>>(*Bagel_id_ranges);
@@ -299,6 +300,7 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
    auto block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
    auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
    do {
+     cout << Tname << " block pos =  [ " ;    for (int block_num : *block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
      
      vector<Index> T_id_blocks(Bagel_id_ranges->size());
      for( int ii = 0 ;  ii != T_id_blocks.size(); ii++)

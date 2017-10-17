@@ -51,10 +51,20 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   H_2el_all  = orig_cpt2->H_2el_;
  
   const int max = ref->maxtile();
-  closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
-  active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
-  virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
-  free_rng = make_shared<IndexRange>(*closed_rng); free_rng->merge(*active_rng); free_rng->merge(*virtual_rng);
+//  closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
+//  active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
+//  virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
+//  free_rng = make_shared<IndexRange>(*closed_rng); free_rng->merge(*active_rng); free_rng->merge(*virtual_rng);
+
+  IndexRange closed  = orig_cpt2_in.closed_; 
+  IndexRange active  = orig_cpt2_in.active_;  
+  IndexRange virt    = orig_cpt2_in.virt_;  
+  IndexRange free    = orig_cpt2_in.all_; 
+
+  closed_rng  = make_shared<IndexRange>(closed); 
+  active_rng  = make_shared<IndexRange>(active);  
+  virtual_rng = make_shared<IndexRange>(virt);  
+  free_rng    = make_shared<IndexRange>(free); 
 
   not_closed_rng  =  make_shared<IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
   not_active_rng  =  make_shared<IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
@@ -74,7 +84,6 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   CTP_map = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
   CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   gamma_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
-  Expression_map = make_shared<map<string, shared_ptr<Equation<double>>>>();
 
   CTP_data_map->emplace("T" , T2_all[0]->at(0));
   CTP_data_map->emplace("L" , T2_all[0]->at(0));
@@ -123,7 +132,6 @@ void CASPT2_ALT::CASPT2_ALT::Build_Compute_Lists() {
 
   Expr_info->Build_Expression(HamT, "test_case") ;
 
-
   return ;
 }
 
@@ -133,7 +141,7 @@ void CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string Expression_name) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(shared_ptr<vector<string>> BraKet_names, string expression_name ) " << endl;
 
-  shared_ptr<Equation<double>> Expr = Expression_map->at(Expression_name); 
+  shared_ptr<Equation<double>> Expr = Expr_info->expression_map->at(Expression_name); 
 
   shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, CTP_data_map, range_conversion_map );
 

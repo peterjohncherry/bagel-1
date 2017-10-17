@@ -96,7 +96,7 @@ void Expression_Info<DataType>::Expression_Info::Construct_Tensor_Ops() {
   pair<double,double>                 L_factor = make_pair(1.0,1.0);
   shared_ptr<vector<string>>          L_idxs = make_shared<vector<string>>(vector<string> {"L0", "L1", "L2", "L3"});
   shared_ptr<vector<bool>>            L_aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true }); 
-  shared_ptr<vector<vector<string>>>  L_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core, not_core, not_virt, not_virt }); 
+  shared_ptr<vector<vector<string>>>  L_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt, not_virt, not_core, not_core }); 
   shared_ptr<double>                  L_dummy_data;
   string                              L_TimeSymm = "none";
 
@@ -158,7 +158,7 @@ void Expression_Info<DataType>::Expression_Info::Build_Expression(shared_ptr<vec
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout <<  "Expression_Info::Expression_Info::Build_Expression(shared_ptr<vector<string>> BraKet_names, string expression_name ) " << endl;
 
-  auto BraKet_List = make_shared<std::vector<std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>>>>(); 
+  auto BraKet_List = make_shared<std::vector<std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>>>>(BraKet_names->size()); 
 
   for ( int ii = 0 ; ii != BraKet_names->size() ; ii++ ) 
     BraKet_List->at(ii) = BraKet_map->at(BraKet_names->at(ii)) ;
