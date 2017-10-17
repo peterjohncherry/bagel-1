@@ -30,7 +30,6 @@ using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 using namespace bagel::SMITH::Equation_Computer; 
-//using namespace bagel::SMITH::CASPT2_ALT_EQN_INFO;
 
 ////////////////////////////////////////////////////////////////////
 CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) { 
@@ -45,9 +44,6 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   nstate_ = ref->ciwfn()->nstates();
   cc_ = ref->ciwfn()->civectors();
   det_ = ref->ciwfn()->civectors()->det();
- // all_gamma1 = make_shared<VecRDM<1>>();
- // all_gamma2 = make_shared<VecRDM<2>>();
- // all_gamma3 = make_shared<VecRDM<3>>();
  
   T2_all     = orig_cpt2->t2all_;
   lambda_all = orig_cpt2->lall_;
@@ -64,7 +60,6 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   not_active_rng  =  make_shared<IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
   not_virtual_rng =  make_shared<IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
 
-
   range_conversion_map = make_shared<map<string, shared_ptr<IndexRange>>>();
   range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
   range_conversion_map->emplace("act", active_rng);
@@ -75,112 +70,95 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   range_conversion_map->emplace("notcor", not_closed_rng);
   range_conversion_map->emplace("notact", not_active_rng);
   range_conversion_map->emplace("notvir", not_virtual_rng); 
+
   CTP_map = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
   CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   gamma_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  Expression_map = make_shared<map<string, shared_ptr<Equation<double>>>>();
+
+  CTP_data_map->emplace("T" , T2_all[0]->at(0));
+  CTP_data_map->emplace("L" , T2_all[0]->at(0));
+  CTP_data_map->emplace("H" , H_2el_all);
+  CTP_data_map->emplace("f" , H_1el_all);
+
+  Expr_info = make_shared<Expression_Info<double>>(norb_, nelea_, neleb_, true);
+  Expr_info->Construct_Tensor_Ops();
+  
 }
 
-/////////////////////////////////////////////////////////////////////////////////
-void CASPT2_ALT::CASPT2_ALT::test() { 
-/////////////////////////////////////////////////////////////////////////////////
-  auto Eqn = make_shared<Equation<double>>();
+////////////////////////////////////////////////////////////////////
+void CASPT2_ALT::CASPT2_ALT::solve() {
+////////////////////////////////////////////////////////////////////
+cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
+  
+  Build_Compute_Lists();
 
-  Eqn->Initialize();
+  Execute_Compute_List("test_case");
+
+  // <proj_jst|H|0_K> set to sall in ms-caspt2
+  
+  // Get < M | W H | N  >
+
+  // Input into linear equation solver to get T amplitudes
+  
+  // Should get \sum < M | W ( f- E_{L}+E_{s} ) T_{LN} | N>  in solver
  
-  //////////////////Initialization section/////////////////////////
-  ///////////This should be read in from an input file/////////////
-  //spinfree orbital ranges
-  vector<string> free     = {"cor", "act", "vir"};
-  vector<string> not_core = {"act", "vir"};
-  vector<string> not_act  = {"cor", "vir"};
-  vector<string> not_virt = {"cor", "act"};
-  vector<string> core = {"cor"};
-  vector<string> act  = {"act"};
-  vector<string> virt = {"vir"};
+  // Construct effective Hamiltonian
+  
+  // symmetrize and diagonalize effective Hmailtonian
+
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+void CASPT2_ALT::CASPT2_ALT::Build_Compute_Lists() { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  shared_ptr<vector<string>> HT = make_shared<vector<string>>(vector<string> { "H" , "T" });
+  Expr_info->Set_BraKet_Ops( HT, "HT" ) ;
+
+  shared_ptr<vector<string>> LT = make_shared<vector<string>>(vector<string> { "L" , "T" });
+  Expr_info->Set_BraKet_Ops( LT, "LT" ) ;
  
-  ///////////////////////////////////X Tensor ////////////////////////////////////////
-  string X_TimeSymm = "none";
-  auto X_factor = make_pair(1.0,1.0);
-  auto X_idxs = make_shared<vector<string>>(vector<string> {"X0", "X1", "X2", "X3"});
-  auto X_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false}); 
-  auto X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free,free,free }); 
-  auto X_symmfuncs = set_2el_symmfuncs();
-  vector<bool(*)(shared_ptr<vector<string>>)>  X_constraints = { &always_true };
-  vector<IndexRange> TEMP_X_ranges = {*free_rng, *free_rng, *free_rng, *free_rng };
-  shared_ptr<double> X_dummy_data;
+  shared_ptr<vector<string>> HamT = make_shared<vector<string>>(vector<string> { "HT", "LT" } ); 
 
-  auto XTens = Eqn->Build_TensOp("X", X_dummy_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
-//  shared_ptr<Tensor_<double>> X_data = make_shared<Tensor_<double>>( TEMP_X_ranges);  
-  shared_ptr<Tensor_<double>> X_data = H_2el_all;
-//  X_data->allocate();
-  CTP_data_map->emplace("X", X_data );
-  Eqn->T_map->emplace("X", XTens);
-  ///////////////////////////////////////////////////// T Tensor /////////////////////////////////////////////////////////////////
-  string T_TimeSymm = "none";
-  auto T_factor = make_pair(1.0,1.0);
-  auto T_idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
-  auto T_aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} ); 
-  auto T_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });   
-  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> T_symmfuncs = set_2el_symmfuncs();
-  vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = { &NotAllAct };
-  shared_ptr<double> T_dummy_data;
+  Expr_info->Build_Expression(HamT, "test_case") ;
 
-  auto TTens = Eqn->Build_TensOp("T", T_dummy_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
-  shared_ptr<Tensor_<double>> T_data = T2_all[0]->at(0);
-  CTP_data_map->emplace("T", T_data );
-  Eqn->T_map->emplace("T", TTens);
 
-  ///////////////////////////////////L Tensor ////////////////////////////////////////
-  string L_TimeSymm = "none";
-  auto L_factor = make_pair(1.0,1.0);
-  auto L_idxs = make_shared<vector<string>>(vector<string> {"L0", "L1", "L2", "L3"});
-  auto L_aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true }); 
-  auto L_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core, not_core, not_virt, not_virt }); 
-  auto L_symmfuncs = set_2el_symmfuncs();
-  vector<bool(*)(shared_ptr<vector<string>>)>  L_constraints = { &NotAllAct };
-  shared_ptr<double> L_dummy_data;
+  return ;
+}
 
-  auto LTens = Eqn->Build_TensOp("L", L_dummy_data, L_idxs, L_aops, L_idx_ranges, L_symmfuncs, L_constraints, L_factor, L_TimeSymm, false ) ;
-  shared_ptr<Tensor_<double>> L_data = lambda_all[0]->at(0);
-  CTP_data_map->emplace("L", L_data );
-  Eqn->T_map->emplace("L", LTens);
-  ////////////////////////////////////// rdms (no derivs) ////////////////////////////////////////////////////////////////
-  auto BraKet_Tensors1 = make_shared<vector< shared_ptr<TensOp<double>> > >( vector<shared_ptr<TensOp<double>>> { XTens,  TTens} );
-//  auto BraKet_Tensors2 = make_shared<vector< shared_ptr<TensOp<double>> > >( vector<shared_ptr<TensOp<double>>> { XTens,  LTens} );
 
-  cout << "T2_all[0]->at(0)->norm()      = "<< T_data->norm()     << endl; 
-  cout << "lambda_all->norm()  = "<< L_data->norm() << endl;
-  cout << "H_1el_all->norm()   = "<< H_1el_all->norm()  << endl;
-  cout << "H_2el_all->norm()   = "<< H_2el_all->norm()  << endl;
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+void CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string Expression_name) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(shared_ptr<vector<string>> BraKet_names, string expression_name ) " << endl;
 
-  auto BraKet_List = make_shared<std::vector<std::shared_ptr<vector< shared_ptr<TensOp<double>> > >>>(1, BraKet_Tensors1);
-  BraKet_List->push_back(BraKet_Tensors2);
+  shared_ptr<Equation<double>> Expr = Expression_map->at(Expression_name); 
 
-  Eqn->equation_build(BraKet_List);
-  CTP_map = Eqn->CTP_map;
-  auto Eqn_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Eqn, CTP_data_map, range_conversion_map );
+  shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, CTP_data_map, range_conversion_map );
+
   //Get Amap for each gamma
-  vector<string> Gname_vec(Eqn->G_to_A_map->size());
+  vector<string> Gname_vec(Expr->G_to_A_map->size());
   {
     compare_string_length csl;
     int ii = 0 ; 
-    for ( auto G_to_A_map_it : *(Eqn->G_to_A_map) ){
+    for ( auto G_to_A_map_it : *(Expr->G_to_A_map) ){
       Gname_vec[ii] = G_to_A_map_it.first;
       ii++;
     }
   std::sort(Gname_vec.begin(), Gname_vec.end(), csl); 
   }
 
-  shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Eqn_computer->get_gammas( 0, 0, Gname_vec[0] );
+  shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gammas( 0, 0, Gname_vec[0] );
   cout << "returned from get_gammas in tact " << endl;
 
   for ( string Gamma_name : Gname_vec ) {
     // Build A_tensor to hold sums of different A-tensors
-    shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Eqn_computer->Get_Bagel_IndexRanges(Eqn->GammaMap->at(Gamma_name)->id_ranges)) );
+    shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Expr_computer->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
     A_combined_data->allocate();
 
     // Loop through A-tensors needed for this gamma,
-    for ( auto A_contrib : *(Eqn->G_to_A_map->at(Gamma_name))){
+    for ( auto A_contrib : *(Expr->G_to_A_map->at(Gamma_name))){
 
       //fudge, should be replaced.
       pair<int,int> A_factor = A_contrib.second;
@@ -193,7 +171,7 @@ void CASPT2_ALT::CASPT2_ALT::test() {
       cout << "=========================================================================================================" << endl;
       cout << A_contrib.first << endl;
       cout << "=========================================================================================================" << endl;
-      for (shared_ptr<CtrOp_base> ctr_op : *(Eqn->ACompute_map->at(A_contrib.first))){
+      for (shared_ptr<CtrOp_base> ctr_op : *(Expr->ACompute_map->at(A_contrib.first))){
         if ( ctr_op->ctr_type()[0] == 'd' ){
           cout << "[" << ctr_op->T1name() << " , " << ctr_op->T2name() << " , (";
           cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T2_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ; cout << ctr_op->ctr_type() << endl;
@@ -204,16 +182,16 @@ void CASPT2_ALT::CASPT2_ALT::test() {
         }
       }
       cout << "=========================================================================================================" << endl;
-      Eqn_computer->Calculate_CTP(A_contrib.first);
+      Expr_computer->Calculate_CTP(A_contrib.first);
       A_combined_data->ax_plus_y( (double)(A_factor.first), CTP_data_map->at(A_contrib.first));
       cout << "added " << A_contrib.first << endl; 
       cout << "=========================================================================================================" << endl << endl;
     }
   }   
- 
 
   return;
 }
+
 
  // shared_ptr<vector<string>> free_ranges = make_shared<vector<string>>(vector<string> {"free", "free", "free", "free"});
  // shared_ptr<vector<string>> omega_ranges = make_shared<vector<string>>(vector<string> {"notcor", "notcor", "notvir", "notvir"});
@@ -226,5 +204,6 @@ void CASPT2_ALT::CASPT2_ALT::test() {
  // CTP_data_map->at("X") =  All_ones_tens_free ;
  // CTP_data_map->at("T") =  All_twos_tens_omega ;
  // CTP_data_map->at("L") =  All_twos_tens_omega_dag ;
+
 
 #endif

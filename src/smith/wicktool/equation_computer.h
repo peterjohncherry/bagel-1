@@ -18,7 +18,6 @@ namespace Equation_Computer {
 
 class Equation_Computer { 
 
-
     public: 
     Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>> >> CTP_data_map,
@@ -56,7 +55,7 @@ class Equation_Computer {
     std::shared_ptr<DType> contract_different_tensors( std::string T1name, std::string T2name,  std::pair<int,int> ctr_todo,
                                                        std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
     //////////////////////////////
-    std::shared_ptr<std::vector<int>> get_Tens_strides ( std::vector<int> range_sizes) ;
+    std::shared_ptr<std::vector<int>> get_Tens_strides ( std::vector<int>& range_sizes) ;
   
     std::shared_ptr<std::vector<int>> get_CTens_strides( std::shared_ptr<std::vector<int>> range_sizes, int ctr1 , int ctr2 ) ;
 

@@ -1,9 +1,26 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-  #include <src/smith/wicktool/equation.h>
-  // #include "equation.h"
+#include <src/smith/wicktool/equation.h>
 
 using namespace std;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
+Equation<DType>::Equation(std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  T_map                 = make_shared<map< string, shared_ptr<TensOp<DType>>>>();
+  CTP_map               = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
+  CMTP_map              = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
+  ACompute_map          = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
+  CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
+
+  GammaMap              = make_shared< unordered_map<string, shared_ptr<GammaInfo> > >(); 
+  G_to_A_map            = make_shared< unordered_map<string, shared_ptr< unordered_map<string, pair<int,int> > >>>(); 
+
+  equation_build(BraKet_list);
+
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <class DType>

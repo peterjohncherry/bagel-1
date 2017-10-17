@@ -17,6 +17,8 @@ class Equation {
       public:
 
       Equation(){};
+      Equation(std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list);
+
       ~Equation(){};
 
       int nidxs = 8;

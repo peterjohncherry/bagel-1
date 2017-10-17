@@ -45,7 +45,6 @@ void BraKet<DType>::add_Op(string op_name,
   New_Op->get_ctrs_tens_ranges();
 
   Sub_Ops->push_back(New_Op);
-
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +59,7 @@ void BraKet<DType>::Build_TotalOp(){
   Total_Op = make_shared<MultiTensOp<DType>>( MT_name , true);
   Total_Op->initialize( *Sub_Ops );
   Total_Op->get_ctrs_tens_ranges() ;
-
+  cout << "Built_total_op" << endl;
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
