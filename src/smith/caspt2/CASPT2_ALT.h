@@ -60,7 +60,8 @@ class CASPT2_ALT {
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> gamma_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Equation<double>>>> Expression_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Equation<double>>>> Expr_Info_map;
+    std::shared_ptr<std::map< std::string, double>> scalar_results_map;
   
     std::shared_ptr<IndexRange> closed_rng; 
     std::shared_ptr<IndexRange> active_rng;  
@@ -77,12 +78,13 @@ class CASPT2_ALT {
     std::shared_ptr<Tensor_<double>> H_1el_all;
     std::shared_ptr<Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
 
-    std::shared_ptr<Expression_Info<double>> Expr_info;
+    std::shared_ptr<Expression_Info<double>> Expr_Info;
 
     CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in);
     ~CASPT2_ALT() {};
     
     void solve();
+    void Construct_Tensor_Ops();
     void build_data_map();
     void Build_Compute_Lists();
     void Execute_Compute_List(std::string expression_name );

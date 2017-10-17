@@ -37,13 +37,11 @@ class Expression_Info {
 
       // key :    Name of contracted part of TensorOp
       // result : Info for contracted part of TensorOp info
-      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >>CTP_map    ;      
+      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >> CTP_map    ;      
 
       // key :    Name of contracted part of multitensorop
       // result : Info for contracted part of multitensorop info
-      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >>CMTP_map   ;  
-
-      void Initialize();
+      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map   ;  
 
       void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>> Tens_vec  );
       
@@ -56,7 +54,6 @@ class Expression_Info {
                                                       std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>)> Constraint_Funcs,
                                                       std::pair<double,double> factor, std::string Tsymmetry, bool hconj ) ;
      
-      void Construct_Tensor_Ops() ;
       void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
       void Build_Expression(std::shared_ptr<std::vector<std::string>> BraKet_names, std::string expression_name ) ;
 

@@ -36,75 +36,13 @@ Expression_Info<DataType>::Expression_Info::Expression_Info( int nact, int nelea
   CTP_map        = make_shared< map <string, shared_ptr<CtrTensorPart<DataType>>>>();
   CMTP_map       = make_shared< map <string, shared_ptr<CtrMultiTensorPart<DataType>>>>();
   expression_map = make_shared< map <string, shared_ptr<Equation<DataType>>>>();
- 
+
   nact_ = nact;
   nelea_ = nelea;
   neleb_ = neleb;
   nele_ = nelea + neleb;
 
   spinfree_ = spinfree;
-
-  return;
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-void Expression_Info<DataType>::Expression_Info::Construct_Tensor_Ops() { 
-/////////////////////////////////////////////////////////////////////////////////
- 
-  //spinfree orbital ranges
-  vector<string> free     = {"cor", "act", "vir"};
-  vector<string> not_core = {"act", "vir"};
-  vector<string> not_act  = {"cor", "vir"};
-  vector<string> not_virt = {"cor", "act"};
-  vector<string> core = {"cor"};
-  vector<string> act  = {"act"};
-  vector<string> virt = {"vir"};
- 
-  /* ---- H Tensor ----  */
-  pair<double,double>                H_factor = make_pair(1.0,1.0);
-  shared_ptr<vector<string>>         H_idxs = make_shared<vector<string>>(vector<string> {"H0", "H1", "H2", "H3"});
-  shared_ptr<vector<bool>>           H_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false}); 
-  shared_ptr<vector<vector<string>>> H_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free,free,free }); 
-  shared_ptr<double>                 H_dummy_data;
-  string                             H_TimeSymm = "none";
-
-  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> H_symmfuncs = set_2el_symmfuncs();
-  vector<bool(*)(shared_ptr<vector<string>>)>  H_constraints = { &always_true };
-
-  auto HTens = Build_TensOp("H", H_dummy_data, H_idxs, H_aops, H_idx_ranges, H_symmfuncs, H_constraints, H_factor, H_TimeSymm, false ) ;
-  T_map->emplace("H", HTens);
-
-  
-  /* ---- T Tensor ----  */
-  pair<double,double>                 T_factor = make_pair(1.0,1.0);
-  shared_ptr<vector<string>>          T_idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
-  shared_ptr<vector<bool>>            T_aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} ); 
-  shared_ptr<vector<vector<string>>>  T_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });   
-  shared_ptr<double>                  T_dummy_data ;
-  string                              T_TimeSymm = "none";
-
-  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> T_symmfuncs = set_2el_symmfuncs();
-  vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = { &NotAllAct };
-
-  auto TTens = Build_TensOp("T", T_dummy_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
-  T_map->emplace("T", TTens);
-
-
-   /* ---- L Tensor ----  */
-  pair<double,double>                 L_factor = make_pair(1.0,1.0);
-  shared_ptr<vector<string>>          L_idxs = make_shared<vector<string>>(vector<string> {"L0", "L1", "L2", "L3"});
-  shared_ptr<vector<bool>>            L_aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true }); 
-  shared_ptr<vector<vector<string>>>  L_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt, not_virt, not_core, not_core }); 
-  shared_ptr<double>                  L_dummy_data;
-  string                              L_TimeSymm = "none";
-
-  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  L_symmfuncs = set_2el_symmfuncs();
-  vector<bool(*)(shared_ptr<vector<string>>)>  L_constraints = { &NotAllAct };
-
-  shared_ptr<TensOp<double>> LTens = Build_TensOp("L", L_dummy_data, L_idxs, L_aops, L_idx_ranges, L_symmfuncs, L_constraints, L_factor, L_TimeSymm, false ) ;
-  T_map->emplace("L", LTens);
 
   return;
 }
