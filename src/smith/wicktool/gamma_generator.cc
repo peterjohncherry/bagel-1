@@ -343,21 +343,27 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
 
     int my_sign  = gamma_vec->at(kk)->my_sign ;
     
-    vector<string> unc_ids(full_id_ranges->size() - 2*deltas_pos->size());
-    vector<string>::iterator unc_ids_it = unc_ids.begin();
-    cout << "unc_ids = [ " ; cout.flush(); 
+    vector<string> unc_idxs(full_id_ranges->size() - 2*deltas_pos->size());
+    vector<string>::iterator unc_idxs_it = unc_idxs.begin();
+    vector<bool> unc_aops(full_aops->size() - 2*deltas_pos->size());
+    vector<bool>::iterator unc_aops_it = unc_aops.begin();
     for (int pos : *ids_pos ) {
-      cout << orig_ids->at(pos) <<  " " ; cout.flush();
-      *unc_ids_it++ = orig_ids->at(pos);
+      *unc_idxs_it++ = orig_ids->at(pos);
+      *unc_aops_it++ = full_aops->at(pos);
     }
-    cout << "]" << endl;
     cout << "ids_pos    = [ " ; for (int pos : *ids_pos ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
+    cout << "unc_idxs    = [ " ; for (string pos : unc_idxs ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
+    cout << "unc_aops   = [ " ; for (bool pos : unc_aops ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
 
-    vector<int> opt_order = get_standard_alt_order_from_norm_order ( unc_ids ) ;
-    cout << "opt_order  = [ " ; for (int pos : opt_order ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
+    vector<int> standard_alt_order = get_standardized_alt_order ( unc_idxs, unc_aops ) ;
+    cout << "new_order  = [ " ; for (int pos : standard_alt_order ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
 
-    shared_ptr<vector<int>> new_ids_pos = reorder_vector( opt_order, *ids_pos) ;    
+    shared_ptr<vector<int>> new_ids_pos = reorder_vector( standard_alt_order, *ids_pos) ;    
     cout << "new_ids_pos  = [ " ; for (int pos : *new_ids_pos ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
+    cout << "new_idxs A = [ " ; for (int pos : standard_alt_order ) {  cout << unc_idxs[pos] <<  " " ; cout.flush(); }  cout << "]" << endl;
+    cout << "new_idxs B = [ " ; for (int pos : *new_ids_pos ) {  cout << orig_ids->at(pos) <<  " " ; cout.flush(); }  cout << "]" << endl;
+    cout << "new_aops A = [ " ; for (int pos : standard_alt_order ) {  cout << unc_aops[pos] <<  " " ; cout.flush(); }  cout << "]" << endl;
+    cout << "new_aops B = [ " ; for (int pos : *new_ids_pos ) {  cout << full_aops->at(pos) <<  " " ; cout.flush(); }  cout << "]" << endl;
 
     for (int ii = ids_pos->size()-1 ; ii != -1; ii-- ){
       if (ids_pos->at(ii) == new_ids_pos->at(ii))
@@ -690,30 +696,35 @@ vector<int> GammaGenerator::get_standard_order ( const vector<string>& rngs ) {
    return new_order;
 }
 
-//////////////////////////////////////////////////////////////////////////////
-vector<int> GammaGenerator::get_standard_alt_order_from_norm_order ( const vector<string>& rngs ) {
-//////////////////////////////////////////////////////////////////////////////
 
-   vector<string> rngs1(rngs.begin(), rngs.begin()+(rngs.size()/2) );
-   vector<string> rngs2(rngs.begin()+(rngs.size()/2), rngs.end() );
+//////////////////////////////////////////////////////////////////////////////
+vector<int> GammaGenerator::get_standardized_alt_order ( const vector<string>& rngs ,const vector<bool>& aops ) {
+//////////////////////////////////////////////////////////////////////////////
    
-   cout << "creators     = [ " ;   for ( string elem : rngs1 ) { cout << elem << " " ; }  cout << "]" <<  endl; 
-   cout << "annihilators = [ " ;   for ( string elem : rngs2 ) { cout << elem << " " ; }  cout << "]" <<  endl; 
+   vector<int> standard_order = get_standard_order(rngs) ; 
 
-   vector<int> new_order1 = get_standard_order(rngs1) ; 
-   vector<int> new_order2 = get_standard_order(rngs2) ; 
-
-   vector<int> new_order(rngs.size());
-   vector<int>::iterator new_order_it = new_order.begin() ;
-
-   for ( int ii = 0 ; ii!=new_order1.size() ; ii++){ 
-     *new_order_it++ = new_order1[ii];
-     *new_order_it++ = new_order2[ii]+new_order1.size();
+   vector<int> standard_order_plus(standard_order.size()/2);
+   vector<int> standard_order_kill(standard_order.size()/2);
+   vector<int>::iterator standard_order_plus_it = standard_order_plus.begin();
+   vector<int>::iterator standard_order_kill_it = standard_order_kill.begin();
+   for ( int pos : standard_order) {
+     if ( aops[pos] ) {
+       *standard_order_plus_it++ = pos;
+     } else { 
+       *standard_order_kill_it++ = pos;
+     }
    }
-   cout << "new rng order = [ " ;   for ( int elem : new_order ) { cout << rngs[elem] << " " ; }  cout << "]" <<  endl; 
-   
-   return new_order;
-}
 
+   vector<int> standard_alt_order(standard_order.size());
+   vector<int>::iterator standard_alt_order_it = standard_alt_order.begin();
+   standard_order_plus_it = standard_order_plus.begin();
+   standard_order_kill_it = standard_order_kill.begin();
+   while ( standard_alt_order_it != standard_alt_order.end()){
+     *standard_alt_order_it++ = *standard_order_plus_it++;
+     *standard_alt_order_it++ = *standard_order_kill_it++;
+   }
+   
+   return standard_alt_order;
+};
 
 #endif
