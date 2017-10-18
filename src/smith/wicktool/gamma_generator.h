@@ -55,8 +55,18 @@ class GammaGenerator{
     std::shared_ptr<std::vector<bool>> orig_aops ;
     std::shared_ptr<std::vector<std::string>> orig_ids ;
     
+    // key    : name of this gamma
+    // result : map containing names of relevant A-tensors and factors (real and imag)
     std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::pair<int,int> > >>> G_to_A_map;
+
+    // key    : name of this gamma
+    // result : information used here and in compute routines
     std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< GammaInfo >>> Gamma_map;
+
+    // key    : name of A-tensor
+    // result : list of reorderings which much be applied to this A-tensor before it is contracted with this gamma.
+    //          second part of pair is factor associated with each reordering.
+    std::shared_ptr<std::unordered_map<std::string, std::vector< std::pair<std::vector<int>, std::pair<int,int>> >> > Aid_orders_map;
 
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
@@ -64,6 +74,7 @@ class GammaGenerator{
     std::shared_ptr<std::map< char, int>>   op_order ;
     std::shared_ptr<std::map< std::string, int>>  idx_order ;
 
+ 
     // functions
     GammaGenerator(std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
                    std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
@@ -103,8 +114,12 @@ class GammaGenerator{
     static std::shared_ptr<std::vector<std::pair<int,int>>>
            Standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ) ;
 
-    std::vector<int> sort_ranges(const std::vector<std::string> &rngs) ;
+    std::vector<int> get_standard_range_order(const std::vector<std::string> &rngs) ;
 
+    std::vector<int> get_position_order(const std::vector<int> &positions) ;
+
+    std::vector<int> get_Aid_order ( const std::vector<int>& id_pos );
+ 
     std::vector<int> get_standard_order (const std::vector<std::string>& rngs ); 
 
     std::vector<int> get_standardized_alt_order ( const std::vector<std::string>& rngs ,const std::vector<bool>& aops ) ;
