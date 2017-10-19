@@ -11,8 +11,8 @@ using pstr_vec = std::vector<std::pair<std::string,std::string>>;
       
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-BraKet<DType>::BraKet(std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::pair<int,int> > >>> G_to_A_map_in,
-                      std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< GammaInfo >>> GammaMap_in ){
+BraKet<DType>::BraKet(shared_ptr<unordered_map<string,shared_ptr<unordered_map<string,vector<pair<vector<int>,pair<int,int>>>>>>> G_to_A_map_in,
+                      shared_ptr<unordered_map<string, shared_ptr< GammaInfo >>> GammaMap_in ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Sub_Ops = make_shared<vector<shared_ptr<TensOp<DType>>>>(0);
   G_to_A_map = G_to_A_map_in;
@@ -82,7 +82,12 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
     cout << map_it->first << endl;
     cout << "====================================================" << endl;
     for( auto A_map_it = map_it->second->begin() ; A_map_it != map_it->second->end();  A_map_it++){
-      cout <<  A_map_it->first  << "  (" << A_map_it->second.first  << "," <<  A_map_it->second.second << ")" << endl;
+      cout <<  A_map_it->first << "  "; cout.flush();
+      for ( pair<vector<int>,pair<int,int>> Aid_order_with_fac : A_map_it->second ){
+        cout << "[ "; for (int pos : Aid_order_with_fac.first ) { cout << pos << " " ;} cout << " ]"; 
+        cout << "(" << Aid_order_with_fac.second.first  << "," <<  Aid_order_with_fac.second.second << ")     "; cout.flush();
+      }
+      cout << endl;
     }
   }
 

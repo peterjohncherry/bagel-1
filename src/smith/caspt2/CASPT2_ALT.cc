@@ -261,10 +261,16 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
     // Loop through A-tensors needed for this gamma,
     for ( auto A_contrib : *(Expr->G_to_A_map->at(Gamma_name))){
 
-      //fudge, should be replaced.
-      pair<int,int> A_factor = A_contrib.second;
-      pair<int,int> zero_pair = make_pair(0,0);
-      if (A_factor == zero_pair ) {
+      //fudge, purging of A_contribs should happen in gamma_generator or Equation
+      bool skip = false ;
+      for ( int qq = 0 ; qq != A_contrib.second.size(); qq++) { 
+         if ( A_contrib.second[qq].second.first != 0 || A_contrib.second[qq].second.second !=0) 
+           break;
+         if ( qq == A_contrib.second.size()-1 ) {
+           skip =true;
+         }
+      } 
+      if (skip){
         cout << A_contrib.first << " does not contribute!!" << endl;
         continue;
       }
@@ -284,7 +290,8 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
       }
       cout << "=========================================================================================================" << endl;
       Expr_computer->Calculate_CTP(A_contrib.first);
-      A_combined_data->ax_plus_y( (double)(A_factor.first), CTP_data_map->at(A_contrib.first));
+      for ( int qq = 0 ; qq != A_contrib.second.size(); qq++) 
+        A_combined_data->ax_plus_y( (double)(A_contrib.second[qq].second.first), CTP_data_map->at(A_contrib.first));
       cout << "added " << A_contrib.first << endl; 
       cout << "=========================================================================================================" << endl << endl;
     }

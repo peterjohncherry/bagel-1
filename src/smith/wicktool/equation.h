@@ -49,7 +49,7 @@ class Equation {
       std::shared_ptr< std::map< std::vector<std::string>, std::shared_ptr<std::vector<std::pair< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> >>> >> CMTP_Eqn_Compute_List ;
 
       //Takes each gamma name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors
-      std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::pair<int,int> > >>> G_to_A_map;
+      std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::vector<std::pair<std::vector<int> , std::pair<int,int>>> > >>> G_to_A_map;
        
       std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<GammaInfo> > > GammaMap; 
 

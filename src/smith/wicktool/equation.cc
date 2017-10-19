@@ -16,7 +16,7 @@ Equation<DType>::Equation(std::shared_ptr<std::vector<std::shared_ptr<std::vecto
   CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
 
   GammaMap              = make_shared< unordered_map<string, shared_ptr<GammaInfo> > >(); 
-  G_to_A_map            = make_shared< unordered_map<string, shared_ptr< unordered_map<string, pair<int,int> > >>>(); 
+  G_to_A_map            = make_shared< unordered_map<string, shared_ptr< unordered_map<string, vector<pair<vector<int>, pair<int,int>>> > >>>(); 
 
   equation_build(BraKet_list);
 
@@ -32,7 +32,7 @@ void Equation<DType>::Initialize(){
   CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
   ACompute_map = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
   CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
-  G_to_A_map = make_shared< unordered_map<string, shared_ptr< unordered_map<string, pair<int,int> > >>>(); 
+  G_to_A_map   = make_shared< unordered_map<string, shared_ptr< unordered_map<string, vector<pair<vector<int>, pair<int,int>>> > >>>(); 
   GammaMap = make_shared< unordered_map<string, shared_ptr<GammaInfo> > >(); 
 
   return;
@@ -116,8 +116,7 @@ void Equation<DType>::Get_CMTP_Compute_Terms(){
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
       
       string CMTP_name  = A_map_it->first;
-      pair<int,int> Asign = A_map_it->second;
-  
+
       shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list; 
       if ( CMTP_map->find(CMTP_name) == CMTP_map->end())
         throw std::logic_error( CMTP_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;

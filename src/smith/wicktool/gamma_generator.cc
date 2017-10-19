@@ -39,7 +39,7 @@ GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaGenerator::GammaGenerator(shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init, 
                                shared_ptr<unordered_map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
-                               shared_ptr< unordered_map<string, shared_ptr< unordered_map<string, pair<int,int> > >>> G_to_A_map_in){
+                               shared_ptr<unordered_map<string, shared_ptr<unordered_map<string,vector<pair<vector<int>,pair<int,int>>>>>>> G_to_A_map_in){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_GammaGenerator
 cout << "GammaGenerator::GammaGenerator" << endl; 
@@ -52,7 +52,6 @@ cout << "GammaGenerator::GammaGenerator" << endl;
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
   G_to_A_map = G_to_A_map_in;
   Gamma_map = Gamma_map_in;
-  Aid_orders_map = make_shared< unordered_map<string ,vector<pair< vector<int> ,pair<int,int> >> >>(); 
 
   //neeeded to keep ordering of contractions consistent 
   auto opname = orig_ids->at(0)[0];
@@ -258,75 +257,6 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void GammaGenerator::alt_order(){
-//////////////////////////////////////////////////////////////////////////////////////  
-#ifdef DBG_GammaGenerator 
-cout << "GammaGenerator::alt_order" << endl; 
-#endif 
-///////////////////////////////////////////////////////////////////////////////////////
-
-  auto even = []( int pos) { return ( 0 == pos % 2);}; 
-    
-  int kk = 0;
-  while ( kk != gamma_vec->size()){
-    shared_ptr<vector<bool>> full_aops = gamma_vec->at(kk)->full_aops;        
-    shared_ptr<vector<int>>  ids_pos = gamma_vec->at(kk)->ids_pos;        
-    shared_ptr<vector<string>> full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
-    shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
-
-    int my_sign  = gamma_vec->at(kk)->my_sign ;
-    int num_pops = ( ids_pos->size()/2 )-1 ;     
-  
-    for (int ii = ids_pos->size()-1 ; ii != -1; ii-- ){
-      if (!even(ii)) {
-        if (!full_aops->at(ids_pos->at(ii)))
-          continue;
-  
-        while(full_aops->at(ids_pos->at(ii))){
-          for ( int jj = (ii-1); jj != -1 ; jj--) {
-             if (!full_aops->at(ids_pos->at(jj))){
-               swap(jj, jj+1, kk, gamma_vec);
-               break;
-             }
-          }
-        }
-      } else if (even(ii)){
-          if (full_aops->at(ids_pos->at(ii)))
-            continue;
-        while(!full_aops->at(ids_pos->at(ii))){
-          for ( int jj = (ii-1); jj != -1 ; jj--) {
-             if (full_aops->at(ids_pos->at(jj))){
-               swap(jj, jj+1, kk, gamma_vec);
-               break;
-             }
-           }
-        }        
-      }
-    }
-    kk++;
-  
-    string Aname_alt = get_Aname( orig_ids, full_id_ranges, deltas_pos );   
-    string Gname_alt = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
-      
-    if ( G_to_A_map->find(Gname_alt) == G_to_A_map->end() ) 
-      G_to_A_map->emplace(Gname_alt, make_shared< unordered_map<string, pair<int,int> > >());
-     
-    
-    auto Aloc_in_map = G_to_A_map->at(Gname_alt)->find(Aname_alt);                                           
-    if ( Aloc_in_map == G_to_A_map->at(Gname_alt)->end() ) {
-      G_to_A_map->at(Gname_alt)->emplace ( Aname_alt, make_pair(my_sign, my_sign)) ;
-    } else {
-      Aloc_in_map->second.first  += my_sign;
-      Aloc_in_map->second.second += my_sign;
-    }
-    if ( Gamma_map->find(Gname_alt) == Gamma_map->end() ) 
-      Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>(full_aops, full_id_ranges, ids_pos) ) ;
-    
-  }
-  return;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
 //This is absurdly inefficient; will probably need to be replaced.
 //The ranged idxs are range+index. The idea is that when sorting, grouping the ranges 
 //should take priority over grouping the indexes. 
@@ -363,20 +293,10 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
       }
       *unc_aops_it++ = full_aops->at(pos);
     }
-    cout << "ids_pos    = [ " ; for (int pos : *ids_pos ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
-    cout << "unc_idxs    = [ " ; for (string pos : unc_ranged_idxs ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
-    cout << "unc_aops   = [ " ; for (bool pos : unc_aops ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
 
     vector<int> standard_alt_order = get_standardized_alt_order ( unc_ranged_idxs, unc_aops ) ;
-   cout << "new_order  = [ " ; for (int pos : standard_alt_order ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
 
     shared_ptr<vector<int>> new_ids_pos = reorder_vector( standard_alt_order, *ids_pos) ;    
-    cout << "new_ids_pos  = [ " ; for (int pos : *new_ids_pos ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
-    cout << "new_idxs A = [ " ; for (int pos : standard_alt_order ) {  cout << unc_ranged_idxs[pos] <<  " " ; cout.flush(); }  cout << "]" << endl;
-    cout << "new_idxs B = [ " ; for (int pos : *new_ids_pos ) {  cout << orig_ids->at(pos) <<  " " ; cout.flush(); }  cout << "]" << endl;
-    cout << "new_aops A = [ " ; for (int pos : standard_alt_order ) {  cout << unc_aops[pos] <<  " " ; cout.flush(); }  cout << "]" << endl;
-    cout << "new_aops B = [ " ; for (int pos : *new_ids_pos ) {  cout << full_aops->at(pos) <<  " " ; cout.flush(); }  cout << "]" << endl;
-
     for (int ii = ids_pos->size()-1 ; ii != -1; ii-- ){
       if (ids_pos->at(ii) == new_ids_pos->at(ii))
         continue;
@@ -390,35 +310,19 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
         }
       }
     }
-    cout << endl;
     kk++;
 
-    cout << "post_ids_pos = [ " ; for (int pos : *ids_pos ) {  cout << pos <<  " " ; cout.flush(); }  cout << "]" << endl;
     string Aname_alt = get_Aname( orig_ids, full_id_ranges, deltas_pos );
     string Gname_alt = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
   
-  
     if ( G_to_A_map->find(Gname_alt) == G_to_A_map->end() )
-      G_to_A_map->emplace(Gname_alt, make_shared< unordered_map<string, pair<int,int> > >());
-    
-    auto Aloc_in_map = G_to_A_map->at(Gname_alt)->find(Aname_alt);
-    if ( Aloc_in_map == G_to_A_map->at(Gname_alt)->end() ) {
-      G_to_A_map->at(Gname_alt)->emplace ( Aname_alt, make_pair(my_sign, my_sign)) ;
-    } else {
-      Aloc_in_map->second.first  += my_sign;
-      Aloc_in_map->second.second += my_sign;
-    }
+      G_to_A_map->emplace(Gname_alt, make_shared< unordered_map<string ,vector<pair< vector<int> ,pair<int,int> >> >>()) ;
 
-    if ( Gamma_map->find(Gname_alt) == Gamma_map->end() )
-      Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>(full_aops, full_id_ranges, new_ids_pos));
-
-    // This is the map used to reorder the uncontracted parts
-    // This is shared by every BraKet, should be merged into G_to_A_map.
-    vector<int> Aid_order = get_Aid_order ( *new_ids_pos ) ; 
-    auto Aid_orders_map_loc = Aid_orders_map->find(Aname_alt);
-    if ( Aid_orders_map_loc == Aid_orders_map->end() ) {
+    vector<int> Aid_order = get_Aid_order ( *ids_pos ) ; 
+    auto Aid_orders_map_loc = G_to_A_map->at(Gname_alt)->find(Aname_alt);
+    if ( Aid_orders_map_loc == G_to_A_map->at(Gname_alt)->end() ) {
       vector<pair< vector<int>, pair<int,int> >> Aid_order_with_fac(1, make_pair(Aid_order, make_pair(my_sign,my_sign)));
-      Aid_orders_map->emplace(Aname_alt, Aid_order_with_fac) ;
+      G_to_A_map->at(Gname_alt)->emplace(Aname_alt, Aid_order_with_fac) ;
     } else {
       for ( int qq = 0 ; qq != Aid_orders_map_loc->second.size() ; qq++ ) {
         if( Aid_orders_map_loc->second[qq].first == Aid_order ){
@@ -430,6 +334,9 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
         }
       }
     }
+
+    if ( Gamma_map->find(Gname_alt) == Gamma_map->end() )
+      Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>(full_aops, full_id_ranges, ids_pos));
 
   }
 

@@ -56,8 +56,9 @@ class GammaGenerator{
     std::shared_ptr<std::vector<std::string>> orig_ids ;
     
     // key    : name of this gamma
-    // result : map containing names of relevant A-tensors and factors (real and imag)
-    std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::pair<int,int> > >>> G_to_A_map;
+    // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
+    std::shared_ptr<std::unordered_map<std::string,
+    std::shared_ptr<std::unordered_map<std::string, std::vector<std::pair<std::vector<int>,std::pair<int,int>>>>>>> G_to_A_map;
 
     // key    : name of this gamma
     // result : information used here and in compute routines
@@ -78,15 +79,13 @@ class GammaGenerator{
     // functions
     GammaGenerator(std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
                    std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
-                   std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::pair<int,int> > >>> G_to_A_map_init );
+                   std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<std::unordered_map<std::string,std::vector<std::pair<std::vector<int>,std::pair<int,int>>>>>>> G_to_A_map_in);
     ~GammaGenerator(){};
 
     void add_gamma(std::shared_ptr<std::vector<std::string>> full_id_ranges_in, int my_sign_in) ;
     
     void norm_order();
     
-    void alt_order();
- 
     void optimized_alt_order();
 
     void Contract_remaining_indexes(int kk);
