@@ -76,8 +76,10 @@ class Expression_Info {
       static std::shared_ptr<std::vector<std::string>> identity(std::shared_ptr<std::vector<std::string>> invec) ;
       static bool NotAllAct(std::shared_ptr<std::vector<std::string>> ranges);
       static bool always_true(std::shared_ptr<std::vector<std::string>> ranges);
+
       std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_2el_symmfuncs();
-      
+      std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_1el_symmfuncs();
+
       struct compare_string_length {
         bool operator()(const std::string& first, const std::string& second) {
             return first.size() > second.size();

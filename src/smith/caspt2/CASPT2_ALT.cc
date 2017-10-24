@@ -47,7 +47,8 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
  
   T2_all     = orig_cpt2->t2all_;
   lambda_all = orig_cpt2->lall_;
-  H_1el_all  = orig_cpt2->f1_;
+  F_1el_all  = orig_cpt2->f1_;
+  H_1el_all  = orig_cpt2->h1_;
   H_2el_all  = orig_cpt2->H_2el_;
  
   const int max = ref->maxtile();
@@ -153,6 +154,23 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
 
   CTP_data_map->emplace("H" , H_2el_all);
 
+  /* ---- h Tensor ----  */
+  pair<double,double>                h_factor = make_pair(1.0,1.0);
+  shared_ptr<vector<string>>         h_idxs = make_shared<vector<string>>(vector<string> {"h0", "h1"});
+  shared_ptr<vector<bool>>           h_aops = make_shared<vector<bool>>(vector<bool>  {true, false}); 
+  shared_ptr<vector<vector<string>>> h_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free }); 
+  shared_ptr<double>                 h_dummy_data;
+  string                             h_TimeSymm = "none";
+
+  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> h_symmfuncs = Expr_Info->set_1el_symmfuncs();
+  vector<bool(*)(shared_ptr<vector<string>>)>  h_constraints = {  &Expression_Info<double>::Expression_Info::always_true };
+
+  shared_ptr<TensOp<double>> hTens = Expr_Info->Build_TensOp("h", h_dummy_data, h_idxs, h_aops, h_idx_ranges, h_symmfuncs, h_constraints, h_factor, h_TimeSymm, false ) ;
+  Expr_Info->T_map->emplace("h", hTens);
+
+  CTP_data_map->emplace("h" , H_1el_all);
+
+
   
   /* ---- T Tensor ----  */
   pair<double,double>                 T_factor = make_pair(1.0,1.0);
@@ -211,7 +229,10 @@ void CASPT2_ALT::CASPT2_ALT::Build_Compute_Lists() {
   shared_ptr<vector<string>> HX = make_shared<vector<string>>(vector<string> { "H" , "X" });
   Expr_Info->Set_BraKet_Ops( HX, "HX" ) ;
  
-  shared_ptr<vector<string>> HamT = make_shared<vector<string>>(vector<string> { "HT", "LT", "HX" } ); 
+  shared_ptr<vector<string>> hX = make_shared<vector<string>>(vector<string> { "h" , "X" });
+  Expr_Info->Set_BraKet_Ops( hX, "hX" ) ;
+
+  shared_ptr<vector<string>> HamT = make_shared<vector<string>>(vector<string> { "HT", "LT", "HX", "hX" } ); 
 
   Expr_Info->Build_Expression(HamT, "test_case") ;
 

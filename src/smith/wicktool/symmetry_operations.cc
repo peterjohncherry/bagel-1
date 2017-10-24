@@ -132,23 +132,35 @@ vector<tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int 
   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Two_el_symmfuncs;
   int one = 1;
   int mone = -1;
-//  shared_ptr<vector<string>> (*symmop1)(shared_ptr<vector<string>>)  = &ijkl_to_klij;
-//  shared_ptr<vector<string>> (*symmop2)(shared_ptr<vector<string>>)  = &bagel::SMITH::Expression_Info<DataType>::Expression_Info::ijkl_to_jilk;
-//  shared_ptr<vector<string>> (*symmop3)(shared_ptr<vector<string>>)  = &bagel::SMITH::Expression_Info<DataType>::Expression_Info::ijkl_to_lkji;
-//  shared_ptr<vector<string>> (*symmop4)(shared_ptr<vector<string>>)  = &bagel::SMITH::Expression_Info<DataType>::Expression_Info::ijkl_to_ijlk_block;
-//  shared_ptr<vector<string>> (*symmop5)(shared_ptr<vector<string>>)  = &bagel::SMITH::Expression_Info<DataType>::Expression_Info::ijkl_to_jikl_block;
-//  shared_ptr<vector<string>> (*symmop6)(shared_ptr<vector<string>>)  = &bagel::SMITH::Expression_Info<DataType>::Expression_Info::ijkl_to_jilk_block;
-//  shared_ptr<vector<string>> (*symmop7)(shared_ptr<vector<string>>)  = &bagel::SMITH::Expression_Info<DataType>::Expression_Info::identity;
-//  Two_el_symmfuncs.push_back(tie(symmop1, one, mone));
-//  Two_el_symmfuncs.push_back(tie(symmop2, one, one));
-//  Two_el_symmfuncs.push_back(tie(symmop3, one, mone));
-//  Two_el_symmfuncs.push_back(tie(symmop4, mone, mone));
-//  Two_el_symmfuncs.push_back(tie(symmop5, mone, mone));
-//  Two_el_symmfuncs.push_back(tie(symmop6, mone, mone));
-//  Two_el_symmfuncs.push_back(tie(symmop7, one, one));
+  shared_ptr<vector<string>> (*symmop1)(shared_ptr<vector<string>>)  = &ijkl_to_klij;
+  shared_ptr<vector<string>> (*symmop2)(shared_ptr<vector<string>>)  = &Expression_Info<DataType>::Expression_Info::ijkl_to_jilk;
+  shared_ptr<vector<string>> (*symmop3)(shared_ptr<vector<string>>)  = &Expression_Info<DataType>::Expression_Info::ijkl_to_lkji;
+  shared_ptr<vector<string>> (*symmop4)(shared_ptr<vector<string>>)  = &Expression_Info<DataType>::Expression_Info::ijkl_to_ijlk_block;
+  shared_ptr<vector<string>> (*symmop5)(shared_ptr<vector<string>>)  = &Expression_Info<DataType>::Expression_Info::ijkl_to_jikl_block;
+  shared_ptr<vector<string>> (*symmop6)(shared_ptr<vector<string>>)  = &Expression_Info<DataType>::Expression_Info::ijkl_to_jilk_block;
+  shared_ptr<vector<string>> (*symmop7)(shared_ptr<vector<string>>)  = &Expression_Info<DataType>::Expression_Info::identity;
+  Two_el_symmfuncs.push_back(tie(symmop1, one, mone));
+  Two_el_symmfuncs.push_back(tie(symmop2, one, one));
+  Two_el_symmfuncs.push_back(tie(symmop3, one, mone));
+  Two_el_symmfuncs.push_back(tie(symmop4, mone, mone));
+  Two_el_symmfuncs.push_back(tie(symmop5, mone, mone));
+  Two_el_symmfuncs.push_back(tie(symmop6, mone, mone));
+  Two_el_symmfuncs.push_back(tie(symmop7, one, one));
 
   return Two_el_symmfuncs;  
 } 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+vector<tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>   Expression_Info<DataType>::Expression_Info::set_1el_symmfuncs(){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> one_el_symmfuncs;
+  int one = 1;
+  int mone = -1;
+
+  return one_el_symmfuncs;  
+} 
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Expression_Info<double>;
