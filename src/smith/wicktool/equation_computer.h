@@ -54,6 +54,10 @@ class Equation_Computer {
     template<class DataType, class DType>
     std::shared_ptr<DType> contract_different_tensors( std::string T1name, std::string T2name,  std::pair<int,int> ctr_todo,
                                                        std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
+  
+    std::shared_ptr<Tensor_<double>>
+    reorder_block_Tensor(std::string Tname, std::shared_ptr<std::vector<int>> new_order);
+
     //////////////////////////////
     std::shared_ptr<std::vector<int>> get_Tens_strides ( std::vector<int>& range_sizes) ;
   

@@ -314,6 +314,55 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 
    return block_tensor;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::reorder_block_Tensor(string Tname, shared_ptr<vector<int>> new_order){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Equation_Computer::Equation_Computer::get_block_Tensor" << Tname << endl;
+  
+   shared_ptr<Tensor_<double>> orig_tens ;
+   { 
+   auto CTP_data_map_loc = CTP_data_map->find(Tname); 
+   if(  CTP_data_map_loc == CTP_data_map->end()){
+     throw std::runtime_error(" don't have tensor data for " +Tname+ " yet.... Equation_Computer::get_block_Tensor " ) ;
+   } else { 
+     orig_tens =  CTP_data_map_loc->second; 
+   } 
+   }
+
+   shared_ptr<vector<string>> unc_ranges = CTP_map->at(Tname)->unc_id_ranges;  
+   shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
+   shared_ptr<vector<int>> range_lengths = make_shared<vector<int>>(0); 
+   for (auto idrng : *Bagel_id_ranges )
+     range_lengths->push_back(idrng.range().size()-1); 
+   
+   shared_ptr<vector<IndexRange>> reordered_ranges = reorder_vector(new_order, Bagel_id_ranges ) ;
+   shared_ptr<Tensor_<double>> reordered_block_tensor = make_shared<Tensor_<double>>(*reordered_ranges);
+   reordered_block_tensor->allocate();
+   reordered_block_tensor->zero();
+
+   auto block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
+   auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
+   do {
+     cout << Tname << " block pos =  [ " ; for(int block_num : *block_pos ){ cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
+     
+     shared_ptr<vector<Index>>  orig_id_blocks = make_shared<vector<Index>>(Bagel_id_ranges->size());
+     for( int ii = 0 ;  ii != orig_id_blocks->size(); ii++)
+       orig_id_blocks->at(ii) =  Bagel_id_ranges->at(ii).range(block_pos->at(ii));
+  
+     unique_ptr<double[]> orig_data_block = orig_tens->get_block(*orig_id_blocks);
+     shared_ptr<vector<Index>> reordered_id_blocks = reorder_vector(new_order, orig_id_blocks ) ;
+
+     unique_ptr<double[]> reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks ) ;
+      
+     reordered_block_tensor->put_block(reordered_data_block, *reordered_id_blocks);
+
+   } while (fvec_cycle(block_pos, range_lengths, mins ));
+
+   return reordered_block_tensor;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //New version 

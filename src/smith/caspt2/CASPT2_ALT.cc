@@ -292,8 +292,10 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
       }
       cout << "=========================================================================================================" << endl;
       Expr_computer->Calculate_CTP(A_contrib.first);
-      for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++) 
+      for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){ 
+        shared_ptr<Tensor_<double>> A_contrib_reordered = Expr_computer->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
         A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), CTP_data_map->at(A_contrib.first));
+      }
       cout << "added " << A_contrib.first << endl; 
       cout << "=========================================================================================================" << endl << endl;
     }
