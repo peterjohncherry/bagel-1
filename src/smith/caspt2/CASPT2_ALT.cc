@@ -234,6 +234,8 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   {
     compare_string_length csl;
     int ii = 0 ; 
+   
+    // std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::vector<std::pair<std::vector<int> , std::pair<int,int>>> > >>>  G_to_A_map
     for ( auto G_to_A_map_it : *(Expr->G_to_A_map) ){
       Gname_vec[ii] = G_to_A_map_it.first;
       ii++;
@@ -263,10 +265,10 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
 
       //fudge, purging of A_contribs should happen in gamma_generator or Equation
       bool skip = false ;
-      for ( int qq = 0 ; qq != A_contrib.second.size(); qq++) { 
-         if ( A_contrib.second[qq].second.first != 0 || A_contrib.second[qq].second.second !=0) 
+      for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++) { 
+         if ( A_contrib.second.factor(qq).first != 0 || A_contrib.second.factor(qq).second !=0) 
            break;
-         if ( qq == A_contrib.second.size()-1 ) {
+         if ( qq == A_contrib.second.id_orders.size()-1 ) {
            skip =true;
          }
       } 
@@ -290,13 +292,16 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
       }
       cout << "=========================================================================================================" << endl;
       Expr_computer->Calculate_CTP(A_contrib.first);
-      for ( int qq = 0 ; qq != A_contrib.second.size(); qq++) 
-        A_combined_data->ax_plus_y( (double)(A_contrib.second[qq].second.first), CTP_data_map->at(A_contrib.first));
+      for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++) 
+        A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), CTP_data_map->at(A_contrib.first));
       cout << "added " << A_contrib.first << endl; 
       cout << "=========================================================================================================" << endl << endl;
     }
-   
+  
+ 
   if ( Gamma_name != "ID" ) {
+    
+    //shared_ptr<vector<int>> WickUtils::reorder_vector(vector<int>& neworder , const vector<int>& origvec ) {
     result += A_combined_data->dot_product(gamma_tensors->at(ii)); 
   } else { 
     result += A_combined_data->rms(); //really dumb, and wrong for negative results...

@@ -6,6 +6,22 @@
  #include <unordered_map>
 using namespace WickUtils;
 
+class AContribInfo { 
+
+   public : 
+     std::vector<std::vector<int>> id_orders;
+     std::vector<std::pair<int,int>> factors;
+
+     AContribInfo(std::vector<int> init_order_in , std::pair<int,int> factor_in ){
+                  id_orders.push_back(init_order_in);
+                  factors.push_back(factor_in); 
+     };
+     ~AContribInfo(){};
+
+     std::vector<int>   id_order(int qq) {return id_orders[qq]; }; 
+     std::pair<int,int> factor(int qq) {return factors[qq]; }; 
+
+};
 
 class GammaInfo {
 
@@ -37,8 +53,11 @@ class GammaIntermediate {
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ;
      int my_sign ;
 
-     GammaIntermediate(std::shared_ptr<std::vector<std::string>> full_id_ranges_in, std::shared_ptr<std::vector<bool>> full_aops_in, std::shared_ptr<std::vector<int>> ids_pos_in,
-              std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in, int my_sign_in): 
+     GammaIntermediate(std::shared_ptr<std::vector<std::string>> full_id_ranges_in,
+                       std::shared_ptr<std::vector<bool>> full_aops_in,
+                       std::shared_ptr<std::vector<int>> ids_pos_in,
+                       std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
+                       int my_sign_in): 
      full_id_ranges(full_id_ranges_in), full_aops(full_aops_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), my_sign(my_sign_in) {}; 
 
      GammaIntermediate(std::shared_ptr<std::vector<std::string>> full_id_ranges_in, int my_sign_in) {};
@@ -57,8 +76,7 @@ class GammaGenerator{
     
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
-    std::shared_ptr<std::unordered_map<std::string,
-    std::shared_ptr<std::unordered_map<std::string, std::vector<std::pair<std::vector<int>,std::pair<int,int>>>>>>> G_to_A_map;
+    std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<std::unordered_map<std::string, AContribInfo>> >> G_to_A_map;
 
     // key    : name of this gamma
     // result : information used here and in compute routines
@@ -79,7 +97,7 @@ class GammaGenerator{
     // functions
     GammaGenerator(std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
                    std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
-                   std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<std::unordered_map<std::string,std::vector<std::pair<std::vector<int>,std::pair<int,int>>>>>>> G_to_A_map_in);
+                   std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<std::unordered_map<std::string, AContribInfo  >>>> G_to_A_map_in);
     ~GammaGenerator(){};
 
     void add_gamma(std::shared_ptr<std::vector<std::string>> full_id_ranges_in, int my_sign_in) ;

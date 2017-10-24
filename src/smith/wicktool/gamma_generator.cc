@@ -39,7 +39,7 @@ GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaGenerator::GammaGenerator(shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init, 
                                shared_ptr<unordered_map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
-                               shared_ptr<unordered_map<string, shared_ptr<unordered_map<string,vector<pair<vector<int>,pair<int,int>>>>>>> G_to_A_map_in){
+                               shared_ptr<unordered_map<string, shared_ptr<unordered_map<string, AContribInfo >>>> G_to_A_map_in){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_GammaGenerator
 cout << "GammaGenerator::GammaGenerator" << endl; 
@@ -316,28 +316,30 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
     string Gname_alt = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
   
     if ( G_to_A_map->find(Gname_alt) == G_to_A_map->end() )
-      G_to_A_map->emplace(Gname_alt, make_shared< unordered_map<string ,vector<pair< vector<int> ,pair<int,int> >> >>()) ;
+      G_to_A_map->emplace( Gname_alt, make_shared<unordered_map<string, AContribInfo>>() ) ;
 
-    vector<int> Aid_order = get_Aid_order ( *ids_pos ) ; 
+    vector<int> Aid_order_new = get_Aid_order ( *ids_pos ) ; 
     auto Aid_orders_map_loc = G_to_A_map->at(Gname_alt)->find(Aname_alt);
     if ( Aid_orders_map_loc == G_to_A_map->at(Gname_alt)->end() ) {
-      vector<pair< vector<int>, pair<int,int> >> Aid_order_with_fac(1, make_pair(Aid_order, make_pair(my_sign,my_sign)));
-      G_to_A_map->at(Gname_alt)->emplace(Aname_alt, Aid_order_with_fac) ;
+      AContribInfo AInfo( Aid_order_new, make_pair(my_sign,my_sign));
+      G_to_A_map->at(Gname_alt)->emplace(Aname_alt, AInfo) ;
+
     } else {
-      for ( int qq = 0 ; qq != Aid_orders_map_loc->second.size() ; qq++ ) {
-        if( Aid_orders_map_loc->second[qq].first == Aid_order ){
-          Aid_orders_map_loc->second[qq].second.first  += my_sign;
-          Aid_orders_map_loc->second[qq].second.second += my_sign;
+      AContribInfo AInfo = Aid_orders_map_loc->second;
+      for ( int qq = 0 ; qq != AInfo.id_orders.size(); qq++ ) {
+        if( Aid_order_new == AInfo.id_order(qq) ){
+          AInfo.factors[qq].first  += my_sign;
+          AInfo.factors[qq].second += my_sign;
           break;
-        } else if ( qq == Aid_orders_map_loc->second.size()-1) { 
-          Aid_orders_map_loc->second.push_back(make_pair(Aid_order, make_pair(my_sign,my_sign)));
+        } else if ( qq == AInfo.id_orders.size()-1) { 
+          AInfo.id_orders.push_back(Aid_order_new);
+          AInfo.factors.push_back(make_pair(my_sign,my_sign));
         }
       }
     }
 
     if ( Gamma_map->find(Gname_alt) == Gamma_map->end() )
       Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>(full_aops, full_id_ranges, ids_pos));
-
   }
 
   return;
