@@ -208,7 +208,10 @@ void CASPT2_ALT::CASPT2_ALT::Build_Compute_Lists() {
   shared_ptr<vector<string>> LT = make_shared<vector<string>>(vector<string> { "L" , "T" });
   Expr_Info->Set_BraKet_Ops( LT, "LT" ) ;
  
-  shared_ptr<vector<string>> HamT = make_shared<vector<string>>(vector<string> { "HT", "LT" } ); 
+  shared_ptr<vector<string>> HX = make_shared<vector<string>>(vector<string> { "H" , "X" });
+  Expr_Info->Set_BraKet_Ops( HX, "HX" ) ;
+ 
+  shared_ptr<vector<string>> HamT = make_shared<vector<string>>(vector<string> { "HT", "LT", "HX" } ); 
 
   Expr_Info->Build_Expression(HamT, "test_case") ;
 
@@ -223,11 +226,18 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   if ( scalar_results_map->find(Expression_name) != scalar_results_map->end() )  
     cout << "WARNING : You have already calculated this expression....." << Expression_name
     << " = " << scalar_results_map->at(Expression_name) << endl;
+  
+   
 
   shared_ptr<Equation<double>> Expr = Expr_Info->expression_map->at(Expression_name); 
   double result = 0.0;
 
   shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, CTP_data_map, range_conversion_map );
+
+  //Hack to test excitation operators
+  shared_ptr<vector<string>> X_ranges = make_shared<vector<string>>(vector<string> {"notvir", "notvir", "notcor", "notcor"});
+  shared_ptr<Tensor_<double>> XTens_data = Expr_computer->get_uniform_Tensor(X_ranges , 1.0 );
+  CTP_data_map->emplace("X" , XTens_data);
 
   //Get Amap for each gamma
   vector<string> Gname_vec(Expr->G_to_A_map->size());
@@ -304,7 +314,8 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   if ( Gamma_name != "ID" ) {
     
     //shared_ptr<vector<int>> WickUtils::reorder_vector(vector<int>& neworder , const vector<int>& origvec ) {
-    result += A_combined_data->dot_product(gamma_tensors->at(ii)); 
+    double bob = A_combined_data->dot_product(gamma_tensors->at(ii));    cout <<  "A_combined_data->dot_product(gamma_tensors->at("<<ii<<")) = " <<  bob  << endl;
+    result += bob; // A_combined_data->dot_product(gamma_tensors->at(ii));  
   } else { 
     result += A_combined_data->rms(); //really dumb, and wrong for negative results...
   }
