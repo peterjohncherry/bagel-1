@@ -295,6 +295,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
       cout << "added " << A_contrib.first << endl; 
       cout << "=========================================================================================================" << endl << endl;
     }
+   
   if ( Gamma_name != "ID" ) {
     result += A_combined_data->dot_product(gamma_tensors->at(ii)); 
   } else { 

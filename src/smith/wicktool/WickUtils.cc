@@ -4,11 +4,21 @@
  // #include "WickUtils.h"
 using namespace std;
 
-namespace WickUtils {
+  using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
+  using delta_strs = std::vector<std::vector<std::pair<std::string,std::string>>>;
+  using delta_bools = std::vector<std::vector<std::pair<bool,bool>>>;
+
+  using vv_ints  = std::vector< std::vector<int> >;
+  using vv_strs  = std::vector< std::vector<std::string> >;
+  using vv_bools = std::vector< std::vector<bool> >;
+
+  using pint_vec = std::vector<std::pair<int,int>>;
+  using pstr_vec = std::vector<std::pair<std::string,std::string>>;
+  using pbool_vec = std::vector<std::pair<bool,bool>>;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<pint_vec>>  
-get_cross_pairs( shared_ptr<vector<int>> vec1 , shared_ptr<vector<int>> vec2, shared_ptr<vector<string>> id_names ){
+WickUtils::get_cross_pairs( shared_ptr<vector<int>> vec1 , shared_ptr<vector<int>> vec2, shared_ptr<vector<string>> id_names ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
  if  ( vec1->empty() || vec2->empty()){
@@ -55,7 +65,7 @@ get_cross_pairs( shared_ptr<vector<int>> vec1 , shared_ptr<vector<int>> vec2, sh
  return all_pairs;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max ) {
+void WickUtils::fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   for(int ii = forvec->size()-1; ii!=-1 ; ii--) {
     if (forvec->at(ii) == max->at(ii)) {
@@ -69,7 +79,7 @@ void fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max ) {
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool fvec_cycle_test(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max ) {
+bool WickUtils::fvec_cycle_test(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   for(int ii = forvec->size()-1; ii!=-1 ; ii--) {
     if (forvec->at(ii) == max->at(ii)) {
@@ -85,7 +95,7 @@ bool fvec_cycle_test(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max
   return true;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min) {
+bool WickUtils::fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   if (forvec->size() == 0 )
@@ -114,7 +124,7 @@ bool fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , sh
 //     for (kk = jj+1 ; ..; kk++)
 //      .....
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool constrained_fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max) {
+bool WickUtils::constrained_fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   int ii = forvec->size()-1;
@@ -153,7 +163,7 @@ bool constrained_fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<in
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class It_Type>
-bool fvec_cycle(shared_ptr<vector<It_Type>> forvec, shared_ptr<vector<It_Type>> max , shared_ptr<vector<It_Type>> min) {
+bool WickUtils::fvec_cycle(shared_ptr<vector<It_Type>> forvec, shared_ptr<vector<It_Type>> max , shared_ptr<vector<It_Type>> min) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   if (forvec->size() == 0 )
@@ -177,7 +187,7 @@ bool fvec_cycle(shared_ptr<vector<It_Type>> forvec, shared_ptr<vector<It_Type>> 
 //Generates all possible combinations of the elements in a given vector
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class T1>
-shared_ptr<vector<shared_ptr<vector<T1>>>> combgen( shared_ptr<vector<T1>> invec){
+shared_ptr<vector<shared_ptr<vector<T1>>>> WickUtils::combgen( shared_ptr<vector<T1>> invec){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if defined DBG_WickUtils || defined DBG_all 
 cout << "combgen" << endl;
@@ -217,7 +227,7 @@ cout << "combgen" << endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // gets all possible combinations of NN elements from vec1 , all combinations will be unique iff all elements of vec1 are unique
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<shared_ptr<vector<int>>>> get_N_in_M_combsX( shared_ptr<vector<int>> vec1, int NN ){
+shared_ptr<vector<shared_ptr<vector<int>>>> WickUtils::get_N_in_M_combsX( shared_ptr<vector<int>> vec1, int NN ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if defined DBG_WickUtils || defined DBG_all 
 cout << "get_N_in_M_combsX" << endl;
@@ -258,7 +268,7 @@ cout << "get_N_in_M_combsX" << endl;
 // gets all possible combinations of NN elements from vec1 , all combinations will be unique iff all elements of vec1 are unique
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DT1>
-shared_ptr<vector<shared_ptr<vector<DT1>>>> get_N_in_M_combsX( shared_ptr<vector<DT1>> vec1, int NN ){
+shared_ptr<vector<shared_ptr<vector<DT1>>>> WickUtils::get_N_in_M_combsX( shared_ptr<vector<DT1>> vec1, int NN ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if defined DBG_WickUtils || defined DBG_all 
 cout << "get_N_in_M_combsX" << endl;
@@ -297,7 +307,7 @@ cout << "get_N_in_M_combsX" << endl;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Prints out a vector of pairs
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void print_pvec (pint_vec pvec) {
+void WickUtils::print_pvec (pint_vec pvec) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if defined DBG_WickUtils || defined DBG_all 
 cout << "print_pvec" << endl;
@@ -312,7 +322,7 @@ cout << "print_pvec" << endl;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 template<class DT>
-void print_vec(vector<DT> invec , string vecname){
+void WickUtils::print_vec(vector<DT> invec , string vecname){
 ///////////////////////////////////////////////////////////////////////////////////////
 #if defined DBG_WickUtils || defined DBG_all 
 cout << "print_vec" << endl;
@@ -326,7 +336,7 @@ cout << "print_vec" << endl;
 } 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> get_unique_pairs(shared_ptr<vector<int>> ids1 , shared_ptr<vector<int>> ids2 , int num_pairs){
+shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> WickUtils::get_unique_pairs(shared_ptr<vector<int>> ids1 , shared_ptr<vector<int>> ids2 , int num_pairs){
 //////////////////////////////////////////////////////////////////////////////////////////////
 #if defined DBG_WickUtils || defined DBG_all 
 cout << "get_unique_pairs" << endl;
@@ -380,7 +390,7 @@ cout << "get_unique_pairs" << endl;
 } 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-string get_name(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_id_ranges,  shared_ptr<pint_vec> all_ctrs_pos) {
+string WickUtils::get_name(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_id_ranges,  shared_ptr<pint_vec> all_ctrs_pos) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   string name = "";
   for(auto idxs : *full_idxs)
@@ -400,7 +410,7 @@ string get_name(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>>
 };
 
 /////////////////////////////////////////////////////////////////////////////
-string get_name_rdm(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_idx_ranges, 
+string WickUtils::get_name_rdm(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_idx_ranges, 
                     shared_ptr<vector<pair<int,int>>> all_deltas_pos ){
 /////////////////////////////////////////////////////////////////////////////
   string  name = "";
@@ -420,7 +430,7 @@ string get_name_rdm(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<stri
 };
 
 /////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> get_unc_ids_from_deltas_ids(shared_ptr<vector<int>> ids , shared_ptr<vector<pair<int,int>>> deltas ){
+shared_ptr<vector<int>> WickUtils::get_unc_ids_from_deltas_ids(shared_ptr<vector<int>> ids , shared_ptr<vector<pair<int,int>>> deltas ){
 /////////////////////////////////////////////////////////////////////////////
  
    vector<bool> contracted(ids->size(),false);
@@ -443,7 +453,7 @@ shared_ptr<vector<int>> get_unc_ids_from_deltas_ids(shared_ptr<vector<int>> ids 
    return make_shared<vector<int>>(unc_ids);
 }
 /////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> get_unc_ids_from_deltas_ids_comparison(shared_ptr<vector<int>> ids , shared_ptr<vector<pair<int,int>>> deltas ){
+shared_ptr<vector<int>> WickUtils::get_unc_ids_from_deltas_ids_comparison(shared_ptr<vector<int>> ids , shared_ptr<vector<pair<int,int>>> deltas ){
 /////////////////////////////////////////////////////////////////////////////
  
    vector<int> unc_ids(0);
@@ -462,7 +472,7 @@ shared_ptr<vector<int>> get_unc_ids_from_deltas_ids_comparison(shared_ptr<vector
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-string get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_idx_ranges, 
+string WickUtils::get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_idx_ranges, 
                                  shared_ptr<vector<pair<int,int>>> all_ctrs_pos ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   string  name = "";
@@ -481,7 +491,7 @@ string get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>
   return name;
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-string get_gamma_name(shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> aops_vec,
+string WickUtils::get_gamma_name(shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> aops_vec,
                                       shared_ptr<vector<int>> idxs_pos ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   string  name = "";
@@ -505,7 +515,7 @@ string get_gamma_name(shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<ve
   return name;
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-string get_gamma_name(shared_ptr<vector<bool>> aops_vec, shared_ptr<vector<string>> full_idx_ranges,  
+string WickUtils::get_gamma_name(shared_ptr<vector<bool>> aops_vec, shared_ptr<vector<string>> full_idx_ranges,  
                                       shared_ptr<vector<pair<int,int>>> deltas_pos ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   string  name = "";
@@ -538,7 +548,7 @@ string get_gamma_name(shared_ptr<vector<bool>> aops_vec, shared_ptr<vector<strin
 //same as normal fvec_cycle, but improved to allow skipping. I expect this should be included everywhere, to guard 
 //against max==min problem.....
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min ) {
+bool WickUtils::fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   for(int ii = forvec->size()-1; ii!=-1 ; ii--) {
     if ( max->at(ii) == min->at(ii) ) {
@@ -558,7 +568,7 @@ bool fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //same as normal fvec_cycle, but will not iterate the index at fixed_index_position
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max, int fixed_index_position ) {
+bool WickUtils::fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max, int fixed_index_position ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   for(int ii = forvec->size()-1; ii!=-1 ; ii--) {
     if ( ii == fixed_index_position ) {
@@ -576,7 +586,7 @@ bool fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> 
   return true;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool fvec_cycle_skipper_f2b(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min ) {
+bool WickUtils::fvec_cycle_skipper_f2b(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   for(int ii = 0; ii!=forvec->size(); ii++) {
     if ( max->at(ii) == min->at(ii) ) {
@@ -594,7 +604,7 @@ bool fvec_cycle_skipper_f2b(shared_ptr<vector<int>> forvec, shared_ptr<vector<in
   return true;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> reorder_vector(vector<int>& neworder , const vector<int>& origvec ) {
+shared_ptr<vector<int>> WickUtils::reorder_vector(vector<int>& neworder , const vector<int>& origvec ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<int> newvec(origvec.size());
@@ -609,5 +619,4 @@ shared_ptr<vector<int>> reorder_vector(vector<int>& neworder , const vector<int>
 
 
 
-}//end of namespace:
 #endif

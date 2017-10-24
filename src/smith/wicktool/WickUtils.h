@@ -80,6 +80,9 @@ namespace WickUtils {
   std::string get_gamma_name(std::shared_ptr<std::vector<bool>> aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,  
                              std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
 
+  std::shared_ptr<std::vector<pint_vec>>  
+  get_cross_pairs( std::shared_ptr<std::vector<int>> vec1 , std::shared_ptr<std::vector<int>> vec2, std::shared_ptr<std::vector<std::string>> id_names );
+
    template<class DataType>
   void print_vecX(std::vector<DataType> invec, std::string name ="lazy"){
     std::cout << name <<" = [ ";
