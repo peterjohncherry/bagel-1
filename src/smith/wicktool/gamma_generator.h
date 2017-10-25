@@ -123,7 +123,7 @@ class GammaGenerator{
 
     bool RangeCheck(std::shared_ptr<std::vector<std::string>> full_id_ranges) ;
     
-    bool Forbidden_Index(std::shared_ptr<std::vector<std::string>> full_id_ranges, std::shared_ptr<std::vector<int>> ids_pos , int position );
+    bool Forbidden_Index(std::shared_ptr<std::vector<std::string>> full_id_ranges, int position );
 
     bool gamma_survives( std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<std::vector<std::string>> id_ranges) ;
      
