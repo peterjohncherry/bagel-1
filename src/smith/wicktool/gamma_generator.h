@@ -3,7 +3,7 @@
 
  #include <src/smith/wicktool/WickUtils.h>
  #include "WickUtils.h"
- #include <unordered_map>
+ #include <map>
 using namespace WickUtils;
 
 class AContribInfo { 
@@ -76,16 +76,16 @@ class GammaGenerator{
     
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
-    std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<std::unordered_map<std::string, AContribInfo>> >> G_to_A_map;
+    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo>> >> G_to_A_map;
 
     // key    : name of this gamma
     // result : information used here and in compute routines
-    std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< GammaInfo >>> Gamma_map;
+    std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> Gamma_map;
 
     // key    : name of A-tensor
     // result : list of reorderings which much be applied to this A-tensor before it is contracted with this gamma.
     //          second part of pair is factor associated with each reordering.
-    std::shared_ptr<std::unordered_map<std::string, std::vector< std::pair<std::vector<int>, std::pair<int,int>> >> > Aid_orders_map;
+    std::shared_ptr<std::map<std::string, std::vector< std::pair<std::vector<int>, std::pair<int,int>> >> > Aid_orders_map;
 
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
@@ -96,8 +96,8 @@ class GammaGenerator{
  
     // functions
     GammaGenerator(std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
-                   std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
-                   std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<std::unordered_map<std::string, AContribInfo  >>>> G_to_A_map_in);
+                   std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
+                   std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in);
     ~GammaGenerator(){};
 
     void add_gamma(std::shared_ptr<std::vector<std::string>> full_id_ranges_in, int my_sign_in) ;

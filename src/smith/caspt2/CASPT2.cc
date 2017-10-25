@@ -165,9 +165,6 @@ void CASPT2::CASPT2::solve() {
       cout << "        t2all_["<< istate << "]->at("<< jst << ")->rms() = " <<   t2all_[istate]->at(jst)->rms()  <<  endl;
 //      cout << " t2all = " << endl;       Equation_Computer::Equation_Computer::Print_Tensor(t2all_[istate]->at(jst) ); 
 
-      cout << " sall_["<< istate << "]->at("<< jst << ")->norm() = " <<   sall_[istate]->at(jst)->norm()  ; cout.flush();
-      cout << "          sall_["<< istate << "]->at("<< jst << ")->rms() = " <<   sall_[istate]->at(jst)->rms()  <<  endl;
-//      cout << " sall before = " << endl; Equation_Computer::Equation_Computer::Print_Tensor(sall_[istate]->at(jst) ); 
 
       s = sall_[istate]->at(jst);
       shared_ptr<Queue> sourceq = make_sourceq(false, jst == istate);
@@ -178,6 +175,7 @@ void CASPT2::CASPT2::solve() {
     }
   }
   cout << " sall_[0]->at(0)->norm() = " <<   sall_[0]->at(0)->norm()  <<  endl;
+  cout << " sall_[0]->at(0)->rms() = " <<   sall_[0]->at(0)->rms()  <<  endl;
 
   // solve linear equation for t amplitudes
   t2all_ = solve_linear(sall_, t2all_);

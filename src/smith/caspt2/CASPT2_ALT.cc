@@ -50,6 +50,10 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   F_1el_all  = orig_cpt2->f1_;
   H_1el_all  = orig_cpt2->h1_;
   H_2el_all  = orig_cpt2->H_2el_;
+
+  cout << "F_1el_all->rms()" <<  F_1el_all->rms() << endl; 
+  cout << "H_1el_all->rms()" <<  H_1el_all->rms() << endl; 
+  cout << "H_2el_all->rms()" <<  H_2el_all->rms() << endl; 
  
   const int max = ref->maxtile();
   closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
@@ -288,7 +292,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
     compare_string_length csl;
     int ii = 0 ; 
    
-    // std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::vector<std::pair<std::vector<int> , std::pair<int,int>>> > >>>  G_to_A_map
+    // std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::vector<std::pair<std::vector<int> , std::pair<int,int>>> > >>>  G_to_A_map
     for ( auto G_to_A_map_it : *(Expr->G_to_A_map) ){
       Gname_vec[ii] = G_to_A_map_it.first;
       ii++;

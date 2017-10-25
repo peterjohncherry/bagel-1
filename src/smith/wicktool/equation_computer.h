@@ -36,7 +36,7 @@ class Equation_Computer {
     std::shared_ptr<const Determinants> det_ ; 
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
-    std::shared_ptr<std::unordered_map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
 
     std::shared_ptr<Equation<double>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;

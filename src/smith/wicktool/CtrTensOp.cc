@@ -279,8 +279,14 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
 
    CTP_new->ctrs_todo = ctrs_todo;
    CTP_new->ctrs_done = ctrs_done;
-   
-   ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done),  abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+  
+    
+   ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done),
+                                                       abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+
+   //Add intermediate compute list into map seperately
+   ACompute_map->emplace( CTP_new->get_next_name(CTP_new->ctrs_done), make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list));
+
    auto new_CTData = make_shared<DType>();
     
    if (Tmap->find(CTP_new->name) == Tmap->end()){

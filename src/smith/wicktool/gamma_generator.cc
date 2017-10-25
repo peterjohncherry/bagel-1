@@ -1,5 +1,5 @@
 #include <bagel_config.h>
-#include <unordered_map>
+#include <map>
 #ifdef COMPILE_SMITH
  #include <src/smith/wicktool/WickUtils.h>
  #include <src/smith/wicktool/gamma_generator.h>
@@ -39,8 +39,8 @@ GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaGenerator::GammaGenerator(shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init, 
-                               shared_ptr<unordered_map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
-                               shared_ptr<unordered_map<string, shared_ptr<unordered_map<string, AContribInfo >>>> G_to_A_map_in){
+                               shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
+                               shared_ptr<map<string, shared_ptr<map<string, AContribInfo >>>> G_to_A_map_in){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_GammaGenerator
 cout << "GammaGenerator::GammaGenerator" << endl; 
@@ -172,22 +172,9 @@ cout << "GammaGenerator::norm_order" << endl;
 ///////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::Forbidden_Index( shared_ptr<vector<string>> full_id_ranges, int position){
 ///////////////////////////////////////////////////////////////////////////////////////
-cout << "GammaGenerator::Forbidden_Index" << endl;
-
-    cout << " full_id_ranges->at("<< position << ")= "<< full_id_ranges->at(position)  << endl;
-    cout << " orig_ids->at("<< position << ")= "<< orig_ids->at(position)  << endl;
-
-    bool bob = ( full_id_ranges->at(position) != "act");
-
-    if ( !bob ) {
-       bob =  (orig_ids->at(position)[0] == 'X');
-    } else if ( !bob )   
-       bob =  (orig_ids->at(position)[0] == 'Y');
-    } 
-    if (bob) { cout << " Forbidden "  << endl; 
-    } else { cout << " allowed "  << endl; } 
-                         
-    return bob;
+//cout << "GammaGenerator::Forbidden_Index" << endl;
+                        
+    return ( full_id_ranges->at(position) != "act");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -336,7 +323,7 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
     string Gname_alt = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
   
     if ( G_to_A_map->find(Gname_alt) == G_to_A_map->end() )
-      G_to_A_map->emplace( Gname_alt, make_shared<unordered_map<string, AContribInfo>>() ) ;
+      G_to_A_map->emplace( Gname_alt, make_shared<map<string, AContribInfo>>() ) ;
 
     vector<int> Aid_order_new = get_Aid_order ( *ids_pos ) ; 
     auto Aid_orders_map_loc = G_to_A_map->at(Gname_alt)->find(Aname_alt);

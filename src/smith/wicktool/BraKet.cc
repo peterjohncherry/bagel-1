@@ -11,8 +11,8 @@ using pstr_vec = std::vector<std::pair<std::string,std::string>>;
       
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-BraKet<DType>::BraKet(shared_ptr<unordered_map<string,shared_ptr<unordered_map<string,AContribInfo>>>> G_to_A_map_in,
-                      shared_ptr<unordered_map<string, shared_ptr< GammaInfo >>> GammaMap_in ){
+BraKet<DType>::BraKet(shared_ptr<map<string,shared_ptr<map<string,AContribInfo>>>> G_to_A_map_in,
+                      shared_ptr<map<string, shared_ptr< GammaInfo >>> GammaMap_in ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   Sub_Ops = make_shared<vector<shared_ptr<TensOp<DType>>>>(0);
   G_to_A_map = G_to_A_map_in;
