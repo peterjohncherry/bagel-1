@@ -258,13 +258,9 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //This is absurdly inefficient; will probably need to be replaced.
-//The ranged idxs are range+index. The idea is that when sorting, grouping the ranges 
-//should take priority over grouping the indexes. 
+//The ranged idxs are index+plus range, should switch to range+index later on.
 //
-// The exception is pure excitation operators (idx = X); in this case the index name
-// comes before the range, in order to ensure all excitation operators are grouped
-// on the far right to failitate summation later on.
-
+//Must add special case for dealing with excitation operators.
 ///////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::optimized_alt_order(){
 //////////////////////////////////////////////////////////////////////////////////////  
@@ -286,11 +282,7 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
     vector<bool> unc_aops(full_aops->size() - 2*deltas_pos->size());
     vector<bool>::iterator unc_aops_it = unc_aops.begin();
     for (int pos : *ids_pos ) {
-      if (orig_ids->at(pos)[0] == 'X'){
-        *unc_ranged_idxs_it++ = orig_ids->at(pos)+full_id_ranges->at(pos);
-      } else {
-        *unc_ranged_idxs_it++ = full_id_ranges->at(pos)+orig_ids->at(pos);
-      }
+      *unc_ranged_idxs_it++ = orig_ids->at(pos)+full_id_ranges->at(pos);
       *unc_aops_it++ = full_aops->at(pos);
     }
 
@@ -366,7 +358,7 @@ cout << "GammaGenerator::swap" << endl;
   ids_pos->at(jj) = idx_buff;                                                                                                       
                                                                                                                                     
   if ( (full_id_ranges->at(ids_pos->at(jj)) == full_id_ranges->at(ids_pos->at(ii))) &&                                                
-       (orig_aops->at(ids_pos->at(ii)) !=  orig_aops->at(ids_pos->at(jj))) )  {                                                   
+     (orig_aops->at(ids_pos->at(ii)) !=  orig_aops->at(ids_pos->at(jj))) )  {                                                   
 
     auto new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);                                                                       
 
@@ -628,6 +620,25 @@ vector<int> GammaGenerator::get_standard_range_order(const vector<string> &rngs)
 }
 
 //////////////////////////////////////////////////////////////////////////////
+vector<int> GammaGenerator::get_standard_idx_order(const vector<string>&idxs) {
+//////////////////////////////////////////////////////////////////////////////
+  
+  vector<int> pos(idxs.size());
+  iota(pos.begin(), pos.end(), 0);
+ 
+  auto op_order_tmp = op_order; 
+  sort(pos.begin(), pos.end(), [&idxs, &op_order_tmp](int i1, int i2){
+                                 if ( idxs[i1][0] == 'X' ){
+                                   return false;
+                                 } else {
+                                   return (bool)( op_order_tmp->at(idxs[i1][0]) < op_order_tmp->at(idxs[i2][0]) );
+                                 }});
+  
+  return pos;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
 vector<int> GammaGenerator::get_position_order(const vector<int> &ids_pos) {
 //////////////////////////////////////////////////////////////////////////////
   
@@ -644,7 +655,8 @@ vector<int> GammaGenerator::get_standard_order ( const vector<string>& rngs ) {
 
    vector<string> new_rngs(rngs.size());
    vector<string>::iterator new_rngs_it = new_rngs.begin();
-   vector<int> new_order = get_standard_range_order(rngs) ;
+   vector<int> new_order = get_standard_idx_order(rngs) ;
+
    for ( int pos : new_order ) { *new_rngs_it++ = rngs[pos] ; }
    return new_order;
 }

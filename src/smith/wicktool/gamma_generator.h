@@ -139,6 +139,8 @@ class GammaGenerator{
  
     std::vector<int> get_standard_order (const std::vector<std::string>& rngs ); 
 
+    std::vector<int> get_standard_idx_order(const std::vector<std::string>& idxs) ;
+
     std::vector<int> get_standardized_alt_order ( const std::vector<std::string>& rngs ,const std::vector<bool>& aops ) ;
 
  };

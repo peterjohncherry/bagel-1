@@ -158,6 +158,7 @@ void CASPT2::CASPT2::solve() {
         sourceq->next_compute();
     }
   }
+  cout << " sall_[0]->at(0)->norm() = " <<   sall_[0]->at(0)->norm()  <<  endl;
 
   // solve linear equation for t amplitudes
   t2all_ = solve_linear(sall_, t2all_);

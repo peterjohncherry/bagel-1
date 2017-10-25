@@ -279,7 +279,7 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tensor(string Tname){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer::Equation_Computer::get_block_Tensor" << Tname << endl;
+   cout << "Equation_Computer::Equation_Computer::get_block_Tensor : " << Tname << endl;
   
    if(  CTP_data_map->find(Tname) != CTP_data_map->end())
      return CTP_data_map->at(Tname);
@@ -319,13 +319,15 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::reorder_block_Tensor(string Tname, shared_ptr<vector<int>> new_order){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer::Equation_Computer::get_block_Tensor" << Tname << endl;
+   cout << "Equation_Computer::Equation_Computer::reorder_block_Tensor "; cout.flush();
+   cout << " : " << Tname ; cout.flush();
+   cout <<  " New_order = [ "; cout.flush();  for (int pos : *new_order ) { cout << pos << " " ; cout.flush(); } cout << "] " << endl;
   
    shared_ptr<Tensor_<double>> orig_tens ;
    { 
    auto CTP_data_map_loc = CTP_data_map->find(Tname); 
    if(  CTP_data_map_loc == CTP_data_map->end()){
-     throw std::runtime_error(" don't have tensor data for " +Tname+ " yet.... Equation_Computer::get_block_Tensor " ) ;
+     throw std::runtime_error(" don't have tensor data for " +Tname+ " yet.... Equation_Computer::reorder_block_Tensor " ) ;
    } else { 
      orig_tens =  CTP_data_map_loc->second; 
    } 

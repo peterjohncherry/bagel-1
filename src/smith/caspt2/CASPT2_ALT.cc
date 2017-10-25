@@ -128,7 +128,7 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   shared_ptr<vector<string>>          X_idxs = make_shared<vector<string>>(vector<string> {"X0", "X1", "X2", "X3"});
   shared_ptr<vector<bool>>            X_aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true }); 
   shared_ptr<vector<vector<string>>>  X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt, not_virt, not_core, not_core }); 
-  vector<IndexRange>                  X_bagel_ranges = {*not_closed_rng , *not_closed_rng, *not_virtual_rng, *not_virtual_rng} ;
+  vector<IndexRange>                  X_bagel_ranges = { *not_virtual_rng, *not_virtual_rng, *not_closed_rng , *not_closed_rng,} ;
   shared_ptr<double>                  X_dummy_data;
   string                              X_TimeSymm = "none";
 
@@ -137,6 +137,22 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
 
   shared_ptr<TensOp<double>> XTens = Expr_Info->Build_TensOp("X", X_dummy_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
   Expr_Info->T_map->emplace("X", XTens);
+
+  /* ---- 2el Excitation Op dag  ----  */
+  pair<double,double>                 Y_factor = make_pair(1.0,1.0);
+  shared_ptr<vector<string>>          Y_idxs = make_shared<vector<string>>(vector<string> {"Y0", "Y1", "Y2", "Y3"});
+  shared_ptr<vector<bool>>            Y_aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false }); 
+  shared_ptr<vector<vector<string>>>  Y_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt }); 
+  vector<IndexRange>                  Y_bagel_ranges = {*not_closed_rng , *not_closed_rng, *not_virtual_rng, *not_virtual_rng } ;
+  shared_ptr<double>                  Y_dummy_data;
+  string                              Y_TimeSymm = "none";
+
+  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  Y_symmfuncs = Expr_Info->set_2el_symmfuncs();
+  vector<bool(*)(shared_ptr<vector<string>>)>  Y_constraints = { &Expression_Info<double>::Expression_Info::NotAllAct };
+
+  shared_ptr<TensOp<double>> YTens = Expr_Info->Build_TensOp("Y", Y_dummy_data, Y_idxs, Y_aops, Y_idx_ranges, Y_symmfuncs, Y_constraints, Y_factor, Y_TimeSymm, false ) ;
+  Expr_Info->T_map->emplace("Y", YTens);
+
 
   /* ---- H Tensor ----  */
   pair<double,double>                H_factor = make_pair(1.0,1.0);
@@ -169,8 +185,6 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   Expr_Info->T_map->emplace("h", hTens);
 
   CTP_data_map->emplace("h" , H_1el_all);
-
-
   
   /* ---- T Tensor ----  */
   pair<double,double>                 T_factor = make_pair(1.0,1.0);
@@ -220,19 +234,25 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
 void CASPT2_ALT::CASPT2_ALT::Build_Compute_Lists() { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<vector<string>> HT = make_shared<vector<string>>(vector<string> { "H" , "T" });
-  Expr_Info->Set_BraKet_Ops( HT, "HT" ) ;
+//  shared_ptr<vector<string>> HT = make_shared<vector<string>>(vector<string> { "H" , "T" });
+//  Expr_Info->Set_BraKet_Ops( HT, "HT" ) ;
 
-  shared_ptr<vector<string>> LT = make_shared<vector<string>>(vector<string> { "L" , "T" });
-  Expr_Info->Set_BraKet_Ops( LT, "LT" ) ;
+//  shared_ptr<vector<string>> LT = make_shared<vector<string>>(vector<string> { "L" , "T" });
+//  Expr_Info->Set_BraKet_Ops( LT, "LT" ) ;
  
-  shared_ptr<vector<string>> HX = make_shared<vector<string>>(vector<string> { "H" , "X" });
-  Expr_Info->Set_BraKet_Ops( HX, "HX" ) ;
+//  shared_ptr<vector<string>> HX = make_shared<vector<string>>(vector<string> { "H" , "X" });
+//  Expr_Info->Set_BraKet_Ops( HX, "HX" ) ;
  
-  shared_ptr<vector<string>> hX = make_shared<vector<string>>(vector<string> { "h" , "X" });
-  Expr_Info->Set_BraKet_Ops( hX, "hX" ) ;
+//  shared_ptr<vector<string>> hX = make_shared<vector<string>>(vector<string> { "h" , "X" });
+//  Expr_Info->Set_BraKet_Ops( hX, "hX" ) ;
+ 
+  shared_ptr<vector<string>> YH = make_shared<vector<string>>(vector<string> { "Y", "H" });
+  Expr_Info->Set_BraKet_Ops( YH, "YH" ) ;                                             
+                                                                                     
+  shared_ptr<vector<string>> Yh = make_shared<vector<string>>(vector<string> { "Y", "h" });
+  Expr_Info->Set_BraKet_Ops( Yh, "Yh" ) ;
 
-  shared_ptr<vector<string>> HamT = make_shared<vector<string>>(vector<string> { "HT", "LT", "HX", "hX" } ); 
+  shared_ptr<vector<string>> HamT = make_shared<vector<string>>(vector<string> { "YH" } ); 
 
   Expr_Info->Build_Expression(HamT, "test_case") ;
 
@@ -259,6 +279,10 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   shared_ptr<vector<string>> X_ranges = make_shared<vector<string>>(vector<string> {"notvir", "notvir", "notcor", "notcor"});
   shared_ptr<Tensor_<double>> XTens_data = Expr_computer->get_uniform_Tensor(X_ranges , 1.0 );
   CTP_data_map->emplace("X" , XTens_data);
+  shared_ptr<vector<string>> Y_ranges = make_shared<vector<string>>(vector<string> { "notcor", "notcor","notvir", "notvir"});
+  shared_ptr<Tensor_<double>> YTens_data = Expr_computer->get_uniform_Tensor(Y_ranges , 1.0 );
+  CTP_data_map->emplace("Y" , YTens_data);
+
 
   //Get Amap for each gamma
   vector<string> Gname_vec(Expr->G_to_A_map->size());
@@ -274,7 +298,9 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   std::sort(Gname_vec.begin(), Gname_vec.end(), csl); 
   }
 
+
   shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gammas( 0, 0, Gname_vec[0] );
+  std::reverse(gamma_tensors->begin(),gamma_tensors->end());
   cout << "returned from get_gammas in tact " << endl;
   
   cout << "Gamma names = [ " ; cout.flush();
@@ -290,6 +316,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
     // Build A_tensor to hold sums of different A-tensors
     shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Expr_computer->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
     A_combined_data->allocate();
+    A_combined_data->zero();
 
     // Loop through A-tensors needed for this gamma,
     for ( auto A_contrib : *(Expr->G_to_A_map->at(Gamma_name))){
@@ -319,8 +346,12 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
         } else if (ctr_op->ctr_type()[0] == 's' ){
           cout << "[" << ctr_op->T1name() << " , " << ctr_op->T1name() << " , (";
           cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;   cout << ctr_op->ctr_type()  << endl;
+        } else { 
+          cout << ctr_op->ctr_type() << endl;
         }
+        
       }
+      
       cout << "=========================================================================================================" << endl;
       Expr_computer->Calculate_CTP(A_contrib.first);
       for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){ 
@@ -333,9 +364,13 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   
  
   if ( Gamma_name != "ID" ) {
-    
-    //shared_ptr<vector<int>> WickUtils::reorder_vector(vector<int>& neworder , const vector<int>& origvec ) {
-    double bob = A_combined_data->dot_product(gamma_tensors->at(ii));    cout <<  "A_combined_data->dot_product(gamma_tensors->at("<<ii<<")) = " <<  bob  << endl;
+    cout << " gamma_tensors->at(ii)->rms()  = " << gamma_tensors->at(ii)->rms() << endl;
+    cout << " gamma_tensors->at(ii)->norm() = " << gamma_tensors->at(ii)->norm() << endl;
+    cout << " A_combined_data->norm()       = " << A_combined_data->norm() << endl;
+    cout << " gamma_tensors->at(ii)->size_alloc() = " << gamma_tensors->at(ii)->size_alloc() << endl;
+    cout << " A_combined_data->size_alloc()       = " << A_combined_data->size_alloc() << endl;
+    double bob = A_combined_data->dot_product(gamma_tensors->at(ii));
+    cout <<  "A_combined_data->dot_product(gamma_tensors->at("<<ii<<")) = " <<  bob  << endl;
     result += bob; // A_combined_data->dot_product(gamma_tensors->at(ii));  
   } else { 
     result += A_combined_data->rms(); //really dumb, and wrong for negative results...
