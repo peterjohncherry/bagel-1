@@ -275,6 +275,39 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
   return T_out;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Sets all elements of input tensor Tens to the value specified by elem_val 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::set_tensor_elems(shared_ptr<Tensor_<double>> Tens, double elem_val  ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Equation_Computer::Equation_Computer::set_tensor_elems  " << endl;
+  
+   vector<IndexRange> id_ranges =  Tens->indexrange();
+
+   shared_ptr<vector<int>> range_lengths = make_shared<vector<int>>(0); 
+   for (IndexRange idrng : id_ranges )
+     range_lengths->push_back(idrng.range().size()-1); 
+
+//   cout << " range_lengths = [ " ; cout.flush(); for ( int pos : *range_lengths ) { cout << pos << " "  ; cout.flush(); } cout << "] " << endl;
+
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
+   do {
+     // cout << " block_pos = [ " ; cout.flush(); for ( int pos : *block_pos ) { cout << pos << " "  ; cout.flush(); } cout << "] " << endl;
+     vector<Index> id_blocks(id_ranges.size());
+     for( int ii = 0 ;  ii != id_blocks.size(); ii++)
+       id_blocks[ii] =  id_ranges[ii].range(block_pos->at(ii));
+ 
+     if ( Tens->exists(id_blocks) ) { 
+       unique_ptr<double[]> block_data = Tens->get_block(id_blocks);
+       std::fill_n(block_data.get(), Tens->get_size(id_blocks), elem_val);
+       Tens->put_block(block_data, id_blocks);
+     }
+   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
+
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tensor(string Tname){
@@ -305,7 +338,6 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
      vector<Index> T_id_blocks(Bagel_id_ranges->size());
      for( int ii = 0 ;  ii != T_id_blocks.size(); ii++)
        T_id_blocks[ii] =  Bagel_id_ranges->at(ii).range(block_pos->at(ii));
-     
   
      unique_ptr<double[]> T_block_data = fulltens->get_block(T_id_blocks);
      block_tensor->put_block(T_block_data, T_id_blocks);
@@ -923,6 +955,7 @@ cout << "Equation_Computer::get_block_info" << endl;
   return tie(data_block_size, data_block_pos);
   
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Equation_Computer::Equation_Computer::Print_Tensor( shared_ptr<Tensor_<double>> Tens ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -966,24 +999,26 @@ void Equation_Computer::Equation_Computer::Print_Tensor( shared_ptr<Tensor_<doub
      for( int ii = 0 ;  ii != id_blocks.size(); ii++)
        id_blocks[ii] = Tens->indexrange()[ii].range(block_pos->at(ii));
     
-     vector<int> id_blocks_sizes(id_blocks.size());
-     shared_ptr<vector<int>> id_blocks_maxs = make_shared<vector<int>>(id_blocks.size());
-     for( int ii = 0 ;  ii != id_blocks.size(); ii++){
-       id_blocks_sizes[ii] = id_blocks[ii].size();
-       id_blocks_maxs->at(ii) = id_blocks[ii].size()-1;
-     }
-    
-     shared_ptr<vector<int>> id_pos = make_shared<vector<int>>(range_lengths->size(),0);
-     int id_block_size = accumulate(id_blocks_sizes.begin(), id_blocks_sizes.end(), 1 , std::multiplies<int>());
-
-     unique_ptr<double[]>    T_data_block = Tens->get_block(id_blocks);
-     shared_ptr<vector<int>> Tens_strides = get_Tens_strides(id_blocks_sizes);
-
-     for ( int jj = 0 ; jj != id_block_size ; jj++) {
-       cout <<  T_data_block[jj] << " "; cout.flush();
-       for ( vector<int>::iterator Titer =  Tens_strides->begin()+1;  Titer != Tens_strides->end(); Titer++ ) {
-         if ( (jj > 0) && ( ( (jj+1) % *Titer) == 0) ){ 
-           cout << endl;
+     if ( Tens->exists(id_blocks) ) { 
+       vector<int> id_blocks_sizes(id_blocks.size());
+       shared_ptr<vector<int>> id_blocks_maxs = make_shared<vector<int>>(id_blocks.size());
+       for( int ii = 0 ;  ii != id_blocks.size(); ii++){
+         id_blocks_sizes[ii] = id_blocks[ii].size();
+         id_blocks_maxs->at(ii) = id_blocks[ii].size()-1;
+       }
+      
+       shared_ptr<vector<int>> id_pos = make_shared<vector<int>>(range_lengths->size(),0);
+       int id_block_size = accumulate(id_blocks_sizes.begin(), id_blocks_sizes.end(), 1 , std::multiplies<int>());
+       
+       unique_ptr<double[]>    T_data_block = Tens->get_block(id_blocks);
+       shared_ptr<vector<int>> Tens_strides = get_Tens_strides(id_blocks_sizes);
+       
+       for ( int jj = 0 ; jj != id_block_size ; jj++) {
+         cout <<  T_data_block[jj] << " "; cout.flush();
+         for ( vector<int>::iterator Titer =  Tens_strides->begin()+1;  Titer != Tens_strides->end(); Titer++ ) {
+           if ( (jj > 0) && ( ( (jj+1) % *Titer) == 0) ){ 
+             cout << endl;
+           }
          }
        }
      }

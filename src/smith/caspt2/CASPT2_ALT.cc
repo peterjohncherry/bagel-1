@@ -155,7 +155,7 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
 
 
   /* ---- H Tensor ----  */
-  pair<double,double>                H_factor = make_pair(1.0,1.0);
+  pair<double,double>                H_factor = make_pair(0.5,0.5);
   shared_ptr<vector<string>>         H_idxs = make_shared<vector<string>>(vector<string> {"H0", "H1", "H2", "H3"});
   shared_ptr<vector<bool>>           H_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false}); 
   shared_ptr<vector<vector<string>>> H_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free,free,free }); 
@@ -267,8 +267,6 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   if ( scalar_results_map->find(Expression_name) != scalar_results_map->end() )  
     cout << "WARNING : You have already calculated this expression....." << Expression_name
     << " = " << scalar_results_map->at(Expression_name) << endl;
-  
-   
 
   shared_ptr<Equation<double>> Expr = Expr_Info->expression_map->at(Expression_name); 
   double result = 0.0;

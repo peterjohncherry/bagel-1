@@ -32,6 +32,8 @@
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
 #include <src/smith/caspt2/CASPT2_ALT.h>
+#include <src/smith/wicktool/equation_computer.h>
+#include <src/smith/wicktool/equation.h>
 
 using namespace std;
 using namespace bagel;
@@ -143,19 +145,36 @@ void CASPT2::CASPT2::solve() {
   Timer timer;
   print_iteration();
 
+
   // <proj_jst|H|0_K> set to sall in ms-caspt2
   for (int istate = 0; istate != nstates_; ++istate) { //K states
     t2all_[istate]->fac(istate) = 0.0;
     sall_[istate]->fac(istate)  = 0.0;
 
     for (int jst=0; jst != nstates_; ++jst) { // <jst|
+    
       if (info_->sssr() && jst != istate)
         continue;
+   
       set_rdm(jst, istate);
+
+      Equation_Computer::Equation_Computer::set_tensor_elems( t2all_[istate]->at(jst) , 1.0  );
+      //Equation_Computer::Equation_Computer::set_tensor_elems( t2 , 1.0  );
+       
+      cout << " t2all_["<< istate << "]->at("<< jst << ")->norm() = " <<   t2all_[istate]->at(jst)->norm(); cout.flush();
+      cout << "        t2all_["<< istate << "]->at("<< jst << ")->rms() = " <<   t2all_[istate]->at(jst)->rms()  <<  endl;
+//      cout << " t2all = " << endl;       Equation_Computer::Equation_Computer::Print_Tensor(t2all_[istate]->at(jst) ); 
+
+      cout << " sall_["<< istate << "]->at("<< jst << ")->norm() = " <<   sall_[istate]->at(jst)->norm()  ; cout.flush();
+      cout << "          sall_["<< istate << "]->at("<< jst << ")->rms() = " <<   sall_[istate]->at(jst)->rms()  <<  endl;
+//      cout << " sall before = " << endl; Equation_Computer::Equation_Computer::Print_Tensor(sall_[istate]->at(jst) ); 
+
       s = sall_[istate]->at(jst);
       shared_ptr<Queue> sourceq = make_sourceq(false, jst == istate);
       while(!sourceq->done())
         sourceq->next_compute();
+    
+//      cout << endl <<  "sall after = " << endl;  Equation_Computer::Equation_Computer::Print_Tensor(sall_[istate]->at(jst) ); 
     }
   }
   cout << " sall_[0]->at(0)->norm() = " <<   sall_[0]->at(0)->norm()  <<  endl;

@@ -59,7 +59,6 @@ class Equation_Computer {
     reorder_block_Tensor(std::string Tname, std::shared_ptr<std::vector<int>> new_order);
 
     //////////////////////////////
-    std::shared_ptr<std::vector<int>> get_Tens_strides ( std::vector<int>& range_sizes) ;
   
     std::shared_ptr<std::vector<int>> get_CTens_strides( std::shared_ptr<std::vector<int>> range_sizes, int ctr1 , int ctr2 ) ;
 
@@ -67,8 +66,12 @@ class Equation_Computer {
 
     std::shared_ptr<Tensor_<double>> get_uniform_Tensor(std::shared_ptr<std::vector<std::string>> unc_ranges, double XX );
 
-    void Print_Tensor(std::shared_ptr<Tensor_<double>> Tens) ;
+    static void Print_Tensor(std::shared_ptr<Tensor_<double>> Tens) ;
 
+    static void set_tensor_elems(std::shared_ptr<Tensor_<double>> Tens, double elem_val );
+
+    static std::shared_ptr<std::vector<int>> get_Tens_strides ( std::vector<int>& range_sizes) ;
+           
     std::vector<int> get_sizes(std::vector<Index>& Idvec) ;
 
     void Calculate_CTP(std::string A_contrib_name );
@@ -127,6 +130,7 @@ class Equation_Computer {
 
     size_t get_block_size(std::shared_ptr<std::vector<Index>> Idvec, int startpos, int endpos) ;
 
+   
     std::shared_ptr<std::vector<int>>
     put_ctr_at_front(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
     

@@ -164,6 +164,18 @@ cout << "GammaGenerator::norm_order" << endl;
   return;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////////////
+//replace this with something more sophisticated....
+///////////////////////////////////////////////////////////////////////////////////////
+bool GammaGenerator::Forbidden_Index( shared_ptr<vector<string>> full_id_ranges, shared_ptr<vector<int>> ids_pos , int position){
+///////////////////////////////////////////////////////////////////////////////////////
+
+    return ( full_id_ranges->at(ids_pos->at(position))!= "act" ||
+             orig_ids->at(ids_pos->at(position))[0]== 'X' ||
+             orig_ids->at(ids_pos->at(position))[0]== 'Y'  ); 
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::Contract_remaining_indexes(int kk){
 //////////////////////////////////////////////////////////////////////////////////////  
@@ -186,7 +198,7 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
 
   int start_pos = 0;
   while( start_pos!= ids_pos->size()  ){
-    if (full_id_ranges->at(ids_pos->at(start_pos))!= "act")
+    if ( Forbidden_Index( full_id_ranges, ids_pos, start_pos)  )
       break;
     start_pos++;
   }
@@ -196,7 +208,7 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
   for ( int jj = start_pos;  jj != ids_pos->size() ; jj++){
     int ii = 0;
     string rng = full_id_ranges->at(ids_pos->at(jj));
-    if (rng != "act" ) {
+    if ( Forbidden_Index( full_id_ranges, ids_pos, jj ) ) {
       do  {
         if( jj != start_pos  &&  rng == diff_rngs[ii] ){
           if ( full_aops->at(ids_pos->at(jj)) ){
