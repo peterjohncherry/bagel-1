@@ -63,7 +63,10 @@ Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_n
      Print_Tensor(new_gamma_tensor);
   }
   cout << "out of loop" << endl;
- 
+   
+  //Hack, fix this and use map instead
+  reverse(gamma_tensors->begin(), gamma_tensors->end() ) ;
+  
   return gamma_tensors;
 }
 

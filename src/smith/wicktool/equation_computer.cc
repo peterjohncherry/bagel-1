@@ -151,10 +151,6 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
          do { 
            int pos   = inner_product( fvec2->begin(), fvec2->end(), CTens_strides->begin(), 0); 
            int inpos = inner_product( fvec2->begin(), fvec2->end(), Tens_strides->begin(),  0); 
-           int total=0;
-
-           for ( int xx = inpos ; xx != inpos+inner_stride ; xx++ ) 
-             total+=CTP_data_block_old[xx];
 
            blas::ax_plus_y_n(1.0, CTP_data_block_old.get()+inpos, inner_stride, CTP_data_block_new.get()+pos);
 
@@ -169,6 +165,131 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
   cout << "CTP_data_out->rms()  = " + Tout_name + "->rms() =" << CTP_data_out->rms() << endl;
 
   return CTP_data_out;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Will contract over all the indexes given in the conctracted indexes list. 
+//Note these are indexes relative to the input tensor, not the original Tensor from which the CtrTensorPart was obtained.
+//In principal this could replace the contract_same_tensor routine, as there's a lot of duplicated code
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<Tensor_<double>>
+Equation_Computer::Equation_Computer::contract_on_same_tensor( vector<int>& contracted_index_positions, std::shared_ptr<Tensor_<double>> Tens_in ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Equation_Computer::Equation_Computer::get_trace_tensor" << endl;
+
+   if ( contracted_index_positions.size()-  Tens_in->indexrange().size() )  {
+     cout << "contracted_index_positions = [ "; cout.flush();  for ( int pos : contracted_index_positions ) {cout << pos << " " ; } cout << " ] " << endl;
+     cout << "contracted_index_positions.size()  = "<<  contracted_index_positions.size() << endl;
+     cout << "Tens_in->indexrange().size() = " << Tens_in->indexrange().size()  <<  endl;
+     cout << "trying to contract more indexes than there are in the tensor!" << endl;
+     assert(false);
+   }
+
+   int num_ctrs = contracted_index_positions.size();
+   // get original uncontracted ranges and positions of Ctrs relative to the current tensor
+   vector<IndexRange> unc_ranges_old = Tens_in->indexrange(); 
+   vector<IndexRange> unc_ranges_new(unc_ranges_old.size() - num_ctrs);  
+   vector<int> unc_pos_new(unc_ranges_old.size() - num_ctrs);  
+
+   vector<bool> unc_get(Tens_in->indexrange().size(), true);
+   for( int ii = 0; ii !=contracted_index_positions.size(); ii++ )
+      unc_get[contracted_index_positions[ii]] = false;
+
+   for ( int ii = 0 ; ii != unc_get.size(); ii++  )
+     if (unc_get[ii]) {
+       unc_ranges_new[ii] = unc_ranges_old[ii];
+       unc_pos_new[ii] = ii;
+     }
+
+   shared_ptr<Tensor_<double>> Tens_out = make_shared<Tensor_<double>>(unc_ranges_new);
+   Tens_out->allocate();
+   Tens_out->zero();
+
+   // loops over index blocks with same ctr
+   int num_ctr_blocks = unc_ranges_old[contracted_index_positions[0]].range().size();
+   for (int ii = 0 ; ii != num_ctr_blocks ; ii++){ 
+     shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(unc_ranges_old.size(),0);  
+     shared_ptr<vector<int>> mins = make_shared<vector<int>>(unc_ranges_old.size(),0);  
+     shared_ptr<vector<int>> maxs = make_shared<vector<int>>(unc_ranges_old.size());  
+     for ( int jj = 0 ; jj != unc_ranges_old.size() ; jj++ ) 
+        maxs->at(jj) = unc_ranges_old[jj].range().size()-1;
+ 
+     for ( int ctr_idx_pos : contracted_index_positions ) {
+        mins->at(ctr_idx_pos)       = ii;
+        maxs->at(ctr_idx_pos)       = ii;
+        block_pos->at(ctr_idx_pos)  = ii;
+     }
+     
+     do {
+       
+       vector<Index> Tens_id_blocks_old = get_rng_blocks(block_pos, unc_ranges_old); 
+       vector<Index> Tens_id_blocks_new(Tens_id_blocks_old.size()- num_ctrs );
+       for (int kk = 0 ; kk != unc_pos_new.size(); kk++)       
+         Tens_id_blocks_new[kk] = Tens_id_blocks_old[unc_pos_new[kk]];
+    
+ 
+       vector<int> range_sizes = get_sizes(Tens_id_blocks_old);
+       shared_ptr<vector<int>> Tens_strides = get_Tens_strides(range_sizes);
+   
+       // To save time,  the contracted parts are copied in blocks i.e. (i, j, k, k, : , : ) 
+       // Inner stride is the size of the data block to the right of the contracted indexes
+       int inner_stride = Tens_strides->at(0); 
+       int innermost_ctr = contracted_index_positions.back() ;
+       for ( int qq = 0 ; qq!=contracted_index_positions.size() ; qq++ ){
+         if ( (inner_stride) > Tens_strides->at(contracted_index_positions[qq])){
+           inner_stride = Tens_strides->at(contracted_index_positions[qq]);
+           innermost_ctr = contracted_index_positions[qq];
+         }
+       }
+
+       cout << "inner_stride  = " << inner_stride << endl;
+       cout << "innermost_ctr = " << innermost_ctr << endl;
+
+       shared_ptr<vector<int>> mins2 = make_shared<vector<int>>(maxs->size(), 0); 
+       shared_ptr<vector<int>> fvec2 = make_shared<vector<int>>(*mins); 
+       shared_ptr<vector<int>> maxs2 = make_shared<vector<int>>(range_sizes.size(),0);
+       // note: copying inner block as vector, so want max = min = 0 for those indexes  
+       // looks backwards, but is countered by use of f2b fvec routine
+       for (int jj = innermost_ctr ; jj != maxs2->size(); jj++) 
+         maxs2->at(jj) = range_sizes[jj]-1; 
+
+       shared_ptr<vector<int>> CTens_strides = get_CTens_strides( range_sizes, contracted_index_positions );
+
+       int ctr_block_len = range_sizes[contracted_index_positions.front()];          
+       int out_block_size = 1;
+       for ( int pos : contracted_index_positions) 
+          out_block_size *= range_sizes[pos];
+
+       unique_ptr<double[]>      Tens_data_block_old = Tens_in->get_block(Tens_id_blocks_old);
+       std::unique_ptr<double[]> Tens_data_block_new(new double[out_block_size]);
+       std::fill_n(Tens_data_block_new.get(), out_block_size, 0.0);
+       
+       for ( int jj = 0 ; jj != ctr_block_len ; jj++ ) {
+
+         fill(fvec2->begin(), fvec2->end(), 0);
+         for ( int ctr_idx_pos : contracted_index_positions ) {
+           maxs2->at(ctr_idx_pos) = jj; 
+           mins2->at(ctr_idx_pos) = jj;  
+           fvec2->at(ctr_idx_pos) = jj; 
+         }
+
+         //within index block, loop through data copying chunks where contracted_ctrs are equal
+         do { 
+           int pos   = inner_product( fvec2->begin(), fvec2->end(), CTens_strides->begin(), 0); 
+           int inpos = inner_product( fvec2->begin(), fvec2->end(), Tens_strides->begin(),  0); 
+           cout << "pos = "<< pos <<   endl;
+           cout << "inpos = "<< pos <<   endl;
+            
+           blas::ax_plus_y_n(1.0, Tens_data_block_old.get()+inpos, inner_stride, Tens_data_block_new.get()+pos);
+  
+      
+         } while (fvec_cycle_skipper_f2b(fvec2, maxs2, mins2));
+       }
+ 
+       Tens_out->add_block( Tens_data_block_new, Tens_id_blocks_new );
+     } while (fvec_cycle_skipper(block_pos, maxs, mins ));
+  } 
+
+  return Tens_out;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -466,6 +587,31 @@ shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_CTens_strides(
 
   return CTens_strides;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Gets the vector of strides of the tensor for which ctr_idxs_pos are contracted from the 
+//range sizes of the tensor where they are not contracted.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_CTens_strides( vector<int>& range_sizes, vector<int>& ctr_idxs_pos ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "get_CTens_strides " <<  endl;
+
+  shared_ptr<vector<int>>  CTens_strides = make_shared<vector<int>>(range_sizes.size(), 1); 
+  vector<bool> is_unc(ctr_idxs_pos.size(), false);
+  for ( int pos : ctr_idxs_pos)  
+    is_unc[pos] = false;
+
+  for ( int ii = 0  ; ii!= range_sizes.size(); ii++ ) 
+    for ( int jj = ii-1  ; jj!= -1; jj-- ) 
+      if (is_unc[jj]) 
+        CTens_strides->at(ii) *= range_sizes[jj];
+  
+  for ( int ii : ctr_idxs_pos ) 
+    CTens_strides->at(ii) = 0 ; 
+
+  return CTens_strides;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_CTens_strides( shared_ptr<vector<int>> range_sizes, int ctr1 , int ctr2 ) {
@@ -1027,9 +1173,32 @@ void Equation_Computer::Equation_Computer::Print_Tensor( shared_ptr<Tensor_<doub
  
    return ;
 }
+#ifndef NDEBUG
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Checks all the index ranges in idx_pos have the same length and number of index blocks
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::check_contracted_indexes( std::vector<IndexRange>&  idx_block, std::vector<int>& idx_pos ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  size_t block_len = idx_block[idx_pos.front()].size();
+  for ( int ii = 1; ii != idx_pos.size() ; ii++ ) 
+    if (block_len != idx_block[idx_pos[ii]].size()){
+      cout << "ranges of contracted indexes " << idx_pos[ii] << " and " <<  idx_pos[ii-1]  << "have different lengths" << endl;
+      assert(block_len == idx_block[idx_pos[ii]].size());
+    }
 
+  block_len = idx_block[idx_pos.front()].range().size();
+  for ( int ii = 1; ii != idx_pos.size() ; ii++ ) 
+    if (block_len != idx_block[idx_pos[ii]].range().size()){
+      cout << "ranges of contracted indexes " << idx_pos[ii] << " and " <<  idx_pos[ii-1]  << "have same lengths but different number of index blocks";
+      assert(block_len == idx_block[idx_pos[ii]].range().size());
+     }
 
+  return;
+
+}
+
+#endif
 #endif
  // int n1 = norb_;  
  // int n2 = norb_*norb_;  

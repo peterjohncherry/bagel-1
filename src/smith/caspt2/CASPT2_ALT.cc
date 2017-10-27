@@ -85,7 +85,6 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   Expr_Info = make_shared<Expression_Info<double>>(norb_, nelea_, neleb_, true);
   Expr_Info_map = Expr_Info->expression_map;
   
-  
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -302,9 +301,19 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
 
 
   shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gammas( 0, 0, Gname_vec[0] );
-  std::reverse(gamma_tensors->begin(),gamma_tensors->end());
   cout << "returned from get_gammas in tact " << endl;
   
+  cout << "contracting gammas " << endl;
+  for (shared_ptr<Tensor_<double>>  gamma_tens : *gamma_tensors) {
+    vector<int> index_pos(gamma_tens->indexrange().size());
+    iota(index_pos.begin() , index_pos.end(), 0 );
+    shared_ptr<Tensor_<double>> contracted_gamma = Expr_computer->contract_on_same_tensor(index_pos, gamma_tens);
+    cout << "contracted_gamma->rms()        = " << contracted_gamma->rms() << endl;
+    cout << "contracted_gamma->norm()       = " << contracted_gamma->norm() << endl;
+    cout << "contracted_gamma->rank()       = " << contracted_gamma->rank() << endl;
+    cout << "contracted_gamma->size_alloc() = " << contracted_gamma->size_alloc() << endl;
+  }
+ 
   cout << "Gamma names = [ " ; cout.flush();
   for ( int ii = 0 ; ii != Gname_vec.size(); ii++ ) {
    cout << Gname_vec[ii] << " " ; cout.flush();
@@ -366,10 +375,10 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   
  
   if ( Gamma_name != "ID" ) {
-    cout << " gamma_tensors->at(ii)->rms()  = " << gamma_tensors->at(ii)->rms() << endl;
-    cout << " gamma_tensors->at(ii)->norm() = " << gamma_tensors->at(ii)->norm() << endl;
+    cout << " gamma_tensors->at("<<ii<<")->rms()  = " << gamma_tensors->at(ii)->rms() << endl;
+    cout << " gamma_tensors->at("<<ii<<")->norm() = " << gamma_tensors->at(ii)->norm() << endl;
     cout << " A_combined_data->norm()       = " << A_combined_data->norm() << endl;
-    cout << " gamma_tensors->at(ii)->size_alloc() = " << gamma_tensors->at(ii)->size_alloc() << endl;
+    cout << " gamma_tensors->at("<<ii<<")->size_alloc() = " << gamma_tensors->at(ii)->size_alloc() << endl;
     cout << " A_combined_data->size_alloc()       = " << A_combined_data->size_alloc() << endl;
     double bob = A_combined_data->dot_product(gamma_tensors->at(ii));
     cout <<  "A_combined_data->dot_product(gamma_tensors->at("<<ii<<")) = " <<  bob  << endl;

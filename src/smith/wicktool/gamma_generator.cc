@@ -192,7 +192,7 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
   int my_sign = gamma_vec->at(kk)->my_sign;
   
-  cout << "[ " ; cout.flush();  for (int  pos : *ids_pos ) { cout << "{" << orig_ids->at(pos) << "," << full_id_ranges->at(pos) << "} "  ;cout.flush(); } cout << "]" << endl;
+//  cout << "[ " ; cout.flush();  for (int  pos : *ids_pos ) { cout << "{" << orig_ids->at(pos) << "," << full_id_ranges->at(pos) << "} "  ;cout.flush(); } cout << "]" << endl;
 
   //vector of different index ranges, and vectors containing list of index positions
   //associated with each of these ranges

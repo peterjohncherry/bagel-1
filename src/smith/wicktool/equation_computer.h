@@ -45,8 +45,13 @@ class Equation_Computer {
     std::shared_ptr<Tensor_<double>>
     get_block_Tensor(std::string Tname);
 
+    //only for two contracted indexes
     std::shared_ptr<Tensor_<double>>
     contract_on_same_tensor( std::pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) ;
+
+    //for an arbitrary number of contracted indexes
+    std::shared_ptr<Tensor_<double>>
+    contract_on_same_tensor( std::vector<int>& contracted_index_positions, std::shared_ptr<Tensor_<double>> Tens_in) ;
 
     std::shared_ptr<Tensor_<double>>
     contract_different_tensors(std::pair<int,int> ctr_todo, std::string T1name, std::string T2name, std::string Tout_name);
@@ -63,6 +68,8 @@ class Equation_Computer {
     std::shared_ptr<std::vector<int>> get_CTens_strides( std::shared_ptr<std::vector<int>> range_sizes, int ctr1 , int ctr2 ) ;
 
     std::shared_ptr<std::vector<int>> get_CTens_strides( std::vector<int>& range_sizes, int ctr1 , int ctr2 ) ;
+
+    std::shared_ptr<std::vector<int>> get_CTens_strides( std::vector<int>& range_sizes, std::vector<int>& ctr_idxs_pos );
 
     std::shared_ptr<Tensor_<double>> get_uniform_Tensor(std::shared_ptr<std::vector<std::string>> unc_ranges, double XX );
 
@@ -90,7 +97,6 @@ class Equation_Computer {
     std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>>
     Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
 
-    
     std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>>
     Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str, std::shared_ptr<std::vector<int>> unc_pos);
 
@@ -99,7 +105,6 @@ class Equation_Computer {
 
     void
     build_index_conversion_map(std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<IndexRange>>>> range_conversion_pairs );
-
     std::shared_ptr<std::vector<Index>>
     get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> old_ids) ;
    
@@ -111,6 +116,12 @@ class Equation_Computer {
   
     std::vector<Index>
     get_rng_blocks_raw(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr< IndexRange>>> old_ids) ;
+
+    std::shared_ptr<std::vector<int>>
+    get_num_index_blocks_vec(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
+ 
+    std::vector<int>
+    get_num_index_blocks_vec(std::vector<IndexRange>& rngvec);
 
     std::shared_ptr<std::vector<size_t>>
     get_sizes(std::shared_ptr<std::vector<Index>> Idvec);
@@ -126,10 +137,9 @@ class Equation_Computer {
 
     size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
 
-    size_t get_unc_block_size( std::vector<Index>& idvec, std::pair<int,int> ctr ) ;
-
     size_t get_block_size(std::shared_ptr<std::vector<Index>> Idvec, int startpos, int endpos) ;
-
+    
+    size_t get_unc_block_size( std::vector<Index>& idvec, std::pair<int,int> ctr ) ;
    
     std::shared_ptr<std::vector<int>>
     put_ctr_at_front(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
@@ -140,12 +150,6 @@ class Equation_Computer {
     std::shared_ptr<Tensor_<double>>
     find_or_get_CTP_data(std::string CTP_name);
 
-    std::shared_ptr<std::vector<int>>
-    get_num_index_blocks_vec(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
- 
-    std::vector<int>
-    get_num_index_blocks_vec(std::vector<IndexRange>& rngvec);
-   
     std::pair<int,int>
     relativize_ctr_positions(std::pair <int,int> ctr_todo, std::shared_ptr<CtrTensorPart<double>>  CTP1,
                                                            std::shared_ptr<CtrTensorPart<double>>  CTP2);
@@ -154,9 +158,6 @@ class Equation_Computer {
     reorder_tensor_data( const DataType* orig_data, std::shared_ptr<std::vector<int>>  new_order_vec,
                          std::shared_ptr<std::vector<Index>> orig_index_blocks ) ;
     
-    template<int N> 
-    std::pair<std::vector<int>, std::pair<double,bool>> find_permutation(const KTag<N>& tag) const ;
-
     std::unique_ptr<double[]> get_block_of_data( double* data_ptr, std::shared_ptr<std::vector<IndexRange>> id_ranges, 
                                                               std::shared_ptr<std::vector<int>> block_pos) ;
 
@@ -177,6 +178,14 @@ class Equation_Computer {
     void sigma_2a1(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
 
     void sigma_2a2(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
+
+#ifndef NDEBUG
+   
+    void check_contracted_indexes( std::vector<IndexRange>&  idx_block, std::vector<int>& contracted_index_positions );
+
+#endif  
+
+
 };
 }
 }

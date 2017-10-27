@@ -83,10 +83,10 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   for (int i = 0; i != nstates_; ++i) {
     sall_.push_back(cas.sall_[i]->copy());
   }
-  h1_ = cas.h1_;
-  f1_ = cas.f1_;
-  v2_ = cas.v2_;
-  H_2el_ =  cas.H_2el_;
+  h1_ = cas.h1_; Equation_Computer::Equation_Computer::set_tensor_elems( h1_ , 1.0  );
+  f1_ = cas.f1_; Equation_Computer::Equation_Computer::set_tensor_elems( f1_ , 1.0  );
+  v2_ = cas.v2_; Equation_Computer::Equation_Computer::set_tensor_elems( v2_ , 1.0  );
+  H_2el_ =  cas.H_2el_; Equation_Computer::Equation_Computer::set_tensor_elems( v2_ , 1.0  );
 
   rdm0all_ = cas.rdm0all_;
   rdm1all_ = cas.rdm1all_;
@@ -94,9 +94,7 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   rdm3all_ = cas.rdm3all_;
   rdm4all_ = cas.rdm4all_;
 
-
 }
-
 
 void CASPT2::CASPT2::do_rdm_deriv(double factor) {
   Timer timer(1);
