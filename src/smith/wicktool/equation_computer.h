@@ -179,6 +179,15 @@ class Equation_Computer {
 
     void sigma_2a2(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
 
+    void get_gamma_tensor( int MM , int NN, std::string gamma_name,
+                           std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> gamma_data_map);
+
+    void sigma_2a1_blocked( std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::pair<int,int> irange,
+                            std::pair<int,int> jrange, int norb) const ;
+    
+    void sigma_2a2_blocked( std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::pair<int,int> irange,
+                            std::pair<int,int> jrange, int norb) const ;
+
 #ifndef NDEBUG
    
     void check_contracted_indexes( std::vector<IndexRange>&  idx_block, std::vector<int>& contracted_index_positions );

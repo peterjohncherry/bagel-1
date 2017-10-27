@@ -287,4 +287,118 @@ void Equation_Computer::Equation_Computer::sigma_2a2(shared_ptr<const Civec> cve
   }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Modified version of that in src/ci/fci/knowles_compute.cc         
+// Has ranges of orbital indexes to make it adapated for Tensor_ index block based routines.
+//////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::sigma_2a1_blocked(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma,
+                                                             pair<int,int> irange, pair<int,int> jrange, int norb) const {
+//////////////////////////////////////////////////////////////////////////////////////////////
+  //cout << "sigma_2a1" << endl;
+  const int lenb = sigma->lenb();
+  const double* const source_base = cvec->data();
+
+  for (int ii = irange.first; ii != irange.second+1; ++ii) {
+    for (int jj = jrange.first; jj != jrange.second+1; ++jj) {
+      double* const target_base = sigma->data(ii*norb+jj)->data();
+
+      for (auto& iter : cvec->det()->phia(ii*norb+jj)) {
+        const double sign = static_cast<double>(iter.sign);
+        double* const target_array = target_base + iter.source*lenb;
+        blas::ax_plus_y_n(sign, source_base + iter.target*lenb, lenb, target_array);
+      }
+    }
+  }
+  return;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////
+// Modified version of that in src/ci/fci/knowles_compute.cc         
+// Has ranges of orbital indexes to make it adapated for Tensor_ index block based routines.
+// I'm sure there was a version which used transposition of the civector; this looks slow.
+///////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::sigma_2a2_blocked(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma,
+                                                             pair<int,int> irange, pair<int,int> jrange, int norb) const {
+///////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "sigma_2a2" << endl;
+  const int lena = sigma->lena();
+
+  for (int adet_pos = 0; adet_pos < lena; ++adet_pos) {
+    const double* const source_array0 = cvec->element_ptr(0, adet_pos);
+
+    for (int ii = irange.first; ii != irange.second+1; ++ii) {
+      for (int jj = jrange.first; jj != jrange.second+1; ++jj) {
+        double* const target_array0 = sigma->data(ii*norb+jj)->element_ptr(0, adet_pos);
+
+        for (auto& iter : cvec->det()->phib(ii*norb+jj)) {
+          const double sign = static_cast<double>(iter.sign);
+          target_array0[iter.source] += sign * source_array0[iter.target];
+        }
+      }
+    }    
+  }      
+}        
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Gets the gammas in tensor format. 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void
+Equation_Computer::Equation_Computer::get_gamma_tensor( int MM , int NN, string gamma_name,
+                                                        shared_ptr<map<string, shared_ptr<Tensor_<double>>>> gamma_data_map){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Equation_Computer::Equation_Computer::get_gammas"  << endl;
+  cout << "Gamma name = " << gamma_name << endl;
+
+  shared_ptr<vector<string>> gamma_ranges_str  = GammaMap->at(gamma_name)->id_ranges;
+
+  // Gets list of gammas which are needed by progressive truncation of the gamma_range vector
+  // e.g. [a,a,a,a,a,a] --> [a,a,a,a] --> [a,a]
+  vector<shared_ptr<vector<IndexRange>>> gamma_ranges =  vector<shared_ptr<vector<IndexRange>>>(gamma_ranges_str->size()/2);
+  for (int ii = 1 ; ii !=(gamma_ranges.size()+2)/2; ii++ ){ 
+    shared_ptr<vector<string>> gamma_ranges_str_tmp = make_shared<vector<string>>(gamma_ranges_str->begin(), gamma_ranges_str->begin()+ii*2);
+    gamma_ranges[ii] = Get_Bagel_IndexRanges( gamma_ranges_str_tmp); 
+  } 
+  
+  // build gamma tensor
+  auto gamma_tensors = make_shared<vector<shared_ptr<Tensor_<double>>>>( gamma_ranges.size());
+  for ( int ii = 0; ii != gamma_ranges.size();  ii++ ) {
+ 
+     shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(gamma_ranges[ii]->size() ); 
+     for (int jj = 0 ; jj != gamma_ranges[ii]->size() ; jj++ )
+       range_lengths->at(jj) = gamma_ranges[ii]->at(jj).range().size()-1; 
+     
+     shared_ptr<Tensor_<double>> new_gamma_tensor= make_shared<Tensor_<double>>(*(gamma_ranges[ii]));
+     new_gamma_tensor->allocate();
+     new_gamma_tensor->zero();
+     
+     shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
+     shared_ptr<vector<int>> mins = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
+
+     do {
+       
+       vector<Index> gamma_id_blocks(gamma_ranges[ii]->size());
+       for( int jj = 0 ;  jj != gamma_id_blocks.size(); jj++)
+         gamma_id_blocks[jj] =  gamma_ranges[ii]->at(jj).range(block_pos->at(jj));
+
+       vector<int> range_sizes = get_sizes(gamma_id_blocks);
+       shared_ptr<vector<int>> gamma_tens_strides = get_Tens_strides(range_sizes);  
+       int gamma_block_size = accumulate( range_sizes.begin(), range_sizes.end(), 1, std::multiplies<int>() );
+       int gamma_block_pos = inner_product( block_pos->begin(), block_pos->end(), gamma_tens_strides->begin(),  0); 
+
+       unique_ptr<double[]> gamma_data_block(new double[gamma_block_size])  ;
+       std::fill_n(gamma_data_block.get(), gamma_block_size, 0.0);
+
+       new_gamma_tensor->put_block( gamma_data_block, gamma_id_blocks);
+     
+     } while (fvec_cycle(block_pos, range_lengths, mins ));
+     gamma_tensors->at(ii)  = new_gamma_tensor;
+
+     cout << "Printing Gamma of order " << gamma_ranges[ii]->size()/2  << endl;
+     Print_Tensor(new_gamma_tensor);
+  }
+  cout << "out of gamma loop" << endl;
+  
+  return;
+}
+
+
 #endif

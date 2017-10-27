@@ -305,21 +305,32 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   
   cout << "contracting gammas " << endl;
   for (shared_ptr<Tensor_<double>>  gamma_tens : *gamma_tensors) {
+//    Expr_computer->set_tensor_elems( gamma_tens, 1.0 );
     vector<int> index_pos(gamma_tens->indexrange().size());
     iota(index_pos.begin() , index_pos.end(), 0 );
     shared_ptr<Tensor_<double>> contracted_gamma = Expr_computer->contract_on_same_tensor(index_pos, gamma_tens);
     cout << "contracted_gamma->rms()        = " << contracted_gamma->rms() << endl;
     cout << "contracted_gamma->norm()       = " << contracted_gamma->norm() << endl;
-    cout << "contracted_gamma->rank()       = " << contracted_gamma->rank() << endl;
-    cout << "contracted_gamma->size_alloc() = " << contracted_gamma->size_alloc() << endl;
+    cout << "contracted_gamma->rank()       = " << contracted_gamma->rank() <<       "    orig_gamma->rank         = "<< gamma_tens->rank() << endl;
+    cout << "contracted_gamma->size_alloc() = " << contracted_gamma->size_alloc() << "    orig_gamma->size_alloc() = "<< gamma_tens->size_alloc() <<  endl;
   }
  
-  cout << "Gamma names = [ " ; cout.flush();
-  for ( int ii = 0 ; ii != Gname_vec.size(); ii++ ) {
-   cout << Gname_vec[ii] << " " ; cout.flush();
-  }
-  cout << " ] " << endl;
+  cout << "Gamma names = [ " ; cout.flush();   for ( int ii = 0 ; ii != Gname_vec.size(); ii++ ) { cout << Gname_vec[ii] << " " ; cout.flush(); } cout << " ] " << endl;
 
+  cout << "contracting gammas " << endl;
+  shared_ptr<Tensor_<double>>  gamma6 =  gamma_tensors->at(0); 
+  shared_ptr<Tensor_<double>>  gamma2 =  gamma_tensors->at(2); 
+  vector<int> index_pos(gamma6->indexrange().size());
+
+  iota(index_pos.begin() , index_pos.end()-2, 0 );
+  shared_ptr<Tensor_<double>> contracted_gamma = Expr_computer->contract_on_same_tensor(index_pos, gamma6);
+  contracted_gamma->ax_plus_y( (-1/625), gamma2 );
+
+  cout << "contracted_gamma->rms()        = " << contracted_gamma->rms() << endl;
+  cout << "contracted_gamma->norm()       = " << contracted_gamma->norm() << endl;
+  cout << "contracted_gamma->rank()       = " << contracted_gamma->rank() <<       "    orig_gamma->rank         = "<< gamma6->rank() << endl;
+  cout << "contracted_gamma->size_alloc() = " << contracted_gamma->size_alloc() << "    orig_gamma->size_alloc() = "<< gamma6->size_alloc() <<  endl;
+ 
   for ( int ii = 0 ; ii != Gname_vec.size(); ii++ ) {
   
     string Gamma_name = Gname_vec[ii];
