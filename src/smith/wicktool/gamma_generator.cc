@@ -198,10 +198,9 @@ cout << "GammaGenerator::norm_order" << endl;
   return;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////
 // Replace this with something more sophisticated which can account
-// for different contraints
+// for different constraints
 ///////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::Forbidden_Index( shared_ptr<vector<string>> full_id_ranges, int position){
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -217,7 +216,6 @@ void GammaGenerator::Contract_remaining_indexes(int kk){
 cout << "GammaGenerator::Contract_remaining_indexes" << endl; 
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
-cout << "GammaGenerator::Contract_remaining_indexes" << endl; 
 
   shared_ptr<vector<bool>> full_aops = gamma_vec->at(kk)->full_aops;        
   shared_ptr<vector<int>>  ids_pos = gamma_vec->at(kk)->ids_pos;        

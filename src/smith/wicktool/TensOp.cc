@@ -101,12 +101,12 @@ cout << "TensOp::generate_ranges" <<   endl;
          break;
        }
        if(kk == ii-1){
-         orb_ranges->emplace(possible_ranges->at(ii), make_pair(1,1) );
+       orb_ranges->emplace(possible_ranges->at(ii), make_pair(1,1) );
          break;
        }
-    } 
+     } 
   }
-cout << "TensOp::generate_ranges" <<   endl;
+  cout << "TensOp::generate_ranges" <<   endl;
   return;
 }
 

@@ -301,40 +301,53 @@ Equation_Computer::Equation_Computer::get_gamma_tensor( int MM , int NN, string 
  
   } else { 
 
-    shared_ptr<vector<IndexRange>> gamma_ranges = Get_Bagel_IndexRanges( GammaMap->at(gamma_name)->id_ranges ); 
+    //for now just use specialized routines, this must be made generic at some point
     
-    // build gamma tensor
-    shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(gamma_ranges->size() ); 
-    for (int jj = 0 ; jj != gamma_ranges->size() ; jj++ )
-      range_lengths->at(jj) = gamma_ranges->at(jj).range().size()-1; 
-    
-    shared_ptr<Tensor_<double>> new_gamma_tensor= make_shared<Tensor_<double>>(*(gamma_ranges));
-    new_gamma_tensor->allocate();
-    new_gamma_tensor->zero();
-    
-    shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(gamma_ranges->size(),0);  
-    shared_ptr<vector<int>> mins = make_shared<vector<int>>(gamma_ranges->size(),0);  
-    
-    do {
-      
-      vector<Index> gamma_id_blocks = *(get_rng_blocks( block_pos, *gamma_ranges));
-    
-      vector<int> range_sizes = get_sizes(gamma_id_blocks);
-      shared_ptr<vector<int>> gamma_tens_strides = get_Tens_strides(range_sizes);  
-      int gamma_block_size = accumulate( range_sizes.begin(), range_sizes.end(), 1, std::multiplies<int>() );
-      int gamma_block_pos = inner_product( block_pos->begin(), block_pos->end(), gamma_tens_strides->begin(),  0); 
-    
-      unique_ptr<double[]> gamma_data_block(new double[gamma_block_size])  ;
-      std::fill_n(gamma_data_block.get(), gamma_block_size, 0.0);
-   
-      new_gamma_tensor->put_block( gamma_data_block, gamma_id_blocks);
-    
-    } while (fvec_cycle(block_pos, range_lengths, mins ));
-    
-    cout << "Printing Gamma of order " << gamma_ranges->size()/2  << endl;
-    Print_Tensor(new_gamma_tensor);
-    
-    cout << "out of gamma loop" << endl;
+    if (GammaMap->at(gamma_name)->id_ranges->size() == 2 ) { 
+       //get rdm 2
+    } else if (GammaMap->at(gamma_name)->id_ranges->size() == 4 ) { 
+       //get rdm 4
+    } else if (GammaMap->at(gamma_name)->id_ranges->size() == 4 ) { 
+       //get rdm 6
+    } else if (GammaMap->at(gamma_name)->id_ranges->size() == 8 ) { 
+       //get rdm 8
+    }    
+
+ //   // build gamma tensor
+ //   shared_ptr<vector<IndexRange>> gamma_ranges = Get_Bagel_IndexRanges( GammaMap->at(gamma_name)->id_ranges ); 
+ //   shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(gamma_ranges->size() ); 
+ //   for (int jj = 0 ; jj != gamma_ranges->size() ; jj++ )
+ //     range_lengths->at(jj) = gamma_ranges->at(jj).range().size()-1; 
+ //  
+ //
+ //
+ //
+ //   shared_ptr<Tensor_<double>> new_gamma_tensor= make_shared<Tensor_<double>>(*(gamma_ranges));
+ //   new_gamma_tensor->allocate();
+ //   new_gamma_tensor->zero();
+ //   
+ //   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(gamma_ranges->size(),0);  
+ //   shared_ptr<vector<int>> mins = make_shared<vector<int>>(gamma_ranges->size(),0);  
+ //   
+ //   do {
+ //     
+ //     vector<Index> gamma_id_blocks = *(get_rng_blocks( block_pos, *gamma_ranges));
+ //     vector<int> range_sizes = get_sizes(gamma_id_blocks);
+ //     shared_ptr<vector<int>> gamma_tens_strides = get_Tens_strides(range_sizes);  
+ //     int gamma_block_size = accumulate( range_sizes.begin(), range_sizes.end(), 1, std::multiplies<int>() );
+ //     int gamma_block_pos = inner_product( block_pos->begin(), block_pos->end(), gamma_tens_strides->begin(),  0); 
+ //   
+ //     unique_ptr<double[]> gamma_data_block(new double[gamma_block_size])  ;
+ //     std::fill_n(gamma_data_block.get(), gamma_block_size, 0.0);
+ //  
+ //     new_gamma_tensor->put_block( gamma_data_block, gamma_id_blocks);
+ //   
+ //   } while (fvec_cycle(block_pos, range_lengths, mins ));
+ //   
+ //   cout << "Printing Gamma of order " << gamma_ranges->size()/2  << endl;
+ //   Print_Tensor(new_gamma_tensor);
+ //   
+ //   cout << "out of gamma loop" << endl;
   }
   
   return;

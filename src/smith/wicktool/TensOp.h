@@ -31,6 +31,8 @@ class TensOp {
      std::shared_ptr<std::vector<int>> kill_ops;
      std::shared_ptr< std::map< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > > orb_ranges;
      std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DType>> > > CTP_map ;
+   
+     std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>> all_range_combs;
 
      int factor;
      void get_ctrs_pos() ;

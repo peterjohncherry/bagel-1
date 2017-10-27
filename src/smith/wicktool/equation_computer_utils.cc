@@ -380,18 +380,18 @@ void Equation_Computer::Equation_Computer::check_contracted_indexes( std::vector
  // int n4 = n3*norb_;  
  // int n5 = n4*norb_;  
  //                       
-//  cout << endl<< "gamma3 " << endl;
-//  for (int i = 0; i != norb_; ++i) 
-//    for (int j = 0; j != norb_; ++j) 
-//      for (int k = 0; k != norb_; ++k) 
-//        for (int l = 0; l != norb_; ++l) 
-//          for (int m = 0; m != norb_; ++m) {
-//            cout << endl << i << " " << j << " "<<  k << " " << l << " " << m << "  ";
-//            for (int n = 0; n != norb_; ++n){
-//              cout << *(gamma3->data()+(i*n5 + j*n4 + k*n3 + l*n2 + m*n1 +n )) << " ";
-//             }
-//          }
-
+ // cout << endl<< "gamma3 " << endl;
+ // for (int i = 0; i != norb_; ++i) 
+ //   for (int j = 0; j != norb_; ++j) 
+ //     for (int k = 0; k != norb_; ++k) 
+ //       for (int l = 0; l != norb_; ++l) 
+ //         for (int m = 0; m != norb_; ++m) {
+ //           cout << endl << i << " " << j << " "<<  k << " " << l << " " << m << "  ";
+ //           for (int n = 0; n != norb_; ++n){
+ //             cout << *(gamma3->data()+(i*n5 + j*n4 + k*n3 + l*n2 + m*n1 +n )) << " ";
+ //            }
+ //         }
+ //
  // cout <<endl<<"gamma2 " << endl;
  // for (int k = 0; k != norb_; ++k) 
  //   for (int l = 0; l != norb_; ++l) 
@@ -399,10 +399,10 @@ void Equation_Computer::Equation_Computer::check_contracted_indexes( std::vector
  //       cout << endl << k << " " << l << " " << m << "  ";
  //       for (int n = 0; n != norb_; ++n){ 
  //         cout << *(gamma2->data()+ (k*n3 + l*n2 + m*n1 +n))  << " " ;
- ////       }                        
- ////     }
- ////
- //// cout << endl << "gamma1 " << endl;
+ //       }                        
+ //     }
+ //
+ // cout << endl << "gamma1 " << endl;
  // for (int m = 0; m != norb_; ++m) {
  //   cout << endl << m << " " ;
  //   for (int n = 0; n != norb_; ++n){ 
