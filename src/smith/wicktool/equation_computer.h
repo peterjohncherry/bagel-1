@@ -20,8 +20,9 @@ class Equation_Computer {
 
     public: 
     Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info,
+                      std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>> >> CTP_data_map,
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map);
+                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>> >> Gamma_data_map);
     ~Equation_Computer(){};
   
     int nelea_ ;
@@ -37,13 +38,12 @@ class Equation_Computer {
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
 
     std::shared_ptr<Equation<double>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
 
-    ////////////////////////////////////
-    std::shared_ptr<Tensor_<double>>
-    get_block_Tensor(std::string Tname);
+    /////////// Tensor contraction routines /////////////////////////
 
     //only for two contracted indexes
     std::shared_ptr<Tensor_<double>>
@@ -56,14 +56,45 @@ class Equation_Computer {
     std::shared_ptr<Tensor_<double>>
     contract_different_tensors(std::pair<int,int> ctr_todo, std::string T1name, std::string T2name, std::string Tout_name);
 
-    template<class DataType, class DType>
-    std::shared_ptr<DType> contract_different_tensors( std::string T1name, std::string T2name,  std::pair<int,int> ctr_todo,
-                                                       std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap ) ;
+    std::shared_ptr<Tensor_<double>>
+    get_block_Tensor(std::string Tname);
   
     std::shared_ptr<Tensor_<double>>
     reorder_block_Tensor(std::string Tname, std::shared_ptr<std::vector<int>> new_order);
 
-    //////////////////////////////
+    ////////////Gamma routines (RDM class based) //////////////////
+
+    std::shared_ptr<std::vector<std::shared_ptr<Tensor_<double>>>>
+    get_gammas(int MM , int NN, std::string gamma_name);
+    
+    std::shared_ptr<std::vector<std::shared_ptr<VectorB>>> compute_gammas(const int MM, const int NN ) ;
+
+    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
+    compute_gamma12(const int MM, const int NN ) ;
+ 
+    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
+    compute_gamma12_from_civec(std::shared_ptr<const Civec> cbra, std::shared_ptr<const Civec> cket) const ;
+ 
+    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
+    compute_gamma12_last_step(std::shared_ptr<const Dvec> dbra, std::shared_ptr<const Dvec> dket, std::shared_ptr<const Civec> cibra) const ;
+
+    void sigma_2a1(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
+
+    void sigma_2a2(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
+
+    ////////////Gamma routines (Tensor class based) //////////////////
+
+    void get_gamma_tensor( int MM , int NN, std::string gamma_name);
+
+    void compute_gammas_blocked(const int MM, const int NN, std::string gamma_name) ;
+
+    void sigma_2a1_blocked( std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::pair<int,int> irange,
+                            std::pair<int,int> jrange, int norb) const ;
+    
+    void sigma_2a2_blocked( std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::pair<int,int> irange,
+                            std::pair<int,int> jrange, int norb) const ;
+
+    /////////// Utility routines /////////////////////////
   
     std::shared_ptr<std::vector<int>> get_CTens_strides( std::shared_ptr<std::vector<int>> range_sizes, int ctr1 , int ctr2 ) ;
 
@@ -160,33 +191,6 @@ class Equation_Computer {
     
     std::unique_ptr<double[]> get_block_of_data( double* data_ptr, std::shared_ptr<std::vector<IndexRange>> id_ranges, 
                                                               std::shared_ptr<std::vector<int>> block_pos) ;
-
-    std::shared_ptr<std::vector<std::shared_ptr<Tensor_<double>>>>
-    get_gammas(int MM , int NN, std::string gamma_name);
-    
-    std::shared_ptr<std::vector<std::shared_ptr<VectorB>>> compute_gammas(const int MM, const int NN ) ;
-
-    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
-    compute_gamma12(const int MM, const int NN ) ;
- 
-    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
-    compute_gamma12_from_civec(std::shared_ptr<const Civec> cbra, std::shared_ptr<const Civec> cket) const ;
- 
-    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
-    compute_gamma12_last_step(std::shared_ptr<const Dvec> dbra, std::shared_ptr<const Dvec> dket, std::shared_ptr<const Civec> cibra) const ;
-
-    void sigma_2a1(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
-
-    void sigma_2a2(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
-
-    void get_gamma_tensor( int MM , int NN, std::string gamma_name,
-                           std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> gamma_data_map);
-
-    void sigma_2a1_blocked( std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::pair<int,int> irange,
-                            std::pair<int,int> jrange, int norb) const ;
-    
-    void sigma_2a2_blocked( std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::pair<int,int> irange,
-                            std::pair<int,int> jrange, int norb) const ;
 
 #ifndef NDEBUG
    

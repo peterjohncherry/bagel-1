@@ -9,8 +9,9 @@ using namespace bagel::SMITH::Tensor_Sorter;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info_in,
+                                                         std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
                                                          std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map_in,
-                                                         std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in){
+                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map_in ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   eqn_info =  eqn_info_in;
@@ -23,9 +24,11 @@ Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const S
   det_ = ref->ciwfn()->civectors()->det();
 
   GammaMap = eqn_info->GammaMap;
-  CTP_map = eqn_info_in->CTP_map;
-  CTP_data_map = CTP_data_map_in;
+  CTP_map  = eqn_info->CTP_map;
   
+  CTP_data_map  = CTP_data_map_in;
+  Gamma_data_map = Gamma_data_map_in;
+
   range_conversion_map = range_conversion_map_in;
 
 }  
@@ -367,7 +370,7 @@ cout << "Equation_Computer::contract_on_different_tensor" <<endl;
       cout << T2name << " block pos =  [ " ;    for (int block_num : *T2_rng_block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
       shared_ptr<vector<Index>> T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
       shared_ptr<vector<Index>> T2_org_rng_blocks = inverse_reorder_vector(T2_new_order, T2_new_rng_blocks); 
-      size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end() );
+      size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
       std::unique_ptr<double[]> T2_data_new;
       {
         std::unique_ptr<double[]> T2_data_org = CTP2_data->get_block(*T2_org_rng_blocks);

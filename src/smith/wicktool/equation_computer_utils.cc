@@ -79,50 +79,6 @@ void Equation_Computer::Equation_Computer::Print_Tensor( shared_ptr<Tensor_<doub
  
    return ;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-tuple< size_t, size_t >
-Equation_Computer::Equation_Computer::get_block_info(shared_ptr<vector<IndexRange>> id_ranges, 
-                                                     shared_ptr<vector<int>> block_pos) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Equation_Computer::get_block_info" << endl;
-  vector<size_t> id_pos(block_pos->size());
-  cout <<endl << "id_pos = ";
-  for (int ii = 0 ; ii != id_ranges->size() ; ii++){
-
-    const size_t range_size         = id_ranges->at(ii).size();
-    const size_t biggest_block_size = id_ranges->at(ii).range(0).size();
-    const size_t num_blocks         = id_ranges->at(ii).range().size();
-    const size_t remainder          = num_blocks * biggest_block_size - range_size;
-
-    if (block_pos->at(ii) <= remainder  ){
-       id_pos[ii] = num_blocks*block_pos->at(ii);//  + id_ranges->at(ii).range(block_pos->at(ii)).offset();
-
-    } else if ( block_pos->at(ii) > remainder ) {
-       id_pos[ii] = num_blocks*(range_size - remainder)+(num_blocks-1)*(remainder - block_pos->at(ii));// + id_ranges->at(ii).range(block_pos->at(ii)).offset(); 
-    }; 
-    cout << id_pos[ii] << " " ;
-  }
-
-  cout << endl << "range_sizes = " ;
-  // getting size of ranges (seems to be correctly offset for node)
-  vector<size_t> range_sizes(block_pos->size());
-  for (int ii = 0 ; ii != id_ranges->size() ; ii++){
-    range_sizes[ii]  = id_ranges->at(ii).size();
-    cout << range_sizes[ii] << " " ;
-  }
-
-  size_t data_block_size = 1;
-  size_t data_block_pos  = 0;
-  for (int ii = 0 ; ii != id_ranges->size()-1 ; ii++){
-    data_block_pos  += id_pos[ii]*(pow(range_sizes[ii] , id_ranges->size()-ii));
-    data_block_size *= id_ranges->at(ii).range(block_pos->at(ii)).size();
-  }
-
-  data_block_size *= id_ranges->back().range(block_pos->back()).size();
- 
-  return tie(data_block_size, data_block_pos);
-  
-}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_Tens_strides(vector<int>& range_sizes) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

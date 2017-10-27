@@ -78,7 +78,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
 
   CTP_map = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
   CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
-  gamma_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  Gamma_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   scalar_results_map = make_shared<map<string, double>>();
   //Deriv_results_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
 
@@ -274,7 +274,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   shared_ptr<Equation<double>> Expr = Expr_Info->expression_map->at(Expression_name); 
   double result = 0.0;
 
-  shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, CTP_data_map, range_conversion_map );
+  shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, CTP_data_map, Gamma_data_map );
 
   //Hack to test excitation operators
   shared_ptr<vector<string>> X_ranges = make_shared<vector<string>>(vector<string> {"notvir", "notvir", "notcor", "notcor"});
@@ -317,20 +317,6 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
  
   cout << "Gamma names = [ " ; cout.flush();   for ( int ii = 0 ; ii != Gname_vec.size(); ii++ ) { cout << Gname_vec[ii] << " " ; cout.flush(); } cout << " ] " << endl;
 
-  cout << "contracting gammas " << endl;
-  shared_ptr<Tensor_<double>>  gamma6 =  gamma_tensors->at(0); 
-  shared_ptr<Tensor_<double>>  gamma2 =  gamma_tensors->at(2); 
-  vector<int> index_pos(gamma6->indexrange().size());
-
-  iota(index_pos.begin() , index_pos.end()-2, 0 );
-  shared_ptr<Tensor_<double>> contracted_gamma = Expr_computer->contract_on_same_tensor(index_pos, gamma6);
-  contracted_gamma->ax_plus_y( (-1/625), gamma2 );
-
-  cout << "contracted_gamma->rms()        = " << contracted_gamma->rms() << endl;
-  cout << "contracted_gamma->norm()       = " << contracted_gamma->norm() << endl;
-  cout << "contracted_gamma->rank()       = " << contracted_gamma->rank() <<       "    orig_gamma->rank         = "<< gamma6->rank() << endl;
-  cout << "contracted_gamma->size_alloc() = " << contracted_gamma->size_alloc() << "    orig_gamma->size_alloc() = "<< gamma6->size_alloc() <<  endl;
- 
   for ( int ii = 0 ; ii != Gname_vec.size(); ii++ ) {
   
     string Gamma_name = Gname_vec[ii];

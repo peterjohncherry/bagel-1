@@ -286,6 +286,81 @@ void Equation_Computer::Equation_Computer::sigma_2a2(shared_ptr<const Civec> cve
     }
   }
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Gets the gammas in tensor format. 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void
+Equation_Computer::Equation_Computer::get_gamma_tensor( int MM , int NN, string gamma_name) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Equation_Computer::Equation_Computer::get_gammas"  << endl;
+  cout << "Gamma name = " << gamma_name << endl;
+
+  if( Gamma_data_map->find(gamma_name) != Gamma_data_map->end()){ 
+
+    cout << "already have data for " << gamma_name << endl;  
+ 
+  } else { 
+
+    shared_ptr<vector<IndexRange>> gamma_ranges = Get_Bagel_IndexRanges( GammaMap->at(gamma_name)->id_ranges ); 
+    
+    // build gamma tensor
+   
+    shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(gamma_ranges->size() ); 
+    for (int jj = 0 ; jj != gamma_ranges->size() ; jj++ )
+      range_lengths->at(jj) = gamma_ranges->at(jj).range().size()-1; 
+    
+    shared_ptr<Tensor_<double>> new_gamma_tensor= make_shared<Tensor_<double>>(*(gamma_ranges));
+    new_gamma_tensor->allocate();
+    new_gamma_tensor->zero();
+    
+    shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(gamma_ranges->size(),0);  
+    shared_ptr<vector<int>> mins = make_shared<vector<int>>(gamma_ranges->size(),0);  
+    
+    do {
+      
+      vector<Index> gamma_id_blocks(gamma_ranges->size());
+      for( int jj = 0 ;  jj != gamma_id_blocks.size(); jj++)
+        gamma_id_blocks[jj] =  gamma_ranges->at(jj).range(block_pos->at(jj));
+    
+      vector<int> range_sizes = get_sizes(gamma_id_blocks);
+      shared_ptr<vector<int>> gamma_tens_strides = get_Tens_strides(range_sizes);  
+      int gamma_block_size = accumulate( range_sizes.begin(), range_sizes.end(), 1, std::multiplies<int>() );
+      int gamma_block_pos = inner_product( block_pos->begin(), block_pos->end(), gamma_tens_strides->begin(),  0); 
+    
+      unique_ptr<double[]> gamma_data_block(new double[gamma_block_size])  ;
+      std::fill_n(gamma_data_block.get(), gamma_block_size, 0.0);
+   
+      new_gamma_tensor->put_block( gamma_data_block, gamma_id_blocks);
+    
+    } while (fvec_cycle(block_pos, range_lengths, mins ));
+    
+    cout << "Printing Gamma of order " << gamma_ranges->size()/2  << endl;
+    Print_Tensor(new_gamma_tensor);
+    
+    cout << "out of gamma loop" << endl;
+  }
+  
+  return;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::compute_gammas_blocked(const int MM, const int NN, string gamma_name ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "compute_gamma12 MM = " << MM << " NN = " << NN  << endl;
+
+  if (det_->compress()) { // uncompressing determinants
+    auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
+    cc_->set_det(detex);
+  }
+  shared_ptr<Civec> ccbra = make_shared<Civec>(*cc_->data(MM));
+  shared_ptr<Civec> ccket = make_shared<Civec>(*cc_->data(NN));
+ 
+ 
+  cc_->set_det(det_); 
+
+  return;
+
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Modified version of that in src/ci/fci/knowles_compute.cc         
@@ -337,68 +412,49 @@ void Equation_Computer::Equation_Computer::sigma_2a2_blocked(shared_ptr<const Ci
     }    
   }      
 }        
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+tuple< size_t, size_t >
+Equation_Computer::Equation_Computer::get_block_info(shared_ptr<vector<IndexRange>> id_ranges, 
+                                                     shared_ptr<vector<int>> block_pos) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Equation_Computer::get_block_info" << endl;
+  vector<size_t> id_pos(block_pos->size());
+  cout <<endl << "id_pos = ";
+  for (int ii = 0 ; ii != id_ranges->size() ; ii++){
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Gets the gammas in tensor format. 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void
-Equation_Computer::Equation_Computer::get_gamma_tensor( int MM , int NN, string gamma_name,
-                                                        shared_ptr<map<string, shared_ptr<Tensor_<double>>>> gamma_data_map){
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Equation_Computer::Equation_Computer::get_gammas"  << endl;
-  cout << "Gamma name = " << gamma_name << endl;
+    const size_t range_size         = id_ranges->at(ii).size();
+    const size_t biggest_block_size = id_ranges->at(ii).range(0).size();
+    const size_t num_blocks         = id_ranges->at(ii).range().size();
+    const size_t remainder          = num_blocks * biggest_block_size - range_size;
 
-  shared_ptr<vector<string>> gamma_ranges_str  = GammaMap->at(gamma_name)->id_ranges;
+    if (block_pos->at(ii) <= remainder  ){
+       id_pos[ii] = num_blocks*block_pos->at(ii);//  + id_ranges->at(ii).range(block_pos->at(ii)).offset();
 
-  // Gets list of gammas which are needed by progressive truncation of the gamma_range vector
-  // e.g. [a,a,a,a,a,a] --> [a,a,a,a] --> [a,a]
-  vector<shared_ptr<vector<IndexRange>>> gamma_ranges =  vector<shared_ptr<vector<IndexRange>>>(gamma_ranges_str->size()/2);
-  for (int ii = 1 ; ii !=(gamma_ranges.size()+2)/2; ii++ ){ 
-    shared_ptr<vector<string>> gamma_ranges_str_tmp = make_shared<vector<string>>(gamma_ranges_str->begin(), gamma_ranges_str->begin()+ii*2);
-    gamma_ranges[ii] = Get_Bagel_IndexRanges( gamma_ranges_str_tmp); 
-  } 
-  
-  // build gamma tensor
-  auto gamma_tensors = make_shared<vector<shared_ptr<Tensor_<double>>>>( gamma_ranges.size());
-  for ( int ii = 0; ii != gamma_ranges.size();  ii++ ) {
- 
-     shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(gamma_ranges[ii]->size() ); 
-     for (int jj = 0 ; jj != gamma_ranges[ii]->size() ; jj++ )
-       range_lengths->at(jj) = gamma_ranges[ii]->at(jj).range().size()-1; 
-     
-     shared_ptr<Tensor_<double>> new_gamma_tensor= make_shared<Tensor_<double>>(*(gamma_ranges[ii]));
-     new_gamma_tensor->allocate();
-     new_gamma_tensor->zero();
-     
-     shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
-     shared_ptr<vector<int>> mins = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
-
-     do {
-       
-       vector<Index> gamma_id_blocks(gamma_ranges[ii]->size());
-       for( int jj = 0 ;  jj != gamma_id_blocks.size(); jj++)
-         gamma_id_blocks[jj] =  gamma_ranges[ii]->at(jj).range(block_pos->at(jj));
-
-       vector<int> range_sizes = get_sizes(gamma_id_blocks);
-       shared_ptr<vector<int>> gamma_tens_strides = get_Tens_strides(range_sizes);  
-       int gamma_block_size = accumulate( range_sizes.begin(), range_sizes.end(), 1, std::multiplies<int>() );
-       int gamma_block_pos = inner_product( block_pos->begin(), block_pos->end(), gamma_tens_strides->begin(),  0); 
-
-       unique_ptr<double[]> gamma_data_block(new double[gamma_block_size])  ;
-       std::fill_n(gamma_data_block.get(), gamma_block_size, 0.0);
-
-       new_gamma_tensor->put_block( gamma_data_block, gamma_id_blocks);
-     
-     } while (fvec_cycle(block_pos, range_lengths, mins ));
-     gamma_tensors->at(ii)  = new_gamma_tensor;
-
-     cout << "Printing Gamma of order " << gamma_ranges[ii]->size()/2  << endl;
-     Print_Tensor(new_gamma_tensor);
+    } else if ( block_pos->at(ii) > remainder ) {
+       id_pos[ii] = num_blocks*(range_size - remainder)+(num_blocks-1)*(remainder - block_pos->at(ii));// + id_ranges->at(ii).range(block_pos->at(ii)).offset(); 
+    }; 
+    cout << id_pos[ii] << " " ;
   }
-  cout << "out of gamma loop" << endl;
-  
-  return;
-}
 
+  cout << endl << "range_sizes = " ;
+  // getting size of ranges (seems to be correctly offset for node)
+  vector<size_t> range_sizes(block_pos->size());
+  for (int ii = 0 ; ii != id_ranges->size() ; ii++){
+    range_sizes[ii]  = id_ranges->at(ii).size();
+    cout << range_sizes[ii] << " " ;
+  }
+
+  size_t data_block_size = 1;
+  size_t data_block_pos  = 0;
+  for (int ii = 0 ; ii != id_ranges->size()-1 ; ii++){
+    data_block_pos  += id_pos[ii]*(pow(range_sizes[ii] , id_ranges->size()-ii));
+    data_block_size *= id_ranges->at(ii).range(block_pos->at(ii)).size();
+  }
+
+  data_block_size *= id_ranges->back().range(block_pos->back()).size();
+ 
+  return tie(data_block_size, data_block_pos);
+  
+}
 
 #endif
