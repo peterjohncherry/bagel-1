@@ -209,39 +209,27 @@ shared_ptr<vector<int>> Equation_Computer::Equation_Computer::put_ctr_at_front(s
   }
 
 }
-////////////////////////////////////////////////////////////////////////////////////////
-vector<Index> Equation_Computer::Equation_Computer::get_rng_blocks_raw(shared_ptr<vector<int>> forvec, shared_ptr<vector<shared_ptr< IndexRange>>> old_ids) {
-////////////////////////////////////////////////////////////////////////////////////////
-  vector<Index> new_ids(forvec->size()); 
-  for( int ii =0; ii != forvec->size(); ii++ ) {
-     new_ids[ii] = old_ids->at(ii)->range(forvec->at(ii));
-  }
-
-  return new_ids;
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////
-vector<Index>
-Equation_Computer::Equation_Computer::get_rng_blocks(shared_ptr<vector<int>> forvec, vector<IndexRange>& id_ranges) {
+shared_ptr<vector<Index>>
+Equation_Computer::Equation_Computer::get_rng_blocks(shared_ptr<vector<int>> block_pos, vector<IndexRange>& id_ranges) {
 ////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "Equation_Computer::get_rng_blocks " << endl;
-
-  vector<Index> new_ids(id_ranges.size()); 
-  for( int ii =0; ii != forvec->size(); ii++ ) 
-     new_ids[ii] = id_ranges[ii].range(forvec->at(ii));
-
-  
-  return new_ids;
+  shared_ptr<vector<Index>> id_blocks = make_shared<vector<Index>>(block_pos->size());
+  for( int ii =0; ii != block_pos->size(); ii++ ) 
+     id_blocks->at(ii) = id_ranges[ii].range(block_pos->at(ii));
+  return id_blocks;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<Index>> Equation_Computer::Equation_Computer::get_rng_blocks(shared_ptr<vector<int>> forvec, shared_ptr<vector<shared_ptr<const IndexRange>>> old_ids) {
+shared_ptr<vector<Index>>
+Equation_Computer::Equation_Computer::get_rng_blocks(shared_ptr<vector<int>> block_pos, shared_ptr<vector<shared_ptr<const IndexRange>>> old_ids) {
 ////////////////////////////////////////////////////////////////////////////////////////
 //cout << "Equation_Computer::get_rng_blocks constver" << endl;
 
   auto new_ids = make_shared<vector<Index>>(); 
-  for( int ii =0; ii != forvec->size(); ii++ ) {
-     new_ids->push_back(old_ids->at(ii)->range(forvec->at(ii)));
+  for( int ii =0; ii != block_pos->size(); ii++ ) {
+     new_ids->push_back(old_ids->at(ii)->range(block_pos->at(ii)));
   }
   return new_ids;
 }
@@ -355,17 +343,6 @@ size_t Equation_Computer::Equation_Computer::get_block_size( vector<Index>::iter
   for( vector<Index>::iterator id_it = startpos ; id_it!=endpos; id_it++ ){ 
     block_size *= id_it->size();
   }
-  return  block_size;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////
-//already a function for this.... so replace
-////////////////////////////////////////////////////////////////////////////////////////
-size_t Equation_Computer::Equation_Computer::get_block_size(shared_ptr<vector<Index>> Idvec, int startpos, int endpos) {
-////////////////////////////////////////////////////////////////////////////////////////
-  size_t block_size = 1; 
-  for( int ii = startpos ; ii!=(endpos+1); ii++ ) 
-    block_size *= Idvec->at(ii).size();
   return  block_size;
 }
 

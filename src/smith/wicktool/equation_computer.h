@@ -136,17 +136,16 @@ class Equation_Computer {
 
     void
     build_index_conversion_map(std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<IndexRange>>>> range_conversion_pairs );
+
     std::shared_ptr<std::vector<Index>>
-    get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> old_ids) ;
+    get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> old_ids) ;
    
     std::shared_ptr<std::vector<Index>>
-    get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr< IndexRange>>> old_ids) ;
+    get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::shared_ptr<std::vector<std::shared_ptr<IndexRange>>> old_ids) ;
 
-    std::vector<Index>
-    get_rng_blocks(std::shared_ptr<std::vector<int>> forvec, std::vector<IndexRange>& id_ranges) ;
-  
-    std::vector<Index>
-    get_rng_blocks_raw(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<std::shared_ptr< IndexRange>>> old_ids) ;
+    std::shared_ptr<std::vector<Index>>
+    get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::vector<IndexRange>& id_ranges);
+
 
     std::shared_ptr<std::vector<int>>
     get_num_index_blocks_vec(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
@@ -154,24 +153,25 @@ class Equation_Computer {
     std::vector<int>
     get_num_index_blocks_vec(std::vector<IndexRange>& rngvec);
 
+
     std::shared_ptr<std::vector<size_t>>
     get_sizes(std::shared_ptr<std::vector<Index>> Idvec);
-
-    std::shared_ptr<std::vector<int>>
-    get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
 
     std::shared_ptr<std::vector<size_t>>
     get_sizes(std::shared_ptr<std::vector<Index>> Idvec, int skip_id);
 
     std::shared_ptr<std::vector<int>>
+    get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
+
+    std::shared_ptr<std::vector<int>>
     get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec, int skip_id) ;
+
 
     size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
 
-    size_t get_block_size(std::shared_ptr<std::vector<Index>> Idvec, int startpos, int endpos) ;
-    
     size_t get_unc_block_size( std::vector<Index>& idvec, std::pair<int,int> ctr ) ;
    
+
     std::shared_ptr<std::vector<int>>
     put_ctr_at_front(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
     

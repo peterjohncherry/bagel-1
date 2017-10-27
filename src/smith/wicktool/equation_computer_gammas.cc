@@ -304,7 +304,6 @@ Equation_Computer::Equation_Computer::get_gamma_tensor( int MM , int NN, string 
     shared_ptr<vector<IndexRange>> gamma_ranges = Get_Bagel_IndexRanges( GammaMap->at(gamma_name)->id_ranges ); 
     
     // build gamma tensor
-   
     shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(gamma_ranges->size() ); 
     for (int jj = 0 ; jj != gamma_ranges->size() ; jj++ )
       range_lengths->at(jj) = gamma_ranges->at(jj).range().size()-1; 
@@ -318,9 +317,7 @@ Equation_Computer::Equation_Computer::get_gamma_tensor( int MM , int NN, string 
     
     do {
       
-      vector<Index> gamma_id_blocks(gamma_ranges->size());
-      for( int jj = 0 ;  jj != gamma_id_blocks.size(); jj++)
-        gamma_id_blocks[jj] =  gamma_ranges->at(jj).range(block_pos->at(jj));
+      vector<Index> gamma_id_blocks = *(get_rng_blocks( block_pos, *gamma_ranges));
     
       vector<int> range_sizes = get_sizes(gamma_id_blocks);
       shared_ptr<vector<int>> gamma_tens_strides = get_Tens_strides(range_sizes);  
