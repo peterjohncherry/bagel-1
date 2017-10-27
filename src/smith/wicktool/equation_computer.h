@@ -187,11 +187,8 @@ class Equation_Computer {
 
 
 };
+
 }
 }
 }
-////////////////////////////////////////////////////
-//template class CtrTensorPart<std::vector<double>>;  
-//template class CtrTensorPart<Tensor_<double>>;
-///////////////////////////////////////////////////
 #endif
