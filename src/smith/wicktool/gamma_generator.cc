@@ -44,7 +44,6 @@ GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<
                       shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaInfo::GammaInfo" <<  endl;
-  
   id_ranges = make_shared<vector<string>>(idxs_pos->size());
   aops = make_shared<vector<bool>>(idxs_pos->size());
 

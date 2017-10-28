@@ -114,6 +114,7 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
      const double done = 1.0; 
      do {
        
+       shared_ptr<vector<pair<size_t, size_t>>> bob = get_block_start( make_shared<vector<IndexRange>>(unc_ranges_old), block_pos ) ;
        vector<Index> CTP_id_blocks_old = *(get_rng_blocks(block_pos, unc_ranges_old)); 
        vector<Index> CTP_id_blocks_new(CTP_id_blocks_old.size()-2);
        for (int kk = 0 ; kk != unc_pos_new.size(); kk++)       

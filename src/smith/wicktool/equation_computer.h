@@ -88,6 +88,8 @@ class Equation_Computer {
 
     void compute_gammas_blocked(const int MM, const int NN, std::string gamma_name) ;
 
+    void get_gamma2(const int MM, const int NN, std::string gamma_name ) ;
+
     void sigma_2a1_blocked( std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::pair<int,int> irange,
                             std::pair<int,int> jrange, int norb) const ;
     
@@ -130,9 +132,6 @@ class Equation_Computer {
 
     std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>>
     Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str, std::shared_ptr<std::vector<int>> unc_pos);
-
-    std::tuple< size_t, size_t >
-    get_block_info(std::shared_ptr<std::vector<IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos) ;
 
     void
     build_index_conversion_map(std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<IndexRange>>>> range_conversion_pairs );
@@ -191,6 +190,9 @@ class Equation_Computer {
     
     std::unique_ptr<double[]> get_block_of_data( double* data_ptr, std::shared_ptr<std::vector<IndexRange>> id_ranges, 
                                                               std::shared_ptr<std::vector<int>> block_pos) ;
+
+    std::shared_ptr<std::vector<std::pair<size_t,size_t>>>
+    get_block_start( std::shared_ptr<std::vector<IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos );
 
 #ifndef NDEBUG
    
