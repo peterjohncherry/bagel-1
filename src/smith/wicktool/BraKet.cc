@@ -72,7 +72,7 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
   shared_ptr<vector<bool>> aops_buff  = make_shared<vector<bool>>(*aops );
   for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
     auto GGen = make_shared<GammaGenerator>(aops_buff, idxs, GammaMap, G_to_A_map); 
-    GGen->add_gamma(range_map_it->first, 1) ;
+    GGen->add_gamma(make_shared<vector<string>>(range_map_it->first), 1) ;
     GGen->norm_order();
     GGen->optimized_alt_order();
   }

@@ -29,7 +29,7 @@ class TensOp {
 
      std::shared_ptr<std::vector<int>> plus_ops;
      std::shared_ptr<std::vector<int>> kill_ops;
-     std::shared_ptr< std::map< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > > orb_ranges;
+     std::shared_ptr< std::map< std::vector<std::string>, std::pair<int,int> > > orb_ranges;
      std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DType>> > > CTP_map ;
    
      std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>> all_range_combs;
@@ -39,7 +39,7 @@ class TensOp {
      
      //map from original index range, to ranges and factors used in calculation
      //tuple contained 1: bool is_this_range_unique?, 2: unique range which needs to be calculated, 3: indexes for contraction of this range,  4: factor from transformation 
-     std::shared_ptr<std::map< std::shared_ptr<std::vector<std::string>>, 
+     std::shared_ptr<std::map< std::vector<std::string>, 
                      std::tuple<bool, std::shared_ptr<std::vector<std::string>>,  std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > >> all_ranges_;
 
 
@@ -58,7 +58,7 @@ class TensOp {
                              std::vector<bool> orig_aops, int orig_factor, std::string orig_Tsymm, std::string orig_psymm = "2el" );
      
      virtual
-     std::shared_ptr<std::map< std::shared_ptr<std::vector<std::string>>, 
+     std::shared_ptr<std::map< std::vector<std::string>, 
                      std::tuple<bool, std::shared_ptr<std::vector<std::string>>,  std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > >> all_ranges(){ return all_ranges_; }
 
      void hconj();
@@ -68,8 +68,12 @@ class TensOp {
      void generate_ranges( std::shared_ptr<std::vector<std::vector<std::string>>> idx_ranges, std::string symm_type);
 
      bool apply_symmetry( std::shared_ptr<std::vector<std::string>> ranges_1, std::shared_ptr<std::vector<std::string>> ranges_2  );
+     
+     bool apply_symmetry( std::vector<std::string> ranges_1, std::vector<std::string> ranges_2  );
 
      bool satisfies_constraints( std::shared_ptr<std::vector<std::string>> ranges );
+
+     bool satisfies_constraints( std::vector<std::string> ranges );
 
      void generate_all_contractions();
      
@@ -110,32 +114,28 @@ class MultiTensOp : public TensOp<DType> {
      bool spinfree;
      bool spinfree_;
 
-     std::shared_ptr< std::map< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > > orb_ranges;
+     std::shared_ptr< std::map< std::vector<std::string>, std::pair<int,int> > > orb_ranges;
 
      std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DType>> > > CTP_map ;
-     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DType>> >> CMTP_map; 
+     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DType>> >> CMTP_map; 
 
      //takes from pair of unc _range_ (defines gamma) and ctr_indexes (defines A contrib) 
      std::shared_ptr<std::map< std::tuple< std::vector<std::string>, pstr_vec, pstr_vec >, std::shared_ptr<std::vector<std::string>> >> CMTP_gamma_contribs;
 
    private:
      //Similar to all_ranges, but has the ranges associated with the different operators split up, this may be useful for decomposition, so keep for now
-     std::shared_ptr<std::map< std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>>, 
-                     std::tuple< std::shared_ptr<std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> split_ranges;
+     std::shared_ptr< std::map< std::vector<std::vector<std::string>>, 
+                                std::tuple<std::shared_ptr<std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>>,
+                                           std::shared_ptr<std::vector<std::pair<int,int>>>>>> split_ranges;
 
    public: 
      MultiTensOp() {};
-
      MultiTensOp(std::string name, bool spinfree) : name_(name), spinfree_(spinfree) {}; // spin free construction
-
-//     MultiTensOp<DType>(std::string name, std::shared_ptr<std::vector<std::pair<int,int>>> spin_sectors,
-//                 std::shared_ptr<std::map< std::pair< int, std::pair<int,int> > , std::shared_ptr<std::vector<std::shared_ptr<std::vector<bool>>>> >> spin_paths)
-//                 : name_(name), spin_sectors_(spin_sectors), spin_paths_(spin_paths), spinfree_(false) {};
 
      ~MultiTensOp() {};
 
      //Multi Tensor analogue of all_ranges; same as normal tensor but with vector of factors. The ordering of these factors is the same as that of the operators in the tensor
-     std::shared_ptr<std::map< std::shared_ptr<std::vector<std::string>>,
+     std::shared_ptr<std::map< std::vector<std::string>,
                                std::tuple<bool, std::shared_ptr<std::vector<std::string>>, std::shared_ptr<std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> combined_ranges;
    public: 
     
@@ -151,3 +151,8 @@ class MultiTensOp : public TensOp<DType> {
     
 }; 
 #endif
+//     With spin construction 
+//
+//     MultiTensOp<DType>(std::string name, std::shared_ptr<std::vector<std::pair<int,int>>> spin_sectors,
+//                 std::shared_ptr<std::map< std::pair< int, std::pair<int,int> > , std::shared_ptr<std::vector<std::shared_ptr<std::vector<bool>>>> >> spin_paths)
+//                 : name_(name), spin_sectors_(spin_sectors), spin_paths_(spin_paths), spinfree_(false) {};
