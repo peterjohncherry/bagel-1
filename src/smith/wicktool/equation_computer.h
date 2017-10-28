@@ -88,13 +88,14 @@ class Equation_Computer {
 
     void compute_gammas_blocked(const int MM, const int NN, std::string gamma_name) ;
 
-    void get_gamma2(const int MM, const int NN, std::string gamma_name ) ;
+    void get_gamma_2idx(const int MM, const int NN, std::string gamma_name );
 
-    void sigma_2a1_blocked( std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::pair<int,int> irange,
-                            std::pair<int,int> jrange, int norb) const ;
-    
-    void sigma_2a2_blocked( std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::pair<int,int> irange,
-                            std::pair<int,int> jrange, int norb) const ;
+    std::unique_ptr<double[]>
+    gamma_2idx_block(std::shared_ptr<const Civec> cbra, std::shared_ptr<const Civec> cket, std::pair<size_t,size_t> irange,
+                     std::pair<size_t,size_t> jrange ) const;
+
+    std::unique_ptr<double[]> 
+    sigma_blocked(std::shared_ptr<const Civec> cvec, std::pair<size_t,size_t> irange, std::pair<size_t,size_t> jrange) const ;
 
     /////////// Utility routines /////////////////////////
   
@@ -165,6 +166,7 @@ class Equation_Computer {
     std::shared_ptr<std::vector<int>>
     get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec, int skip_id) ;
 
+    std::shared_ptr<std::vector<int>>  get_range_lengths(std::shared_ptr<std::vector<IndexRange>> Id_ranges ) ;
 
     size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
 

@@ -294,6 +294,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
     // std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::vector<std::pair<std::vector<int> , std::pair<int,int>>> > >>>  G_to_A_map
     for ( auto G_to_A_map_it : *(Expr->G_to_A_map) ){
       Gname_vec[ii] = G_to_A_map_it.first;
+      Expr_computer->get_gamma_tensor( 0, 0, Gname_vec[ii]) ;
       ii++;
     }
   std::sort(Gname_vec.begin(), Gname_vec.end(), csl); 

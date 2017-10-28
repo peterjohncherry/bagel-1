@@ -346,6 +346,17 @@ size_t Equation_Computer::Equation_Computer::get_block_size( vector<Index>::iter
   return  block_size;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<int>> Equation_Computer::Equation_Computer::get_range_lengths(shared_ptr<vector<IndexRange>> indexranges ) { 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(indexranges->size() ); 
+  for (int jj = 0 ; jj != indexranges->size() ; jj++ )                                                        
+    range_lengths->at(jj) = indexranges->at(jj).range().size()-1; 
+
+  return range_lengths;
+}
+
 #ifndef NDEBUG
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Checks all the index ranges in idx_pos have the same length and number of index blocks
