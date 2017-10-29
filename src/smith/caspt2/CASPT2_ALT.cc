@@ -55,10 +55,10 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   cout << "H_1el_all->rms()" <<  H_1el_all->rms() << endl; 
   cout << "H_2el_all->rms()" <<  H_2el_all->rms() << endl; 
  
-  const int max = ref->maxtile();
-  closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), max, 0, ref->ncore()));
-  active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,max), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
-  virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), max, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
+  const int maxtile = ref->maxtile();
+  closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), maxtile, 0, ref->ncore()));
+  active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,maxtile), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
+  virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), maxtile, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
   free_rng = make_shared<IndexRange>(*closed_rng); free_rng->merge(*active_rng); free_rng->merge(*virtual_rng);
 
   not_closed_rng  =  make_shared<IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
@@ -274,7 +274,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   shared_ptr<Equation<double>> Expr = Expr_Info->expression_map->at(Expression_name); 
   double result = 0.0;
 
-  shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, CTP_data_map, Gamma_data_map );
+  shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, CTP_data_map, Gamma_data_map);
 
   //Hack to test excitation operators
   shared_ptr<vector<string>> X_ranges = make_shared<vector<string>>(vector<string> {"notvir", "notvir", "notcor", "notcor"});

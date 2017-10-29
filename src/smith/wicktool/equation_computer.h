@@ -30,6 +30,7 @@ class Equation_Computer {
     int ncore_ ;
     int norb_  ;
     int nstate_;
+    int maxtile;
     std::shared_ptr<IndexRange> virt_  ;
     std::shared_ptr<IndexRange> active_  ;
     std::shared_ptr<IndexRange> closed_  ;
@@ -96,6 +97,9 @@ class Equation_Computer {
 
     std::unique_ptr<double[]> 
     sigma_blocked(std::shared_ptr<const Civec> cvec, std::pair<size_t,size_t> irange, std::pair<size_t,size_t> jrange) const ;
+   
+    std::shared_ptr<Tensor_<double>> 
+    convert_civec_to_tensor( std::shared_ptr<const Civec> civector ) const ;
 
     /////////// Utility routines /////////////////////////
   
@@ -195,6 +199,7 @@ class Equation_Computer {
 
     std::shared_ptr<std::vector<std::pair<size_t,size_t>>>
     get_block_start( std::shared_ptr<std::vector<IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos );
+
 
 #ifndef NDEBUG
    

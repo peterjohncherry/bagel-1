@@ -22,6 +22,7 @@ Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const S
   nstate_ = ref->ciwfn()->nstates();
   cc_ = ref->ciwfn()->civectors();
   det_ = ref->ciwfn()->civectors()->det();
+  maxtile = ref->maxtile();
 
   GammaMap = eqn_info->GammaMap;
   CTP_map  = eqn_info->CTP_map;

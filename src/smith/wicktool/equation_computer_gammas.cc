@@ -363,7 +363,6 @@ void Equation_Computer::Equation_Computer::get_gamma_2idx(const int MM, const in
   return;
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 unique_ptr<double[]>
 Equation_Computer::Equation_Computer::gamma_2idx_block( shared_ptr<const Civec> cbra, shared_ptr<const Civec> cket,
@@ -372,17 +371,17 @@ Equation_Computer::Equation_Computer::gamma_2idx_block( shared_ptr<const Civec> 
   cout << "gamma_2idx_block" << endl;
 
   unique_ptr<double[]> sigma_block = sigma_blocked( cbra, irange, jrange );
+
   size_t iblock_size  = irange.second - irange.first; 
   size_t jblock_size  = jrange.second - jrange.first; 
-
+  
   unique_ptr<double[]> gamma_block(new double[iblock_size*jblock_size])  ;
   std::fill_n(gamma_block.get(), iblock_size*jblock_size, 0.0);
-  
+
   dgemv_("N", cbra->size(), iblock_size*jblock_size, 1.0, sigma_block.get(), cbra->size(), cket->data(), 1, 0.0, gamma_block.get(), 1);
   
   return gamma_block;
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adapted from routines in src/ci/fci/knowles_compute.cc so returns block of a sigma vector in a manner more compatible with
@@ -401,6 +400,10 @@ Equation_Computer::Equation_Computer::sigma_blocked(shared_ptr<const Civec> cvec
   size_t jblock_size  = jrange.second - jrange.first; 
 
   const size_t sigma_block_size =lena*lenb*(iblock_size*norb_+jblock_size);
+  cout << "sigma_block_size = "<<  sigma_block_size << endl;
+  cout << "irange.second , irange.first = "<<  irange.second << " , " <<  irange.first  << endl;
+  cout << "jrange.second , jrange.first = "<<  jrange.second << " , " <<   jrange.first  << endl;
+  cout << "lena , lenb                  = "<<  lena  << " , " <<  lenb  << endl;
 
   unique_ptr<double[]> sigma_block(new double[sigma_block_size])  ;
   std::fill_n(sigma_block.get(), sigma_block_size, 0.0);
@@ -438,8 +441,30 @@ Equation_Computer::Equation_Computer::sigma_blocked(shared_ptr<const Civec> cvec
 
 }        
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<Tensor_<double>> 
+Equation_Computer::Equation_Computer::convert_civec_to_tensor( shared_ptr<const Civec> civector ) const {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "convert_civec_to_tensor" << endl;
+
+  vector<IndexRange> civec_idxrng(1, IndexRange(0 , maxtile, 0 , ( civector->lena() * civector->lenb() ) ));  
+  shared_ptr<Tensor_<double>> civec_tensor= make_shared<Tensor_<double>>( civec_idxrng);
+  civec_tensor->allocate();
+
+  size_t idx_position = 0;
+
+  for ( Index idx_block : civec_idxrng[0].range() ){
+     unique_ptr<double[]> civec_block(new double[idx_block.size()]);
+     copy_n( civector->data() + idx_position, idx_block.size(), civec_block.get());
+     civec_tensor->put_block(civec_block, vector<Index>({ idx_block })) ;  
+     idx_position += idx_block.size();  
+  }
+
+  return civec_tensor;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Out puts the interval [start_orb, end_orb) of the index blocks at block_pos
+// Outputs the interval [start_orb, end_orb) of the index blocks at block_pos
 // Note the interval is relative to the input IndexRanges.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<pair<size_t, size_t>>>
