@@ -108,13 +108,13 @@ class Equation_Computer {
 
     void get_civector_indexranges(int nstates) ;
 
+    void build_sigma_2orb_tensor(std::string Bra_name, std::string Ket_name, std::shared_ptr<std::vector<std::string>> orb_ranges_str)  ;
+
     /////////// Utility routines /////////////////////////
-
-    void Fill_out_detmap(int nstates) ;
  
-    std::string get_civec_name(int state_num) const ; 
+    std::string get_sigma_name( std::string Bra_name, std::string Ket_name , std::shared_ptr<std::vector<std::string>>  orb_ranges, std::shared_ptr<std::vector<bool>> aops ) ;
 
-    std::string get_civec_name(int state_num, int nalpha, int nbeta) const ;
+    std::string get_civec_name(int state_num, int norb, int nalpha, int nbeta) const ;
  
     std::string get_det_name(std::shared_ptr<const Determinants> Detspace ) ;
 

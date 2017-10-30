@@ -31,8 +31,8 @@ Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const S
   
   CIvec_data_map = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
   Sigma_data_map = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
+  determinants_map = make_shared<std::map<std::string, std::shared_ptr<const Determinants>>>();
 
-  Fill_out_detmap(1) ;
   cimaxblock = 2500; //figure out what is best, this chosen so 4 orbital indexes to hit maxtile of 10000.
 
   get_civector_indexranges(1);
@@ -41,22 +41,11 @@ Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const S
   tester();
     
 }  
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Trivial, in seperate function as filling out map will be different in relativistic case
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer::Equation_Computer::Fill_out_detmap(int nstates) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- 
-  determinants_map = make_shared<std::map<std::string, std::shared_ptr<const Determinants>>>();
-  for ( int ii = 0 ; ii != nstates; ii++ ) 
-    determinants_map->emplace( get_det_name(cc_->data(ii)->det()), cc_->data(ii)->det() );
-  return;
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 string Equation_Computer::Equation_Computer::get_det_name(shared_ptr<const Determinants> Detspace ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- return "Det[" +to_string(Detspace->norb()) + ",{"+to_string(Detspace->nelea())+"a,"+to_string(Detspace->neleb())+"b}]";
+ return "[" +to_string(Detspace->norb()) + ",{"+to_string(Detspace->nelea())+"a,"+to_string(Detspace->neleb())+"b}]";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,9 +54,10 @@ string Equation_Computer::Equation_Computer::get_det_name(shared_ptr<const Deter
 void Equation_Computer::Equation_Computer::get_civector_indexranges(int nstates) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
-  ci_idxrng_map = make_shared<map< int , shared_ptr<IndexRange>>>();
   for ( int ii = 0 ; ii != nstates; ii++ ) 
-    ci_idxrng_map->emplace( ii , make_shared<IndexRange>(cc_->data(ii)->lena()*cc_->data(ii)->lenb(), cimaxblock ));  
+    range_conversion_map->emplace( get_civec_name( ii , cc_->data(ii)->det()->norb(), cc_->data(ii)->det()->nelea(), cc_->data(ii)->det()->neleb()),
+                                   make_shared<IndexRange>(cc_->data(ii)->lena()*cc_->data(ii)->lenb(), cimaxblock ));  
+
 
   return;
 }

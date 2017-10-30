@@ -257,6 +257,7 @@ void Equation_Computer::Equation_Computer::sigma_2a1(shared_ptr<const Civec> cve
   for (int ip = 0; ip != ij; ++ip) {
     double* const target_base = sigma->data(ip)->data();
 
+    //DetMap(size_t t, int si, size_t s, int o) : target(t), sign(si), source(s), ij(o) {}
     for (auto& iter : cvec->det()->phia(ip)) {
       const double sign = static_cast<double>(iter.sign);
       double* const target_array = target_base + iter.source*lb;
@@ -346,8 +347,6 @@ void Equation_Computer::Equation_Computer::get_gamma_2idx(const int MM, const in
   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(gamma_ranges->size(),0);  
   shared_ptr<vector<int>> mins = make_shared<vector<int>>(gamma_ranges->size(),0);  
   
-  shared_ptr<vector<pair<size_t,size_t>>> gamma_block_start;
-
   do {
     
     vector<Index> gamma_id_blocks = *(get_rng_blocks( block_pos, *gamma_ranges));
@@ -482,27 +481,16 @@ Equation_Computer::Equation_Computer::convert_civec_to_tensor( shared_ptr<const 
 
   cout <<endl;
 
-  CIvec_data_map->emplace(get_civec_name(state_num),  civec_tensor); 
+  //will have to modify for relativistic case
+  CIvec_data_map->emplace(  get_civec_name(state_num, civector->det()->norb(), civector->det()->nelea(), civector->det()->neleb() ), civec_tensor); 
+  determinants_map->emplace(get_civec_name(state_num, civector->det()->norb(), civector->det()->nelea(), civector->det()->neleb() ), civector->det() ); 
 
   return civec_tensor;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Trivial, but this is probably going to be extended later on, and I'd rather just change this than
-// lots of other places
+string Equation_Computer::Equation_Computer::get_civec_name(int state_num, int norb, int nalpha, int nbeta) const { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-string Equation_Computer::Equation_Computer::get_civec_name(int state_num) const { 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  return to_string(state_num);
-
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-string Equation_Computer::Equation_Computer::get_civec_name(int state_num, int nalpha, int nbeta) const { 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  string name = to_string(state_num);
-  name += "_{" + to_string(nalpha) + "," + to_string(nbeta) + "}" ;
-  
+  string name = to_string(state_num) + "_["+ to_string(norb)+"{" + to_string(nalpha) + "a," + to_string(nbeta) + "b}]" ;
   return name ;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -530,4 +518,127 @@ Equation_Computer::Equation_Computer::get_block_start( shared_ptr<vector<IndexRa
   return make_shared<vector<pair<size_t,size_t>>>(block_start_end);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Adapted from routines in src/ci/fci/knowles_compute.cc so returns block of a sigma vector in a manner more compatible with
+// the Tensor format.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void
+Equation_Computer::Equation_Computer::build_sigma_2orb_tensor(string Bra_name, string Ket_name, shared_ptr<vector<string>> orb_ranges_str)  {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "build_sigma_2idx_tensor" << endl;
+
+  // temp hack for aops, must implement SigmaInfo class and map so this is cleaner
+  shared_ptr<vector<bool>> aops = make_shared<vector<bool>>(vector<bool> { true, false } );
+  string sigma_name = get_sigma_name( Bra_name, Ket_name, orb_ranges_str, aops );
+
+  shared_ptr<Tensor_<double>> Bra_civec = CIvec_data_map->at(Bra_name);
+  shared_ptr<const Determinants> Bra_det = determinants_map->at(Bra_name);
+
+  shared_ptr<Tensor_<double>> Ket_civec = CIvec_data_map->at(Ket_name);
+  shared_ptr<const Determinants> Ket_det = determinants_map->at(Ket_name);
+
+  shared_ptr<vector<IndexRange>> orb_ranges  = Get_Bagel_IndexRanges( orb_ranges_str );   
+
+  shared_ptr<IndexRange> Bra_range = range_conversion_map->at(Bra_name);
+  shared_ptr<IndexRange> Ket_range = range_conversion_map->at(Ket_name);
+
+  shared_ptr<vector<IndexRange>> sigma_ranges = make_shared<vector<IndexRange>>(1, *Bra_range);
+  sigma_ranges->insert(sigma_ranges->end(), orb_ranges->begin(), orb_ranges->end());
+
+
+  shared_ptr<Tensor_<double>> sigma_tensor = make_shared<Tensor_<double>>(*(sigma_ranges));
+  sigma_tensor->allocate();
+  sigma_tensor->zero();
+ 
+  //note that we because of the loop ranges has 
+  shared_ptr<vector<int>> range_lengths = get_range_lengths(sigma_ranges); 
+  shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(sigma_ranges->size(),0);  
+  shared_ptr<vector<int>> mins = make_shared<vector<int>>(sigma_ranges->size(),0);  
+
+  do {
+    
+    vector<Index> sigma_id_blocks = *(get_rng_blocks( block_pos, *sigma_ranges));
+    size_t offset = 0 ;
+    //Should bring the civector to sigma (not vice versa) as sigma is much larger 
+    for ( Index Ket_idx_block : Ket_range->range()) { 
+        // build_sigma_block( sigma_tensor, sigma_id_blocks, Ket_idx_block,) ;
+         offset += Ket_idx_block.size(); 
+    }
+
+  } while (fvec_cycle(block_pos, range_lengths, mins ));
+
+  Sigma_data_map->emplace(sigma_name, sigma_tensor); 
+
+  return;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+string Equation_Computer::Equation_Computer::get_sigma_name( string Bra_name, string Ket_name , shared_ptr<vector<string>>  orb_ranges,
+                                                             shared_ptr<vector<bool>>  aops ) { 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+   string sigma_name = Bra_name + "_";
+
+   for (string rng : *orb_ranges ) 
+     sigma_name += rng[0];
+
+   for ( bool aop : *aops ) {
+     if ( aop ) {
+       sigma_name += "1";
+     } else { 
+       sigma_name += "0";
+     }
+   } 
+
+  sigma_name += "_"+Ket_name;
+
+
+  return sigma_name;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  size_t iblock_size  = irange.second - irange.first; 
+//  size_t jblock_size  = jrange.second - jrange.first; 
+//
+//  const size_t sigma_block_size = ciblock_size*(iblock_size*norb_+jblock_size);
+//  cout << "sigma_block_size = " <<  sigma_block_size << endl;
+//  cout << "irange.second , irange.first = "<<  irange.second << " , " <<  irange.first  << endl;
+// cout << "jrange.second , jrange.first = "<<  jrange.second << " , " <<   jrange.first  << endl;
+//  cout << "lena , lenb                  = "<<  lena  << " , " <<  lenb  << endl;
+//
+//  unique_ptr<double[]> sigma_block(new double[sigma_block_size])  ;
+//  std::fill_n(sigma_block.get(), sigma_block_size, 0.0);
+
+//  const double* const source_base = cvec->data();
+//  for (size_t ii = 0; ii != iblock_size; ++ii) {
+//    for (size_t jj = 0; jj != jblock_size; ++jj) {
+//      double* const target_base = sigma_block.get() + ((ii*norb_+jj)*lena*lenb);
+//      
+//      for (auto& iter : cvec->det()->phia( (ii+irange.first)*norb_ + (jj+jrange.first) )) {
+//        const double sign = static_cast<double>(iter.sign);
+//        double* const target_array = target_base + iter.source*lenb;
+//        blas::ax_plus_y_n(sign, source_base + iter.target*lenb, lenb, target_array);
+//      }
+//    }
+//  }
+// 
+//  //should do this by transposing civector so can use blas copy as above
+//  for (int adet_pos = 0; adet_pos < lena; ++adet_pos) {
+//    const double* const source_array0 = cvec->element_ptr(0, adet_pos);
+// 
+//    for (size_t ii = 0; ii != iblock_size; ++ii) {
+//      for (size_t jj = 0; jj != jblock_size; ++jj) {
+//        double* const target_array0 = sigma_block.get() + ((ii*norb_+jj)*lena*lenb) + adet_pos;
+// 
+//        for (auto& iter : cvec->det()->phib( (ii+irange.first)*norb_+(jj+jrange.first) ) ) {
+//          const double sign = static_cast<double>(iter.sign);
+//          target_array0[iter.source] += sign * source_array0[iter.target];
+//        }
+//      }
+//    }    
+//  }      
+//  
+//  return sigma_block;
+// 
+// }       
+// 
+// 
 #endif
