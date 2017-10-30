@@ -271,14 +271,13 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
     cout << "WARNING : You have already calculated this expression....." << Expression_name
     << " = " << scalar_results_map->at(Expression_name) << endl;
  
-  cout << "A1" << endl;
   shared_ptr<Equation<double>> Expr = Expr_Info->expression_map->at(Expression_name); 
   double result = 0.0;
+  int MM = 0;
+  int NN = 0;
 
-  cout << "A2" << endl;
   shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, CTP_data_map, Gamma_data_map);
 
-  cout << "A3" << endl;
   //Hack to test excitation operators
   shared_ptr<vector<string>> X_ranges = make_shared<vector<string>>(vector<string> {"notvir", "notvir", "notcor", "notcor"});
   shared_ptr<Tensor_<double>> XTens_data = Expr_computer->get_uniform_Tensor(X_ranges , 1.0 );
@@ -287,7 +286,6 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   shared_ptr<Tensor_<double>> YTens_data = Expr_computer->get_uniform_Tensor(Y_ranges , 1.0 );
   CTP_data_map->emplace("Y" , YTens_data);
 
-  cout << "A4" << endl;
 
   //Get Amap for each gamma
   vector<string> Gname_vec(Expr->G_to_A_map->size());
@@ -301,7 +299,11 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
       Expr_computer->get_gamma_tensor( 0, 0, Gname_vec[ii]) ;
       ii++;
     }
-  std::sort(Gname_vec.begin(), Gname_vec.end(), csl); 
+
+    Expr_computer->build_gamma_2idx_tensor( NN, MM, nelea_, neleb_, norb_, Gname_vec[2] );
+
+    std::sort(Gname_vec.begin(), Gname_vec.end(), csl); 
+
   }
 
 

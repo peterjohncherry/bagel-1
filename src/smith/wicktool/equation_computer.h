@@ -108,7 +108,11 @@ class Equation_Computer {
 
     void get_civector_indexranges(int nstates) ;
 
-    void build_sigma_2orb_tensor(std::string Bra_name, std::string Ket_name, std::shared_ptr<std::vector<std::string>> orb_ranges_str)  ;
+    void build_sigma_block( std::string sigma_name, std::vector<Index>& sigma_id_blocks, std::vector<int>& sigma_offsets, std::string Ket_name  ) const ;
+
+    void build_sigma_2idx_tensor(std::string Bra_name, std::string Ket_name, std::shared_ptr<std::vector<std::string>> orb_ranges_str)  ;
+
+    void build_gamma_2idx_tensor( int NN, int MM, int nelea, int neleb, int norb, std::string gamma_name ) ;
 
     /////////// Utility routines /////////////////////////
  
@@ -146,6 +150,14 @@ class Equation_Computer {
     std::shared_ptr<std::vector<vtype>>
     reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
 
+    template<class vtype>
+    std::shared_ptr<std::vector<vtype>>
+    reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::vector<vtype>& origvec ) ;
+
+    template<class vtype>
+    std::shared_ptr<std::vector<vtype>>
+    inverse_reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::vector<vtype>& origvec ) ;
+
     std::shared_ptr<std::vector<IndexRange>>
     Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
 
@@ -167,10 +179,12 @@ class Equation_Computer {
     std::shared_ptr<std::vector<Index>>
     get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::vector<IndexRange>& id_ranges);
 
-
     std::shared_ptr<std::vector<int>>
     get_num_index_blocks_vec(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
  
+    std::shared_ptr<std::vector<int>>
+    get_num_index_blocks_vec(std::shared_ptr<std::vector<IndexRange>> rngvec) ;
+
     std::vector<int>
     get_num_index_blocks_vec(std::vector<IndexRange>& rngvec);
 

@@ -491,8 +491,8 @@ string WickUtils::get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<vec
   return name;
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-string WickUtils::get_gamma_name(shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> aops_vec,
-                                      shared_ptr<vector<int>> idxs_pos ){
+string WickUtils::get_gamma_name( shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> aops_vec,
+                                  shared_ptr<vector<int>> idxs_pos ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   string  name = "";
  

@@ -121,8 +121,8 @@ class GammaGenerator{
     std::string get_Aname(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges, 
                           std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
    
-    static std::string get_gamma_name(std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> full_aops,
-                               std::shared_ptr<std::vector<int>> idxs_pos );
+    static std::string get_gamma_name( std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> full_aops,
+                                       std::shared_ptr<std::vector<int>> idxs_pos );
 
     bool RangeCheck(std::shared_ptr<std::vector<std::string>> full_id_ranges) ;
     
