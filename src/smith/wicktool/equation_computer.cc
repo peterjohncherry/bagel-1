@@ -21,18 +21,75 @@ Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const S
   norb_  = ref->ciwfn()->nact();
   nstate_ = ref->ciwfn()->nstates();
   cc_ = ref->ciwfn()->civectors();
-  det_ = ref->ciwfn()->civectors()->det();
   maxtile = ref->maxtile();
-
+  
   GammaMap = eqn_info->GammaMap;
   CTP_map  = eqn_info->CTP_map;
   
   CTP_data_map  = CTP_data_map_in;
   Gamma_data_map = Gamma_data_map_in;
+  
+  CIvec_data_map = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
+  Sigma_data_map = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
 
+  Fill_out_detmap(1) ;
+  cimaxblock = 2500; //figure out what is best, this chosen so 4 orbital indexes to hit maxtile of 10000.
+
+  get_civector_indexranges(1);
   range_conversion_map = range_conversion_map_in;
 
+  tester();
+    
 }  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Trivial, in seperate function as filling out map will be different in relativistic case
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::Fill_out_detmap(int nstates) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  determinants_map = make_shared<std::map<std::string, std::shared_ptr<const Determinants>>>();
+  for ( int ii = 0 ; ii != nstates; ii++ ) 
+    determinants_map->emplace( get_det_name(cc_->data(ii)->det()), cc_->data(ii)->det() );
+  return;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+string Equation_Computer::Equation_Computer::get_det_name(shared_ptr<const Determinants> Detspace ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ return "Det[" +to_string(Detspace->norb()) + ",{"+to_string(Detspace->nelea())+"a,"+to_string(Detspace->neleb())+"b}]";
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//should be extended to deal with spin sectors
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::get_civector_indexranges(int nstates) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  ci_idxrng_map = make_shared<map< int , shared_ptr<IndexRange>>>();
+  for ( int ii = 0 ; ii != nstates; ii++ ) 
+    ci_idxrng_map->emplace( ii , make_shared<IndexRange>(cc_->data(ii)->lena()*cc_->data(ii)->lenb(), cimaxblock ));  
+
+  return;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::tester(){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  shared_ptr<Tensor_<double>> civec1 =  convert_civec_to_tensor( cc_->data(0), 0 );
+  shared_ptr<Tensor_<double>> civec2 =  convert_civec_to_tensor( cc_->data(0), 0 );
+
+  double normval = civec1->dot_product(civec2); 
+  cout << " civec1->dot_product(civec2) = " << normval << endl;
+  cout << " civec1->rms()               = " << civec1->rms()  << endl;
+  cout << " civec1->norm()              = " << civec1->norm() << endl;
+  
+  assert(!(abs(normval -1.00) > 0.000000000001) ); 
+  
+  return;
+
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -77,9 +134,8 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
    shared_ptr<Tensor_<double>> CTP_data_old = find_or_get_CTP_data(Tname); cout <<  endl;
 
    // get original uncontracted ranges and positions of Ctrs relative to the current tensor
-   pair<int,int> rel_ctr_todo = ctr_todo;
-   int ctr1 = rel_ctr_todo.first;
-   int ctr2 = rel_ctr_todo.second;
+   int ctr1 = ctr_todo.first;
+   int ctr2 = ctr_todo.second;
    vector<IndexRange> unc_ranges_old = CTP_data_old->indexrange(); 
    vector<IndexRange> unc_ranges_new(unc_ranges_old.size()-2);  
    vector<int> unc_pos_new(unc_ranges_old.size()-2);  
@@ -87,14 +143,14 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
    vector<IndexRange>::iterator urn_iter = unc_ranges_new.begin();
    vector<int>::iterator upn_iter = unc_pos_new.begin();
    for ( int ii = 0 ; ii != CTP_old->unc_pos->size() ; ii++ )
-     if ( (ii != rel_ctr_todo.first) && (ii != rel_ctr_todo.second) ){ 
+     if ( (ii != ctr_todo.first) && (ii != ctr_todo.second) ){ 
        *urn_iter++ = unc_ranges_old[ii];
        *upn_iter++ = ii;
      }
 
    shared_ptr<Tensor_<double>> CTP_data_out = make_shared<Tensor_<double>>(unc_ranges_new);
    CTP_data_out->allocate();
-   int num_ctr_blocks = unc_ranges_old[rel_ctr_todo.first].range().size();
+   int num_ctr_blocks = unc_ranges_old[ctr_todo.first].range().size();
 
    //loops over index blocks where ctr1 = ctr2 
    for (int ii = 0 ; ii != num_ctr_blocks ; ii++){ 
@@ -104,12 +160,12 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
      for ( int jj = 0 ; jj != unc_ranges_old.size() ; jj++ ) 
         maxs->at(jj) = unc_ranges_old[jj].range().size()-1;
  
-     mins->at(rel_ctr_todo.first)  = ii;
-     mins->at(rel_ctr_todo.second) = ii; 
-     maxs->at(rel_ctr_todo.first)  = ii;
-     maxs->at(rel_ctr_todo.second) = ii;
-     block_pos->at(rel_ctr_todo.first)  = ii;
-     block_pos->at(rel_ctr_todo.second) = ii;
+     mins->at(ctr_todo.first)  = ii;
+     mins->at(ctr_todo.second) = ii; 
+     maxs->at(ctr_todo.first)  = ii;
+     maxs->at(ctr_todo.second) = ii;
+     block_pos->at(ctr_todo.first)  = ii;
+     block_pos->at(ctr_todo.second) = ii;
      
      const int ione = 1; 
      const double done = 1.0; 
@@ -182,9 +238,9 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( vector<int>& cont
    cout << "Equation_Computer::Equation_Computer::get_trace_tensor" << endl;
 
    if ( contracted_index_positions.size()-  Tens_in->indexrange().size() )  {
-     cout << "contracted_index_positions = [ "; cout.flush();  for ( int pos : contracted_index_positions ) {cout << pos << " " ; } cout << " ] " << endl;
+     cout << "contracted_index_positions         = [ "; cout.flush();  for ( int pos : contracted_index_positions ) {cout << pos << " " ; } cout << " ] " << endl;
      cout << "contracted_index_positions.size()  = "<<  contracted_index_positions.size() << endl;
-     cout << "Tens_in->indexrange().size() = " << Tens_in->indexrange().size()  <<  endl;
+     cout << "Tens_in->indexrange().size()       = " << Tens_in->indexrange().size()  <<  endl;
      cout << "trying to contract more indexes than there are in the tensor!" << endl;
      assert(false);
    }
@@ -281,8 +337,8 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( vector<int>& cont
          do { 
            int pos   = inner_product( fvec2->begin(), fvec2->end(), CTens_strides->begin(), 0); 
            int inpos = inner_product( fvec2->begin(), fvec2->end(), Tens_strides->begin(),  0); 
-           cout << "pos = "<< pos <<   endl;
-           cout << "inpos = "<< pos <<   endl;
+           cout << "pos   = "<< pos <<   endl;
+           cout << "inpos = "<< inpos <<   endl;
             
            blas::ax_plus_y_n(1.0, Tens_data_block_old.get()+inpos, inner_stride, Tens_data_block_new.get()+pos);
   
@@ -650,7 +706,6 @@ Equation_Computer::Equation_Computer::relativize_ctr_positions(pair <int,int> ct
      }
 
  return rel_ctr;
-
 
 }
 

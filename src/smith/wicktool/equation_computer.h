@@ -31,15 +31,20 @@ class Equation_Computer {
     int norb_  ;
     int nstate_;
     int maxtile;
+    int cimaxblock;
     std::shared_ptr<IndexRange> virt_  ;
     std::shared_ptr<IndexRange> active_  ;
     std::shared_ptr<IndexRange> closed_  ;
+    std::shared_ptr<std::map< int , std::shared_ptr<IndexRange>>> ci_idxrng_map;
+
     std::shared_ptr<const Dvec> cc_; 
-    std::shared_ptr<const Determinants> det_ ; 
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> determinants_map;
 
     std::shared_ptr<Equation<double>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
@@ -99,10 +104,22 @@ class Equation_Computer {
     sigma_blocked(std::shared_ptr<const Civec> cvec, std::pair<size_t,size_t> irange, std::pair<size_t,size_t> jrange) const ;
    
     std::shared_ptr<Tensor_<double>> 
-    convert_civec_to_tensor( std::shared_ptr<const Civec> civector ) const ;
+    convert_civec_to_tensor( std::shared_ptr<const Civec> civector, int state_num ) const ;
+
+    void get_civector_indexranges(int nstates) ;
 
     /////////// Utility routines /////////////////////////
-  
+
+    void Fill_out_detmap(int nstates) ;
+ 
+    std::string get_civec_name(int state_num) const ; 
+
+    std::string get_civec_name(int state_num, int nalpha, int nbeta) const ;
+ 
+    std::string get_det_name(std::shared_ptr<const Determinants> Detspace ) ;
+
+    void tester();
+
     std::shared_ptr<std::vector<int>> get_CTens_strides( std::shared_ptr<std::vector<int>> range_sizes, int ctr1 , int ctr2 ) ;
 
     std::shared_ptr<std::vector<int>> get_CTens_strides( std::vector<int>& range_sizes, int ctr1 , int ctr2 ) ;

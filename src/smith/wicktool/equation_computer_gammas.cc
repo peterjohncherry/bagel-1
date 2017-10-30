@@ -10,7 +10,7 @@ using namespace bagel::SMITH;
 //Gets the gammas in tensor format. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<shared_ptr<Tensor_<double>>>>
-Equation_Computer::Equation_Computer::get_gammas(int MM , int NN, string gamma_name){
+Equation_Computer::Equation_Computer::get_gammas(int MM, int NN, string gamma_name){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Computer::Equation_Computer::get_gammas"  << endl;
   cout << "Gamma name = " << gamma_name << endl;
@@ -80,6 +80,7 @@ Equation_Computer::Equation_Computer::compute_gammas(const int MM, const int NN 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "compute_gamma12 MM = " << MM << " NN = " << NN  << endl;
 
+  shared_ptr<const Determinants> det_ =  determinants_map->at(get_det_name(cc_->data(MM)->det()));
   if (det_->compress()) { // uncompressing determinants
     auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
     cc_->set_det(detex);
@@ -118,6 +119,7 @@ Equation_Computer::Equation_Computer::compute_gamma12(const int MM, const int NN
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "compute_gamma12 MM = " << MM << " NN = " << NN  << endl;
 
+  shared_ptr<const Determinants> det_ =  determinants_map->at(get_det_name(cc_->data(MM)->det()));
   if (det_->compress()) { // uncompressing determinants
     auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
     cc_->set_det(detex);
@@ -322,7 +324,9 @@ void Equation_Computer::Equation_Computer::get_gamma_2idx(const int MM, const in
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "get_gamma_2idx MM = " << MM << " NN = " << NN  << endl;
   cout << "gamma_name = " << gamma_name << endl;
+//  sigma_name = 
 
+  shared_ptr<const Determinants> det_ =  determinants_map->at(get_det_name(cc_->data(MM)->det()));
   if (det_->compress()) { // uncompressing determinants, probably should be done in the sigma_blocked routine
     auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
     cc_->set_det(detex);
@@ -400,7 +404,7 @@ Equation_Computer::Equation_Computer::sigma_blocked(shared_ptr<const Civec> cvec
   size_t jblock_size  = jrange.second - jrange.first; 
 
   const size_t sigma_block_size =lena*lenb*(iblock_size*norb_+jblock_size);
-  cout << "sigma_block_size = "<<  sigma_block_size << endl;
+  cout << "sigma_block_size = " <<  sigma_block_size << endl;
   cout << "irange.second , irange.first = "<<  irange.second << " , " <<  irange.first  << endl;
   cout << "jrange.second , jrange.first = "<<  jrange.second << " , " <<   jrange.first  << endl;
   cout << "lena , lenb                  = "<<  lena  << " , " <<  lenb  << endl;
@@ -443,26 +447,64 @@ Equation_Computer::Equation_Computer::sigma_blocked(shared_ptr<const Civec> cvec
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>> 
-Equation_Computer::Equation_Computer::convert_civec_to_tensor( shared_ptr<const Civec> civector ) const {
+Equation_Computer::Equation_Computer::convert_civec_to_tensor( shared_ptr<const Civec> civector, int state_num ) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "convert_civec_to_tensor" << endl;
+  cout << "Equation_Computer::convert_civec_to_tensor" << endl;
 
-  vector<IndexRange> civec_idxrng(1, IndexRange(0 , maxtile, 0 , ( civector->lena() * civector->lenb() ) ));  
-  shared_ptr<Tensor_<double>> civec_tensor= make_shared<Tensor_<double>>( civec_idxrng);
+  //NOTE: must be adapted to handle arbitrary spin sectors
+  vector<IndexRange> civec_idxrng(1, *(ci_idxrng_map->at(state_num)) );  
+
+  cout <<" civec_idxrng[0].nblock()       = " << civec_idxrng[0].nblock()     <<  endl;
+  cout <<" civec_idxrng[0].size()         = " << civec_idxrng[0].size()       <<  endl;
+  cout <<" civec_idxrng[0].range().size() = " << civec_idxrng[0].range().size() <<  endl;
+  cout <<" civec_idxrng[0].range().size() = " << civec_idxrng[0].range().size() <<  endl;
+  
+  shared_ptr<Tensor_<double>> civec_tensor = make_shared<Tensor_<double>>( civec_idxrng );
   civec_tensor->allocate();
+  civec_tensor->zero();
 
   size_t idx_position = 0;
 
+  cout << "civectordata = " ; cout.flush(); 
   for ( Index idx_block : civec_idxrng[0].range() ){
      unique_ptr<double[]> civec_block(new double[idx_block.size()]);
+     std::fill_n(civec_block.get(), idx_block.size(), 0.0);
      copy_n( civector->data() + idx_position, idx_block.size(), civec_block.get());
-     civec_tensor->put_block(civec_block, vector<Index>({ idx_block })) ;  
+
+     for ( int ii = 0 ; ii != idx_block.size() ; ii++ ) 
+       cout << *(civector->data() + idx_position + ii) << " "; 
+     cout.flush();
+       
+  
+     civec_tensor->add_block(civec_block, vector<Index>({ idx_block })) ;  
      idx_position += idx_block.size();  
   }
 
+  cout <<endl;
+
+  CIvec_data_map->emplace(get_civec_name(state_num),  civec_tensor); 
+
   return civec_tensor;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Trivial, but this is probably going to be extended later on, and I'd rather just change this than
+// lots of other places
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+string Equation_Computer::Equation_Computer::get_civec_name(int state_num) const { 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  return to_string(state_num);
 
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+string Equation_Computer::Equation_Computer::get_civec_name(int state_num, int nalpha, int nbeta) const { 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  string name = to_string(state_num);
+  name += "_{" + to_string(nalpha) + "," + to_string(nbeta) + "}" ;
+  
+  return name ;
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Outputs the interval [start_orb, end_orb) of the index blocks at block_pos
 // Note the interval is relative to the input IndexRanges.
