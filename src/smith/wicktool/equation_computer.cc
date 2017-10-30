@@ -35,10 +35,13 @@ Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const S
 
   cimaxblock = 2500; //figure out what is best, this chosen so 4 orbital indexes to hit maxtile of 10000.
 
-  get_civector_indexranges(1);
   range_conversion_map = range_conversion_map_in;
+   cout << "B2" << endl;
+  get_civector_indexranges(1);
 
+   cout << "B3" << endl;
   tester();
+   cout << "B4" << endl;
     
 }  
 
@@ -58,22 +61,26 @@ void Equation_Computer::Equation_Computer::get_civector_indexranges(int nstates)
     range_conversion_map->emplace( get_civec_name( ii , cc_->data(ii)->det()->norb(), cc_->data(ii)->det()->nelea(), cc_->data(ii)->det()->neleb()),
                                    make_shared<IndexRange>(cc_->data(ii)->lena()*cc_->data(ii)->lenb(), cimaxblock ));  
 
-
   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Equation_Computer::Equation_Computer::tester(){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+//
+  cout << "C1" << endl; 
   shared_ptr<Tensor_<double>> civec1 =  convert_civec_to_tensor( cc_->data(0), 0 );
+  cout << "C2" << endl; 
   shared_ptr<Tensor_<double>> civec2 =  convert_civec_to_tensor( cc_->data(0), 0 );
+  cout << "C3" << endl; 
 
   double normval = civec1->dot_product(civec2); 
+  cout << "C4" << endl; 
   cout << " civec1->dot_product(civec2) = " << normval << endl;
   cout << " civec1->rms()               = " << civec1->rms()  << endl;
   cout << " civec1->norm()              = " << civec1->norm() << endl;
   
+  cout << "C1" << endl; 
   assert(!(abs(normval -1.00) > 0.000000000001) ); 
   
   return;

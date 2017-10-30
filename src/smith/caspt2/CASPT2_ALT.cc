@@ -270,12 +270,15 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   if ( scalar_results_map->find(Expression_name) != scalar_results_map->end() )  
     cout << "WARNING : You have already calculated this expression....." << Expression_name
     << " = " << scalar_results_map->at(Expression_name) << endl;
-
+ 
+  cout << "A1" << endl;
   shared_ptr<Equation<double>> Expr = Expr_Info->expression_map->at(Expression_name); 
   double result = 0.0;
 
+  cout << "A2" << endl;
   shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, CTP_data_map, Gamma_data_map);
 
+  cout << "A3" << endl;
   //Hack to test excitation operators
   shared_ptr<vector<string>> X_ranges = make_shared<vector<string>>(vector<string> {"notvir", "notvir", "notcor", "notcor"});
   shared_ptr<Tensor_<double>> XTens_data = Expr_computer->get_uniform_Tensor(X_ranges , 1.0 );
@@ -284,6 +287,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   shared_ptr<Tensor_<double>> YTens_data = Expr_computer->get_uniform_Tensor(Y_ranges , 1.0 );
   CTP_data_map->emplace("Y" , YTens_data);
 
+  cout << "A4" << endl;
 
   //Get Amap for each gamma
   vector<string> Gname_vec(Expr->G_to_A_map->size());
@@ -301,6 +305,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   }
 
 
+  cout << "A5" << endl;
   shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gammas( 0, 0, Gname_vec[0] );
   cout << "returned from get_gammas in tact " << endl;
   
@@ -318,6 +323,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
  
   cout << "Gamma names = [ " ; cout.flush();   for ( int ii = 0 ; ii != Gname_vec.size(); ii++ ) { cout << Gname_vec[ii] << " " ; cout.flush(); } cout << " ] " << endl;
 
+  cout << "A6" << endl;
   for ( int ii = 0 ; ii != Gname_vec.size(); ii++ ) {
   
     string Gamma_name = Gname_vec[ii];

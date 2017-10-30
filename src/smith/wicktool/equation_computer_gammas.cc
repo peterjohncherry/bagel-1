@@ -80,7 +80,8 @@ Equation_Computer::Equation_Computer::compute_gammas(const int MM, const int NN 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "compute_gamma12 MM = " << MM << " NN = " << NN  << endl;
 
-  shared_ptr<const Determinants> det_ =  determinants_map->at(get_det_name(cc_->data(MM)->det()));
+  string det_name = get_civec_name( MM, cc_->data(MM)->det()->norb(),  cc_->data(MM)->det()->nelea(), cc_->data(MM)->det()->neleb());  
+  shared_ptr<const Determinants> det_ =  determinants_map->at(det_name);
   if (det_->compress()) { // uncompressing determinants
     auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
     cc_->set_det(detex);
@@ -327,7 +328,8 @@ void Equation_Computer::Equation_Computer::get_gamma_2idx(const int MM, const in
   cout << "gamma_name = " << gamma_name << endl;
 //  sigma_name = 
 
-  shared_ptr<const Determinants> det_ =  determinants_map->at(get_det_name(cc_->data(MM)->det()));
+  string det_name = get_civec_name( MM, cc_->data(MM)->det()->norb(),  cc_->data(MM)->det()->nelea(), cc_->data(MM)->det()->neleb());  
+  shared_ptr<const Determinants> det_ =  determinants_map->at(det_name);
   if (det_->compress()) { // uncompressing determinants, probably should be done in the sigma_blocked routine
     auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
     cc_->set_det(detex);
@@ -451,7 +453,8 @@ Equation_Computer::Equation_Computer::convert_civec_to_tensor( shared_ptr<const 
   cout << "Equation_Computer::convert_civec_to_tensor" << endl;
 
   //NOTE: must be adapted to handle arbitrary spin sectors
-  vector<IndexRange> civec_idxrng(1, *(ci_idxrng_map->at(state_num)) );  
+  string civec_name = get_civec_name(state_num, civector->det()->norb(), civector->det()->nelea(), civector->det()->neleb());  
+  vector<IndexRange> civec_idxrng(1, *(range_conversion_map->at(civec_name)) );  
 
   cout <<" civec_idxrng[0].nblock()       = " << civec_idxrng[0].nblock()     <<  endl;
   cout <<" civec_idxrng[0].size()         = " << civec_idxrng[0].size()       <<  endl;
@@ -482,8 +485,8 @@ Equation_Computer::Equation_Computer::convert_civec_to_tensor( shared_ptr<const 
   cout <<endl;
 
   //will have to modify for relativistic case
-  CIvec_data_map->emplace(  get_civec_name(state_num, civector->det()->norb(), civector->det()->nelea(), civector->det()->neleb() ), civec_tensor); 
-  determinants_map->emplace(get_civec_name(state_num, civector->det()->norb(), civector->det()->nelea(), civector->det()->neleb() ), civector->det() ); 
+  CIvec_data_map->emplace( civec_name, civec_tensor); 
+  determinants_map->emplace( civec_name, civector->det() ); 
 
   return civec_tensor;
 }
