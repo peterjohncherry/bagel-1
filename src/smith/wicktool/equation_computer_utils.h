@@ -44,7 +44,41 @@ namespace Equation_Computer_Utils {
      size_t get_unc_block_size( std::vector<Index>& idvec, std::pair<int,int> ctr ) ;
 
      void check_contracted_indexes( std::vector<IndexRange>&  idx_block, std::vector<int>& contracted_index_positions );
-}
+
+     //messy, but I can't see a better way
+     template<class vtype>
+     std::shared_ptr<std::vector<vtype>> inverse_reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) {
+     auto newvec = std::make_shared<std::vector<vtype>>(origvec->size());
+     for( int ii = 0; ii != origvec->size(); ii++ )
+         newvec->at(neworder->at(ii)) =  origvec->at(ii);
+     return newvec;
+     };
+
+     template<class vtype>
+     std::shared_ptr<std::vector<vtype>> inverse_reorder_vector(std::shared_ptr<std::vector<int>> neworder, std::vector<vtype>& origvec ) {
+     auto newvec = std::make_shared<std::vector<vtype>>(origvec.size());
+     for( int ii = 0; ii != origvec->size(); ii++ )
+       newvec->at(neworder->at(ii)) =  origvec->at(ii);
+     return newvec;
+     };
+
+     template<class vtype>
+     std::shared_ptr<std::vector<vtype>> reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::vector<vtype>& origvec ) {
+     auto newvec = std::make_shared<std::vector<vtype>>(origvec.size());
+     for( int ii = 0; ii != origvec.size(); ii++ )
+       newvec->at(ii) = origvec[neworder->at(ii)];
+     return newvec;
+     };
+
+     template<class vtype>
+     std::shared_ptr<std::vector<vtype>> reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) {
+       auto newvec = std::make_shared<std::vector<vtype>>(origvec->size());
+       for( int ii = 0; ii != origvec->size(); ii++ )
+          newvec->at(ii) = origvec->at(neworder->at(ii));
+       return newvec;
+     };
+
+     }
 }
 }
 #endif 

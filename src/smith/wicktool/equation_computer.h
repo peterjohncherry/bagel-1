@@ -130,22 +130,6 @@ class Equation_Computer {
 
     void Calculate_CTP(std::string A_contrib_name );
 
-    template<class vtype>
-    std::shared_ptr<std::vector<vtype>>
-    inverse_reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
-
-    template<class vtype>
-    std::shared_ptr<std::vector<vtype>>
-    reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) ;
-
-    template<class vtype>
-    std::shared_ptr<std::vector<vtype>>
-    reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::vector<vtype>& origvec ) ;
-
-    template<class vtype>
-    std::shared_ptr<std::vector<vtype>>
-    inverse_reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::vector<vtype>& origvec ) ;
-
     std::shared_ptr<std::vector<IndexRange>>
     Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
 

@@ -738,55 +738,6 @@ cout << "Equation_Computer::Get_Bagel_IndexRanges 1arg" << endl;
 
   return ranges_Bagel;
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class vtype>
-shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::inverse_reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Equation_Computer::inverse_reorder_vector" << endl;
-
-  auto newvec = make_shared<vector<vtype>>(origvec->size());
-  for( int ii = 0; ii != origvec->size(); ii++ )
-    newvec->at(neworder->at(ii)) =  origvec->at(ii);
-
-  return newvec;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class vtype>
-shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::inverse_reorder_vector(shared_ptr<vector<int>> neworder, vector<vtype>& origvec ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Equation_Computer::inverse_reorder_vector" << endl;
-
-  auto newvec = make_shared<vector<vtype>>(origvec.size());
-  for( int ii = 0; ii != origvec->size(); ii++ )
-    newvec->at(neworder->at(ii)) =  origvec->at(ii);
-
-  return newvec;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class vtype>
-shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::reorder_vector(shared_ptr<vector<int>> neworder , vector<vtype>& origvec ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Equation_Computer::reorder_vector" << endl;
-
-  auto newvec = make_shared<vector<vtype>>(origvec.size());
-  for( int ii = 0; ii != origvec.size(); ii++ )
-     newvec->at(ii) = origvec[neworder->at(ii)];
-  return newvec;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class vtype>
-shared_ptr<vector<vtype>> Equation_Computer::Equation_Computer::reorder_vector(shared_ptr<vector<int>> neworder , shared_ptr<vector<vtype>> origvec ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Equation_Computer::reorder_vector" << endl;
-
-  auto newvec = make_shared<vector<vtype>>(origvec->size());
-  for( int ii = 0; ii != origvec->size(); ii++ )
-     newvec->at(ii) = origvec->at(neworder->at(ii));
-  return newvec;
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 unique_ptr<DataType[]>
