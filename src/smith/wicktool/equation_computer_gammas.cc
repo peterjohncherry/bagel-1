@@ -1,10 +1,12 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
 #include <src/smith/wicktool/equation_computer.h>
+#include <src/smith/wicktool/equation_computer_utils.h>
 #include <src/util/f77.h>
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
+using namespace Equation_Computer_Utils; 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets the gammas in tensor format. 

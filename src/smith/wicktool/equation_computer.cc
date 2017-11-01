@@ -1,11 +1,13 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
 #include <src/smith/wicktool/equation_computer.h>
+#include <src/smith/wicktool/equation_computer_utils.h>
 #include <src/util/f77.h>
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 using namespace bagel::SMITH::Tensor_Sorter;
+using namespace bagel::SMITH::Equation_Computer_Utils; 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info_in,
@@ -65,19 +67,14 @@ void Equation_Computer::Equation_Computer::get_civector_indexranges(int nstates)
 void Equation_Computer::Equation_Computer::tester(){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-  cout << "C1" << endl; 
   shared_ptr<Tensor_<double>> civec1 =  convert_civec_to_tensor( cc_->data(0), 0 );
-  cout << "C2" << endl; 
   shared_ptr<Tensor_<double>> civec2 =  convert_civec_to_tensor( cc_->data(0), 0 );
-  cout << "C3" << endl; 
 
   double normval = civec1->dot_product(civec2); 
-  cout << "C4" << endl; 
   cout << " civec1->dot_product(civec2) = " << normval << endl;
   cout << " civec1->rms()               = " << civec1->rms()  << endl;
   cout << " civec1->norm()              = " << civec1->norm() << endl;
   
-  cout << "C1" << endl; 
   assert(!(abs(normval -1.00) > 0.000000000001) ); 
   
   return;
@@ -124,7 +121,6 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Equation_Computer::Equation_Computer::contract_on_same_tensor" << endl;
 
-   shared_ptr<CtrTensorPart<double>> CTP_old = CTP_map->at(Tname);
    shared_ptr<Tensor_<double>> CTP_data_old = find_or_get_CTP_data(Tname); cout <<  endl;
 
    // get original uncontracted ranges and positions of Ctrs relative to the current tensor
@@ -136,7 +132,7 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( pair<int,int> ctr
          
    vector<IndexRange>::iterator urn_iter = unc_ranges_new.begin();
    vector<int>::iterator upn_iter = unc_pos_new.begin();
-   for ( int ii = 0 ; ii != CTP_old->unc_pos->size() ; ii++ )
+   for ( int ii = 0 ; ii != unc_ranges_old.size() ; ii++ )
      if ( (ii != ctr_todo.first) && (ii != ctr_todo.second) ){ 
        *urn_iter++ = unc_ranges_old[ii];
        *upn_iter++ = ii;

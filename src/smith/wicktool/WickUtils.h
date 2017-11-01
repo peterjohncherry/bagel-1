@@ -17,6 +17,7 @@
 #include <numeric>
  
 namespace WickUtils {  
+
   using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
   using delta_strs = std::vector<std::vector<std::pair<std::string,std::string>>>;
   using delta_bools = std::vector<std::vector<std::pair<bool,bool>>>;
