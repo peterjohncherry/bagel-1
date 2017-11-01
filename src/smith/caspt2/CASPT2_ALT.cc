@@ -77,7 +77,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   range_conversion_map->emplace("notvir", not_virtual_rng); 
 
   CTP_map = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
-  CTP_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  Data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   Gamma_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   scalar_results_map = make_shared<map<string, double>>();
   //Deriv_results_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
@@ -171,7 +171,7 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   shared_ptr<TensOp<double>> HTens = Expr_Info->Build_TensOp("H", H_dummy_data, H_idxs, H_aops, H_idx_ranges, H_symmfuncs, H_constraints, H_factor, H_TimeSymm, false ) ;
   Expr_Info->T_map->emplace("H", HTens);
 
-  CTP_data_map->emplace("H" , H_2el_all);
+  Data_map->emplace("H" , H_2el_all);
 
   /* ---- h Tensor ----  */
   pair<double,double>                h_factor = make_pair(1.0,1.0);
@@ -187,7 +187,7 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   shared_ptr<TensOp<double>> hTens = Expr_Info->Build_TensOp("h", h_dummy_data, h_idxs, h_aops, h_idx_ranges, h_symmfuncs, h_constraints, h_factor, h_TimeSymm, false ) ;
   Expr_Info->T_map->emplace("h", hTens);
 
-  CTP_data_map->emplace("h" , H_1el_all);
+  Data_map->emplace("h" , H_1el_all);
   
   /* ---- T Tensor ----  */
   pair<double,double>                 T_factor = make_pair(1.0,1.0);
@@ -207,7 +207,7 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   shared_ptr<Tensor_<double>> TTens_data =  make_shared<Tensor_<double>>(T_bagel_ranges); 
   TTens_data->allocate();
   TTens_data->zero();
-  CTP_data_map->emplace("T" , TTens_data);
+  Data_map->emplace("T" , TTens_data);
  
 
    /* ---- L Tensor ----  */
@@ -228,7 +228,7 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   shared_ptr<Tensor_<double>> LTens_data =  make_shared<Tensor_<double>>(L_bagel_ranges); 
   LTens_data->allocate();
   LTens_data->zero();
-  CTP_data_map->emplace("L" , LTens_data);
+  Data_map->emplace("L" , LTens_data);
 
   return;
 }
@@ -276,15 +276,15 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   int MM = 0;
   int NN = 0;
 
-  shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, CTP_data_map, Gamma_data_map);
+  shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, Data_map, Gamma_data_map);
 
   //Hack to test excitation operators
   shared_ptr<vector<string>> X_ranges = make_shared<vector<string>>(vector<string> {"notvir", "notvir", "notcor", "notcor"});
   shared_ptr<Tensor_<double>> XTens_data = Expr_computer->get_uniform_Tensor(X_ranges , 1.0 );
-  CTP_data_map->emplace("X" , XTens_data);
+  Data_map->emplace("X" , XTens_data);
   shared_ptr<vector<string>> Y_ranges = make_shared<vector<string>>(vector<string> { "notcor", "notcor","notvir", "notvir"});
   shared_ptr<Tensor_<double>> YTens_data = Expr_computer->get_uniform_Tensor(Y_ranges , 1.0 );
-  CTP_data_map->emplace("Y" , YTens_data);
+  Data_map->emplace("Y" , YTens_data);
 
 
   //Get Amap for each gamma
@@ -373,7 +373,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
       Expr_computer->Calculate_CTP(A_contrib.first);
       for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){ 
         shared_ptr<Tensor_<double>> A_contrib_reordered = Expr_computer->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
-        A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), CTP_data_map->at(A_contrib.first));
+        A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), Data_map->at(A_contrib.first));
       }
       cout << "added " << A_contrib.first << endl; 
       cout << "=========================================================================================================" << endl << endl;
@@ -408,9 +408,9 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
  // shared_ptr<Tensor_<double>> All_twos_tens_omega = Eqn_computer->get_uniform_Tensor(omega_ranges, 2.0 );
  // shared_ptr<Tensor_<double>> All_twos_tens_omega_dag = Eqn_computer->get_uniform_Tensor(omega_ranges_dag, 2.0 );
  // 
- // CTP_data_map->at("X") =  All_ones_tens_free ;
- // CTP_data_map->at("T") =  All_twos_tens_omega ;
- // CTP_data_map->at("L") =  All_twos_tens_omega_dag ;
+ // Data_map->at("X") =  All_ones_tens_free ;
+ // Data_map->at("T") =  All_twos_tens_omega ;
+ // Data_map->at("L") =  All_twos_tens_omega_dag ;
 
 
 #endif

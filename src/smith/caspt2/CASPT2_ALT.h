@@ -58,7 +58,7 @@ class CASPT2_ALT {
     std::shared_ptr<const Determinants> det_ ; 
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Equation<double>>>> Expr_Info_map;
     std::shared_ptr<std::map< std::string, double>> scalar_results_map;

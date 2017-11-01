@@ -10,7 +10,7 @@ using namespace bagel::SMITH::Tensor_Sorter;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info_in,
                                                          std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
-                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map_in,
+                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in,
                                                          std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map_in ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,9 +26,8 @@ Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const S
   GammaMap = eqn_info->GammaMap;
   CTP_map  = eqn_info->CTP_map;
   
-  CTP_data_map  = CTP_data_map_in;
+  Data_map  = Data_map_in;
   Gamma_data_map = Gamma_data_map_in;
-  
   
   CIvec_data_map = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
   Sigma_data_map = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
@@ -95,20 +94,20 @@ void Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib )
   for (shared_ptr<CtrOp_base> ctr_op : *(eqn_info->ACompute_map->at(A_contrib))){
  
     // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
-    if( CTP_data_map->find(ctr_op->Tout_name()) == CTP_data_map->end() ) {
+    if( Data_map->find(ctr_op->Tout_name()) == Data_map->end() ) {
        shared_ptr<Tensor_<double>>  New_Tdata; 
  
       if ( ctr_op->ctr_type()[0] == 'g'){  cout << " : no contraction, fetch this tensor part" << endl; 
         New_Tdata =  get_block_Tensor(ctr_op->Tout_name());
-        CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+        Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
   
       } else if ( ctr_op->ctr_type()[0] == 'd' ){ cout << " : contract different tensors" << endl; 
         New_Tdata = contract_different_tensors( make_pair(ctr_op->T1_ctr_rel_pos(), ctr_op->T2_ctr_rel_pos()), ctr_op->T1name(), ctr_op->T2name(), ctr_op->Tout_name());
-        CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+        Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
       
       } else if ( ctr_op->ctr_type()[0] == 's' ) { cout << " : contract on same tensor" <<  endl; 
         New_Tdata = contract_on_same_tensor( ctr_op->ctr_rel_pos(), ctr_op->T1name(), ctr_op->Tout_name()); 
-        CTP_data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+        Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
       } else { 
         throw std::runtime_error(" unknown contraction type : " + ctr_op->ctr_type() ) ;
       }
@@ -450,11 +449,9 @@ void Equation_Computer::Equation_Computer::set_tensor_elems(shared_ptr<Tensor_<d
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Equation_Computer::Equation_Computer::set_tensor_elems  " << endl;
   
-   vector<IndexRange> id_ranges =  Tens->indexrange();
+   vector<IndexRange> id_ranges = Tens->indexrange();
 
-   shared_ptr<vector<int>> range_lengths = make_shared<vector<int>>(0); 
-   for (IndexRange idrng : id_ranges )
-     range_lengths->push_back(idrng.range().size()-1); 
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( id_ranges ) ; 
 
 //   cout << " range_lengths = [ " ; cout.flush(); for ( int pos : *range_lengths ) { cout << pos << " "  ; cout.flush(); } cout << "] " << endl;
 
@@ -462,9 +459,7 @@ void Equation_Computer::Equation_Computer::set_tensor_elems(shared_ptr<Tensor_<d
    shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
    do {
      // cout << " block_pos = [ " ; cout.flush(); for ( int pos : *block_pos ) { cout << pos << " "  ; cout.flush(); } cout << "] " << endl;
-     vector<Index> id_blocks(id_ranges.size());
-     for( int ii = 0 ;  ii != id_blocks.size(); ii++)
-       id_blocks[ii] =  id_ranges[ii].range(block_pos->at(ii));
+     vector<Index> id_blocks =  *(get_rng_blocks( block_pos, id_ranges ));
  
      if ( Tens->exists(id_blocks) ) { 
        unique_ptr<double[]> block_data = Tens->get_block(id_blocks);
@@ -483,18 +478,16 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Equation_Computer::Equation_Computer::get_block_Tensor : " << Tname << endl;
   
-   if(  CTP_data_map->find(Tname) != CTP_data_map->end())
-     return CTP_data_map->at(Tname);
+   if(  Data_map->find(Tname) != Data_map->end())
+     return Data_map->at(Tname);
 
    shared_ptr<vector<string>> unc_ranges = CTP_map->at(Tname)->unc_id_ranges;  
 
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
-   shared_ptr<vector<int>> range_lengths = make_shared<vector<int>>(0); 
-   for (auto idrng : *Bagel_id_ranges )
-     range_lengths->push_back(idrng.range().size()-1); 
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( Bagel_id_ranges ) ;
 
-   shared_ptr<Tensor_<double>> fulltens = CTP_data_map->at(Tname.substr(0,1));
+   shared_ptr<Tensor_<double>> fulltens = Data_map->at(Tname.substr(0,1));
    shared_ptr<Tensor_<double>> block_tensor = make_shared<Tensor_<double>>(*Bagel_id_ranges);
    block_tensor->allocate();
    block_tensor->zero();
@@ -504,11 +497,10 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
    do {
      cout << Tname << " block pos =  [ " ;    for (int block_num : *block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
      
-     vector<Index> T_id_blocks(Bagel_id_ranges->size());
-     for( int ii = 0 ;  ii != T_id_blocks.size(); ii++)
-       T_id_blocks[ii] =  Bagel_id_ranges->at(ii).range(block_pos->at(ii));
-  
+     vector<Index> T_id_blocks =  *(get_rng_blocks( block_pos, *Bagel_id_ranges )); 
+
      unique_ptr<double[]> T_block_data = fulltens->get_block(T_id_blocks);
+
      block_tensor->put_block(T_block_data, T_id_blocks);
 
    } while (fvec_cycle(block_pos, range_lengths, mins ));
@@ -526,11 +518,11 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::reorder_block_
   
    shared_ptr<Tensor_<double>> orig_tens ;
    { 
-   auto CTP_data_map_loc = CTP_data_map->find(Tname); 
-   if(  CTP_data_map_loc == CTP_data_map->end()){
+   auto Data_map_loc = Data_map->find(Tname); 
+   if(  Data_map_loc == Data_map->end()){
      throw std::runtime_error(" don't have tensor data for " +Tname+ " yet.... Equation_Computer::reorder_block_Tensor " ) ;
    } else { 
-     orig_tens =  CTP_data_map_loc->second; 
+     orig_tens =  Data_map_loc->second; 
    } 
    }
 
@@ -702,11 +694,11 @@ Equation_Computer::Equation_Computer::find_or_get_CTP_data(string CTP_name){
  cout << "Equation_Computer::Equation_Computer::find_or_get_CTP_data  : " <<  CTP_name <<  endl;
 
   shared_ptr<Tensor_<double>> CTP_data;
-  auto CTP_data_loc =  CTP_data_map->find(CTP_name); 
-  if ( CTP_data_loc == CTP_data_map->end() ){
+  auto Data_loc =  Data_map->find(CTP_name); 
+  if ( Data_loc == Data_map->end() ){
     CTP_data = get_block_Tensor(CTP_name);   
   } else {
-    CTP_data = CTP_data_loc->second;
+    CTP_data = Data_loc->second;
   }
   
   return CTP_data;

@@ -21,7 +21,7 @@ class Equation_Computer {
     public: 
     Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map,
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>> >> CTP_data_map,
+                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>> >> Data_map,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>> >> Gamma_data_map);
     ~Equation_Computer(){};
   
@@ -38,7 +38,7 @@ class Equation_Computer {
     std::shared_ptr<std::map< int , std::shared_ptr<IndexRange>>> ci_idxrng_map;
 
     std::shared_ptr<const Dvec> cc_; 
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
@@ -176,6 +176,7 @@ class Equation_Computer {
     std::shared_ptr<std::vector<Index>>
     get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::shared_ptr<std::vector<std::shared_ptr<IndexRange>>> old_ids) ;
 
+    static
     std::shared_ptr<std::vector<Index>>
     get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::vector<IndexRange>& id_ranges);
 
@@ -201,7 +202,9 @@ class Equation_Computer {
     std::shared_ptr<std::vector<int>>
     get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec, int skip_id) ;
 
-    std::shared_ptr<std::vector<int>>  get_range_lengths(std::shared_ptr<std::vector<IndexRange>> Id_ranges ) ;
+    std::shared_ptr<std::vector<int>> get_range_lengths( std::shared_ptr<std::vector<IndexRange>> Id_ranges ) ;
+
+    static std::shared_ptr<std::vector<int>> get_range_lengths( std::vector<IndexRange>& Id_ranges ) ;
 
     size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
 

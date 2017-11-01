@@ -362,7 +362,7 @@ void Equation_Computer::Equation_Computer::get_gamma_2idx(const int MM, const in
   } while (fvec_cycle(block_pos, range_lengths, mins ));
 
   Gamma_data_map->emplace(gamma_name, gamma_tensor); 
-  CTP_data_map->emplace(gamma_name, gamma_tensor); 
+  Data_map->emplace(gamma_name, gamma_tensor); 
 
   cc_->set_det(det_); 
 
@@ -488,7 +488,7 @@ Equation_Computer::Equation_Computer::convert_civec_to_tensor( shared_ptr<const 
   CIvec_data_map->emplace( civec_name, civec_tensor); 
   determinants_map->emplace( civec_name, civector->det() ); 
 
-  CTP_data_map->emplace( civec_name, civec_tensor); 
+  Data_map->emplace( civec_name, civec_tensor); 
 
   return civec_tensor;
 }
@@ -551,7 +551,7 @@ cout << "build_gamma_2idx_tensor : " << gamma_name << endl;
     shared_ptr<Tensor_<double>> gamma_2idx = contract_different_tensors( make_pair(0,0), Bra_name, sigma_name, gamma_name);
      
     Gamma_data_map->emplace( gamma_name, gamma_2idx );
-    CTP_data_map->emplace( gamma_name, gamma_2idx );
+    Data_map->emplace( gamma_name, gamma_2idx );
  
     Print_Tensor(Gamma_data_map->at(gamma_name));
 
@@ -611,7 +611,7 @@ Equation_Computer::Equation_Computer::build_sigma_2idx_tensor(string Bra_name, s
     } while (fvec_cycle(block_pos, range_lengths, mins ));
     
     Sigma_data_map->emplace(sigma_name, sigma_tensor); 
-    CTP_data_map->emplace(sigma_name, sigma_tensor); 
+    Data_map->emplace(sigma_name, sigma_tensor); 
 
   }
 
