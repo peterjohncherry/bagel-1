@@ -7,9 +7,8 @@
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
 #include <src/util/f77.h>
-#include <src/util/kramers.h>
-#include <src/smith/storage.h>
 #include <src/smith/wicktool/tensor_sorter.h>
+#include <src/smith/wicktool/tensor_arithmetic.h>
 
 namespace bagel {
 namespace SMITH { 
@@ -49,24 +48,23 @@ class Equation_Computer {
     std::shared_ptr<Equation<double>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
 
+    std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> Tensor_Calc;
+
     /////////// Tensor contraction routines /////////////////////////
 
     //only for two contracted indexes
-    std::shared_ptr<Tensor_<double>>
-    contract_on_same_tensor( std::pair<int,int> ctr_todo, std::string Tname, std::string Tout_name) ;
+    std::shared_ptr<Tensor_<double>> contract_on_same_tensor( std::string Tname, std::string Tout_name, std::pair<int,int> ctr_todo) ;
 
     //for an arbitrary number of contracted indexes
-    std::shared_ptr<Tensor_<double>>
-    contract_on_same_tensor( std::vector<int>& contracted_index_positions, std::shared_ptr<Tensor_<double>> Tens_in) ;
+    std::shared_ptr<Tensor_<double>> contract_on_same_tensor( std::string Tens_in, std::shared_ptr<std::vector<int>> contracted_index_positions ) ;
 
-    std::shared_ptr<Tensor_<double>>
-    contract_different_tensors(std::pair<int,int> ctr_todo, std::string T1name, std::string T2name, std::string Tout_name);
+    std::shared_ptr<Tensor_<double>> contract_different_tensors( std::string T1name, std::string T2name, std::string Tout_name, std::pair<int,int> ctr_todo );
 
-    std::shared_ptr<Tensor_<double>>
-    get_block_Tensor(std::string Tname);
+    std::shared_ptr<Tensor_<double>> reorder_block_Tensor(std::string Tname, std::shared_ptr<std::vector<int>> new_order);
+
+    std::shared_ptr<Tensor_<double>> get_block_Tensor(std::string Tname);
   
-    std::shared_ptr<Tensor_<double>>
-    reorder_block_Tensor(std::string Tname, std::shared_ptr<std::vector<int>> new_order);
+    std::shared_ptr<Tensor_<double>> get_uniform_Tensor(std::shared_ptr<std::vector<std::string>> unc_ranges, double XX );
 
     ////////////Gamma routines (RDM class based) //////////////////
 
@@ -124,10 +122,6 @@ class Equation_Computer {
 
     void tester();
 
-    std::shared_ptr<Tensor_<double>> get_uniform_Tensor(std::shared_ptr<std::vector<std::string>> unc_ranges, double XX );
-
-    static void set_tensor_elems(std::shared_ptr<Tensor_<double>> Tens, double elem_val );
-
     void Calculate_CTP(std::string A_contrib_name );
 
     std::shared_ptr<std::vector<IndexRange>>
@@ -149,16 +143,6 @@ class Equation_Computer {
     relativize_ctr_positions(std::pair <int,int> ctr_todo, std::shared_ptr<CtrTensorPart<double>>  CTP1,
                                                            std::shared_ptr<CtrTensorPart<double>>  CTP2);
 
-    template<class DataType>
-    std::unique_ptr<DataType[]>
-    reorder_tensor_data( const DataType* orig_data, std::shared_ptr<std::vector<int>>  new_order_vec,
-                         std::shared_ptr<std::vector<Index>> orig_index_blocks ) ;
-    
-    std::unique_ptr<double[]> get_block_of_data( double* data_ptr, std::shared_ptr<std::vector<IndexRange>> id_ranges, 
-                                                              std::shared_ptr<std::vector<int>> block_pos) ;
-
-    std::shared_ptr<std::vector<std::pair<size_t,size_t>>>
-    get_block_start( std::shared_ptr<std::vector<IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos );
 
 
 };

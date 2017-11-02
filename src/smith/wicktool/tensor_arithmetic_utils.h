@@ -1,5 +1,5 @@
-#ifndef __SRC_SMITH_Equation_Computer_Utils_H
-#define __SRC_SMITH_Equation_Computer_Utils_H
+#ifndef __SRC_SMITH_Tensor_Arithmetic_Utils_H
+#define __SRC_SMITH_Tensor_Arithmetic_Utils_H
 
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
@@ -7,8 +7,7 @@
 namespace bagel {
 namespace SMITH { 
 
-
-namespace Equation_Computer_Utils {  
+namespace Tensor_Arithmetic_Utils {  
 
      std::shared_ptr<std::vector<int>> get_CTens_strides( std::shared_ptr<std::vector<int>> range_sizes, int ctr1 , int ctr2 ) ;
      std::shared_ptr<std::vector<int>> get_CTens_strides( std::vector<int>& range_sizes, int ctr1 , int ctr2 ) ;
@@ -42,6 +41,8 @@ namespace Equation_Computer_Utils {
      size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
 
      size_t get_unc_block_size( std::vector<Index>& idvec, std::pair<int,int> ctr ) ;
+
+     std::shared_ptr<std::vector<std::pair<size_t,size_t>>> get_block_start( std::shared_ptr<std::vector<IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos ) ;
 
      void check_contracted_indexes( std::vector<IndexRange>&  idx_block, std::vector<int>& contracted_index_positions );
 
@@ -78,7 +79,7 @@ namespace Equation_Computer_Utils {
        return newvec;
      };
 
-     }
+}
 }
 }
 #endif 

@@ -279,11 +279,12 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, Data_map, Gamma_data_map);
 
   //Hack to test excitation operators
-  shared_ptr<vector<string>> X_ranges = make_shared<vector<string>>(vector<string> {"notvir", "notvir", "notcor", "notcor"});
-  shared_ptr<Tensor_<double>> XTens_data = Expr_computer->get_uniform_Tensor(X_ranges , 1.0 );
+  shared_ptr<vector<IndexRange>> X_ranges = make_shared<vector<IndexRange>>(vector<IndexRange> { *not_virtual_rng, *not_virtual_rng, *not_closed_rng,  *not_closed_rng});
+  shared_ptr<vector<IndexRange>> Y_ranges = make_shared<vector<IndexRange>>(vector<IndexRange> { *not_closed_rng,  *not_closed_rng,  *not_virtual_rng, *not_virtual_rng});
+  
+  shared_ptr<Tensor_<double>> XTens_data = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(X_ranges , 1.0 );
   Data_map->emplace("X" , XTens_data);
-  shared_ptr<vector<string>> Y_ranges = make_shared<vector<string>>(vector<string> { "notcor", "notcor","notvir", "notvir"});
-  shared_ptr<Tensor_<double>> YTens_data = Expr_computer->get_uniform_Tensor(Y_ranges , 1.0 );
+  shared_ptr<Tensor_<double>> YTens_data = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(Y_ranges , 1.0 );
   Data_map->emplace("Y" , YTens_data);
 
 
@@ -317,7 +318,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
 //    Expr_computer->set_tensor_elems( gamma_tens, 1.0 );
     vector<int> index_pos(gamma_tens->indexrange().size());
     iota(index_pos.begin() , index_pos.end(), 0 );
-    shared_ptr<Tensor_<double>> contracted_gamma = Expr_computer->contract_on_same_tensor(index_pos, gamma_tens);
+    shared_ptr<Tensor_<double>> contracted_gamma = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( gamma_tens, index_pos);
     cout << "contracted_gamma->rms()        = " << contracted_gamma->rms() << endl;
     cout << "contracted_gamma->norm()       = " << contracted_gamma->norm() << endl;
     cout << "contracted_gamma->rank()       = " << contracted_gamma->rank() <<       "    orig_gamma->rank         = "<< gamma_tens->rank() << endl;

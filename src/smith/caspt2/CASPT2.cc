@@ -83,10 +83,10 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   for (int i = 0; i != nstates_; ++i) {
     sall_.push_back(cas.sall_[i]->copy());
   }
-  h1_ = cas.h1_; Equation_Computer::Equation_Computer::set_tensor_elems( h1_ , 1.0  );
-  f1_ = cas.f1_; Equation_Computer::Equation_Computer::set_tensor_elems( f1_ , 1.0  );
-  v2_ = cas.v2_; Equation_Computer::Equation_Computer::set_tensor_elems( v2_ , 1.0  );
-  H_2el_ =  cas.H_2el_; Equation_Computer::Equation_Computer::set_tensor_elems( v2_ , 1.0  );
+  h1_ = cas.h1_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 1.0  );
+  f1_ = cas.f1_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 1.0  );
+  v2_ = cas.v2_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );
+  H_2el_ =  cas.H_2el_; Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );
 
   rdm0all_ = cas.rdm0all_;
   rdm1all_ = cas.rdm1all_;
@@ -156,7 +156,7 @@ void CASPT2::CASPT2::solve() {
    
       set_rdm(jst, istate);
 
-      Equation_Computer::Equation_Computer::set_tensor_elems( t2all_[istate]->at(jst) , 1.0  );
+      Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2all_[istate]->at(jst) , 1.0  );
       //Equation_Computer::Equation_Computer::set_tensor_elems( t2 , 1.0  );
        
       cout << " t2all_["<< istate << "]->at("<< jst << ")->norm() = " <<   t2all_[istate]->at(jst)->norm(); cout.flush();

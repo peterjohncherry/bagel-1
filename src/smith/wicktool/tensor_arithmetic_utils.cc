@@ -1,15 +1,15 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include <src/smith/wicktool/equation_computer_utils.h>
+#include <src/smith/wicktool/tensor_arithmetic_utils.h>
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 using namespace WickUtils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens ) {
+void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer_Utils::Print_Tensor " << endl;
+   cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
 
    vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
 
@@ -78,7 +78,7 @@ void Equation_Computer_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens ) {
    return ;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Equation_Computer_Utils::get_Tens_strides(vector<int>& range_sizes) { 
+shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides(vector<int>& range_sizes) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // cout << "get_Tens_strides " << endl;
 
@@ -91,7 +91,7 @@ shared_ptr<vector<int>> Equation_Computer_Utils::get_Tens_strides(vector<int>& r
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Equation_Computer_Utils::get_CTens_strides( vector<int>& range_sizes, int ctr1 , int ctr2 ) {
+shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_CTens_strides( vector<int>& range_sizes, int ctr1 , int ctr2 ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "get_CTens_strides " <<  endl;
 
@@ -111,7 +111,7 @@ shared_ptr<vector<int>> Equation_Computer_Utils::get_CTens_strides( vector<int>&
 //Gets the vector of strides of the tensor for which ctr_idxs_pos are contracted from the 
 //range sizes of the tensor where they are not contracted.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Equation_Computer_Utils::get_CTens_strides( vector<int>& range_sizes, vector<int>& ctr_idxs_pos ) {
+shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_CTens_strides( vector<int>& range_sizes, vector<int>& ctr_idxs_pos ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "get_CTens_strides " <<  endl;
 
@@ -133,7 +133,7 @@ cout << "get_CTens_strides " <<  endl;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Equation_Computer_Utils::get_CTens_strides( shared_ptr<vector<int>> range_sizes, int ctr1 , int ctr2 ) {
+shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_CTens_strides( shared_ptr<vector<int>> range_sizes, int ctr1 , int ctr2 ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "get_CTens_strides " <<  endl;
 
@@ -152,7 +152,7 @@ shared_ptr<vector<int>> Equation_Computer_Utils::get_CTens_strides( shared_ptr<v
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //rearranges position vector to have ctr pos at back
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Equation_Computer_Utils::put_ctr_at_back(shared_ptr<vector<int>> orig_pos , int ctr_pos){
+shared_ptr<vector<int>> Tensor_Arithmetic_Utils::put_ctr_at_back(shared_ptr<vector<int>> orig_pos , int ctr_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "put_ctr_at_back" << endl;
 
@@ -182,7 +182,7 @@ shared_ptr<vector<int>> Equation_Computer_Utils::put_ctr_at_back(shared_ptr<vect
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //rearranges position vector to have ctr pos at front
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Equation_Computer_Utils::put_ctr_at_front(shared_ptr<vector<int>> orig_pos , int ctr_pos){
+shared_ptr<vector<int>> Tensor_Arithmetic_Utils::put_ctr_at_front(shared_ptr<vector<int>> orig_pos , int ctr_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "put_ctr_at_front" <<  endl;  
   if (ctr_pos == orig_pos->front()){
@@ -210,7 +210,7 @@ shared_ptr<vector<int>> Equation_Computer_Utils::put_ctr_at_front(shared_ptr<vec
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<Index>>
-Equation_Computer_Utils::get_rng_blocks(shared_ptr<vector<int>> block_pos, vector<IndexRange>& id_ranges) {
+Tensor_Arithmetic_Utils::get_rng_blocks(shared_ptr<vector<int>> block_pos, vector<IndexRange>& id_ranges) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "Equation_Computer::get_rng_blocks " << endl;
   shared_ptr<vector<Index>> id_blocks = make_shared<vector<Index>>(block_pos->size());
@@ -221,7 +221,7 @@ Equation_Computer_Utils::get_rng_blocks(shared_ptr<vector<int>> block_pos, vecto
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<Index>>
-Equation_Computer_Utils::get_rng_blocks(shared_ptr<vector<int>> block_pos, shared_ptr<vector<shared_ptr<const IndexRange>>> old_ids) {
+Tensor_Arithmetic_Utils::get_rng_blocks(shared_ptr<vector<int>> block_pos, shared_ptr<vector<shared_ptr<const IndexRange>>> old_ids) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "Equation_Computer::get_rng_blocks constver" << endl;
 
@@ -234,7 +234,7 @@ Equation_Computer_Utils::get_rng_blocks(shared_ptr<vector<int>> block_pos, share
 
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<Index>>
-Equation_Computer_Utils::get_rng_blocks(shared_ptr<vector<int>> forvec, shared_ptr<vector<shared_ptr<IndexRange>>> old_ids) {
+Tensor_Arithmetic_Utils::get_rng_blocks(shared_ptr<vector<int>> forvec, shared_ptr<vector<shared_ptr<IndexRange>>> old_ids) {
 ////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "Equation_Computer::get_rng_blocks " << endl;
 
@@ -247,7 +247,7 @@ Equation_Computer_Utils::get_rng_blocks(shared_ptr<vector<int>> forvec, shared_p
 
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>>
-Equation_Computer_Utils::get_sizes(shared_ptr<vector<shared_ptr<const IndexRange>>> rngvec, int skip_id) {
+Tensor_Arithmetic_Utils::get_sizes(shared_ptr<vector<shared_ptr<const IndexRange>>> rngvec, int skip_id) {
 ////////////////////////////////////////////////////////////////////////////////////////
   auto size_vec = make_shared<vector<int>>(); 
   for( int ii =0 ; ii!=rngvec->size();ii++)
@@ -257,7 +257,7 @@ Equation_Computer_Utils::get_sizes(shared_ptr<vector<shared_ptr<const IndexRange
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<size_t>> 
-Equation_Computer_Utils::get_sizes(shared_ptr<vector<Index>> Idvec, int skip_id) {
+Tensor_Arithmetic_Utils::get_sizes(shared_ptr<vector<Index>> Idvec, int skip_id) {
 ////////////////////////////////////////////////////////////////////////////////////////
   auto size_vec = make_shared<vector<size_t>>(); 
   for( int ii =0 ; ii!=Idvec->size();ii++)
@@ -268,7 +268,7 @@ Equation_Computer_Utils::get_sizes(shared_ptr<vector<Index>> Idvec, int skip_id)
 
 ////////////////////////////////////////////////////////////////////////////////////////
 vector<int>
-Equation_Computer_Utils::get_num_index_blocks_vec(vector<IndexRange>& rngvec) {
+Tensor_Arithmetic_Utils::get_num_index_blocks_vec(vector<IndexRange>& rngvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
 
   vector<int> num_id_blocks_vec(rngvec.size()); 
@@ -282,7 +282,7 @@ Equation_Computer_Utils::get_num_index_blocks_vec(vector<IndexRange>& rngvec) {
 
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>>
-Equation_Computer_Utils::get_num_index_blocks_vec(shared_ptr<vector<IndexRange>> rngvec) {
+Tensor_Arithmetic_Utils::get_num_index_blocks_vec(shared_ptr<vector<IndexRange>> rngvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
 
   vector<int> num_id_blocks_vec(rngvec->size()); 
@@ -296,7 +296,7 @@ Equation_Computer_Utils::get_num_index_blocks_vec(shared_ptr<vector<IndexRange>>
 
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>>
-Equation_Computer_Utils::get_num_index_blocks_vec(shared_ptr<vector<shared_ptr<const IndexRange>>> rngvec) {
+Tensor_Arithmetic_Utils::get_num_index_blocks_vec(shared_ptr<vector<shared_ptr<const IndexRange>>> rngvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
 
   vector<int> num_id_blocks_vec(rngvec->size()); 
@@ -311,7 +311,7 @@ Equation_Computer_Utils::get_num_index_blocks_vec(shared_ptr<vector<shared_ptr<c
 
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>>
-Equation_Computer_Utils::get_sizes(shared_ptr<vector<shared_ptr<const IndexRange>>> rngvec) {
+Tensor_Arithmetic_Utils::get_sizes(shared_ptr<vector<shared_ptr<const IndexRange>>> rngvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
   auto size_vec = make_shared<vector<int>>(); 
   for( auto elem : *rngvec ) 
@@ -321,7 +321,7 @@ Equation_Computer_Utils::get_sizes(shared_ptr<vector<shared_ptr<const IndexRange
 
 ////////////////////////////////////////////////////////////////////////////////////////
 vector<int>
-Equation_Computer_Utils::get_sizes(vector<Index>& Idvec) {
+Tensor_Arithmetic_Utils::get_sizes(vector<Index>& Idvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
   vector<int> size_vec(Idvec.size()); 
   for( int ii = 0 ; ii != Idvec.size() ; ii++ ) 
@@ -331,7 +331,7 @@ Equation_Computer_Utils::get_sizes(vector<Index>& Idvec) {
 
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<size_t>>
-Equation_Computer_Utils::get_sizes(shared_ptr<vector<Index>> Idvec) {
+Tensor_Arithmetic_Utils::get_sizes(shared_ptr<vector<Index>> Idvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
   auto size_vec = make_shared<vector<size_t>>(); 
   for( auto elem : *Idvec ) 
@@ -341,7 +341,7 @@ Equation_Computer_Utils::get_sizes(shared_ptr<vector<Index>> Idvec) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 size_t
-Equation_Computer_Utils::get_unc_block_size( vector<Index>& idvec, pair<int,int> ctr ) {
+Tensor_Arithmetic_Utils::get_unc_block_size( vector<Index>& idvec, pair<int,int> ctr ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
   
   size_t block_size = 1; 
@@ -353,7 +353,7 @@ Equation_Computer_Utils::get_unc_block_size( vector<Index>& idvec, pair<int,int>
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-size_t Equation_Computer_Utils::get_block_size( vector<Index>::iterator startpos,
+size_t Tensor_Arithmetic_Utils::get_block_size( vector<Index>::iterator startpos,
                                                              vector<Index>::iterator endpos   ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
   size_t block_size = 1; 
@@ -364,7 +364,7 @@ size_t Equation_Computer_Utils::get_block_size( vector<Index>::iterator startpos
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Equation_Computer_Utils::get_range_lengths(shared_ptr<vector<IndexRange>> indexranges ) { 
+shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_range_lengths(shared_ptr<vector<IndexRange>> indexranges ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(indexranges->size() ); 
@@ -375,7 +375,7 @@ shared_ptr<vector<int>> Equation_Computer_Utils::get_range_lengths(shared_ptr<ve
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Equation_Computer_Utils::get_range_lengths(vector<IndexRange>& indexranges ) { 
+shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_range_lengths(vector<IndexRange>& indexranges ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(indexranges.size() ); 
@@ -388,7 +388,7 @@ shared_ptr<vector<int>> Equation_Computer_Utils::get_range_lengths(vector<IndexR
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Checks all the index ranges in idx_pos have the same length and number of index blocks
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer_Utils::check_contracted_indexes( std::vector<IndexRange>&  idx_block, std::vector<int>& idx_pos ){
+void Tensor_Arithmetic_Utils::check_contracted_indexes( std::vector<IndexRange>&  idx_block, std::vector<int>& idx_pos ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   size_t block_len = idx_block[idx_pos.front()].size();
@@ -409,6 +409,30 @@ void Equation_Computer_Utils::check_contracted_indexes( std::vector<IndexRange>&
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Outputs the interval [start_orb, end_orb) of the index blocks at block_pos
+// Note the interval is relative to the input IndexRanges.
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<pair<size_t, size_t>>>
+Tensor_Arithmetic_Utils::get_block_start( shared_ptr<vector<IndexRange>> id_ranges, 
+                                          shared_ptr<vector<int>> block_pos         ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "Equation_Computer::get_block_info" << endl;
+
+  vector<pair<size_t,size_t>> block_start_end(block_pos->size());
+  for (int ii = 0 ; ii != block_start_end.size() ; ii++){
+    size_t block_start = 0;
+
+    for (int jj = 0 ; jj != block_pos->at(ii); jj++) 
+      block_start += id_ranges->at(ii).range(jj).size();
+
+    block_start_end[ii] = make_pair(block_start, block_start+id_ranges->at(ii).range(block_pos->at(ii)).size());
+
+  }
+//  cout << "block_start_end = [ " ; cout.flush(); for ( auto elem : block_start_end  ) {cout << "(" << elem.first <<  ","  << elem.second << ") " ; } cout << " ] " << endl;
+
+  return make_shared<vector<pair<size_t,size_t>>>(block_start_end);
+}
 
 
 #endif

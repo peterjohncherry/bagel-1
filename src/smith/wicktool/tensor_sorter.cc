@@ -2,7 +2,6 @@
 #ifdef COMPILE_SMITH
 #include <src/smith/wicktool/tensor_sorter.h>
 
-
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;

@@ -1,12 +1,12 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
 #include <src/smith/wicktool/equation_computer.h>
-#include <src/smith/wicktool/equation_computer_utils.h>
-#include <src/util/f77.h>
+
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
-using namespace Equation_Computer_Utils; 
+using namespace Tensor_Arithmetic;
+using namespace Tensor_Arithmetic_Utils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets the gammas in tensor format. 
@@ -500,30 +500,7 @@ string Equation_Computer::Equation_Computer::get_civec_name(int state_num, int n
   string name = to_string(state_num) + "_["+ to_string(norb)+"{" + to_string(nalpha) + "a," + to_string(nbeta) + "b}]" ;
   return name ;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Outputs the interval [start_orb, end_orb) of the index blocks at block_pos
-// Note the interval is relative to the input IndexRanges.
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<pair<size_t, size_t>>>
-Equation_Computer::Equation_Computer::get_block_start( shared_ptr<vector<IndexRange>> id_ranges, 
-                                                       shared_ptr<vector<int>> block_pos         ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Equation_Computer::get_block_info" << endl;
 
-  vector<pair<size_t,size_t>> block_start_end(block_pos->size());
-  for (int ii = 0 ; ii != block_start_end.size() ; ii++){
-    size_t block_start = 0;
-
-    for (int jj = 0 ; jj != block_pos->at(ii); jj++) 
-      block_start += id_ranges->at(ii).range(jj).size();
-
-    block_start_end[ii] = make_pair(block_start, block_start+id_ranges->at(ii).range(block_pos->at(ii)).size());
-
-  }
-//  cout << "block_start_end = [ " ; cout.flush(); for ( auto elem : block_start_end  ) {cout << "(" << elem.first <<  ","  << elem.second << ") " ; } cout << " ] " << endl;
-
-  return make_shared<vector<pair<size_t,size_t>>>(block_start_end);
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adapted from routines in src/ci/fci/knowles_compute.cc so returns block of a sigma vector in a manner more compatible with
@@ -550,7 +527,7 @@ cout << "build_gamma_2idx_tensor : " << gamma_name << endl;
 
     build_sigma_2idx_tensor( Bra_name, Ket_name, gamma_ranges_str);
    
-    shared_ptr<Tensor_<double>> gamma_2idx = contract_different_tensors( make_pair(0,0), Bra_name, sigma_name, gamma_name);
+    shared_ptr<Tensor_<double>> gamma_2idx = contract_different_tensors(  Bra_name, sigma_name, gamma_name, make_pair(0,0));
      
     Gamma_data_map->emplace( gamma_name, gamma_2idx );
     Data_map->emplace( gamma_name, gamma_2idx );
