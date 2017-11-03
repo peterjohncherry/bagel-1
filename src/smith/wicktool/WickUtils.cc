@@ -615,6 +615,12 @@ shared_ptr<vector<int>> WickUtils::reorder_vector(vector<int>& neworder , const 
 
   return make_shared<vector<int>>(newvec);
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+string WickUtils::get_civec_name(const int state_num, const int norb, const int nalpha, const int nbeta)  { 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+  string name = to_string(state_num) + "_["+ to_string(norb)+"o{" + to_string(nalpha) + "a," + to_string(nbeta) + "b}]" ;
+  return name ;
+}
 
 
 

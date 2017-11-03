@@ -1,12 +1,14 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
 #include <src/smith/wicktool/gamma_computer.h>
+#include <src/smith/wicktool/WickUtils.h>
 
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 using namespace Tensor_Arithmetic;
 using namespace Tensor_Arithmetic_Utils;
+using namespace WickUtils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr<Equation<double>> eqn_info_in,
@@ -469,12 +471,6 @@ string Gamma_Computer::Gamma_Computer::get_sigma_name( string Bra_name, string K
   sigma_name += "_"+Ket_name;
 
   return sigma_name;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-string Gamma_Computer::Gamma_Computer::get_civec_name(int state_num, int norb, int nalpha, int nbeta) const { 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-  string name = to_string(state_num) + "_["+ to_string(norb)+"{" + to_string(nalpha) + "a," + to_string(nbeta) + "b}]" ;
-  return name ;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 string Gamma_Computer::Gamma_Computer::get_det_name(shared_ptr<const Determinants> Detspace ) {

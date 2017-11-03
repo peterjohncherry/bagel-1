@@ -57,11 +57,9 @@ class Gamma_Computer {
     gamma_2idx_block(std::shared_ptr<const Civec> cbra, std::shared_ptr<const Civec> cket, std::pair<size_t,size_t> irange,
                      std::pair<size_t,size_t> jrange ) const;
 
-    std::unique_ptr<double[]> 
-    sigma_blocked(std::shared_ptr<const Civec> cvec, std::pair<size_t,size_t> irange, std::pair<size_t,size_t> jrange) const ;
+    std::unique_ptr<double[]>  sigma_blocked(std::shared_ptr<const Civec> cvec, std::pair<size_t,size_t> irange, std::pair<size_t,size_t> jrange) const ;
    
-    std::shared_ptr<Tensor_<double>> 
-    convert_civec_to_tensor( std::shared_ptr<const Civec> civector, int state_num ) const ;
+    std::shared_ptr<Tensor_<double>> convert_civec_to_tensor( std::shared_ptr<const Civec> civector, int state_num ) const;
 
     void get_civector_indexranges(int nstates) ;
 
@@ -77,8 +75,6 @@ class Gamma_Computer {
 
     std::string get_sigma_name( std::string Bra_name, std::string Ket_name , std::shared_ptr<std::vector<std::string>>  orb_ranges, std::shared_ptr<std::vector<bool>> aops ) ;
 
-    std::string get_civec_name(int state_num, int norb, int nalpha, int nbeta) const ;
- 
     std::string get_det_name(std::shared_ptr<const Determinants> Detspace ) ;
 
     void tester();

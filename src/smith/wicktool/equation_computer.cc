@@ -91,8 +91,8 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
    block_tensor->allocate();
    block_tensor->zero();
 
-   auto block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
-   auto mins = make_shared<vector<int>>(unc_ranges->size(),0);  
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(unc_ranges->size(),0);  
    do {
      cout << Tname << " block pos =  [ " ;    for (int block_num : *block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
      
