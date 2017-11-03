@@ -10,19 +10,11 @@ using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 template<class DataType> 
 class Expression_Info {
       private :
-        int nact_;
-        int nele_;
         bool spinfree_ = false;
-        
-        int nelea_;
-        int neleb_;
-
         std::shared_ptr<StatesInfo<DataType>> TargetStates;
 
       public:
 
-      Expression_Info(int nact, int nele, bool spinfree);
-      Expression_Info(int nact, int nelea, int neleb, bool spinfree);
       Expression_Info(std::shared_ptr<StatesInfo<DataType>> TargetStates, bool spinfree);
       ~Expression_Info(){};
 
@@ -61,10 +53,9 @@ class Expression_Info {
       void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
       void Build_Expression(std::shared_ptr<std::vector<std::string>> BraKet_names, std::string expression_name ) ;
 
-      int nact(){return nact_;}
-      int nele(){return nele_;}
-      int nelea(){return nelea_;}
-      int neleb(){return neleb_;}
+      int nalpha(int state_num) { return TargetStates->nalpha( state_num ); };
+      int nbeta(int state_num)  { return TargetStates->nbeta( state_num );  };
+      int nact(int state_num)   { return TargetStates->nact( state_num );   };
       bool spinfree(){return spinfree_;}
 
       static std::string flip(std::string idx);

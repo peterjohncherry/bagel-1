@@ -108,7 +108,7 @@ void CASPT2_ALT::CASPT2_ALT::set_target_info( shared_ptr<vector<int>> states_of_
   for ( int state_num : *states_of_interest ) {
      TargetsInfo->num_alpha_map.emplace( state_num , det_->nelea() ) ;
      TargetsInfo->num_beta_map.emplace( state_num  , det_->neleb() ) ;
-     TargetsInfo->num_orb_map.emplace( state_num   , det_->norb() ) ;
+     TargetsInfo->num_act_map.emplace( state_num   , det_->norb() ) ;
   } 
   return;
 }

@@ -24,49 +24,6 @@ Expression_Info<DataType>::Expression_Info::Expression_Info( shared_ptr<StatesIn
 
 }
 
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-Expression_Info<DataType>::Expression_Info::Expression_Info( int nact,  int nele,  bool spinfree ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  T_map          = make_shared< map <string, shared_ptr<TensOp<DataType>>>>();
-  BraKet_map     = make_shared<  std::map <std::string, 
-                                           std::shared_ptr<std::vector<std::shared_ptr< TensOp<DataType>>>>>>();
-  CTP_map        = make_shared< map <string, shared_ptr<CtrTensorPart<DataType>>>>();
-  CMTP_map       = make_shared< map <string, shared_ptr<CtrMultiTensorPart<DataType>>>>();
-  expression_map = make_shared< map <string, shared_ptr<Equation<DataType>>>>();
- 
-  nact_ = nact;
-  nele_ = nele;
-  nelea_ = nele;
-  neleb_ = 0;
-  spinfree_ = spinfree;
-
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-Expression_Info<DataType>::Expression_Info::Expression_Info( int nact, int nelea, int neleb,  bool spinfree ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  T_map          = make_shared< map <string, shared_ptr<TensOp<DataType>>>>();
-  BraKet_map     = make_shared<  std::map <std::string, 
-                                          std::shared_ptr<std::vector<std::shared_ptr< TensOp<DataType>>>>>>();
-  CTP_map        = make_shared< map <string, shared_ptr<CtrTensorPart<DataType>>>>();
-  CMTP_map       = make_shared< map <string, shared_ptr<CtrMultiTensorPart<DataType>>>>();
-  expression_map = make_shared< map <string, shared_ptr<Equation<DataType>>>>();
-
-  nact_ = nact;
-  nelea_ = nelea;
-  neleb_ = neleb;
-  nele_ = nelea + neleb;
-
-  spinfree_ = spinfree;
-
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<TensOp<DataType>>
