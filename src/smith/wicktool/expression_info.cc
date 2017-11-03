@@ -20,6 +20,8 @@ Expression_Info<DataType>::Expression_Info::Expression_Info( shared_ptr<StatesIn
   CMTP_map       = make_shared< map <string, shared_ptr<CtrMultiTensorPart<DataType>>>>();
   expression_map = make_shared< map <string, shared_ptr<Equation<DataType>>>>();
 
+  TargetStates = TargetStates_in;
+
   spinfree_ = spinfree;
 
 }
@@ -78,7 +80,7 @@ cout <<  "Expression_Info::Expression_Info::Build_Expression(shared_ptr<vector<s
   for ( int ii = 0 ; ii != BraKet_names->size() ; ii++ ) 
     BraKet_List->at(ii) = BraKet_map->at(BraKet_names->at(ii)) ;
 
-  shared_ptr<Equation<DataType>> new_expression = make_shared<Equation<DataType>>(BraKet_List);
+  shared_ptr<Equation<DataType>> new_expression = make_shared<Equation<DataType>>(BraKet_List, TargetStates);
 
   expression_map->emplace(expression_name, new_expression);
 

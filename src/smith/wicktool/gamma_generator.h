@@ -2,8 +2,7 @@
  #define __SRC_SMITH_Gamma_Generator_H
 
  #include <src/smith/wicktool/WickUtils.h>
- #include "WickUtils.h"
- #include <map>
+ #include <src/smith/wicktool/states_info.h> 
 using namespace WickUtils;
 
 class AContribInfo { 
@@ -109,8 +108,9 @@ class GammaGenerator{
    
     int Bra_num; 
 
+    std::shared_ptr<StatesInfo<double>> TargetStates;
 
-    GammaGenerator(int Ket_norb, int Ket_nalpha, int Ket_nbeta, int Ket_num, int Bra_num,
+    GammaGenerator(std::shared_ptr<StatesInfo<double>> TargetStates, int Ket_num, int Bra_num,
                    std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in);

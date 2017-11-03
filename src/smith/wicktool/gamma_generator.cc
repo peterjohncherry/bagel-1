@@ -40,7 +40,7 @@ GammaInfo::GammaInfo ( int Ket_norb_in, int Ket_nalpha_in, int Ket_nbeta_in, int
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-GammaGenerator::GammaGenerator(int Ket_norb_in, int Ket_nalpha_in, int Ket_nbeta_in, int Ket_num_in, int Bra_num_in,
+GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> TargetStates_in, int Ket_num_in, int Bra_num_in,
                                shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init, 
                                shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
                                shared_ptr<map<string, shared_ptr<map<string, AContribInfo >>>> G_to_A_map_in){
@@ -49,15 +49,19 @@ GammaGenerator::GammaGenerator(int Ket_norb_in, int Ket_nalpha_in, int Ket_nbeta
 cout << "GammaGenerator::GammaGenerator" << endl; 
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  TargetStates = TargetStates_in;
+ 
   orig_aops = ac_init;
   orig_ids = ids_init; 
 
   Ket_num = Ket_num_in;
   Bra_num = Bra_num_in;
+  cout << "Ket_num =  " << Ket_num << endl;
+  cout << "Bra_num =  " << Bra_num << endl;
+  Ket_nalpha = TargetStates->nalpha(Ket_num);cout << " Ket_nalpha = "<<  Ket_nalpha << endl;
+  Ket_nbeta  = TargetStates->nbeta(Ket_num);cout  << " Ket_nbeta  = "<<  Ket_nbeta  << endl;
+  Ket_norb   = TargetStates->nact(Ket_num);  cout << " Ket_norb   = "<<  Ket_norb   << endl;
 
-  Ket_norb   = Ket_norb_in;
-  Ket_nalpha = Ket_nalpha_in;   
-  Ket_nbeta  = Ket_nalpha_in;   
 
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);

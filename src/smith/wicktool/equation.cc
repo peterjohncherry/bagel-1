@@ -6,7 +6,8 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-Equation<DType>::Equation(std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list){
+Equation<DType>::Equation( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list,
+                           std::shared_ptr<StatesInfo<DType>> TargetStates_in ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   T_map                 = make_shared<map< string, shared_ptr<TensOp<DType>>>>();
@@ -18,6 +19,8 @@ Equation<DType>::Equation(std::shared_ptr<std::vector<std::shared_ptr<std::vecto
   GammaMap              = make_shared< map<string, shared_ptr<GammaInfo> > >(); 
   G_to_A_map            = make_shared< map<string, shared_ptr< map<string, AContribInfo  >>>>(); 
 
+  TargetStates = TargetStates_in;
+ 
   equation_build(BraKet_list);
 
 }
@@ -88,7 +91,7 @@ template<class DType>
 void Equation<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>> Tens_vec ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  auto New_BraKet = make_shared<BraKet<DType>>(G_to_A_map, GammaMap );
+  shared_ptr<BraKet<DType>> New_BraKet = make_shared<BraKet<DType>>(G_to_A_map, GammaMap, TargetStates );
   New_BraKet->Sub_Ops = Tens_vec;
  
   New_BraKet->Build_TotalOp();

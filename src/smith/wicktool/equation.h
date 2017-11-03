@@ -3,6 +3,7 @@
  #include <src/smith/wicktool/BraKet.h>
  #include <src/smith/wicktool/WickUtils.h>
  #include <src/smith/wicktool/TensOp.h>
+ #include <src/smith/wicktool/states_info.h>
  #include <src/smith/tensor.h>
 
  //#include "WickUtils.h"
@@ -17,18 +18,15 @@ class Equation {
       public:
 
       Equation(){};
-      Equation(std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list);
+      Equation( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list,
+                std::shared_ptr<StatesInfo<DType>> TargetsInfo);
 
       ~Equation(){};
 
-      int nidxs = 8;
-      int nact = 5;
-      int norb = 5;
-      bool spinfree = false;
-
-
       //Equation builder
       void equation_build(std::shared_ptr<std::vector< std::shared_ptr<std::vector<std::shared_ptr<TensOp<DType>>>> >> BraKet_list);
+
+      std::shared_ptr<StatesInfo<DType>> TargetStates;
 
       //Vector of BraKet terms which comprise the equation
       std::vector<std::shared_ptr<BraKet<DType>>> BraKet_Terms;
@@ -68,7 +66,6 @@ class Equation {
 
      
       void Get_CMTP_Compute_Terms();
-
 
 };
 #endif

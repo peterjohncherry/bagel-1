@@ -4,6 +4,7 @@
   #include <src/smith/wicktool/gamma_generator.h>
   #include <src/smith/wicktool/TensOp.h>
   #include <src/smith/wicktool/spin_manager.h>
+  #include <src/smith/wicktool/states_info.h>
 
  //#include "WickUtils.h"
  //#include "gamma_generator.h"
@@ -17,9 +18,11 @@ class BraKet  {
 
       public:
        BraKet(std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map_in,
-              std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> GammaMap  );
+              std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> GammaMap ,
+              std::shared_ptr<StatesInfo<DType>> TargetStates  );
        ~BraKet(){};
-       
+      
+       std::shared_ptr<StatesInfo<DType>> TargetStates;
        int nact_orb;
        int nact_el;
        int nidxs;
