@@ -2,6 +2,7 @@
  #define __SRC_SMITH_EXPRESSION_INFO_H
  #include <src/smith/wicktool/equation.h>
  #include <src/smith/tensor.h>
+ #include <src/smith/wicktool/states_info.h>
 
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
@@ -16,11 +17,13 @@ class Expression_Info {
         int nelea_;
         int neleb_;
 
+        std::shared_ptr<StatesInfo<DataType>> TargetStates;
 
       public:
 
       Expression_Info(int nact, int nele, bool spinfree);
       Expression_Info(int nact, int nelea, int neleb, bool spinfree);
+      Expression_Info(std::shared_ptr<StatesInfo<DataType>> TargetStates, bool spinfree);
       ~Expression_Info(){};
 
       //only makes sense to specify a and b electrons if non-rel
@@ -42,6 +45,7 @@ class Expression_Info {
       // key :    Name of contracted part of multitensorop
       // result : Info for contracted part of multitensorop info
       std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map   ;  
+
 
       void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>> Tens_vec  );
       

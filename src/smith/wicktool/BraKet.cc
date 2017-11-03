@@ -17,17 +17,19 @@ BraKet<DType>::BraKet(shared_ptr<map<string,shared_ptr<map<string,AContribInfo>>
   Sub_Ops = make_shared<vector<shared_ptr<TensOp<DType>>>>(0);
   G_to_A_map = G_to_A_map_in;
   GammaMap = GammaMap_in;
+
+
 } 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-void BraKet<DType>::add_Op(string op_name,
-                    shared_ptr<vector<string>> op_idxs,
-                    shared_ptr<vector<bool>> op_aops, 
-                    shared_ptr<vector<vector<string>>> op_idx_ranges,
-                    vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
-                    vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
-                    pair<double,double> factor, string Tsymmetry, bool hconj ) {
+void BraKet<DType>::add_Op( string op_name,
+                            shared_ptr<vector<string>> op_idxs,
+                            shared_ptr<vector<bool>> op_aops, 
+                            shared_ptr<vector<vector<string>>> op_idx_ranges,
+                            vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
+                            vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
+                            pair<double,double> factor, string Tsymmetry, bool hconj ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   if(hconj){
@@ -74,6 +76,8 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
   int norb   = 5;
   int Bra_num = 1;
   int Ket_num = 1;
+
+
 
   shared_ptr<vector<bool>> aops_buff  = make_shared<vector<bool>>(*aops );
   for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){

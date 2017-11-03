@@ -37,11 +37,6 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   orig_cpt2 = make_shared<CASPT2::CASPT2>(orig_cpt2_in);
   ref = orig_cpt2_in.info_;
 
-  nelea_ = ref->ciwfn()->det()->nelea();
-  neleb_ = ref->ciwfn()->det()->neleb();
-  ncore_ = ref->ciwfn()->ncore();
-  norb_  = ref->ciwfn()->nact();
-  nstate_ = ref->ciwfn()->nstates();
   cc_ = ref->ciwfn()->civectors();
   det_ = ref->ciwfn()->civectors()->det();
  
@@ -56,6 +51,12 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   cout << "H_2el_all->rms()" <<  H_2el_all->rms() << endl; 
  
   const int maxtile = ref->maxtile();
+ 
+  ncore   =  ref->ncore();
+  nclosed =  ref->nclosed();
+  nact    =  ref->nact();
+  nvirt   =  ref->nvirt();
+
   closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), maxtile, 0, ref->ncore()));
   active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,maxtile), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
   virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), maxtile, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
@@ -76,15 +77,35 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   range_conversion_map->emplace("notact", not_active_rng);
   range_conversion_map->emplace("notvir", not_virtual_rng); 
 
-  CTP_map = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
-  Data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
-  Gamma_data_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  CTP_map            = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
+  Data_map           = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  Gamma_data_map     = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   scalar_results_map = make_shared<map<string, double>>();
   //Deriv_results_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
 
-  Expr_Info = make_shared<Expression_Info<double>>(norb_, nelea_, neleb_, true);
+  shared_ptr<vector<int>> states_of_interest = make_shared<vector<int>>( vector<int> { 0 } );
+  set_target_info(states_of_interest) ;
+   
+  Expr_Info = make_shared<Expression_Info<double>>(TargetsInfo, true);
   Expr_Info_map = Expr_Info->expression_map;
   
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+// defining this so we don't need to put determinants class into gamma generator etc.
+// At the moment this is quite silly; the determinant space is the same for every space,
+// however, this is not necessarily the case. This function will need to do something 
+// different in the relativistic case.
+//////////////////////////////////////////////////////////////////////////////////////////////
+void CASPT2_ALT::CASPT2_ALT::set_target_info( shared_ptr<vector<int>> states_of_interest) {
+//////////////////////////////////////////////////////////////////////////////////////////////
+  TargetsInfo = make_shared<StatesInfo<double>> ( states_of_interest ) ;
+
+  for ( int state_num : *states_of_interest ) {
+     TargetsInfo->num_alpha_map.emplace( state_num , det_->nelea() ) ;
+     TargetsInfo->num_beta_map.emplace( state_num  , det_->neleb() ) ;
+     TargetsInfo->num_orb_map.emplace( state_num   , det_->norb() ) ;
+  } 
 }
 
 ////////////////////////////////////////////////////////////////////

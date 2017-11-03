@@ -38,13 +38,12 @@ class Gamma_Computer {
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> Determinants_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> Determinants_map;
 
     std::shared_ptr<Equation<double>> Eqn_info;
 
     std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> Tensor_Calc;
-
 
     void Initialize_wfn_info( std::shared_ptr<Civec> civector, int state_num ) ;
 

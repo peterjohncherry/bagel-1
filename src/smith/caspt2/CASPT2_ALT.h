@@ -51,11 +51,11 @@ class CASPT2_ALT {
     std::shared_ptr<const SMITH_Info<double>> ref;
 
     std::shared_ptr<const Dvec> cc_; 
-    int  nelea_ ;
-    int  neleb_ ;
-    int  ncore_ ;
-    int  norb_  ;
-    int  nstate_;
+    int  ncore ;
+    int  nact  ;
+    int  nvirt ;
+    int  nclosed ;
+    int  nstate;
     std::shared_ptr<const Determinants> det_ ; 
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
@@ -72,8 +72,9 @@ class CASPT2_ALT {
     std::shared_ptr<IndexRange> not_active_rng  ;
     std::shared_ptr<IndexRange> not_virtual_rng ;
 
+    std::shared_ptr<StatesInfo<double>> TargetsInfo;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map ;
-
+     
     std::vector<std::shared_ptr<MultiTensor_<double>>> T2_all;
     std::vector<std::shared_ptr<MultiTensor_<double>>> lambda_all;
     std::shared_ptr<Tensor_<double>> F_1el_all;
@@ -91,6 +92,8 @@ class CASPT2_ALT {
     void Build_Compute_Lists();
     void Execute_Compute_List(std::string expression_name );
     
+    void set_target_info( std::shared_ptr<std::vector<int>> states_of_interest) ;
+
     struct compare_string_length {
       bool operator()(const std::string& first, const std::string& second) {
           return first.size() > second.size();
