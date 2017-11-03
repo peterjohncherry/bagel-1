@@ -10,11 +10,23 @@ using namespace std;
 using namespace WickUtils;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<string>> full_idx_ranges, 
-                      shared_ptr<vector<int>> idxs_pos) {
+GammaInfo::GammaInfo ( int Ket_norb_in, int Ket_nalpha_in, int Ket_nbeta_in, int Ket_num_in, int Bra_num_in, 
+                       shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<string>> full_idx_ranges, 
+                       shared_ptr<vector<int>> idxs_pos) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaInfo::GammaInfo" <<  endl;
-  
+
+  Ket_num =  Ket_num_in;
+  Bra_num =  Bra_num_in;
+ 
+  Ket_norb   = Ket_norb_in;
+  Ket_nalpha = Ket_nalpha_in;
+  Ket_nbeta  = Ket_nbeta_in;
+
+  Bra_norb   = Ket_norb_in;
+  Bra_nalpha = Ket_nalpha_in;
+  Bra_nbeta  = Ket_nbeta_in;
+ 
   id_ranges = make_shared<vector<string>>(idxs_pos->size());
   aops      = make_shared<vector<bool>>(idxs_pos->size());
 
@@ -25,50 +37,11 @@ GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<
 
   //depends on floor in integer division
   name = GammaGenerator::get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos ); cout << "gamma name = " <<  name << endl;
-  if ( idxs_pos->size() != 0 ) { 
-    one_el_gammas = make_shared<vector<string>>(idxs_pos->size()/2);
-    for (int ii = 0 ; ii != idxs_pos->size() ; ii+=2 ) {
-      shared_ptr<vector<int>> gamma_1el_pos =  make_shared<vector<int>>(vector<int> { idxs_pos->at(ii), idxs_pos->at(ii+1)});   
-      one_el_gammas->at(ii/2) =  GammaGenerator::get_gamma_name( full_idx_ranges, full_aops_vec, gamma_1el_pos );
-    }
-    
-  } else { 
-    one_el_gammas = make_shared<vector<string>>(0);
-  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<string>> full_idx_ranges, 
-                      shared_ptr<vector<int>> idxs_pos,
-                      shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map ) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaInfo::GammaInfo" <<  endl;
-  id_ranges = make_shared<vector<string>>(idxs_pos->size());
-  aops = make_shared<vector<bool>>(idxs_pos->size());
-
-  for (int ii = 0 ; ii != idxs_pos->size(); ii++ ){ 
-    id_ranges->at(ii) = full_idx_ranges->at(idxs_pos->at(ii));     
-    aops->at(ii) = full_aops_vec->at(idxs_pos->at(ii));     
-  }
-
-  //depends on floor in integer division
-  name = GammaGenerator::get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos );
-  cout << "gamma name = " <<  name << endl;
-  if ( idxs_pos->size() != 0 ) { 
-    one_el_gammas = make_shared<vector<string>>(idxs_pos->size()/2);
-    for (int ii = 0 ; ii != idxs_pos->size() ; ii+=2 ) {
-      shared_ptr<vector<int>> gamma_1el_pos =  make_shared<vector<int>>(vector<int> { idxs_pos->at(ii), idxs_pos->at(ii+1)});  
-      one_el_gammas->at(ii/2) =  GammaGenerator::get_gamma_name( full_idx_ranges, full_aops_vec, gamma_1el_pos );
-      if (Gamma_map->find(one_el_gammas->at(ii/2)) == Gamma_map->end())
-        Gamma_map->emplace(one_el_gammas->at(ii/2), make_shared<GammaInfo>(full_aops_vec, full_idx_ranges, gamma_1el_pos));
-    } 
-  } else { 
-    one_el_gammas = make_shared<vector<string>>(0);
-  }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-GammaGenerator::GammaGenerator(shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init, 
+GammaGenerator::GammaGenerator(int Ket_norb_in, int Ket_nalpha_in, int Ket_nbeta_in, int Ket_num_in, int Bra_num_in,
+                               shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init, 
                                shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
                                shared_ptr<map<string, shared_ptr<map<string, AContribInfo >>>> G_to_A_map_in){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -78,6 +51,13 @@ cout << "GammaGenerator::GammaGenerator" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   orig_aops = ac_init;
   orig_ids = ids_init; 
+
+  Ket_num = Ket_num_in;
+  Bra_num = Bra_num_in;
+
+  Ket_norb   = Ket_norb_in;
+  Ket_nalpha = Ket_nalpha_in;   
+  Ket_nbeta  = Ket_nalpha_in;   
 
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
@@ -139,9 +119,9 @@ cout << "GammaGenerator::norm_order" << endl;
   int kk = 0;                                                                                                      
 
   while ( kk != gamma_vec->size()){                                               
-    shared_ptr<vector<bool>> full_aops = gamma_vec->at(kk)->full_aops;        
-    shared_ptr<vector<int>>  ids_pos = gamma_vec->at(kk)->ids_pos;        
-    shared_ptr<vector<string>> full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
+    shared_ptr<vector<bool>>          full_aops = gamma_vec->at(kk)->full_aops;        
+    shared_ptr<vector<int>>           ids_pos = gamma_vec->at(kk)->ids_pos;        
+    shared_ptr<vector<string>>        full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
     shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
 
     int  num_pops = ( ids_pos->size()/2 )-1;     
@@ -187,7 +167,7 @@ cout << "GammaGenerator::norm_order" << endl;
       cout <<  Gname << endl;
       final_gamma_vec->push_back(gamma_vec->at(kk));
       if ( Gamma_map->find(Gname) == Gamma_map->end() ) 
-        Gamma_map->emplace( Gname, make_shared<GammaInfo>(full_aops, full_id_ranges, ids_pos, Gamma_map) ) ;
+        Gamma_map->emplace( Gname, make_shared<GammaInfo>( Ket_norb, Ket_nalpha, Ket_nbeta, Ket_num, Bra_num, full_aops, full_id_ranges, ids_pos) ) ;
     } 
     kk++;                                                         
   }                                                               
@@ -312,6 +292,7 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////
   int kk = 0;
+
   while ( kk != gamma_vec->size()){
     shared_ptr<vector<bool>> full_aops = gamma_vec->at(kk)->full_aops;
     shared_ptr<vector<int>>  ids_pos = gamma_vec->at(kk)->ids_pos;
@@ -348,16 +329,16 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
     kk++;
 
     string Aname_alt = get_Aname( orig_ids, full_id_ranges, deltas_pos );
-    string Gname_alt = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
+    string Gname = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
   
-    if ( G_to_A_map->find(Gname_alt) == G_to_A_map->end() )
-      G_to_A_map->emplace( Gname_alt, make_shared<map<string, AContribInfo>>() ) ;
+    if ( G_to_A_map->find( Gname ) == G_to_A_map->end() )
+      G_to_A_map->emplace( Gname, make_shared<map<string, AContribInfo>>() ) ;
 
     vector<int> Aid_order_new = get_Aid_order ( *ids_pos ) ; 
-    auto Aid_orders_map_loc = G_to_A_map->at(Gname_alt)->find(Aname_alt);
-    if ( Aid_orders_map_loc == G_to_A_map->at(Gname_alt)->end() ) {
+    auto Aid_orders_map_loc =  G_to_A_map->at( Gname )->find(Aname_alt);
+    if ( Aid_orders_map_loc == G_to_A_map->at( Gname )->end() ) {
       AContribInfo AInfo( Aid_order_new, make_pair(my_sign,my_sign));
-      G_to_A_map->at(Gname_alt)->emplace(Aname_alt, AInfo) ;
+      G_to_A_map->at( Gname )->emplace(Aname_alt, AInfo) ;
 
     } else {
       AContribInfo AInfo = Aid_orders_map_loc->second;
@@ -373,8 +354,9 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
       }
     }
 
-    if ( Gamma_map->find(Gname_alt) == Gamma_map->end() )
-      Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>(full_aops, full_id_ranges, ids_pos, Gamma_map));
+    if ( Gamma_map->find( Gname ) == Gamma_map->end() )
+      Gamma_map->emplace( Gname, make_shared<GammaInfo>( Ket_norb, Ket_nalpha, Ket_nbeta, Ket_num, Bra_num, full_aops,
+                                                         full_id_ranges, ids_pos) ) ;
   }
 
   return;

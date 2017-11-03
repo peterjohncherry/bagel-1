@@ -34,20 +34,18 @@ class GammaInfo {
      std::string name;     
      std::shared_ptr<std::vector<std::string>> one_el_gammas;
 
+     int Bra_num;
      int Bra_norb;
-     int Ket_norb;
      int Bra_nalpha;
-     int Ket_nalpha;
      int Bra_nbeta;
+
+     int Ket_num;
+     int Ket_norb;
+     int Ket_nalpha;
      int Ket_nbeta;
 
-     GammaInfo( std::shared_ptr<std::vector<std::string>> id_ranges_in, std::shared_ptr<std::vector<bool>> aops_in ) :
-                id_ranges(id_ranges_in), aops(aops_in) {}; 
-
-     GammaInfo( std::shared_ptr<std::vector<bool>> full_aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges, std::shared_ptr<std::vector<int>> idxs_pos );
-
-     GammaInfo( std::shared_ptr<std::vector<bool>> full_aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
-                std::shared_ptr<std::vector<int>> idxs_pos, std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in );
+     GammaInfo( int Ket_norb, int Ket_nalpha, int Ket_nbeta, int Ket_num, int Bra_num, std::shared_ptr<std::vector<bool>> full_aops_vec,
+                std::shared_ptr<std::vector<std::string>> full_idx_ranges, std::shared_ptr<std::vector<int>> idxs_pos );
 
      GammaInfo(){};
      ~GammaInfo(){};
@@ -100,12 +98,20 @@ class GammaGenerator{
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
 
-    std::shared_ptr<std::map< char, int>>   op_order ;
+    std::shared_ptr<std::map< char, int>>         op_order ;
     std::shared_ptr<std::map< std::string, int>>  idx_order ;
 
- 
-    // functions
-    GammaGenerator(std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
+    
+    int Ket_num;
+    int Ket_norb;
+    int Ket_nalpha;
+    int Ket_nbeta;
+   
+    int Bra_num; 
+
+
+    GammaGenerator(int Ket_norb, int Ket_nalpha, int Ket_nbeta, int Ket_num, int Bra_num,
+                   std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in);
     ~GammaGenerator(){};
