@@ -1,6 +1,6 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include <src/smith/wicktool/equation_computer.h>
+#include <src/smith/wicktool/gamma_computer.h>
 
 using namespace std;
 using namespace bagel;
@@ -9,38 +9,37 @@ using namespace Tensor_Arithmetic;
 using namespace Tensor_Arithmetic_Utils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Gamma_Computer::Gamma_Computer::Gamma_Computer( int MM , int NN, string gamma_name) {
+Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr<Equation<double>> eqn_info_in,
+						shared_ptr<map< string, shared_ptr<IndexRange>>> range_conversion_map_in ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
   cout << "Gamma_Computer::Gamma_Computer::Gamma_Computer" << endl;
-  nelea_ = Bra->det()->nelea();
-  neleb_ = Bra->det()->neleb();
-  ncore_ = Bra->ncore();
-  norb_  = Bra->nact();
-  nstate_ = ref->ciwfn()->nstates();
-  cc_ = ref->ciwfn()->civectors();
-  maxtile = ref->maxtile();
+  maxtile = 10000;
+  GammaMap = eqn_info_in->GammaMap;
   
-  GammaMap = eqn_info->GammaMap;
-  CTP_map  = eqn_info->CTP_map;
-  
-  Data_map  = Data_map_in;
-  Gamma_data_map = Gamma_data_map_in;
-  
-  CIvec_data_map = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
-  Sigma_data_map = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
-  determinants_map = make_shared<std::map<std::string, std::shared_ptr<const Determinants>>>();
+  CIvec_data_map   = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
+  Sigma_data_map   = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
+  Gamma_data_map   = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
+  Determinants_map = make_shared<std::map<std::string, std::shared_ptr<const Determinants>>>();
 
   cimaxblock = 100; //figure out what is best, maxtile is 10000, so this is chosen to have one index block. Must be consistent if contraction routines are to work...
-
-  range_conversion_map = range_conversion_map_in;
-  get_civector_indexranges(1);
 
   Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
 
   tester();
     
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Gamma_Computer::Gamma_Computer::Initialize_wfn_info( shared_ptr<Civec> civector, int state_num ) { 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  nelea_ = civector->det()->nelea();
+  neleb_ = civector->det()->neleb();
+  norb_  = civector->det()->norb();
+  get_civector_indexranges(1);
+
+  return;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets the gammas in tensor format. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +53,7 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( int MM , int NN, string g
     cout << "already have data for " << gamma_name << endl;  
  
   } else { 
-
+    
     //for now just use specialized routines, this must be made generic at some point
     if (GammaMap->at(gamma_name)->id_ranges->size() == 2 ) { 
       get_gamma_2idx( MM, NN, gamma_name ) ;
@@ -80,7 +79,7 @@ void Gamma_Computer::Gamma_Computer::get_gamma_2idx(const int MM, const int NN, 
   cout << "gamma_name = " << gamma_name << endl;
 
   string det_name = get_civec_name( MM, cc_->data(MM)->det()->norb(),  cc_->data(MM)->det()->nelea(), cc_->data(MM)->det()->neleb());  
-  shared_ptr<const Determinants> det_ =  determinants_map->at(det_name);
+  shared_ptr<const Determinants> det_ =  Determinants_map->at(det_name);
   if (det_->compress()) { // uncompressing determinants, probably should be done in the sigma_blocked routine
     auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
     cc_->set_det(detex);
@@ -113,7 +112,6 @@ void Gamma_Computer::Gamma_Computer::get_gamma_2idx(const int MM, const int NN, 
   } while (fvec_cycle(block_pos, range_lengths, mins ));
 
   Gamma_data_map->emplace(gamma_name, gamma_tensor); 
-  Data_map->emplace(gamma_name, gamma_tensor); 
 
   cc_->set_det(det_); 
 
@@ -145,8 +143,8 @@ Gamma_Computer::Gamma_Computer::gamma_2idx_block( shared_ptr<const Civec> cbra, 
 // the Tensor format.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 unique_ptr<double[]> 
-Gamma_Computer::Gamma_Computer::sigma_blocked(shared_ptr<const Civec> cvec, 
-                                                    pair<size_t,size_t> irange, pair<size_t,size_t> jrange) const {
+Gamma_Computer::Gamma_Computer::sigma_blocked( shared_ptr<const Civec> cvec,
+                                               pair<size_t,size_t> irange, pair<size_t,size_t> jrange ) const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "sigma_blocked" << endl;
 
@@ -237,19 +235,11 @@ Gamma_Computer::Gamma_Computer::convert_civec_to_tensor( shared_ptr<const Civec>
 
   //will have to modify for relativistic case
   CIvec_data_map->emplace( civec_name, civec_tensor); 
-  determinants_map->emplace( civec_name, civector->det() ); 
+  Determinants_map->emplace( civec_name, civector->det() ); 
 
-  Data_map->emplace( civec_name, civec_tensor); 
 
   return civec_tensor;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-string Gamma_Computer::Gamma_Computer::get_civec_name(int state_num, int norb, int nalpha, int nbeta) const { 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-  string name = to_string(state_num) + "_["+ to_string(norb)+"{" + to_string(nalpha) + "a," + to_string(nbeta) + "b}]" ;
-  return name ;
-}
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adapted from routines in src/ci/fci/knowles_compute.cc so returns block of a sigma vector in a manner more compatible with
@@ -276,10 +266,9 @@ cout << "build_gamma_2idx_tensor : " << gamma_name << endl;
 
     build_sigma_2idx_tensor( Bra_name, Ket_name, gamma_ranges_str);
    
-    shared_ptr<Tensor_<double>> gamma_2idx = contract_different_tensors(  Bra_name, sigma_name, gamma_name, make_pair(0,0));
+    shared_ptr<Tensor_<double>> gamma_2idx = Tensor_Calc->contract_different_tensors(  CIvec_data_map->at(Bra_name), Sigma_data_map->at(sigma_name),  make_pair(0,0));
      
     Gamma_data_map->emplace( gamma_name, gamma_2idx );
-    Data_map->emplace( gamma_name, gamma_2idx );
  
     Print_Tensor(Gamma_data_map->at(gamma_name));
 
@@ -309,7 +298,7 @@ Gamma_Computer::Gamma_Computer::build_sigma_2idx_tensor(string Bra_name, string 
   } else { 
     
     shared_ptr<Tensor_<double>> Bra_civec = CIvec_data_map->at(Bra_name);
-    shared_ptr<const Determinants> Bra_det = determinants_map->at(Bra_name);
+    shared_ptr<const Determinants> Bra_det = Determinants_map->at(Bra_name);
     
     shared_ptr<vector<IndexRange>> orb_ranges  = Get_Bagel_IndexRanges( orb_ranges_str );   
     
@@ -339,7 +328,6 @@ Gamma_Computer::Gamma_Computer::build_sigma_2idx_tensor(string Bra_name, string 
     } while (fvec_cycle(block_pos, range_lengths, mins ));
     
     Sigma_data_map->emplace(sigma_name, sigma_tensor); 
-    Data_map->emplace(sigma_name, sigma_tensor); 
 
   }
 
@@ -351,7 +339,7 @@ Gamma_Computer::Gamma_Computer::build_sigma_2idx_tensor(string Bra_name, string 
 // the Tensor format.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vector<Index>& sigma_id_blocks,
-                                                              vector<int>& sigma_offsets, string Ket_name  ) const {
+                                                        vector<int>& sigma_offsets, string Ket_name  ) const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::build_sigma_block" << endl; 
 
@@ -368,7 +356,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
   unique_ptr<double[]> sigma_block(new double[sigma_block_size])  ;
   std::fill_n(sigma_block.get(), sigma_block_size, 0.0);
 
-  shared_ptr<const Determinants> Ket_det = determinants_map->at(Ket_name);
+  shared_ptr<const Determinants> Ket_det = Determinants_map->at(Ket_name);
   shared_ptr<Tensor_<double>> Ket_Tens  = CIvec_data_map->at(Ket_name);
   shared_ptr<IndexRange> Ket_range       = range_conversion_map->at(Ket_name);
   // size_t lb = Ket_det->lenb() <= Ket_idx_block.size() ? Ket_det_lenb() : Ket_idx_block.size();      
@@ -377,7 +365,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
   auto in_Bra_range = [&sigma_offsets, &Bra_block_size ]( size_t& pos) {
       if (( pos > (sigma_offsets[0]+Bra_block_size)) || ( pos < sigma_offsets[0] ) ){
          cout << "out of sigma range " << endl;
-         cout << "pos + len      = " << pos << endl;
+         cout << "pos            = " << pos << endl;
          cout << "Bra_offset     = " << sigma_offsets[0] << endl;
          cout << "Bra_Block_size = " << Bra_block_size << endl;
          return false;
@@ -399,11 +387,8 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
    const int lena = Ket_det->lena();
    const int lenb = Ket_det->lenb();
   
-  // vector<DetMap> phia ,  DetMap(size_t t, int si, size_t s, int o) : target(t), sign(si), source(s), ij(o) {}
-  // source and target seem backward, but it's this way round everywhere else, strange name perhaps?
-  // Must be fixed to use BLAS, however, you will have to be careful about the ranges; 
+  // Must be changed to use BLAS, however, you will have to be careful about the ranges; 
   // ci_block needs to have a length which is some integer multiple of lenb.
- 
   double* sigma_ptr = sigma_block.get();
   for ( Index Ket_idx_block : Ket_range->range()) { 
     unique_ptr<double[]> Ket_block = Ket_Tens->get_block(vector<Index>{Ket_idx_block});
@@ -412,7 +397,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
     
     for( size_t ii = sigma_offsets[1]; ii != iblock_size + sigma_offsets[1]; ++ii) {
       for( size_t jj = sigma_offsets[2]; jj != iblock_size + sigma_offsets[2]; ++jj) {
-        for (auto& iter : Ket_det->phia(ii, jj)) {
+        for ( DetMap iter : Ket_det->phia(ii, jj)) {
           size_t Sshift = iter.source*lenb;
           size_t Kshift = iter.source*lenb;
           double* sigma_pos = sigma_block.get() + iter.source *lenb;
@@ -433,7 +418,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
       sigma_block_ia += lenb;
       for( size_t ii = sigma_offsets[1]; ii != iblock_size + sigma_offsets[1]; ++ii) {
         for( size_t jj = sigma_offsets[2]; jj != iblock_size + sigma_offsets[2]; ++jj) {
-          for (auto& iter : Ket_det->phib(ii,jj)) {
+          for ( DetMap iter : Ket_det->phib(ii,jj)) {
             const double sign = static_cast<double>(iter.sign);
             size_t shift1 = ia*lenb+iter.target;
             size_t shift2 = ia*lenb+iter.source; 
@@ -449,6 +434,20 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
   return;
  
 }       
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//should be extended to deal with spin sectors
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Gamma_Computer::Gamma_Computer::get_civector_indexranges(int nstates) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  for ( int ii = 0 ; ii != nstates; ii++ ) 
+    range_conversion_map->emplace( get_civec_name( ii , cc_->data(ii)->det()->norb(), cc_->data(ii)->det()->nelea(), cc_->data(ii)->det()->neleb()),
+                                   make_shared<IndexRange>(cc_->data(ii)->lena()*cc_->data(ii)->lenb(), cimaxblock ));  
+
+  return;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 string Gamma_Computer::Gamma_Computer::get_sigma_name( string Bra_name, string Ket_name , shared_ptr<vector<string>>  orb_ranges,
                                                              shared_ptr<vector<bool>>  aops ) { 
@@ -471,5 +470,45 @@ string Gamma_Computer::Gamma_Computer::get_sigma_name( string Bra_name, string K
 
   return sigma_name;
 }
- 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+string Gamma_Computer::Gamma_Computer::get_civec_name(int state_num, int norb, int nalpha, int nbeta) const { 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+  string name = to_string(state_num) + "_["+ to_string(norb)+"{" + to_string(nalpha) + "a," + to_string(nbeta) + "b}]" ;
+  return name ;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+string Gamma_Computer::Gamma_Computer::get_det_name(shared_ptr<const Determinants> Detspace ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ return "[" +to_string(Detspace->norb()) + ",{"+to_string(Detspace->nelea())+"a,"+to_string(Detspace->neleb())+"b}]";
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Gamma_Computer::Gamma_Computer::tester(){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+  shared_ptr<Tensor_<double>> civec1 =  convert_civec_to_tensor( cc_->data(0), 0 );
+  shared_ptr<Tensor_<double>> civec2 =  convert_civec_to_tensor( cc_->data(0), 0 );
+
+  double normval = civec1->dot_product(civec2); 
+  cout << " civec1->dot_product(civec2) = " << normval << endl;
+  cout << " civec1->rms()               = " << civec1->rms()  << endl;
+  cout << " civec1->norm()              = " << civec1->norm() << endl;
+  
+  assert(!(abs(normval -1.00) > 0.000000000001) ); 
+  
+  return;
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<IndexRange>> Gamma_Computer::Gamma_Computer::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Gamma_Computer::Get_Bagel_IndexRanges 1arg" << endl;
+
+  shared_ptr<vector<IndexRange>> ranges_Bagel = make_shared<vector<IndexRange>>(ranges_str->size());
+  for ( int ii =0 ; ii != ranges_str->size(); ii++) 
+    ranges_Bagel->at(ii) = *range_conversion_map->at(ranges_str->at(ii));
+
+  return ranges_Bagel;
+}
+
 #endif

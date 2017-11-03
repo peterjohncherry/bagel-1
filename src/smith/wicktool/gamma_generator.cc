@@ -16,16 +16,15 @@ GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<
   cout << "GammaInfo::GammaInfo" <<  endl;
   
   id_ranges = make_shared<vector<string>>(idxs_pos->size());
-  aops = make_shared<vector<bool>>(idxs_pos->size());
+  aops      = make_shared<vector<bool>>(idxs_pos->size());
 
   for (int ii = 0 ; ii != idxs_pos->size(); ii++ ){ 
     id_ranges->at(ii) = full_idx_ranges->at(idxs_pos->at(ii));     
-    aops->at(ii) = full_aops_vec->at(idxs_pos->at(ii));     
+    aops->at(ii)      = full_aops_vec->at(idxs_pos->at(ii));     
   }
 
   //depends on floor in integer division
-  name = GammaGenerator::get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos );
-  cout << "gamma name = " <<  name << endl;
+  name = GammaGenerator::get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos ); cout << "gamma name = " <<  name << endl;
   if ( idxs_pos->size() != 0 ) { 
     one_el_gammas = make_shared<vector<string>>(idxs_pos->size()/2);
     for (int ii = 0 ; ii != idxs_pos->size() ; ii+=2 ) {
@@ -67,7 +66,6 @@ GammaInfo::GammaInfo (shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<
     one_el_gammas = make_shared<vector<string>>(0);
   }
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaGenerator::GammaGenerator(shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init, 

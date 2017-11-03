@@ -18,10 +18,9 @@ namespace Equation_Computer {
 class Equation_Computer { 
 
     public: 
-    Equation_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info,
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map,
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>> >> Data_map,
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>> >> Gamma_data_map);
+    Equation_Computer( std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info_in,
+                       std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
+                       std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in );
     ~Equation_Computer(){};
   
     int nelea_ ;
@@ -40,10 +39,6 @@ class Equation_Computer {
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> determinants_map;
 
     std::shared_ptr<Equation<double>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
@@ -87,14 +82,6 @@ class Equation_Computer {
     void sigma_2a2(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
 
     /////////// Utility routines /////////////////////////
- 
-    std::string get_sigma_name( std::string Bra_name, std::string Ket_name , std::shared_ptr<std::vector<std::string>>  orb_ranges, std::shared_ptr<std::vector<bool>> aops ) ;
-
-    std::string get_civec_name(int state_num, int norb, int nalpha, int nbeta) const ;
- 
-    std::string get_det_name(std::shared_ptr<const Determinants> Detspace ) ;
-
-    void tester();
 
     void Calculate_CTP(std::string A_contrib_name );
 

@@ -31,6 +31,7 @@
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/ci/fci/fci.h>
 #include <src/smith/wicktool/equation_computer.h>
+#include <src/smith/wicktool/gamma_computer.h>
 #include <src/smith/multitensor.h>
 
 namespace bagel {

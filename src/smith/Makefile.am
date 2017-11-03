@@ -48,6 +48,7 @@ relcaspt2/RelCASPT2_tasks6.cc \
 wicktool/equation.cc wicktool/CtrTensOp.cc wicktool/TensOp.cc wicktool/WickUtils.cc  wicktool/BraKet.cc \
 wicktool/equation_computer.cc wicktool/equation_computer_gammas.cc wicktool/gamma_generator.cc wicktool/spin_manager.cc wicktool/tensor_sorter.cc \
 wicktool/expression_info.cc wicktool/symmetry_operations.cc wicktool/tensor_arithmetic.cc wicktool/tensor_arithmetic_utils.cc \
+wicktool/gamma_computer.cc \
 \
 casa/CASA.cc casa/CASA_gamma.cc casa/CASA_residualq.cc casa/CASA_sourceq.cc \
 casa/CASA_gen1.cc casa/CASA_gen2.cc casa/CASA_gen3.cc casa/CASA_gen4.cc casa/CASA_gen5.cc casa/CASA_gen6.cc \

@@ -157,22 +157,19 @@ void CASPT2::CASPT2::solve() {
       set_rdm(jst, istate);
 
       Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2all_[istate]->at(jst) , 1.0  );
-      //Equation_Computer::Equation_Computer::set_tensor_elems( t2 , 1.0  );
        
-      cout << " t2all_["<< istate << "]->at("<< jst << ")->norm() = " <<   t2all_[istate]->at(jst)->norm(); cout.flush();
-      cout << "        t2all_["<< istate << "]->at("<< jst << ")->rms() = " <<   t2all_[istate]->at(jst)->rms()  <<  endl;
-//      cout << " t2all = " << endl;       Equation_Computer::Equation_Computer::Print_Tensor(t2all_[istate]->at(jst) ); 
-
+      cout << " t2all_["<< istate << "]->at("<< jst << ")->norm()       = " <<   t2all_[istate]->at(jst)->norm() << endl;
+      cout << " t2all_["<< istate << "]->at("<< jst << ")->rms()        = " <<   t2all_[istate]->at(jst)->rms()  <<  endl;
+      cout << " t2all_["<< istate << "]->at("<< jst << ")->size_alloc() = " <<   t2all_[istate]->at(jst)->size_alloc()  <<  endl;
 
       s = sall_[istate]->at(jst);
       shared_ptr<Queue> sourceq = make_sourceq(false, jst == istate);
       while(!sourceq->done())
         sourceq->next_compute();
     
-//      cout << endl <<  "sall after = " << endl;  Equation_Computer::Equation_Computer::Print_Tensor(sall_[istate]->at(jst) ); 
     }
   }
-  cout << " sall_[0]->at(0)->norm() = " <<   sall_[0]->at(0)->norm()  <<  endl;
+  cout << " sall_[0]->at(0)->norm() = " <<  sall_[0]->at(0)->norm()  <<  endl;
   cout << " sall_[0]->at(0)->rms() = " <<   sall_[0]->at(0)->rms()  <<  endl;
 
   // solve linear equation for t amplitudes

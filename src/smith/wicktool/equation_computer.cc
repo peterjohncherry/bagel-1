@@ -11,8 +11,7 @@ using namespace bagel::SMITH::Tensor_Arithmetic_Utils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info_in,
                                                          std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
-                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in,
-                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map_in ){
+                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in          ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Computer::Equation_Computer::Equation_Computer" << endl;
   eqn_info =  eqn_info_in;
@@ -24,25 +23,17 @@ Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const S
   cc_ = ref->ciwfn()->civectors();
   maxtile = ref->maxtile();
   
-  GammaMap = eqn_info->GammaMap;
   CTP_map  = eqn_info->CTP_map;
+  GammaMap = eqn_info->GammaMap;
   
   Data_map  = Data_map_in;
-  Gamma_data_map = Gamma_data_map_in;
-  
-  CIvec_data_map = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
-  Sigma_data_map = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();
-  determinants_map = make_shared<std::map<std::string, std::shared_ptr<const Determinants>>>();
 
   cimaxblock = 100; //figure out what is best, maxtile is 10000, so this is chosen to have one index block. Must be consistent if contraction routines are to work...
 
   range_conversion_map = range_conversion_map_in;
-  get_civector_indexranges(1);
 
   Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
 
-  tester();
-    
 }  
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,43 +106,6 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 
    return block_tensor;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-string Equation_Computer::Equation_Computer::get_det_name(shared_ptr<const Determinants> Detspace ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- return "[" +to_string(Detspace->norb()) + ",{"+to_string(Detspace->nelea())+"a,"+to_string(Detspace->neleb())+"b}]";
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//should be extended to deal with spin sectors
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer::Equation_Computer::get_civector_indexranges(int nstates) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- 
-  for ( int ii = 0 ; ii != nstates; ii++ ) 
-    range_conversion_map->emplace( get_civec_name( ii , cc_->data(ii)->det()->norb(), cc_->data(ii)->det()->nelea(), cc_->data(ii)->det()->neleb()),
-                                   make_shared<IndexRange>(cc_->data(ii)->lena()*cc_->data(ii)->lenb(), cimaxblock ));  
-
-  return;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer::Equation_Computer::tester(){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-  shared_ptr<Tensor_<double>> civec1 =  convert_civec_to_tensor( cc_->data(0), 0 );
-  shared_ptr<Tensor_<double>> civec2 =  convert_civec_to_tensor( cc_->data(0), 0 );
-
-  double normval = civec1->dot_product(civec2); 
-  cout << " civec1->dot_product(civec2) = " << normval << endl;
-  cout << " civec1->rms()               = " << civec1->rms()  << endl;
-  cout << " civec1->norm()              = " << civec1->norm() << endl;
-  
-  assert(!(abs(normval -1.00) > 0.000000000001) ); 
-  
-  return;
-
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a tensor with ranges specified by unc_ranges, where all values are equal to XX  
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,9 +180,9 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::reorder_block_
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 pair<int,int>
-Equation_Computer::Equation_Computer::relativize_ctr_positions(pair <int,int> ctr_todo, 
-                                                               shared_ptr<CtrTensorPart<double>>  CTP1,
-                                                               shared_ptr<CtrTensorPart<double>>  CTP2){
+Equation_Computer::Equation_Computer::relativize_ctr_positions( pair <int,int> ctr_todo, 
+                                                                shared_ptr<CtrTensorPart<double>> CTP1,
+                                                                shared_ptr<CtrTensorPart<double>> CTP2 ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  cout << "Equation_Computer::Equation_Computer::find_or_get_CTP_data" << endl;
    pair<int,int> rel_ctr;

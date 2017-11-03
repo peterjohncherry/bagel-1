@@ -1,8 +1,9 @@
-#ifndef __SRC_SMITH_WICKTOOL_EQN_COMPUTER_H
-#define __SRC_SMITH_WICKTOOL_EQN_COMPUTER_H
+#ifndef __SRC_SMITH_WICKTOOL_GAMMA_COMPUTER_H
+#define __SRC_SMITH_WICKTOOL_GAMMA_COMPUTER_H
 
 #include <tuple>
 #include <src/smith/wicktool/equation.h>
+#include <src/smith/wicktool/equation_computer.h>
 #include <src/smith/smith_info.h>
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
@@ -18,37 +19,34 @@ namespace Gamma_Computer {
 class Gamma_Computer { 
 
     public: 
-    Gamma_Computer(std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info,
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map,
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map;
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map;
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> determinants_map);
+    Gamma_Computer( std::shared_ptr<Equation<double>> Eqn_info_in,
+                    std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in      );
     ~Gamma_Computer(){};
   
-    int nelea_ ;
-    int neleb_ ;
-    int ncore_ ;
-    int norb_  ;
-    int nstate_;
-    int maxtile;
+    int nelea_  ;
+    int neleb_  ;
+    int norb_   ;
+    int nstate_ ;
+    int maxtile ;
     int cimaxblock;
-    std::shared_ptr<IndexRange> virt_  ;
-    std::shared_ptr<IndexRange> active_  ;
-    std::shared_ptr<IndexRange> closed_  ;
-    std::shared_ptr<std::map< int , std::shared_ptr<IndexRange>>> ci_idxrng_map;
+    std::shared_ptr<IndexRange> virt_   ;
+    std::shared_ptr<IndexRange> active_ ;
+    std::shared_ptr<IndexRange> closed_ ;
 
     std::shared_ptr<const Dvec> cc_; 
     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> determinants_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> Determinants_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
+
+    std::shared_ptr<Equation<double>> Eqn_info;
 
     std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> Tensor_Calc;
 
-    ////////////Gamma routines (Tensor class based) //////////////////
+
+    void Initialize_wfn_info( std::shared_ptr<Civec> civector, int state_num ) ;
 
     void get_gamma_tensor( int MM , int NN, std::string gamma_name);
 
@@ -76,6 +74,8 @@ class Gamma_Computer {
 
     /////////// Utility routines /////////////////////////
  
+    std::shared_ptr<std::vector<IndexRange>> Get_Bagel_IndexRanges( std::shared_ptr<std::vector<std::string>> ranges_str);
+
     std::string get_sigma_name( std::string Bra_name, std::string Ket_name , std::shared_ptr<std::vector<std::string>>  orb_ranges, std::shared_ptr<std::vector<bool>> aops ) ;
 
     std::string get_civec_name(int state_num, int norb, int nalpha, int nbeta) const ;
@@ -83,8 +83,6 @@ class Gamma_Computer {
     std::string get_det_name(std::shared_ptr<const Determinants> Detspace ) ;
 
     void tester();
-
-
 
 };
 

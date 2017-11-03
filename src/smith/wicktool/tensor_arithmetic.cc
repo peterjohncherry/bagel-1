@@ -244,8 +244,8 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( std::sh
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( shared_ptr<Tensor_<DataType>> Tens1_in,
-                                                                  shared_ptr<Tensor_<DataType>> Tens2_in,
-                                                                  pair<int,int> ctr_todo){
+                                                                            shared_ptr<Tensor_<DataType>> Tens2_in,
+                                                                            pair<int,int> ctr_todo){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Tensor_Arithmetic::contract_on_different_tensor" <<endl; 
 

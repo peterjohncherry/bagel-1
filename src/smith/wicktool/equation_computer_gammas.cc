@@ -82,8 +82,7 @@ Equation_Computer::Equation_Computer::compute_gammas(const int MM, const int NN 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "compute_gamma12 MM = " << MM << " NN = " << NN  << endl;
 
-  string det_name = get_civec_name( MM, cc_->data(MM)->det()->norb(),  cc_->data(MM)->det()->nelea(), cc_->data(MM)->det()->neleb());  
-  shared_ptr<const Determinants> det_ =  determinants_map->at(det_name);
+  shared_ptr<const Determinants> det_ = cc_->data(MM)->det();
   if (det_->compress()) { // uncompressing determinants
     auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
     cc_->set_det(detex);
@@ -122,7 +121,7 @@ Equation_Computer::Equation_Computer::compute_gamma12(const int MM, const int NN
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "compute_gamma12 MM = " << MM << " NN = " << NN  << endl;
 
-  shared_ptr<const Determinants> det_ =  determinants_map->at(get_det_name(cc_->data(MM)->det()));
+  shared_ptr<const Determinants> det_ =  cc_->data(MM)->det();
   if (det_->compress()) { // uncompressing determinants
     auto detex = make_shared<Determinants>(norb_, nelea_, neleb_, false, /*mute=*/true);
     cc_->set_det(detex);

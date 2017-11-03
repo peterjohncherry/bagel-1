@@ -276,7 +276,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   int MM = 0;
   int NN = 0;
 
-  shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, Data_map, Gamma_data_map);
+  shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, Data_map);
 
   //Hack to test excitation operators
   shared_ptr<vector<IndexRange>> X_ranges = make_shared<vector<IndexRange>>(vector<IndexRange> { *not_virtual_rng, *not_virtual_rng, *not_closed_rng,  *not_closed_rng});
@@ -293,29 +293,18 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   {
     compare_string_length csl;
     int ii = 0 ; 
-   
-    // std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::vector<std::pair<std::vector<int> , std::pair<int,int>>> > >>>  G_to_A_map
     for ( auto G_to_A_map_it : *(Expr->G_to_A_map) ){
       Gname_vec[ii] = G_to_A_map_it.first;
-      Expr_computer->get_gamma_tensor( 0, 0, Gname_vec[ii]) ;
       ii++;
     }
-
-    Expr_computer->build_gamma_2idx_tensor( NN, MM, nelea_, neleb_, norb_, Gname_vec[2] );
-    
-
     std::sort(Gname_vec.begin(), Gname_vec.end(), csl); 
-
   }
 
-
-  cout << "A5" << endl;
+  cout << "getting_gammas" << endl;
   shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gammas( 0, 0, Gname_vec[0] );
-  cout << "returned from get_gammas in tact " << endl;
   
   cout << "contracting gammas " << endl;
   for (shared_ptr<Tensor_<double>>  gamma_tens : *gamma_tensors) {
-//    Expr_computer->set_tensor_elems( gamma_tens, 1.0 );
     vector<int> index_pos(gamma_tens->indexrange().size());
     iota(index_pos.begin() , index_pos.end(), 0 );
     shared_ptr<Tensor_<double>> contracted_gamma = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( gamma_tens, index_pos);
