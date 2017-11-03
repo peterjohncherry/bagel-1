@@ -38,29 +38,44 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   ref = orig_cpt2_in.info_;
 
   cc_ = ref->ciwfn()->civectors();
-  det_ = ref->ciwfn()->civectors()->det();
+  det_ = ref->ciwfn()->civectors()->det(); //remove this ASAP
  
-  T2_all     = orig_cpt2->t2all_;
-  lambda_all = orig_cpt2->lall_;
-  F_1el_all  = orig_cpt2->f1_;
-  H_1el_all  = orig_cpt2->h1_;
-  H_2el_all  = orig_cpt2->H_2el_;
+  T2_all     = orig_cpt2->t2all_;  
+  lambda_all = orig_cpt2->lall_;   
+  F_1el_all  = orig_cpt2->f1_;     cout << "F_1el_all->rms()" <<  F_1el_all->rms() << endl; 
+  H_1el_all  = orig_cpt2->h1_;     cout << "H_1el_all->rms()" <<  H_1el_all->rms() << endl; 
+  H_2el_all  = orig_cpt2->H_2el_;  cout << "H_2el_all->rms()" <<  H_2el_all->rms() << endl; 
+ 
+  ncore   = ref->ncore();
+  nclosed = ref->nclosed();
+  nact    = ref->nact();
+  nvirt   = ref->nvirt();
+  maxtile = ref->maxtile();
+ 
+  set_range_info();
 
-  cout << "F_1el_all->rms()" <<  F_1el_all->rms() << endl; 
-  cout << "H_1el_all->rms()" <<  H_1el_all->rms() << endl; 
-  cout << "H_2el_all->rms()" <<  H_2el_all->rms() << endl; 
- 
-  const int maxtile = ref->maxtile();
- 
-  ncore   =  ref->ncore();
-  nclosed =  ref->nclosed();
-  nact    =  ref->nact();
-  nvirt   =  ref->nvirt();
+  CTP_map            = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
+  Data_map           = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  Gamma_data_map     = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  scalar_results_map = make_shared<map<string, double>>();
 
-  closed_rng  =  make_shared<IndexRange>(IndexRange(ref->nclosed()-ref->ncore(), maxtile, 0, ref->ncore()));
-  active_rng  =  make_shared<IndexRange>(IndexRange(ref->nact(), min(10,maxtile), closed_rng->nblock(), ref->ncore()+closed_rng->size()));
-  virtual_rng =  make_shared<IndexRange>(IndexRange(ref->nvirt(), maxtile, closed_rng->nblock()+active_rng->nblock(), ref->ncore()+closed_rng->size()+active_rng->size()));
-  free_rng = make_shared<IndexRange>(*closed_rng); free_rng->merge(*active_rng); free_rng->merge(*virtual_rng);
+  shared_ptr<vector<int>> states_of_interest = make_shared<vector<int>>( vector<int> { 0 } );
+  set_target_info(states_of_interest) ;
+   
+  Expr_Info = make_shared<Expression_Info<double>>(TargetsInfo, true);
+  Expr_Info_map = Expr_Info->expression_map;
+  
+}
+//////////////////////////////////////////////////////////////////////////////////////////////
+void CASPT2_ALT::CASPT2_ALT::set_range_info() {
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+  closed_rng  =  make_shared<IndexRange>(IndexRange(nclosed-ncore, maxtile, 0, ncore));
+  active_rng  =  make_shared<IndexRange>(IndexRange(nact, min(10,maxtile), closed_rng->nblock(), ncore + closed_rng->size()));
+  virtual_rng =  make_shared<IndexRange>(IndexRange(nvirt, maxtile, closed_rng->nblock()+ active_rng->nblock(), ncore+closed_rng->size()+active_rng->size()));
+  free_rng    = make_shared<IndexRange>(*closed_rng);
+  free_rng->merge(*active_rng);
+  free_rng->merge(*virtual_rng);
 
   not_closed_rng  =  make_shared<IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
   not_active_rng  =  make_shared<IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
@@ -77,20 +92,9 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   range_conversion_map->emplace("notact", not_active_rng);
   range_conversion_map->emplace("notvir", not_virtual_rng); 
 
-  CTP_map            = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
-  Data_map           = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
-  Gamma_data_map     = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
-  scalar_results_map = make_shared<map<string, double>>();
-  //Deriv_results_map = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  return;
 
-  shared_ptr<vector<int>> states_of_interest = make_shared<vector<int>>( vector<int> { 0 } );
-  set_target_info(states_of_interest) ;
-   
-  Expr_Info = make_shared<Expression_Info<double>>(TargetsInfo, true);
-  Expr_Info_map = Expr_Info->expression_map;
-  
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 // defining this so we don't need to put determinants class into gamma generator etc.
 // At the moment this is quite silly; the determinant space is the same for every space,
@@ -106,6 +110,7 @@ void CASPT2_ALT::CASPT2_ALT::set_target_info( shared_ptr<vector<int>> states_of_
      TargetsInfo->num_beta_map.emplace( state_num  , det_->neleb() ) ;
      TargetsInfo->num_orb_map.emplace( state_num   , det_->norb() ) ;
   } 
+  return;
 }
 
 ////////////////////////////////////////////////////////////////////

@@ -51,12 +51,13 @@ class CASPT2_ALT {
     std::shared_ptr<const SMITH_Info<double>> ref;
 
     std::shared_ptr<const Dvec> cc_; 
-    int  ncore ;
-    int  nact  ;
-    int  nvirt ;
-    int  nclosed ;
-    int  nstate;
     std::shared_ptr<const Determinants> det_ ; 
+
+    int ncore ;
+    int nact  ;
+    int nvirt ;
+    int nclosed ;
+    int maxtile;  
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map;
@@ -92,7 +93,9 @@ class CASPT2_ALT {
     void Build_Compute_Lists();
     void Execute_Compute_List(std::string expression_name );
     
+
     void set_target_info( std::shared_ptr<std::vector<int>> states_of_interest) ;
+    void set_range_info();
 
     struct compare_string_length {
       bool operator()(const std::string& first, const std::string& second) {
