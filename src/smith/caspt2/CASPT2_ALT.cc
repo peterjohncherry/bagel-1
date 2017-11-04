@@ -30,6 +30,7 @@ using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 using namespace bagel::SMITH::Equation_Computer; 
+using namespace bagel::SMITH::Gamma_Computer; 
 
 ////////////////////////////////////////////////////////////////////
 CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) { 
@@ -55,6 +56,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   CTP_map            = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
   Data_map           = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   Gamma_data_map     = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
+  GammaMap           = make_shared<map<string, shared_ptr<GammaInfo>>>();
   scalar_results_map = make_shared<map<string, double>>();
 
   CIvec_data_map   = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();    
@@ -113,7 +115,8 @@ void CASPT2_ALT::CASPT2_ALT::set_target_info( shared_ptr<vector<int>> states_of_
   TargetsInfo = make_shared<StatesInfo<double>> ( *states_of_interest ) ;
   
   for ( int state_num : *states_of_interest ) 
-     TargetsInfo->add_state( cc_->det()->nelea(), cc_->det()->neleb(), cc_->det()->norb(), state_num ) ;
+     TargetsInfo->add_state( cc_->data(state_num)->det()->nelea(), cc_->data(state_num)->det()->neleb(),
+                             cc_->data(state_num)->det()->norb(), state_num ) ;
   
   return;
 }
@@ -261,6 +264,16 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   LTens_data->zero();
   Data_map->emplace("L" , LTens_data);
 
+
+  //Hack to test excitation operators
+  shared_ptr<vector<IndexRange>> X_ranges = make_shared<vector<IndexRange>>(vector<IndexRange> { *not_virtual_rng, *not_virtual_rng, *not_closed_rng,  *not_closed_rng});
+  shared_ptr<vector<IndexRange>> Y_ranges = make_shared<vector<IndexRange>>(vector<IndexRange> { *not_closed_rng,  *not_closed_rng,  *not_virtual_rng, *not_virtual_rng});
+  
+  shared_ptr<Tensor_<double>> XTens_data = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(X_ranges , 1.0 );
+  Data_map->emplace("X" , XTens_data);
+  shared_ptr<Tensor_<double>> YTens_data = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(Y_ranges , 1.0 );
+  Data_map->emplace("Y" , YTens_data);
+
   return;
 }
 
@@ -293,6 +306,8 @@ void CASPT2_ALT::CASPT2_ALT::Build_Compute_Lists() {
   return ;
 }
 
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string Expression_name) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -304,20 +319,12 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
  
   shared_ptr<Equation<double>> Expr = Expr_Info->expression_map->at(Expression_name); 
   double result = 0.0;
-  int MM = 0;
-  int NN = 0;
 
   shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, Data_map);
 
-  //Hack to test excitation operators
-  shared_ptr<vector<IndexRange>> X_ranges = make_shared<vector<IndexRange>>(vector<IndexRange> { *not_virtual_rng, *not_virtual_rng, *not_closed_rng,  *not_closed_rng});
-  shared_ptr<vector<IndexRange>> Y_ranges = make_shared<vector<IndexRange>>(vector<IndexRange> { *not_closed_rng,  *not_closed_rng,  *not_virtual_rng, *not_virtual_rng});
+  Gamma_Machine = make_shared<Gamma_Computer::Gamma_Computer>( Expr->GammaMap, CIvec_data_map, Sigma_data_map, Gamma_data_map, Determinants_map, range_conversion_map );
   
-  shared_ptr<Tensor_<double>> XTens_data = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(X_ranges , 1.0 );
-  Data_map->emplace("X" , XTens_data);
-  shared_ptr<Tensor_<double>> YTens_data = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(Y_ranges , 1.0 );
-  Data_map->emplace("Y" , YTens_data);
-
+  Gamma_Machine->convert_civec_to_tensor( cc_->data(0), 0 );
 
   //Get Amap for each gamma
   vector<string> Gname_vec(Expr->G_to_A_map->size());
@@ -326,6 +333,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
     int ii = 0 ; 
     for ( auto G_to_A_map_it : *(Expr->G_to_A_map) ){
       Gname_vec[ii] = G_to_A_map_it.first;
+      Gamma_Machine->get_gamma_tensor( G_to_A_map_it.first);
       ii++;
     }
     std::sort(Gname_vec.begin(), Gname_vec.end(), csl); 
@@ -333,12 +341,13 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
 
   cout << "getting_gammas" << endl;
   shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gammas( 0, 0, Gname_vec[0] );
-  
+ 
   cout << "contracting gammas " << endl;
   for (shared_ptr<Tensor_<double>>  gamma_tens : *gamma_tensors) {
     vector<int> index_pos(gamma_tens->indexrange().size());
     iota(index_pos.begin() , index_pos.end(), 0 );
     shared_ptr<Tensor_<double>> contracted_gamma = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( gamma_tens, index_pos);
+
     cout << "contracted_gamma->rms()        = " << contracted_gamma->rms() << endl;
     cout << "contracted_gamma->norm()       = " << contracted_gamma->norm() << endl;
     cout << "contracted_gamma->rank()       = " << contracted_gamma->rank() <<       "    orig_gamma->rank         = "<< gamma_tens->rank() << endl;

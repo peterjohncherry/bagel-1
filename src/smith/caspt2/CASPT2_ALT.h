@@ -71,6 +71,7 @@ class CASPT2_ALT {
     std::shared_ptr<std::map< std::string, std::shared_ptr<Equation<double>>>> Expr_Info_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
     std::shared_ptr<std::map< std::string, double>> scalar_results_map;
+    std::shared_ptr<Gamma_Computer::Gamma_Computer> Gamma_Machine;
   
     std::shared_ptr<IndexRange> closed_rng; 
     std::shared_ptr<IndexRange> active_rng;  

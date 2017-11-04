@@ -20,24 +20,25 @@ Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_
   cout << "Gamma_Computer::Gamma_Computer::Gamma_Computer" << endl;
   maxtile  = 10000;
 
-  GammaMap             = GammaMap_in;         
-  CIvec_data_map       = CIvec_data_map_in;   
-  Sigma_data_map       = Sigma_data_map_in;   
-  Gamma_data_map       = Gamma_data_map_in;   
-  Determinants_map     = Determinants_map_in; 
-  range_conversion_map = range_conversion_map_in;
+  GammaMap             = GammaMap_in;             cout << "set GammaMap            "<< endl; 
+  CIvec_data_map       = CIvec_data_map_in;       cout << "set CIvec_data_map      "<< endl;  
+  Sigma_data_map       = Sigma_data_map_in;       cout << "set Sigma_data_map      "<< endl;  
+  Gamma_data_map       = Gamma_data_map_in;       cout << "set Gamma_data_map      "<< endl;  
+  Determinants_map     = Determinants_map_in;     cout << "set Determinants_map    "<< endl; 
+  range_conversion_map = range_conversion_map_in; cout << "set range_conversion_map"<< endl; 
 
   cimaxblock = 100; //figure out what is best, maxtile is 10000, so this is chosen to have one index block. Must be consistent if contraction routines are to work...
 
   Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
 
-  tester();
+  //tester();
     
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets the gammas in tensor format. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name) {
+void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::Gamma_Computer::get_gammas"  << endl;
   cout << "Gamma name = " << gamma_name << endl;
@@ -50,15 +51,18 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name) {
     
     //for now just use specialized routines, this must be made generic at some point
     if (GammaMap->at(gamma_name)->id_ranges->size() == 2 ) { 
-      build_gamma_2idx_tensor(  gamma_name ) ;
+      build_gamma_2idx_tensor( gamma_name ) ;
       cout << "------------------ "<<  gamma_name  << " ---------------------" << endl; 
       Print_Tensor(Gamma_data_map->at(gamma_name));
+
     } else if (GammaMap->at(gamma_name)->id_ranges->size() == 4 ) { 
-       //get rdm 4
+       cout << " 4-index stuff not implemented, cannot calculate " << gamma_name << endl;
+
     } else if (GammaMap->at(gamma_name)->id_ranges->size() == 6 ) { 
-       //get rdm 6
+       cout << " 6-index stuff not implemented, cannot calculate " << gamma_name << endl;
+
     } else if (GammaMap->at(gamma_name)->id_ranges->size() == 8 ) { 
-       //get rdm 8
+       cout << " 8-index stuff not implemented, cannot calculate " << gamma_name << endl;
     }    
   }
   
@@ -92,12 +96,20 @@ cout << "build_gamma_2idx_tensor : " << gamma_name << endl;
   } else { //should replace this with blockwise and immediate contraction build.
 
     build_sigma_2idx_tensor( gamma_info );
+  
+    cout << "sigma tensor = " <<  sigma_name << endl;  
+    Print_Tensor(Sigma_data_map->at(sigma_name)); 
+    cout << " Sigma_data_map->at("<<sigma_name<<")->rms()  = " <<  Sigma_data_map->at(sigma_name)->rms() << endl;
+    cout << " Sigma_data_map->at("<<sigma_name<<")->norm() = " <<  Sigma_data_map->at(sigma_name)->norm() << endl;
    
     shared_ptr<Tensor_<double>> gamma_2idx = Tensor_Calc->contract_different_tensors(  CIvec_data_map->at(Bra_name), Sigma_data_map->at(sigma_name),  make_pair(0,0));
      
     Gamma_data_map->emplace( gamma_name, gamma_2idx );
- 
+
+    cout << "gamma tensor = " << gamma_name << endl;  
     Print_Tensor(Gamma_data_map->at(gamma_name));
+    cout << " Gamma_data_map->at("<< gamma_name<<")->rms()  = " <<  Gamma_data_map->at(gamma_name)->rms() << endl;
+    cout << " Gamma_data_map->at("<< gamma_name<<")->norm() = " <<  Gamma_data_map->at(gamma_name)->norm() << endl;
 
   }
  
@@ -147,15 +159,17 @@ Gamma_Computer::Gamma_Computer::build_sigma_2idx_tensor(shared_ptr<GammaInfo> ga
     shared_ptr<vector<int>> range_lengths = get_range_lengths(sigma_ranges); 
 
     vector<int> sigma_offsets = { 0, 0, 0 };
-    
+    shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( sigma_ranges ) ;
+ 
+
     // loop through sigma ranges,  loop over Ket ranges inside build_sigma_block;  
     do {
-       
+          
       vector<Index> sigma_id_blocks = *(get_rng_blocks( block_pos, *sigma_ranges));
-      build_sigma_block( sigma_name, sigma_id_blocks, sigma_offsets, Ket_name ) ;
-      
-      for (int ii = 0 ; ii != 3; ii++ )
-        sigma_offsets[ii] += sigma_id_blocks[ii].size();
+      build_sigma_block( sigma_tensor, sigma_id_blocks, sigma_offsets, Ket_name ) ;
+   
+      for ( int ii = 0 ; ii != block_pos->size(); ii++  )
+        sigma_offsets[ii] = block_offsets->at(ii)[block_pos->at(ii)]; 
     
     } while (fvec_cycle(block_pos, range_lengths, mins ));
     
@@ -170,7 +184,7 @@ Gamma_Computer::Gamma_Computer::build_sigma_2idx_tensor(shared_ptr<GammaInfo> ga
 // Adapted from routines in src/ci/fci/knowles_compute.cc so returns block of a sigma vector in a manner more compatible with
 // the Tensor format.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vector<Index>& sigma_id_blocks,
+void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<double>> sigma_tens, vector<Index>& sigma_id_blocks,
                                                         vector<int>& sigma_offsets, string Ket_name  ) const {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::build_sigma_block" << endl; 
@@ -178,6 +192,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
   size_t Bra_block_size = sigma_id_blocks[0].size();
   size_t iblock_size    = sigma_id_blocks[1].size();
   size_t jblock_size    = sigma_id_blocks[2].size();
+  size_t Ket_offset = 0;
 
   const size_t sigma_block_size = Bra_block_size*(iblock_size*norb_+jblock_size);
 
@@ -185,14 +200,14 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
   cout << " jblock_size      = " << jblock_size << endl;
   cout << " Bra_block_size   = " << Bra_block_size << endl;
   cout << " sigma_block_size = " << sigma_block_size << endl;
+
   unique_ptr<double[]> sigma_block(new double[sigma_block_size])  ;
   std::fill_n(sigma_block.get(), sigma_block_size, 0.0);
 
   shared_ptr<const Determinants> Ket_det = Determinants_map->at(Ket_name);
-  shared_ptr<Tensor_<double>> Ket_Tens  = CIvec_data_map->at(Ket_name);
-  shared_ptr<IndexRange> Ket_range       = range_conversion_map->at(Ket_name);
+  shared_ptr<Tensor_<double>>   Ket_Tens = CIvec_data_map->at(Ket_name);
+  shared_ptr<IndexRange>       Ket_range = range_conversion_map->at(Ket_name);
   // size_t lb = Ket_det->lenb() <= Ket_idx_block.size() ? Ket_det_lenb() : Ket_idx_block.size();      
-  size_t Ket_offset = 0;
 
   auto in_Bra_range = [&sigma_offsets, &Bra_block_size ]( size_t& pos) {
       if (( pos > (sigma_offsets[0]+Bra_block_size)) || ( pos < sigma_offsets[0] ) ){
@@ -218,7 +233,9 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
 
    const int lena = Ket_det->lena();
    const int lenb = Ket_det->lenb();
-  
+ 
+  cout << "sigma_offsets = " ; cout.flush() ;for ( int  soffset : sigma_offsets) {cout << soffset << " " ;} cout << endl;
+ 
   // Must be changed to use BLAS, however, you will have to be careful about the ranges; 
   // ci_block needs to have a length which is some integer multiple of lenb.
   double* sigma_ptr = sigma_block.get();
@@ -227,8 +244,10 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
     double* Ket_ptr = Ket_block.get();
     size_t Ket_block_size = Ket_idx_block.size();
     
+    cout << "sigma alphas" << endl;
     for( size_t ii = sigma_offsets[1]; ii != iblock_size + sigma_offsets[1]; ++ii) {
-      for( size_t jj = sigma_offsets[2]; jj != iblock_size + sigma_offsets[2]; ++jj) {
+      for( size_t jj = sigma_offsets[2]; jj != jblock_size + sigma_offsets[2]; ++jj) {
+//        cout << " ii , jj =  " << ii << " , " << jj << endl;
         for ( DetMap iter : Ket_det->phia(ii, jj)) {
           size_t Sshift = iter.source*lenb;
           size_t Kshift = iter.source*lenb;
@@ -236,25 +255,26 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
           double* Ket_pos   = Ket_block.get() +   iter.target *lenb;
           double sign = static_cast<double>(iter.sign);
           for( size_t ib = 0; ib != lenb; ++ib, sigma_pos++, Ket_pos++, Sshift++, Kshift++) {
-            if( (in_Ket_range(Kshift, Ket_block_size) && in_Bra_range(Sshift) ))
+//            if( (in_Ket_range(Kshift, Ket_block_size) && in_Bra_range(Sshift) ))
               *sigma_pos += (*Ket_pos * sign);
           }
         }
       }
     }
-
+    cout << "sigma betas" << endl;
     Ket_ptr = Ket_block.get();
     double* sigma_block_ia = sigma_block.get();
     for (int ia = 0; ia < lena; ++ia) {
       Ket_ptr += lenb;
       sigma_block_ia += lenb;
       for( size_t ii = sigma_offsets[1]; ii != iblock_size + sigma_offsets[1]; ++ii) {
-        for( size_t jj = sigma_offsets[2]; jj != iblock_size + sigma_offsets[2]; ++jj) {
+        for( size_t jj = sigma_offsets[2]; jj != jblock_size + sigma_offsets[2]; ++jj) {
+//          cout << " ii , jj =  " << ii << " , " << jj << endl;
           for ( DetMap iter : Ket_det->phib(ii,jj)) {
             const double sign = static_cast<double>(iter.sign);
             size_t shift1 = ia*lenb+iter.target;
             size_t shift2 = ia*lenb+iter.source; 
-            if ( (in_Ket_range( shift1,  Ket_block_size)) && (in_Bra_range( shift2 )) )
+//            if ( (in_Ket_range( shift1,  Ket_block_size)) && (in_Bra_range( shift2 )) )
               *(sigma_block.get() + iter.source) +=  *(Ket_ptr + iter.target) * sign ;
           }
         }
@@ -262,7 +282,9 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( string sigma_name, vecto
     }
     Ket_offset += Ket_idx_block.size(); 
   }
-  
+  cout << " got a sigma block .... " ; cout.flush();
+  sigma_tens->put_block(sigma_block, sigma_id_blocks ) ; 
+  cout << " and put it in the tensor! " << endl;
   return;
  
 }       
@@ -323,6 +345,7 @@ cout << "Gamma_Computer::Get_Bagel_IndexRanges 1arg" << endl;
 
   return ranges_Bagel;
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>> 
 Gamma_Computer::Gamma_Computer::convert_civec_to_tensor( shared_ptr<const Civec> civector, int state_num ) const {
@@ -364,10 +387,7 @@ Gamma_Computer::Gamma_Computer::convert_civec_to_tensor( shared_ptr<const Civec>
   CIvec_data_map->emplace( civec_name, civec_tensor); 
   Determinants_map->emplace( civec_name, civector->det() ); 
 
-
   return civec_tensor;
 }
-
-
 
 #endif

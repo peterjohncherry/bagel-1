@@ -39,10 +39,11 @@ class Gamma_Computer {
       std::shared_ptr<IndexRange> closed_ ;
       
       std::shared_ptr<const Dvec> cc_; 
-      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
       std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
       std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map;
       std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map;
+
+      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
       std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
       std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> Determinants_map;
       
@@ -57,7 +58,7 @@ class Gamma_Computer {
       
       void build_gamma_2idx_tensor( std::string gamma_name ) ;
       
-      void build_sigma_block( std::string sigma_name, std::vector<Index>& sigma_id_blocks, std::vector<int>& sigma_offsets, std::string Ket_name  ) const ;
+      void build_sigma_block( std::shared_ptr<Tensor_<double>> sigma_tens, std::vector<Index>& sigma_id_blocks, std::vector<int>& sigma_offsets, std::string Ket_name  ) const ;
       
       void get_civector_indexranges(int nstates) ;
       

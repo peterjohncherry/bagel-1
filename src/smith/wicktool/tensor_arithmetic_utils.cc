@@ -434,5 +434,24 @@ Tensor_Arithmetic_Utils::get_block_start( shared_ptr<vector<IndexRange>> id_rang
   return make_shared<vector<pair<size_t,size_t>>>(block_start_end);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets(shared_ptr<vector<IndexRange>>  ranges ) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic_Utils::get_block_offsets" << endl;
+ 
+  shared_ptr<vector<vector<int>>> block_offsets = make_shared<vector<vector<int>>>(ranges->size());
+   
+  for ( int  ii = 0 ; ii != ranges->size() ; ii++ ) { 
+    vector<int> block_offset(ranges->at(ii).range().size()); 
+    block_offset[0] = 0;
+    for ( int  jj = 1 ; jj != ranges->at(ii).range().size() ; jj++ ) { 
+      block_offset[jj] = block_offset[jj-1]+ranges->at(ii).range(jj).size(); 
+    }    
+    block_offsets->at(ii) =  block_offset;
+  }
+  
+  return block_offsets ; 
+
+}
 
 #endif
