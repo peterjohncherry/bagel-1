@@ -103,13 +103,11 @@ void CASPT2_ALT::CASPT2_ALT::set_range_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::set_target_info( shared_ptr<vector<int>> states_of_interest) {
 //////////////////////////////////////////////////////////////////////////////////////////////
-  TargetsInfo = make_shared<StatesInfo<double>> ( states_of_interest ) ;
-
-  for ( int state_num : *states_of_interest ) {
-     TargetsInfo->num_alpha_map.emplace( state_num , det_->nelea() ) ;
-     TargetsInfo->num_beta_map.emplace( state_num  , det_->neleb() ) ;
-     TargetsInfo->num_act_map.emplace( state_num   , det_->norb() ) ;
-  } 
+  TargetsInfo = make_shared<StatesInfo<double>> ( *states_of_interest ) ;
+  
+  for ( int state_num : *states_of_interest ) 
+     TargetsInfo->add_state( cc_->det()->nelea(), cc_->det()->neleb(), cc_->det()->norb(), state_num ) ;
+  
   return;
 }
 

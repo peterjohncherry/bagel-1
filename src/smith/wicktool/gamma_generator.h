@@ -33,6 +33,9 @@ class GammaInfo {
      std::string name;     
      std::shared_ptr<std::vector<std::string>> one_el_gammas;
 
+     std::shared_ptr<CIVecInfo<double>> Bra_info;
+     std::shared_ptr<CIVecInfo<double>> Ket_info;
+
      int Bra_num;
      int Bra_norb;
      int Bra_nalpha;
@@ -43,8 +46,9 @@ class GammaInfo {
      int Ket_nalpha;
      int Ket_nbeta;
 
-     GammaInfo( int Ket_norb, int Ket_nalpha, int Ket_nbeta, int Ket_num, int Bra_num, std::shared_ptr<std::vector<bool>> full_aops_vec,
-                std::shared_ptr<std::vector<std::string>> full_idx_ranges, std::shared_ptr<std::vector<int>> idxs_pos );
+     GammaInfo( std::shared_ptr<CIVecInfo<double>> Bra_info, std::shared_ptr<CIVecInfo<double>> Ket_info, 
+                std::shared_ptr<std::vector<bool>> full_aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
+                std::shared_ptr<std::vector<int>> idxs_pos );
 
      GammaInfo(){};
      ~GammaInfo(){};

@@ -83,6 +83,9 @@ namespace WickUtils {
 
   std::string get_civec_name( const int state_num,  const int norb,  const int nalpha, const int nbeta);
 
+  std::string get_gamma_name( std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> aops_vec,
+                              std::shared_ptr<std::vector<int>> idxs_pos, std::string Bra_name, std::string Ket_name );
+
   std::shared_ptr<std::vector<pint_vec>>  
   get_cross_pairs( std::shared_ptr<std::vector<int>> vec1 , std::shared_ptr<std::vector<int>> vec2, std::shared_ptr<std::vector<std::string>> id_names );
 

@@ -10,23 +10,18 @@ using namespace std;
 using namespace WickUtils;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-GammaInfo::GammaInfo ( int Ket_norb_in, int Ket_nalpha_in, int Ket_nbeta_in, int Ket_num_in, int Bra_num_in, 
+GammaInfo::GammaInfo ( shared_ptr<CIVecInfo<double>> Bra_info_in, shared_ptr<CIVecInfo<double>> Ket_info_in, 
                        shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<string>> full_idx_ranges, 
                        shared_ptr<vector<int>> idxs_pos) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaInfo::GammaInfo" <<  endl;
+#ifdef DBG_GammaInfo
+cout << "GammaInfo::GammaInfo" <<  endl;
+#endif 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  Ket_num =  Ket_num_in;
-  Bra_num =  Bra_num_in;
- 
-  Ket_norb   = Ket_norb_in;
-  Ket_nalpha = Ket_nalpha_in;
-  Ket_nbeta  = Ket_nbeta_in;
+  Bra_info =  Bra_info_in;
+  Ket_info =  Ket_info_in;
 
-  Bra_norb   = Ket_norb_in;
-  Bra_nalpha = Ket_nalpha_in;
-  Bra_nbeta  = Ket_nbeta_in;
- 
   id_ranges = make_shared<vector<string>>(idxs_pos->size());
   aops      = make_shared<vector<bool>>(idxs_pos->size());
 
@@ -36,14 +31,14 @@ GammaInfo::GammaInfo ( int Ket_norb_in, int Ket_nalpha_in, int Ket_nbeta_in, int
   }
 
   //depends on floor in integer division
-  name = GammaGenerator::get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos ); cout << "gamma name = " <<  name << endl;
+  name = get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos, Bra_info->name(), Ket_info->name() ); cout << "gamma name = " <<  name << endl;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> TargetStates_in, int Ket_num_in, int Bra_num_in,
-                               shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init, 
-                               shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
-                               shared_ptr<map<string, shared_ptr<map<string, AContribInfo >>>> G_to_A_map_in){
+                                shared_ptr<vector<bool>> ac_init, shared_ptr<vector<string>> ids_init, 
+                                shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
+                                shared_ptr<map<string, shared_ptr<map<string, AContribInfo >>>> G_to_A_map_in){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_GammaGenerator
 cout << "GammaGenerator::GammaGenerator" << endl; 
@@ -56,12 +51,10 @@ cout << "GammaGenerator::GammaGenerator" << endl;
 
   Ket_num = Ket_num_in;
   Bra_num = Bra_num_in;
-  cout << "Ket_num =  " << Ket_num << endl;
-  cout << "Bra_num =  " << Bra_num << endl;
-  Ket_nalpha = TargetStates->nalpha(Ket_num);cout << " Ket_nalpha = "<<  Ket_nalpha << endl;
-  Ket_nbeta  = TargetStates->nbeta(Ket_num);cout  << " Ket_nbeta  = "<<  Ket_nbeta  << endl;
-  Ket_norb   = TargetStates->nact(Ket_num);  cout << " Ket_norb   = "<<  Ket_norb   << endl;
 
+  Ket_nalpha = TargetStates->nalpha(Ket_num);
+  Ket_nbeta  = TargetStates->nbeta(Ket_num); 
+  Ket_norb   = TargetStates->nact(Ket_num);  
 
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
@@ -130,9 +123,6 @@ cout << "GammaGenerator::norm_order" << endl;
 
     int  num_pops = ( ids_pos->size()/2 )-1;     
  
-    string Aname_init = get_Aname(orig_ids, full_id_ranges, deltas_pos );   
-    string Gname_init = get_gamma_name( full_id_ranges, full_aops, ids_pos );
-                                       
     for (int ii = ids_pos->size()-1 ; ii != -1; ii--){            
       if ( ii > num_pops ) {                                      
         if (!full_aops->at(ids_pos->at(ii)))                      
@@ -165,13 +155,14 @@ cout << "GammaGenerator::norm_order" << endl;
     if (!gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
        Contract_remaining_indexes(kk);
     } else {
-      string Gname = get_gamma_name( full_id_ranges, full_aops, ids_pos ) ;
+      string Gname = WickUtils::get_gamma_name( full_id_ranges, full_aops, ids_pos, TargetStates->name(Bra_num), TargetStates->name(Ket_num) ) ;
       cout << "No further contractions for ";
       cout <<  get_Aname(orig_ids, full_id_ranges, deltas_pos ) << " and  ";
       cout <<  Gname << endl;
       final_gamma_vec->push_back(gamma_vec->at(kk));
       if ( Gamma_map->find(Gname) == Gamma_map->end() ) 
-        Gamma_map->emplace( Gname, make_shared<GammaInfo>( Ket_norb, Ket_nalpha, Ket_nbeta, Ket_num, Bra_num, full_aops, full_id_ranges, ids_pos) ) ;
+        Gamma_map->emplace( Gname, make_shared<GammaInfo>(  TargetStates->civec_info(Bra_num), TargetStates->civec_info(Ket_num),
+                                                            full_aops, full_id_ranges, ids_pos) ) ;
     } 
     kk++;                                                         
   }                                                               
@@ -332,8 +323,11 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
     }
     kk++;
 
+    string Bra_name = TargetStates->name(Bra_num);
+    string Ket_name = TargetStates->name(Ket_num);
+
     string Aname_alt = get_Aname( orig_ids, full_id_ranges, deltas_pos );
-    string Gname = get_gamma_name( full_id_ranges, orig_aops, ids_pos );
+    string Gname = WickUtils::get_gamma_name( full_id_ranges, orig_aops, ids_pos, Bra_name, Ket_name );
   
     if ( G_to_A_map->find( Gname ) == G_to_A_map->end() )
       G_to_A_map->emplace( Gname, make_shared<map<string, AContribInfo>>() ) ;
@@ -359,8 +353,8 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
     }
 
     if ( Gamma_map->find( Gname ) == Gamma_map->end() )
-      Gamma_map->emplace( Gname, make_shared<GammaInfo>( Ket_norb, Ket_nalpha, Ket_nbeta, Ket_num, Bra_num, full_aops,
-                                                         full_id_ranges, ids_pos) ) ;
+      Gamma_map->emplace( Gname, make_shared<GammaInfo>(  TargetStates->civec_info(Bra_num), TargetStates->civec_info(Ket_num), 
+                                                          full_aops, full_id_ranges, ids_pos) ) ;
   }
 
   return;
