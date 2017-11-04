@@ -52,10 +52,6 @@ cout << "GammaGenerator::GammaGenerator" << endl;
   Ket_num = Ket_num_in;
   Bra_num = Bra_num_in;
 
-  Ket_nalpha = TargetStates->nalpha(Ket_num);
-  Ket_nbeta  = TargetStates->nbeta(Ket_num); 
-  Ket_norb   = TargetStates->nact(Ket_num);  
-
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
   G_to_A_map = G_to_A_map_in;
@@ -425,34 +421,6 @@ cout << "GammaGenerator::get_Aname" << endl;
     for(pair<int,int> delta : *all_ctrs_pos)
       name += to_string(delta.first)+to_string(delta.second);
   }
-  return name;
-};
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-string GammaGenerator::get_gamma_name(shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> aops_vec,
-                                      shared_ptr<vector<int>> idxs_pos ){
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_GammaGenerator 
-cout << "GammaGenerator::get_gamma_name" << endl; 
-#endif 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  string  name = "";
- 
-  if (idxs_pos->size() == 0 ) {
-     name = "ID" ;
-  } else {  
-    for (int pos : *idxs_pos ) 
-        name+=full_idx_ranges->at(pos)[0];
-    
-    name+='_';
-    for (int pos : *idxs_pos ) {
-      if(aops_vec->at(pos)){ 
-        name += '1';
-      } else {
-        name += '0';
-      }
-    } 
-  }
-  
   return name;
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

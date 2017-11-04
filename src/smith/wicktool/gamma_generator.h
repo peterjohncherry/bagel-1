@@ -103,13 +103,8 @@ class GammaGenerator{
 
     std::shared_ptr<std::map< char, int>>         op_order ;
     std::shared_ptr<std::map< std::string, int>>  idx_order ;
-
     
     int Ket_num;
-    int Ket_norb;
-    int Ket_nalpha;
-    int Ket_nbeta;
-   
     int Bra_num; 
 
     std::shared_ptr<StatesInfo<double>> TargetStates;
@@ -138,9 +133,6 @@ class GammaGenerator{
     std::string get_Aname(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges, 
                           std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
    
-    static std::string get_gamma_name( std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> full_aops,
-                                       std::shared_ptr<std::vector<int>> idxs_pos );
-
     bool RangeCheck(std::shared_ptr<std::vector<std::string>> full_id_ranges) ;
     
     bool Forbidden_Index(std::shared_ptr<std::vector<std::string>> full_id_ranges, int position );

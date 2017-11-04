@@ -59,10 +59,17 @@ class CASPT2_ALT {
     int nclosed ;
     int maxtile;  
 
-    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map;
+
+
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map;
+
+    std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> Determinants_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Equation<double>>>> Expr_Info_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
     std::shared_ptr<std::map< std::string, double>> scalar_results_map;
   
     std::shared_ptr<IndexRange> closed_rng; 
@@ -94,8 +101,8 @@ class CASPT2_ALT {
     void Execute_Compute_List(std::string expression_name );
     
 
-    void set_target_info( std::shared_ptr<std::vector<int>> states_of_interest) ;
-    void set_range_info();
+    void set_target_info( std::shared_ptr<std::vector<int>> states_of_interest ) ;
+    void set_range_info( std::shared_ptr<std::vector<int>> states_of_interest );
 
     struct compare_string_length {
       bool operator()(const std::string& first, const std::string& second) {

@@ -51,23 +51,26 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   nact    = ref->nact();
   nvirt   = ref->nvirt();
   maxtile = ref->maxtile();
- 
-  set_range_info();
 
   CTP_map            = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
   Data_map           = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   Gamma_data_map     = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
   scalar_results_map = make_shared<map<string, double>>();
 
+  CIvec_data_map   = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();    
+  Sigma_data_map   = make_shared<std::map<std::string, std::shared_ptr<Tensor_<double>>>>();    
+  Determinants_map = make_shared<std::map<std::string, std::shared_ptr<const Determinants>>>(); 
+
   shared_ptr<vector<int>> states_of_interest = make_shared<vector<int>>( vector<int> { 0 } );
   set_target_info(states_of_interest) ;
+  set_range_info(states_of_interest);
    
   Expr_Info = make_shared<Expression_Info<double>>(TargetsInfo, true);
   Expr_Info_map = Expr_Info->expression_map;
   
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
-void CASPT2_ALT::CASPT2_ALT::set_range_info() {
+void CASPT2_ALT::CASPT2_ALT::set_range_info(shared_ptr<vector<int>> states_of_interest ) {
 //////////////////////////////////////////////////////////////////////////////////////////////
 
   closed_rng  =  make_shared<IndexRange>(IndexRange(nclosed-ncore, maxtile, 0, ncore));
@@ -91,6 +94,10 @@ void CASPT2_ALT::CASPT2_ALT::set_range_info() {
   range_conversion_map->emplace("notcor", not_closed_rng);
   range_conversion_map->emplace("notact", not_active_rng);
   range_conversion_map->emplace("notvir", not_virtual_rng); 
+ 
+  for ( int ii : *states_of_interest ) 
+    range_conversion_map->emplace( get_civec_name( ii , cc_->data(ii)->det()->norb(), cc_->data(ii)->det()->nelea(), cc_->data(ii)->det()->neleb()),
+                                   make_shared<IndexRange>(cc_->data(ii)->lena()*cc_->data(ii)->lenb(), maxtile ));  
 
   return;
 
