@@ -224,13 +224,12 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
   // Must be changed to use BLAS, however, you will have to be careful about the ranges; 
   // ci_block needs to have a length which is some integer multiple of lenb.
   for ( Index Ket_idx_block : Ket_range->range()) {  
+
     cout << " Ket_range = "; cout.flush(); cout << Ket_offset  << "-> "  << Ket_offset+Ket_idx_block.size()  << endl;
     cout << " Bra_range = "; cout.flush(); cout << sigma_offsets[2]  << "-> "  << sigma_offsets[2] + Bra_block_size << endl;
-    vector<Index> Ket_id_vec = {Ket_idx_block};
-    
-    unique_ptr<double[]>  Ket_block = Ket_Tens->get_block(Ket_id_vec);
 
-    cout << "got ket block " << endl;
+    unique_ptr<double[]>  Ket_block = Ket_Tens->get_block( vector<Index> {Ket_idx_block} );
+
     double* Ket_ptr = Ket_block.get();
     size_t Ket_block_size = Ket_idx_block.size();
    
@@ -264,7 +263,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
         
             int Ket_shift = iter.target+ia*lenb - Ket_offset;
             if ( (Ket_shift < 0 ) || (Ket_shift >= Ket_block_size) ){
-              cout << "out of range " << endl; continue;}
+              cout << " Ket out of range " << endl; continue;}
             else {
               cout << " Ket_shift      = " << Ket_shift ; cout.flush();
               cout << " Ket_offset     = " << Ket_offset; cout.flush(); 
@@ -272,11 +271,11 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
             }
             int Bra_shift = iter.source+ia*lenb - sigma_offsets[2];
             if ( (Bra_shift < 0 ) || (Bra_shift >= Bra_block_size) ) {
-              cout << "out of range " << endl; continue;}
+              cout << " Bra out of range " << endl; continue;}
             else {
-              cout << " Bra_shift        = " << Bra_shift ; cout.flush();
-              cout << " Sigma_offsets[2] = " << sigma_offsets[2]; cout.flush(); 
-              cout << " Bra_block_size   = " << Bra_block_size << endl; 
+              cout << " Bra_shift      = " << Bra_shift ; cout.flush();
+              cout << " Bra_offset     = " << sigma_offsets[2]; cout.flush(); 
+              cout << " Bra_block_size = " << Bra_block_size << endl; 
             }
             double sign = static_cast<double>(iter.sign);
         
