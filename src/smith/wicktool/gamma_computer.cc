@@ -224,12 +224,11 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
   // Must be changed to use BLAS, however, you will have to be careful about the ranges; 
   // ci_block needs to have a length which is some integer multiple of lenb.
   for ( Index Ket_idx_block : Ket_range->range()) {  
-    cout << " Ket_range = " << Ket_offset  << "-> "  << Ket_offset+Ket_idx_block.size()  << endl;
-    cout << " Bra_range = " << sigma_offsets[2]  << "-> "  << sigma_offsets[2] + Bra_block_size << endl;
+    cout << " Ket_range = "; cout.flush(); cout << Ket_offset  << "-> "  << Ket_offset+Ket_idx_block.size()  << endl;
+    cout << " Bra_range = "; cout.flush(); cout << sigma_offsets[2]  << "-> "  << sigma_offsets[2] + Bra_block_size << endl;
     vector<Index> Ket_id_vec = {Ket_idx_block};
-    unique_ptr<double[]>   Ket_block = make_unique<double[]>(Ket_idx_block.size());
-    auto bob   = Ket_Tens->get_block(Ket_id_vec);
-     //Ket_block = Ket_Tens->get_block(Ket_id_vec);
+    
+    unique_ptr<double[]>  Ket_block = Ket_Tens->get_block(Ket_id_vec);
 
     cout << "got ket block " << endl;
     double* Ket_ptr = Ket_block.get();
@@ -245,64 +244,45 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
 
         cout << "sigma alphas ii,jj " << ii << " , " << jj ; cout.flush() ;
         for ( DetMap iter : Ket_det->phia(ii, jj)) {
-          if (ii == 4 && jj==4 ) cout << "A1" << endl;
  
-          int Ket_shift = iter.target*lenb - Ket_offset;
-          if ( (Ket_shift < 0 ) || (Ket_shift >= Ket_block_size) ) {
-              cout << "Ket_shift = " << Ket_shift << " out of bounds : Ket_block_size =  " << Ket_block_size   << endl;
-              continue;
-            } else {
-              cout << "Ket_shift = " << Ket_shift << " OK ! " << endl;
-            }
-
+          int Ket_shift = iter.target*lenb - Ket_offset; cout << "Ket_shift = " << Ket_shift << endl;
+          if ( (Ket_shift < 0 ) || (Ket_shift >= Ket_block_size) )  continue;
 
           int Bra_shift = iter.source*lenb - sigma_offsets[2];
-          if ( (Bra_shift < 0 ) || (Bra_shift >= Bra_block_size) ){
-              cout << "Bra_shift = " << Bra_shift << " out of bounds : Bra_block_size =  " << Bra_block_size   << endl;
-              continue;
-            } else {
-              cout << "Bra_shift = " << Bra_shift << " OK ! " << endl;
-            }
-
+          if ( (Bra_shift < 0 ) || (Bra_shift >= Bra_block_size) )  continue;
              
-          size_t loop_limit = lenb > Bra_block_size ? Bra_block_size : lenb; //Ket block size and Bra block size should be the same...
-
-          double* sigma_pos = sigma_ptr + Bra_shift;  
-          double* Ket_pos = Ket_ptr+Ket_shift;  
+          size_t loop_limit = lenb > Bra_block_size ? Bra_block_size : lenb; 
+          loop_limit = Ket_block_size > loop_limit ? loop_limit : Ket_block_size; 
           double sign = static_cast<double>(iter.sign);
-
-          if (ii == 4 && jj==4 ) cout << "A1" << endl;
-            
-          for( size_t ib = 0; ib != loop_limit; ib++, sigma_pos++, Ket_pos++) 
-           *sigma_pos += (*Ket_pos * sign);
-          
+          for( size_t ib = 0; ib != loop_limit; ib++) 
+           *(sigma_ptr+Bra_shift+ib) += (*(Ket_ptr+Ket_shift+ib) * sign);
+ 
         }
 
-        cout << endl << "     sigma betas " <<  endl;
-       
         for( size_t ia = 0; ia != lena; ia++) {
           for ( DetMap iter : Ket_det->phib(ii, jj)) {
-
+        
             int Ket_shift = iter.target+ia*lenb - Ket_offset;
-            if ( (Ket_shift < 0 ) || (Ket_shift >= Ket_block_size) ) {
-              cout << "Ket_shift = " << Ket_shift << " out of bounds : Ket_block_size =  " << Ket_block_size   << endl;
-              continue;
-            } else {
-              cout << "Ket_shift = " << Ket_shift << " OK ! " << endl;
+            if ( (Ket_shift < 0 ) || (Ket_shift >= Ket_block_size) ){
+              cout << "out of range " << endl; continue;}
+            else {
+              cout << " Ket_shift      = " << Ket_shift ; cout.flush();
+              cout << " Ket_offset     = " << Ket_offset; cout.flush(); 
+              cout << " Ket_block_size = " << Ket_block_size << endl; 
             }
-            
             int Bra_shift = iter.source+ia*lenb - sigma_offsets[2];
             if ( (Bra_shift < 0 ) || (Bra_shift >= Bra_block_size) ) {
-              cout << "Bra_shift = " << Bra_shift << " out of bounds : Bra_block_size =  " << Bra_block_size   << endl;
-              continue;
-            } else {
-              cout << "Bra_shift = " << Bra_shift << " OK ! " << endl;
+              cout << "out of range " << endl; continue;}
+            else {
+              cout << " Bra_shift        = " << Bra_shift ; cout.flush();
+              cout << " Sigma_offsets[2] = " << sigma_offsets[2]; cout.flush(); 
+              cout << " Bra_block_size   = " << Bra_block_size << endl; 
             }
- 
             double sign = static_cast<double>(iter.sign);
-
-            *(sigma_ptr + Bra_shift) += (*(Ket_ptr+Ket_shift) * sign);
-            
+        
+//           *(sigma_ptr + Bra_shift) += (*(Ket_ptr+Ket_shift) * sign);
+             *(sigma_ptr + Bra_shift) += (*(Ket_ptr+Ket_shift) * sign);
+          
           }
         } 
         cout << "leaving ii,jj = " << ii << "," << jj << endl;
@@ -310,6 +290,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
     }     
     cout << "leaving orb loop" << endl;
     Ket_offset += Ket_idx_block.size(); 
+    cout << "checked block size" << endl;
   }
   cout << " got a sigma block .... " ; cout.flush();
   sigma_tens->put_block(sigma_block, sigma_id_blocks ) ; 
