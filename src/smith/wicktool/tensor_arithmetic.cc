@@ -236,6 +236,39 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( std::sh
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Code is much clearer if we have a seperate routine for this rather than pepper the generic version with ifs
+// Could be accomplished with dot_product member of Tensor....
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+DataType Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_vectors( shared_ptr<Tensor_<DataType>> Tens1_in,
+                                                                           shared_ptr<Tensor_<DataType>> Tens2_in){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithmetic::contract_on_different_tensor" <<endl; 
+
+  vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
+  vector<IndexRange> T2_org_rngs = Tens2_in->indexrange();
+
+  assert(Tens1_in->size_alloc() == Tens2_in->size_alloc() );
+
+  DataType dot_product_value = 0.0 ;
+  
+  for (int ii = 0 ; ii != T1_org_rngs[0].range().size(); ii++ ){ 
+     
+      vector<Index> T1_block = { T1_org_rngs[0].range(ii) };
+      vector<Index> T2_block = { T2_org_rngs[0].range(ii) }; 
+
+      unique_ptr<DataType[]> T1_data_block = Tens1_in->get_block(T1_block); 
+      unique_ptr<DataType[]> T2_data_block = Tens2_in->get_block(T2_block); 
+
+      dot_product_value += ddot_( T1_block.size(), T1_data_block.get(), 1, T2_data_block.get(), 1 ); 
+
+  }
+  
+  return dot_product_value;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Contracts tensors T1 and T2 over two specified indexes
 //T1_org_rg T2_org_rg are the original index ranges for the tensors (not necessarily normal ordered).
 //T2_new_rg T1_new_rg are the new ranges, with the contracted index at the end, and the rest in normal ordering.
@@ -251,6 +284,14 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor" <<endl;
 
   vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
   vector<IndexRange> T2_org_rngs = Tens2_in->indexrange();
+
+  if ( ( T1_org_rngs.size() == 1 ) && (T2_org_rngs.size() == 1) ) {
+    cout << "vector dot product" << endl;
+  } else if ( ( T1_org_rngs.size() == 1 ) && (T2_org_rngs.size() != 1) ) {
+    cout << "tensor dot vector " << endl;
+  } else if ( ( T1_org_rngs.size() == 1 ) && (T2_org_rngs.size() == 1) ) {
+    cout << "vector dot tensor " << endl;
+  }    
 
   shared_ptr<vector<int>> T1_org_order= make_shared<vector<int>>(T1_org_rngs.size());
   iota(T1_org_order->begin(), T1_org_order->end(), 0);
@@ -273,7 +314,7 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor" <<endl;
   Tens_out->allocate();
   Tens_out->zero();
 
-  //loops over all index blocks of T1 and  T2; final index of T1 is same as first index of T2 due to contraction
+  //loops over all index blocks of T1 and T2; final index of T1 is same as first index of T2 due to contraction
   shared_ptr<vector<int>> T1_rng_block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
 
   do { 
@@ -290,10 +331,15 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor" <<endl;
       std::unique_ptr<DataType[]> T1_data_org = Tens1_in->get_block(*T1_org_rng_blocks);
       T1_data_new = reorder_tensor_data(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
     }
-    
+   
+    cout <<" T1_data_block = [ " ; cout.flush();
+    for ( int qq = 0 ; qq!=T1_unc_block_size; qq++ ) 
+      cout << *(T1_data_new.get()) << " " ;
+    cout << "] " << endl;
+  
     shared_ptr<vector<int>> T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size(), 0);
     T2_rng_block_pos->front() = T1_rng_block_pos->back();
- 
+  
     do { 
 
       cout << "T2 block pos =  [ " ; for (int block_num : *T2_rng_block_pos ){cout << block_num << " ";cout.flush();} cout << " ] " << endl;
@@ -305,7 +351,12 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor" <<endl;
         std::unique_ptr<DataType[]> T2_data_org = Tens2_in->get_block(*T2_org_rng_blocks);
         T2_data_new = reorder_tensor_data(T2_data_org.get(), T2_new_order, T2_org_rng_blocks); 
       }
-       
+      
+      cout <<" T2_data_block = [ "; cout.flush(); 
+      for ( int qq = 0 ; qq!=T2_unc_block_size; qq++ ) 
+        cout << *(T2_data_new.get()+qq) << " " ;
+      cout << "] " << endl;
+ 
       std::unique_ptr<DataType[]> T_out_data(new DataType[T1_unc_block_size*T2_unc_block_size]);
       std::fill_n(T_out_data.get(), T1_unc_block_size*T2_unc_block_size, 0.0);
 
@@ -316,6 +367,11 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor" <<endl;
       vector<Index> T_out_rng_block(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
       T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
       Tens_out->add_block( T_out_data, T_out_rng_block );
+
+      cout <<" T_out_data = [ " ; cout.flush();
+      for ( int qq = 0 ; qq!=T1_unc_block_size*T2_unc_block_size; qq++ ) 
+        cout << *(T_out_data.get()+qq) << " " ;
+      cout << "] " << endl;
 
       //remove last index; contracted index is cycled in T1 loop
     } while(fvec_cycle_skipper(T2_rng_block_pos, maxs2, 0 )) ;

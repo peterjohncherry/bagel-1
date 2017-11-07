@@ -12,62 +12,44 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens ) {
    cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
 
    vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
+   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( Bagel_id_ranges) ;
 
-   shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(Tens->indexrange().size()); 
-   for (int ii = 0 ; ii != range_lengths->size(); ii++)
-      range_lengths->at(ii) =  Tens->indexrange()[ii].range().size()-1;
-    
+   shared_ptr<vector<int>> range_lengths  =  get_range_lengths( Bagel_id_ranges ) ;
    shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
    shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
-   vector<vector<int>> all_id_block_pos(0);
-   vector<vector<int>> all_id_block_sizes(0);
     
-   for (int ii = 0 ; ii != Tens->indexrange().size(); ii++) {
-
-     vector<int> id_block_pos_part(Tens->indexrange()[ii].range().size());
-     vector<int> id_block_sizes_part(Tens->indexrange()[ii].range().size());
-     id_block_pos_part[0] = 0;
-     id_block_sizes_part[0] = Tens->indexrange()[ii].range(0).size() ;
-
-     for (int jj = 1 ; jj != Tens->indexrange()[ii].range().size(); jj++){ 
-        id_block_pos_part[jj]   = id_block_pos_part[jj-1] + Tens->indexrange()[ii].range(jj-1).size();
-        id_block_sizes_part[jj] = Tens->indexrange()[ii].range(jj).size();
-     }
-
-     all_id_block_pos.push_back(id_block_pos_part);
-     all_id_block_sizes.push_back(id_block_sizes_part);
-   } 
-
    cout << "Tdata_block : " << endl; 
    do {
 
-     vector<int> block_id_start(block_pos->size());
-     for ( int ii = 0 ; ii != block_id_start.size(); ii++)
-       block_id_start[ii] = all_id_block_pos[ii].at(block_pos->at(ii));
+     vector<int> id_pos(block_pos->size());
+     for ( int ii = 0 ; ii != Bagel_id_ranges.size(); ii++)
+       id_pos[ii] = block_offsets->at(ii).at(block_pos->at(ii));
     
-     vector<Index> id_blocks( block_pos->size() );
-     for( int ii = 0 ;  ii != id_blocks.size(); ii++)
-       id_blocks[ii] = Tens->indexrange()[ii].range(block_pos->at(ii));
+     vector<Index> id_blocks = *(get_rng_blocks( block_pos, Bagel_id_ranges ));
     
      if ( Tens->exists(id_blocks) ) { 
        vector<int> id_blocks_sizes(id_blocks.size());
-       shared_ptr<vector<int>> id_blocks_maxs = make_shared<vector<int>>(id_blocks.size());
-       for( int ii = 0 ;  ii != id_blocks.size(); ii++){
+       for( int ii = 0 ;  ii != id_blocks.size(); ii++)
          id_blocks_sizes[ii] = id_blocks[ii].size();
-         id_blocks_maxs->at(ii) = id_blocks[ii].size()-1;
-       }
-      
-       shared_ptr<vector<int>> id_pos = make_shared<vector<int>>(range_lengths->size(),0);
+
        int id_block_size = accumulate(id_blocks_sizes.begin(), id_blocks_sizes.end(), 1 , std::multiplies<int>());
        
        unique_ptr<double[]>    T_data_block = Tens->get_block(id_blocks);
        shared_ptr<vector<int>> Tens_strides = get_Tens_strides(id_blocks_sizes);
        
+       cout <<  "[ " ; for ( int elem : id_pos ) { cout << elem << " " ; } cout  << "] " << endl;
        for ( int jj = 0 ; jj != id_block_size ; jj++) {
          cout <<  T_data_block[jj] << " "; cout.flush();
-         for ( vector<int>::iterator Titer =  Tens_strides->begin()+1;  Titer != Tens_strides->end(); Titer++ ) {
-           if ( (jj > 0) && ( ( (jj+1) % *Titer) == 0) ){ 
+         for ( int kk = 1; kk != Tens_strides->size(); kk++ ) {
+           if ( (((jj+1) % Tens_strides->at(kk)) == 0)  && (jj > 0) ){ 
              cout << endl;
+             if ( kk > 1 ) {
+               for ( int  ll = kk ; ll !=  Tens_strides->size() ; ll++){
+                 if ( ( jj+1 % Tens_strides->at(ll) == 0) ) 
+                   id_pos[ll]++;
+               }
+               cout <<  "[ " ; for ( int elem : id_pos ) { cout << elem << " " ; } cout  << "] " << endl;
+             }
            }
          }
        }
@@ -434,6 +416,25 @@ Tensor_Arithmetic_Utils::get_block_start( shared_ptr<vector<IndexRange>> id_rang
   return make_shared<vector<pair<size_t,size_t>>>(block_start_end);
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets(vector<IndexRange>&  ranges ) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic_Utils::get_block_offsets" << endl;
+ 
+  shared_ptr<vector<vector<int>>> block_offsets = make_shared<vector<vector<int>>>(ranges.size());
+   
+  for ( int  ii = 0 ; ii != ranges.size() ; ii++ ) { 
+    vector<int> block_offset(ranges[ii].range().size()); 
+    block_offset[0] = 0;
+    for ( int  jj = 1 ; jj != ranges[ii].range().size() ; jj++ ) { 
+      block_offset[jj] = block_offset[jj-1]+ranges[ii].range(jj).size(); 
+    }    
+    block_offsets->at(ii) =  block_offset;
+  }
+  
+  return block_offsets ; 
+
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets(shared_ptr<vector<IndexRange>>  ranges ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

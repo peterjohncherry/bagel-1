@@ -44,6 +44,8 @@ class Tensor_Arithmetic {
      static std::shared_ptr<Tensor_<DataType>>
      get_uniform_Tensor(std::shared_ptr<std::vector<IndexRange>> T_id_ranges, DataType XX );
 
+     static DataType contract_vectors( std::shared_ptr<Tensor_<DataType>> Tens1_in,  std::shared_ptr<Tensor_<DataType>> Tens2_in);
+
      static std::unique_ptr<DataType[]>
      reorder_tensor_data( const DataType* orig_data, std::shared_ptr<std::vector<int>> new_order_vec, std::shared_ptr<std::vector<Index>> orig_index_blocks ) ;
 

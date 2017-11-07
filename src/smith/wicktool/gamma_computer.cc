@@ -86,6 +86,9 @@ cout << "build_gamma_2idx_tensor : " << gamma_name << endl;
   string Ket_name = KetInfo->name();  
   shared_ptr<vector<string>> gamma_ranges_str  = gamma_info->id_ranges;
 
+  cout << "CIvec_data_map->at("<<Bra_name<<")->norm() = " << CIvec_data_map->at(Bra_name)->norm() << endl; 
+  cout << "CIvec_data_map->at("<<Bra_name<<")->rms()  = " << CIvec_data_map->at(Bra_name)->rms() << endl; 
+
   shared_ptr<vector<bool>> aops = make_shared<vector<bool>>(vector<bool> { true, false } );
   string sigma_name = "S_"+gamma_name;
 
@@ -101,8 +104,17 @@ cout << "build_gamma_2idx_tensor : " << gamma_name << endl;
     Print_Tensor(Sigma_data_map->at(sigma_name)); 
     cout << " Sigma_data_map->at("<<sigma_name<<")->rms()  = " <<  Sigma_data_map->at(sigma_name)->rms() << endl;
     cout << " Sigma_data_map->at("<<sigma_name<<")->norm() = " <<  Sigma_data_map->at(sigma_name)->norm() << endl;
+
+    
+    cout << "	calculating brabra " << endl;
+    shared_ptr<Tensor_<double>> brabra = Tensor_Calc->contract_different_tensors(  CIvec_data_map->at(Bra_name) , CIvec_data_map->at(Bra_name),  make_pair(0,0));
+    cout << " brabra->rms()  = " << brabra->rms()  << endl;
+    cout << " brabra->norm() = " << brabra->norm() << endl;
+    
+
    
-    shared_ptr<Tensor_<double>> gamma_2idx = Tensor_Calc->contract_different_tensors(  CIvec_data_map->at(Bra_name), Sigma_data_map->at(sigma_name),  make_pair(0,0));
+    cout << "	calculating brabra " << endl;
+    shared_ptr<Tensor_<double>> gamma_2idx = Tensor_Calc->contract_different_tensors(   Sigma_data_map->at(sigma_name), CIvec_data_map->at(Bra_name),  make_pair(2,0));
      
     Gamma_data_map->emplace( gamma_name, gamma_2idx );
 
@@ -147,9 +159,8 @@ Gamma_Computer::Gamma_Computer::build_sigma_2idx_tensor(shared_ptr<GammaInfo> ga
     
     shared_ptr<vector<IndexRange>> orb_ranges  = Get_Bagel_IndexRanges( orb_ranges_str );   
     
-    shared_ptr<vector<IndexRange>> sigma_ranges = make_shared<vector<IndexRange>>(1, Bra_civec->indexrange()[0] );
-    sigma_ranges->insert(sigma_ranges->end(), orb_ranges->begin(), orb_ranges->end());
-    
+    auto sigma_ranges = make_shared<vector<IndexRange>>(vector<IndexRange> { orb_ranges->at(0), orb_ranges->at(1), Bra_civec->indexrange()[0]} );
+
     shared_ptr<Tensor_<double>> sigma_tensor = make_shared<Tensor_<double>>(*(sigma_ranges));
     sigma_tensor->allocate();
     sigma_tensor->zero();
@@ -160,7 +171,6 @@ Gamma_Computer::Gamma_Computer::build_sigma_2idx_tensor(shared_ptr<GammaInfo> ga
 
     vector<int> sigma_offsets = { 0, 0, 0 };
     shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( sigma_ranges ) ;
- 
 
     // loop through sigma ranges,  loop over Ket ranges inside build_sigma_block;  
     do {
@@ -189,9 +199,9 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::build_sigma_block" << endl; 
 
-  size_t Bra_block_size = sigma_id_blocks[0].size();
-  size_t iblock_size    = sigma_id_blocks[1].size();
-  size_t jblock_size    = sigma_id_blocks[2].size();
+  size_t iblock_size    = sigma_id_blocks[0].size();
+  size_t jblock_size    = sigma_id_blocks[1].size();
+  size_t Bra_block_size = sigma_id_blocks[2].size();
   size_t Ket_offset = 0;
 
   const size_t sigma_block_size = Bra_block_size*(iblock_size*norb_+jblock_size);
@@ -235,6 +245,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
    const int lenb = Ket_det->lenb();
  
   cout << "sigma_offsets = " ; cout.flush() ;for ( int  soffset : sigma_offsets) {cout << soffset << " " ;} cout << endl;
+  cout << "iblock_size , jblock_size = " << iblock_size <<" , " << jblock_size << endl;
  
   // Must be changed to use BLAS, however, you will have to be careful about the ranges; 
   // ci_block needs to have a length which is some integer multiple of lenb.
@@ -244,9 +255,10 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
     double* Ket_ptr = Ket_block.get();
     size_t Ket_block_size = Ket_idx_block.size();
     
-    cout << "sigma alphas" << endl;
-    for( size_t ii = sigma_offsets[1]; ii != iblock_size + sigma_offsets[1]; ++ii) {
-      for( size_t jj = sigma_offsets[2]; jj != jblock_size + sigma_offsets[2]; ++jj) {
+    cout << "sigma alphas " << endl;
+    for( size_t ii = sigma_offsets[0]; ii != iblock_size + sigma_offsets[0]; ++ii) {
+      for( size_t jj = sigma_offsets[1]; jj != jblock_size + sigma_offsets[1]; ++jj) {
+        cout << "ii , jj = "  <<  ii << " , " << jj << endl;  
 //        cout << " ii , jj =  " << ii << " , " << jj << endl;
         for ( DetMap iter : Ket_det->phia(ii, jj)) {
           size_t Sshift = iter.source*lenb;
@@ -267,8 +279,8 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
     for (int ia = 0; ia < lena; ++ia) {
       Ket_ptr += lenb;
       sigma_block_ia += lenb;
-      for( size_t ii = sigma_offsets[1]; ii != iblock_size + sigma_offsets[1]; ++ii) {
-        for( size_t jj = sigma_offsets[2]; jj != jblock_size + sigma_offsets[2]; ++jj) {
+      for( size_t ii = sigma_offsets[0]; ii != iblock_size + sigma_offsets[0]; ++ii) {
+        for( size_t jj = sigma_offsets[1]; jj != jblock_size + sigma_offsets[1]; ++jj) {
 //          cout << " ii , jj =  " << ii << " , " << jj << endl;
           for ( DetMap iter : Ket_det->phib(ii,jj)) {
             const double sign = static_cast<double>(iter.sign);

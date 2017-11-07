@@ -44,6 +44,7 @@ namespace Tensor_Arithmetic_Utils {
 
      std::shared_ptr<std::vector<std::pair<size_t,size_t>>> get_block_start( std::shared_ptr<std::vector<IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos ) ;
 
+     std::shared_ptr<std::vector<std::vector<int>>> get_block_offsets(std::vector<IndexRange>&  ranges ) ;
      std::shared_ptr<std::vector<std::vector<int>>> get_block_offsets(std::shared_ptr<std::vector<IndexRange>> ranges ) ;
 
      void check_contracted_indexes( std::vector<IndexRange>&  idx_block, std::vector<int>& contracted_index_positions );
