@@ -97,9 +97,14 @@ void CASPT2_ALT::CASPT2_ALT::set_range_info(shared_ptr<vector<int>> states_of_in
   range_conversion_map->emplace("notact", not_active_rng);
   range_conversion_map->emplace("notvir", not_virtual_rng); 
  
-  for ( int ii : *states_of_interest ) 
+  for ( int ii : *states_of_interest ) {
     range_conversion_map->emplace( get_civec_name( ii , cc_->data(ii)->det()->norb(), cc_->data(ii)->det()->nelea(), cc_->data(ii)->det()->neleb()),
-                                   make_shared<IndexRange>(cc_->data(ii)->lena()*cc_->data(ii)->lenb(), maxtile ));  
+                                   make_shared<IndexRange>(cc_->data(ii)->det()->size(), maxtile ));  
+  auto  ci_index_ranges =  make_shared<IndexRange>(cc_->data(ii)->det()->size(), maxtile );
+  cout <<" ci_index_ranges->size() = " << ci_index_ranges->size() << endl;
+  cout << "cirngs = [ ";  for (auto irng : ci_index_ranges->range()) { cout << irng.size()  << " "; }; cout << "] " << endl;
+  }    
+
 
   return;
 

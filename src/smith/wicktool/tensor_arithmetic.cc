@@ -295,12 +295,12 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
   shared_ptr<vector<int>> T1_org_order= make_shared<vector<int>>(T1_org_rngs.size());
   iota(T1_org_order->begin(), T1_org_order->end(), 0);
 
-  //Fortran clomun-major ordering, swap indexes here, not later... 
-  shared_ptr<vector<int>>        T1_new_order = put_ctr_at_back( T1_org_order, ctr_todo.first);
+  //Fortran column-major ordering, swap indexes here, not later... 
+  shared_ptr<vector<int>>        T1_new_order = put_ctr_at_front( T1_org_order, ctr_todo.first);
   shared_ptr<vector<IndexRange>> T1_new_rngs  = reorder_vector(T1_new_order, T1_org_rngs);
   shared_ptr<vector<int>>        maxs1        = get_num_index_blocks_vec(T1_new_rngs) ;
 
-  vector<IndexRange> Tout_unc_rngs(T1_new_rngs->begin(), T1_new_rngs->end()-1);
+  vector<IndexRange> Tout_unc_rngs(T1_new_rngs->begin()+1, T1_new_rngs->end());
 
   shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(Tout_unc_rngs);  
   Tens_out->allocate();
@@ -313,11 +313,11 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
     cout << "T1 block pos =  [ " ;    for (int block_num : *block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
     shared_ptr<vector<Index>> T1_new_rng_blocks = get_rng_blocks( block_pos, *T1_new_rngs); 
     shared_ptr<vector<Index>> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
-    vector<Index> T_out_rng_blocks(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
+    vector<Index> T_out_rng_blocks(T1_new_rng_blocks->begin()+1, T1_new_rng_blocks->end());
     
-    int ctr_block_size    = T1_new_rng_blocks->back().size(); cout << "ctr_block_size = " << ctr_block_size << endl; 
+    int ctr_block_size    = T1_new_rng_blocks->front().size(); cout << "ctr_block_size = " << ctr_block_size << endl; 
     int T1_block_size     = get_block_size( T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); 
-    int T_out_block_size = T1_block_size/ctr_block_size; 
+    int T_out_block_size  = T1_block_size/ctr_block_size; cout << " T_out_block_size = " << T_out_block_size << endl; 
 
     std::unique_ptr<DataType[]> T1_data_new;
     {
@@ -325,14 +325,13 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
       T1_data_new = reorder_tensor_data(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
     }
 
-    unique_ptr<DataType[]> T2_data = Tens2_in->get_block(vector<Index> { T2_rng[0].range(block_pos->back()) } ); 
+    unique_ptr<DataType[]> T2_data = Tens2_in->get_block(vector<Index> { T2_rng[0].range(block_pos->front()) } ); 
  
     std::unique_ptr<DataType[]> T_out_data(new DataType[T_out_block_size]);
     std::fill_n(T_out_data.get(), T_out_block_size, 0.0);
     
     DataType dblone =  1.0;
     int int_one = 1; 
-    
 
     dgemv_( "N", T_out_block_size, ctr_block_size, dblone, T1_data_new.get(), T_out_block_size, T2_data.get(), 1, 
              dblone, T_out_data.get(), int_one );  
