@@ -107,19 +107,16 @@ cout << "build_gamma_2idx_tensor : " << gamma_name << endl;
 
     
     cout << "	calculating brabra " << endl;
-    shared_ptr<Tensor_<double>> brabra = Tensor_Calc->contract_different_tensors(  CIvec_data_map->at(Bra_name) , CIvec_data_map->at(Bra_name),  make_pair(0,0));
-    cout << " brabra->rms()  = " << brabra->rms()  << endl;
-    cout << " brabra->norm() = " << brabra->norm() << endl;
-    
+    double brabra = Tensor_Calc->contract_vectors(  CIvec_data_map->at(Bra_name) , CIvec_data_map->at(Bra_name));
+    cout << " brabra  = " << brabra  << endl;
 
-   
-    cout << "	calculating brabra " << endl;
-    shared_ptr<Tensor_<double>> gamma_2idx = Tensor_Calc->contract_different_tensors(   Sigma_data_map->at(sigma_name), CIvec_data_map->at(Bra_name),  make_pair(2,0));
-     
+    shared_ptr<Tensor_<double>> gamma_2idx =  Tensor_Calc->contract_tensor_with_vector( Sigma_data_map->at(sigma_name), CIvec_data_map->at(Bra_name),  make_pair(2,0));
+    cout << " printing gamma.... " << endl;
+    Print_Tensor(gamma_2idx);
+
+ 
     Gamma_data_map->emplace( gamma_name, gamma_2idx );
 
-    cout << "gamma tensor = " << gamma_name << endl;  
-    Print_Tensor(Gamma_data_map->at(gamma_name));
     cout << " Gamma_data_map->at("<< gamma_name<<")->rms()  = " <<  Gamma_data_map->at(gamma_name)->rms() << endl;
     cout << " Gamma_data_map->at("<< gamma_name<<")->norm() = " <<  Gamma_data_map->at(gamma_name)->norm() << endl;
 

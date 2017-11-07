@@ -241,14 +241,15 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( std::sh
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 DataType Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_vectors( shared_ptr<Tensor_<DataType>> Tens1_in,
-                                                                           shared_ptr<Tensor_<DataType>> Tens2_in){
+                                                                           shared_ptr<Tensor_<DataType>> Tens2_in ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Tensor_Arithmetic::contract_on_different_tensor" <<endl; 
+cout << "Tensor_Arithmetic::contract_vectors" <<endl; 
 
   vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
   vector<IndexRange> T2_org_rngs = Tens2_in->indexrange();
 
   assert(Tens1_in->size_alloc() == Tens2_in->size_alloc() );
+  assert(T1_org_rngs.size() == T2_org_rngs.size() );
 
   DataType dot_product_value = 0.0 ;
   
@@ -260,11 +261,88 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor" <<endl;
       unique_ptr<DataType[]> T1_data_block = Tens1_in->get_block(T1_block); 
       unique_ptr<DataType[]> T2_data_block = Tens2_in->get_block(T2_block); 
 
-      dot_product_value += ddot_( T1_block.size(), T1_data_block.get(), 1, T2_data_block.get(), 1 ); 
+      cout << "T1_data, T2_data  =  ";
+      for ( int qq = 0 ; qq != T1_block[0].size() ; qq++ ) {
+        cout <<  *(T1_data_block.get() + qq) << "    " <<  *(T2_data_block.get() + qq) <<  endl;
+      }  
+    
+      dot_product_value += ddot_( T1_block[0].size(), T1_data_block.get(), 1, T2_data_block.get(), 1 ); 
 
+      cout << endl << "dot_product_value = " << dot_product_value <<  endl;
   }
   
   return dot_product_value;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Contracts a tensor with a vector
+// Tens1 is the tensor ( order >1 ) 
+// Tens2 is the vector 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<Tensor_<DataType>>
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_tensor_with_vector( shared_ptr<Tensor_<DataType>> Tens1_in,
+                                                                             shared_ptr<Tensor_<DataType>> Tens2_in,
+                                                                             pair<int,int> ctr_todo){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl; 
+
+  assert(ctr_todo.second == 0 ) ;
+
+  vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
+  vector<IndexRange> T2_rng = Tens2_in->indexrange();
+
+  shared_ptr<vector<int>> T1_org_order= make_shared<vector<int>>(T1_org_rngs.size());
+  iota(T1_org_order->begin(), T1_org_order->end(), 0);
+
+  //Fortran clomun-major ordering, swap indexes here, not later... 
+  shared_ptr<vector<int>>        T1_new_order = put_ctr_at_back( T1_org_order, ctr_todo.first);
+  shared_ptr<vector<IndexRange>> T1_new_rngs  = reorder_vector(T1_new_order, T1_org_rngs);
+  shared_ptr<vector<int>>        maxs1        = get_num_index_blocks_vec(T1_new_rngs) ;
+
+  vector<IndexRange> Tout_unc_rngs(T1_new_rngs->begin(), T1_new_rngs->end()-1);
+
+  shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(Tout_unc_rngs);  
+  Tens_out->allocate();
+  Tens_out->zero();
+
+  //loops over all index blocks of T1 and T2; final index of T1 is same as first index of T2 due to contraction
+  shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
+
+  do { 
+    cout << "T1 block pos =  [ " ;    for (int block_num : *block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
+    shared_ptr<vector<Index>> T1_new_rng_blocks = get_rng_blocks( block_pos, *T1_new_rngs); 
+    shared_ptr<vector<Index>> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
+    vector<Index> T_out_rng_blocks(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
+    
+    int ctr_block_size    = T1_new_rng_blocks->back().size(); cout << "ctr_block_size = " << ctr_block_size << endl; 
+    int T1_block_size     = get_block_size( T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); 
+    int T_out_block_size = T1_block_size/ctr_block_size; 
+
+    std::unique_ptr<DataType[]> T1_data_new;
+    {
+      std::unique_ptr<DataType[]> T1_data_org = Tens1_in->get_block(*T1_org_rng_blocks);
+      T1_data_new = reorder_tensor_data(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
+    }
+
+    unique_ptr<DataType[]> T2_data = Tens2_in->get_block(vector<Index> { T2_rng[0].range(block_pos->back()) } ); 
+ 
+    std::unique_ptr<DataType[]> T_out_data(new DataType[T_out_block_size]);
+    std::fill_n(T_out_data.get(), T_out_block_size, 0.0);
+    
+    DataType dblone =  1.0;
+    int int_one = 1; 
+    
+
+    dgemv_( "N", T_out_block_size, ctr_block_size, dblone, T1_data_new.get(), T_out_block_size, T2_data.get(), 1, 
+             dblone, T_out_data.get(), int_one );  
+
+    Tens_out->add_block( T_out_data, T_out_rng_blocks );
+
+  } while (fvec_cycle_test(block_pos, maxs1 ));
+
+  
+  return Tens_out;
 }
 
 

@@ -49,6 +49,8 @@ class Tensor_Arithmetic {
      static std::unique_ptr<DataType[]>
      reorder_tensor_data( const DataType* orig_data, std::shared_ptr<std::vector<int>> new_order_vec, std::shared_ptr<std::vector<Index>> orig_index_blocks ) ;
 
+     static std::shared_ptr<Tensor_<DataType>> contract_tensor_with_vector( std::shared_ptr<Tensor_<DataType>> Tens1_in, std::shared_ptr<Tensor_<DataType>> Tens2_in,  
+                                                                            std::pair<int,int> ctr_todo);
 
 }; 
  
