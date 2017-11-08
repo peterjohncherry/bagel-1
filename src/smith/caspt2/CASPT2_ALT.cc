@@ -40,7 +40,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
 
   cc_ = ref->ciwfn()->civectors();
   det_ = ref->ciwfn()->civectors()->det(); //remove this ASAP
- 
+    
   T2_all     = orig_cpt2->t2all_;  
   lambda_all = orig_cpt2->lall_;   
   F_1el_all  = orig_cpt2->f1_;     cout << "F_1el_all->rms()" <<  F_1el_all->rms() << endl; 
@@ -52,6 +52,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   nact    = ref->nact();
   nvirt   = ref->nvirt();
   maxtile = ref->maxtile();
+  cimaxtile = 1000;
 
   CTP_map            = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
   Data_map           = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
@@ -75,8 +76,10 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
 void CASPT2_ALT::CASPT2_ALT::set_range_info(shared_ptr<vector<int>> states_of_interest ) {
 //////////////////////////////////////////////////////////////////////////////////////////////
 
+  cout << maxtile << endl;
+  int maxtile_buff = maxtile; 
   closed_rng  =  make_shared<IndexRange>(IndexRange(nclosed-ncore, maxtile, 0, ncore));
-  active_rng  =  make_shared<IndexRange>(IndexRange(nact, min(10,maxtile), closed_rng->nblock(), ncore + closed_rng->size()));
+  active_rng  =  make_shared<IndexRange>(IndexRange(nact, min(10,maxtile_buff), closed_rng->nblock(), ncore + closed_rng->size()));
   virtual_rng =  make_shared<IndexRange>(IndexRange(nvirt, maxtile, closed_rng->nblock()+ active_rng->nblock(), ncore+closed_rng->size()+active_rng->size()));
   free_rng    = make_shared<IndexRange>(*closed_rng);
   free_rng->merge(*active_rng);
@@ -99,9 +102,17 @@ void CASPT2_ALT::CASPT2_ALT::set_range_info(shared_ptr<vector<int>> states_of_in
  
   for ( int ii : *states_of_interest ) {
     range_conversion_map->emplace( get_civec_name( ii , cc_->data(ii)->det()->norb(), cc_->data(ii)->det()->nelea(), cc_->data(ii)->det()->neleb()),
-                                   make_shared<IndexRange>(cc_->data(ii)->det()->size(), maxtile ));  
-  auto  ci_index_ranges =  make_shared<IndexRange>(cc_->data(ii)->det()->size(), maxtile );
-  cout <<" ci_index_ranges->size() = " << ci_index_ranges->size() << endl;
+                                   make_shared<IndexRange>(cc_->data(ii)->det()->size(), cimaxtile ));  
+
+  cout <<" cc_->data("<<ii<<")->det()->size() = " << cc_->data(ii)->det()->size() <<  endl;
+  cout <<" maxtile = " << maxtile << endl;
+  cout <<" cimaxtile = " << cimaxtile << endl;
+  
+  shared_ptr<IndexRange>  ci_index_ranges =  make_shared<IndexRange>(cc_->data(ii)->det()->size(), cimaxtile );
+  cout <<" ci_index_ranges->nblock()       = " << ci_index_ranges->nblock()     <<  endl;
+  cout <<" ci_index_ranges->size()         = " << ci_index_ranges->size()       <<  endl;
+  cout <<" ci_index_ranges->range().size() = " << ci_index_ranges->range().size() <<  endl;
+  cout <<" ci_index_ranges->range().size() = " << ci_index_ranges->range().size() <<  endl;
   cout << "cirngs = [ ";  for (auto irng : ci_index_ranges->range()) { cout << irng.size()  << " "; }; cout << "] " << endl;
   }    
 

@@ -58,6 +58,7 @@ class CASPT2_ALT {
     int nvirt ;
     int nclosed ;
     int maxtile;  
+    int cimaxtile;  
 
 
 
