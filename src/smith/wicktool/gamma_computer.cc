@@ -119,9 +119,6 @@ Gamma_Computer::Gamma_Computer::build_sigma_2idx_tensor(shared_ptr<GammaInfo> ga
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "build_sigma_2idx_tensor" << endl;
  
-  // temp hack for aops, must implement SigmaInfo class and map so this is cleaner
-
-  shared_ptr<vector<bool>>   aops = gamma_info->aops; 
   shared_ptr<vector<string>> orb_ranges_str = gamma_info->id_ranges; 
 
   string sigma_name = "S_"+gamma_info->name;
@@ -169,6 +166,58 @@ Gamma_Computer::Gamma_Computer::build_sigma_2idx_tensor(shared_ptr<GammaInfo> ga
 
   return;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// For now just calculate the necessary sigmas and contracts for the 4idx gamma
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void
+Gamma_Computer::Gamma_Computer::build_gamma_4idx_tensor(shared_ptr<GammaInfo> gamma_info )  {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "build_sigma_4idx_tensor" << endl;
+
+  string sigma_name = "S_"+gamma_info->name;
+
+  if ( Sigma_data_map->find(sigma_name) != Sigma_data_map->end() ){ 
+   
+    cout << "already got " << sigma_name << endl;
+
+  } else { 
+   
+  //  for ( shared_ptr<GammaInfo>  gamma2 : gamma_info->Two_id_gammas() ) {
+//
+//        if ( Sigma_data_map->find("S_"+gamma2->name) != Sigma_data_map->end() ) {
+//
+//        cout << "already got sigma : " "S_"+gamma2->name << endl; 
+//
+//      } else {
+//   
+//        if ( gamma2->Bra_info->name() == gamma2->Ket_info->name() ) {
+//       
+//          build_sigma_2idx_tensor( gamma2 )  ;
+//        
+//        } else {
+//           
+//           cout << "Must swap Bra and Ket in gamma_info, not implemented yet" << endl;
+//        }
+// 
+//      }               
+//
+//    }
+//
+//    shared_ptr<Tensor_<double>> sigma_KijJ = Sigma_data_map->at( "S_"+gamma_info->Two_id_gammas(0)->name );
+//    shared_ptr<Tensor_<double>> sigma_KklI = Sigma_data_map->at( "S_"+gamma_info->Two_id_gammas(1)->name );
+
+      shared_ptr<Tensor_<double>> gamma4 ;// = contract_different_tensors( gamma_info->Two_id_gammas(0), gamma_info->Two_id_gammas(1), make_pair(2,2) ); 
+
+//    reorder_tensor_indexes(gamma4, { 1, 0, 2, 3} );
+
+    Gamma_data_map->emplace(gamma_info->name , gamma4);
+
+  }
+
+  return;
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adapted from routines in src/ci/fci/knowles_compute.cc so returns block of a sigma vector in a manner more compatible with
@@ -360,17 +409,17 @@ Gamma_Computer::Gamma_Computer::convert_civec_to_tensor( shared_ptr<const Civec>
 
 #endif
 
- // auto in_Bra_range = [&sigma_offsets, &Bra_block_size ]( size_t& pos) {
- //     if (( pos > (sigma_offsets[0]+Bra_block_size)) || ( pos < sigma_offsets[0] ) ){
- //        cout << "out of sigma range " << endl;
- //        cout << "pos            = " << pos << endl;
- //        cout << "Bra_offset     = " << sigma_offsets[2] << endl;
- //        cout << "Bra_Block_size = " << Bra_block_size << endl;
- //        return false;
- //     }
- //     return true;
- //     };
-
+// auto in_Bra_range = [&sigma_offsets, &Bra_block_size ]( size_t& pos) {
+//     if (( pos > (sigma_offsets[0]+Bra_block_size)) || ( pos < sigma_offsets[0] ) ){
+//        cout << "out of sigma range " << endl;
+//        cout << "pos            = " << pos << endl;
+//        cout << "Bra_offset     = " << sigma_offsets[2] << endl;
+//        cout << "Bra_Block_size = " << Bra_block_size << endl;
+//        return false;
+//     }
+//     return true;
+//     };
+//
 //   auto in_Ket_range = [&Ket_offset ]( size_t& pos , size_t Ket_block_size ) {
 //      if ( ( pos  > (Ket_offset+ Ket_block_size )) || ( pos < Ket_offset ) ){
 //         cout << "out of Ket range " << endl;
