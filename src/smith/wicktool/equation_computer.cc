@@ -179,6 +179,7 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::reorder_block_
      return Tensor_Calc->reorder_block_Tensor( Data_map_loc->second , new_order);
    }
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 pair<int,int>
 Equation_Computer::Equation_Computer::relativize_ctr_positions( pair <int,int> ctr_todo, 

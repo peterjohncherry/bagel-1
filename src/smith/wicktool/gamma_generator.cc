@@ -12,7 +12,8 @@ using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaInfo::GammaInfo ( shared_ptr<CIVecInfo<double>> Bra_info_in, shared_ptr<CIVecInfo<double>> Ket_info_in, 
                        shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<string>> full_idx_ranges, 
-                       shared_ptr<vector<int>> idxs_pos) {
+                       shared_ptr<vector<int>> idxs_pos  ,
+                       shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_GammaInfo
 cout << "GammaInfo::GammaInfo" <<  endl;
@@ -30,8 +31,29 @@ cout << "GammaInfo::GammaInfo" <<  endl;
     aops->at(ii)      = full_aops_vec->at(idxs_pos->at(ii));     
   }
 
+  name = get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos, Bra_info->name(), Ket_info->name() ); 
+
+  //TODO extend for rel case (Bra and Ket can vary) and gammas with odd num of idxs
+  if ( (idxs_pos->size() > 2 ) && ( idxs_pos->size() % 2 == 0 ) ) {
+    cout << "gamma name = " <<  name << endl;
+    sub_gammas_ = vector<string>(idxs_pos->size()/2);
+
+    cout << "sub_gammas = [ " ; cout.flush();
+    for (int ii = 0 ; ii != idxs_pos->size()/2 ; ii++ ){
+      string sub_gamma_name = get_gamma_name( full_idx_ranges, full_aops_vec, make_shared<vector<int>>(vector<int>{ idxs_pos->at(2*ii), idxs_pos->at(2*ii+1)}), Bra_info->name(), Ket_info->name());   
+
+      if ( Gamma_map->find( sub_gamma_name)  == Gamma_map->end() )
+        Gamma_map->emplace( sub_gamma_name, make_shared<GammaInfo>( Bra_info, Ket_info, full_aops_vec, full_idx_ranges,
+                                                                    make_shared<vector<int>>(vector<int>{ idxs_pos->at(2*ii), idxs_pos->at(2*ii+1) }), Gamma_map  ));
+       
+      sub_gammas_[ii] = sub_gamma_name;
+      cout << sub_gamma_name << " " ; cout.flush();
+    }
+    cout << "] " << endl << endl;
+  }
+
   //depends on floor in integer division
-  name = get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos, Bra_info->name(), Ket_info->name() ); cout << "gamma name = " <<  name << endl;
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +180,7 @@ cout << "GammaGenerator::norm_order" << endl;
       final_gamma_vec->push_back(gamma_vec->at(kk));
       if ( Gamma_map->find(Gname) == Gamma_map->end() ) 
         Gamma_map->emplace( Gname, make_shared<GammaInfo>(  TargetStates->civec_info(Bra_num), TargetStates->civec_info(Ket_num),
-                                                            full_aops, full_id_ranges, ids_pos) ) ;
+                                                            full_aops, full_id_ranges, ids_pos, Gamma_map) ) ;
     } 
     kk++;                                                         
   }                                                               
@@ -350,7 +372,7 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
 
     if ( Gamma_map->find( Gname ) == Gamma_map->end() )
       Gamma_map->emplace( Gname, make_shared<GammaInfo>(  TargetStates->civec_info(Bra_num), TargetStates->civec_info(Ket_num), 
-                                                          full_aops, full_id_ranges, ids_pos) ) ;
+                                                          full_aops, full_id_ranges, ids_pos, Gamma_map) ) ;
   }
 
   return;
