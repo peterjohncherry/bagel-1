@@ -10,6 +10,7 @@
 #include <src/util/f77.h>
 #include <src/smith/wicktool/tensor_sorter.h>
 #include <src/smith/wicktool/tensor_arithmetic.h>
+#include <src/smith/wicktool/tensor_arithmetic_utils.h>
 #include <src/smith/wicktool/states_info.h>
 
 namespace bagel {
@@ -58,7 +59,7 @@ class Gamma_Computer {
       
       void build_gamma_2idx_tensor( std::string gamma_name ) ;
 
-      void build_gamma_4idx_tensor( std::shared_ptr<GammaInfo> gamma_info ) ;
+      void build_gamma_4idx_tensor( std::string gamma_name ) ;
       
       void build_sigma_block( std::shared_ptr<Tensor_<double>> sigma_tens, std::vector<Index>& sigma_id_blocks, std::vector<int>& sigma_offsets, std::string Ket_name  ) const ;
       

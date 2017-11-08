@@ -61,8 +61,8 @@ Equation_Computer::Equation_Computer::get_gammas(int MM, int NN, string gamma_na
      } while (fvec_cycle(block_pos, range_lengths, mins ));
      gamma_tensors->push_back(new_gamma_tensor);
 
-     cout << "Printing Gamma of order " << gamma_ranges[ii]->size()/2  << endl;
-     Print_Tensor(new_gamma_tensor);
+  //   cout << "Printing Gamma of order " << gamma_ranges[ii]->size()/2  << endl;
+  //   Print_Tensor(new_gamma_tensor);
   }
   cout << "out of loop" << endl;
    

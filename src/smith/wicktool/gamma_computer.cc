@@ -51,12 +51,18 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
     if (GammaMap->at(gamma_name)->id_ranges->size() == 2 ) { 
       build_gamma_2idx_tensor( gamma_name ) ;
       cout << "------------------ "<<  gamma_name  << " ---------------------" << endl; 
-      Print_Tensor(Gamma_data_map->at(gamma_name));
+      Print_Tensor_test(Gamma_data_map->at(gamma_name));
+      cout << "------------------------------------------------------------------------------------------------------" << endl; 
       cout << "Gamma_data_map->at("<<gamma_name<<")->norm() = "<< Gamma_data_map->at(gamma_name)->norm() <<  endl; 
       cout << "Gamma_data_map->at("<<gamma_name<<")->rms()  = "<< Gamma_data_map->at(gamma_name)->rms() <<  endl; 
       
     } else if (GammaMap->at(gamma_name)->id_ranges->size() == 4 ) { 
-       cout << " 4-index stuff not implemented, cannot calculate " << gamma_name << endl;
+      build_gamma_4idx_tensor( gamma_name );
+      cout << "------------------ "<<  gamma_name  << " ---------------------" << endl; 
+      Print_Tensor_test(Gamma_data_map->at(gamma_name));
+      cout << "------------------------------------------------------------------------------------------------------" << endl; 
+      cout << "Gamma_data_map->at("<<gamma_name<<")->norm() = "<< Gamma_data_map->at(gamma_name)->norm() <<  endl; 
+      cout << "Gamma_data_map->at("<<gamma_name<<")->rms()  = "<< Gamma_data_map->at(gamma_name)->rms() <<  endl; 
 
     } else if (GammaMap->at(gamma_name)->id_ranges->size() == 6 ) { 
        cout << " 6-index stuff not implemented, cannot calculate " << gamma_name << endl;
@@ -171,55 +177,59 @@ Gamma_Computer::Gamma_Computer::build_sigma_2idx_tensor(shared_ptr<GammaInfo> ga
 // For now just calculate the necessary sigmas and contracts for the 4idx gamma
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void
-Gamma_Computer::Gamma_Computer::build_gamma_4idx_tensor(shared_ptr<GammaInfo> gamma_4idx_info )  {
+Gamma_Computer::Gamma_Computer::build_gamma_4idx_tensor(string gamma_4idx_name )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "build_sigma_4idx_tensor" << endl;
 
-  string sigma_name = "S_"+gamma_4idx_info->name;
+  string sigma_name = "S_"+gamma_4idx_name;
+
+  shared_ptr<GammaInfo> gamma_4idx_info = GammaMap->at(gamma_4idx_name) ;
+  shared_ptr<Tensor_<double>> gamma_4idx ;
 
   if ( Sigma_data_map->find(sigma_name) != Sigma_data_map->end() ){ 
    
     cout << "already got " << sigma_name << endl;
 
+    //contract tensor with vector    
+
   } else { 
    
-  for ( string gamma2_name : gamma_4idx_info->sub_gammas() ) {
+    for ( string gamma_2idx_name : gamma_4idx_info->sub_gammas() ) {
 
-        if ( Sigma_data_map->find("S_"+gamma2_name) != Sigma_data_map->end() ) {
+      if ( Sigma_data_map->find("S_"+gamma_2idx_name) != Sigma_data_map->end() ) {
 
-        cout << "already got sigma : " "S_"+gamma2_name << endl; 
+        cout << "already got sigma : " "S_"+gamma_2idx_name << endl; 
 
       } else {
          
-        shared_ptr<GammaInfo> gamma_2idx_info =  GammaMap->at(gamma2_name);
+        shared_ptr<GammaInfo> gamma_2idx_info =  GammaMap->at(gamma_2idx_name);
 
         if ( gamma_2idx_info->Bra_info->name() == gamma_2idx_info->Ket_info->name() ) {
-     
-         build_sigma_2idx_tensor( GammaMap->at(gamma2_name))  ;
-
-         shared_ptr<Tensor_<double>> sigma_KijJ = Sigma_data_map->at( "S_"+gamma_4idx_info->sub_gammas(0) );
-         shared_ptr<Tensor_<double>> sigma_KklI = Sigma_data_map->at( "S_"+gamma_4idx_info->sub_gammas(1) );
-
-         shared_ptr<vector<int>> new_order = make_shared<vector<int>>(vector<int> { 1, 0, 2, 3} ); 
-         
-         shared_ptr<Tensor_<double>> gamma_4idx_orig_order = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( sigma_KijJ, sigma_KklI, make_pair(2,2) ); 
-         shared_ptr<Tensor_<double>> gamma_4idx = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( gamma_4idx_orig_order,  new_order);
-         
-         Gamma_data_map->emplace(gamma_4idx_info->name , gamma_4idx);
-
-       
+           
+         build_sigma_2idx_tensor( GammaMap->at(gamma_2idx_name))  ;
+ 
         } else {
            
            cout << "Must swap Bra and Ket in gamma_info, not implemented yet" << endl;
         }
- 
+
       }               
 
     }
+ 
+    shared_ptr<Tensor_<double>> sigma_KijJ = Sigma_data_map->at( "S_"+gamma_4idx_info->sub_gammas(0) );
+    shared_ptr<Tensor_<double>> sigma_KklI = Sigma_data_map->at( "S_"+gamma_4idx_info->sub_gammas(1) );
 
+    
+    shared_ptr<Tensor_<double>> gamma_4idx_orig_order = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( sigma_KijJ, sigma_KklI, make_pair(2,2) ); 
 
-
+    shared_ptr<vector<int>> new_order = make_shared<vector<int>>(vector<int> { 1, 0, 2, 3} ); 
+    gamma_4idx = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( gamma_4idx_orig_order,  new_order);
+    
   }
+
+  cout << " putting " << gamma_4idx_name << " data into map " <<  endl; 
+  Gamma_data_map->emplace(gamma_4idx_name , gamma_4idx);
 
   return;
 }

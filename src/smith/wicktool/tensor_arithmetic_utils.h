@@ -36,8 +36,10 @@ namespace Tensor_Arithmetic_Utils {
      std::shared_ptr<std::vector<int>>  put_ctr_at_front(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
      std::shared_ptr<std::vector<int>>  put_ctr_at_back(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
 
-     void Print_Tensor(std::shared_ptr<Tensor_<double>> Tens) ;
+     void Print_Tensor(std::shared_ptr<Tensor_<double>> Tens, std::string name = "") ;
      
+     void Print_Tensor_test( std::shared_ptr<Tensor_<double>> Tens, std::string name = ""  ) ;
+
      size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
 
      size_t get_unc_block_size( std::vector<Index>& idvec, std::pair<int,int> ctr ) ;

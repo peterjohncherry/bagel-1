@@ -653,4 +653,5 @@ cout << "WickUtils::get_gamma_name" << endl;
   return name;
 };
 
+
 #endif

@@ -89,8 +89,9 @@ namespace WickUtils {
   std::shared_ptr<std::vector<pint_vec>>  
   get_cross_pairs( std::shared_ptr<std::vector<int>> vec1 , std::shared_ptr<std::vector<int>> vec2, std::shared_ptr<std::vector<std::string>> id_names );
 
-   template<class DataType>
-  void print_vecX(std::vector<DataType> invec, std::string name ="lazy"){
+
+  template<class DataType>
+  void print_vector(std::vector<DataType> invec, std::string name ="lazy"){
     std::cout << name <<" = [ ";
     for (auto  elem : invec)
       std::cout << elem << " " ;
@@ -100,11 +101,11 @@ namespace WickUtils {
 
 
   template<class DataType>
-  void print_pairvec(std::vector<std::pair<DataType,DataType>> invec, std::string name ="lazy"){
-    std::cout << name <<" = ( ";
+  void print_pair_vector(std::vector<std::pair<DataType,DataType>> invec, std::string name ="lazy"){
+    std::cout << name <<" = [ ";
     for (auto  elem : invec)
       std::cout << "(" << elem.first << "," << elem.second << ") ";
-    std::cout << ")  " ;
+    std::cout << "]  " ;
     return;
   }
 

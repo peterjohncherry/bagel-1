@@ -7,9 +7,10 @@ using namespace bagel::SMITH;
 using namespace WickUtils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens ) {
+void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens , string name  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
+   cout << "---------------------------- " << name <<  " ----------------------------" << endl;
 
    vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
    shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( Bagel_id_ranges) ;
@@ -59,6 +60,96 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens ) {
  
    return ;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Tensor_Arithmetic_Utils::Print_Tensor_test( shared_ptr<Tensor_<double>> Tens, string name  ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Tensor_Arithmetic_Utils::Print_Tensor_test " << endl;
+   cout << "---------------------------- " << name <<  " ----------------------------" << endl;
+
+   vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
+   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( Bagel_id_ranges) ;
+
+   shared_ptr<vector<int>> range_lengths  =  get_range_lengths( Bagel_id_ranges ) ;
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
+    
+   cout << "Tdata_block : " << endl; 
+   do {
+
+     vector<int> id_pos(block_pos->size());
+     for ( int ii = 0 ; ii != Bagel_id_ranges.size(); ii++)
+       id_pos[ii] = block_offsets->at(ii).at(block_pos->at(ii));
+    
+     print_vector( *block_pos , "block_pos" ); cout <<  endl;
+     print_vector( id_pos , "id_pos"); cout<< endl;
+     
+     vector<Index> id_blocks = *(get_rng_blocks( block_pos, Bagel_id_ranges ));
+    
+     if ( Tens->exists(id_blocks) ) { 
+
+       vector<int> id_blocks_sizes(id_blocks.size());
+
+       for( int ii = 0 ;  ii != id_blocks.size(); ii++)
+         id_blocks_sizes[ii] = id_blocks[ii].size();
+       
+       int id_block_size = accumulate(id_blocks_sizes.begin(), id_blocks_sizes.end(), 1 , std::multiplies<int>());
+
+
+       unique_ptr<double[]>    T_data_block = Tens->get_block(id_blocks);
+       shared_ptr<vector<int>> Tens_strides = get_Tens_strides(id_blocks_sizes);
+
+       for (int ii = 0 ; ii != id_blocks_sizes.size() ; ii++ ) 
+         id_blocks_sizes[ii]--;       
+
+       shared_ptr<vector<int>> block_lengths  = make_shared<vector<int>>( id_blocks_sizes ) ;
+       shared_ptr<vector<int>> rel_id_pos     = make_shared<vector<int>>( id_blocks_sizes.size(),0);  
+       shared_ptr<vector<int>> rel_id_mins    = make_shared<vector<int>>( id_blocks_sizes.size(),0);  
+    
+       double* pos = T_data_block.get();
+
+       vector<int> rel_id_pos_old(id_blocks_sizes.size()-1, 0);
+
+       do {
+
+
+          if ( *(rel_id_pos->end()-2) != rel_id_pos_old.back() ){
+            print_vector(rel_id_pos_old , "rel_id_pos_old" ); cout << "   ";  print_vector(*rel_id_pos , "rel_id_pos" );  cout <<  *(rel_id_pos->end()-2)  << "    "  << rel_id_pos_old.back() ;
+
+            rel_id_pos_old.back() = *(rel_id_pos->end()-2);
+            cout << endl; 
+          }
+          
+          bool newmat = false;
+          for ( int ii = 0; ii != rel_id_pos->size()-2 ; ii++  ){
+            if ( rel_id_pos->at(ii) != rel_id_pos_old[ii] ) {
+              newmat= true;
+            }
+          }
+          if (newmat ){
+            rel_id_pos_old = vector<int>(rel_id_pos->begin(), rel_id_pos->end()-1);
+            cout << endl <<  "[ " ; cout.flush();
+            for ( int kk = 0 ; kk != rel_id_pos->size() ; kk++ ) { 
+              cout << rel_id_pos->at(kk) + block_offsets->at(kk).at(block_pos->at(kk)) << " " ; cout.flush();
+            }
+            cout << "] " << endl; 
+          }   
+
+          cout << *pos++ << " " ; cout.flush();        
+ 
+       } while (fvec_cycle_skipper(rel_id_pos, block_lengths, mins ) ) ;
+ 
+     } else { 
+       
+       cout << "WARNING : TENSOR BLOCK AT " ; cout.flush() ; print_vector( *block_pos ) ; cout << " IS NOT STORED FOR PRINTING!! " << endl;
+        
+     }
+
+   } while (fvec_cycle(block_pos, range_lengths, mins ));
+ 
+   return ;
+}
+               //for ( int  ll = kk ; ll !=  Tens_strides->size() ; ll++){
+               //  if ( ( jj+1 % Tens_strides->at(ll) == 0) ) 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides(vector<int>& range_sizes) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +259,8 @@ shared_ptr<vector<int>> Tensor_Arithmetic_Utils::put_ctr_at_front(shared_ptr<vec
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "put_ctr_at_front" <<  endl;  
   if (ctr_pos == orig_pos->front()){
-   return make_shared<vector<int>>(*orig_pos);
+ 
+    return make_shared<vector<int>>(*orig_pos);
  
   } else { 
     vector<int> tmp_pos = *orig_pos;
@@ -181,12 +273,11 @@ shared_ptr<vector<int>> Tensor_Arithmetic_Utils::put_ctr_at_front(shared_ptr<vec
     vector<int> new_pos(1,  ctr_pos);
     new_pos.insert(new_pos.end(), tmp_pos.begin(), tmp_pos.end() );
    
-    if (new_pos.size() != orig_pos->size()){
-      throw runtime_error("something has gone wrong in index reshuffling");
-    } else { 
-      return make_shared<vector<int>>(new_pos);
-    }
+    assert(new_pos.size() == orig_pos->size());
+
+    return make_shared<vector<int>>(new_pos);
   }
+  
 
 }
 
