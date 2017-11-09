@@ -49,20 +49,14 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
     
     //for now just use specialized routines, this must be made generic at some point
     if (GammaMap->at(gamma_name)->id_ranges->size() == 2 ) { 
+
       build_gamma_2idx_tensor( gamma_name ) ;
-      cout << "------------------ "<<  gamma_name  << " ---------------------" << endl; 
-      Print_Tensor_test(Gamma_data_map->at(gamma_name));
-      cout << "------------------------------------------------------------------------------------------------------" << endl; 
-      cout << "Gamma_data_map->at("<<gamma_name<<")->norm() = "<< Gamma_data_map->at(gamma_name)->norm() <<  endl; 
-      cout << "Gamma_data_map->at("<<gamma_name<<")->rms()  = "<< Gamma_data_map->at(gamma_name)->rms() <<  endl; 
+      assert( gamma_2idx_contract_test( gamma_name ) );
       
     } else if (GammaMap->at(gamma_name)->id_ranges->size() == 4 ) { 
+
       build_gamma_4idx_tensor( gamma_name );
-      cout << "------------------ "<<  gamma_name  << " ---------------------" << endl; 
-      Print_Tensor_test(Gamma_data_map->at(gamma_name));
-      cout << "------------------------------------------------------------------------------------------------------" << endl; 
-      cout << "Gamma_data_map->at("<<gamma_name<<")->norm() = "<< Gamma_data_map->at(gamma_name)->norm() <<  endl; 
-      cout << "Gamma_data_map->at("<<gamma_name<<")->rms()  = "<< Gamma_data_map->at(gamma_name)->rms() <<  endl; 
+      assert (gamma_4idx_contract_test( gamma_name ) );
 
     } else if (GammaMap->at(gamma_name)->id_ranges->size() == 6 ) { 
        cout << " 6-index stuff not implemented, cannot calculate " << gamma_name << endl;
@@ -423,8 +417,82 @@ Gamma_Computer::Gamma_Computer::convert_civec_to_tensor( shared_ptr<const Civec>
   return civec_tensor;
 }
 
-#endif
+#ifndef NDEBUG
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Tests 2idx gamma matrix by taking trace  and checking symmetry. Non-rel only.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool Gamma_Computer::Gamma_Computer::gamma_2idx_contract_test( string gamma_name ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+   bool passed = true;
 
+   cout << endl << "------------------------------------------------------------------------------------------------------" << endl;
+   Print_Tensor_test(Gamma_data_map->at(gamma_name), gamma_name);
+   cout << endl << "------------------------------------------------------------------------------------------------------" << endl;
+   cout << "Gamma_data_map->at("<<gamma_name<<")->norm() = "<< Gamma_data_map->at(gamma_name)->norm() <<  endl;  
+   cout << "Gamma_data_map->at("<<gamma_name<<")->rms()  = "<< Gamma_data_map->at(gamma_name)->rms() <<  endl; 
+
+   shared_ptr<Tensor_<double>> gamma_2idx_trace  =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Gamma_data_map->at(gamma_name),  make_pair(0,1) );
+   cout << "------------------------------------------------------------------------------------------------------" << endl; 
+   cout << "gamma_2idx_trace->rms() = "<< gamma_2idx_trace->rms() << endl;
+   cout << "------------------------------------------------------------------------------------------------------" << endl; 
+
+   shared_ptr<vector<int>>     new_order = make_shared<vector<int>>(vector<int> { 1, 0} ); 
+
+   shared_ptr<Tensor_<double>> gamma_2idx_orig_order = make_shared<Tensor_<double>>( *(Gamma_data_map->at(gamma_name)) );
+   shared_ptr<Tensor_<double>> gamma_2idx_transposed = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( gamma_2idx_orig_order, new_order);
+
+   gamma_2idx_transposed->ax_plus_y(-1, gamma_2idx_orig_order) ;
+
+
+   int nel = GammaMap->at(gamma_name)->Bra_info->nele();
+   if ( (abs(gamma_2idx_trace->rms() -nel) > 0.00000001 ) || (gamma_2idx_transposed->rms() > 0.00000001 )  )  passed = false;
+
+   return passed;
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Tests 4idx gamma matrix by contracting in different ways and compairing with 2idx gamma matrices.  Only set up for non-rel at present.
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool Gamma_Computer::Gamma_Computer::gamma_4idx_contract_test( string gamma_name ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+   bool passed = true;
+
+   cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
+   Print_Tensor_test(Gamma_data_map->at(gamma_name));
+   cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
+   cout << "Gamma_data_map->at("<<gamma_name<<")->norm() = "<< Gamma_data_map->at(gamma_name)->norm() <<  endl;  
+   cout << "Gamma_data_map->at("<<gamma_name<<")->rms()  = "<< Gamma_data_map->at(gamma_name)->rms() <<  endl; 
+
+   shared_ptr<Tensor_<double>> gamma_2idx_from_4idx_A  =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Gamma_data_map->at(gamma_name),  make_pair(2,3) );
+   cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
+   Print_Tensor_test(gamma_2idx_from_4idx_A, "gamma_2idx_from_4idx" ); 
+   cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
+   cout << "gamma_2idx_from_4idx_A->norm()  = "<< gamma_2idx_from_4idx_A->norm() << endl;
+   cout << "gamma_2idx_from_4idx_A->rms()   = "<< gamma_2idx_from_4idx_A->rms() << endl;
+   cout << "------------------------------------------------------------------------------------------------------" << endl; 
+
+   shared_ptr<Tensor_<double>> gamma_2idx_from_4idx_B  =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Gamma_data_map->at(gamma_name),  make_pair(0,1) );
+   cout << " gamma_2idx_from_4idx_B->norm() = " << gamma_2idx_from_4idx_B->norm()  << endl; 
+   cout << " gamma_2idx_from_4idx_B->rms()  = " << gamma_2idx_from_4idx_B->rms()  << endl; 
+
+   gamma_2idx_from_4idx_B->ax_plus_y(-1.0, gamma_2idx_from_4idx_A );
+   cout << " gamma_2idx_from_4idx_B->norm() - gamma_2idx_from_4idx_A->norm()  = " << gamma_2idx_from_4idx_B->norm()  << endl; 
+   cout << " gamma_2idx_from_4idx_B->rms()  - gamma_2idx_from_4idx_A->rms()   = " << gamma_2idx_from_4idx_B->rms()  << endl; 
+
+   get_gamma_tensor( (GammaMap->at(gamma_name)->sub_gammas(1)) );
+   gamma_2idx_from_4idx_A->ax_plus_y(-(GammaMap->at(gamma_name)->Bra_info->nele()), Gamma_data_map->at(GammaMap->at(gamma_name)->sub_gammas(1)) );
+   cout << "gamma_2idx_from_4idx_A->norm() - gamma_2idx = "<< gamma_2idx_from_4idx_A->norm() << endl;
+   cout << "gamma_2idx_from_4idx_A->rms()  - gamma_2idx = "<< gamma_2idx_from_4idx_A->rms() << endl;
+
+   if ( ( gamma_2idx_from_4idx_A->norm() > 0.00000001 ) || ( gamma_2idx_from_4idx_B->norm() > 0.00000001 )  ) passed = false;
+
+   return passed;
+
+}
+#endif
+#endif
 // auto in_Bra_range = [&sigma_offsets, &Bra_block_size ]( size_t& pos) {
 //     if (( pos > (sigma_offsets[0]+Bra_block_size)) || ( pos < sigma_offsets[0] ) ){
 //        cout << "out of sigma range " << endl;

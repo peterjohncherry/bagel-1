@@ -67,6 +67,15 @@ class Gamma_Computer {
       
       std::shared_ptr<Tensor_<double>> convert_civec_to_tensor( std::shared_ptr<const Civec> civector, int state_num ) const;
       
+
+
+#ifndef NDEBUG
+      bool gamma_2idx_contract_test( std::string gamma_name ) ;
+
+      bool gamma_4idx_contract_test( std::string gamma_name ) ;
+#endif
+
+
       /////////// Utility routines /////////////////////////
       
       std::shared_ptr<std::vector<IndexRange>> Get_Bagel_IndexRanges( std::shared_ptr<std::vector<std::string>> ranges_str);

@@ -119,7 +119,6 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_uniform_Te
    return Tensor_Calc->get_uniform_Tensor(T_id_ranges, XX);
 
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>>
 Equation_Computer::Equation_Computer::contract_on_same_tensor( std::string T_in_name, std::string T_out_name, pair<int,int> ctr_todo) {
@@ -230,7 +229,6 @@ Equation_Computer::Equation_Computer::find_or_get_CTP_data(string CTP_name){
   
   return CTP_data;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<shared_ptr<const IndexRange>>>

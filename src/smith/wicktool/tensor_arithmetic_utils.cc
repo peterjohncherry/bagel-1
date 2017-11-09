@@ -73,16 +73,12 @@ void Tensor_Arithmetic_Utils::Print_Tensor_test( shared_ptr<Tensor_<double>> Ten
    shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
    shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
     
-   cout << "Tdata_block : " << endl; 
    do {
 
      vector<int> id_pos(block_pos->size());
      for ( int ii = 0 ; ii != Bagel_id_ranges.size(); ii++)
        id_pos[ii] = block_offsets->at(ii).at(block_pos->at(ii));
     
-     print_vector( *block_pos , "block_pos" ); cout <<  endl;
-     print_vector( id_pos , "id_pos"); cout<< endl;
-     
      vector<Index> id_blocks = *(get_rng_blocks( block_pos, Bagel_id_ranges ));
     
      if ( Tens->exists(id_blocks) ) { 
@@ -113,8 +109,6 @@ void Tensor_Arithmetic_Utils::Print_Tensor_test( shared_ptr<Tensor_<double>> Ten
 
 
           if ( *(rel_id_pos->end()-2) != rel_id_pos_old.back() ){
-            print_vector(rel_id_pos_old , "rel_id_pos_old" ); cout << "   ";  print_vector(*rel_id_pos , "rel_id_pos" );  cout <<  *(rel_id_pos->end()-2)  << "    "  << rel_id_pos_old.back() ;
-
             rel_id_pos_old.back() = *(rel_id_pos->end()-2);
             cout << endl; 
           }
@@ -141,6 +135,7 @@ void Tensor_Arithmetic_Utils::Print_Tensor_test( shared_ptr<Tensor_<double>> Ten
      } else { 
        
        cout << "WARNING : TENSOR BLOCK AT " ; cout.flush() ; print_vector( *block_pos ) ; cout << " IS NOT STORED FOR PRINTING!! " << endl;
+       cout << "NOTE : THIS IS OK IF THERE IS SYMMETRY, BUT OTHERWISE A BIG PROBLEM!! " << endl;
         
      }
 
