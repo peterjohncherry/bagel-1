@@ -4,6 +4,7 @@
   #include <src/smith/wicktool/gamma_generator.h>
   #include <src/smith/wicktool/TensOp.h>
   #include <src/smith/wicktool/spin_manager.h>
+  #include <src/smith/wicktool/states_info.h>
 
  //#include "WickUtils.h"
  //#include "gamma_generator.h"
@@ -16,15 +17,17 @@ class BraKet  {
       using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
       public:
-       BraKet(std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::pair<int,int> > >>> G_to_A_map_in, 
-              std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< GammaInfo >>> GammaMap  );
+       BraKet(std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map_in,
+              std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> GammaMap ,
+              std::shared_ptr<StatesInfo<DType>> TargetStates  );
        ~BraKet(){};
-       
+      
+       std::shared_ptr<StatesInfo<DType>> TargetStates;
        int nact_orb;
        int nact_el;
        int nidxs;
        
-       bool spinfree_;
+       bool spinfree;
        int spin_max ;
        int spin_min ;
        
@@ -35,10 +38,10 @@ class BraKet  {
        std::shared_ptr< std::map< std::vector<std::string>, std::shared_ptr<std::vector<std::pair< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> >>> >> BK_Compute_List_CMTP;
        
        //Takes each gamma name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors
-       std::shared_ptr<std::unordered_map<std::string, std::shared_ptr< std::unordered_map<std::string, std::pair<int,int> > >>> G_to_A_map;
+       std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map;
        
        //Goes from a gamma name to the gamma info
-       std::shared_ptr<std::unordered_map<std::string, std::shared_ptr<GammaInfo>>> GammaMap;
+       std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> GammaMap;
        
        //functions 
        void add_Op(std::string op_name,

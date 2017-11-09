@@ -2,34 +2,9 @@
 #ifdef COMPILE_SMITH
 #include <src/smith/wicktool/tensor_sorter.h>
 
-
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//This would be best put in another part, probably CTP
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-unique_ptr<DataType[]>
-Tensor_Sorter::Tensor_Sorter<DataType>::reorder_tensor_data(const DataType* orig_data,  size_t data_size,
-                                                  shared_ptr<vector<int>>  new_order_vec ,
-                                                  shared_ptr<vector<size_t>>  old_order_range_lengths ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  const DataType fac1= 1.0;
-  const DataType fac2= 1.0;
-
-  int nbase = new_order_vec->size();
-  int id_num = 0;
-  for (int ii = 0; ii!=new_order_vec->size(); ii++)
-    id_num+= pow(nbase, ii)*new_order_vec->at(ii); 
-
-  unique_ptr<DataType[]> reordered_data(new DataType[data_size]);
- 
-  return reordered_data;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 std::string Tensor_Sorter::Tensor_Sorter<DataType>::get_comb_str(shared_ptr<vector<size_t>> invec){
@@ -89,7 +64,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_2( std::shared_ptr<std
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  cout << "sort_indices_2 "<< endl;
+//  cout << "sort_indices_2 "<< endl;
   const size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   const size_t perm_id = get_perm_idnum( new_id_order ) ; 
 
@@ -118,7 +93,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_2( std::shared_ptr<std
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
-  cout << "sort_indices_2 "<< endl;
+//  cout << "sort_indices_2 "<< endl;
   return;
 }
 
@@ -186,7 +161,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_4( std::shared_ptr<std
                                                             std::array<int,4>& sort_options, 
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "sort_indices_4 "<< endl;
+//  cout << "sort_indices_4 "<< endl;
 
   const size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   const size_t perm_id = get_perm_idnum( new_id_order ) ; 
@@ -304,7 +279,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_4( std::shared_ptr<std
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
-  cout << "sort_indices_4 "<< endl;
+//  cout << "sort_indices_4 "<< endl;
   return;
 }
 
@@ -1069,7 +1044,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_6( std::shared_ptr<std
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  cout << "sort_indices_6 "<< endl;
+//  cout << "sort_indices_6 "<< endl;
   const size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   const size_t perm_id = get_perm_idnum( new_id_order ) ; 
 
@@ -5410,7 +5385,7 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_6( std::shared_ptr<std
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
-  cout << "sort_indices_6 "<< endl;
+//  cout << "sort_indices_6 "<< endl;
   return;
 }
 

@@ -17,7 +17,7 @@ class Spin_Manager  {
     Spin_Manager(int nel, int norb, int num_idxs) :  nact_el(nel), nact_orb(norb),  nidxs(num_idxs) {}
     ~Spin_Manager(){};
 
-    bool spinfree_;
+    bool spinfree;
     int spin_max ;
     int spin_min ;
 

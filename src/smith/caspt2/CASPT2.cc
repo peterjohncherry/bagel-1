@@ -32,6 +32,8 @@
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
 #include <src/smith/caspt2/CASPT2_ALT.h>
+#include <src/smith/wicktool/equation_computer.h>
+#include <src/smith/wicktool/equation.h>
 
 using namespace std;
 using namespace bagel;
@@ -81,10 +83,10 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   for (int i = 0; i != nstates_; ++i) {
     sall_.push_back(cas.sall_[i]->copy());
   }
-  h1_ = cas.h1_;
-  f1_ = cas.f1_;
-  v2_ = cas.v2_;
-  H_2el_ =  cas.H_2el_;
+  h1_ = cas.h1_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 1.0  );
+  f1_ = cas.f1_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 1.0  );
+  v2_ = cas.v2_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );
+  H_2el_ =  cas.H_2el_; Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );
 
   rdm0all_ = cas.rdm0all_;
   rdm1all_ = cas.rdm1all_;
@@ -92,9 +94,7 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   rdm3all_ = cas.rdm3all_;
   rdm4all_ = cas.rdm4all_;
 
-
 }
-
 
 void CASPT2::CASPT2::do_rdm_deriv(double factor) {
   Timer timer(1);
@@ -143,21 +143,34 @@ void CASPT2::CASPT2::solve() {
   Timer timer;
   print_iteration();
 
+
   // <proj_jst|H|0_K> set to sall in ms-caspt2
   for (int istate = 0; istate != nstates_; ++istate) { //K states
     t2all_[istate]->fac(istate) = 0.0;
     sall_[istate]->fac(istate)  = 0.0;
 
     for (int jst=0; jst != nstates_; ++jst) { // <jst|
+    
       if (info_->sssr() && jst != istate)
         continue;
+   
       set_rdm(jst, istate);
+
+      Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2all_[istate]->at(jst) , 1.0  );
+       
+      cout << " t2all_["<< istate << "]->at("<< jst << ")->norm()       = " <<   t2all_[istate]->at(jst)->norm() << endl;
+      cout << " t2all_["<< istate << "]->at("<< jst << ")->rms()        = " <<   t2all_[istate]->at(jst)->rms()  <<  endl;
+      cout << " t2all_["<< istate << "]->at("<< jst << ")->size_alloc() = " <<   t2all_[istate]->at(jst)->size_alloc()  <<  endl;
+
       s = sall_[istate]->at(jst);
       shared_ptr<Queue> sourceq = make_sourceq(false, jst == istate);
       while(!sourceq->done())
         sourceq->next_compute();
+    
     }
   }
+  cout << " sall_[0]->at(0)->norm() = " <<  sall_[0]->at(0)->norm()  <<  endl;
+  cout << " sall_[0]->at(0)->rms() = " <<   sall_[0]->at(0)->rms()  <<  endl;
 
   // solve linear equation for t amplitudes
   t2all_ = solve_linear(sall_, t2all_);
@@ -520,8 +533,6 @@ void CASPT2::CASPT2::solve_gradient(const int targetJ, const int targetI, shared
   } else {
     // in case when CASPT2 is not variational...
     MSCASPT2::MSCASPT2 ms(*this);
-    CASPT2_ALT::CASPT2_ALT CA(*this);
-    CA.test();
     
     ms.solve_gradient(targetJ, targetI, nocider);
     den1_ = ms.rdm11();

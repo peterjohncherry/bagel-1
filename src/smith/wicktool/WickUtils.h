@@ -17,6 +17,7 @@
 #include <numeric>
  
 namespace WickUtils {  
+
   using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
   using delta_strs = std::vector<std::vector<std::pair<std::string,std::string>>>;
   using delta_bools = std::vector<std::vector<std::pair<bool,bool>>>;
@@ -43,7 +44,8 @@ namespace WickUtils {
   bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max ,
                           std::shared_ptr<std::vector<int>> min ) ;
 
-
+  bool fvec_cycle_skipper_f2b(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max,
+                              std::shared_ptr<std::vector<int>> min ) ;
 
   template<class T1>
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<T1>>>> combgen( std::shared_ptr<std::vector<T1>> invec);
@@ -52,6 +54,8 @@ namespace WickUtils {
 
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
   get_unique_pairs(std::shared_ptr<std::vector<int>> ids1 , std::shared_ptr<std::vector<int>> ids2 , int num_pairs);
+
+  std::shared_ptr<std::vector<int>> reorder_vector(std::vector<int>& neworder , const std::vector<int>& origvec ) ;
 
   template<class DT>
   void print_vec(std::vector<DT> invec , std::string vecname);
@@ -77,8 +81,17 @@ namespace WickUtils {
   std::string get_gamma_name(std::shared_ptr<std::vector<bool>> aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,  
                              std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
 
-   template<class DataType>
-  void print_vecX(std::vector<DataType> invec, std::string name ="lazy"){
+  std::string get_civec_name( const int state_num,  const int norb,  const int nalpha, const int nbeta);
+
+  std::string get_gamma_name( std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> aops_vec,
+                              std::shared_ptr<std::vector<int>> idxs_pos, std::string Bra_name, std::string Ket_name );
+
+  std::shared_ptr<std::vector<pint_vec>>  
+  get_cross_pairs( std::shared_ptr<std::vector<int>> vec1 , std::shared_ptr<std::vector<int>> vec2, std::shared_ptr<std::vector<std::string>> id_names );
+
+
+  template<class DataType>
+  void print_vector(std::vector<DataType> invec, std::string name ="lazy"){
     std::cout << name <<" = [ ";
     for (auto  elem : invec)
       std::cout << elem << " " ;
@@ -88,11 +101,11 @@ namespace WickUtils {
 
 
   template<class DataType>
-  void print_pairvec(std::vector<std::pair<DataType,DataType>> invec, std::string name ="lazy"){
-    std::cout << name <<" = ( ";
+  void print_pair_vector(std::vector<std::pair<DataType,DataType>> invec, std::string name ="lazy"){
+    std::cout << name <<" = [ ";
     for (auto  elem : invec)
       std::cout << "(" << elem.first << "," << elem.second << ") ";
-    std::cout << ")  " ;
+    std::cout << "]  " ;
     return;
   }
 

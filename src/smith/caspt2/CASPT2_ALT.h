@@ -27,10 +27,11 @@
 #define __SRC_SMITH_CASPT2_ALT_H
 
 #include <tuple>
-#include <src/smith/wicktool/equation.h>
+#include <src/smith/wicktool/expression_info.h>
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/ci/fci/fci.h>
-#include <src/smith/wicktool/equation_tools.h>
+#include <src/smith/wicktool/equation_computer.h>
+#include <src/smith/wicktool/gamma_computer.h>
 #include <src/smith/multitensor.h>
 
 namespace bagel {
@@ -49,57 +50,67 @@ class CASPT2_ALT {
     std::shared_ptr<CASPT2::CASPT2> orig_cpt2;
     std::shared_ptr<const SMITH_Info<double>> ref;
 
-    CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in);
     std::shared_ptr<const Dvec> cc_; 
-    int  nelea_ ;
-    int  neleb_ ;
-    int  ncore_ ;
-    int  norb_  ;
-    int  nstate_;
     std::shared_ptr<const Determinants> det_ ; 
 
+    int ncore ;
+    int nact  ;
+    int nvirt ;
+    int nclosed ;
+    int maxtile;  
+    int cimaxtile;  
+
+
+
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map;
+
+    std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> Determinants_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CTP_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> gamma_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Equation<double>>>> Expr_Info_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
+    std::shared_ptr<std::map< std::string, double>> scalar_results_map;
+    std::shared_ptr<Gamma_Computer::Gamma_Computer> Gamma_Machine;
   
     std::shared_ptr<IndexRange> closed_rng; 
     std::shared_ptr<IndexRange> active_rng;  
     std::shared_ptr<IndexRange> virtual_rng;
     std::shared_ptr<IndexRange> free_rng  ; 
-    std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map ;
+    std::shared_ptr<IndexRange> not_closed_rng ; 
+    std::shared_ptr<IndexRange> not_active_rng  ;
+    std::shared_ptr<IndexRange> not_virtual_rng ;
 
+    std::shared_ptr<StatesInfo<double>> TargetsInfo;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map ;
+     
     std::vector<std::shared_ptr<MultiTensor_<double>>> T2_all;
     std::vector<std::shared_ptr<MultiTensor_<double>>> lambda_all;
+    std::shared_ptr<Tensor_<double>> F_1el_all;
     std::shared_ptr<Tensor_<double>> H_1el_all;
     std::shared_ptr<Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
 
-    CASPT2_ALT(std::shared_ptr<const SMITH_Info<double>> ref_alt);
+    std::shared_ptr<Expression_Info<double>> Expr_Info;
+
+    CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in);
     ~CASPT2_ALT() {};
     
-    void test();
+    void solve();
+    void Construct_Tensor_Ops();
     void build_data_map();
+    void Build_Compute_Lists();
+    void Execute_Compute_List(std::string expression_name );
+    
 
-    static std::string flip(std::string idx);
-    static std::shared_ptr<std::vector<std::string>> ijkl_to_klij(std::shared_ptr<std::vector<std::string>> invec) ;
-    static std::shared_ptr<std::vector<std::string>> ijkl_to_jilk(std::shared_ptr<std::vector<std::string>> invec) ;
-    static std::shared_ptr<std::vector<std::string>> ijkl_to_lkji(std::shared_ptr<std::vector<std::string>> invec) ;
-    static std::shared_ptr<std::vector<std::string>> ijkl_to_ijlk_block(std::shared_ptr<std::vector<std::string>> invec) ;
-    static std::shared_ptr<std::vector<std::string>> ijkl_to_jikl_block(std::shared_ptr<std::vector<std::string>> invec) ;
-    static std::shared_ptr<std::vector<std::string>> ijkl_to_jilk_block(std::shared_ptr<std::vector<std::string>> invec) ;
-    static std::shared_ptr<std::vector<std::string>> bbbb_to_aaaa(std::shared_ptr<std::vector<std::string>> invec) ;
-    static std::shared_ptr<std::vector<std::string>> bbaa_to_aaaa(std::shared_ptr<std::vector<std::string>> invec) ;
-    static std::shared_ptr<std::vector<std::string>> aabb_to_aaaa(std::shared_ptr<std::vector<std::string>> invec) ;
-    static std::shared_ptr<std::vector<std::string>> identity(std::shared_ptr<std::vector<std::string>> invec) ;
-    static bool NotAllAct(std::shared_ptr<std::vector<std::string>> ranges);
-    static bool always_true(std::shared_ptr<std::vector<std::string>> ranges);
-    std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_2el_symmfuncs();
-
+    void set_target_info( std::shared_ptr<std::vector<int>> states_of_interest ) ;
+    void set_range_info( std::shared_ptr<std::vector<int>> states_of_interest );
 
     struct compare_string_length {
       bool operator()(const std::string& first, const std::string& second) {
           return first.size() > second.size();
       }
-    };
+};
 
 
 };

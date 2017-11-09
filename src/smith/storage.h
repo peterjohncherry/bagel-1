@@ -229,6 +229,7 @@ class StorageIncore : public RMAWindow<DataType> {
                                                                    const Index& i4, const Index& i5, const Index& i6);
     virtual void add_block(const std::unique_ptr<DataType[]>& dat, const Index& i0, const Index& i1, const Index& i2, const Index& i3,
                                                                    const Index& i4, const Index& i5, const Index& i6, const Index& i7);
+    virtual void add_block(const std::unique_ptr<DataType[]>& dat, const std::vector<Index> i);
 
     size_t blocksize() const { return 1lu; }
     template<typename ...args>

@@ -15,10 +15,6 @@ class Tensor_Sorter {
       Tensor_Sorter(){};
       ~Tensor_Sorter(){};
   
-     std::unique_ptr<DataType[]> reorder_tensor_data(const DataType* orig_data,  size_t data_size,
-                                                     std::shared_ptr<std::vector<int>> new_order_vec,
-                                                     std::shared_ptr<std::vector<int>> old_order_range_lengths);
-
      std::string get_comb_str(std::shared_ptr<std::vector<size_t>> invec);
 
      std::string get_comb_str(std::array<int,4>&  sort_options);
@@ -26,12 +22,6 @@ class Tensor_Sorter {
      size_t get_perm_idnum(std::shared_ptr<std::vector<size_t>> seq) ;
   
      size_t get_sort_options_idnum(std::array<int,4>& sort_options) ;
-
-     std::unique_ptr<DataType[]>
-     reorder_tensor_data(const DataType* orig_data,  size_t data_size,
-                         std::shared_ptr<std::vector<int>>  new_order_vec ,
-                         std::shared_ptr<std::vector<size_t>>  old_order_range_lengths ) ;
-
 
      void sort_indices_2( std::shared_ptr<std::vector<size_t>> new_id_order,
                    std::shared_ptr<std::vector<size_t>> rlen,

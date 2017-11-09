@@ -589,44 +589,44 @@ void SpinFreeMethod<DataType>::compute_e0() {
 // local function to compress the following
 template<typename DataType>
 void SpinFreeMethod<DataType>::loop_over(function<void(const Index&, const Index&, const Index&, const Index&)> func) const {
-  for (auto& i3 : virt_)
-    for (auto& i2 : closed_)
+  for (auto& i3 : virt_)          //cvcv
+    for (auto& i2 : closed_)     
       for (auto& i1 : virt_)
         for (auto& i0 : closed_)
           func(i0, i1, i2, i3);
-  for (auto& i2 : active_)
+  for (auto& i2 : active_)        //avav
     for (auto& i0 : active_)
       for (auto& i3 : virt_)
         for (auto& i1 : virt_)
           func(i0, i1, i2, i3);
-  for (auto& i0 : active_)
+  for (auto& i0 : active_)        //avcv
     for (auto& i3 : virt_)
       for (auto& i2 : closed_)
         for (auto& i1 : virt_)
           func(i0, i1, i2, i3);
-  for (auto& i3 : active_)
+  for (auto& i3 : active_)        //cvca
     for (auto& i2 : closed_)
       for (auto& i1 : virt_)
         for (auto& i0 : closed_)
           func(i0, i1, i2, i3);
-  for (auto& i3 : active_)
+  for (auto& i3 : active_)        //caca
     for (auto& i1 : active_)
       for (auto& i2 : closed_)
         for (auto& i0 : closed_)
           func(i0, i1, i2, i3);
-  for (auto& i3 : active_)
-    for (auto& i2 : active_)
+  for (auto& i3 : active_)       //cvaa and //avca
+    for (auto& i2 : active_)     
       for (auto& i1 : virt_)
         for (auto& i0 : closed_) {
           func(i0, i1, i2, i3);
           func(i2, i1, i0, i3);
         }
-  for (auto& i3 : active_)
+  for (auto& i3 : active_)           //avaa
     for (auto& i2 : active_)
       for (auto& i0 : active_)
         for (auto& i1 : virt_)
           func(i0, i1, i2, i3);
-  for (auto& i3 : active_)
+  for (auto& i3 : active_)          //caaa
     for (auto& i1 : active_)
       for (auto& i0 : active_)
         for (auto& i2 : closed_)
