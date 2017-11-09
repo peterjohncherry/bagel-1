@@ -9,7 +9,7 @@ using namespace WickUtils;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens , string name  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
+//   cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
    cout << "---------------------------- " << name <<  " ----------------------------" << endl;
 
    vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
@@ -63,7 +63,7 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens , s
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Tensor_Arithmetic_Utils::Print_Tensor_test( shared_ptr<Tensor_<double>> Tens, string name  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Tensor_Arithmetic_Utils::Print_Tensor_test " << endl;
+//   cout << "Tensor_Arithmetic_Utils::Print_Tensor_test " << endl;
    cout << "---------------------------- " << name <<  " ----------------------------" << endl;
 
    vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
@@ -505,7 +505,7 @@ Tensor_Arithmetic_Utils::get_block_start( shared_ptr<vector<IndexRange>> id_rang
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets(vector<IndexRange>&  ranges ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Tensor_Arithmetic_Utils::get_block_offsets" << endl;
+//  cout << "Tensor_Arithmetic_Utils::get_block_offsets" << endl;
  
   shared_ptr<vector<vector<int>>> block_offsets = make_shared<vector<vector<int>>>(ranges.size());
    
@@ -524,7 +524,7 @@ shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets(vecto
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets(shared_ptr<vector<IndexRange>>  ranges ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Tensor_Arithmetic_Utils::get_block_offsets" << endl;
+ // cout << "Tensor_Arithmetic_Utils::get_block_offsets" << endl;
  
   shared_ptr<vector<vector<int>>> block_offsets = make_shared<vector<vector<int>>>(ranges->size());
    

@@ -53,28 +53,22 @@ class Gamma_Computer {
       std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> Tensor_Calc;
       
       /////////// Gamma routines /////////////////////////
+
       void get_gamma_tensor( std::string gamma_name);
       
-      void build_sigma_2idx_tensor( std::shared_ptr<GammaInfo> gamma_info ) ;
+      void build_sigma_2idx_tensor( std::shared_ptr<GammaInfo> gamma_2idx_info );
       
+      void build_sigma_4idx_tensor( std::shared_ptr<GammaInfo> gamma_4idx_info );
+
       void build_gamma_2idx_tensor( std::string gamma_name ) ;
 
       void build_gamma_4idx_tensor( std::string gamma_name ) ;
       
       void build_sigma_block( std::shared_ptr<Tensor_<double>> sigma_tens, std::vector<Index>& sigma_id_blocks, std::vector<int>& sigma_offsets, std::string Ket_name  ) const ;
-      
-      void get_civector_indexranges(int nstates) ;
-      
-      std::shared_ptr<Tensor_<double>> convert_civec_to_tensor( std::shared_ptr<const Civec> civector, int state_num ) const;
-      
 
-
-#ifndef NDEBUG
-      bool gamma_2idx_contract_test( std::string gamma_name ) ;
-
-      bool gamma_4idx_contract_test( std::string gamma_name ) ;
-#endif
-
+      void build_sigma_4idx_block_from_sigma_2idx_block( std::shared_ptr<Tensor_<double>> sigma_4idx_IJ, std::vector<Index>& sigma_4idx_IJ_id_blocks, std::vector<int>& sigma_4idx_IJ_offsets,
+                                                         std::shared_ptr<Tensor_<double>> sigma_2idx_KJ, std::vector<Index>& sigma_2idx_KJ_id_blocks, std::vector<int>& sigma_2idx_KJ_offsets,
+                                                         std::string KKet_name  );
 
       /////////// Utility routines /////////////////////////
       
@@ -83,8 +77,26 @@ class Gamma_Computer {
       std::string get_sigma_name( std::string Bra_name, std::string Ket_name , std::shared_ptr<std::vector<std::string>>  orb_ranges, std::shared_ptr<std::vector<bool>> aops ) ;
       
       std::string get_det_name(std::shared_ptr<const Determinants> Detspace ) ;
+       
+      void get_civector_indexranges(int nstates) ;
       
+      std::shared_ptr<Tensor_<double>> convert_civec_to_tensor( std::shared_ptr<const Civec> civector, int state_num ) const;
+
       void tester();
+
+      
+#ifndef NDEBUG
+
+      bool gamma_2idx_contract_test( std::string gamma_name ) ;
+
+      bool gamma_4idx_contract_test( std::string gamma_name ) ;
+
+      bool build_sigma_4idx_tensor_tests(std::shared_ptr<GammaInfo> gamma_4idx_info ) ;
+
+#endif
+
+
+
 
 };
 
