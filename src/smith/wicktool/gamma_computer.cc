@@ -204,7 +204,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
     for( size_t ii = sigma_offsets[0]; ii != iblock_size + sigma_offsets[0]; ii++ ) {
       for( size_t jj = sigma_offsets[1]; jj != jblock_size + sigma_offsets[1]; jj++ ) {
     
-        double* sigma_ptr = sigma_block.get() + (ii*iblock_size+jj)*Bra_block_size;
+        double* sigma_ptr = sigma_block.get() + (ii*jblock_size+jj)*Bra_block_size;
         
         for ( DetMap iter : Ket_det->phia(ii, jj)) {
    
@@ -291,7 +291,6 @@ void Gamma_Computer::Gamma_Computer::build_sigma_4idx_tensor(shared_ptr<GammaInf
     shared_ptr<vector<int>> sigma_2idx_KJ_block_pos     = make_shared<vector<int>>( sigma_2idx_KJ_ranges->size(), 0 );  
     shared_ptr<vector<int>> sigma_2idx_KJ_range_lengths = get_range_lengths(sigma_2idx_KJ_ranges); 
 
-    vector<int> sigma_4idx_IJ_offsets = { 0, 0, 0, 0, 0 };
     shared_ptr<vector<vector<int>>> sigma_2idx_IK_block_offsets = get_block_offsets( sigma_2idx_IK_ranges ) ;
     shared_ptr<vector<vector<int>>> sigma_2idx_KJ_block_offsets = get_block_offsets( sigma_2idx_KJ_ranges ) ;
 
@@ -299,25 +298,28 @@ void Gamma_Computer::Gamma_Computer::build_sigma_4idx_tensor(shared_ptr<GammaInf
     // one for each two electron sigma, and then combine the blocks and offsets into the arguments we need.
     do {
 
-      vector<int> sigma_4idx_IJ_offsets(5);
+      print_vector(*sigma_2idx_IK_block_pos, "sigma_2idx_IK_block_pos"); cout << endl;
 
-      sigma_4idx_IJ_offsets[0] = sigma_2idx_IK_block_offsets->at(0)[ sigma_2idx_IK_block_pos->at(0)]; 
-      sigma_4idx_IJ_offsets[1] = sigma_2idx_IK_block_offsets->at(1)[ sigma_2idx_IK_block_pos->at(1)]; 
-      sigma_4idx_IJ_offsets[4] = sigma_2idx_IK_block_offsets->at(2)[ sigma_2idx_IK_block_pos->at(2)]; 
+      vector<int> sigma_2idx_IK_offsets(3);
+      for ( int ii = 0 ; ii != sigma_2idx_KJ_block_offsets->size(); ii++ )  
+        sigma_2idx_IK_offsets[ii] = sigma_2idx_IK_block_offsets->at(ii)[sigma_2idx_IK_block_pos->at(ii)]; 
+
+      vector<Index> sigma_2idx_IK_id_blocks = *(get_rng_blocks( sigma_2idx_IK_block_pos, *sigma_2idx_IK_ranges));
  
       do {
+        print_vector(*sigma_2idx_KJ_block_pos, "sigma_2idx_KJ_block_pos"); cout << endl;
 
         vector<int> sigma_2idx_KJ_offsets(3);
-        
         for ( int ii = 0 ; ii != sigma_2idx_KJ_block_offsets->size(); ii++ )  
-           sigma_2idx_KJ_offsets[ii] = sigma_2idx_KJ_block_offsets->at(ii)[ sigma_2idx_KJ_block_pos->at(ii)]; 
+           sigma_2idx_KJ_offsets[ii] = sigma_2idx_KJ_block_offsets->at(ii)[sigma_2idx_KJ_block_pos->at(ii)]; 
         
-        sigma_4idx_IJ_offsets[2] = sigma_2idx_KJ_offsets[0]; 
-        sigma_4idx_IJ_offsets[3] = sigma_2idx_KJ_offsets[1]; 
-          
-        vector<Index> sigma_2idx_IK_id_blocks = *(get_rng_blocks( sigma_2idx_IK_block_pos, *sigma_2idx_IK_ranges));
+        vector<int> sigma_4idx_IJ_offsets = { sigma_2idx_IK_offsets[0], sigma_2idx_IK_offsets[1],
+                                              sigma_2idx_KJ_offsets[0], sigma_2idx_KJ_offsets[1], sigma_2idx_IK_offsets[2]};
+
+        print_vector( sigma_4idx_IJ_offsets , "sigma_4idx_IJ_offsets" ) ;
+
         vector<Index> sigma_2idx_KJ_id_blocks = *(get_rng_blocks( sigma_2idx_KJ_block_pos, *sigma_2idx_KJ_ranges));
-   
+
         vector<Index> sigma_4idx_IJ_id_blocks = { sigma_2idx_IK_id_blocks[0], sigma_2idx_IK_id_blocks[1],
                                                   sigma_2idx_KJ_id_blocks[0], sigma_2idx_KJ_id_blocks[1], sigma_2idx_IK_id_blocks[2]};
  
@@ -325,10 +327,21 @@ void Gamma_Computer::Gamma_Computer::build_sigma_4idx_tensor(shared_ptr<GammaInf
                                                       sigma_2idx_KJ,  sigma_2idx_KJ_id_blocks, sigma_2idx_KJ_offsets,
                                                       sigma_2idx_IK_info->Ket_info->name() )  ;
 
+        
       } while (fvec_cycle_skipper(sigma_2idx_KJ_block_pos, sigma_2idx_KJ_range_lengths, sigma_2idx_KJ_mins ));
 
     } while (fvec_cycle_skipper(sigma_2idx_IK_block_pos, sigma_2idx_IK_range_lengths, sigma_2idx_IK_mins ));
-    
+
+    cout << endl << "----------------------------------------------------------------------------------------" << endl;
+    Print_Tensor(sigma_4idx_IJ, "sigma_4idx_IJ"); 
+    cout << endl << "----------------------------------------------------------------------------------------" << endl;
+ 
+    shared_ptr<Tensor_<double>> gamma_4idx_IJ =  Tensor_Calc->contract_tensor_with_vector( sigma_4idx_IJ, CIvec_data_map->at(gamma_4idx_info->Bra_info->name()),  make_pair(4,0));
+
+    cout << endl << "----------------------------------------------------------------------------------------" << endl;
+    Print_Tensor(gamma_4idx_IJ, "gamma_4idx_IJ from sigma_4idx_IJ"); 
+    cout << endl << "----------------------------------------------------------------------------------------" << endl;
+ 
     Sigma_data_map->emplace(sigma_4idx_name, sigma_4idx_IJ); 
 
   }
@@ -348,11 +361,14 @@ Gamma_Computer::Gamma_Computer::build_sigma_4idx_block_from_sigma_2idx_block( sh
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::build_sigma_4idx_block_from_sigma_2idx_block" << endl;
 
-  size_t iblock_size     = sigma_4idx_IJ_id_blocks[0].size();
-  size_t jblock_size     = sigma_4idx_IJ_id_blocks[1].size();
-  size_t kblock_size     = sigma_4idx_IJ_id_blocks[2].size();
-  size_t lblock_size     = sigma_4idx_IJ_id_blocks[3].size();
-  size_t IBra_block_size = sigma_4idx_IJ_id_blocks[4].size();
+  size_t iblock_size     = sigma_4idx_IJ_id_blocks[0].size();cout << " iblock_size     = " << iblock_size     << endl; 
+  size_t jblock_size     = sigma_4idx_IJ_id_blocks[1].size();cout << " jblock_size     = " << jblock_size     << endl;
+  size_t kblock_size     = sigma_4idx_IJ_id_blocks[2].size();cout << " kblock_size     = " << kblock_size     << endl;
+  size_t lblock_size     = sigma_4idx_IJ_id_blocks[3].size();cout << " lblock_size     = " << lblock_size     << endl;
+                                                                                                            
+  size_t IBra_block_size = sigma_4idx_IJ_id_blocks[4].size();cout << " IBra_block_size = " << IBra_block_size << endl;
+  size_t KKet_block_size = sigma_2idx_KJ_id_blocks[2].size();cout << " KKet_block_size = " << KKet_block_size << endl;
+
   const size_t sigma_4idx_IJ_block_size = IBra_block_size*iblock_size*jblock_size*kblock_size*lblock_size;
 
   unique_ptr<double[]> sigma_4idx_IJ_block(new double[sigma_4idx_IJ_block_size])  ;
@@ -362,57 +378,57 @@ Gamma_Computer::Gamma_Computer::build_sigma_4idx_block_from_sigma_2idx_block( sh
   const int lena = KKet_det->lena();
   const int lenb = KKet_det->lenb();
 
+  Index KKet_idx_block = sigma_2idx_KJ_id_blocks[2] ;
   int KKet_offset = sigma_2idx_KJ_offsets[2];
  
   unique_ptr<double[]> sigma_2idx_KJ_block = sigma_2idx_KJ->get_block(sigma_2idx_KJ_id_blocks);
+  double* sigma4_ptr = sigma_4idx_IJ_block.get();
+  //standard sigma from civec algorithm
+  for( size_t ii = sigma_4idx_IJ_offsets[0]; ii != iblock_size + sigma_4idx_IJ_offsets[0]; ii++ ) {
+    for( size_t jj = sigma_4idx_IJ_offsets[1]; jj != jblock_size + sigma_4idx_IJ_offsets[1]; jj++ ) { cout << " ii, jj  = " << ii << ", " << jj << endl;
 
-  Index KKet_idx_block = sigma_2idx_KJ_id_blocks[2] ;
-  size_t KKet_block_size = KKet_idx_block.size();
-
-  //loops over orbitals in sigma_2idx
-  for ( int kk = 0 ; kk!= kblock_size; kk++ ) {  
-    for ( int ll = 0 ; ll!= lblock_size; ll++ ) {  
-    
-      double* KKet_ptr = sigma_2idx_KJ_block.get() + kk*lblock_size+ll;
-      
-      //standard sigma from civec algorithm
-      for( size_t ii = sigma_4idx_IJ_offsets[0]; ii != iblock_size + sigma_4idx_IJ_offsets[0]; ii++ ) {
-        for( size_t jj = sigma_4idx_IJ_offsets[1]; jj != jblock_size + sigma_4idx_IJ_offsets[1]; jj++ ) {
-      
-          double* sigma4_ptr = sigma_4idx_IJ_block.get() + (ii*iblock_size+jj)*IBra_block_size;
-          
-          for ( DetMap iter : KKet_det->phia(ii, jj)) {
-     
-            int KKet_shift = iter.target*lenb - KKet_offset; 
-            if ( (KKet_shift < 0 ) || (KKet_shift >= KKet_block_size) )  continue;
-      
-            int IBra_shift = iter.source*lenb - sigma_4idx_IJ_offsets[2];
-            if ( (IBra_shift < 0 ) || (IBra_shift >= IBra_block_size) )  continue;
-               
-            size_t loop_limit = lenb > IBra_block_size ? IBra_block_size : lenb;      //fix
-            loop_limit = KKet_block_size > loop_limit ? loop_limit : KKet_block_size; //fix
-            double sign = static_cast<double>(iter.sign);
-            for( size_t ib = 0; ib != loop_limit; ib++) 
-             *(sigma4_ptr+IBra_shift+ib) += (*(KKet_ptr+KKet_shift+ib) * sign);
-          }
-     
-          for( size_t ia = 0; ia != lena; ia++) {
-            for ( DetMap iter : KKet_det->phib(ii, jj)) {
-          
-              int KKet_shift = iter.target + (ia*lenb) - KKet_offset;
-              if ( (KKet_shift < 0 ) || (KKet_shift >= KKet_block_size) ) continue;
-     
-              int IBra_shift = iter.source + (ia*lenb) - sigma_4idx_IJ_offsets[2];
-              if ( (IBra_shift < 0 ) || (IBra_shift >= IBra_block_size) ) continue;
-              
-              double sign = static_cast<double>(iter.sign);
-          
-              *(sigma4_ptr + IBra_shift) += (*(KKet_ptr+KKet_shift) * sign);
-            
-            }
+      double* KKet_ptr = sigma_2idx_KJ_block.get() ;
+      cout << "[ (kk,ll) ] = [" ; cout.flush();
+      //loops over orbitals in sigma_2idx
+      for ( int kk = 0 ; kk!= kblock_size; kk++ ) {                                                                                        
+        for ( int ll = 0 ; ll!= lblock_size; ll++ ) {  cout << " (" << kk << "," << ll << ") " ; cout.flush();                                                                          
+                                                                                                                                           
+                                                                                                                                           
+          for ( DetMap iter : KKet_det->phia(ii, jj)) {                                                                                    
+                                                                                                                                           
+            int KKet_shift = iter.target*lenb - KKet_offset;                                                                               
+            if ( (KKet_shift < 0 ) || (KKet_shift >= KKet_block_size) )  { continue; }     
+                                                                                           
+            int IBra_shift = iter.source*lenb - sigma_4idx_IJ_offsets[4];                  
+            if ( (IBra_shift < 0 ) || (IBra_shift >= IBra_block_size) )  { continue; }     
+                                                                                                                                           
+            size_t loop_limit = lenb > IBra_block_size ? IBra_block_size : lenb;      /*fix */                                             
+            loop_limit = KKet_block_size > loop_limit ? loop_limit : KKet_block_size; /*fix */                                             
+            double sign = static_cast<double>(iter.sign);                                                                                  
+            for( size_t ib = 0; ib != lenb; ib++)                                                                                          
+             *(sigma4_ptr+IBra_shift+ib) += (*(KKet_ptr+KKet_shift+ib) * sign);                                                            
+          }                                                                                                                                
+                                                                                                                                           
+          for( size_t ia = 0; ia != lena; ia++) {                                                                                          
+            for ( DetMap iter : KKet_det->phib(ii, jj)) {                                                                                  
+                                                                                                                                           
+              int KKet_shift = iter.target + (ia*lenb) - KKet_offset;                                                                      
+              if ( (KKet_shift < 0 ) || (KKet_shift >= KKet_block_size) ) { continue; }    
+                                                                                                                                           
+              int IBra_shift = iter.source + (ia*lenb) - sigma_4idx_IJ_offsets[4];                                                         
+              if ( (IBra_shift < 0 ) || (IBra_shift >= IBra_block_size) ) { continue; }    
+                                                                                                                                           
+              double sign = static_cast<double>(iter.sign);                                                                                
+                                                                                                                                           
+              *(sigma4_ptr + IBra_shift) += (*(KKet_ptr+KKet_shift) * sign);                                                               
+                                                                                                                                           
+            }                                                                                                                              
           } 
+          KKet_ptr += KKet_block_size;                                                                                                     
+          sigma4_ptr += IBra_block_size;                                                                                                    
         }   
-      }     
+      }
+      cout << "]" <<  endl;     
     }     
   }
   cout << " got a sigma block .... " ; cout.flush();
@@ -608,7 +624,7 @@ bool Gamma_Computer::Gamma_Computer::gamma_2idx_contract_test( string gamma_name
    bool passed = true;
 
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl;
-   Print_Tensor_test(Gamma_data_map->at(gamma_name), gamma_name);
+   Print_Tensor(Gamma_data_map->at(gamma_name), gamma_name);
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl;
    cout << "Gamma_data_map->at("<<gamma_name<<")->norm() = "<< Gamma_data_map->at(gamma_name)->norm() <<  endl;  
    cout << "Gamma_data_map->at("<<gamma_name<<")->rms()  = "<< Gamma_data_map->at(gamma_name)->rms() <<  endl; 
@@ -639,20 +655,21 @@ bool Gamma_Computer::Gamma_Computer::gamma_4idx_contract_test( string gamma_name
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
-   Print_Tensor_test(Gamma_data_map->at(gamma_name));
+   Print_Tensor(Gamma_data_map->at(gamma_name));
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
    cout << "Gamma_data_map->at("<<gamma_name<<")->norm() = "<< Gamma_data_map->at(gamma_name)->norm() <<  endl;  
    cout << "Gamma_data_map->at("<<gamma_name<<")->rms()  = "<< Gamma_data_map->at(gamma_name)->rms() <<  endl; 
 
    shared_ptr<Tensor_<double>> gamma_2idx_from_4idx_A  =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Gamma_data_map->at(gamma_name),  make_pair(2,3) );
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
-   Print_Tensor_test(gamma_2idx_from_4idx_A, "gamma_2idx_from_4idx" ); 
+   Print_Tensor(gamma_2idx_from_4idx_A, "gamma_2idx_from_4idx" ); 
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
    cout << "gamma_2idx_from_4idx_A->norm()  = "<< gamma_2idx_from_4idx_A->norm() << endl;
    cout << "gamma_2idx_from_4idx_A->rms()   = "<< gamma_2idx_from_4idx_A->rms() << endl;
    cout << "------------------------------------------------------------------------------------------------------" << endl; 
 
-   shared_ptr<Tensor_<double>> gamma_2idx_from_4idx_B  =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Gamma_data_map->at(gamma_name),  make_pair(0,1) );
+   vector<int> ctrs_pos = {0,1,2,3};
+   shared_ptr<Tensor_<double>> gamma_2idx_from_4idx_B = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Gamma_data_map->at(gamma_name),  make_pair(0,1) );
    cout << " gamma_2idx_from_4idx_B->norm() = " << gamma_2idx_from_4idx_B->norm()  << endl; 
    cout << " gamma_2idx_from_4idx_B->rms()  = " << gamma_2idx_from_4idx_B->rms()  << endl; 
 
@@ -660,12 +677,7 @@ bool Gamma_Computer::Gamma_Computer::gamma_4idx_contract_test( string gamma_name
    cout << " gamma_2idx_from_4idx_B->norm() - gamma_2idx_from_4idx_A->norm()  = " << gamma_2idx_from_4idx_B->norm()  << endl; 
    cout << " gamma_2idx_from_4idx_B->rms()  - gamma_2idx_from_4idx_A->rms()   = " << gamma_2idx_from_4idx_B->rms()  << endl; 
 
-   get_gamma_tensor( (Gamma_info_map->at(gamma_name)->sub_gammas(1)) );
-   gamma_2idx_from_4idx_A->ax_plus_y(-(Gamma_info_map->at(gamma_name)->Bra_info->nele()), Gamma_data_map->at(Gamma_info_map->at(gamma_name)->sub_gammas(1)) );
-   cout << "( gamma_2idx_from_4idx_A - gamma_2idx )->norm() = "<< gamma_2idx_from_4idx_A->norm() << endl;
-   cout << "( gamma_2idx_from_4idx_A - gamma_2idx )->rms()  = "<< gamma_2idx_from_4idx_A->rms() << endl;
-
-   return ( gamma_2idx_from_4idx_A->norm() < 0.00000001 ) && ( gamma_2idx_from_4idx_B->norm() < 0.00000001 );
+   return ( gamma_2idx_from_4idx_B->norm() < 0.00000001 );
 
 }
 

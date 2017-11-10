@@ -7,63 +7,9 @@ using namespace bagel::SMITH;
 using namespace WickUtils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens , string name  ) {
+void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, string name  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
-   cout << "---------------------------- " << name <<  " ----------------------------" << endl;
-
-   vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
-   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( Bagel_id_ranges) ;
-
-   shared_ptr<vector<int>> range_lengths  =  get_range_lengths( Bagel_id_ranges ) ;
-   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
-   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
-    
-   cout << "Tdata_block : " << endl; 
-   do {
-
-     vector<int> id_pos(block_pos->size());
-     for ( int ii = 0 ; ii != Bagel_id_ranges.size(); ii++)
-       id_pos[ii] = block_offsets->at(ii).at(block_pos->at(ii));
-    
-     vector<Index> id_blocks = *(get_rng_blocks( block_pos, Bagel_id_ranges ));
-    
-     if ( Tens->exists(id_blocks) ) { 
-       vector<int> id_blocks_sizes(id_blocks.size());
-       for( int ii = 0 ;  ii != id_blocks.size(); ii++)
-         id_blocks_sizes[ii] = id_blocks[ii].size();
-
-       int id_block_size = accumulate(id_blocks_sizes.begin(), id_blocks_sizes.end(), 1 , std::multiplies<int>());
-       
-       unique_ptr<double[]>    T_data_block = Tens->get_block(id_blocks);
-       shared_ptr<vector<int>> Tens_strides = get_Tens_strides(id_blocks_sizes);
-       
-       cout <<  "[ " ; for ( int elem : id_pos ) { cout << elem << " " ; } cout  << "] " << endl;
-       for ( int jj = 0 ; jj != id_block_size ; jj++) {
-         cout <<  T_data_block[jj] << " "; cout.flush();
-         for ( int kk = 1; kk != Tens_strides->size(); kk++ ) {
-           if ( (((jj+1) % Tens_strides->at(kk)) == 0)  && (jj > 0) ){ 
-             cout << endl;
-             if ( kk > 1 ) {
-               for ( int  ll = kk ; ll !=  Tens_strides->size() ; ll++){
-                 if ( ( jj+1 % Tens_strides->at(ll) == 0) ) 
-                   id_pos[ll]++;
-               }
-               cout <<  "[ " ; for ( int elem : id_pos ) { cout << elem << " " ; } cout  << "] " << endl;
-             }
-           }
-         }
-       }
-     }
-
-   } while (fvec_cycle(block_pos, range_lengths, mins ));
- 
-   return ;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Tensor_Arithmetic_Utils::Print_Tensor_test( shared_ptr<Tensor_<double>> Tens, string name  ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//   cout << "Tensor_Arithmetic_Utils::Print_Tensor_test " << endl;
    cout << "---------------------------- " << name <<  " ----------------------------" << endl;
 
    vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
