@@ -14,23 +14,83 @@ using namespace WickUtils;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( shared_ptr<Tensor_<DataType>> Tens_in,  vector<int>& ctrs_todo) {
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( shared_ptr<Tensor_<DataType>> Tens_in,  vector<int>& ctrs_pos) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Tensor_Arithmetic::contract_on_same_tensor_new" << endl;
 
   vector<IndexRange> id_ranges_in = Tens_in->indexrange();
   int num_ids  = id_ranges_in.size();
 
-  vector<int> new_order(num_ids);
-  iota(new_order.begin(), new_order.end(), 0);
-  
-  put_ctrs_at_front(new_order, ctrs_todo);
+  // for reordering blocks in loop, put at front, indexes on right move fastest
+  shared_ptr<vector<int>> new_order = make_shared<vector<int>>(num_ids);
+  iota(new_order->begin(), new_order->end(), 0);
+  put_ctrs_at_front(*new_order, ctrs_pos);
 
-  
+  vector<int> unc_pos(new_order->begin()+ctrs_pos.size(), new_order->end());
+  vector<IndexRange> unc_idxrng(unc_pos.size());
+  for (int qq = 0; qq != unc_pos.size(); qq++ ) 
+    unc_idxrng[qq] = id_ranges_in[unc_pos[qq]];
+
+  shared_ptr<vector<int>> maxs      = get_range_lengths( id_ranges_in ) ;
+  shared_ptr<vector<int>> mins      = make_shared<vector<int>>(maxs->size(),0);  
+  shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(maxs->size(),0);  
+
+  //set max = min so contracted blocks are skipped in fvec_cycle
+  for ( vector<int>::iterator iter = ctrs_pos.begin(); iter != ctrs_pos.end(); iter++ ) {
+     maxs->at(*iter) = 0;
+     mins->at(*iter) = 0;
+  } 
+
+  int num_ctr_blocks = id_ranges_in[ctrs_pos.front()].range().size();
+  shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(unc_idxrng);
+  Tens_out->allocate();
+  Tens_out->zero();
 
 
+  //loop over all blocks, unc and ctr . Loop over ctr in middle loop
+  do {
 
-  shared_ptr<Tensor_<double>> Tens_out;
+    shared_ptr<vector<Index>> id_blocks_in = get_rng_blocks(block_pos, id_ranges_in); 
+
+    int unc_block_size = 1;
+    vector<Index> unc_id_blocks(unc_pos.size());
+    for (int qq = 0 ; qq != unc_pos.size(); qq++ ) {
+      unc_id_blocks[qq] = id_blocks_in->at(unc_pos[qq]);
+      unc_block_size   *= unc_id_blocks[qq].size();
+    }
+
+    unique_ptr<DataType[]> contracted_block(new DataType[unc_block_size]);
+    //loop over ctr blocks
+    for ( int ii = 0 ; ii != num_ctr_blocks; ii++) { 
+      
+      for ( int pos : ctrs_pos )  
+         block_pos->at(pos) = ii;
+
+      //redefine block position
+      id_blocks_in = get_rng_blocks(block_pos, id_ranges_in);
+
+      vector<int> ctr_block_strides(ctrs_pos.size());
+      ctr_block_strides.back() = unc_block_size;
+      int ctr_total_stride = unc_block_size;
+      for (int qq = ctrs_pos.size()-2; qq != -1 ; qq-- ) {
+        ctr_block_strides[qq] *= (ctr_block_strides[qq+1] * id_blocks_in->at(ctrs_pos[qq+1]).size());
+        ctr_total_stride += ctr_block_strides[qq]; 
+      }
+
+      {
+      unique_ptr<DataType[]> orig_block = Tens_in->get_block(*id_blocks_in);
+      unique_ptr<DataType[]> reordered_block = reorder_tensor_data( orig_block.get(), new_order, id_blocks_in );
+
+      //looping over the id positions within the block
+      for ( int ctr_id = 0 ; ctr_id != id_blocks_in->at(ctrs_pos[0]).size(); ctr_id++)
+        blas::ax_plus_y_n(1.0, reordered_block.get() + (ctr_total_stride*ctr_id), unc_block_size, contracted_block.get() );
+      }
+ 
+    }  
+    
+    Tens_out->put_block(contracted_block, unc_id_blocks );
+   
+  } while( fvec_cycle_skipper(block_pos, maxs, mins));
 
   return Tens_out;
 }

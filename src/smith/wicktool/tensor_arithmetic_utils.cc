@@ -70,8 +70,8 @@ void Tensor_Arithmetic_Utils::Print_Tensor_test( shared_ptr<Tensor_<double>> Ten
    shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( Bagel_id_ranges) ;
 
    shared_ptr<vector<int>> range_lengths  =  get_range_lengths( Bagel_id_ranges ) ;
-   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
-   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> block_pos      =  make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> mins           =  make_shared<vector<int>>(range_lengths->size(),0);  
     
    do {
 
@@ -544,32 +544,59 @@ shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets(share
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Put ctrs at front,  vector version. Note, this will change the input vector orig_pos
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Tensor_Arithmetic_Utils::put_ctrs_at_front( vector<int>& id_pos, vector<int>& ctr_todo) {
+void Tensor_Arithmetic_Utils::put_ctrs_at_front( vector<int>& ids_pos, vector<int>& ctrs_pos) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Tensor_Arithmetic_Utils::put_ctrs_at_front" << endl;
 
-  for ( vector<int>::iterator iter = id_pos.begin(); iter != id_pos.end(); iter++  ) 
-    for ( int ctr_pos : ctr_todo) 
+  for ( vector<int>::iterator iter = ids_pos.begin(); iter != ids_pos.end(); iter++  ) 
+    for ( int ctr_pos : ctrs_pos) 
       if (  *iter == ctr_pos  )
-        id_pos.erase(iter); 
+        ids_pos.erase(iter); 
 
-  for ( int ctr_pos : ctr_todo )//should think about what order is best... 
-    id_pos.push_back(ctr_pos);
-
-  std::reverse(id_pos.begin(), id_pos.end());
+  ids_pos.insert(ids_pos.begin(), ctrs_pos.begin(), ctrs_pos.end());
 
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Put ctrs at front,  vector version. Note, this will change the input vector orig_pos
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Tensor_Arithmetic_Utils::put_ctrs_at_front( vector<int>& id_pos, pair<int,int>& ctr_todo) {
+void Tensor_Arithmetic_Utils::put_ctrs_at_front( vector<int>& ids_pos, pair<int,int>& ctr_pair) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   vector<int> ctrs_todo = {ctr_todo.first, ctr_todo.second};
+   vector<int> ctrs_pos = {ctr_pair.first, ctr_pair.second};
 
-   put_ctrs_at_front(id_pos, ctrs_todo );
+   put_ctrs_at_front(ids_pos, ctrs_pos );
  
    return;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Put ctrs at back,  vector version. Note, this will change the input vector orig_pos
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Tensor_Arithmetic_Utils::put_ctrs_at_back( vector<int>& ids_pos, vector<int>& ctrs_pos) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic_Utils::put_ctrs_at_back" << endl;
+
+  for ( vector<int>::iterator iter = ids_pos.begin(); iter != ids_pos.end(); iter++  ) 
+    for ( int ctr_pos : ctrs_pos) 
+      if (  *iter == ctr_pos  )
+        ids_pos.erase(iter); 
+
+  ids_pos.insert(ids_pos.end(), ctrs_pos.begin(), ctrs_pos.end());
+
+  return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Put ctrs at back,  vector version. Note, this will change the input vector orig_pos
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Tensor_Arithmetic_Utils::put_ctrs_at_back( vector<int>& id_pos, pair<int,int>& ctr_pair) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   vector<int> ctrs_pos = {ctr_pair.first, ctr_pair.second};
+
+   put_ctrs_at_back(id_pos, ctrs_pos );
+ 
+   return;
+}
+
 #endif
