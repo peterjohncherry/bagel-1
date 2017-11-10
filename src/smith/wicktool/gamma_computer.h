@@ -21,7 +21,7 @@ namespace Gamma_Computer {
 class Gamma_Computer { 
 
     public: 
-      Gamma_Computer( std::shared_ptr< std::map< std::string, std::shared_ptr<GammaInfo>>>          GammaMap,
+      Gamma_Computer( std::shared_ptr< std::map< std::string, std::shared_ptr<GammaInfo>>>          Gamma_info_map,
                       std::shared_ptr< std::map< std::string, std::shared_ptr<Tensor_<double>>>>    CIvec_data_map,
                       std::shared_ptr< std::map< std::string, std::shared_ptr<Tensor_<double>>>>    Sigma_data_map,
                       std::shared_ptr< std::map< std::string, std::shared_ptr<Tensor_<double>>>>    Gamma_data_map,
@@ -44,7 +44,7 @@ class Gamma_Computer {
       std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map;
       std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map;
 
-      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> Gamma_info_map;
       std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
       std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> Determinants_map;
       

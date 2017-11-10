@@ -91,6 +91,12 @@ class CASPT2_ALT {
     std::shared_ptr<Tensor_<double>> H_1el_all;
     std::shared_ptr<Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
 
+
+    std::shared_ptr<Tensor_<double>> Smith_rdm1;
+    std::shared_ptr<Tensor_<double>> Smith_rdm2;
+    std::shared_ptr<Tensor_<double>> Smith_rdm3;
+    std::shared_ptr<Tensor_<double>> Smith_rdm4;
+
     std::shared_ptr<Expression_Info<double>> Expr_Info;
 
     CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in);

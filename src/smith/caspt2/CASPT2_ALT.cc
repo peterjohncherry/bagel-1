@@ -40,7 +40,8 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
 
   cc_ = ref->ciwfn()->civectors();
   det_ = ref->ciwfn()->civectors()->det(); //remove this ASAP
-    
+
+
   T2_all     = orig_cpt2->t2all_;  
   lambda_all = orig_cpt2->lall_;   
   F_1el_all  = orig_cpt2->f1_;     cout << "F_1el_all->rms()" <<  F_1el_all->rms() << endl; 
@@ -52,7 +53,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   nact    = ref->nact();
   nvirt   = ref->nvirt();
   maxtile = ref->maxtile();
-  cimaxtile = 1000;
+  cimaxtile = 100000;
 
   CTP_map            = make_shared<map<string, shared_ptr<CtrTensorPart<double>>>>();
   Data_map           = make_shared<map<string, shared_ptr<Tensor_<double>>>>();
@@ -70,6 +71,24 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
    
   Expr_Info = make_shared<Expression_Info<double>>(TargetsInfo, true);
   Expr_Info_map = Expr_Info->expression_map;
+
+  /////////////////////////////////////////////////////////  
+  orig_cpt2->set_rdm(0,0);
+  Smith_rdm1 = orig_cpt2->rdm1_;
+  Smith_rdm2 = orig_cpt2->rdm2_;
+  Smith_rdm3 = orig_cpt2->rdm3_;
+  Smith_rdm4 = orig_cpt2->rdm4_;
+  
+  cout << endl << "-------------------------------------------------------------------------------" << endl;
+  Tensor_Arithmetic_Utils::Print_Tensor_test(Smith_rdm1, "Smith rdm1" );
+  cout << endl << "-------------------------------------------------------------------------------" << endl;
+  Tensor_Arithmetic_Utils::Print_Tensor_test(Smith_rdm2, "Smith rdm2" );
+  cout << endl << "-------------------------------------------------------------------------------" << endl;
+  shared_ptr<Tensor_<double>> Smith_rdm1_from_rdm2 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Smith_rdm2 , make_pair(2,3));
+  
+  Tensor_Arithmetic_Utils::Print_Tensor_test( Smith_rdm1_from_rdm2, "Smith rdm1 from rdm2" );
+  cout << endl << "-------------------------------------------------------------------------------" << endl;
+  /////////////////////////////////////////////////////////  
   
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -358,18 +377,6 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   cout << "getting_gammas" << endl;
   shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gammas( 0, 0, Gname_vec[0] );
  
-  cout << "contracting gammas " << endl;
-  for (shared_ptr<Tensor_<double>>  gamma_tens : *gamma_tensors) {
-    vector<int> index_pos(gamma_tens->indexrange().size());
-    iota(index_pos.begin() , index_pos.end(), 0 );
-    shared_ptr<Tensor_<double>> contracted_gamma = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( gamma_tens, index_pos);
-
-    cout << "contracted_gamma->rms()        = " << contracted_gamma->rms() << endl;
-    cout << "contracted_gamma->norm()       = " << contracted_gamma->norm() << endl;
-    cout << "contracted_gamma->rank()       = " << contracted_gamma->rank() <<       "    orig_gamma->rank         = "<< gamma_tens->rank() << endl;
-    cout << "contracted_gamma->size_alloc() = " << contracted_gamma->size_alloc() << "    orig_gamma->size_alloc() = "<< gamma_tens->size_alloc() <<  endl;
-  }
- 
   cout << "Gamma names = [ " ; cout.flush();   for ( int ii = 0 ; ii != Gname_vec.size(); ii++ ) { cout << Gname_vec[ii] << " " ; cout.flush(); } cout << " ] " << endl;
 
   cout << "A6" << endl;
@@ -441,7 +448,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   }
   }   
   cout << Expression_name << " = " << result << endl;
-  scalar_results_map->emplace(Expression_name, result);
+  scalar_results_map->emplace( Expression_name, result );
   
   return;
 }

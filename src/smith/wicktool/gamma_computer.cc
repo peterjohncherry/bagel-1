@@ -10,7 +10,7 @@ using namespace Tensor_Arithmetic;
 using namespace Tensor_Arithmetic_Utils;
 using namespace WickUtils;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_ptr<GammaInfo>>>          GammaMap_in,
+Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_ptr<GammaInfo>>>          Gamma_info_map_in,
                                                 shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    CIvec_data_map_in,
                                                 shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    Sigma_data_map_in,
                                                 shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    Gamma_data_map_in,
@@ -20,7 +20,7 @@ Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_
   cout << "Gamma_Computer::Gamma_Computer::Gamma_Computer" << endl;
   maxtile  = 10000;
 
-  GammaMap             = GammaMap_in;             cout << "set GammaMap            "<< endl; 
+  Gamma_info_map             = Gamma_info_map_in;             cout << "set Gamma_info_map            "<< endl; 
   CIvec_data_map       = CIvec_data_map_in;       cout << "set CIvec_data_map      "<< endl;  
   Sigma_data_map       = Sigma_data_map_in;       cout << "set Sigma_data_map      "<< endl;  
   Gamma_data_map       = Gamma_data_map_in;       cout << "set Gamma_data_map      "<< endl;  
@@ -48,22 +48,22 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
   } else { 
     
     //for now just use specialized routines, this must be made generic at some point
-    if (GammaMap->at(gamma_name)->id_ranges->size() == 2 ) { 
+    if (Gamma_info_map->at(gamma_name)->id_ranges->size() == 2 ) { 
 
       build_gamma_2idx_tensor( gamma_name ) ;
       assert( gamma_2idx_contract_test( gamma_name ) );
       
-    } else if (GammaMap->at(gamma_name)->id_ranges->size() == 4 ) { 
+    } else if (Gamma_info_map->at(gamma_name)->id_ranges->size() == 4 ) { 
 
       build_gamma_4idx_tensor( gamma_name );
       assert (gamma_4idx_contract_test( gamma_name ) );
 
-     build_sigma_4idx_tensor( GammaMap->at(gamma_name) );
+      build_sigma_4idx_tensor( Gamma_info_map->at(gamma_name) );
 
-    } else if (GammaMap->at(gamma_name)->id_ranges->size() == 6 ) { 
+    } else if (Gamma_info_map->at(gamma_name)->id_ranges->size() == 6 ) { 
        cout << " 6-index stuff not implemented, cannot calculate " << gamma_name << endl;
 
-    } else if (GammaMap->at(gamma_name)->id_ranges->size() == 8 ) { 
+    } else if (Gamma_info_map->at(gamma_name)->id_ranges->size() == 8 ) { 
        cout << " 8-index stuff not implemented, cannot calculate " << gamma_name << endl;
     }    
   }
@@ -80,7 +80,7 @@ Gamma_Computer::Gamma_Computer::build_gamma_2idx_tensor( string gamma_name ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "build_gamma_2idx_tensor : " << gamma_name << endl;
 
-  shared_ptr<GammaInfo> gamma_info      =  GammaMap->at(gamma_name);
+  shared_ptr<GammaInfo> gamma_info      =  Gamma_info_map->at(gamma_name);
 
   shared_ptr<CIVecInfo<double>> BraInfo =  gamma_info->Bra_info;
   shared_ptr<CIVecInfo<double>> KetInfo =  gamma_info->Ket_info;
@@ -241,7 +241,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma_block( shared_ptr<Tensor_<doubl
     Ket_offset += Ket_idx_block.size(); 
   }
   cout << " got a sigma block .... " ; cout.flush();
-  sigma_tensor->put_block(sigma_block, sigma_id_blocks ) ; 
+  sigma_tensor->add_block(sigma_block, sigma_id_blocks ) ; 
   cout << " and put it in the tensor! " << endl;
   return;
  
@@ -264,11 +264,11 @@ void Gamma_Computer::Gamma_Computer::build_sigma_4idx_tensor(shared_ptr<GammaInf
     assert ( build_sigma_4idx_tensor_tests( gamma_4idx_info ) );
 
     //acquire sigma_2idx_KJ
-    build_sigma_2idx_tensor( GammaMap->at( gamma_4idx_info->sub_gammas(1) ) );  
+    build_sigma_2idx_tensor( Gamma_info_map->at( gamma_4idx_info->sub_gammas(1) ) );  
     shared_ptr<Tensor_<double>> sigma_2idx_KJ = Sigma_data_map->at( "S_"+ gamma_4idx_info->sub_gammas(1)); 
 
-    shared_ptr<GammaInfo> sigma_2idx_IK_info = GammaMap->at( gamma_4idx_info->sub_gammas(0));
-    shared_ptr<GammaInfo> sigma_2idx_KJ_info = GammaMap->at( gamma_4idx_info->sub_gammas(1));
+    shared_ptr<GammaInfo> sigma_2idx_IK_info = Gamma_info_map->at( gamma_4idx_info->sub_gammas(0));
+    shared_ptr<GammaInfo> sigma_2idx_KJ_info = Gamma_info_map->at( gamma_4idx_info->sub_gammas(1));
  
     IndexRange IBra_idxrng = CIvec_data_map->at( sigma_2idx_IK_info->Bra_info->name() )->indexrange()[0];
     IndexRange KKet_idxrng = CIvec_data_map->at( sigma_2idx_IK_info->Ket_info->name() )->indexrange()[0];
@@ -432,7 +432,7 @@ Gamma_Computer::Gamma_Computer::build_gamma_4idx_tensor(string gamma_4idx_name )
 
   string sigma_name = "S_"+gamma_4idx_name;
 
-  shared_ptr<GammaInfo> gamma_4idx_info = GammaMap->at(gamma_4idx_name) ;
+  shared_ptr<GammaInfo> gamma_4idx_info = Gamma_info_map->at(gamma_4idx_name) ;
   shared_ptr<Tensor_<double>> gamma_4idx ;
 
   if ( Sigma_data_map->find(sigma_name) != Sigma_data_map->end() ){ 
@@ -451,11 +451,11 @@ Gamma_Computer::Gamma_Computer::build_gamma_4idx_tensor(string gamma_4idx_name )
 
       } else {
          
-        shared_ptr<GammaInfo> gamma_2idx_info =  GammaMap->at(gamma_2idx_name);
+        shared_ptr<GammaInfo> gamma_2idx_info =  Gamma_info_map->at(gamma_2idx_name);
 
         if ( gamma_2idx_info->Bra_info->name() == gamma_2idx_info->Ket_info->name() ) {
            
-         build_sigma_2idx_tensor( GammaMap->at(gamma_2idx_name))  ;
+         build_sigma_2idx_tensor( Gamma_info_map->at(gamma_2idx_name))  ;
  
         } else {
            
@@ -469,6 +469,18 @@ Gamma_Computer::Gamma_Computer::build_gamma_4idx_tensor(string gamma_4idx_name )
     shared_ptr<Tensor_<double>> sigma_KijJ = Sigma_data_map->at( "S_"+gamma_4idx_info->sub_gammas(0) );
     shared_ptr<Tensor_<double>> sigma_KklI = Sigma_data_map->at( "S_"+gamma_4idx_info->sub_gammas(1) );
 
+    string IBra_name =  ( Gamma_info_map->at(gamma_4idx_info->sub_gammas(0)) )->Bra_info->name();
+    string KBra_name =  ( Gamma_info_map->at(gamma_4idx_info->sub_gammas(1)) )->Bra_info->name();
+
+    shared_ptr<Tensor_<double>> gamma_ij =  Tensor_Calc->contract_tensor_with_vector( sigma_KijJ, CIvec_data_map->at(IBra_name),  make_pair(2,0));
+    Gamma_info_map->emplace( "gamma_ij", Gamma_info_map->at(gamma_4idx_info->sub_gammas(0)));
+    Gamma_data_map->emplace( "gamma_ij", gamma_ij);
+    gamma_2idx_contract_test("gamma_ij");
+
+    shared_ptr<Tensor_<double>> gamma_kl =  Tensor_Calc->contract_tensor_with_vector( sigma_KklI, CIvec_data_map->at(KBra_name),  make_pair(2,0));
+    Gamma_info_map->emplace( "gamma_kl", Gamma_info_map->at(gamma_4idx_info->sub_gammas(1)));
+    Gamma_data_map->emplace( "gamma_kl", gamma_kl );
+    gamma_2idx_contract_test("gamma_kl");
     
     shared_ptr<Tensor_<double>> gamma_4idx_orig_order = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( sigma_KijJ, sigma_KklI, make_pair(2,2) ); 
 
@@ -614,7 +626,7 @@ bool Gamma_Computer::Gamma_Computer::gamma_2idx_contract_test( string gamma_name
    gamma_2idx_transposed->ax_plus_y(-1, gamma_2idx_orig_order) ;
 
 
-   int nel = GammaMap->at(gamma_name)->Bra_info->nele();
+   int nel = Gamma_info_map->at(gamma_name)->Bra_info->nele();
    if ( (abs(gamma_2idx_trace->rms() -nel) > 0.00000001 ) || (gamma_2idx_transposed->rms() > 0.00000001 )  )  passed = false;
 
    return passed;
@@ -648,10 +660,10 @@ bool Gamma_Computer::Gamma_Computer::gamma_4idx_contract_test( string gamma_name
    cout << " gamma_2idx_from_4idx_B->norm() - gamma_2idx_from_4idx_A->norm()  = " << gamma_2idx_from_4idx_B->norm()  << endl; 
    cout << " gamma_2idx_from_4idx_B->rms()  - gamma_2idx_from_4idx_A->rms()   = " << gamma_2idx_from_4idx_B->rms()  << endl; 
 
-   get_gamma_tensor( (GammaMap->at(gamma_name)->sub_gammas(1)) );
-   gamma_2idx_from_4idx_A->ax_plus_y(-(GammaMap->at(gamma_name)->Bra_info->nele()), Gamma_data_map->at(GammaMap->at(gamma_name)->sub_gammas(1)) );
-   cout << "gamma_2idx_from_4idx_A->norm() - gamma_2idx = "<< gamma_2idx_from_4idx_A->norm() << endl;
-   cout << "gamma_2idx_from_4idx_A->rms()  - gamma_2idx = "<< gamma_2idx_from_4idx_A->rms() << endl;
+   get_gamma_tensor( (Gamma_info_map->at(gamma_name)->sub_gammas(1)) );
+   gamma_2idx_from_4idx_A->ax_plus_y(-(Gamma_info_map->at(gamma_name)->Bra_info->nele()), Gamma_data_map->at(Gamma_info_map->at(gamma_name)->sub_gammas(1)) );
+   cout << "( gamma_2idx_from_4idx_A - gamma_2idx )->norm() = "<< gamma_2idx_from_4idx_A->norm() << endl;
+   cout << "( gamma_2idx_from_4idx_A - gamma_2idx )->rms()  = "<< gamma_2idx_from_4idx_A->rms() << endl;
 
    return ( gamma_2idx_from_4idx_A->norm() < 0.00000001 ) && ( gamma_2idx_from_4idx_B->norm() < 0.00000001 );
 
@@ -665,8 +677,8 @@ bool Gamma_Computer::Gamma_Computer::build_sigma_4idx_tensor_tests(shared_ptr<Ga
 
   bool passed = true;
 
-  shared_ptr<GammaInfo> sigma_2idx_KJ_info = GammaMap->at( gamma_4idx_info->sub_gammas(1));
-  shared_ptr<GammaInfo> sigma_2idx_IK_info = GammaMap->at( gamma_4idx_info->sub_gammas(0));
+  shared_ptr<GammaInfo> sigma_2idx_KJ_info = Gamma_info_map->at( gamma_4idx_info->sub_gammas(1) );
+  shared_ptr<GammaInfo> sigma_2idx_IK_info = Gamma_info_map->at( gamma_4idx_info->sub_gammas(0) );
 
   string IJ_Bra_name = gamma_4idx_info->Bra_info->name();
   string IJ_Ket_name = gamma_4idx_info->Ket_info->name();

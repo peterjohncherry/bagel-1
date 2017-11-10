@@ -35,6 +35,10 @@ namespace Tensor_Arithmetic_Utils {
  
      std::shared_ptr<std::vector<int>>  put_ctr_at_front(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
      std::shared_ptr<std::vector<int>>  put_ctr_at_back(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
+     
+     void put_ctrs_at_front( std::vector<int>& id_pos, std::vector<int>& ctr_todo);
+
+     void put_ctrs_at_front( std::vector<int>& id_pos, std::pair<int,int>& ctr_todo);
 
      void Print_Tensor(std::shared_ptr<Tensor_<double>> Tens, std::string name = "") ;
      

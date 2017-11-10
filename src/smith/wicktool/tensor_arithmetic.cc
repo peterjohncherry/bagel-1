@@ -10,6 +10,32 @@ using namespace bagel::SMITH::Tensor_Arithmetic_Utils;
 using namespace WickUtils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Bad routine using reordering because I just want something which works
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<Tensor_<DataType>>
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( shared_ptr<Tensor_<DataType>> Tens_in,  vector<int>& ctrs_todo) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic::contract_on_same_tensor_new" << endl;
+
+  vector<IndexRange> id_ranges_in = Tens_in->indexrange();
+  int num_ids  = id_ranges_in.size();
+
+  vector<int> new_order(num_ids);
+  iota(new_order.begin(), new_order.end(), 0);
+  
+  put_ctrs_at_front(new_order, ctrs_todo);
+
+  
+
+
+
+  shared_ptr<Tensor_<double>> Tens_out;
+
+  return Tens_out;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_ptr<Tensor_<DataType>> Tens_in,  pair<int,int> ctr_todo) {
@@ -33,6 +59,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_
 
    shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(unc_ranges_new);
    Tens_out->allocate();
+   Tens_out->zero();
    int num_ctr_blocks = unc_ranges_old[ctr_todo.first].range().size();
 
    //loops over index blocks where ctr1 = ctr2 
@@ -54,7 +81,6 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_
      const DataType done = 1.0; 
      do {
        
-       shared_ptr<vector<pair<size_t, size_t>>> bob = get_block_start( make_shared<vector<IndexRange>>(unc_ranges_old), block_pos ) ;
        vector<Index> Tens_id_blocks_old = *(get_rng_blocks(block_pos, unc_ranges_old)); 
        vector<Index> Tens_id_blocks_new(Tens_id_blocks_old.size()-2);
        for (int kk = 0 ; kk != unc_pos_new.size(); kk++)       
@@ -68,7 +94,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_
 
        shared_ptr<vector<int>> maxs2 = make_shared<vector<int>>(range_sizes.size(),0);
        shared_ptr<vector<int>> mins2 = make_shared<vector<int>>(maxs->size(), 0); 
-       shared_ptr<vector<int>> fvec2 = make_shared<vector<int>>(*mins); 
+       shared_ptr<vector<int>> fvec2 = make_shared<vector<int>>(*mins2); 
 
        //within index block, loop through data copying chunks where ctr1 = ctr2 
        //Has odd striding; probably very inefficient when ctr1 or ctr2 are the leading index.
@@ -77,6 +103,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_
        
        int ctr1_rlen = range_sizes[ctr1];          
        int tmp = total_size/(ctr1_rlen*ctr1_rlen); 
+
        unique_ptr<DataType[]>      Tens_data_block_old = Tens_in->get_block(Tens_id_blocks_old);
        std::unique_ptr<DataType[]> Tens_data_block_new(new DataType[tmp]);
        std::fill_n(Tens_data_block_new.get(), tmp, 0.0);
@@ -149,9 +176,11 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( std::sh
    // loops over index blocks with same ctr
    int num_ctr_blocks = unc_ranges_old[contracted_index_positions[0]].range().size();
    for (int ii = 0 ; ii != num_ctr_blocks ; ii++){ 
+
      shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(unc_ranges_old.size(),0);  
      shared_ptr<vector<int>> mins = make_shared<vector<int>>(unc_ranges_old.size(),0);  
      shared_ptr<vector<int>> maxs = make_shared<vector<int>>(unc_ranges_old.size());  
+
      for ( int jj = 0 ; jj != unc_ranges_old.size() ; jj++ ) 
         maxs->at(jj) = unc_ranges_old[jj].range().size()-1;
  
@@ -227,7 +256,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( std::sh
          } while (fvec_cycle_skipper_f2b(fvec2, maxs2, mins2));
        }
  
-       Tens_out->add_block( Tens_data_block_new, Tens_id_blocks_new );
+       Tens_out->put_block( Tens_data_block_new, Tens_id_blocks_new );
      } while (fvec_cycle_skipper(block_pos, maxs, mins ));
   } 
 
@@ -504,7 +533,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(shared_ptr<
      reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks ) ;
      }
       
-     reordered_block_tensor->put_block(reordered_data_block, *reordered_id_blocks);
+     reordered_block_tensor->put_block( reordered_data_block, *reordered_id_blocks );
 
    } while (fvec_cycle(block_pos, range_lengths, mins ));
 
