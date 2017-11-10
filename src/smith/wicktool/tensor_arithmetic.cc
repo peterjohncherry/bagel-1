@@ -9,13 +9,27 @@ using namespace bagel::SMITH::Tensor_Sorter;
 using namespace bagel::SMITH::Tensor_Arithmetic_Utils; 
 using namespace WickUtils;
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Lazy, so can substitute this in to test easily, should remove later
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<Tensor_<DataType>>
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( shared_ptr<Tensor_<DataType>> Tens_in,  pair<int,int>& ctrs_pair) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic::contract_on_same_tensor_new , pair " << endl;
+
+   vector<int> ctrs_pos = { ctrs_pair.first, ctrs_pair.second };
+
+   return contract_on_same_tensor_new( Tens_in, ctrs_pos) ;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Bad routine using reordering because I just want something which works
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( shared_ptr<Tensor_<DataType>> Tens_in,  vector<int>& ctrs_pos) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Tensor_Arithmetic::contract_on_same_tensor_new" << endl;
 
   vector<IndexRange> id_ranges_in = Tens_in->indexrange();
@@ -46,11 +60,10 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( sha
   Tens_out->allocate();
   Tens_out->zero();
 
-
   //loop over all blocks, unc and ctr . Loop over ctr in middle loop
   do {
-
-    shared_ptr<vector<Index>> id_blocks_in = get_rng_blocks(block_pos, id_ranges_in); 
+   
+    shared_ptr<vector<Index>> id_blocks_in = get_rng_blocks( block_pos, id_ranges_in ); 
 
     int unc_block_size = 1;
     vector<Index> unc_id_blocks(unc_pos.size());
@@ -69,7 +82,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( sha
       //redefine block position
       id_blocks_in = get_rng_blocks(block_pos, id_ranges_in);
 
-      vector<int> ctr_block_strides(ctrs_pos.size());
+      vector<int> ctr_block_strides(ctrs_pos.size(),1);
       ctr_block_strides.back() = unc_block_size;
       int ctr_total_stride = unc_block_size;
       for (int qq = ctrs_pos.size()-2; qq != -1 ; qq-- ) {
@@ -82,8 +95,10 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( sha
       unique_ptr<DataType[]> reordered_block = reorder_tensor_data( orig_block.get(), new_order, id_blocks_in );
 
       //looping over the id positions within the block
-      for ( int ctr_id = 0 ; ctr_id != id_blocks_in->at(ctrs_pos[0]).size(); ctr_id++)
+      for ( int ctr_id = 0 ; ctr_id != id_blocks_in->at(ctrs_pos[0]).size(); ctr_id++){
         blas::ax_plus_y_n(1.0, reordered_block.get() + (ctr_total_stride*ctr_id), unc_block_size, contracted_block.get() );
+    
+      }
       }
  
     }  

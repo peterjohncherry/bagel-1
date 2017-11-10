@@ -34,6 +34,9 @@ class Tensor_Arithmetic {
      contract_on_same_tensor_new( std::shared_ptr<Tensor_<DataType>> Tens_in,  std::vector<int>& ctrs ); 
 
      static std::shared_ptr<Tensor_<DataType>>
+     contract_on_same_tensor_new( std::shared_ptr<Tensor_<DataType>> Tens_in,  std::pair<int,int>& ctrs_pair ); 
+
+     static std::shared_ptr<Tensor_<DataType>>
      contract_different_tensors( std::shared_ptr<Tensor_<DataType>> Tens1_in, std::shared_ptr<Tensor_<DataType>> Tens2_in, std::pair<int,int> ctr_todo );
      
      static std::shared_ptr<Tensor_<DataType>>

@@ -548,11 +548,12 @@ void Tensor_Arithmetic_Utils::put_ctrs_at_front( vector<int>& ids_pos, vector<in
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Tensor_Arithmetic_Utils::put_ctrs_at_front" << endl;
 
-  for ( vector<int>::iterator iter = ids_pos.begin(); iter != ids_pos.end(); iter++  ) 
-    for ( int ctr_pos : ctrs_pos) 
-      if (  *iter == ctr_pos  )
+  for ( int ctr_pos : ctrs_pos) 
+    for ( vector<int>::iterator iter = ids_pos.begin(); iter != ids_pos.end(); iter++  ) 
+      if (  *iter == ctr_pos  ){
         ids_pos.erase(iter); 
-
+        break;
+      }
   ids_pos.insert(ids_pos.begin(), ctrs_pos.begin(), ctrs_pos.end());
 
   return;
@@ -562,6 +563,7 @@ void Tensor_Arithmetic_Utils::put_ctrs_at_front( vector<int>& ids_pos, vector<in
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Tensor_Arithmetic_Utils::put_ctrs_at_front( vector<int>& ids_pos, pair<int,int>& ctr_pair) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic_Utils::put_ctrs_at_front pair" << endl;
 
    vector<int> ctrs_pos = {ctr_pair.first, ctr_pair.second};
 
@@ -577,10 +579,12 @@ void Tensor_Arithmetic_Utils::put_ctrs_at_back( vector<int>& ids_pos, vector<int
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Tensor_Arithmetic_Utils::put_ctrs_at_back" << endl;
 
-  for ( vector<int>::iterator iter = ids_pos.begin(); iter != ids_pos.end(); iter++  ) 
-    for ( int ctr_pos : ctrs_pos) 
-      if (  *iter == ctr_pos  )
+  for ( int ctr_pos : ctrs_pos) 
+    for ( vector<int>::iterator iter = ids_pos.begin(); iter != ids_pos.end(); iter++  ) 
+      if (  *iter == ctr_pos  ){
         ids_pos.erase(iter); 
+        break;
+      }
 
   ids_pos.insert(ids_pos.end(), ctrs_pos.begin(), ctrs_pos.end());
 
