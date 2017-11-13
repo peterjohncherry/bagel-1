@@ -42,6 +42,8 @@ class Equation_Computer {
 
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<Dvec>>> dvec_sigma_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Determinants>>> det_old_map  ;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Civec>>> cvec_old_map; 
 
     std::shared_ptr<Equation<double>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
@@ -71,9 +73,9 @@ class Equation_Computer {
     
     std::shared_ptr<std::vector<std::shared_ptr<VectorB>>> compute_gammas(const int MM, const int NN ) ;
 
-    void compute_gamma12( std::shared_ptr<const Civec> IBra, std::shared_ptr<const Civec> JKet,
-                          std::shared_ptr<Determinants> det_IBra, std::shared_ptr<Determinants> det_JKet,
-                          std::string II_name, std::string JJ_name ) const;
+    void compute_sigma2( std::string II_name, std::string JJ_name );
+  
+    void get_gamma2_from_sigma2_and_civec( std::string IBra_name,  std::string JKet_name );
 
     void sigma_2a1(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::shared_ptr<Determinants> dets ) const ;
 
