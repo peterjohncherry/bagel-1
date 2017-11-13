@@ -12,66 +12,18 @@ using namespace Tensor_Arithmetic_Utils;
 //Gets the gammas in tensor format. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<shared_ptr<Tensor_<double>>>>
-Equation_Computer::Equation_Computer::get_gammas(int MM, int NN, string gamma_name){
+Equation_Computer::Equation_Computer::get_gammas(int MM, int NN){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Computer::Equation_Computer::get_gammas"  << endl;
-  cout << "Gamma name = " << gamma_name << endl;
 
-  //Gets list of necessary gammas which are needed by truncating the gamma_range vector
-  //e.g. [a,a,a,a,a,a] --> [a,a,a,a] --> [a,a]
-  shared_ptr<vector<string>> gamma_ranges_str = GammaMap->at(gamma_name)->id_ranges;
+  shared_ptr<Tensor_<double>> New_gamma = make_shared<Tensor_<double>>(); 
 
-  auto gamma_ranges =  vector<shared_ptr<vector<IndexRange>>>(gamma_ranges_str->size()/2);
-  for (int ii = 0 ; ii !=gamma_ranges.size(); ii++ ){ 
-    shared_ptr<vector<string>> gamma_ranges_str_tmp = make_shared<vector<string>>(gamma_ranges_str->begin(), gamma_ranges_str->end()-ii*2);
-    gamma_ranges[ii] = Get_Bagel_IndexRanges( gamma_ranges_str_tmp); 
-  } 
+  shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_vec ; 
+
+
+  return gamma_vec;
   
-  //Gamma data in vector format 
-  shared_ptr<vector<shared_ptr<VectorB>>> gamma_data_vec = compute_gammas( MM, NN ) ;
-  auto gamma_tensors = make_shared<vector<shared_ptr<Tensor_<double>>>>(0);
-  for ( int ii = gamma_ranges.size()-1; ii != -1;  ii-- ) {
- 
-     shared_ptr<vector<int>> range_lengths  = make_shared<vector<int>>(0); 
-     for (IndexRange idrng : *(gamma_ranges[ii]) )
-       range_lengths->push_back(idrng.range().size()-1); 
-     
-     shared_ptr<Tensor_<double>> new_gamma_tensor= make_shared<Tensor_<double>>(*(gamma_ranges[ii]));
-     new_gamma_tensor->allocate();
-     
-     shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
-     shared_ptr<vector<int>> mins = make_shared<vector<int>>(gamma_ranges[ii]->size(),0);  
-
-     do {
-       
-       vector<Index> gamma_id_blocks(gamma_ranges[ii]->size());
-       for( int jj = 0 ;  jj != gamma_id_blocks.size(); jj++)
-         gamma_id_blocks[jj] =  gamma_ranges[ii]->at(jj).range(block_pos->at(jj));
-
-       vector<int> range_sizes = get_sizes(gamma_id_blocks);
-       shared_ptr<vector<int>> gamma_tens_strides = get_Tens_strides(range_sizes);  
-       int gamma_block_size = accumulate( range_sizes.begin(), range_sizes.end(), 1, std::multiplies<int>() );
-       int gamma_block_pos = inner_product( block_pos->begin(), block_pos->end(), gamma_tens_strides->begin(),  0); 
-
-       unique_ptr<double[]> gamma_data_block(new double[gamma_block_size])  ;
-       std::fill_n(gamma_data_block.get(), gamma_block_size, 0.0);
-       blas::ax_plus_y_n(1.0,  gamma_data_vec->at(ii)->data()+gamma_block_pos, gamma_block_size, gamma_data_block.get());
-       new_gamma_tensor->put_block( gamma_data_block, gamma_id_blocks);
-     
-     } while (fvec_cycle(block_pos, range_lengths, mins ));
-     gamma_tensors->push_back(new_gamma_tensor);
-
-  //   cout << "Printing Gamma of order " << gamma_ranges[ii]->size()/2  << endl;
-  //   Print_Tensor(new_gamma_tensor);
-  }
-  cout << "out of loop" << endl;
-   
-  //Hack, fix this and use map instead
-  reverse(gamma_tensors->begin(), gamma_tensors->end() ) ;
-  
-  return gamma_tensors;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Computes the gamma matrix g_ij with elements c*_{M,I}< I | a*_{i} a_{j} | J > c_{N,J}
 // mangled version of routines in fci_rdm.cc

@@ -346,8 +346,6 @@ void CASPT2_ALT::CASPT2_ALT::Build_Compute_Lists() {
   return ;
 }
 
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string Expression_name) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -366,91 +364,87 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   
   Gamma_Machine->convert_civec_to_tensor( cc_->data(0), 0 );
 
-  //Get Amap for each gamma
-  vector<string> Gname_vec(Expr->G_to_A_map->size());
-  {
-    compare_string_length csl;
-    int ii = 0 ; 
-    for ( auto G_to_A_map_it : *(Expr->G_to_A_map) ){
-      Gname_vec[ii] = G_to_A_map_it.first;
-      Gamma_Machine->get_gamma_tensor( G_to_A_map_it.first);
-      ii++;
-    }
-    std::sort(Gname_vec.begin(), Gname_vec.end(), csl); 
-  }
+  shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gammas( 0, 0 );
 
-  cout << "getting_gammas" << endl;
-  shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gammas( 0, 0, Gname_vec[0] );
- 
-  cout << "Gamma names = [ " ; cout.flush();   for ( int ii = 0 ; ii != Gname_vec.size(); ii++ ) { cout << Gname_vec[ii] << " " ; cout.flush(); } cout << " ] " << endl;
-
-  cout << "A6" << endl;
-  for ( int ii = 0 ; ii != Gname_vec.size(); ii++ ) {
-  
-    string Gamma_name = Gname_vec[ii];
+  //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
+  for ( auto AG_contrib : *(Expr->GammaMap) ) {
+   
+    string Gamma_name = AG_contrib.first;
 
     // Build A_tensor to hold sums of different A-tensors
     shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Expr_computer->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
     A_combined_data->allocate();
     A_combined_data->zero();
 
-    // Loop through A-tensors needed for this gamma,
-    for ( auto A_contrib : *(Expr->G_to_A_map->at(Gamma_name))){
+    cout << " Gamma_name  = " << Gamma_name << endl;
+    cout << " A_contrib_names " << endl;
+    for ( auto A_contrib : *(Expr->G_to_A_map)){
+      cout << A_contrib.first << " " << endl;
+    }
 
-      //fudge, purging of A_contribs should happen in gamma_generator or Equation
-      bool skip = false ;
-      for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++) { 
-         if ( A_contrib.second.factor(qq).first != 0 || A_contrib.second.factor(qq).second !=0) 
-           break;
-         if ( qq == A_contrib.second.id_orders.size()-1 ) {
-           skip =true;
-         }
-      } 
-      if (skip){
-        cout << A_contrib.first << " does not contribute!!" << endl;
-        continue;
-      }
-    
-      cout << "=========================================================================================================" << endl;
-      cout << A_contrib.first << endl;
-      cout << "=========================================================================================================" << endl;
-      for (shared_ptr<CtrOp_base> ctr_op : *(Expr->ACompute_map->at(A_contrib.first))){
-        if ( ctr_op->ctr_type()[0] == 'd' ){
-          cout << "[" << ctr_op->T1name() << " , " << ctr_op->T2name() << " , (";
-          cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T2_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ; cout << ctr_op->ctr_type() << endl;
 
-        } else if (ctr_op->ctr_type()[0] == 's' ){
-          cout << "[" << ctr_op->T1name() << " , " << ctr_op->T1name() << " , (";
-          cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;   cout << ctr_op->ctr_type()  << endl;
-        } else { 
-          cout << ctr_op->ctr_type() << endl;
+    // Loop through A-tensors needed for this gamma, first check to see if gamma actually ahs any contributions (should redo things so this check is not necessary)
+    auto  A_contrib_loc =  Expr->G_to_A_map->find(Gamma_name) ;
+
+    if ( A_contrib_loc !=  Expr->G_to_A_map->find(Gamma_name) ) { 
+   
+      for ( auto A_contrib : *(Expr->G_to_A_map->at(Gamma_name))){
+      
+         cout << Gamma_name << "   2 " << endl;
+      
+        //fudge, purging of A_contribs should happen in gamma_generator or Equation
+        bool skip = false ;
+      
+        for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++) { 
+           if ( A_contrib.second.factor(qq).first != 0 || A_contrib.second.factor(qq).second !=0) 
+             break;
+           if ( qq == A_contrib.second.id_orders.size()-1 ) {
+             skip =true;
+           }
+        } 
+        if (skip){
+          cout << A_contrib.first << " does not contribute!!" << endl;
+          continue;
         }
+        cout << Gamma_name << " 3 " << endl;
+      
+        cout << "=========================================================================================================" << endl;
+        cout << A_contrib.first << endl;
+        cout << "=========================================================================================================" << endl;
+        for (shared_ptr<CtrOp_base> ctr_op : *(Expr->ACompute_map->at(A_contrib.first))){
+          if ( ctr_op->ctr_type()[0] == 'd' ){
+            cout << "[" << ctr_op->T1name() << " , " << ctr_op->T2name() << " , (";
+            cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T2_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ; cout << ctr_op->ctr_type() << endl;
+      
+          } else if (ctr_op->ctr_type()[0] == 's' ){
+            cout << "[" << ctr_op->T1name() << " , " << ctr_op->T1name() << " , (";
+            cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;   cout << ctr_op->ctr_type()  << endl;
+          } else { 
+            cout << ctr_op->ctr_type() << endl;
+          }
+          
+        }
+        cout << Gamma_name << "   4 " << endl;
         
+        cout << "=========================================================================================================" << endl;
+        Expr_computer->Calculate_CTP(A_contrib.first);
+        for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){ 
+          shared_ptr<Tensor_<double>> A_contrib_reordered = Expr_computer->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
+          A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), Data_map->at(A_contrib.first));
+        }
+        cout << "added " << A_contrib.first << endl; 
+        cout << "=========================================================================================================" << endl << endl;
       }
       
-      cout << "=========================================================================================================" << endl;
-      Expr_computer->Calculate_CTP(A_contrib.first);
-      for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){ 
-        shared_ptr<Tensor_<double>> A_contrib_reordered = Expr_computer->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
-        A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), Data_map->at(A_contrib.first));
+      
+      if ( Gamma_name != "ID" ) {
+        //  double bob = A_combined_data->dot_product(gamma_tensors->at(ii));
+        double bob = 1;
+        result += bob; // A_combined_data->dot_product(gamma_tensors->at(ii));  
+      } else { 
+        result += A_combined_data->rms(); //really dumb, and wrong for negative values...
       }
-      cout << "added " << A_contrib.first << endl; 
-      cout << "=========================================================================================================" << endl << endl;
     }
-  
- 
-  if ( Gamma_name != "ID" ) {
-    cout << " gamma_tensors->at("<<ii<<")->rms()  = " << gamma_tensors->at(ii)->rms() << endl;
-    cout << " gamma_tensors->at("<<ii<<")->norm() = " << gamma_tensors->at(ii)->norm() << endl;
-    cout << " A_combined_data->norm()       = " << A_combined_data->norm() << endl;
-    cout << " gamma_tensors->at("<<ii<<")->size_alloc() = " << gamma_tensors->at(ii)->size_alloc() << endl;
-    cout << " A_combined_data->size_alloc()       = " << A_combined_data->size_alloc() << endl;
-    double bob = A_combined_data->dot_product(gamma_tensors->at(ii));
-    cout <<  "A_combined_data->dot_product(gamma_tensors->at("<<ii<<")) = " <<  bob  << endl;
-    result += bob; // A_combined_data->dot_product(gamma_tensors->at(ii));  
-  } else { 
-    result += A_combined_data->rms(); //really dumb, and wrong for negative results...
-  }
   }   
   cout << Expression_name << " = " << result << endl;
   scalar_results_map->emplace( Expression_name, result );

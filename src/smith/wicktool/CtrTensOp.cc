@@ -146,10 +146,12 @@ cout << endl <<  "CtrTensorPart<DType>::FullContract NEWVER : CTP name =  " << n
     CTP_out->dependencies.emplace(name);
 
     cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done->back().first << ","<< ctrs_done->back().second << ") to get " << CTP_out_name ; cout.flush();
-    cout << " added to " << name << "'s Acompute_list"<<  endl;
-    ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done->back(), ctrs_rel_pos_in, "same_T new" ));
+ 
+    ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name << "'s Acompute_list"<<  endl;
+
     shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list_out =  make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list);
     ACompute_map->emplace(CTP_out_name, ACompute_list_out);
+
     cout << "Acompute_list->size() =" << ACompute_list->size() << endl;
     dependencies.emplace(CTP_in_name);
   } 

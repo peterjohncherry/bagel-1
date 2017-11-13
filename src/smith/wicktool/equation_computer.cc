@@ -247,7 +247,8 @@ cout << "Get_Bagel_const_IndexRanges 1arg" << endl;
 shared_ptr<vector<shared_ptr<const IndexRange>>>
 Equation_Computer::Equation_Computer::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str, shared_ptr<vector<int>> unc_pos){ 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Equation_Computer::Get_Bagel_const_IndexRanges 2arg" << endl;
+cout << "Equation_Computer::Get_Bagel_const_IndexRanges 2arg" ; print_vector(*ranges_str, "ranges_str" ) ;
+cout <<  "  "; cout.flush();  print_vector(*unc_pos, "unc_pos" ) ; cout << endl;
 
   vector<shared_ptr<const IndexRange>>  ranges_Bagel(unc_pos->size());
   for ( int ii = 0 ; ii != unc_pos->size() ; ii++) 
@@ -259,7 +260,7 @@ cout << "Equation_Computer::Get_Bagel_const_IndexRanges 2arg" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<IndexRange>> Equation_Computer::Equation_Computer::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Equation_Computer::Get_Bagel_IndexRanges 1arg" << endl;
+cout << "Equation_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str, "ranges_str" ) ; cout << endl;
 
   auto ranges_Bagel = make_shared<vector<IndexRange>>(0);
   for ( auto rng : *ranges_str) 

@@ -64,7 +64,7 @@ class Equation_Computer {
     ////////////Gamma routines (RDM class based) //////////////////
 
     std::shared_ptr<std::vector<std::shared_ptr<Tensor_<double>>>>
-    get_gammas(int MM , int NN, std::string gamma_name);
+    get_gammas( int MM , int NN );
     
     std::shared_ptr<std::vector<std::shared_ptr<VectorB>>> compute_gammas(const int MM, const int NN ) ;
 
