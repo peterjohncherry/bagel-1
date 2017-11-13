@@ -75,13 +75,20 @@ class Equation_Computer {
     
     void get_wfn_data( std::shared_ptr<CIVecInfo<double>>  cvec_info );
 
-    void compute_sigma2( std::string II_name, std::string JJ_name );
+
+    void compute_sigma2( std::string II_name, std::string JJ_name, std::string sigma_name );
+
+    void compute_sigmaN( std::string predecessor_name, std::string gamma_name );
   
     void get_gamma2_from_sigma2_and_civec( std::string IBra_name,  std::string JKet_name );
 
     void sigma_2a1(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::shared_ptr<Determinants> dets ) const ;
 
     void sigma_2a2(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::shared_ptr<Determinants> dets ) const ;
+
+    void sigma_2a1( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<Determinants> dets );
+
+    void sigma_2a2( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<Determinants> dets ) ;
 
     /////////// Utility routines /////////////////////////
 

@@ -370,66 +370,32 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
    
     string Gamma_name = AG_contrib.first;
 
-
     // Build A_tensor to hold sums of different A-tensors
     shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Expr_computer->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
     A_combined_data->allocate();
     A_combined_data->zero();
-
     cout << " Gamma_name  = " << Gamma_name << endl;
-    cout << " A_contrib_names " << endl;
-    for ( auto A_contrib : *(Expr->G_to_A_map)){
-      cout << A_contrib.first << " " << endl;
-    }
 
-
-    // Loop through A-tensors needed for this gamma, first check to see if gamma actually ahs any contributions (should redo things so this check is not necessary)
+    // Loop through A-tensors needed for this gamma
     auto  A_contrib_loc =  Expr->G_to_A_map->find(Gamma_name) ;
-
+  
     if ( A_contrib_loc !=  Expr->G_to_A_map->end() ) { 
    
       for ( auto A_contrib : *(Expr->G_to_A_map->at(Gamma_name))){
+    
+        if (check_AContrib_factors(A_contrib.second))
+          continue;
       
          shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gamma( Gamma_name );
          cout << Gamma_name << "   2 " << endl;
       
         //fudge, purging of A_contribs should happen in gamma_generator or Equation
         bool skip = false ;
-      
-        for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++) { 
-           if ( A_contrib.second.factor(qq).first != 0 || A_contrib.second.factor(qq).second !=0) 
-             break;
-           if ( qq == A_contrib.second.id_orders.size()-1 ) {
-             skip =true;
-           }
-        } 
-
-        if (skip){
-          cout << A_contrib.first << " does not contribute!!" << endl;
-          continue;
-        }
-        cout << Gamma_name << " 3 " << endl;
-      
-        cout << "=========================================================================================================" << endl;
-        cout << A_contrib.first << endl;
-        cout << "=========================================================================================================" << endl;
-        for (shared_ptr<CtrOp_base> ctr_op : *(Expr->ACompute_map->at(A_contrib.first))){
-          if ( ctr_op->ctr_type()[0] == 'd' ){
-            cout << "[" << ctr_op->T1name() << " , " << ctr_op->T2name() << " , (";
-            cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T2_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ; cout << ctr_op->ctr_type() << endl;
-      
-          } else if (ctr_op->ctr_type()[0] == 's' ){
-            cout << "[" << ctr_op->T1name() << " , " << ctr_op->T1name() << " , (";
-            cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;   cout << ctr_op->ctr_type()  << endl;
-          } else { 
-            cout << ctr_op->ctr_type() << endl;
-          }
-          
-        }
-        cout << Gamma_name << "   4 " << endl;
-        
-        cout << "=========================================================================================================" << endl;
+             cout << Gamma_name << " 3 " << endl;
+	print_AContraction_list(Expr->ACompute_map->at(A_contrib.first), A_contrib.first);
+        cout << Gamma_name << " 4 " << endl;
         Expr_computer->Calculate_CTP(A_contrib.first);
+        cout << Gamma_name << " 5 " << endl;
         for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){ 
           shared_ptr<Tensor_<double>> A_contrib_reordered = Expr_computer->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
           A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), Data_map->at(A_contrib.first));
@@ -454,6 +420,45 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   return;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CASPT2_ALT::CASPT2_ALT::print_AContraction_list(shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list, string A_contrib_name ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  cout << "=========================================================================================================" << endl;
+  cout << A_contrib_name << endl;
+  cout << "=========================================================================================================" << endl;
+  for (shared_ptr<CtrOp_base> ctr_op : *ACompute_list ){
+    if ( ctr_op->ctr_type()[0] == 'd' ){
+      cout << "[" << ctr_op->T1name() << " , " << ctr_op->T2name() << " , (";
+      cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T2_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ; cout << ctr_op->ctr_type() << endl;
+  
+    } else if (ctr_op->ctr_type()[0] == 's' ){
+      cout << "[" << ctr_op->T1name() << " , " << ctr_op->T1name() << " , (";
+      cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;   cout << ctr_op->ctr_type()  << endl;
+    } else { 
+      cout << ctr_op->ctr_type() << endl;
+    }
+    
+  }
+  cout << "=========================================================================================================" << endl;
+ 
+  return;
+}
+ 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool CASPT2_ALT::CASPT2_ALT::check_AContrib_factors(AContribInfo& AC_info ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  bool  skip = false;
+  for ( int qq = 0 ; qq != AC_info.id_orders.size(); qq++) { 
+     if ( AC_info.factor(qq).first != 0 || AC_info.factor(qq).second !=0) 
+       break;
+     if ( qq == AC_info.id_orders.size()-1 ) {
+       skip =true;
+     }
+  } 
+  return skip;
+}
 
  // shared_ptr<vector<string>> free_ranges = make_shared<vector<string>>(vector<string> {"free", "free", "free", "free"});
  // shared_ptr<vector<string>> omega_ranges = make_shared<vector<string>>(vector<string> {"notcor", "notcor", "notvir", "notvir"});

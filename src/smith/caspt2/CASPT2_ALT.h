@@ -112,6 +112,9 @@ class CASPT2_ALT {
     void set_target_info( std::shared_ptr<std::vector<int>> states_of_interest ) ;
     void set_range_info( std::shared_ptr<std::vector<int>> states_of_interest );
 
+    void print_AContraction_list(std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>> ACompute_list, std::string A_Contrib_name );
+    bool check_AContrib_factors(AContribInfo& AC_info );
+
     struct compare_string_length {
       bool operator()(const std::string& first, const std::string& second) {
           return first.size() > second.size();

@@ -20,24 +20,25 @@ Equation_Computer::Equation_Computer::get_gamma(string gamma_name){
   cout << "gamma_name = " <<  gamma_name << endl;
 
   shared_ptr<GammaInfo> gamma_info = GammaMap->at(gamma_name);
+  string IBra_name = gamma_info->Bra_info->name();
 
   cout << "got " << gamma_name << " info "<< endl;
 
   //note this has reverse iterators!
-  if (gamma_info->id_ranges->size() > 2 ) { 
+  if (gamma_info->order > 2 ) { 
     
     get_gamma(gamma_info->predecessor_gamma_name);
  
+    compute_sigmaN( gamma_info->predecessor_gamma_name, gamma_info->name );
+
   } else {
 
-    string IBra_name = gamma_info->Bra_info->name();
     string JKet_name = gamma_info->Ket_info->name();
-
     get_wfn_data( gamma_info->Bra_info );
     get_wfn_data( gamma_info->Ket_info );
    
-    compute_sigma2( IBra_name, JKet_name );
-    get_gamma2_from_sigma2_and_civec( IBra_name, JKet_name );
+    compute_sigma2( IBra_name, JKet_name, gamma_info->name );
+    get_gamma2_from_sigma2_and_civec( IBra_name, gamma_name );
  }
 
   cout << "D" << endl;
@@ -45,32 +46,103 @@ Equation_Computer::Equation_Computer::get_gamma(string gamma_name){
   return gamma_vec;                              
   
 }
-   
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer::Equation_Computer::get_wfn_data( shared_ptr<CIVecInfo<double>>  cvec_info ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  string cvec_name = cvec_info->name();
-  auto cvec_det_loc = det_old_map->find(cvec_name); 
-  if( cvec_det_loc == det_old_map->end()){
-    int II = cvec_info->state_num();
-    shared_ptr<const Determinants> det_cvec_orig = cc_->data(II)->det();
-    shared_ptr<Determinants> det_cvec = make_shared<Determinants>(det_cvec_orig->norb(), det_cvec_orig->nelea(), det_cvec_orig->neleb(), false, /*mute=*/true);
-    det_old_map->emplace( cvec_name, det_cvec);
-    cvec_old_map->emplace( cvec_name, make_shared<Civec>(*(cc_->data(II))) );
-  }  
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::compute_sigmaN( string predecessor_gamma_name, string sigmaN_name)  {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "compute_sigma2" << endl;
 
+  shared_ptr<GammaInfo>  predecessor_info = GammaMap->at(predecessor_gamma_name);
+  shared_ptr<GammaInfo>  sigma_info = GammaMap->at(sigmaN_name);
+
+  string  Bra_name = sigma_info->Bra_info->name();
+  string  Ket_name = sigma_info->Ket_info->name();
+
+  if (Bra_name == Ket_name) { 
+
+    shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name ); 
+
+    shared_ptr<Dvec> pred_sigma = dvec_sigma_map->at( predecessor_gamma_name );
+
+    int orb_dim = pow(Ket_det->norb(), predecessor_info->order);
+    int orb2 = Ket_det->norb()*Ket_det->norb();
+
+    shared_ptr<Dvec> sigmaN = make_shared<Dvec>( Ket_det, orb_dim  );
+  
+    double* sigmaN_ptr = sigmaN->data(0)->data();
+    double* pred_sigma_ptr = pred_sigma->data(0)->data();
+
+    for ( int  ii = 0; ii != orb_dim; ii++) {
+    
+      sigma_2a1( pred_sigma_ptr, sigmaN_ptr, Ket_det );
+      sigma_2a2( pred_sigma_ptr, sigmaN_ptr, Ket_det );
+    
+      sigmaN_ptr   += Ket_det->size()*orb2;
+      pred_sigma_ptr  += Ket_det->size();
+
+    }
+
+    dvec_sigma_map->emplace( sigmaN_name, sigmaN );
+
+  } else {
+
+    cout << "spin transitions sigmas not implemented yet " << endl;  
+
+  }
   return;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::sigma_2a1(double* cvec_ptr, double* sigma_ptr, shared_ptr<Determinants> dets  )  {
+//////////////////////////////////////////////////////////////////////////////////////////////
+  //cout << "sigma_2a1" << endl;
+  const int lb = dets->lenb();
+  const int ij = dets->norb()*dets->norb();
+
+  for (int ip = 0; ip != ij; ++ip) {
+    sigma_ptr += ip* dets->size(); 
+
+    //DetMap(size_t t, int si, size_t s, int o) : target(t), sign(si), source(s), ij(o) {}
+    for (auto& iter : dets->phia(ip)) {
+      const double sign = static_cast<double>(iter.sign);
+      double* const target_array = sigma_ptr + iter.source*lb;
+      blas::ax_plus_y_n(sign, cvec_ptr + iter.target*lb, lb, target_array);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::sigma_2a2( double* cvec_ptr, double* sigma_ptr, shared_ptr<Determinants> dets) {
+///////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "sigma_2a2" << endl;
+  const int la = dets->lena();
+  const int ij = dets->norb()*dets->norb();
+
+  for (int i = 0; i < la; ++i) {
+    double* source_array0 = cvec_ptr+i;
+
+    for (int ip = 0; ip != ij; ++ip) {
+      double* target_array0 = sigma_ptr + ip;
+
+      for (auto& iter : dets->phib(ip)) {
+        const double sign = static_cast<double>(iter.sign);
+        target_array0[iter.source] += sign * source_array0[iter.target];
+      }
+    }
+  }
+}
+ 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Equation_Computer::Equation_Computer::get_gamma2_from_sigma2_and_civec( string IBra_name, string sigma2_Ket_name){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "get_gamma2_from_sigma2_and_civec" << endl; 
 
-  shared_ptr<Dvec>         sigma2_Ket = dvec_sigma_map->at(sigma2_Ket_name); 
-  shared_ptr<Civec>        IBra       = cvec_old_map->at(IBra_name);
-  shared_ptr<Determinants> dets       = det_old_map->at(sigma2_Ket_name); 
-  
+  cout << "sigma2_Ket_name = " << sigma2_Ket_name << endl;
+  shared_ptr<Dvec>         sigma2_Ket = dvec_sigma_map->at( sigma2_Ket_name );  cout << "IBra_name = " << IBra_name << endl;
+  shared_ptr<Civec>        IBra       = cvec_old_map->at( IBra_name );          cout << "get dets" << endl;
+  shared_ptr<Determinants> dets       = det_old_map->at( IBra_name ); 
+ 
+  cout << "ham " << endl; 
   int norb = dets->norb();
 
   unique_ptr<double[]> gamma2_data(new double[ norb*norb]);
@@ -92,7 +164,7 @@ cout << "get_gamma2_from_sigma2_and_civec" << endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer::Equation_Computer::compute_sigma2( string IBra_name, string JKet_name )  {
+void Equation_Computer::Equation_Computer::compute_sigma2( string IBra_name, string JKet_name, string sigma2_JKet_name)  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "compute_sigma2" << endl;
 
@@ -106,8 +178,7 @@ void Equation_Computer::Equation_Computer::compute_sigma2( string IBra_name, str
     sigma_2a1( JKet, sigma2_JKet, JKet_det );
     sigma_2a2( JKet, sigma2_JKet, JKet_det );
     
-    dvec_sigma_map->emplace( JKet_name, sigma2_JKet );
-    dvec_sigma_map->emplace( IBra_name, sigma2_JKet );
+    dvec_sigma_map->emplace( sigma2_JKet_name, sigma2_JKet );
 
   } else {
 
@@ -162,7 +233,23 @@ void Equation_Computer::Equation_Computer::sigma_2a2(shared_ptr<const Civec> cve
     }
   }
 }
+   
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Equation_Computer::Equation_Computer::get_wfn_data( shared_ptr<CIVecInfo<double>>  cvec_info ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  string cvec_name = cvec_info->name();
+  auto cvec_det_loc = det_old_map->find(cvec_name); 
+  if( cvec_det_loc == det_old_map->end()){
+    int II = cvec_info->state_num();
+    shared_ptr<const Determinants> det_cvec_orig = cc_->data(II)->det();
+    shared_ptr<Determinants> det_cvec = make_shared<Determinants>(det_cvec_orig->norb(), det_cvec_orig->nelea(), det_cvec_orig->neleb(), false, /*mute=*/true);
+    det_old_map->emplace( cvec_name, det_cvec);
+    cvec_old_map->emplace( cvec_name, make_shared<Civec>(*(cc_->data(II))) );
+  }  
+
+  return;
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //   shared_ptr<Dvec> sigma_kl_JKet;
 //  if (IBra != JKet) {
