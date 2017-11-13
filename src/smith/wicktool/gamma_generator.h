@@ -31,6 +31,7 @@ class GammaInfo {
      std::shared_ptr<std::vector<std::pair<std::pair<int,int>,std::pair<int,int>>>> ssector_sequence;
      std::pair<int,int> factor ;
      std::string name;     
+     int order ;
      std::shared_ptr<std::vector<std::string>> one_el_gammas;
 
      std::shared_ptr<CIVecInfo<double>> Bra_info;
@@ -45,6 +46,8 @@ class GammaInfo {
      GammaInfo(){};
      ~GammaInfo(){};
 
+
+     std::string predecessor_gamma_name; 
      std::string sub_gammas(int  ii ) { return sub_gammas_[ii] ; };
      std::vector<std::string> sub_gammas() { return sub_gammas_ ; };
 

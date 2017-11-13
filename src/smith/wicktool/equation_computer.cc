@@ -34,6 +34,10 @@ Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const S
 
   Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
 
+  //temporary for building gamma checking routine
+  dvec_sigma_map = make_shared<std::map< std::string, std::shared_ptr<Dvec>>>();
+  det_old_map    = make_shared<std::map< std::string, std::shared_ptr<Determinants>>>();
+  cvec_old_map   = make_shared<std::map< std::string, std::shared_ptr<Civec>>>();
 }  
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

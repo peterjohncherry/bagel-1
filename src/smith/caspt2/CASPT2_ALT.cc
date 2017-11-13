@@ -364,12 +364,12 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   
   Gamma_Machine->convert_civec_to_tensor( cc_->data(0), 0 );
 
-  shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gammas( 0, 0 );
 
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(Expr->GammaMap) ) {
    
     string Gamma_name = AG_contrib.first;
+
 
     // Build A_tensor to hold sums of different A-tensors
     shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Expr_computer->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
@@ -386,10 +386,11 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
     // Loop through A-tensors needed for this gamma, first check to see if gamma actually ahs any contributions (should redo things so this check is not necessary)
     auto  A_contrib_loc =  Expr->G_to_A_map->find(Gamma_name) ;
 
-    if ( A_contrib_loc !=  Expr->G_to_A_map->find(Gamma_name) ) { 
+    if ( A_contrib_loc !=  Expr->G_to_A_map->end() ) { 
    
       for ( auto A_contrib : *(Expr->G_to_A_map->at(Gamma_name))){
       
+         shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gamma( Gamma_name );
          cout << Gamma_name << "   2 " << endl;
       
         //fudge, purging of A_contribs should happen in gamma_generator or Equation

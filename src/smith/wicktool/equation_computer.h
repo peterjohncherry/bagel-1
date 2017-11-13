@@ -9,6 +9,8 @@
 #include <src/util/f77.h>
 #include <src/smith/wicktool/tensor_sorter.h>
 #include <src/smith/wicktool/tensor_arithmetic.h>
+#include <src/smith/wicktool/states_info.h>
+
 
 namespace bagel {
 namespace SMITH { 
@@ -69,9 +71,9 @@ class Equation_Computer {
     ////////////Gamma routines (RDM class based) //////////////////
 
     std::shared_ptr<std::vector<std::shared_ptr<Tensor_<double>>>>
-    get_gammas( int MM , int NN );
+    get_gamma( std::string gamma_name );
     
-    std::shared_ptr<std::vector<std::shared_ptr<VectorB>>> compute_gammas(const int MM, const int NN ) ;
+    void get_wfn_data( std::shared_ptr<CIVecInfo<double>>  cvec_info );
 
     void compute_sigma2( std::string II_name, std::string JJ_name );
   

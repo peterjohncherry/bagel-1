@@ -23,6 +23,9 @@ cout << "GammaInfo::GammaInfo" <<  endl;
   Bra_info =  Bra_info_in;
   Ket_info =  Ket_info_in;
 
+  order = idxs_pos->size();
+  
+
   id_ranges = make_shared<vector<string>>(idxs_pos->size());
   aops      = make_shared<vector<bool>>(idxs_pos->size());
 
@@ -51,6 +54,13 @@ cout << "GammaInfo::GammaInfo" <<  endl;
     }
     cout << "] " << endl << endl;
   }
+
+  if ( (idxs_pos->size() > 3 ) ) {
+    shared_ptr<vector<int>> predecessor_idxs_pos =  make_shared<vector<int>>(vector<int>(idxs_pos->begin()+2, idxs_pos->end()));
+    predecessor_gamma_name = get_gamma_name( full_idx_ranges, full_aops_vec, predecessor_idxs_pos, Bra_info->name(), Ket_info->name());   
+    if ( Gamma_map->find( predecessor_gamma_name)  == Gamma_map->end() )
+      Gamma_map->emplace( predecessor_gamma_name, make_shared<GammaInfo>( Bra_info, Ket_info, full_aops_vec, full_idx_ranges, predecessor_idxs_pos, Gamma_map  ));
+  } 
 
   //depends on floor in integer division
 
