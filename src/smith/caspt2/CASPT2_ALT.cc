@@ -402,6 +402,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
              skip =true;
            }
         } 
+
         if (skip){
           cout << A_contrib.first << " does not contribute!!" << endl;
           continue;

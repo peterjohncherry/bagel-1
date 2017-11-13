@@ -40,6 +40,9 @@ class Equation_Computer {
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
 
+
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Dvec>>> dvec_sigma_map;
+
     std::shared_ptr<Equation<double>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
 
@@ -68,18 +71,13 @@ class Equation_Computer {
     
     std::shared_ptr<std::vector<std::shared_ptr<VectorB>>> compute_gammas(const int MM, const int NN ) ;
 
-    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
-    compute_gamma12(const int MM, const int NN ) ;
- 
-    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
-    compute_gamma12_from_civec(std::shared_ptr<const Civec> cbra, std::shared_ptr<const Civec> cket) const ;
- 
-    std::tuple<std::shared_ptr<RDM<1>>, std::shared_ptr<RDM<2>>, std::shared_ptr<RDM<3>> >
-    compute_gamma12_last_step(std::shared_ptr<const Dvec> dbra, std::shared_ptr<const Dvec> dket, std::shared_ptr<const Civec> cibra) const ;
+    void compute_gamma12( std::shared_ptr<const Civec> IBra, std::shared_ptr<const Civec> JKet,
+                          std::shared_ptr<Determinants> det_IBra, std::shared_ptr<Determinants> det_JKet,
+                          std::string II_name, std::string JJ_name ) const;
 
-    void sigma_2a1(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
+    void sigma_2a1(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::shared_ptr<Determinants> dets ) const ;
 
-    void sigma_2a2(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma) const ;
+    void sigma_2a2(std::shared_ptr<const Civec> cvec, std::shared_ptr<Dvec> sigma, std::shared_ptr<Determinants> dets ) const ;
 
     /////////// Utility routines /////////////////////////
 
