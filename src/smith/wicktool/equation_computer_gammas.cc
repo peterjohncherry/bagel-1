@@ -26,9 +26,8 @@ Equation_Computer::Equation_Computer::get_gamma(string gamma_name){
 
   //note this has reverse iterators!
   if (gamma_info->order > 2 ) { 
-    
+
     get_gamma(gamma_info->predecessor_gamma_name);
- 
     compute_sigmaN( gamma_info->predecessor_gamma_name, gamma_info->name );
 
   } else {
@@ -36,10 +35,14 @@ Equation_Computer::Equation_Computer::get_gamma(string gamma_name){
     string JKet_name = gamma_info->Ket_info->name();
     get_wfn_data( gamma_info->Bra_info );
     get_wfn_data( gamma_info->Ket_info );
-   
+
+    compute_sigma2_test( IBra_name, JKet_name );
+    cout << "goats" << endl;
     compute_sigma2( IBra_name, JKet_name, gamma_info->name );
     get_gamma2_from_sigma2_and_civec( IBra_name, gamma_name );
+
  }
+
 
   cout << "D" << endl;
 
@@ -48,81 +51,182 @@ Equation_Computer::Equation_Computer::get_gamma(string gamma_name){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void  Equation_Computer::Equation_Computer::compute_sigma2_test( string Bra_name, string Ket_name ) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ cout << "Equation_Computer::compute_sigma2_test" <<endl;
+
+  shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name ); 
+  shared_ptr<Civec> Ket_A = make_shared<Civec>(* (cvec_old_map->at( Ket_name )));
+  shared_ptr<Civec> Ket_B = make_shared<Civec>(* (cvec_old_map->at( Ket_name )));
+  int norb = Ket_det->norb();
+  
+  shared_ptr<Dvec> sigma2_A = make_shared<Dvec>( Ket_det, (norb*norb) );
+  shared_ptr<Dvec> sigma2_B = make_shared<Dvec>( Ket_det, (norb*norb) );
+
+  sigma_2a1(Ket_A, sigma2_A, Ket_det );
+
+  double* Ket_B_ptr  = Ket_B->data();
+  double* sigma2_B_ptr  = sigma2_B->data(0)->data();
+  sigma_2a1( Ket_B_ptr, sigma2_B_ptr, Ket_det );
+
+
+  for (int ii = 0 ; ii != norb*norb*Ket_det->size() ; ii++ ) 
+     cout << "2a1_diff[" << ii <<  "] = " << sigma2_A->data(0)->data(ii) - sigma2_B->data(0)->data(ii) << endl;
+
+ 
+  sigma_2a2(Ket_A, sigma2_A, Ket_det );
+
+  Ket_B_ptr  = Ket_B->data();
+  sigma2_B_ptr  = sigma2_B->data(0)->data();
+  sigma_2a2( Ket_B_ptr, sigma2_B_ptr, Ket_det );
+
+  for (int ii = 0 ; ii != norb*norb*Ket_det->size() ; ii++ ) 
+     cout << "2a2_diff[" << ii <<  "] = " << sigma2_A->data(0)->data(ii) - sigma2_B->data(0)->data(ii) << endl;
+
+  cout << "gamma2_test orig routines" << endl;
+  for ( int ii = 0 ; ii != norb; ii++ ){ 
+    for ( int jj = 0 ; jj != norb; jj++ ){
+       cout << ddot_( Ket_det->size(), sigma2_A->data(norb*ii + jj)->data(), 1, Ket_A->data(), 1) << " "; cout.flush(); 
+     } 
+    cout <<endl;
+  }
+
+  cout << "gamma2_test ptr_routines" << endl;
+  for ( int ii = 0 ; ii != norb; ii++ ){ 
+    for ( int jj = 0 ; jj != norb; jj++ ){
+       cout << ddot_( Ket_det->size(), sigma2_B->data(norb*ii + jj)->data(), 1, Ket_B->data(), 1) << " "; cout.flush(); 
+     } 
+    cout <<endl;
+  }
+  cout <<endl; cout << " ham " <<endl; 
+  return;
+
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Equation_Computer::Equation_Computer::compute_sigmaN( string predecessor_gamma_name, string sigmaN_name)  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "compute_sigma2" << endl;
+  cout << "Equation_Computer::compute_sigmaN" << endl;
 
   shared_ptr<GammaInfo>  predecessor_info = GammaMap->at(predecessor_gamma_name);
-  shared_ptr<GammaInfo>  sigma_info = GammaMap->at(sigmaN_name);
+  shared_ptr<GammaInfo>  sigmaN_info = GammaMap->at(sigmaN_name);
 
-  string  Bra_name = sigma_info->Bra_info->name();
-  string  Ket_name = sigma_info->Ket_info->name();
+  string  Bra_name = sigmaN_info->Bra_info->name();
+  string  Ket_name = sigmaN_info->Ket_info->name();
+  
 
   if (Bra_name == Ket_name) { 
+    cout << "(Bra_name == Ket_name)  =  " <<  Bra_name << " == " << Ket_name << endl;
+    shared_ptr<Civec>  IBra = cvec_old_map->at( Bra_name );          cout << "get dets" << endl;
+
+    int sorder = sigmaN_info->order; 
 
     shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name ); 
-
     shared_ptr<Dvec> pred_sigma = dvec_sigma_map->at( predecessor_gamma_name );
 
-    int orb_dim = pow(Ket_det->norb(), predecessor_info->order);
+    int orb_dim = pow(Ket_det->norb(), sorder-2);
     int orb2 = Ket_det->norb()*Ket_det->norb();
 
-    shared_ptr<Dvec> sigmaN = make_shared<Dvec>( Ket_det, orb_dim  );
+    shared_ptr<Dvec> sigmaN = make_shared<Dvec>( Ket_det, orb_dim*orb2  );
   
+    cout << "A4" << endl;
     double* sigmaN_ptr = sigmaN->data(0)->data();
     double* pred_sigma_ptr = pred_sigma->data(0)->data();
 
+    cout << "A5" << endl;
+    int sigmaN_ptr_shift = 0;
+    int pred_sigma_shift = 0;
+
+    cout << "orb_dim = " << orb_dim << endl;
     for ( int  ii = 0; ii != orb_dim; ii++) {
-    
       sigma_2a1( pred_sigma_ptr, sigmaN_ptr, Ket_det );
       sigma_2a2( pred_sigma_ptr, sigmaN_ptr, Ket_det );
     
-      sigmaN_ptr   += Ket_det->size()*orb2;
-      pred_sigma_ptr  += Ket_det->size();
+      sigmaN_ptr      = sigmaN->data(ii*orb2)->data();
+      pred_sigma_ptr  = pred_sigma->data(ii)->data();
 
     }
+    cout << "A7" << endl;
 
     dvec_sigma_map->emplace( sigmaN_name, sigmaN );
 
+    unique_ptr<double[]> gammaN( new double[orb_dim*orb2]);
+    std::fill_n(gammaN.get(), orb_dim*orb2, 0.0);
+    sigmaN_ptr = sigmaN->data(0)->data();
+
+    cout << "A8" << endl;
+    double* gammaN_ptr = gammaN.get();
+    sigmaN_ptr_shift = 0;    
+
+    cout << "A9" << endl;
+    for ( int  ii = 0; ii != orb_dim*orb2; ii++) {
+      
+      *gammaN_ptr = ddot_( Ket_det->size(), sigmaN_ptr, 1, IBra->data(), 1); 
+      sigmaN_ptr += Ket_det->size();
+      gammaN_ptr++;
+    
+    }
+
+    cout << "A10" << endl;
+    int norb = Ket_det->norb();
+    cout << "----------------gammaN-------------------" << endl;
+      
+    for ( int ii = 0; ii != orb_dim*orb2 ; ii++ ) {
+      if ( !( ii % norb )  ) {
+        cout << endl;
+        if (! (ii % orb2) ) {
+          cout <<  " [ " ; cout.flush();
+          int ii_tmp = ii;
+          for (int jj = sorder-1 ; jj != 1 ; jj-- ) {   
+            int id_pos = ii_tmp / ((int)pow( norb , jj ));
+            cout << id_pos  << " " ;  
+            ii_tmp -= id_pos*(int)pow(norb, jj );
+          }
+          cout << "] " << endl; 
+        }
+      }
+      cout << gammaN[ii] << " " ; cout.flush();
+    }
+ 
+
+    cout << "A11" << endl;
   } else {
-
+  
     cout << "spin transitions sigmas not implemented yet " << endl;  
-
+  
   }
   return;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 void Equation_Computer::Equation_Computer::sigma_2a1(double* cvec_ptr, double* sigma_ptr, shared_ptr<Determinants> dets  )  {
-//////////////////////////////////////////////////////////////////////////////////////////////
-  //cout << "sigma_2a1" << endl;
+//////////////////////////////////////////////////////////////////////////////////////////////                               
+  //cout << "sigma_2a1" << endl;                                                                                          
+  const int lb = dets->lenb();                                                                                            
+  const int ij = dets->norb()*dets->norb();                                                                               
+                                                                                                                          
+  for (int ip = 0; ip != ij; ++ip) {                                                                                      
+    double* target_base = sigma_ptr+dets->size()*ip;                                                                              
+    for (auto& iter : dets->phia(ip)) {                                                                                   
+      const double sign = static_cast<double>(iter.sign);                                                                 
+      double* const target_array = target_base + iter.source*lb;                                                          
+      blas::ax_plus_y_n(sign, cvec_ptr + iter.target*lb, lb, target_array);                                               
+    }                                                                                                                     
+  }                                                                                                                       
+}                                                                                                                         
+                                                                                                                          
+///////////////////////////////////////////////////////////////////////////////////////////////                             
+void Equation_Computer::Equation_Computer::sigma_2a2( double* cvec_ptr, double* sigma_ptr, shared_ptr<Determinants> dets) { 
+///////////////////////////////////////////////////////////////////////////////////////////////                             
+//  cout << "sigma_2a2" << endl;
+  const int la = dets->lena();
   const int lb = dets->lenb();
   const int ij = dets->norb()*dets->norb();
 
-  for (int ip = 0; ip != ij; ++ip) {
-    sigma_ptr += ip* dets->size(); 
-
-    //DetMap(size_t t, int si, size_t s, int o) : target(t), sign(si), source(s), ij(o) {}
-    for (auto& iter : dets->phia(ip)) {
-      const double sign = static_cast<double>(iter.sign);
-      double* const target_array = sigma_ptr + iter.source*lb;
-      blas::ax_plus_y_n(sign, cvec_ptr + iter.target*lb, lb, target_array);
-    }
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer::Equation_Computer::sigma_2a2( double* cvec_ptr, double* sigma_ptr, shared_ptr<Determinants> dets) {
-///////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "sigma_2a2" << endl;
-  const int la = dets->lena();
-  const int ij = dets->norb()*dets->norb();
-
   for (int i = 0; i < la; ++i) {
-    double* source_array0 = cvec_ptr+i;
+    double* source_array0 = cvec_ptr+i*lb;
 
     for (int ip = 0; ip != ij; ++ip) {
-      double* target_array0 = sigma_ptr + ip;
+      double* target_array0 = sigma_ptr + (ip * dets->size()) + i*lb;
 
       for (auto& iter : dets->phib(ip)) {
         const double sign = static_cast<double>(iter.sign);
@@ -145,7 +249,7 @@ cout << "get_gamma2_from_sigma2_and_civec" << endl;
   cout << "ham " << endl; 
   int norb = dets->norb();
 
-  unique_ptr<double[]> gamma2_data(new double[ norb*norb]);
+  unique_ptr<double[]> gamma2_data(new double[norb*norb]);
 
   for ( int ii = 0 ; ii != norb ; ii++) 
     for ( int jj = 0 ; jj != norb ; jj++) 

@@ -28,7 +28,7 @@ Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const S
   
   Data_map  = Data_map_in;
 
-  cimaxblock = 100; //figure out what is best, maxtile is 10000, so this is chosen to have one index block. Must be consistent if contraction routines are to work...
+  cimaxblock = 10000; //figure out what is best, maxtile is 10000, so this is chosen to have one index block. Must be consistent if contraction routines are to work...
 
   range_conversion_map = range_conversion_map_in;
 

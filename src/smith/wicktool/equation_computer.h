@@ -90,6 +90,8 @@ class Equation_Computer {
 
     void sigma_2a2( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<Determinants> dets ) ;
 
+    void compute_sigma2_test( std::string Bra_name, std::string Ket_name );
+
     /////////// Utility routines /////////////////////////
 
     void Calculate_CTP(std::string A_contrib_name );
