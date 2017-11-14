@@ -36,6 +36,65 @@ Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets the gammas in tensor format. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Gamma_Computer::Gamma_Computer::get_gamma_tensor_test( string gamma_name ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Gamma_Computer::Gamma_Computer::get_gammas"  << endl;
+  cout << "Gamma name = " << gamma_name << endl;
+
+
+  if( Gamma_data_map->find(gamma_name) != Gamma_data_map->end()){ 
+
+    cout << "already have data for " << gamma_name << endl;  
+ 
+  } else { 
+    
+    shared_ptr<GammaInfo> gamma_info = Gamma_info_map->at(gamma_name) ;
+    int order = gamma_info->order;
+    //for now just use specialized routines, this must be made generic at some point
+    if ( order == 2 ) { 
+
+      build_gamma_2idx_tensor( gamma_name ) ;
+      assert( gamma_2idx_contract_test( gamma_name ) );
+      
+    } else { 
+
+
+      shared_ptr<CIVecInfo<double>> Bra_info = gamma_info->Bra_info;  
+      shared_ptr<Tensor_<double>>   Bra = CIvec_data_map->at( Bra_info->name() );  
+
+      shared_ptr<CIVecInfo<double>>  Ket_info   = gamma_info->Ket_info;  
+      shared_ptr<Tensor_<double>>    pred_sigma = Sigma_data_map->at( "S_"+gamma_info->predecessor_gamma_name );
+      shared_ptr<const Determinants> rhs_det    = Determinants_map->at( Ket_info->name() ); 
+     
+      vector<IndexRange> idx_ranges(order);
+      for ( int ii = 0 ; ii != order ; ii++) 
+        idx_ranges[ii] = *(range_conversion_map->at(gamma_info->id_ranges->at(ii)));
+
+      shared_ptr<Tensor_<double>> sigmaN = make_shared<Tensor_<double>>( idx_ranges );
+
+      int norb = rhs_det->norb();      
+      int orb_dim = pow(norb, order-2);
+      int orb2    = norb*norb;
+ 
+      //blockloop 
+
+      for ( int  ii = 0; ii != orb_dim; ii++) {
+
+        // unique_ptr<double[]> get_sigma_part(predecessor_name, gamma_name); 
+        // contract block with Bra to get gamma 
+
+      } 
+
+    }
+  }
+  
+  return;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Gets the gammas in tensor format. 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::Gamma_Computer::get_gammas"  << endl;

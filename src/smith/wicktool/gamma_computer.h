@@ -70,6 +70,8 @@ class Gamma_Computer {
                                                          std::shared_ptr<Tensor_<double>> sigma_2idx_KJ, std::vector<Index>& sigma_2idx_KJ_id_blocks, std::vector<int>& sigma_2idx_KJ_offsets,
                                                          std::string KKet_name  );
 
+      void get_gamma_tensor_test( std::string gamma_name ) ;
+
       /////////// Utility routines /////////////////////////
       
       std::shared_ptr<std::vector<IndexRange>> Get_Bagel_IndexRanges( std::shared_ptr<std::vector<std::string>> ranges_str);
