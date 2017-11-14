@@ -37,7 +37,6 @@ Equation_Computer::Equation_Computer::get_gamma(string gamma_name){
     get_wfn_data( gamma_info->Ket_info );
 
     compute_sigma2_test( IBra_name, JKet_name );
-    cout << "goats" << endl;
     compute_sigma2( IBra_name, JKet_name, gamma_info->name );
     get_gamma2_from_sigma2_and_civec( IBra_name, gamma_name );
 
@@ -63,25 +62,19 @@ void  Equation_Computer::Equation_Computer::compute_sigma2_test( string Bra_name
   shared_ptr<Dvec> sigma2_A = make_shared<Dvec>( Ket_det, (norb*norb) );
   shared_ptr<Dvec> sigma2_B = make_shared<Dvec>( Ket_det, (norb*norb) );
 
-  sigma_2a1(Ket_A, sigma2_A, Ket_det );
 
   double* Ket_B_ptr  = Ket_B->data();
   double* sigma2_B_ptr  = sigma2_B->data(0)->data();
-  sigma_2a1( Ket_B_ptr, sigma2_B_ptr, Ket_det );
 
-
-  for (int ii = 0 ; ii != norb*norb*Ket_det->size() ; ii++ ) 
-     cout << "2a1_diff[" << ii <<  "] = " << sigma2_A->data(0)->data(ii) - sigma2_B->data(0)->data(ii) << endl;
-
- 
+  sigma_2a1(Ket_A, sigma2_A, Ket_det );
   sigma_2a2(Ket_A, sigma2_A, Ket_det );
 
-  Ket_B_ptr  = Ket_B->data();
-  sigma2_B_ptr  = sigma2_B->data(0)->data();
+  sigma_2a1( Ket_B_ptr, sigma2_B_ptr, Ket_det );
   sigma_2a2( Ket_B_ptr, sigma2_B_ptr, Ket_det );
 
   for (int ii = 0 ; ii != norb*norb*Ket_det->size() ; ii++ ) 
-     cout << "2a2_diff[" << ii <<  "] = " << sigma2_A->data(0)->data(ii) - sigma2_B->data(0)->data(ii) << endl;
+    if ( sigma2_A->data(0)->data(ii) - sigma2_B->data(0)->data(ii) != 0.0) 
+      cout << "2a2_diff[" << ii <<  "] = " << sigma2_A->data(0)->data(ii) - sigma2_B->data(0)->data(ii) << endl;
 
   cout << "gamma2_test orig routines" << endl;
   for ( int ii = 0 ; ii != norb; ii++ ){ 
@@ -119,57 +112,28 @@ void Equation_Computer::Equation_Computer::compute_sigmaN( string predecessor_ga
     shared_ptr<Civec>  IBra = cvec_old_map->at( Bra_name );          cout << "get dets" << endl;
 
     int sorder = sigmaN_info->order; 
-
     shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name ); 
-    shared_ptr<Dvec> pred_sigma = dvec_sigma_map->at( predecessor_gamma_name );
+    shared_ptr<Dvec>      pred_sigma = dvec_sigma_map->at( predecessor_gamma_name );
 
     int orb_dim = pow(Ket_det->norb(), sorder-2);
-    int orb2 = Ket_det->norb()*Ket_det->norb();
+    int orb2    = Ket_det->norb()*Ket_det->norb();
 
     shared_ptr<Dvec> sigmaN = make_shared<Dvec>( Ket_det, orb_dim*orb2  );
-  
-    cout << "A4" << endl;
-    double* sigmaN_ptr = sigmaN->data(0)->data();
-    double* pred_sigma_ptr = pred_sigma->data(0)->data();
-
-    cout << "A5" << endl;
-    int sigmaN_ptr_shift = 0;
-    int pred_sigma_shift = 0;
-
     cout << "orb_dim = " << orb_dim << endl;
     for ( int  ii = 0; ii != orb_dim; ii++) {
-      sigma_2a1( pred_sigma_ptr, sigmaN_ptr, Ket_det );
-      sigma_2a2( pred_sigma_ptr, sigmaN_ptr, Ket_det );
-    
-      sigmaN_ptr      = sigmaN->data(ii*orb2)->data();
-      pred_sigma_ptr  = pred_sigma->data(ii)->data();
-
+      sigma_2a1( pred_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), Ket_det );
+      sigma_2a2( pred_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), Ket_det );
     }
-    cout << "A7" << endl;
 
     dvec_sigma_map->emplace( sigmaN_name, sigmaN );
-
     unique_ptr<double[]> gammaN( new double[orb_dim*orb2]);
     std::fill_n(gammaN.get(), orb_dim*orb2, 0.0);
-    sigmaN_ptr = sigmaN->data(0)->data();
 
-    cout << "A8" << endl;
-    double* gammaN_ptr = gammaN.get();
-    sigmaN_ptr_shift = 0;    
-
-    cout << "A9" << endl;
-    for ( int  ii = 0; ii != orb_dim*orb2; ii++) {
-      
-      *gammaN_ptr = ddot_( Ket_det->size(), sigmaN_ptr, 1, IBra->data(), 1); 
-      sigmaN_ptr += Ket_det->size();
-      gammaN_ptr++;
-    
-    }
-
-    cout << "A10" << endl;
+    for ( int  ii = 0; ii != orb_dim*orb2; ii++) 
+      gammaN[ii] = ddot_( Ket_det->size(), sigmaN->data(ii)->data(), 1, IBra->data(), 1); 
+     
     int norb = Ket_det->norb();
-    cout << "----------------gammaN-------------------" << endl;
-      
+    cout << "--------------- gamma " << sorder << " ------------------- (from recursive)" << endl;
     for ( int ii = 0; ii != orb_dim*orb2 ; ii++ ) {
       if ( !( ii % norb )  ) {
         cout << endl;
@@ -186,9 +150,58 @@ void Equation_Computer::Equation_Computer::compute_sigmaN( string predecessor_ga
       }
       cout << gammaN[ii] << " " ; cout.flush();
     }
- 
 
-    cout << "A11" << endl;
+    if (sorder == 4 ) { 
+     int n2 = norb*norb;
+     int n3 = n2*norb;
+
+     unique_ptr<double[]> gamma2( new double[n2]);
+     std::fill_n(gamma2.get(), n2, 0.0);
+     for ( int  ii = 0; ii != n2; ii++) 
+       gamma2[ii] = ddot_( Ket_det->size(), pred_sigma->data(ii)->data(), 1, IBra->data(), 1); 
+ 
+     cout << "------------ tmp gamma2 -------------" << endl;
+     for ( int ii = 0 ; ii != norb; ii++ ) {
+       for ( int jj = 0 ; jj != norb; jj++ ) {
+          cout << gamma2[ii*norb+jj] << " " ; cout.flush();
+       } 
+       cout <<endl;
+     }
+     cout <<endl;
+
+
+     for ( int ii = 0 ; ii != norb; ii++ ) {
+       for ( int jj = 0 ; jj != norb; jj++ ) {
+         for ( int kk = 0 ; kk != norb; kk++ ) {
+           if ( jj == kk ) {
+             for ( int ll = 0 ; ll != norb; ll++ ) 
+               gammaN[ ii*n3+ jj*n2 + kk*norb + ll ] -= gamma2[ii*norb+ll] ;
+           }
+         }
+       }
+     }
+
+    cout << "--------------- -rdm4 " << sorder << " ------------------- (from recursive)" << endl;
+    for ( int ii = 0; ii != orb_dim*orb2 ; ii++ ) {
+      if ( !( ii % norb )  ) {
+        cout << endl;
+        if (! (ii % orb2) ) {
+          cout << endl <<  " [ " ; cout.flush();
+          int ii_tmp = ii;
+          for (int jj = sorder-1 ; jj != 1 ; jj-- ) {   
+            int id_pos = ii_tmp / ((int)pow( norb , jj ));
+            cout << id_pos  << " " ;  
+            ii_tmp -= id_pos*(int)pow(norb, jj );
+          }
+          cout << "] " << endl; 
+        }
+      }
+      cout << gammaN[ii] << " " ; cout.flush();
+    }
+
+   }
+
+
   } else {
   
     cout << "spin transitions sigmas not implemented yet " << endl;  
@@ -292,52 +305,52 @@ void Equation_Computer::Equation_Computer::compute_sigma2( string IBra_name, str
   return;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////
-// Taken directly from src/ci/fci/knowles_compute.cc         
-//////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer::Equation_Computer::sigma_2a1(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma, shared_ptr<Determinants> dets  ) const {
-//////////////////////////////////////////////////////////////////////////////////////////////
-  //cout << "sigma_2a1" << endl;
-  const int lb = dets->lenb();
-  const int ij = dets->norb()*dets->norb();
-  const double* const source_base = cvec->data();
-
-  for (int ip = 0; ip != ij; ++ip) {
-    double* const target_base = sigma->data(ip)->data();
-
-    //DetMap(size_t t, int si, size_t s, int o) : target(t), sign(si), source(s), ij(o) {}
-    for (auto& iter : dets->phia(ip)) {
-      const double sign = static_cast<double>(iter.sign);
-      double* const target_array = target_base + iter.source*lb;
-      blas::ax_plus_y_n(sign, source_base + iter.target*lb, lb, target_array);
-    }
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// Taken directly from src/ci/fci/knowles_compute.cc         
-// I'm sure there was a version which used transposition of the civector; this looks slow.
-///////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer::Equation_Computer::sigma_2a2(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma, shared_ptr<Determinants> dets) const {
-///////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "sigma_2a2" << endl;
-  const int la = dets->lena();
-  const int ij = dets->norb()*dets->norb();
-
-  for (int i = 0; i < la; ++i) {
-    const double* const source_array0 = cvec->element_ptr(0, i);
-
-    for (int ip = 0; ip != ij; ++ip) {
-      double* const target_array0 = sigma->data(ip)->element_ptr(0, i);
-
-      for (auto& iter : dets->phib(ip)) {
-        const double sign = static_cast<double>(iter.sign);
-        target_array0[iter.source] += sign * source_array0[iter.target];
-      }
-    }
-  }
-}
-   
+//////////////////////////////////////////////////////////////////////////////////////////////                                                         
+// Taken directly from src/ci/fci/knowles_compute.cc                                                                                                   
+//////////////////////////////////////////////////////////////////////////////////////////////                                                         
+void Equation_Computer::Equation_Computer::sigma_2a1(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma, shared_ptr<Determinants> dets  ) const {    
+//////////////////////////////////////////////////////////////////////////////////////////////                                                         
+  //cout << "sigma_2a1" << endl;                                                                                                                       
+  const int lb = dets->lenb();                                                                                                                         
+  const int ij = dets->norb()*dets->norb();                                                                                                            
+  const double* const source_base = cvec->data();                                                                                                      
+                                                                                                                                                       
+  for (int ip = 0; ip != ij; ++ip) {                                                                                                                   
+    double* const target_base = sigma->data(ip)->data();                                                                                               
+                                                                                                                                                       
+    //DetMap(size_t t, int si, size_t s, int o) : target(t), sign(si), source(s), ij(o) {}                                                             
+    for (auto& iter : dets->phia(ip)) {                                                                                                                
+      const double sign = static_cast<double>(iter.sign);                                                                                              
+      double* const target_array = target_base + iter.source*lb;                                                                                       
+      blas::ax_plus_y_n(sign, source_base + iter.target*lb, lb, target_array);                                                                         
+    }                                                                                                                                                  
+  }                                                                                                                                                    
+}                                                                                                                                                      
+                                                                                                                                                       
+///////////////////////////////////////////////////////////////////////////////////////////////                                                        
+// Taken directly from src/ci/fci/knowles_compute.cc                                                                                                   
+// I'm sure there was a version which used transposition of the civector; this looks slow.                                                             
+///////////////////////////////////////////////////////////////////////////////////////////////                                                        
+void Equation_Computer::Equation_Computer::sigma_2a2(shared_ptr<const Civec> cvec, shared_ptr<Dvec> sigma, shared_ptr<Determinants> dets) const {      
+///////////////////////////////////////////////////////////////////////////////////////////////                                                        
+//  cout << "sigma_2a2" << endl;                                                                                                                       
+  const int la = dets->lena();                                                                                                                         
+  const int ij = dets->norb()*dets->norb();                                                                                                            
+                                                                                                                                                       
+  for (int i = 0; i < la; ++i) {                                                                                                                       
+    const double* const source_array0 = cvec->element_ptr(0, i);                                                                                       
+                                                                                                                                                       
+    for (int ip = 0; ip != ij; ++ip) {                                                                                                                 
+      double* const target_array0 = sigma->data(ip)->element_ptr(0, i);                                                                                
+                                                                                                                                                       
+      for (auto& iter : dets->phib(ip)) {                                                                                                              
+        const double sign = static_cast<double>(iter.sign);                                                                                            
+        target_array0[iter.source] += sign * source_array0[iter.target];                                                                               
+      }                                                                                                                                                
+    }                                                                                                                                                  
+  }                                                                                                                                                    
+}                                                                                                                                                      
+                                                                                                                                                       
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Equation_Computer::Equation_Computer::get_wfn_data( shared_ptr<CIVecInfo<double>>  cvec_info ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
