@@ -56,40 +56,88 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor_test( string gamma_name ) 
       build_gamma_2idx_tensor( gamma_name ) ;
       assert( gamma_2idx_contract_test( gamma_name ) );
       
-    } else { 
-
-
-      shared_ptr<CIVecInfo<double>> Bra_info = gamma_info->Bra_info;  
-      shared_ptr<Tensor_<double>>   Bra = CIvec_data_map->at( Bra_info->name() );  
-
-      shared_ptr<CIVecInfo<double>>  Ket_info   = gamma_info->Ket_info;  
-      shared_ptr<Tensor_<double>>    pred_sigma = Sigma_data_map->at( "S_"+gamma_info->predecessor_gamma_name );
-      shared_ptr<const Determinants> rhs_det    = Determinants_map->at( Ket_info->name() ); 
-     
-      vector<IndexRange> idx_ranges(order);
-      for ( int ii = 0 ; ii != order ; ii++) 
-        idx_ranges[ii] = *(range_conversion_map->at(gamma_info->id_ranges->at(ii)));
-
-      shared_ptr<Tensor_<double>> sigmaN = make_shared<Tensor_<double>>( idx_ranges );
-
-      int norb = rhs_det->norb();      
-      int orb_dim = pow(norb, order-2);
-      int orb2    = norb*norb;
- 
-      //blockloop 
-
-      for ( int  ii = 0; ii != orb_dim; ii++) {
-
-        // unique_ptr<double[]> get_sigma_part(predecessor_name, gamma_name); 
-        // contract block with Bra to get gamma 
-
-      } 
+    } else {
+    
+      build_gammaN_tensor( gamma_info ) ;
 
     }
   }
   
   return;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Gamma_Computer::Gamma_Computer::build_gammaN_tensor(shared_ptr<GammaInfo> gamma_info )  {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Gamma_Computer::build_gammaN_tensor" << endl;
+   
+   build_sigmaN_tensor(gamma_info);
+   
+   return;
+
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void
+Gamma_Computer::Gamma_Computer::build_sigmaN_tensor(shared_ptr<GammaInfo> gamma_info )  {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Gamma_Computer::build_sigmaN_tensor" << endl;
+ 
+  string sigma_name = "S_"+gamma_info->name;
+  string pred_sigma_name = "S_"+gamma_info->predecessor_gamma_name;  
+
+  shared_ptr<CIVecInfo<double>> Bra_info = gamma_info->Bra_info;  
+  shared_ptr<Tensor_<double>>   Bra = CIvec_data_map->at( Bra_info->name() );  
+
+  shared_ptr<CIVecInfo<double>>  Ket_info   = gamma_info->Ket_info;  
+  shared_ptr<Tensor_<double>>    pred_sigma = Sigma_data_map->at( pred_sigma_name );
+  shared_ptr<const Determinants> rhs_det    = Determinants_map->at( Ket_info->name() ); 
+
+  int order = gamma_info->order;  
+  vector<IndexRange> sigma_ranges(order);
+  for ( int ii = 0 ; ii != order ; ii++) 
+    sigma_ranges[ii] = *(range_conversion_map->at(gamma_info->id_ranges->at(ii)));
+
+  shared_ptr<Tensor_<double>> sigmaN = make_shared<Tensor_<double>>( sigma_ranges );
+
+  shared_ptr<vector<int>> mins          = make_shared<vector<int>>( sigma_ranges.size(), 0 );  
+  shared_ptr<vector<int>> block_pos     = make_shared<vector<int>>( sigma_ranges.size(), 0 );  
+  shared_ptr<vector<int>> range_lengths = get_range_lengths(sigma_ranges); 
+
+  shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( sigma_ranges ) ;
+
+  vector<int> sigma_offsets(order+1); 
+  for ( int ii = 0 ; ii != order+1 ; ii++)
+    sigma_offsets[ii] = 0;
+
+  // loop through sigma ranges,  loop over Ket ranges inside build_sigma_block;  
+  do {
+
+    for ( int ii = 0 ; ii != sigma_offsets.size(); ii++ )
+      sigma_offsets[ii] = block_offsets->at(ii)[block_pos->at(ii)]; 
+
+    vector<Index> sigma_id_blocks = *(get_rng_blocks( block_pos, sigma_ranges));
+
+    //build_sigmaN_block( sigmaN, sigma_id_blocks, sigma_offsets, pred_sigma_name ) ;
+  
+  } while (fvec_cycle(block_pos, range_lengths, mins ));
+
+//  int norb = rhs_det->norb();      
+//  int orb_dim = pow(norb, order-2);
+//  int orb2    = norb*norb;
+ 
+  //blockloop 
+
+//  for ( int  ii = 0; ii != orb_dim; ii++) {
+
+    // unique_ptr<double[]> get_sigma_part(predecessor_name, gamma_name); 
+    // contract block with Bra to get gamma 
+
+//  } 
+ 
+
+  return;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

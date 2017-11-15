@@ -72,6 +72,9 @@ class Gamma_Computer {
 
       void get_gamma_tensor_test( std::string gamma_name ) ;
 
+      void build_sigmaN_tensor(std::shared_ptr<GammaInfo> gamma_info );
+      void build_gammaN_tensor(std::shared_ptr<GammaInfo> gamma_info );
+
       /////////// Utility routines /////////////////////////
       
       std::shared_ptr<std::vector<IndexRange>> Get_Bagel_IndexRanges( std::shared_ptr<std::vector<std::string>> ranges_str);

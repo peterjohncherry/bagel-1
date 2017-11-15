@@ -37,8 +37,8 @@ Equation_Computer::Equation_Computer::get_gamma(string gamma_name){
     compute_sigma2( IBra_name, JKet_name, gamma_info->name );
     get_gamma2_from_sigma2_and_civec( IBra_name, gamma_name );
 
- }
-
+  }
+ 
   return gamma_vec;                              
   
 }
