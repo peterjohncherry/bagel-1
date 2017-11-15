@@ -73,7 +73,16 @@ class Gamma_Computer {
       void get_gamma_tensor_test( std::string gamma_name ) ;
 
       void build_sigmaN_tensor(std::shared_ptr<GammaInfo> gamma_info );
+
       void build_gammaN_tensor(std::shared_ptr<GammaInfo> gamma_info );
+
+      void build_sigmaN_block( std::shared_ptr<Tensor_<double>> sigmaN,     std::vector<Index>& id_blocks_ps, std::vector<int>& offsets_ps,
+                               std::shared_ptr<Tensor_<double>> prev_sigma, std::vector<Index>& id_blocks_ij, std::vector<int>& offsets_ij  ) ;
+
+      void sigma_2a1( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<Determinants> dets, int cvec_offset, int sigma_cvec_offset, int ii_offset, int jj_offset );
+
+      void sigma_2a2( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<Determinants> dets, int cvec_offset, int sigma_cvec_offset, int ii_offset, int jj_offset );
+
 
       /////////// Utility routines /////////////////////////
       
