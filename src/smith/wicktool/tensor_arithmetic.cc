@@ -73,6 +73,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( sha
     }
 
     unique_ptr<DataType[]> contracted_block(new DataType[unc_block_size]);
+    fill_n(contracted_block.get(), unc_block_size, 0.0);
     //loop over ctr blocks
     for ( int ii = 0 ; ii != num_ctr_blocks; ii++) { 
       

@@ -10,6 +10,9 @@ using namespace std;
 using namespace WickUtils;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//TODO extend for rel case (Bra and Ket can vary,  prev gammas and 
+// prev_Bra_info should be constructed from idxs_pos, full_idxs_ranges, full_aops and Ket. 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaInfo::GammaInfo ( shared_ptr<CIVecInfo<double>> Bra_info_in, shared_ptr<CIVecInfo<double>> Ket_info_in, 
                        shared_ptr<vector<bool>> full_aops_vec, shared_ptr<vector<string>> full_idx_ranges, 
                        shared_ptr<vector<int>> idxs_pos  ,
@@ -24,45 +27,43 @@ cout << "GammaInfo::GammaInfo" <<  endl;
   Ket_info =  Ket_info_in;
 
   order = idxs_pos->size();
-  
 
   id_ranges = make_shared<vector<string>>(idxs_pos->size());
   aops      = make_shared<vector<bool>>(idxs_pos->size());
-
   for (int ii = 0 ; ii != idxs_pos->size(); ii++ ){ 
     id_ranges->at(ii) = full_idx_ranges->at(idxs_pos->at(ii));     
     aops->at(ii)      = full_aops_vec->at(idxs_pos->at(ii));     
   }
 
-  name = get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos, Bra_info->name(), Ket_info->name() ); 
+  sigma_id_ranges = make_shared<vector<string>>(*id_ranges);
+  sigma_id_ranges->push_back(Bra_info->name());
 
-  //TODO extend for rel case (Bra and Ket can vary) and gammas with odd num of idxs
+  name = get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos, Bra_info->name(), Ket_info->name() ); cout << "gamma name = " <<  name << endl;
+  sigma_name = "S_"+name; 
+
   if ( (idxs_pos->size() > 2 ) && ( idxs_pos->size() % 2 == 0 ) ) {
-    cout << "gamma name = " <<  name << endl;
-    sub_gammas_ = vector<string>(idxs_pos->size()/2);
 
-    cout << "sub_gammas = [ " ; cout.flush();
-    for (int ii = 0 ; ii != idxs_pos->size()/2 ; ii++ ){
-      string sub_gamma_name = get_gamma_name( full_idx_ranges, full_aops_vec, make_shared<vector<int>>(vector<int>{ idxs_pos->at(2*ii), idxs_pos->at(2*ii+1)}), Bra_info->name(), Ket_info->name());   
+    prev_gammas_ = vector<string>(idxs_pos->size()/2); cout << "prev_gammas = [ " ; cout.flush();
+    prev_sigmas_ = vector<string>(idxs_pos->size()/2); 
 
-      if ( Gamma_map->find( sub_gamma_name)  == Gamma_map->end() )
-        Gamma_map->emplace( sub_gamma_name, make_shared<GammaInfo>( Bra_info, Ket_info, full_aops_vec, full_idx_ranges,
-                                                                    make_shared<vector<int>>(vector<int>{ idxs_pos->at(2*ii), idxs_pos->at(2*ii+1) }), Gamma_map  ));
-       
-      sub_gammas_[ii] = sub_gamma_name;
-      cout << sub_gamma_name << " " ; cout.flush();
+    for (int ii = 2 ; ii != idxs_pos->size() ; ii+=2 ){ cout << "ii = " << ii <<  endl;
+
+      shared_ptr<vector<int>> prev_gamma_idxs_pos = make_shared<vector<int>> ( idxs_pos->begin()+ii, idxs_pos->end());
+      prev_gammas_[(ii/2)-1] = get_gamma_name( full_idx_ranges, full_aops_vec, prev_gamma_idxs_pos, Bra_info->name(), Ket_info->name());   
+      prev_sigmas_[(ii/2)-1] = "S_"+prev_gammas_[(ii/2)-1];
+
+      if ( Gamma_map->find( prev_gammas_[(ii/2)-1] )  == Gamma_map->end() ){ //TODO fix Bra_info for rel case
+        shared_ptr<GammaInfo> prev_gamma = make_shared<GammaInfo>( Bra_info, Ket_info, full_aops_vec, full_idx_ranges, prev_gamma_idxs_pos, Gamma_map );
+        if(  ii == 2 ) 
+          prev_Bra_info = prev_gamma->Bra_info ;
+
+        Gamma_map->emplace( prev_gammas_[(ii/2)-1], prev_gamma );
+      }
+      
+      cout << prev_gammas_[(ii/2)-1] << " " ; cout.flush();
     }
     cout << "] " << endl << endl;
   }
-
-  if ( (idxs_pos->size() > 3 ) ) {
-    shared_ptr<vector<int>> predecessor_idxs_pos =  make_shared<vector<int>>(vector<int>(idxs_pos->begin()+2, idxs_pos->end()));
-    predecessor_gamma_name = get_gamma_name( full_idx_ranges, full_aops_vec, predecessor_idxs_pos, Bra_info->name(), Ket_info->name());   
-    if ( Gamma_map->find( predecessor_gamma_name)  == Gamma_map->end() )
-      Gamma_map->emplace( predecessor_gamma_name, make_shared<GammaInfo>( Bra_info, Ket_info, full_aops_vec, full_idx_ranges, predecessor_idxs_pos, Gamma_map  ));
-  } 
-
-  //depends on floor in integer division
 
 }
 

@@ -26,18 +26,22 @@ class GammaInfo {
 
    public :
      std::shared_ptr<std::vector<std::string>> id_ranges ;
+     std::shared_ptr<std::vector<std::string>> sigma_id_ranges ; //unsummed CI indexes at back, contrary to notation
+
      std::shared_ptr<std::vector<bool>> aops ;
-     std::shared_ptr<std::vector<bool>> spins ; 
-     std::shared_ptr<std::vector<std::pair<std::pair<int,int>,std::pair<int,int>>>> ssector_sequence;
      std::pair<int,int> factor ;
+
      std::string name;     
+     std::string sigma_name;     
      int order ;
-     std::shared_ptr<std::vector<std::string>> one_el_gammas;
 
-     std::shared_ptr<CIVecInfo<double>> Bra_info;
-     std::shared_ptr<CIVecInfo<double>> Ket_info;
+     //Follows convention : <I | i j | K > < K | .........| J >  
+     std::shared_ptr<CIVecInfo<double>> Bra_info;      // < I |
+     std::shared_ptr<CIVecInfo<double>> prev_Bra_info; // < K | 
+     std::shared_ptr<CIVecInfo<double>> Ket_info;      // | J >
 
-     std::vector<std::string> sub_gammas_;
+     std::vector<std::string> prev_gammas_; 
+     std::vector<std::string> prev_sigmas_; 
 
      GammaInfo( std::shared_ptr<CIVecInfo<double>> Bra_info, std::shared_ptr<CIVecInfo<double>> Ket_info, 
                 std::shared_ptr<std::vector<bool>> full_aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
@@ -46,10 +50,17 @@ class GammaInfo {
      GammaInfo(){};
      ~GammaInfo(){};
 
+     std::vector<std::string> prev_sigmas() { return prev_sigmas_ ; };
+     std::string prev_sigmas(int ii ) { return prev_sigmas_[ii] ; };
+     std::string prev_sigma_name() { return prev_sigmas_[0]; };  
 
-     std::string predecessor_gamma_name; 
-     std::string sub_gammas(int  ii ) { return sub_gammas_[ii] ; };
-     std::vector<std::string> sub_gammas() { return sub_gammas_ ; };
+     std::vector<std::string> prev_gammas() { return prev_gammas_ ; };
+     std::string prev_gammas(int ii ) { return prev_gammas_[ii] ; };
+     std::string prev_gamma_name() { return prev_gammas_[0]; };  
+
+     std::string Bra_name() { return Bra_info->name(); };
+     std::string Ket_name() { return Ket_info->name(); };
+     std::string Prev_Bra_name() { return prev_Bra_info->name(); };
 
 };
 

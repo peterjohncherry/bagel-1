@@ -102,6 +102,8 @@ class Gamma_Computer {
       
       std::shared_ptr<Tensor_<double>> convert_civec_to_tensor( std::shared_ptr<const Civec> civector, int state_num ) const;
 
+      void build_detspace(std::shared_ptr<CIVecInfo<double>>  ci_info );
+
       void tester();
 
       

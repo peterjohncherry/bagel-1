@@ -25,8 +25,8 @@ Equation_Computer::Equation_Computer::get_gamma(string gamma_name){
   //note this has reverse iterators!
   if (gamma_info->order > 2 ) { 
 
-    get_gamma(gamma_info->predecessor_gamma_name);
-    compute_sigmaN( gamma_info->predecessor_gamma_name, gamma_info->name );
+    get_gamma(gamma_info->prev_gamma_name());
+    compute_sigmaN( gamma_info->prev_gamma_name(), gamma_info->name );
 
   } else {
 
@@ -44,11 +44,11 @@ Equation_Computer::Equation_Computer::get_gamma(string gamma_name){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer::Equation_Computer::compute_sigmaN( string predecessor_gamma_name, string sigmaN_name)  {
+void Equation_Computer::Equation_Computer::compute_sigmaN( string prev_gamma_name, string sigmaN_name)  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Computer::compute_sigmaN" << endl;
 
-  shared_ptr<GammaInfo>  predecessor_info = GammaMap->at(predecessor_gamma_name);
+  shared_ptr<GammaInfo>  predecessor_info = GammaMap->at(prev_gamma_name);
   shared_ptr<GammaInfo>  sigmaN_info = GammaMap->at(sigmaN_name);
 
   string  Bra_name = sigmaN_info->Bra_info->name();
@@ -59,7 +59,7 @@ void Equation_Computer::Equation_Computer::compute_sigmaN( string predecessor_ga
 
     int sorder = sigmaN_info->order; 
     shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name ); 
-    shared_ptr<Dvec>      pred_sigma = dvec_sigma_map->at( predecessor_gamma_name );
+    shared_ptr<Dvec>      pred_sigma = dvec_sigma_map->at( prev_gamma_name );
 
     int orb_dim = pow(Ket_det->norb(), sorder-2);
     int orb2    = Ket_det->norb()*Ket_det->norb();
@@ -168,6 +168,7 @@ cout << "get_gamma2_from_sigma2_and_civec" << endl;
     }
     cout <<endl;
   }
+
 ////////////////////////////////////////////////////////////////////////////
   unique_ptr<double[]> gamma4_from_sigma2(new double[norb*norb*norb*norb]);
   cout << "printing gamma4 from old method sigma2 contraction ijlk" << endl;
