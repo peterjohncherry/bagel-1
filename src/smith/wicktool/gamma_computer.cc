@@ -27,6 +27,8 @@ Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_
   Determinants_map     = Determinants_map_in;     cout << "set Determinants_map    "<< endl; 
   range_conversion_map = range_conversion_map_in; cout << "set range_conversion_map"<< endl; 
 
+  Determinants_map_new = make_shared< map < string, shared_ptr<Determinants> >>();     cout << "building Determinants_map_new    "<< endl; 
+
   Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
 
   //tester();
@@ -38,19 +40,23 @@ Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Gamma_Computer::Gamma_Computer::get_gamma_tensor_test( string gamma_name ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Gamma_Computer::Gamma_Computer::get_gammas"  << endl;
+  cout << "Gamma_Computer::Gamma_Computer::get_gamma_tensor_test"  << endl;
   cout << "Gamma name = " << gamma_name << endl;
 
-
-  if( Gamma_data_map->find(gamma_name) != Gamma_data_map->end()){ 
+  if ( gamma_name == "ID" ) { 
+ 
+    cout << "nothing todo for ID" << endl;
+ 
+  } else if( Gamma_data_map->find(gamma_name) != Gamma_data_map->end()){ 
 
     cout << "already have data for " << gamma_name << endl;  
- 
+
   } else { 
     
     shared_ptr<GammaInfo> gamma_info = Gamma_info_map->at(gamma_name) ;
     int order = gamma_info->order;
     //for now just use specialized routines, this must be made generic at some point
+
     if ( order == 2 ) { 
 
       build_gamma_2idx_tensor( gamma_name ) ;
@@ -67,13 +73,86 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor_test( string gamma_name ) 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> gamma2_info )  {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// sn  :  sigmaN   ,  ps : prev_sigma    
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Gamma_Computer::build_sigma2_tensor" << endl;
+ 
+  string sigma2_name     = "S_"+gamma2_info->name; cout << "sigma2_name = " << sigma2_name << endl;
+
+  shared_ptr<CIVecInfo<double>> Bra_info = gamma2_info->Bra_info;       cout << "Bra_info->name() = " << Bra_info->name() << endl;
+  shared_ptr<Tensor_<double>>   Bra = CIvec_data_map->at( Bra_info->name() );  
+  IndexRange                    Bra_range = Bra->indexrange()[0];
+
+  shared_ptr<CIVecInfo<double>> Ket_info = gamma2_info->Ket_info;       cout << "Ket_info->name() = " << Ket_info->name() << endl;
+  shared_ptr<Tensor_<double>>   Ket = CIvec_data_map->at( Ket_info->name() );  
+  IndexRange                    Ket_range = Ket->indexrange()[0];
+
+  int order = gamma2_info->order;  
+
+  vector<IndexRange> ranges(order+1);
+  for ( int ii = 0 ; ii != order ; ii++) 
+    ranges[ii] = *(range_conversion_map->at(gamma2_info->id_ranges->at(ii)));
+  ranges.back() = Bra_range;//fix this; ok in nr, but in rel lhs det space for gamma is not same as lhs det space for sigma
+
+  shared_ptr<Tensor_<double>> sigma2 = make_shared<Tensor_<double>>( ranges );
+  sigma2->allocate();
+  sigma2->zero();
+  cout << "sigma2_name     = " << sigma2_name << endl;
+  Sigma_data_map->emplace( sigma2_name , sigma2 );
+
+  shared_ptr<vector<int>> mins          = make_shared<vector<int>>( 3, 0 );  
+  shared_ptr<vector<int>> block_pos     = make_shared<vector<int>>( 3, 0 );  
+  shared_ptr<vector<int>> range_lengths = get_range_lengths( ranges ); 
+
+  shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( ranges ) ;
+
+  vector<int> offsets(3); 
+  do { 
+     vector<Index> id_blocks = *(get_rng_blocks( block_pos, ranges ));
+     for ( int ii = 0 ; ii != 3 ; ii++ ) 
+       offsets[ii] = block_offsets->at(ii)[block_pos->at(ii)];    
+    
+     int Ket_offset = 0 ;
+     for ( Index Ket_id_block : Ket_range ) { 
+
+     //build_sigma2_block( sigma2_name, id_blocks_ps, offsets_ps, Ket_name, id_blocks, offsets ) ;
+
+     Ket_offset += Ket_id_block.size();
+    }
+  } while (fvec_cycle( block_pos, range_lengths, mins ));
+  
+
+  return;
+}
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Gamma_Computer::Gamma_Computer::build_gammaN_tensor(shared_ptr<GammaInfo> gamma_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Gamma_Computer::build_gammaN_tensor" << endl;
-   
-   build_sigmaN_tensor(gamma_info);
+  
+   shared_ptr<CIVecInfo<double>> Bra_info = gamma_info->Bra_info;
+   if (Determinants_map_new->find( Bra_info->name() ) ==  Determinants_map_new->end() ) 
+     Determinants_map_new->emplace( Bra_info->name(), make_shared<Determinants> (Bra_info->nact(), Bra_info->nalpha(), Bra_info->nbeta(), false, /*mute=*/true) );
 
-   //TODO contract sigma 
+   shared_ptr<CIVecInfo<double>> Ket_info = gamma_info->Ket_info;
+   if (Determinants_map_new->find( Ket_info->name() ) ==  Determinants_map_new->end() ) 
+     Determinants_map_new->emplace(  Ket_info->name(), make_shared<Determinants>(Ket_info->nact(), Ket_info->nalpha(), Ket_info->nbeta(), false, /*mute=*/true));
+
+   build_sigmaN_tensor(gamma_info);
+   
+   shared_ptr<Tensor_<double>> gammaN = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at("S_"+gamma_info->name),
+                                                                     CIvec_data_map->at(gamma_info->Bra_info->name()),
+                                                                     make_pair(gamma_info->order, 0) );
+ 
+   Print_Tensor( gammaN, "gamma "+to_string(gamma_info->order)+ " recursive tensor version "  ); cout << endl;
+
+   Gamma_data_map->emplace(gamma_info->name, gammaN); 
+ 
+ 
    
    return;
 
@@ -86,17 +165,17 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor(shared_ptr<GammaInfo> s
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::build_sigmaN_tensor" << endl;
  
-  string sigma_name      = "S_"+sigmaN_info->name;
-  string prev_sigma_name = "S_"+sigmaN_info->predecessor_gamma_name;  
+  string sigmaN_name     = "S_"+sigmaN_info->name; cout << "sigmaN_name = " << sigmaN_name << endl;
+  string prev_sigma_name = "S_"+sigmaN_info->predecessor_gamma_name; cout << "prev_sigma_name = " << prev_sigma_name << endl; 
 
-  shared_ptr<CIVecInfo<double>> Bra_info = sigmaN_info->Bra_info;  
+  shared_ptr<CIVecInfo<double>> Bra_info = sigmaN_info->Bra_info;       cout << "Bra_info->name() = " << Bra_info->name() << endl;
   shared_ptr<Tensor_<double>>   Bra = CIvec_data_map->at( Bra_info->name() );  
 
-  shared_ptr<CIVecInfo<double>>  Ket_info   = sigmaN_info->Ket_info;  
-  shared_ptr<Tensor_<double>>    prev_sigma = Sigma_data_map->at( prev_sigma_name );
-  shared_ptr<const Determinants> rhs_det    = Determinants_map->at( Ket_info->name() ); 
+  shared_ptr<CIVecInfo<double>>  Ket_info   = sigmaN_info->Ket_info;    cout << "Ket_info->name() = " << Ket_info->name() << endl;
+  shared_ptr<Determinants> rhs_det    = Determinants_map_new->at( Bra_info->name() ); //fix this for rel 
 
-  shared_ptr<GammaInfo> prev_sigma_info = Gamma_info_map->at( prev_sigma_name );
+  shared_ptr<Tensor_<double>> prev_sigma = Sigma_data_map->at( prev_sigma_name );
+  shared_ptr<GammaInfo>       prev_sigma_info = Gamma_info_map->at( sigmaN_info->predecessor_gamma_name );
 
   int order = sigmaN_info->order;  
 
@@ -106,20 +185,22 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor(shared_ptr<GammaInfo> s
   ranges_sn.back() = *(range_conversion_map->at(Bra_info->name()));//fix this; ok in nr, but in rel lhs det space for gamma is not same as lhs det space for sigma
 
   shared_ptr<Tensor_<double>> sigmaN = make_shared<Tensor_<double>>( ranges_sn );
+  sigmaN->allocate();
+  sigmaN->zero();
+  cout << "sigmaN_name     = " << sigmaN_name << endl;
+  Sigma_data_map->emplace( sigmaN_name , sigmaN );
 
   vector<IndexRange> ranges_ps(order-1);
   for ( int ii = 0 ; ii != order-2 ; ii++) 
     ranges_ps[ii] = *(range_conversion_map->at(prev_sigma_info->id_ranges->at(ii)));
   ranges_ps.back() = *(range_conversion_map->at(Ket_info->name()));//fix this; ok in nr, but in rel lhs det space for gamma is not same as lhs det space for sigma
 
-
-
   shared_ptr<vector<int>> mins_ps          = make_shared<vector<int>>( ranges_ps.size(), 0 );  
   shared_ptr<vector<int>> block_pos_ps     = make_shared<vector<int>>( ranges_ps.size(), 0 );  
   shared_ptr<vector<int>> range_lengths_ps = get_range_lengths(ranges_ps); 
 
   shared_ptr<vector<vector<int>>> block_offsets_ps = get_block_offsets( ranges_ps ) ;
-  vector<int> offsets_ps(order+1); 
+  vector<int> offsets_ps(order-1); 
   do {
 
     for ( int ii = 0 ; ii != offsets_ps.size(); ii++ )
@@ -127,7 +208,7 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor(shared_ptr<GammaInfo> s
 
     vector<Index> id_blocks_ps = *(get_rng_blocks( block_pos_ps, ranges_ps));
 
-    vector<IndexRange> ranges_Iij = { ranges_sn[0], ranges_sn[1], ranges_sn.back(); }; 
+    vector<IndexRange> ranges_Iij = { ranges_sn[0], ranges_sn[1], ranges_sn.back() }; 
 
     shared_ptr<vector<int>> mins_Iij          = make_shared<vector<int>>( 3, 0 );  
     shared_ptr<vector<int>> block_pos_Iij     = make_shared<vector<int>>( 3, 0 );  
@@ -135,20 +216,16 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor(shared_ptr<GammaInfo> s
 
     shared_ptr<vector<vector<int>>> block_offsets_Iij = get_block_offsets( ranges_Iij ) ;
 
-    vector<int> offsets_Iij(2); 
+    vector<int> offsets_Iij(3); 
     do { 
 
       vector<Index> id_blocks_Iij = *(get_rng_blocks( block_pos_Iij, ranges_Iij));
       for ( int ii = 0 ; ii != 3 ; ii++ ) 
         offsets_Iij[ii] = block_offsets_Iij->at(ii)[block_pos_Iij->at(ii)];    
-   
       
-    build_sigmaN_block( sigmaN, id_blocks_ps, offsets_ps, prev_sigma, id_blocks_Iij, offsets_Iij ) ;
-
+      build_sigmaN_block( sigmaN_name, id_blocks_ps, offsets_ps, prev_sigma_name, id_blocks_Iij, offsets_Iij ) ;
 
     } while (fvec_cycle(block_pos_Iij, range_lengths_Iij, mins_Iij ));
-
-
   
   } while (fvec_cycle(block_pos_ps, range_lengths_ps, mins_ps ));
 
@@ -158,54 +235,67 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor(shared_ptr<GammaInfo> s
     // contract block with Bra to get gamma 
 
 //  } 
- 
 
   return;
 }
-
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void
 Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vector<Index>& id_blocks_ps, vector<int>& offsets_ps,
                                                     string prev_sigma_name, vector<Index>& id_blocks_Iij, vector<int>& offsets_Iij ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Gamma_Computer::build_sigmaN_block" << endl;
+  cout << "sigmaN_name = " << sigmaN_name << endl;
+  cout << "prev_sigma_name = " << prev_sigma_name << endl;
 
-  if (Bra_name == Ket_name) { 
 
+  if ( Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info->name()  == Gamma_info_map->at(prev_sigma_name.substr(2))->Ket_info->name() ){//fix for rel case
+   
     shared_ptr<Tensor_<double>> sigmaN      = Sigma_data_map->at(sigmaN_name);
     shared_ptr<Tensor_<double>> prev_sigma  = Sigma_data_map->at(prev_sigma_name);
 
-    unique_ptr<double[]> prev_sigma_block = prev_sigma->get_block( id_block_ps );
-    
-    vector<int> Iij_block_size      = id_blocks_Iij[0].size() * id_blocks_Iij[1].size()*id_blocks_Iij[2].size();
-    vector<int> rhs_ci_block_size   = id_blocks_ps.back().size();
-    vector<int> ps_orb_block_size = 1;
-    for ( int bl_size : id_blocks_ps ) 
-       ps_orb_block_size *= bl_size;
+    unique_ptr<double[]> prev_sigma_block = prev_sigma->get_block( id_blocks_ps );
 
-    unique_ptr<double[]> sigmaN_block( new double[ij_block_size*ps_orb_block_size*rhs_ci_block_size] );
+    size_t Iij_block_size     = get_block_size( id_blocks_Iij.begin(), id_blocks_Iij.end() ); 
+    size_t rhs_ci_block_size  = id_blocks_ps.back().size();
+    size_t ps_orb_block_size  = get_block_size( id_blocks_ps.begin(), id_blocks_ps.end()-1 ); 
 
-    shared_ptr<Determinants> Ket_det  = Determinants_map->at(Sigma_data_map->at(sigmaN_name)->Ket_info->name());
+    unique_ptr<double[]> sigmaN_block( new double[Iij_block_size*ps_orb_block_size*rhs_ci_block_size] );
 
+    shared_ptr<Determinants> Ket_det = Determinants_map_new->at(Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info->name()); 
+
+    cout <<  "ps_orb_block_size = " << ps_orb_block_size << endl;
     for ( int  ii = 0; ii != ps_orb_block_size; ii++) {
-      sigma_2a1( prev_sigma_block.get()+(ii*rhs_ci_block_size), sigmaN_block.get()+(ii*Iij_block_size), Ket_det );
-      sigma_2a2( prev_sigma_block.get()+(ii*rhs_ci_block_size), sigmaN_block.get()+(ii*Iij_block_size), Ket_det );
+
+      sigma_2a1( prev_sigma_block.get()+(ii*rhs_ci_block_size), sigmaN_block.get()+(ii*Iij_block_size), Ket_det,
+                 offsets_ps.back(), offsets_Iij[0], offsets_Iij[1], offsets_Iij[2] ) ;
+
+      sigma_2a2( prev_sigma_block.get()+(ii*rhs_ci_block_size), sigmaN_block.get()+(ii*Iij_block_size), Ket_det,
+                 offsets_ps.back(), offsets_Iij[0], offsets_Iij[1], offsets_Iij[2] ) ;
+
     }
+    cout << "A5" << endl; 
+    
+    vector<Index> id_blocks_sn = {id_blocks_Iij[0], id_blocks_Iij[1]} ;
+    id_blocks_sn.insert( id_blocks_sn.end(), id_blocks_ps.begin(), id_blocks_ps.end()-1) ;
+    id_blocks_sn.push_back(id_blocks_Iij[2]);
+    sigmaN->put_block( sigmaN_block, id_blocks_sn); 
 
   } else {
 
     cout << "spin flips not implemented yet " <<endl;
-  }
 
+  }
 
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::sigma_2a1(double* cvec_ptr, double* sigma_ptr, shared_ptr<Determinants> dets,
-                                               int cvec_offset , int sigma_cvec_offset, int ii_offset, int jj_offset ) {
+void Gamma_Computer::Gamma_Computer::sigma_2a1(double* cvec_ptr, double* sigma_ptr, shared_ptr<const Determinants> dets,
+                                                 int cvec_offset, int sigma_offset, int ii_offset , int jj_offset ){
+//                                               int cvec_offset , int cvec_block_size, 
+//                                               vector<int>& Iij_offsets, vector<int>& Iij_block_sizes ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                               
-  //cout << "sigma_2a1" << endl;                                                                                          
+//  cout << "Gamma_Computer::sigma_2a1" << endl;                                                                                          
   const int lb = dets->lenb();                                                                                            
   const int ij = dets->norb()*dets->norb();                                                                               
                                                                                                                           
@@ -220,10 +310,10 @@ void Gamma_Computer::Gamma_Computer::sigma_2a1(double* cvec_ptr, double* sigma_p
 }                                                                                                                         
                                                                                                                           
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                             
-void Gamma_Computer::Gamma_Computer::sigma_2a2( double* cvec_ptr, double* sigma_ptr, shared_ptr<Determinants> dets, 
+void Gamma_Computer::Gamma_Computer::sigma_2a2( double* cvec_ptr, double* sigma_ptr, shared_ptr<const Determinants> dets, 
                                                 int cvec_offset , int sigma_cvec_offset, int ii_offset, int jj_offset ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                             
-//  cout << "sigma_2a2" << endl;
+//  cout << "Gamma_Computer::sigma_2a2" << endl;
   const int la = dets->lena();
   const int lb = dets->lenb();
   const int ij = dets->norb()*dets->norb();
@@ -370,9 +460,10 @@ Gamma_Computer::Gamma_Computer::build_sigma_2idx_tensor(shared_ptr<GammaInfo> ga
       build_sigma_block( sigma_tensor, sigma_id_blocks, sigma_offsets, Ket_name ) ;
     
     } while (fvec_cycle(block_pos, range_lengths, mins ));
-    
+   
+      
     Sigma_data_map->emplace(sigma_name, sigma_tensor); 
-
+    cout << "put sigma2 : " << sigma_name << " into Sigma_data_map " << endl;
   }
 
   return;

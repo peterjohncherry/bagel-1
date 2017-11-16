@@ -47,6 +47,7 @@ class Gamma_Computer {
       std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> Gamma_info_map;
       std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
       std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> Determinants_map;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<Determinants>>> Determinants_map_new;
       
       std::shared_ptr<Equation<double>> Eqn_info;
       
@@ -72,16 +73,18 @@ class Gamma_Computer {
 
       void get_gamma_tensor_test( std::string gamma_name ) ;
 
+      void build_sigma2_tensor(std::shared_ptr<GammaInfo> gamma2_info );
+
       void build_sigmaN_tensor(std::shared_ptr<GammaInfo> gamma_info );
 
       void build_gammaN_tensor(std::shared_ptr<GammaInfo> gamma_info );
 
-      void build_sigmaN_block( std::shared_ptr<Tensor_<double>> sigmaN,     std::vector<Index>& id_blocks_ps, std::vector<int>& offsets_ps,
-                               std::shared_ptr<Tensor_<double>> prev_sigma, std::vector<Index>& id_blocks_ij, std::vector<int>& offsets_ij  ) ;
+      void build_sigmaN_block( std::string sigmaN,     std::vector<Index>& id_blocks_ps, std::vector<int>& offsets_ps,
+                               std::string prev_sigma, std::vector<Index>& id_blocks_ij, std::vector<int>& offsets_ij  ) ;
 
-      void sigma_2a1( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<Determinants> dets, int cvec_offset, int sigma_cvec_offset, int ii_offset, int jj_offset );
+      void sigma_2a1( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<const Determinants> dets, int cvec_offset, int sigma_cvec_offset, int ii_offset, int jj_offset );
 
-      void sigma_2a2( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<Determinants> dets, int cvec_offset, int sigma_cvec_offset, int ii_offset, int jj_offset );
+      void sigma_2a2( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<const Determinants> dets, int cvec_offset, int sigma_cvec_offset, int ii_offset, int jj_offset );
 
 
       /////////// Utility routines /////////////////////////
