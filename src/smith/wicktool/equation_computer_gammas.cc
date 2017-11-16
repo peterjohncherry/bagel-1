@@ -53,7 +53,6 @@ void Equation_Computer::Equation_Computer::compute_sigmaN( string predecessor_ga
 
   string  Bra_name = sigmaN_info->Bra_info->name();
   string  Ket_name = sigmaN_info->Ket_info->name();
-  
 
   if (Bra_name == Ket_name) { 
     shared_ptr<Civec>  IBra = cvec_old_map->at( Bra_name );  
@@ -77,6 +76,23 @@ void Equation_Computer::Equation_Computer::compute_sigmaN( string predecessor_ga
 
     for ( int  ii = 0; ii != orb_dim*orb2; ii++) 
       gammaN[ii] = ddot_( Ket_det->size(), sigmaN->data(ii)->data(), 1, IBra->data(), 1); 
+
+   if (sorder == 4 ) { 
+     int norb    = Ket_det->norb();
+     cout << "printing gamma4 from old method " << endl;
+     int pos = 0 ; 
+     for ( int ii = 0 ; ii != norb ; ii++) {
+       for ( int jj = 0 ; jj != norb ; jj++) { 
+         cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
+         for ( int kk = 0 ; kk != norb ; kk++) { 
+           for ( int ll = 0 ; ll != norb ; ll++) { 
+              cout << gammaN[pos++] << " " ;
+           }
+           cout << endl; 
+         }
+       }
+     }
+   } 
 
   } else {
   
@@ -144,7 +160,7 @@ cout << "get_gamma2_from_sigma2_and_civec" << endl;
     for ( int jj = 0 ; jj != norb ; jj++) 
       *(gamma2_data.get() + (ii*norb+jj)) =  ddot_( sigma2_Ket->det()->size(),  sigma2_Ket->data(ii*norb+jj)->data(), 1, IBra->data(), 1); 
 
-  cout << "gamma2_data " << endl;
+  cout << "gamma2 old method " << endl;
   for ( int ii = 0 ; ii != norb ; ii++) {
     
     for ( int jj = 0 ; jj != norb ; jj++) { 
@@ -152,6 +168,57 @@ cout << "get_gamma2_from_sigma2_and_civec" << endl;
     }
     cout <<endl;
   }
+////////////////////////////////////////////////////////////////////////////
+  unique_ptr<double[]> gamma4_from_sigma2(new double[norb*norb*norb*norb]);
+  cout << "printing gamma4 from old method sigma2 contraction ijlk" << endl;
+  int pos = 0 ; 
+  for ( int ii = 0 ; ii != norb ; ii++) {
+    for ( int jj = 0 ; jj != norb ; jj++) { 
+      cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
+        for ( int  kk = 0; kk != norb; kk++) {
+          for ( int  ll = 0; ll != norb; ll++) {
+            gamma4_from_sigma2[pos] = ddot_( sigma2_Ket->det()->size(), sigma2_Ket->data(ii*norb+jj)->data(),1, sigma2_Ket->data(ll*norb+kk)->data(), 1);
+            cout << gamma4_from_sigma2[pos++] << " " ;
+        }
+        cout << endl; 
+      }
+    }
+  }
+////////////////////////////////////////////////////////////////////////////
+ 
+  cout << "printing gamma4 from old method sigma2 contraction jilk " << endl;
+  pos = 0 ; 
+  for ( int ii = 0 ; ii != norb ; ii++) {
+    for ( int jj = 0 ; jj != norb ; jj++) { 
+      cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
+        for ( int  kk = 0; kk != norb; kk++) {
+          for ( int  ll = 0; ll != norb; ll++) {
+            gamma4_from_sigma2[pos] = ddot_( sigma2_Ket->det()->size(), sigma2_Ket->data(jj*norb+ii)->data(),1, sigma2_Ket->data(ll*norb+kk)->data(), 1);
+            cout << gamma4_from_sigma2[pos++] << " " ;
+        }
+        cout << endl; 
+      }
+    }
+  }
+////////////////////////////////////////////////////////////////////////////
+ 
+  cout << "printing gamma4 from old method sigma2 contraction jikl " << endl;
+  pos = 0 ; 
+  for ( int ii = 0 ; ii != norb ; ii++) {
+    for ( int jj = 0 ; jj != norb ; jj++) { 
+      cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
+        for ( int  kk = 0; kk != norb; kk++) {
+          for ( int  ll = 0; ll != norb; ll++) {
+            gamma4_from_sigma2[pos] = ddot_( sigma2_Ket->det()->size(), sigma2_Ket->data(jj*norb+ii)->data(),1, sigma2_Ket->data(kk*norb+ll)->data(), 1);
+            cout << gamma4_from_sigma2[pos++] << " " ;
+        }
+        cout << endl; 
+      }
+    }
+  }
+////////////////////////////////////////////////////////////////////////////
+
+
 
   return; 
 }

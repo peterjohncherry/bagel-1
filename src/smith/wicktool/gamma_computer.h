@@ -73,6 +73,8 @@ class Gamma_Computer {
 
       void get_gamma_tensor_test( std::string gamma_name ) ;
 
+      void build_gamma2_tensor(std::shared_ptr<GammaInfo> gamma2_info ) ;
+
       void build_sigma2_tensor(std::shared_ptr<GammaInfo> gamma2_info );
 
       void build_sigmaN_tensor(std::shared_ptr<GammaInfo> gamma_info );
@@ -82,10 +84,11 @@ class Gamma_Computer {
       void build_sigmaN_block( std::string sigmaN,     std::vector<Index>& id_blocks_ps, std::vector<int>& offsets_ps,
                                std::string prev_sigma, std::vector<Index>& id_blocks_ij, std::vector<int>& offsets_ij  ) ;
 
-      void sigma_2a1( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<const Determinants> dets, int cvec_offset, int sigma_cvec_offset, int ii_offset, int jj_offset );
+      void sigma_2a1( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<const Determinants> dets, int cvec_offset, std::vector<int>& sigma_offsets, 
+                      int cvec_block_size, std::vector<int>& sigma_block_sizes );
 
-      void sigma_2a2( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<const Determinants> dets, int cvec_offset, int sigma_cvec_offset, int ii_offset, int jj_offset );
-
+      void sigma_2a2( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<const Determinants> dets, int cvec_offset, std::vector<int>& sigma_offsets, 
+                      int cvec_block_size, std::vector<int>& sigma_block_sizes );
 
       /////////// Utility routines /////////////////////////
       
