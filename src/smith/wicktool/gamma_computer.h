@@ -57,23 +57,7 @@ class Gamma_Computer {
 
       void get_gamma_tensor( std::string gamma_name);
       
-      void build_sigma_2idx_tensor( std::shared_ptr<GammaInfo> gamma_2idx_info );
-      
-      void build_sigma_4idx_tensor( std::shared_ptr<GammaInfo> gamma_4idx_info );
-
-      void build_gamma_2idx_tensor( std::string gamma_name ) ;
-
-      void build_gamma_4idx_tensor( std::string gamma_name ) ;
-      
-      void build_sigma_block( std::shared_ptr<Tensor_<double>> sigma_tens, std::vector<Index>& sigma_id_blocks, std::vector<int>& sigma_offsets, std::string Ket_name  ) const ;
-
-      void build_sigma_4idx_block_from_sigma_2idx_block( std::shared_ptr<Tensor_<double>> sigma_4idx_IJ, std::vector<Index>& sigma_4idx_IJ_id_blocks, std::vector<int>& sigma_4idx_IJ_offsets,
-                                                         std::shared_ptr<Tensor_<double>> sigma_2idx_KJ, std::vector<Index>& sigma_2idx_KJ_id_blocks, std::vector<int>& sigma_2idx_KJ_offsets,
-                                                         std::string KKet_name  );
-
-      void get_gamma_tensor_test( std::string gamma_name ) ;
-
-      void build_gamma2_tensor(std::shared_ptr<GammaInfo> gamma2_info ) ;
+      void build_gamma2_tensor(std::shared_ptr<GammaInfo> gamma2_info );
 
       void build_sigma2_tensor(std::shared_ptr<GammaInfo> gamma2_info );
 

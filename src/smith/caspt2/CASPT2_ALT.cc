@@ -387,7 +387,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
           continue;
       
          shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gamma( Gamma_name );
-         Gamma_Machine->get_gamma_tensor_test( Gamma_name );
+         Gamma_Machine->get_gamma_tensor( Gamma_name );
          cout << Gamma_name << "   2 " << endl;
       
         //fudge, purging of A_contribs should happen in gamma_generator or Equation
