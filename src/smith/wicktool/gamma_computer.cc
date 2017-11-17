@@ -55,8 +55,6 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
     
     shared_ptr<GammaInfo> gamma_info = Gamma_info_map->at(gamma_name) ;
     int order = gamma_info->order;
-    //for now just use specialized routines, this must be made generic at some point
-
     if ( order == 2 ) { 
 
       build_gamma2_tensor( gamma_info );
@@ -76,25 +74,20 @@ void Gamma_Computer::Gamma_Computer::build_gamma2_tensor(shared_ptr<GammaInfo> g
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Gamma_Computer::build_gamma2_tensor" << endl;
   
-   build_detspace( gamma2_info->Bra_info );
-   build_detspace( gamma2_info->Ket_info );
-
-   build_sigma2_tensor(gamma2_info);
-   shared_ptr<Tensor_<double>> sigma2 = Sigma_data_map->at(gamma2_info->sigma_name);
-
-   shared_ptr<Tensor_<double>> gamma2_test =
-   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( sigma2, sigma2, make_pair(2,2) ); 
-
-   Print_Tensor(gamma2_test, "gamma4 from sigma2 contraction" ) ; cout << endl;
+   auto sigma2_loc = Sigma_data_map->find(gamma2_info->sigma_name);
+   
+   if (sigma2_loc == Sigma_data_map->end()){ 
+     
+     build_sigma2_tensor(gamma2_info);
+   }
 
    shared_ptr<Tensor_<double>> gamma2 =
    Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at(gamma2_info->sigma_name),
                                                                               CIvec_data_map->at(gamma2_info->Bra_name()),
                                                                               make_pair(2, 0) );
 
-   Print_Tensor(gamma2, "gamma2 from recursive" ) ; cout << endl;
-  
    Gamma_data_map->emplace(gamma2_info->name, gamma2); 
+   Print_Tensor(Gamma_data_map->at(gamma2_info->name), "MAP gamma2 from recursive" ) ; cout << endl;
   
    return;
 }
@@ -104,6 +97,9 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> g
   cout << "Gamma_Computer::build_sigma2_tensor" << endl;
  
   string sigma2_name     = gamma2_info->sigma_name; cout << "sigma2_name = " << sigma2_name << endl;
+
+  build_detspace( gamma2_info->Bra_info );
+  build_detspace( gamma2_info->Ket_info );
 
   shared_ptr<Tensor_<double>> Ket = CIvec_data_map->at( gamma2_info->Ket_name() );  
   shared_ptr<Determinants>    Ket_det = Determinants_map_new->at( gamma2_info->Ket_name() ); 
@@ -126,33 +122,161 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> g
 
   vector<int> sigma2_id_offsets(3); 
   do { 
-     vector<Index> sigma2_id_blocks = *(get_rng_blocks( block_pos, *ranges ));
-     for ( int ii = 0 ; ii != 3 ; ii++ ) 
-       sigma2_id_offsets[ii] = block_offsets->at(ii)[block_pos->at(ii)];    
 
-     vector<int> sigma2_block_sizes = { (int)sigma2_id_blocks[0].size(), (int)sigma2_id_blocks[1].size(), (int)sigma2_id_blocks[2].size() };
-     size_t sigma2_block_size = sigma2_block_sizes[0]*sigma2_block_sizes[1]*sigma2_block_sizes[2];
+    vector<Index> sigma2_id_blocks = *(get_rng_blocks( block_pos, *ranges ));
+    for ( int ii = 0 ; ii != 3 ; ii++ ) 
+      sigma2_id_offsets[ii] = block_offsets->at(ii)[block_pos->at(ii)];    
 
-     unique_ptr<double[]> sigma2_block( new double[sigma2_block_size] ) ;
-     std::fill_n(sigma2_block.get(), sigma2_block_size, 0.0);
+    vector<int> sigma2_block_sizes = { (int)sigma2_id_blocks[0].size(), (int)sigma2_id_blocks[1].size(), (int)sigma2_id_blocks[2].size() };
+    size_t sigma2_block_size = sigma2_block_sizes[0]*sigma2_block_sizes[1]*sigma2_block_sizes[2];
+
+    unique_ptr<double[]> sigma2_block( new double[sigma2_block_size] ) ;
+    std::fill_n(sigma2_block.get(), sigma2_block_size, 0.0);
     
-     int Ket_offset = 0 ;
-     for ( Index Ket_id_block : Ket_range ) { 
+    int Ket_offset = 0 ;
+    for ( Index Ket_id_block : Ket_range ) { 
 
-       unique_ptr<double[]> Ket_block = Ket->get_block( (vector<Index>({Ket_id_block}) ) );
-       
-       sigma_2a1( Ket_block.get(), sigma2_block.get(), Ket_det,
-                  Ket_offset, sigma2_id_offsets, Ket_id_block.size(), sigma2_block_sizes );
+      unique_ptr<double[]> Ket_block = Ket->get_block( (vector<Index>({Ket_id_block}) ) );
+      
+      sigma_2a1( Ket_block.get(), sigma2_block.get(), Ket_det,
+                 Ket_offset, sigma2_id_offsets, Ket_id_block.size(), sigma2_block_sizes );
 
-       sigma_2a2( Ket_block.get(), sigma2_block.get(), Ket_det,
-                  Ket_offset, sigma2_id_offsets, Ket_id_block.size(), sigma2_block_sizes );
+      sigma_2a2( Ket_block.get(), sigma2_block.get(), Ket_det,
+                 Ket_offset, sigma2_id_offsets, Ket_id_block.size(), sigma2_block_sizes );
 
-       Ket_offset += Ket_id_block.size();
+      Ket_offset += Ket_id_block.size();
 
-     }
+    }
+
+    sigma2->put_block(sigma2_block, sigma2_id_blocks);
 
   } while (fvec_cycle( block_pos, range_lengths, mins ));
+ 
+  vector<Index> id_block = { ranges->at(0).range(0), ranges->at(1).range(0), ranges->at(2).range(0) };
+  unique_ptr<double[]> sigma2_block = sigma2->get_block(id_block);
+
+  int cisize = id_block[2].size(); 
+  int norb   = id_block[1].size(); 
+  cout << "sigma2 in column format AGAIN" << endl;
+  cout << "     :" << endl;
+  for ( int qq = 0 ; qq != norb; qq++){
+    for ( int rr = 0 ; rr != norb; rr++){
+      cout << "    ("<< qq <<  "," <<  rr << ")    " ;
+    }
+  }
+  cout << endl;
+  for ( int xx =0 ; xx!= cisize; xx++ ) {
+    cout << xx << " : ";
+    for ( int qq = 0 ; qq != norb; qq++){
+      for ( int rr = 0 ; rr != norb; rr++){
+        cout << sigma2_block[ (qq*norb + rr)*cisize + xx ] << " " ;
+      }
+    }
+    cout << endl;
+  }
+  cout << endl;
+ 
+
+  vector<Index> id_block_012 = { ranges->at(0).range(0), ranges->at(1).range(0), ranges->at(2).range(0) };
+  unique_ptr<double[]> sigma2_block_012 = sigma2->get_block(id_block_012);
+
+  cout << "sigma2_012 in column format" << endl;
+  cout << "     :" << endl;
+  for ( int qq = 0 ; qq != norb; qq++){
+    for ( int rr = 0 ; rr != norb; rr++){
+      cout << "    ("<< qq <<  "," <<  rr << ")    " ;
+    }
+  }
+  cout << endl;
+  for ( int xx =0 ; xx!= cisize; xx++ ) {
+    cout << xx << " : ";
+    for ( int qq = 0 ; qq != norb; qq++){
+      for ( int rr = 0 ; rr != norb; rr++){
+        cout << sigma2_block_012[ (qq*norb + rr)*cisize + xx ] << " " ;
+      }
+    }
+    cout << endl;
+  }
+  cout << endl;
+ 
+  shared_ptr<vector<int>> new_order = make_shared<vector<int>> ( vector<int> { 1, 0, 2} );
+  shared_ptr<Tensor_<double>> sigma2_102 =  Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( sigma2, new_order );
+
+  vector<Index> id_block_102 = { ranges->at(0).range(0), ranges->at(1).range(0), ranges->at(2).range(0) };
+  unique_ptr<double[]> sigma2_block_102 = sigma2_102->get_block(id_block_102);
+  cout << "sigma2_102 in column format" << endl;
+  cout << "     :" << endl;
+  for ( int qq = 0 ; qq != norb; qq++){
+    for ( int rr = 0 ; rr != norb; rr++){
+      cout << "    ("<< qq <<  "," <<  rr << ")    " ;
+    }
+  }
+  cout << endl;
+  for ( int xx =0 ; xx!= cisize; xx++ ) {
+    cout << xx << " : ";
+    for ( int qq = 0 ; qq != norb; qq++){
+      for ( int rr = 0 ; rr != norb; rr++){
+        cout << sigma2_block_102[ (qq*norb + rr)*cisize + xx ] << " " ;
+      }
+    }
+    cout << endl;
+  }
+  cout << endl;
   
+  shared_ptr<vector<Index>> id_block_102_ptr = make_shared<vector<Index>>(id_block_102);
+  unique_ptr<double[]> sigma2_block_102_ham = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_tensor_data( sigma2_block_102.get(), new_order, id_block_102_ptr ) ;
+  cout << "sigma2_102_ham in column format" << endl;
+  cout << "     :" << endl;
+  for ( int qq = 0 ; qq != norb; qq++){
+    for ( int rr = 0 ; rr != norb; rr++){
+      cout << "    ("<< qq <<  "," <<  rr << ")    " ;
+    }
+  }
+  cout << endl;
+  for ( int xx =0 ; xx!= cisize; xx++ ) {
+    cout << xx << " : ";
+    for ( int qq = 0 ; qq != norb; qq++){
+      for ( int rr = 0 ; rr != norb; rr++){
+        cout << sigma2_block_102[ (qq*norb + rr)*cisize + xx ] << " " ;
+      }
+    }
+    cout << endl;
+  }
+  cout << endl;
+
+  shared_ptr<vector<int>> new_order_201  = make_shared<vector<int>> ( vector<int> { 2, 0, 1 } );
+  shared_ptr<Tensor_<double>> sigma2_201 = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( sigma2, new_order_201 );
+
+  vector<Index> id_block_201 = { ranges->at(2).range(0), ranges->at(0).range(0), ranges->at(1).range(0) };
+  unique_ptr<double[]> sigma2_block_201 = sigma2_201->get_block(id_block_201);
+  cout << "sigma2_201 in column format" << endl;
+  cout << "     :" << endl;
+  for ( int qq = 0 ; qq != norb; qq++){
+    for ( int rr = 0 ; rr != norb; rr++){
+      cout << "    ("<< qq <<  "," <<  rr << ")    " ;
+    }
+  }
+  cout << endl;
+  for ( int xx =0 ; xx!= cisize; xx++ ) {
+    cout << xx << " : ";
+    for ( int qq = 0 ; qq != norb; qq++){
+      for ( int rr = 0 ; rr != norb; rr++){
+        cout << sigma2_block_201[ (qq*norb + rr)*cisize + xx ] << " " ;
+      }
+    }
+    cout << endl;
+  }
+  cout << endl;
+
+  shared_ptr<Tensor_<double>> gamma2 =
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( sigma2, CIvec_data_map->at(gamma2_info->Bra_name()), make_pair(2, 0) );
+
+  Print_Tensor(gamma2, "DIRECT gamma2 from recursive" ) ; cout << endl;
+
+  shared_ptr<Tensor_<double>> gamma4_test =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( sigma2, sigma2, make_pair(2,2) ); 
+  Print_Tensor(gamma4_test, "gamma4 from sigma2 contraction recursive 0 ,1, 2, 0, 1, 2 " ) ; cout << endl;cout << endl;cout << endl;
+
+  Print_Tensor(sigma2, "sigma2 inside routine recursive" ) ; cout << endl;
 
   return;
 }

@@ -586,12 +586,10 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(shared_ptr<
    cout << "Tensor_Arithmetic::reorder_block_Tensor "; cout.flush();
 
    shared_ptr<vector<IndexRange>> T_id_ranges = make_shared<vector<IndexRange>>(Tens_in->indexrange());
-   shared_ptr<vector<int>> range_lengths = make_shared<vector<int>>(0); 
-   for (auto idrng : *T_id_ranges )
-     range_lengths->push_back(idrng.range().size()-1); 
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( T_id_ranges ); 
    
-   shared_ptr<vector<IndexRange>> reordered_ranges    = reorder_vector(new_order, T_id_ranges ) ;
-   shared_ptr<Tensor_<DataType>> reordered_block_tensor = make_shared<Tensor_<DataType>>(*reordered_ranges);
+   shared_ptr<vector<IndexRange>> reordered_ranges       = reorder_vector(new_order, T_id_ranges ) ;
+   shared_ptr<Tensor_<DataType>>  reordered_block_tensor = make_shared<Tensor_<DataType>>(*reordered_ranges);
    reordered_block_tensor->allocate();
    reordered_block_tensor->zero();
 
@@ -600,19 +598,19 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(shared_ptr<
    do {
      cout << " block pos =  [ " ; for(int block_num : *block_pos ){ cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
      
-     shared_ptr<vector<Index>> orig_id_blocks      = get_rng_blocks( block_pos, *T_id_ranges); 
-     shared_ptr<vector<Index>> reordered_id_blocks = reorder_vector(new_order, orig_id_blocks ) ;
+     shared_ptr<vector<Index>> orig_id_blocks      = get_rng_blocks( block_pos, *T_id_ranges ); 
 
      unique_ptr<DataType[]> reordered_data_block; 
      {
-     unique_ptr<DataType[]> orig_data_block = Tens_in->get_block(*orig_id_blocks);
-     reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks ) ;
+     unique_ptr<DataType[]> orig_data_block = Tens_in->get_block( *orig_id_blocks );
+     reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks );
      }
       
+     shared_ptr<vector<Index>> reordered_id_blocks = reorder_vector( new_order, orig_id_blocks );
      reordered_block_tensor->put_block( reordered_data_block, *reordered_id_blocks );
 
-   } while (fvec_cycle(block_pos, range_lengths, mins ));
-
+   } while ( fvec_cycle_skipper( block_pos, range_lengths, mins ) );
+   
    return reordered_block_tensor;
 }
 
@@ -620,7 +618,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(shared_ptr<
 template<class DataType>
 unique_ptr<DataType[]>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data( const DataType* orig_data, shared_ptr<vector<int>>  new_order_vec,
-                                                           shared_ptr<vector<Index>> orig_index_blocks ) {
+                                                                     shared_ptr<vector<Index>> orig_index_blocks ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "reorder_tensor_data" << endl;
 
