@@ -400,9 +400,9 @@ cout << "GammaGenerator::swap" << endl;
 #endif 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  shared_ptr<vector<bool>> full_aops = gamma_vec->at(kk)->full_aops;        
-  shared_ptr<vector<int>>  ids_pos = gamma_vec->at(kk)->ids_pos;        
-  shared_ptr<vector<string>> full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
+  shared_ptr<vector<bool>> full_aops           = gamma_vec->at(kk)->full_aops;        
+  shared_ptr<vector<string>>  full_id_ranges   = gamma_vec->at(kk)->full_id_ranges;                  
+  shared_ptr<vector<int>>  ids_pos             = gamma_vec->at(kk)->ids_pos;        
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
 
   int idx_buff = ids_pos->at(ii);                                                                                                   

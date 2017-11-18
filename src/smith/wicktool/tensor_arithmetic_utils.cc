@@ -53,7 +53,6 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, st
 
        do {
 
-
           if ( *(rel_id_pos->end()-2) != rel_id_pos_old.back() ){
             rel_id_pos_old.back() = *(rel_id_pos->end()-2);
             cout << endl; 

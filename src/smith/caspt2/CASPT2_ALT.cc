@@ -125,21 +125,22 @@ void CASPT2_ALT::CASPT2_ALT::set_range_info(shared_ptr<vector<int>> states_of_in
   range_conversion_map->emplace("notvir", not_virtual_rng); 
  
   for ( int ii : *states_of_interest ) {
+
     range_conversion_map->emplace( get_civec_name( ii , cc_->data(ii)->det()->norb(), cc_->data(ii)->det()->nelea(), cc_->data(ii)->det()->neleb()),
-                                   make_shared<IndexRange>(cc_->data(ii)->det()->size(), cimaxtile ));  
+                                                   make_shared<IndexRange>(cc_->data(ii)->det()->size(), cimaxtile ));  
 
-  cout <<" cc_->data("<<ii<<")->det()->size() = " << cc_->data(ii)->det()->size() <<  endl;
-  cout <<" maxtile = " << maxtile << endl;
-  cout <<" cimaxtile = " << cimaxtile << endl;
-  
-  shared_ptr<IndexRange>  ci_index_ranges =  make_shared<IndexRange>(cc_->data(ii)->det()->size(), cimaxtile );
-  cout <<" ci_index_ranges->nblock()       = " << ci_index_ranges->nblock()     <<  endl;
-  cout <<" ci_index_ranges->size()         = " << ci_index_ranges->size()       <<  endl;
-  cout <<" ci_index_ranges->range().size() = " << ci_index_ranges->range().size() <<  endl;
-  cout <<" ci_index_ranges->range().size() = " << ci_index_ranges->range().size() <<  endl;
-  cout << "cirngs = [ ";  for (auto irng : ci_index_ranges->range()) { cout << irng.size()  << " "; }; cout << "] " << endl;
+    cout <<" cc_->data("<<ii<<")->det()->size() = " << cc_->data(ii)->det()->size() <<  endl;
+    cout <<" maxtile = " << maxtile << endl;
+    cout <<" cimaxtile = " << cimaxtile << endl;
+    
+    shared_ptr<IndexRange>  ci_index_ranges =  make_shared<IndexRange>(cc_->data(ii)->det()->size(), cimaxtile );
+    cout <<" ci_index_ranges->nblock()       = " << ci_index_ranges->nblock()     <<  endl;
+    cout <<" ci_index_ranges->size()         = " << ci_index_ranges->size()       <<  endl;
+    cout <<" ci_index_ranges->range().size() = " << ci_index_ranges->range().size() <<  endl;
+    cout <<" ci_index_ranges->range().size() = " << ci_index_ranges->range().size() <<  endl;
+    cout << "cirngs = [ ";  for (auto irng : ci_index_ranges->range()) { cout << irng.size()  << " "; }; cout << "] " << endl;
+
   }    
-
 
   return;
 
@@ -360,10 +361,9 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
 
   shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, Data_map);
 
-  Gamma_Machine = make_shared<Gamma_Computer::Gamma_Computer>( Expr->GammaMap, CIvec_data_map, Sigma_data_map, Gamma_data_map, Determinants_map, range_conversion_map );
-  
-  Gamma_Machine->convert_civec_to_tensor( cc_->data(0), 0 );
+//  Gamma_Machine = make_shared<Gamma_Computer::Gamma_Computer>( Expr->GammaMap, CIvec_data_map, Sigma_data_map, Gamma_data_map, Determinants_map, range_conversion_map );
 
+  B_Gamma_Computer::B_Gamma_Computer B_Gamma_Machine( ref->ciwfn()->civectors(), range_conversion_map, Expr->GammaMap, Gamma_data_map, Sigma_data_map, CIvec_data_map );
 
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(Expr->GammaMap) ) {
@@ -373,32 +373,23 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
     // Build A_tensor to hold sums of different A-tensors
     shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Expr_computer->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
     A_combined_data->allocate();
-    A_combined_data->zero();
-    cout << " Gamma_name  = " << Gamma_name << endl;
+    A_combined_data->zero(); cout << " Gamma_name  = " << Gamma_name << endl;
 
     // Loop through A-tensors needed for this gamma
-    auto  A_contrib_loc =  Expr->G_to_A_map->find(Gamma_name) ;
+    auto  A_contrib_loc =  Expr->G_to_A_map->find(Gamma_name);
   
-    if ( A_contrib_loc !=  Expr->G_to_A_map->end() ) { 
+    if ( A_contrib_loc !=  Expr->G_to_A_map->end() ) {
    
-      for ( auto A_contrib : *(Expr->G_to_A_map->at(Gamma_name))){
+      for ( auto A_contrib : *A_contrib_loc->second ) {
     
         if (check_AContrib_factors(A_contrib.second))
           continue;
       
-         shared_ptr<vector<shared_ptr<Tensor_<double>>>> gamma_tensors = Expr_computer->get_gamma( Gamma_name );
-         Gamma_Machine->get_gamma_tensor( Gamma_name );
-         cout << Gamma_name << "   2 " << endl;
-      
-        //fudge, purging of A_contribs should happen in gamma_generator or Equation
-        bool skip = false ;
-             cout << Gamma_name << " 3 " << endl;
 	print_AContraction_list(Expr->ACompute_map->at(A_contrib.first), A_contrib.first);
-        cout << Gamma_name << " 4 " << endl;
         Expr_computer->Calculate_CTP(A_contrib.first);
-        cout << Gamma_name << " 5 " << endl;
+
         if ( Gamma_name != "ID" ) {
-          for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){ 
+          for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){
             shared_ptr<Tensor_<double>> A_contrib_reordered = Expr_computer->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
             A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), Data_map->at(A_contrib.first));
           }
@@ -407,16 +398,17 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
         cout << "=========================================================================================================" << endl << endl;
       }
       
-      
       if ( Gamma_name != "ID" ) {
-        //  double bob = A_combined_data->dot_product(gamma_tensors->at(ii));
-        double bob = 1;
+        cout << " into  B_Gamma_Machine to get " << Gamma_name << endl;
+        B_Gamma_Machine.get_gamma( Gamma_name );
+        cout << " out of B_Gamma_Machine to get " << Gamma_name << endl;
+        double bob = A_combined_data->dot_product( Gamma_data_map->at(Gamma_name) );
         result += bob; // A_combined_data->dot_product(gamma_tensors->at(ii));  
-      } else { 
+      } else {
         result += A_combined_data->rms(); //really dumb, and wrong for negative values...
       }
     }
-  }   
+  }
   cout << Expression_name << " = " << result << endl;
   scalar_results_map->emplace( Expression_name, result );
   

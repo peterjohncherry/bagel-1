@@ -68,24 +68,6 @@ class Equation_Computer {
   
     std::shared_ptr<Tensor_<double>> get_uniform_Tensor(std::shared_ptr<std::vector<std::string>> unc_ranges, double XX );
 
-    ////////////Gamma routines (RDM class based) //////////////////
-
-    std::shared_ptr<std::vector<std::shared_ptr<Tensor_<double>>>>
-    get_gamma( std::string gamma_name );
-    
-    void get_wfn_data( std::shared_ptr<CIVecInfo<double>>  cvec_info );
-
-
-    void compute_sigma2( std::string II_name, std::string JJ_name, std::string sigma_name );
-
-    void compute_sigmaN( std::string predecessor_name, std::string gamma_name );
-  
-    void get_gamma2_from_sigma2_and_civec( std::string IBra_name,  std::string JKet_name );
-
-    void sigma_2a1( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<Determinants> dets );
-
-    void sigma_2a2( double* cvec_ptr, double* sigma_ptr, std::shared_ptr<Determinants> dets ) ;
-
     /////////// Utility routines /////////////////////////
 
     void Calculate_CTP(std::string A_contrib_name );
