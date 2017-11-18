@@ -157,31 +157,10 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> g
 
   int cisize = id_block[2].size(); 
   int norb   = id_block[1].size(); 
-  cout << "sigma2 in column format AGAIN" << endl;
-  cout << "     :" << endl;
-  for ( int qq = 0 ; qq != norb; qq++){
-    for ( int rr = 0 ; rr != norb; rr++){
-      cout << "    ("<< qq <<  "," <<  rr << ")    " ;
-    }
-  }
-  cout << endl;
-  for ( int xx =0 ; xx!= cisize; xx++ ) {
-    cout << xx << " : ";
-    for ( int qq = 0 ; qq != norb; qq++){
-      for ( int rr = 0 ; rr != norb; rr++){
-        cout << sigma2_block[ (qq*norb + rr)*cisize + xx ] << " " ;
-      }
-    }
-    cout << endl;
-  }
-  cout << endl;
- 
-
   vector<Index> id_block_012 = { ranges->at(0).range(0), ranges->at(1).range(0), ranges->at(2).range(0) };
   unique_ptr<double[]> sigma2_block_012 = sigma2->get_block(id_block_012);
 
   cout << "sigma2_012 in column format" << endl;
-  cout << "     :" << endl;
   for ( int qq = 0 ; qq != norb; qq++){
     for ( int rr = 0 ; rr != norb; rr++){
       cout << "    ("<< qq <<  "," <<  rr << ")    " ;
@@ -198,48 +177,23 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> g
     cout << endl;
   }
   cout << endl;
- 
-  shared_ptr<vector<int>> new_order = make_shared<vector<int>> ( vector<int> { 1, 0, 2} );
-  shared_ptr<Tensor_<double>> sigma2_102 =  Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( sigma2, new_order );
 
-  vector<Index> id_block_102 = { ranges->at(0).range(0), ranges->at(1).range(0), ranges->at(2).range(0) };
-  unique_ptr<double[]> sigma2_block_102 = sigma2_102->get_block(id_block_102);
+  shared_ptr<vector<int>> order_102  = make_shared<vector<int>> ( vector<int> { 1, 0, 2 } );
+  shared_ptr<vector<Index>> id_block_012_ptr = make_shared<vector<Index>>(id_block_012);
+  unique_ptr<double[]> sigma2_block_102 = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_tensor_data( sigma2_block.get(), order_102, id_block_012_ptr ) ;
   cout << "sigma2_102 in column format" << endl;
-  cout << "     :" << endl;
-  for ( int qq = 0 ; qq != norb; qq++){
-    for ( int rr = 0 ; rr != norb; rr++){
+  for ( int qq = 0 ; qq != norb; qq++)
+    for ( int rr = 0 ; rr != norb; rr++)
       cout << "    ("<< qq <<  "," <<  rr << ")    " ;
-    }
-  }
+   
   cout << endl;
+
   for ( int xx =0 ; xx!= cisize; xx++ ) {
     cout << xx << " : ";
-    for ( int qq = 0 ; qq != norb; qq++){
-      for ( int rr = 0 ; rr != norb; rr++){
+    for ( int qq = 0 ; qq != norb; qq++)
+      for ( int rr = 0 ; rr != norb; rr++)
         cout << sigma2_block_102[ (qq*norb + rr)*cisize + xx ] << " " ;
-      }
-    }
-    cout << endl;
-  }
-  cout << endl;
-  
-  shared_ptr<vector<Index>> id_block_102_ptr = make_shared<vector<Index>>(id_block_102);
-  unique_ptr<double[]> sigma2_block_102_ham = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_tensor_data( sigma2_block_102.get(), new_order, id_block_102_ptr ) ;
-  cout << "sigma2_102_ham in column format" << endl;
-  cout << "     :" << endl;
-  for ( int qq = 0 ; qq != norb; qq++){
-    for ( int rr = 0 ; rr != norb; rr++){
-      cout << "    ("<< qq <<  "," <<  rr << ")    " ;
-    }
-  }
-  cout << endl;
-  for ( int xx =0 ; xx!= cisize; xx++ ) {
-    cout << xx << " : ";
-    for ( int qq = 0 ; qq != norb; qq++){
-      for ( int rr = 0 ; rr != norb; rr++){
-        cout << sigma2_block_102[ (qq*norb + rr)*cisize + xx ] << " " ;
-      }
-    }
+      
     cout << endl;
   }
   cout << endl;
@@ -259,11 +213,10 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> g
   cout << endl;
   for ( int xx =0 ; xx!= cisize; xx++ ) {
     cout << xx << " : ";
-    for ( int qq = 0 ; qq != norb; qq++){
-      for ( int rr = 0 ; rr != norb; rr++){
+    for ( int qq = 0 ; qq != norb; qq++)
+      for ( int rr = 0 ; rr != norb; rr++)
         cout << sigma2_block_201[ (qq*norb + rr)*cisize + xx ] << " " ;
-      }
-    }
+    
     cout << endl;
   }
   cout << endl;

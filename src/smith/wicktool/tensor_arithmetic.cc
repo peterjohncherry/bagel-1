@@ -628,6 +628,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data( const DataT
   array<int,4> sort_options = {0,1,1,1};
 
   unique_ptr<DataType[]> reordered_data(new DataType[block_size]);
+  fill_n(reordered_data.get(), block_size, 0.0 );
 
    for ( int ii = 0 ; ii != new_order_vec->size(); ii++) 
      new_order_st->at(ii) = new_order_vec->at(ii);

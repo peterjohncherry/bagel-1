@@ -104,7 +104,10 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_3( std::shared_ptr<std
                                                             std::array<int,4>& sort_options, 
                                                             const DataType* in, DataType* out ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "sort_indices_3 "<< endl;
+  cout << "Tensor_Sorter::sort_indices_3 "<< endl;
+
+  cout << "new_id_order = [ " ; for ( size_t id_pos : *new_id_order ) { cout << id_pos << " " ; } cout << "]" << endl; 
+  cout << "rlen         = [ " ; for ( size_t len : *rlen ) { cout << len << " " ; } cout << "]" << endl; 
 
   const size_t sort_options_id = get_sort_options_idnum( sort_options ) ; 
   const size_t perm_id = get_perm_idnum( new_id_order ) ; 
@@ -150,7 +153,6 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_3( std::shared_ptr<std
     default:
       throw std::logic_error(" sort options case " + sort_name + " not implemented" ) ;
   }
-  cout << "sort_indices_3 "<< endl;
   return;
 }
 
