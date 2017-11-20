@@ -58,6 +58,8 @@ class Tensor_Arithmetic {
      static std::shared_ptr<Tensor_<DataType>> contract_tensor_with_vector( std::shared_ptr<Tensor_<DataType>> Tens1_in, std::shared_ptr<Tensor_<DataType>> Tens2_in,  
                                                                             std::pair<int,int> ctr_todo);
 
+     static std::shared_ptr<Tensor_<DataType>>
+     get_test_Tensor( std::shared_ptr<std::vector<IndexRange>> T_id_ranges );
 }; 
  
 }

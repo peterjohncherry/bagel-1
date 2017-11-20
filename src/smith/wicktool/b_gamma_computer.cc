@@ -1,6 +1,7 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
 #include <src/smith/wicktool/b_gamma_computer.h>
+#include <src/util/prim_op.h>
 
 using namespace std;
 using namespace bagel;
@@ -165,7 +166,6 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
 
   return;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<GammaInfo> gammaN_info ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -179,22 +179,23 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
   int orb_dim = pow(Bra_det->norb(), (gammaN_info->order - 2) );
   int orb2    = Bra_det->norb()*Bra_det->norb();
 
-  unique_ptr<double[]> gammaN( new double[orb_dim*orb2]);
-  std::fill_n(gammaN.get(), orb_dim*orb2, 0.0);
 
+
+  
+
+  unique_ptr<double[]> gammaN( new double[orb_dim*orb2]);
   for ( int  ii = 0; ii != orb_dim*orb2; ii++) 
     gammaN[ii] = ddot_( Bra_det->size(), sigmaN->data(ii)->data(), 1, Bra->data(), 1); 
+
+
+
 
   shared_ptr<Tensor_<double>> Tens_sigmaN = Sigma_data_map->at(gammaN_info->sigma_name);
   convert_civec_to_tensor( Bra_name );
   shared_ptr<vector<IndexRange>> gamma_ranges = Get_Bagel_IndexRanges( gammaN_info->id_ranges ); 
-  shared_ptr<Tensor_<double>> Tens_gammaN = Tensor_Calc->contract_tensor_with_vector( Tens_sigmaN, CIvec_data_map->at(Bra_name), make_pair(gammaN_info->order, 0) );
   Gamma_data_map->emplace( gammaN_info->name, Tens_gammaN ); 
- 
-  cout << endl; 
-  Print_Tensor( Tens_gammaN , gammaN_info->name ) ; cout << endl << endl;
 
-
+//////////////////////////////////////////////////////TESTING//////////////////////////////////////////////////////////////////////////////
   if ( gammaN_info->order == 4 ) { 
     int norb  = Bra_det->norb();
     cout << "printing gamma4 from old method " << endl;
@@ -211,28 +212,103 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
       }
     }
 
-    shared_ptr<Dvec> sigma2 = dvec_sigma_map->at(gammaN_info->prev_sigma_name());
-    unique_ptr<double[]> gamma2( new double[orb2]);
-    for ( int  ii = 0; ii != orb2; ii++) 
-      gamma2[ii] = ddot_( Bra_det->size(), sigma2->data(ii)->data(), 1, Bra->data(), 1); 
+    cout << endl; Print_Tensor( Tens_gammaN , gammaN_info->name ) ; cout << endl << endl;
 
-    cout << " TEST rdm4 " << endl;
-    pos = 0;
+    shared_ptr<vector<int>> new_order = make_shared<vector<int>>(vector<int> { 0,1,3,2 });
+    cout <<"getting test Tensor with gammaN ranges " << endl; 
+    shared_ptr<Tensor_<double>> Test_Tens = Tensor_Calc->get_test_Tensor( gamma_ranges);
+    cout << endl; Print_Tensor( Test_Tens, "Test_Tens" ) ; cout << endl << endl;
+ 
+    shared_ptr<Tensor_<double>>  Test_Tens_reord = Tensor_Calc->reorder_block_Tensor( Test_Tens, new_order );
+    Print_Tensor( Test_Tens_reord, "Test_Tens_reord 0132" ); cout << endl<<endl;
+  
+    new_order = make_shared<vector<int>>(vector<int> { 1,0,2,3 });
+    Test_Tens_reord = Tensor_Calc->reorder_block_Tensor( Test_Tens, new_order );
+    Print_Tensor( Test_Tens_reord, "Test_Tens_reord 1023" ); cout << endl<<endl;
+  
+    new_order = make_shared<vector<int>>(vector<int> { 3,2,1,0 });
+    Test_Tens_reord = Tensor_Calc->reorder_block_Tensor( Test_Tens, new_order );
+    Print_Tensor( Test_Tens_reord, "Test_Tens_reord 3210" ); cout << endl<<endl;
+  
+    shared_ptr<vector<IndexRange>> test_ids_3 = make_shared<vector<IndexRange>>(gamma_ranges->begin(), gamma_ranges->end()-1);
+    shared_ptr<Tensor_<double>> Test_Tens_3 = Tensor_Calc->get_test_Tensor( test_ids_3);
+    Print_Tensor( Test_Tens_3, "Test_Tens_3" ); cout << endl<<endl;
+
+    shared_ptr<vector<int>> new_order_3 = make_shared<vector<int>>(vector<int> { 1, 2, 0 });
+    shared_ptr<Tensor_<double>>Test_Tens_3_reord = Tensor_Calc->reorder_block_Tensor( Test_Tens_3, new_order_3 );
+    Print_Tensor( Test_Tens_3_reord, "Test_Tens_reord 021" ); cout << endl << endl;
+  
+  
+//    sort_indices<0,1,2,3,a,b,c,d>
+// a :  add or not
+// c :  factor +1 or -1
+// b : always seems to equal 1 ...
+// d : always seems to equal 1 ...
+
+    pos = 0 ; 
+    unique_ptr<double[]> test_block(new double[norb*norb*norb*norb]);
+    for ( int ii = 0 ; ii != norb ; ii++) {
+      for ( int jj = 0 ; jj != norb ; jj++) { 
+        for ( int kk = 0 ; kk != norb ; kk++) { 
+          for ( int ll = 0 ; ll != norb ; ll++) { 
+             test_block[pos++] = ii*1000+jj*100+kk*10+ll*1;
+          }
+        }
+      }
+    }
+    cout << endl << "test_block " << endl;
+    pos = 0 ; 
     for ( int ii = 0 ; ii != norb ; ii++) {
       for ( int jj = 0 ; jj != norb ; jj++) { 
         cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
         for ( int kk = 0 ; kk != norb ; kk++) { 
-          if ( jj == kk ) {
-            for ( int ll = 0 ; ll != norb ; ll++)  
-               cout << gammaN[pos++] - gamma2[ii*norb+ll] << " " ;
-          } else if ( jj != kk ) {
-            for ( int ll = 0 ; ll != norb ; ll++) 
-               cout << gammaN[pos++] <<  " " ;
+          for ( int ll = 0 ; ll != norb ; ll++) { 
+             cout << test_block[pos++] << " " ;
           }
           cout << endl; 
         }
       }
     }
+    unique_ptr<double[]> test_block_0132(new double[norb*norb*norb*norb] );
+    cout << endl << "test_block_0132 "  << endl;
+    pos = 0 ; 
+    sort_indices<0,1,3,2,0,1,1,1>(test_block.get(), test_block_0132.get(), norb, norb, norb, norb) ;
+    for ( int ii = 0 ; ii != norb ; ii++) {
+      for ( int jj = 0 ; jj != norb ; jj++) { 
+        cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
+        for ( int kk = 0 ; kk != norb ; kk++) { 
+          for ( int ll = 0 ; ll != norb ; ll++) { 
+             cout << test_block_0132[pos++] << " " ;
+          }
+          cout << endl; 
+        }
+      }
+    }
+
+
+
+//    shared_ptr<Dvec> sigma2 = dvec_sigma_map->at(gammaN_info->prev_sigma_name());
+//    unique_ptr<double[]> gamma2( new double[orb2]);
+//    for ( int  ii = 0; ii != orb2; ii++) 
+//      gamma2[ii] = ddot_( Bra_det->size(), sigma2->data(ii)->data(), 1, Bra->data(), 1); 
+
+//    cout << " TEST rdm4 " << endl;
+//    pos = 0;
+//    for ( int ii = 0 ; ii != norb ; ii++) {
+//      for ( int jj = 0 ; jj != norb ; jj++) { 
+//        cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
+//        for ( int kk = 0 ; kk != norb ; kk++) { 
+//          if ( jj == kk ) {
+//            for ( int ll = 0 ; ll != norb ; ll++)  
+//               cout << gammaN[pos++] - gamma2[ii*norb+ll] << " " ;
+//          } else if ( jj != kk ) {
+//            for ( int ll = 0 ; ll != norb ; ll++) 
+//               cout << gammaN[pos++] <<  " " ;
+//          }
+//          cout << endl; 
+//        }
+//      }
+//    }
 
   
   } 

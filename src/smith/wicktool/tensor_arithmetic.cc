@@ -415,9 +415,9 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
     shared_ptr<vector<Index>> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
     vector<Index> T_out_rng_blocks(T1_new_rng_blocks->begin()+1, T1_new_rng_blocks->end());
     
-    int ctr_block_size    = T1_new_rng_blocks->front().size(); cout << "ctr_block_size = " << ctr_block_size << endl; 
+    int ctr_block_size    = T1_new_rng_blocks->front().size(); cout << " ctr_block_size = " << ctr_block_size << endl; 
     int T1_block_size     = get_block_size( T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); 
-    int T_out_block_size  = T1_block_size/ctr_block_size; cout << " T_out_block_size = " << T_out_block_size << endl; 
+    int T_out_block_size  = T1_block_size/ctr_block_size;      cout << " T_out_block_size = " << T_out_block_size << endl; 
 
     std::unique_ptr<DataType[]> T1_data_new;
     {
@@ -662,6 +662,8 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
    cout << "Tensor_Arithmetic::get_uniform_Tensor" << endl;
 
    shared_ptr<vector<int>>  range_lengths  = make_shared<vector<int>>(0); 
+
+   
    for ( IndexRange idrng : *T_id_ranges )
       range_lengths->push_back(idrng.range().size()-1); 
 
@@ -691,6 +693,53 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
    } while (fvec_cycle(block_pos, range_lengths, mins ));
    return block_tensor;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Returns a tensor with element with distinct elements, all blcoks have similarly generated elems though
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_Tensor(shared_ptr<vector<IndexRange>> T_id_ranges ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Tensor_Arithmetic::get_test_Tensor" << endl;
+
+
+   shared_ptr<Tensor_<DataType>> Tens = make_shared<Tensor_<DataType>>(*T_id_ranges);
+   Tens->allocate();
+
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(T_id_ranges->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(T_id_ranges->size(),0);  
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( T_id_ranges ); 
+
+   double put_after_decimal_point  = pow(10 , block_pos->size());
+   vector<double> power_10( block_pos->size() );
+   for (int ii = 0  ; ii != power_10.size() ; ii++ ) 
+     power_10[power_10.size()-1-ii] = pow(10, (double)ii );///put_after_decimal_point ;
+
+   do {
+
+     vector<Index> T_id_blocks = *(get_rng_blocks( block_pos, *T_id_ranges )); 
+     size_t out_size = Tens->get_size(T_id_blocks); 
+
+     unique_ptr<DataType[]> T_block_data( new DataType[out_size] );
+  
+     shared_ptr<vector<int>> id_pos = make_shared<vector<int>>(T_id_ranges->size(),0);  
+     shared_ptr<vector<int>> id_mins = make_shared<vector<int>>(T_id_ranges->size(),0);  
+     shared_ptr<vector<int>> id_maxs = make_shared<vector<int>>(T_id_ranges->size());
+     for (int xx = 0 ; xx !=id_maxs->size(); xx++ ) 
+       id_maxs->at(xx)  =   T_id_blocks[xx].size()-1;
+
+     int  qq =0;
+     //TODO add in offsets at some point
+     do {
+        T_block_data[qq++] = inner_product (id_pos->begin(), id_pos->end(), power_10.begin(), 0 );
+     } while (fvec_cycle( id_pos, id_maxs, id_mins ));
+
+     Tens->put_block(T_block_data, T_id_blocks);
+
+   } while (fvec_cycle(block_pos, range_lengths, mins ));
+   return Tens;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
