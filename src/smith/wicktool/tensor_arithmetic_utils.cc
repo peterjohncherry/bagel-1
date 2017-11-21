@@ -7,6 +7,87 @@ using namespace bagel::SMITH;
 using namespace WickUtils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Tensor_Arithmetic_Utils::Print_Tensor_column_major( shared_ptr<Tensor_<double>> Tens, string name  ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//   cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
+   cout << "---------------------------- " << name <<  " ----------------------------" << endl;
+
+   vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
+   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( Bagel_id_ranges) ;
+
+   shared_ptr<vector<int>> range_lengths  =  get_range_lengths( Bagel_id_ranges ) ;
+   shared_ptr<vector<int>> block_pos      =  make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> mins           =  make_shared<vector<int>>(range_lengths->size(),0);  
+    
+   do {
+
+     vector<int> id_pos(block_pos->size());
+     for ( int ii = 0 ; ii != Bagel_id_ranges.size(); ii++)
+       id_pos[ii] = block_offsets->at(ii).at(block_pos->at(ii));
+    
+     vector<Index> id_blocks = *(get_rng_blocks( block_pos, Bagel_id_ranges ));
+    
+     if ( !(Tens->exists(id_blocks)) ) { 
+
+       cout << "WARNING : TENSOR BLOCK AT " ; cout.flush() ; print_vector( *block_pos ) ; cout << " IS NOT STORED FOR PRINTING!! " << endl;
+       cout << "NOTE : THIS IS OK IF THERE IS SYMMETRY, BUT OTHERWISE A BIG PROBLEM!! " << endl;
+        
+     } else {
+
+
+       shared_ptr<vector<int>> id_blocks_sizes= make_shared<vector<int>>(id_blocks.size());
+       for( int ii = 0 ;  ii != id_blocks.size(); ii++)
+         id_blocks_sizes->at(ii) = id_blocks[ii].size();
+      
+       int id_block_size = Tens->get_size(id_blocks);
+     
+       unique_ptr<double[]>    T_data_block = Tens->get_block(id_blocks);
+       shared_ptr<vector<int>> Tens_strides = get_Tens_strides_column_major(*id_blocks_sizes);
+       double* pos = T_data_block.get();
+       int shift = 0 ; 
+       if ( block_pos->size() >2 ) { 
+         do {
+
+           int id_pos_tmp = shift;
+           vector<int> id_pos_rel(Tens_strides->size(), 0 );
+           for ( int kk = Tens_strides->size()-1 ; kk != 1 ; kk--){
+             id_pos_rel[kk] = id_pos_tmp/Tens_strides->at(kk);
+             id_pos_tmp -= id_pos_rel[kk]*Tens_strides->at(kk); 
+           }
+           
+	   print_vector( id_pos_rel, "id_pos_rel" ) ; cout << endl;
+
+           for (int jj = 0 ; jj != id_blocks_sizes->at(0) ; jj++ ){
+             for (int kk = 0 ; kk != id_blocks_sizes->at(1) ; kk++ ){
+               cout << T_data_block[shift+kk*id_blocks_sizes->at(0)+jj] << " " ; 
+             }
+             cout <<endl;
+           }
+ 
+           shift +=  id_blocks_sizes->at(1)*id_blocks_sizes->at(0);
+ 
+         } while (shift < id_block_size );
+
+       } else { cout << " block_pos->size() = " << block_pos->size() << endl; 
+
+         for (int jj = 0 ; jj != id_blocks_sizes->at(0) ; jj++ ){
+           for (int kk = 0 ; kk != id_blocks_sizes->at(1) ; kk++ ){
+             cout << T_data_block[shift+kk*id_blocks_sizes->at(0)+jj] << " " ; 
+           }
+           cout <<endl;
+         }
+
+         shift += id_blocks_sizes->at(1)*id_blocks_sizes->at(0);
+         cout << endl;
+       }
+     } 
+
+   } while ( fvec_cycle_skipper_f2b( block_pos, range_lengths, mins ));
+ 
+   return ;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, string name  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
@@ -92,6 +173,19 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, st
                //  if ( ( jj+1 % Tens_strides->at(ll) == 0) ) 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides(vector<int>& range_sizes) { 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// cout << "get_Tens_strides " << endl;
+
+ shared_ptr<vector<int>> Tens_strides= make_shared<vector<int>>(range_sizes.size());
+ Tens_strides->front() = 1;
+ for ( int ii = 1  ; ii!= range_sizes.size(); ii++ ) 
+   Tens_strides->at(ii) = Tens_strides->at(ii-1) * range_sizes[ii-1];
+  
+ return Tens_strides;
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides_column_major(vector<int>& range_sizes) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // cout << "get_Tens_strides " << endl;
 

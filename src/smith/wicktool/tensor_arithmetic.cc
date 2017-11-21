@@ -444,6 +444,120 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
   return Tens_out;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Contracts tensors T1 and T2 over two specified indexes
+//T1_org_rg T2_org_rg are the original index ranges for the tensors (not necessarily normal ordered).
+//T2_new_rg T1_new_rg are the new ranges, with the contracted index at the end, and the rest in normal ordering.
+//T1_new_order and T2_new_order are the new order of indexes, and are used for rearranging the tensor data.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<Tensor_<DataType>>
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors_column_major( shared_ptr<Tensor_<DataType>> Tens1_in,
+                                                                                         shared_ptr<Tensor_<DataType>> Tens2_in,
+                                                                                         pair<int,int> ctr_todo){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl; 
+
+  vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
+  vector<IndexRange> T2_org_rngs = Tens2_in->indexrange();
+
+  if ( ( T1_org_rngs.size() == 1 ) && (T2_org_rngs.size() == 1) ) {
+    cout << "vector dot product" << endl;
+  } else if ( ( T1_org_rngs.size() == 1 ) && (T2_org_rngs.size() != 1) ) {
+    cout << "tensor dot vector " << endl;
+  } else if ( ( T1_org_rngs.size() == 1 ) && (T2_org_rngs.size() == 1) ) {
+    cout << "vector dot tensor " << endl;
+  }    
+
+  shared_ptr<vector<int>> T1_org_order= make_shared<vector<int>>(T1_org_rngs.size());
+  iota(T1_org_order->begin(), T1_org_order->end(), 0);
+
+  shared_ptr<vector<int>> T2_org_order= make_shared<vector<int>>(T2_org_rngs.size());
+  iota(T2_org_order->begin(), T2_org_order->end(), 0);
+ 
+  // front for column major ordering
+  shared_ptr<vector<int>>        T1_new_order = put_ctr_at_front( T1_org_order, ctr_todo.first);
+  shared_ptr<vector<IndexRange>> T1_new_rngs  = reorder_vector(T1_new_order, T1_org_rngs);
+  shared_ptr<vector<int>>        maxs1        = get_num_index_blocks_vec(T1_new_rngs) ;
+
+  shared_ptr<vector<int>>        T2_new_order = put_ctr_at_back( T2_org_order, ctr_todo.second);
+  shared_ptr<vector<IndexRange>> T2_new_rngs  = reorder_vector(T2_new_order, T2_org_rngs);
+  shared_ptr<vector<int>>        maxs2        = get_num_index_blocks_vec(T2_new_rngs) ;
+
+   cout << "established ordering and got ranges" <<endl;
+ 
+  vector<IndexRange> Tout_unc_rngs(T1_new_rngs->begin()+1, T1_new_rngs->end());
+  Tout_unc_rngs.insert(Tout_unc_rngs.end(), T2_new_rngs->begin(), T2_new_rngs->end()-1);
+
+  shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(Tout_unc_rngs);  
+  Tens_out->allocate();
+  Tens_out->zero();
+
+  //loops over all index blocks of T1 and T2; final index of T1 is same as first index of T2 due to contraction
+  shared_ptr<vector<int>> T1_rng_block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
+
+  do { 
+    
+    print_vector( *T1_rng_block_pos , "T1_block_pos" ); cout << endl;
+
+    shared_ptr<vector<Index>> T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, *T1_new_rngs); 
+    shared_ptr<vector<Index>> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
+    
+    size_t ctr_block_size    = T1_new_rng_blocks->front().size(); 
+    size_t T1_unc_block_size = get_block_size( T1_new_rng_blocks->begin()+1, T1_new_rng_blocks->end()); 
+    size_t T1_block_size     = get_block_size( T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); 
+
+    std::unique_ptr<DataType[]> T1_data_new;
+    {
+      std::unique_ptr<DataType[]> T1_data_org = Tens1_in->get_block(*T1_org_rng_blocks);
+      cout << "got T1 block, reordering to  "; print_vector(*T1_new_order , "T1_new_order" ); cout << endl;
+      T1_data_new = reorder_tensor_data(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
+      cout << "reordered T1 block" << endl;
+    }
+   
+    shared_ptr<vector<int>> T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size(), 0);
+    T2_rng_block_pos->back() = T1_rng_block_pos->front();
+  
+    do { 
+
+      print_vector( *T2_rng_block_pos , "T2_block_pos" ); cout << endl;
+
+      shared_ptr<vector<Index>> T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, *T2_new_rngs); 
+      shared_ptr<vector<Index>> T2_org_rng_blocks = inverse_reorder_vector( T2_new_order, T2_new_rng_blocks); 
+      size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin(), T2_new_rng_blocks->end()-1);
+
+
+
+      std::unique_ptr<DataType[]> T2_data_new;
+      {
+        cout << "getting T2 block" << endl;
+        std::unique_ptr<DataType[]> T2_data_org = Tens2_in->get_block(*T2_org_rng_blocks);
+        cout << "got T2 block, reordering to  "; print_vector(*T2_new_order , "T2_new_order" ); cout << endl;
+        T2_data_new = reorder_tensor_data(T2_data_org.get(), T2_new_order, T2_org_rng_blocks); 
+        cout << "reordered T2 block" << endl;
+      }
+      
+      std::unique_ptr<DataType[]> T_out_data(new DataType[T1_unc_block_size*T2_unc_block_size]);
+      std::fill_n(T_out_data.get(), T1_unc_block_size*T2_unc_block_size, 0.0);
+
+      dgemm_( "N", "N", T1_unc_block_size, T2_unc_block_size, ctr_block_size, 1.0, T1_data_new, T1_unc_block_size,
+              T2_data_new, ctr_block_size, 0.0, T_out_data, T1_unc_block_size );
+
+      vector<Index> T_out_rng_block(T1_new_rng_blocks->begin()+1, T1_new_rng_blocks->end());
+      T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin(), T2_new_rng_blocks->end()-1);
+      cout << "putting block" << endl;
+      Tens_out->add_block( T_out_data, T_out_rng_block );
+      cout << "put block" << endl;
+
+    } while(fvec_cycle_skipper(T2_rng_block_pos, maxs2, 0 )) ;//remove last index; contracted index is cycled in T1 loop
+
+  } while (fvec_cycle_test(T1_rng_block_pos, maxs1 ));
+
+  
+  return Tens_out;
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Contracts tensors T1 and T2 over two specified indexes
@@ -696,12 +810,12 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a tensor with element with distinct elements, all blcoks have similarly generated elems though
+//C ordering (row major)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_Tensor(shared_ptr<vector<IndexRange>> T_id_ranges ){
+shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_Tensor_row_major(shared_ptr<vector<IndexRange>> T_id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Tensor_Arithmetic::get_test_Tensor" << endl;
-
 
    shared_ptr<Tensor_<DataType>> Tens = make_shared<Tensor_<DataType>>(*T_id_ranges);
    Tens->allocate();
@@ -739,6 +853,53 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
    } while (fvec_cycle(block_pos, range_lengths, mins ));
    return Tens;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Returns a tensor with element with distinct elements, all blcoks have similarly generated elems though
+//C ordering (row major)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_Tensor_column_major(shared_ptr<vector<IndexRange>> T_id_ranges ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Tensor_Arithmetic::get_test_Tensor" << endl;
+
+   shared_ptr<Tensor_<DataType>> Tens = make_shared<Tensor_<DataType>>(*T_id_ranges);
+   Tens->allocate();
+
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(T_id_ranges->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(T_id_ranges->size(),0);  
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( T_id_ranges ); 
+
+   double put_after_decimal_point  = pow(10 , block_pos->size());
+   vector<double> power_10( block_pos->size() );
+   for (int ii = 0  ; ii != power_10.size() ; ii++ ) 
+     power_10[ii] = pow(10, (double)ii );///put_after_decimal_point ;
+
+   do {
+
+     vector<Index> T_id_blocks = *(get_rng_blocks( block_pos, *T_id_ranges )); 
+     size_t out_size = Tens->get_size(T_id_blocks); 
+
+     unique_ptr<DataType[]> T_block_data( new DataType[out_size] );
+  
+     shared_ptr<vector<int>> id_pos = make_shared<vector<int>>(T_id_ranges->size(),0);  
+     shared_ptr<vector<int>> id_mins = make_shared<vector<int>>(T_id_ranges->size(),0);  
+     shared_ptr<vector<int>> id_maxs = make_shared<vector<int>>(T_id_ranges->size());
+     for (int xx = 0 ; xx !=id_maxs->size(); xx++ ) 
+       id_maxs->at(xx)  =   T_id_blocks[xx].size()-1;
+
+     int  qq =0;
+     //TODO add in offsets at some point
+     do {
+        T_block_data[qq++] = inner_product (id_pos->begin(), id_pos->end(), power_10.begin(), 0 );
+     } while (fvec_cycle( id_pos, id_maxs, id_mins ));
+
+     Tens->put_block(T_block_data, T_id_blocks);
+
+   } while (fvec_cycle(block_pos, range_lengths, mins ));
+   return Tens;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

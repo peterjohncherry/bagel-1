@@ -14,6 +14,7 @@ namespace Tensor_Arithmetic_Utils {
      std::shared_ptr<std::vector<int>> get_CTens_strides( std::vector<int>& range_sizes, std::vector<int>& ctr_idxs_pos );
 
      std::shared_ptr<std::vector<int>> get_Tens_strides ( std::vector<int>& range_sizes) ;
+     std::shared_ptr<std::vector<int>> get_Tens_strides_column_major( std::vector<int>& range_sizes) ; 
  
      std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> old_ids) ;
      std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::shared_ptr<std::vector<std::shared_ptr<IndexRange>>> old_ids) ;
@@ -43,6 +44,8 @@ namespace Tensor_Arithmetic_Utils {
      void put_ctrs_at_back( std::vector<int>& id_pos, std::pair<int,int>& ctr_todo);
 
      void Print_Tensor(std::shared_ptr<Tensor_<double>> Tens, std::string name = "") ;
+     
+     void Print_Tensor_column_major( std::shared_ptr<Tensor_<double>> Tens, std::string name = "") ;
      
      size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
 

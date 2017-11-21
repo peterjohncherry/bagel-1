@@ -82,6 +82,7 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
 
   shared_ptr<vector<IndexRange>> sigma_ranges = Get_Bagel_IndexRanges( gamma_info->sigma_id_ranges ); 
   print_vector( *(gamma_info->sigma_id_ranges) , "sigma_id_ranges") ;  cout << endl;
+
   shared_ptr<Tensor_<double>> Tens_sigma = make_shared<Tensor_<double>>( *sigma_ranges ); 
   Tens_sigma->allocate();
   Tens_sigma->zero();
@@ -95,12 +96,12 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
 
   vector<int> orb_id_strides(order);
   for ( int ii = 0 ; ii != order ; ii++ ) 
-    orb_id_strides[order - ii - 1] = (int)pow(Dvec_sigma->det()->norb(), ii);
+    orb_id_strides[ii] = (int)pow( Dvec_sigma->det()->norb(), ii );
 
   auto boffset = [&block_offsets, &block_pos]( int pos ){ return block_offsets->at(pos).at(block_pos->at(pos)); }; 
   do {
       
-    print_vector( *block_pos, "block_pos" ) ; cout<< endl; cout <<" order = " <<  order << endl;
+    print_vector( *block_pos, "block_pos" ) ; cout << endl; cout <<" order = " <<  order << endl;
 
     vector<Index> sigma_id_blocks = *(get_rng_blocks( block_pos, *sigma_ranges ));
     int block_size = 1 ;
@@ -113,7 +114,7 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
     unique_ptr<double[]> sigma_block( new double[block_size] );
     double* sigma_block_ptr = sigma_block.get();
 
-    int ci_block_size = sigma_id_blocks[order].size();
+    int ci_block_size = sigma_id_blocks[0].size();
     cout << " block_size = " << block_size << endl; cout << " ci_block_size = " << ci_block_size << endl;   cout << " block_size/ci_block_size = " << block_size/ci_block_size << endl; 
     for (int ii = 0; ii != block_size/ci_block_size ; ii++ ) { 
       std::copy( Dvec_sigma->data(orb_pos)->data()+boffset(order), Dvec_sigma->data(orb_pos)->data()+boffset(order)+ci_block_size, sigma_block_ptr );   
@@ -123,195 +124,118 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
 
     Tens_sigma->put_block( sigma_block, sigma_id_blocks ) ; 
 
-  if (order == 4) { 
-  int n1 = Dvec_sigma->det()->norb();
-  int n2 = n1*n1;
-  int n3 = n1*n2;
-  int cisize = Dvec_sigma->det()->size();
-
- 
-  cout << endl << endl;
-  cout << " Sigma4 test dvec " << endl;
-  for ( int xx =0 ; xx!= cisize; xx++ ) {
-    cout << xx << " : ";
-    for ( int qq = 0 ; qq != n1; qq++){
-      for ( int rr = 0 ; rr != n1; rr++){
-        for ( int ss = 0 ; ss != n1; ss++){
-          for ( int tt = 0 ; tt != n1; tt++){
-            cout << *( Dvec_sigma->data(qq*n3 + rr*n2 + ss*n1 + tt )->data()+xx) << " " ;  
-          }
-        }
-      }
-    }
-    cout << endl;
-  }
-  cout << endl << endl;
-  cout << "sigma4_ in Tensor column format" << endl;
-  for ( int xx =0 ; xx!= cisize; xx++ ) {
-    cout << xx << " : ";
-    for ( int qq = 0 ; qq != n1; qq++){
-      for ( int rr = 0 ; rr != n1; rr++){
-        for ( int ss = 0 ; ss != n1; ss++){
-          for ( int tt = 0 ; tt != n1; tt++){
-            cout << sigma_block[ (qq*n3 + rr*n2 + ss*n1 + tt)*cisize + xx ] << " " ;
-          }
-        }
-      }
-    }
-    cout << endl;
-  }
-  cout << endl << endl;
-  }
   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
 
   return;
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<GammaInfo> gammaN_info ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "B_Gamma_Computer::get_gammaN_from_sigmaN " << endl;
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "B_Gamma_Computer::get_gammaN_from_sigmaN : " << gammaN_info->name <<  endl;
+  
+  string gammaN_name = gammaN_info->name;
   shared_ptr<Dvec> sigmaN = dvec_sigma_map->at(gammaN_info->sigma_name);
   string Bra_name = gammaN_info->Bra_name();
   shared_ptr<Civec> Bra = cvec_old_map->at( Bra_name );      
   shared_ptr<Determinants> Bra_det = det_old_map->at( Bra_name ) ; 
 
   int orb_dim = pow(Bra_det->norb(), (gammaN_info->order - 2) );
-  int orb2    = Bra_det->norb()*Bra_det->norb();
+  int norb    = Bra_det->norb();
+  int orb2    = norb*norb;
+  int order = gammaN_info->order;
 
+  shared_ptr<vector<IndexRange>> gammaN_ranges = Get_Bagel_IndexRanges( gammaN_info->id_ranges ); 
+  shared_ptr<Tensor_<double>> Tens_gammaN = make_shared<Tensor_<double>>( *gammaN_ranges ); 
+  Tens_gammaN->allocate();
+  Tens_gammaN->zero();
+  Gamma_data_map->emplace( gammaN_name, Tens_gammaN ); 
 
+  shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( *gammaN_ranges ) ;
 
-  
+  shared_ptr<vector<int>> range_lengths  =  get_range_lengths( gammaN_ranges ) ;
+  shared_ptr<vector<int>> block_pos      =  make_shared<vector<int>>(order,0);  
+  shared_ptr<vector<int>> mins           =  make_shared<vector<int>>(order,0);  
 
+  vector<int> orb_id_strides(order);
+  for ( int ii = 0 ; ii != order ; ii++ ) 
+    orb_id_strides[ii] = (int)pow(norb, ii);
+
+  auto boffset = [&block_offsets, &block_pos]( int pos ){ return block_offsets->at(pos).at(block_pos->at(pos)); }; 
+  do {
+      
+    print_vector( *block_pos, "block_pos" ) ; cout<< endl; cout <<" order = " <<  order << endl;
+
+    vector<Index> gammaN_id_blocks = *(get_rng_blocks( block_pos, *gammaN_ranges ));
+    int block_size = 1 ;
+    int orb_pos = 0;
+    for ( int  ii = 0 ; ii != order; ii++ ){
+      orb_pos += boffset(ii)*orb_id_strides[ii]; 
+      block_size *= gammaN_id_blocks[ii].size(); 
+    }    
+
+    unique_ptr<double[]> gammaN_block( new double[block_size] );
+    double* gammaN_block_ptr = gammaN_block.get();
+
+    for (int ii = orb_pos; ii != orb_pos+block_size; ii++ )  
+      *gammaN_block_ptr++ = ddot_( Bra_det->size(),sigmaN->data(ii)->data(), 1, Bra->data(), 1); 
+
+    Tens_gammaN->put_block( gammaN_block, gammaN_id_blocks ) ; 
+
+  } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
+
+ /////////////////////////TESTING///////////////////////////
   unique_ptr<double[]> gammaN( new double[orb_dim*orb2]);
   for ( int  ii = 0; ii != orb_dim*orb2; ii++) 
     gammaN[ii] = ddot_( Bra_det->size(), sigmaN->data(ii)->data(), 1, Bra->data(), 1); 
 
-
-
-
-  shared_ptr<Tensor_<double>> Tens_sigmaN = Sigma_data_map->at(gammaN_info->sigma_name);
-  convert_civec_to_tensor( Bra_name );
-  shared_ptr<vector<IndexRange>> gamma_ranges = Get_Bagel_IndexRanges( gammaN_info->id_ranges ); 
-  Gamma_data_map->emplace( gammaN_info->name, Tens_gammaN ); 
-
-//////////////////////////////////////////////////////TESTING//////////////////////////////////////////////////////////////////////////////
   if ( gammaN_info->order == 4 ) { 
     int norb  = Bra_det->norb();
+    int shift = 0;
     cout << "printing gamma4 from old method " << endl;
     int pos = 0 ; 
     for ( int ii = 0 ; ii != norb ; ii++) {
       for ( int jj = 0 ; jj != norb ; jj++) { 
-        cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
+        cout << " [ 0 0 " << jj << " " << ii << " ] "<< endl;
         for ( int kk = 0 ; kk != norb ; kk++) { 
           for ( int ll = 0 ; ll != norb ; ll++) { 
-             cout << gammaN[pos++] << " " ;
+             cout << gammaN[ shift+ ll*norb + kk ] << " " ;
           }
           cout << endl; 
         }
+        shift +=norb*norb;
       }
     }
 
-    cout << endl; Print_Tensor( Tens_gammaN , gammaN_info->name ) ; cout << endl << endl;
+//    cout << endl; Print_Tensor( Tens_gammaN , gammaN_info->name ) ; cout << endl << endl;
+    cout << endl; Print_Tensor_column_major( Tens_gammaN, gammaN_info->name + " column major version"  ) ; cout << endl << endl;
 
-    shared_ptr<vector<int>> new_order = make_shared<vector<int>>(vector<int> { 0,1,3,2 });
-    cout <<"getting test Tensor with gammaN ranges " << endl; 
-    shared_ptr<Tensor_<double>> Test_Tens = Tensor_Calc->get_test_Tensor( gamma_ranges);
-    cout << endl; Print_Tensor( Test_Tens, "Test_Tens" ) ; cout << endl << endl;
- 
-    shared_ptr<Tensor_<double>>  Test_Tens_reord = Tensor_Calc->reorder_block_Tensor( Test_Tens, new_order );
-    Print_Tensor( Test_Tens_reord, "Test_Tens_reord 0132" ); cout << endl<<endl;
-  
-    new_order = make_shared<vector<int>>(vector<int> { 1,0,2,3 });
-    Test_Tens_reord = Tensor_Calc->reorder_block_Tensor( Test_Tens, new_order );
-    Print_Tensor( Test_Tens_reord, "Test_Tens_reord 1023" ); cout << endl<<endl;
-  
-    new_order = make_shared<vector<int>>(vector<int> { 3,2,1,0 });
-    Test_Tens_reord = Tensor_Calc->reorder_block_Tensor( Test_Tens, new_order );
-    Print_Tensor( Test_Tens_reord, "Test_Tens_reord 3210" ); cout << endl<<endl;
-  
-    shared_ptr<vector<IndexRange>> test_ids_3 = make_shared<vector<IndexRange>>(gamma_ranges->begin(), gamma_ranges->end()-1);
-    shared_ptr<Tensor_<double>> Test_Tens_3 = Tensor_Calc->get_test_Tensor( test_ids_3);
-    Print_Tensor( Test_Tens_3, "Test_Tens_3" ); cout << endl<<endl;
-
-    shared_ptr<vector<int>> new_order_3 = make_shared<vector<int>>(vector<int> { 1, 2, 0 });
-    shared_ptr<Tensor_<double>>Test_Tens_3_reord = Tensor_Calc->reorder_block_Tensor( Test_Tens_3, new_order_3 );
-    Print_Tensor( Test_Tens_3_reord, "Test_Tens_reord 021" ); cout << endl << endl;
-  
-  
-//    sort_indices<0,1,2,3,a,b,c,d>
-// a :  add or not
-// c :  factor +1 or -1
-// b : always seems to equal 1 ...
-// d : always seems to equal 1 ...
-
-    pos = 0 ; 
-    unique_ptr<double[]> test_block(new double[norb*norb*norb*norb]);
-    for ( int ii = 0 ; ii != norb ; ii++) {
-      for ( int jj = 0 ; jj != norb ; jj++) { 
-        for ( int kk = 0 ; kk != norb ; kk++) { 
-          for ( int ll = 0 ; ll != norb ; ll++) { 
-             test_block[pos++] = ii*1000+jj*100+kk*10+ll*1;
-          }
-        }
-      }
-    }
-    cout << endl << "test_block " << endl;
-    pos = 0 ; 
-    for ( int ii = 0 ; ii != norb ; ii++) {
-      for ( int jj = 0 ; jj != norb ; jj++) { 
-        cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
-        for ( int kk = 0 ; kk != norb ; kk++) { 
-          for ( int ll = 0 ; ll != norb ; ll++) { 
-             cout << test_block[pos++] << " " ;
-          }
-          cout << endl; 
-        }
-      }
-    }
-    unique_ptr<double[]> test_block_0132(new double[norb*norb*norb*norb] );
-    cout << endl << "test_block_0132 "  << endl;
-    pos = 0 ; 
-    sort_indices<0,1,3,2,0,1,1,1>(test_block.get(), test_block_0132.get(), norb, norb, norb, norb) ;
-    for ( int ii = 0 ; ii != norb ; ii++) {
-      for ( int jj = 0 ; jj != norb ; jj++) { 
-        cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
-        for ( int kk = 0 ; kk != norb ; kk++) { 
-          for ( int ll = 0 ; ll != norb ; ll++) { 
-             cout << test_block_0132[pos++] << " " ;
-          }
-          cout << endl; 
-        }
-      }
-    }
-
-
-
-//    shared_ptr<Dvec> sigma2 = dvec_sigma_map->at(gammaN_info->prev_sigma_name());
-//    unique_ptr<double[]> gamma2( new double[orb2]);
-//    for ( int  ii = 0; ii != orb2; ii++) 
-//      gamma2[ii] = ddot_( Bra_det->size(), sigma2->data(ii)->data(), 1, Bra->data(), 1); 
-
-//    cout << " TEST rdm4 " << endl;
-//    pos = 0;
-//    for ( int ii = 0 ; ii != norb ; ii++) {
-//      for ( int jj = 0 ; jj != norb ; jj++) { 
-//        cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
-//        for ( int kk = 0 ; kk != norb ; kk++) { 
-//          if ( jj == kk ) {
-//            for ( int ll = 0 ; ll != norb ; ll++)  
-//               cout << gammaN[pos++] - gamma2[ii*norb+ll] << " " ;
-//          } else if ( jj != kk ) {
-//            for ( int ll = 0 ; ll != norb ; ll++) 
-//               cout << gammaN[pos++] <<  " " ;
-//          }
-//          cout << endl; 
-//        }
-//      }
-//    }
-
-  
   } 
+
+
+  shared_ptr<Dvec> sigma2 = dvec_sigma_map->at(gammaN_info->prev_sigma_name());
+  unique_ptr<double[]> gamma2( new double[orb2]);
+  for ( int  ii = 0; ii != orb2; ii++) 
+    gamma2[ii] = ddot_( Bra_det->size(), sigma2->data(ii)->data(), 1, Bra->data(), 1); 
+
+  cout << " TEST rdm4 " << endl;
+  int pos = 0;
+  for ( int ii = 0 ; ii != norb ; ii++) {
+    for ( int jj = 0 ; jj != norb ; jj++) { 
+      cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
+      for ( int kk = 0 ; kk != norb ; kk++) { 
+        if ( jj == kk ) {
+          for ( int ll = 0 ; ll != norb ; ll++)  
+             cout << gammaN[pos++] - gamma2[ii*norb+ll] << " " ;
+        } else if ( jj != kk ) {
+          for ( int ll = 0 ; ll != norb ; ll++) 
+             cout << gammaN[pos++] <<  " " ;
+        }
+        cout << endl; 
+      }
+    }
+  }
+
+  
   return;
 }
 
@@ -385,24 +309,35 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
   int pos = 0 ; 
   for ( int ii = 0 ; ii != norb ; ii++) {
     for ( int jj = 0 ; jj != norb ; jj++) { 
-      cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
+      cout << " [ 0 0 " << ii << " " << jj <<" ] "<< endl;
         for ( int  kk = 0; kk != norb; kk++) {
           for ( int  ll = 0; ll != norb; ll++) {
-            gamma4_from_sigma2[pos] = ddot_( sigma2->det()->size(), sigma2->data(ii*norb+jj)->data(),1, sigma2->data(ll*norb+kk)->data(), 1);
+            gamma4_from_sigma2[pos] = ddot_( sigma2->det()->size(), sigma2->data(ii+norb*jj)->data(),1, sigma2->data(kk+norb*ll)->data(), 1);
             cout << gamma4_from_sigma2[pos++] << " " ;
         }
         cout << endl; 
       }
     }
   }
+
   cout << "doing tensor contraction " << endl;
   shared_ptr<Tensor_<double>> Tens_sigma2 = Sigma_data_map->at( sigma2_name );
   convert_civec_to_tensor( Bra_name );
-  shared_ptr<vector<IndexRange>> gamma_ranges = Get_Bagel_IndexRanges( gamma2_info->id_ranges ); 
-  shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( Tens_sigma2, CIvec_data_map->at( Bra_name ), make_pair(gamma2_info->order, 0) );
+
+  shared_ptr<vector<IndexRange>> gammaN_ranges = Get_Bagel_IndexRanges( gamma2_info->id_ranges ); 
+  shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( Tens_sigma2, CIvec_data_map->at( Bra_name ), make_pair(0, 0) );
   Gamma_data_map->emplace( gamma2_info->name, Tens_gamma2 ); 
 
-  Print_Tensor( Tens_gamma2 , gamma2_info->name ) ;
+  Print_Tensor_column_major( Tens_gamma2, "Tens_gamma2_from_sigma2_contraction column major print" ) ; cout << endl << endl;
+  Print_Tensor( Tens_gamma2, "Tens_gamma2_from_sigma2_contraction" ) ; cout << endl << endl;
+
+  shared_ptr<Tensor_<double>> Tens_gamma4 = Tensor_Calc->contract_different_tensors( Tens_sigma2, Tens_sigma2, make_pair(0,0) );
+ 
+  shared_ptr<vector<int>> new_order_0213 = make_shared<vector<int>>( vector<int> { 0, 2, 1, 3 } ); 
+  shared_ptr<Tensor_<double>> Tens_gamma4_reord = Tensor_Calc->reorder_block_Tensor(  Tens_gamma4, new_order_0213 );
+
+  Print_Tensor_column_major( Tens_gamma4_reord, "Tens_gamma4_from_sigma2_contraction column major print" ) ; cout << endl << endl;
+  Print_Tensor( Tens_gamma4_reord, "Tens_gamma4_from_sigma2_contraction" ) ; cout << endl << endl;
 
   cout << "leaving B_Gamma_Computer::B_Gamma_Computer::get_gamma2_from_sigma2 " <<endl;
   return; 
@@ -506,11 +441,6 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_civec_to_tensor( string civec_n
     vector<IndexRange> civec_idxrng(1, *(range_conversion_map->at(civec_name)) );  
     
     cout <<" civec_name = " << civec_name << endl;
-    cout <<" civec_idxrng[0].nblock()       = " << civec_idxrng[0].nblock()     <<  endl;
-    cout <<" civec_idxrng[0].size()         = " << civec_idxrng[0].size()       <<  endl;
-    cout <<" civec_idxrng[0].range().size() = " << civec_idxrng[0].range().size() <<  endl;
-    cout <<" civec_idxrng[0].range().size() = " << civec_idxrng[0].range().size() <<  endl;
-    
     shared_ptr<Tensor_<double>> civec_tensor = make_shared<Tensor_<double>>( civec_idxrng );
     civec_tensor->allocate();
     civec_tensor->zero();
@@ -547,3 +477,45 @@ cout << "B_Gamma_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_st
 }
 
 #endif
+
+
+
+//  if (order == 4) { 
+//  int n1 = Dvec_sigma->det()->norb();
+//  int n2 = n1*n1;
+//  int n3 = n1*n2;
+//  int cisize = Dvec_sigma->det()->size();
+// 
+// 
+//  cout << endl << endl;
+//  cout << " Sigma4 test dvec " << endl;
+//  for ( int xx =0 ; xx!= cisize; xx++ ) {
+//    cout << xx << " : ";
+//    for ( int qq = 0 ; qq != n1; qq++){
+//      for ( int rr = 0 ; rr != n1; rr++){
+//        for ( int ss = 0 ; ss != n1; ss++){
+//          for ( int tt = 0 ; tt != n1; tt++){
+//            cout << *( Dvec_sigma->data(qq*n3 + rr*n2 + ss*n1 + tt )->data()+xx) << " " ;  
+//          }
+//        }
+//      }
+//    }
+//    cout << endl;
+//  }
+//  cout << endl << endl;
+//  cout << "sigma4_ in Tensor column format" << endl;
+//  for ( int xx =0 ; xx!= cisize; xx++ ) {
+//    cout << xx << " : ";
+//    for ( int qq = 0 ; qq != n1; qq++){
+//      for ( int rr = 0 ; rr != n1; rr++){
+//        for ( int ss = 0 ; ss != n1; ss++){
+//          for ( int tt = 0 ; tt != n1; tt++){
+//            cout << sigma_block[ (qq*n3 + rr*n2 + ss*n1 + tt)*cisize + xx ] << " " ;
+//          }
+//        }
+//      }
+//    }
+//    cout << endl;
+//  }
+//  cout << endl << endl;
+//  }

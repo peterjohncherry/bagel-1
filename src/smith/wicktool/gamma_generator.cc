@@ -35,8 +35,10 @@ cout << "GammaInfo::GammaInfo" <<  endl;
     aops->at(ii)      = full_aops_vec->at(idxs_pos->at(ii));     
   }
 
-  sigma_id_ranges = make_shared<vector<string>>(*id_ranges);
-  sigma_id_ranges->push_back(Bra_info->name());
+  sigma_id_ranges = make_shared<vector<string>>(id_ranges->size()+1);
+  sigma_id_ranges->at(0) = Bra_info->name();
+  for ( int  ii = 1 ; ii != sigma_id_ranges->size() ; ii++ ) 
+    sigma_id_ranges->at(ii) = id_ranges->at(ii-1);
 
   name = get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos, Bra_info->name(), Ket_info->name() ); cout << "gamma name = " <<  name << endl;
   sigma_name = "S_"+name; 
