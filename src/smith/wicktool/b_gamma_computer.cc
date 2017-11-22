@@ -184,56 +184,56 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
 
  /////////////////////////TESTING///////////////////////////
-  unique_ptr<double[]> gammaN( new double[orb_dim*orb2]);
-  for ( int  ii = 0; ii != orb_dim*orb2; ii++) 
-    gammaN[ii] = ddot_( Bra_det->size(), sigmaN->data(ii)->data(), 1, Bra->data(), 1); 
-
-  if ( gammaN_info->order == 4 ) { 
-    int norb  = Bra_det->norb();
-    int shift = 0;
-    cout << "printing gamma4 from old method " << endl;
-    int pos = 0 ; 
-    for ( int ii = 0 ; ii != norb ; ii++) {
-      for ( int jj = 0 ; jj != norb ; jj++) { 
-        cout << " [ 0 0 " << jj << " " << ii << " ] "<< endl;
-        for ( int kk = 0 ; kk != norb ; kk++) { 
-          for ( int ll = 0 ; ll != norb ; ll++) { 
-             cout << gammaN[ shift+ ll*norb + kk ] << " " ;
-          }
-          cout << endl; 
-        }
-        shift +=norb*norb;
-      }
-    }
-
+//  unique_ptr<double[]> gammaN( new double[orb_dim*orb2]);
+//  for ( int  ii = 0; ii != orb_dim*orb2; ii++) 
+//    gammaN[ii] = ddot_( Bra_det->size(), sigmaN->data(ii)->data(), 1, Bra->data(), 1); 
+//
+//  if ( gammaN_info->order == 4 ) { 
+//    int norb  = Bra_det->norb();
+//    int shift = 0;
+//    cout << "printing gamma4 from old method " << endl;
+//    int pos = 0 ; 
+//    for ( int ii = 0 ; ii != norb ; ii++) {
+//      for ( int jj = 0 ; jj != norb ; jj++) { 
+//        cout << " [ 0 0 " << jj << " " << ii << " ] "<< endl;
+//        for ( int kk = 0 ; kk != norb ; kk++) { 
+//          for ( int ll = 0 ; ll != norb ; ll++) { 
+//             cout << gammaN[ shift+ ll*norb + kk ] << " " ;
+//          }
+//          cout << endl; 
+//        }
+//        shift +=norb*norb;
+//      }
+//    }
+//
 //    cout << endl; Print_Tensor( Tens_gammaN , gammaN_info->name ) ; cout << endl << endl;
-    cout << endl; Print_Tensor_column_major( Tens_gammaN, gammaN_info->name + " column major version"  ) ; cout << endl << endl;
+//    cout << endl; Print_Tensor_column_major( Tens_gammaN, gammaN_info->name + " column major version"  ) ; cout << endl << endl;
+//
+//  } 
 
-  } 
 
-
-  shared_ptr<Dvec> sigma2 = dvec_sigma_map->at(gammaN_info->prev_sigma_name());
-  unique_ptr<double[]> gamma2( new double[orb2]);
-  for ( int  ii = 0; ii != orb2; ii++) 
-    gamma2[ii] = ddot_( Bra_det->size(), sigma2->data(ii)->data(), 1, Bra->data(), 1); 
-
-  cout << " TEST rdm4 " << endl;
-  int pos = 0;
-  for ( int ii = 0 ; ii != norb ; ii++) {
-    for ( int jj = 0 ; jj != norb ; jj++) { 
-      cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
-      for ( int kk = 0 ; kk != norb ; kk++) { 
-        if ( jj == kk ) {
-          for ( int ll = 0 ; ll != norb ; ll++)  
-             cout << gammaN[pos++] - gamma2[ii*norb+ll] << " " ;
-        } else if ( jj != kk ) {
-          for ( int ll = 0 ; ll != norb ; ll++) 
-             cout << gammaN[pos++] <<  " " ;
-        }
-        cout << endl; 
-      }
-    }
-  }
+ // shared_ptr<Dvec> sigma2 = dvec_sigma_map->at(gammaN_info->prev_sigma_name());
+ // unique_ptr<double[]> gamma2( new double[orb2]);
+ // for ( int  ii = 0; ii != orb2; ii++) 
+ //   gamma2[ii] = ddot_( Bra_det->size(), sigma2->data(ii)->data(), 1, Bra->data(), 1); 
+ //
+ // cout << " TEST rdm4 " << endl;
+ // int pos = 0;
+ // for ( int ii = 0 ; ii != norb ; ii++) {
+ //   for ( int jj = 0 ; jj != norb ; jj++) { 
+ //     cout << " [ " << ii << " " << jj << " 0 0 ] "<< endl;
+ //     for ( int kk = 0 ; kk != norb ; kk++) { 
+ //       if ( jj == kk ) {
+ //         for ( int ll = 0 ; ll != norb ; ll++)  
+ //            cout << gammaN[pos++] - gamma2[ii*norb+ll] << " " ;
+ //       } else if ( jj != kk ) {
+ //         for ( int ll = 0 ; ll != norb ; ll++) 
+ //            cout << gammaN[pos++] <<  " " ;
+ //       }
+ //       cout << endl; 
+ //     }
+ //   }
+ // }
 
   
   return;

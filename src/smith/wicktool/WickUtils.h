@@ -57,9 +57,6 @@ namespace WickUtils {
 
   std::shared_ptr<std::vector<int>> reorder_vector(std::vector<int>& neworder , const std::vector<int>& origvec ) ;
 
-  template<class DT>
-  void print_vec(std::vector<DT> invec , std::string vecname);
- 
   void print_pvec (pint_vec pvec) ;
 
   std::string get_name(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_id_ranges,  std::shared_ptr<pint_vec> all_ctrs_pos) ;

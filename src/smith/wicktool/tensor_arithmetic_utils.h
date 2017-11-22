@@ -58,6 +58,11 @@ namespace Tensor_Arithmetic_Utils {
 
      void check_contracted_indexes( std::vector<IndexRange>&  idx_block, std::vector<int>& contracted_index_positions );
 
+     std::shared_ptr<Tensor_<double>> get_sub_tensor( std::shared_ptr<Tensor_<double>> Tens_in,  std::vector<IndexRange>& range_names );
+
+     std::shared_ptr<Tensor_<double>> get_sub_tensor( std::shared_ptr<Tensor_<double>> Tens_in,  std::vector<std::string>& range_names,
+                                                      std::shared_ptr< std::map< std::string, std::shared_ptr<IndexRange> >> range_conversion_map );
+
      //messy, but I can't see a better way
      template<class vtype>
      std::shared_ptr<std::vector<vtype>> inverse_reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) {

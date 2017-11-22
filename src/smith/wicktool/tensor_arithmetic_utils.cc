@@ -5,6 +5,58 @@ using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 using namespace WickUtils;
+ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<Tensor_<double>>  Tensor_Arithmetic_Utils::get_sub_tensor( shared_ptr<Tensor_<double>> Tens_in, vector<string>& range_names,
+                                                                      shared_ptr<map< string, shared_ptr<IndexRange> > > range_conversion_map ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithemetic_Utils::get_sub_tensor 3arg" << endl;
+
+  vector<IndexRange> id_ranges(range_names.size());
+  for ( int ii = 0; ii != range_names.size() ; ii++ )
+    id_ranges[ii] = *range_conversion_map->at(range_names[ii]);
+
+  shared_ptr<Tensor_<double>> Tens_out = make_shared<Tensor_<double>>(id_ranges);
+  Tens_out->allocate();
+
+  shared_ptr<vector<int>> range_maxs  =  get_range_lengths( id_ranges ) ;
+  shared_ptr<vector<int>> block_pos   =  make_shared<vector<int>>(range_maxs->size(),0);  
+  shared_ptr<vector<int>> mins        =  make_shared<vector<int>>(range_maxs->size(),0);  
+
+  do { 
+
+     vector<Index> id_blocks = *(get_rng_blocks( block_pos, id_ranges ));
+     unique_ptr<double[]> block = Tens_in->get_block( id_blocks );
+     Tens_out->put_block( block, id_blocks );
+
+  } while (fvec_cycle_skipper( block_pos, range_maxs, mins ) ); 
+
+  return Tens_out;
+}
+ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<Tensor_<double>>  Tensor_Arithmetic_Utils::get_sub_tensor( shared_ptr<Tensor_<double>> Tens_in, vector<IndexRange>& id_ranges) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithemetic_Utils::get_sub_tensor 2arg" << endl;
+
+
+  shared_ptr<Tensor_<double>> Tens_out = make_shared<Tensor_<double>>(id_ranges);
+  Tens_out->allocate();
+  shared_ptr<vector<int>> range_maxs  =  get_range_lengths( id_ranges ) ;
+  shared_ptr<vector<int>> block_pos   =  make_shared<vector<int>>(range_maxs->size(),0);  
+  shared_ptr<vector<int>> mins        =  make_shared<vector<int>>(range_maxs->size(),0);  
+
+
+  do { 
+
+     vector<Index> id_blocks = *(get_rng_blocks( block_pos, id_ranges ));
+     unique_ptr<double[]> block = Tens_in->get_block( id_blocks );
+     Tens_out->put_block( block, id_blocks );
+
+  } while (fvec_cycle_skipper( block_pos, range_maxs, mins ) ); 
+
+  return Tens_out;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Tensor_Arithmetic_Utils::Print_Tensor_column_major( shared_ptr<Tensor_<double>> Tens, string name  ) {

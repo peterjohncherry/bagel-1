@@ -724,7 +724,8 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(shared_ptr<
      reordered_block_tensor->put_block( reordered_data_block, *reordered_id_blocks );
 
    } while ( fvec_cycle_skipper( block_pos, range_lengths, mins ) );
-   
+
+   cout << "reordered_block_tensor" << endl;   
    return reordered_block_tensor;
 }
 

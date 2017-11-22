@@ -84,19 +84,25 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
    if(  Data_map->find(Tname) != Data_map->end())
      return Data_map->at(Tname);
 
+   shared_ptr<Tensor_<double>> fulltens;
+   if(  Data_map->find(Tname.substr(0,1)) != Data_map->end()){
+     fulltens = Data_map->at(Tname.substr(0,1));
+   } else {  
+     throw std::runtime_error("cannot find data for tensor op " +  Tname.substr(0,1) ) ; 
+   }
+
    shared_ptr<vector<string>> unc_ranges = CTP_map->at(Tname)->unc_id_ranges;  
 
    shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
    shared_ptr<vector<int>> range_lengths = get_range_lengths( Bagel_id_ranges ) ;
 
-   shared_ptr<Tensor_<double>> fulltens = Data_map->at(Tname.substr(0,1));
    shared_ptr<Tensor_<double>> block_tensor = make_shared<Tensor_<double>>(*Bagel_id_ranges);
    block_tensor->allocate();
    block_tensor->zero();
 
    shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
-   shared_ptr<vector<int>> mins = make_shared<vector<int>>(unc_ranges->size(),0);  
+   shared_ptr<vector<int>> mins      = make_shared<vector<int>>(unc_ranges->size(),0);  
 
    do {
      cout << Tname << " block pos =  [ " ;    for (int block_num : *block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
@@ -171,16 +177,20 @@ cout << ": "  << T1_in_name << " and " << T2_in_name << " over T1[" << ctr_todo.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::reorder_block_Tensor(string T_in_name, shared_ptr<vector<int>> new_order){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer::Equation_Computer::reorder_block_Tensor "; cout.flush();
-   cout << " : " << T_in_name ; cout.flush();
-   cout <<  " New_order = [ "; cout.flush();  for (int pos : *new_order ) { cout << pos << " " ; cout.flush(); } cout << "] " << endl;
+  cout << "Equation_Computer::Equation_Computer::reorder_block_Tensor "; cout.flush();
+  cout << " : " << T_in_name ; cout.flush();
+  cout <<  " New_order = [ "; cout.flush();  for (int pos : *new_order ) { cout << pos << " " ; cout.flush(); } cout << "] " << endl;
   
-   auto Data_map_loc = Data_map->find(T_in_name); 
-   if(  Data_map_loc == Data_map->end()){
-     throw std::runtime_error(" don't have tensor data for " +T_in_name+ " yet.... Equation_Computer::reorder_block_Tensor " ) ;
-   } else { 
-     return Tensor_Calc->reorder_block_Tensor( Data_map_loc->second , new_order);
-   }
+  auto Data_map_loc = Data_map->find(T_in_name); 
+  shared_ptr<Tensor_<double>> T_part; 
+  if(  Data_map_loc == Data_map->end()){
+    T_part =  get_block_Tensor(T_in_name); 
+    Data_map->emplace(T_in_name , T_part );
+  } else { 
+    T_part = Data_map_loc->second; 
+  }
+
+  return Tensor_Calc->reorder_block_Tensor( T_part , new_order );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

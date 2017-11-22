@@ -87,7 +87,7 @@ cout << "Gamma_Computer::build_gamma2_tensor" << endl;
                                                                               make_pair(2, 0) );
 
    Gamma_data_map->emplace(gamma2_info->name, gamma2); 
-   Print_Tensor(Gamma_data_map->at(gamma2_info->name), "MAP gamma2 from recursive" ) ; cout << endl;
+//   Print_Tensor(Gamma_data_map->at(gamma2_info->name), "MAP gamma2 from recursive" ) ; cout << endl;
   
    return;
 }
@@ -155,81 +155,15 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> g
   vector<Index> id_block = { ranges->at(0).range(0), ranges->at(1).range(0), ranges->at(2).range(0) };
   unique_ptr<double[]> sigma2_block = sigma2->get_block(id_block);
 
-  int cisize = id_block[2].size(); 
-  int norb   = id_block[1].size(); 
-  vector<Index> id_block_012 = { ranges->at(0).range(0), ranges->at(1).range(0), ranges->at(2).range(0) };
-  unique_ptr<double[]> sigma2_block_012 = sigma2->get_block(id_block_012);
-
-  cout << "sigma2_012 in column format" << endl;
-  for ( int qq = 0 ; qq != norb; qq++){
-    for ( int rr = 0 ; rr != norb; rr++){
-      cout << "    ("<< qq <<  "," <<  rr << ")    " ;
-    }
-  }
-  cout << endl;
-  for ( int xx =0 ; xx!= cisize; xx++ ) {
-    cout << xx << " : ";
-    for ( int qq = 0 ; qq != norb; qq++){
-      for ( int rr = 0 ; rr != norb; rr++){
-        cout << sigma2_block_012[ (qq*norb + rr)*cisize + xx ] << " " ;
-      }
-    }
-    cout << endl;
-  }
-  cout << endl;
-
-  shared_ptr<vector<int>> order_102  = make_shared<vector<int>> ( vector<int> { 1, 0, 2 } );
-  shared_ptr<vector<Index>> id_block_012_ptr = make_shared<vector<Index>>(id_block_012);
-  unique_ptr<double[]> sigma2_block_102 = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_tensor_data( sigma2_block.get(), order_102, id_block_012_ptr ) ;
-  cout << "sigma2_102 in column format" << endl;
-  for ( int qq = 0 ; qq != norb; qq++)
-    for ( int rr = 0 ; rr != norb; rr++)
-      cout << "    ("<< qq <<  "," <<  rr << ")    " ;
-   
-  cout << endl;
-
-  for ( int xx =0 ; xx!= cisize; xx++ ) {
-    cout << xx << " : ";
-    for ( int qq = 0 ; qq != norb; qq++)
-      for ( int rr = 0 ; rr != norb; rr++)
-        cout << sigma2_block_102[ (qq*norb + rr)*cisize + xx ] << " " ;
-      
-    cout << endl;
-  }
-  cout << endl;
-
-  shared_ptr<vector<int>> new_order_201  = make_shared<vector<int>> ( vector<int> { 2, 0, 1 } );
-  shared_ptr<Tensor_<double>> sigma2_201 = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( sigma2, new_order_201 );
-
-  vector<Index> id_block_201 = { ranges->at(2).range(0), ranges->at(0).range(0), ranges->at(1).range(0) };
-  unique_ptr<double[]> sigma2_block_201 = sigma2_201->get_block(id_block_201);
-  cout << "sigma2_201 in column format" << endl;
-  cout << "     :" << endl;
-  for ( int qq = 0 ; qq != norb; qq++){
-    for ( int rr = 0 ; rr != norb; rr++){
-      cout << "    ("<< qq <<  "," <<  rr << ")    " ;
-    }
-  }
-  cout << endl;
-  for ( int xx =0 ; xx!= cisize; xx++ ) {
-    cout << xx << " : ";
-    for ( int qq = 0 ; qq != norb; qq++)
-      for ( int rr = 0 ; rr != norb; rr++)
-        cout << sigma2_block_201[ (qq*norb + rr)*cisize + xx ] << " " ;
-    
-    cout << endl;
-  }
-  cout << endl;
-
   shared_ptr<Tensor_<double>> gamma2 =
   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( sigma2, CIvec_data_map->at(gamma2_info->Bra_name()), make_pair(2, 0) );
 
-  Print_Tensor(gamma2, "DIRECT gamma2 from recursive" ) ; cout << endl;
+//  Print_Tensor(gamma2, "DIRECT gamma2 from recursive" ) ; cout << endl;
 
   shared_ptr<Tensor_<double>> gamma4_test =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( sigma2, sigma2, make_pair(2,2) ); 
-  Print_Tensor(gamma4_test, "gamma4 from sigma2 contraction recursive 0 ,1, 2, 0, 1, 2 " ) ; cout << endl;cout << endl;cout << endl;
+//  Print_Tensor(gamma4_test, "gamma4 from sigma2 contraction recursive 0, 1, 2, 0, 1, 2 " ) ; cout << endl << endl << endl;
 
-  Print_Tensor(sigma2, "sigma2 inside routine recursive" ) ; cout << endl;
+ // Print_Tensor(sigma2, "sigma2 inside routine recursive" ) ; cout << endl;
 
   return;
 }
@@ -249,7 +183,7 @@ void Gamma_Computer::Gamma_Computer::build_gammaN_tensor(shared_ptr<GammaInfo> g
                                                                               CIvec_data_map->at(gammaN_info->Bra_name()),
                                                                               make_pair(gammaN_info->order, 0) );
  
-   Print_Tensor( gammaN, "gamma "+to_string(gammaN_info->order)+ " recursive tensor version "  ); cout << endl;
+//   Print_Tensor( gammaN, "gamma "+to_string(gammaN_info->order)+ " recursive tensor version "  ); cout << endl;
 
    Gamma_data_map->emplace(gammaN_info->name, gammaN); 
    
