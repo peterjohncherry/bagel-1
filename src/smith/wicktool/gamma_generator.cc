@@ -420,7 +420,7 @@ cout << "GammaGenerator::swap" << endl;
     new_deltas_tmp->push_back(new_delta);                                                         
     auto new_deltas = Standardize_delta_ordering_generic( new_deltas_tmp ) ;                                                                
 
-    int new_sign = gamma_vec->at(kk)->my_sign;                                                                                               
+    int new_sign = gamma_vec->at(kk)->my_sign*-1;                                                                                               
 
     auto new_ids_pos = make_shared<vector<int>>();
     for( int qq = 0 ; qq !=ids_pos->size() ; qq++)
@@ -431,7 +431,8 @@ cout << "GammaGenerator::swap" << endl;
     gamma_vec->push_back(new_gamma);
 
   }                                                                                                                                 
-  gamma_vec->at(kk)->my_sign *= -1;
+//  gamma_vec->at(kk)->my_sign *= -1;
+  print_vector(*full_aops, "full_aops"); cout << "    my_sign = " << gamma_vec->at(kk)->my_sign << endl;
   return ;                                                                                                                          
 } 
 
