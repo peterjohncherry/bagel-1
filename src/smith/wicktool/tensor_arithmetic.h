@@ -22,6 +22,9 @@ class Tensor_Arithmetic {
     Tensor_Arithmetic(){};
     ~Tensor_Arithmetic(){};
 
+     static DataType
+     sum_tensor_elems( std::shared_ptr<Tensor_<DataType>> Tens_in) ;
+
      //only for two contracted indexes
      static std::shared_ptr<Tensor_<DataType>>
      contract_on_same_tensor(std::shared_ptr<Tensor_<DataType>> Tens_in, std::pair<int,int> ctr_todo) ;
@@ -64,7 +67,7 @@ class Tensor_Arithmetic {
      static std::shared_ptr<Tensor_<DataType>>
      get_test_Tensor_column_major( std::shared_ptr<std::vector<IndexRange>> T_id_ranges );
 
-    
+
      static std::shared_ptr<Tensor_<DataType>>
      contract_different_tensors_column_major( std::shared_ptr<Tensor_<DataType>> Tens1_in, std::shared_ptr<Tensor_<DataType>> Tens2_in, std::pair<int,int> ctr_todo );
 

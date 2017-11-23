@@ -161,9 +161,9 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   
   Build_Compute_Lists();
 
-  Execute_Compute_List("Hact_test");
+//  Execute_Compute_List("Hact_test");
   Execute_Compute_List("R6_test");
-  Execute_Compute_List("Q8_test");
+//  Execute_Compute_List("Q8_test");
 
   // <proj_jst|H|0_K> set to sall in ms-caspt2
   
@@ -248,7 +248,9 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   shared_ptr<TensOp<double>> QTens = Expr_Info->Build_TensOp("Q", Q_dummy_data, Q_idxs, Q_aops, Q_idx_ranges, Q_symmfuncs, Q_constraints, Q_factor, Q_TimeQymm, false ) ;
   Expr_Info->T_map->emplace("Q", QTens);
 
-  shared_ptr<vector<IndexRange>> act_ranges_8 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
+  shared_ptr<vector<IndexRange>> act_ranges_8 =
+  make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
+
   shared_ptr<Tensor_<double>> Q_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act_ranges_8, 1.0 );
   Data_map->emplace( "Q", Q_Tens );
   cout <<"Q_Tens->norm() = "<< Q_Tens->norm() << endl;
@@ -296,6 +298,8 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
 
   B_Gamma_Computer::B_Gamma_Computer B_Gamma_Machine( ref->ciwfn()->civectors(), range_conversion_map, Expr->GammaMap, Gamma_data_map, Sigma_data_map, CIvec_data_map );
 
+  map<string , double > g_result_map;
+
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(Expr->GammaMap) ) {
    
@@ -332,28 +336,52 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
       if ( Gamma_name != "ID" ) {
 
         B_Gamma_Machine.get_gamma( Gamma_name );
+       
+        double tmp_result = A_combined_data->dot_product( Gamma_data_map->at(Gamma_name) );
+        cout << "A_combined_data->dot_product( Gamma_data_map->at(" << Gamma_name << ") ) = " << tmp_result  << endl;
+        g_result_map.emplace(Gamma_name, tmp_result) ;
+        result += tmp_result;
 
-        cout << "A_combined_data->dot_product( Gamma_data_map->at(" << Gamma_name << ") ) = " << A_combined_data->dot_product( Gamma_data_map->at(Gamma_name) ) << endl;
-
-        result += A_combined_data->dot_product( Gamma_data_map->at(Gamma_name) );
       } else {
+
         Print_Tensor( A_combined_data, " A_combined_data for 1D " ) ; cout << endl;
-        result += A_combined_data->rms(); //really dumb, and wrong for negative values...
+        double tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( A_combined_data) ;
+        g_result_map.emplace(Gamma_name, tmp_result) ;
+        result += tmp_result ; 
+
       }
     }
   }
-  
   cout << endl << endl;
-  double reference_result;
+
+  cout << "Contributions from different gamma terms " << endl;
+  for ( auto elem : g_result_map ) 
+    cout << elem.first << " :  " << elem.second << endl; 
+
+  cout << endl; 
+
+  double reference_result = 666.0;
+ 
   if ( Expression_name == "Hact_test" ) {
     reference_result = Smith_rdm2->dot_product( Data_map->at("S"));
+    cout << " Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( Smith_rdm2 ) = " <<  Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( Smith_rdm2 ) << endl; ;
   } else if ( Expression_name == "Q8_test" ) {
-    cout << " Smith_rdm4->norm() = " << Smith_rdm4->norm() << endl;
+    cout << " Smith_rdm4->norm() = " << Smith_rdm4->norm() << "      Smith_rdm4->rms() = " << Smith_rdm4->rms() << endl;
+    cout << " Data_map->at(\"Q\")->rms()  = " << Data_map->at("Q")->rms() << "     Data_map->at(\"Q\")->norm()  = " << Data_map->at("Q")->norm() << endl << endl;
+    Print_Tensor( Smith_rdm4, "Smith_rdm4" ); cout << endl <<endl;
+    Print_Tensor( Data_map->at("Q"), "Data_map->at(\"Q\")" ); cout << endl <<endl;
+    cout << " Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( Smith_rdm4 ) = " <<  Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( Smith_rdm4 ) << endl; ;
     reference_result = Smith_rdm4->dot_product( Data_map->at("Q"));
   } else if ( Expression_name == "R6_test" ) {
-    cout << " Smith_rdm3->norm() = " << Smith_rdm3->norm() << endl;
+    Print_Tensor( Smith_rdm3, "Smith_rdm3" ); cout << endl <<endl;
+    Print_Tensor( Data_map->at("R"), "Data_map->at(\"R\")" ); cout << endl <<endl;
+    cout << " Smith_rdm3->norm() = " << Smith_rdm3->norm() << "       Smith_rdm3->rms() = " << Smith_rdm3->rms() << endl;
+    cout << " Data_map->at(\"R\")->norm()  = " << Data_map->at("R")->norm() <<  "      Data_map->at(\"R\")->rms()  = " << Data_map->at("R")->rms() << endl;
+    cout << " Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( Smith_rdm3 ) = " <<  Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( Smith_rdm3 ) << endl; ;
     reference_result = Smith_rdm3->dot_product( Data_map->at("R"));
   }
+
+ 
 
   cout << "==================================== RESULTS for "<< Expression_name << "===================" << endl << endl;
   cout << Expression_name << " = " << result << endl ;

@@ -22,7 +22,34 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( sha
 
    return contract_on_same_tensor_new( Tens_in, ctrs_pos) ;
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Specialized routine for summing over the whole tensor, should not be needed by handy for now
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+DataType Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_tensor_elems( shared_ptr<Tensor_<DataType>> Tens_in) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithemetic_Utils::sum_tensor_elems" << endl;
 
+  shared_ptr<vector<IndexRange>> id_ranges = make_shared<vector<IndexRange>>( Tens_in->indexrange() );
+  
+  shared_ptr<vector<int>> range_maxs  =  get_range_lengths( id_ranges ) ;
+  shared_ptr<vector<int>> block_pos   =  make_shared<vector<int>>(range_maxs->size(),0);  
+  shared_ptr<vector<int>> mins        =  make_shared<vector<int>>(range_maxs->size(),0);  
+
+  double sum_of_elems = (DataType)0.0;
+
+  do { 
+
+     vector<Index> id_blocks = *(get_rng_blocks( block_pos, *id_ranges ));
+     unique_ptr<double[]> block = Tens_in->get_block( id_blocks );
+     Tens_in->get_size(id_blocks);
+     double* bob = block.get();
+     sum_of_elems += *bob++;
+
+  } while (fvec_cycle_skipper( block_pos, range_maxs, mins ) ); 
+
+  return sum_of_elems;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Bad routine using reordering because I just want something which works
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
