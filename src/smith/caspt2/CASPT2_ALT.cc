@@ -157,6 +157,8 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   Build_Compute_Lists();
 
   Execute_Compute_List("Hact_test");
+  Execute_Compute_List("R6_test");
+  Execute_Compute_List("Q8_test");
 
   // <proj_jst|H|0_K> set to sall in ms-caspt2
   
@@ -185,7 +187,7 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   vector<string> core = {"cor"};
   vector<string> act  = {"act"};
   vector<string> virt = {"vir"};
-
+  {
   /* ---- H Tensor  ACTIVE ONLY FOR TESTING----  */
   pair<double,double>                S_factor = make_pair(0.5,0.5);
   shared_ptr<vector<string>>         S_idxs = make_shared<vector<string>>(vector<string> {"S0", "S1", "S2", "S3"});
@@ -203,7 +205,49 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   vector<IndexRange> act_ranges = { *active_rng, *active_rng, *active_rng, *active_rng };
   shared_ptr<Tensor_<double>> Hact = Tensor_Arithmetic_Utils::get_sub_tensor( H_2el_all, act_ranges);
   Data_map->emplace( "S", Hact );
+  }
 
+  /* ---- 6idx UNIT Tensor ACTIVE ONLY FOR TESTING----  */
+  {
+  pair<double,double>                R_factor = make_pair(0.5,0.5);
+  shared_ptr<vector<string>>         R_idxs = make_shared<vector<string>>(vector<string> {"R0", "R1", "R2", "R3","R4", "R5"});
+  shared_ptr<vector<bool>>           R_aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false}); 
+  shared_ptr<vector<vector<string>>> R_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  act, act, act, act, act, act }); 
+  shared_ptr<double>                 R_dummy_data;
+  string                             R_TimeRymm = "none";
+
+  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> R_symmfuncs = Expr_Info->identity_only();
+  vector<bool(*)(shared_ptr<vector<string>>)>  R_constraints = {  &Expression_Info<double>::Expression_Info::always_true };
+
+  shared_ptr<TensOp<double>> RTens = Expr_Info->Build_TensOp("R", R_dummy_data, R_idxs, R_aops, R_idx_ranges, R_symmfuncs, R_constraints, R_factor, R_TimeRymm, false ) ;
+  Expr_Info->T_map->emplace("R", RTens);
+
+  shared_ptr<vector<IndexRange>> act_ranges_6 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
+  shared_ptr<Tensor_<double>> R_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act_ranges_6, 1.0 );
+  Data_map->emplace( "R", R_Tens );
+  cout <<"R_Tens->norm() = "<< R_Tens->norm() << endl;
+  }
+
+  {
+  /* ---- 8idx UNIT Tensor ACTIVE ONLY FOR TESTING----  */
+  pair<double,double>                Q_factor = make_pair(0.5,0.5);
+  shared_ptr<vector<string>>         Q_idxs = make_shared<vector<string>>(vector<string> {"Q0", "Q1", "Q2", "Q3","Q4", "Q5", "Q6", "Q7"});
+  shared_ptr<vector<bool>>           Q_aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, true, false, false, false, false}); 
+  shared_ptr<vector<vector<string>>> Q_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  act, act, act, act, act, act, act, act }); 
+  shared_ptr<double>                 Q_dummy_data;
+  string                             Q_TimeQymm = "none";
+
+  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Q_symmfuncs = Expr_Info->identity_only();
+  vector<bool(*)(shared_ptr<vector<string>>)>  Q_constraints = {  &Expression_Info<double>::Expression_Info::always_true };
+
+  shared_ptr<TensOp<double>> QTens = Expr_Info->Build_TensOp("Q", Q_dummy_data, Q_idxs, Q_aops, Q_idx_ranges, Q_symmfuncs, Q_constraints, Q_factor, Q_TimeQymm, false ) ;
+  Expr_Info->T_map->emplace("Q", QTens);
+
+  shared_ptr<vector<IndexRange>> act_ranges_8 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
+  shared_ptr<Tensor_<double>> Q_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act_ranges_8, 1.0 );
+  Data_map->emplace( "Q", Q_Tens );
+  cout <<"Q_Tens->norm() = "<< Q_Tens->norm() << endl;
+  }
   return;
 }
 
@@ -211,10 +255,22 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
 void CASPT2_ALT::CASPT2_ALT::Build_Compute_Lists() { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
                                                                                      
-  shared_ptr<vector<string>> S = make_shared<vector<string>>(vector<string> { "S" });
-  Expr_Info->Set_BraKet_Ops( S, "S" ) ;
+  shared_ptr<vector<string>> op_list1 = make_shared<vector<string>>(vector<string> { "S" });
+  Expr_Info->Set_BraKet_Ops( op_list1, "<I|H_act|J>" ) ;
 
-  Expr_Info->Build_Expression( S, "Hact_test") ;
+  shared_ptr<vector<string>> op_list2 = make_shared<vector<string>>(vector<string> { "Q" });
+  Expr_Info->Set_BraKet_Ops( op_list2, "<I|Q|J>" ) ;
+
+  shared_ptr<vector<string>> op_list3 = make_shared<vector<string>>(vector<string> { "R" });
+  Expr_Info->Set_BraKet_Ops( op_list3, "<I|R|J>" ) ;
+
+  shared_ptr<vector<string>> BK_list_S = make_shared<vector<string>>(vector<string> { "<I|H_act|J>" });
+  shared_ptr<vector<string>> BK_list_Q = make_shared<vector<string>>(vector<string> { "<I|Q|J>" });
+  shared_ptr<vector<string>> BK_list_R = make_shared<vector<string>>(vector<string> { "<I|R|J>" });
+
+  Expr_Info->Build_Expression( BK_list_S, "Hact_test") ;
+  Expr_Info->Build_Expression( BK_list_Q, "Q8_test") ;
+  Expr_Info->Build_Expression( BK_list_R, "R6_test") ;
 
   return ;
 }
@@ -223,8 +279,6 @@ void CASPT2_ALT::CASPT2_ALT::Build_Compute_Lists() {
 void CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string Expression_name) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) " << endl;
-
-  cout << "Smith_rdm2->dot_product( Data_map->at(\"S\")) = " << Smith_rdm2->dot_product( Data_map->at("S")) << endl;
 
   if ( scalar_results_map->find(Expression_name) != scalar_results_map->end() )  
     cout << "WARNING : You have already calculated this expression....." << Expression_name
@@ -286,7 +340,24 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
       }
     }
   }
-  cout << Expression_name << " = " << result << endl;
+  
+  cout << endl << endl;
+  double reference_result;
+  if ( Expression_name == "Hact_test" ) {
+    reference_result = Smith_rdm2->dot_product( Data_map->at("S"));
+  } else if ( Expression_name == "Q8_test" ) {
+    cout << " Smith_rdm4->norm() = " << Smith_rdm4->norm() << endl;
+    reference_result = Smith_rdm4->dot_product( Data_map->at("Q"));
+  } else if ( Expression_name == "R6_test" ) {
+    cout << " Smith_rdm3->norm() = " << Smith_rdm3->norm() << endl;
+    reference_result = Smith_rdm3->dot_product( Data_map->at("R"));
+  }
+
+  cout << "==================================== RESULTS for "<< Expression_name << "===================" << endl << endl;
+  cout << Expression_name << " = " << result << endl ;
+  cout << "reference result  = " << reference_result << endl;
+  cout << "difference = " << result-reference_result << endl << endl;
+  cout << "=========================================================================================================" << endl << endl << endl;
   scalar_results_map->emplace( Expression_name, result );
   
   return;

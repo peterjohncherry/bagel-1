@@ -156,7 +156,7 @@ void CASPT2::CASPT2::solve() {
    
       set_rdm(jst, istate);
 
-      Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2all_[istate]->at(jst) , 1.0  );
+      Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2all_[istate]->at(jst) , 0.0  );
        
       cout << " t2all_["<< istate << "]->at("<< jst << ")->norm()       = " <<   t2all_[istate]->at(jst)->norm() << endl;
       cout << " t2all_["<< istate << "]->at("<< jst << ")->rms()        = " <<   t2all_[istate]->at(jst)->rms()  <<  endl;

@@ -208,8 +208,7 @@ cout << "GammaGenerator::norm_order" << endl;
 bool GammaGenerator::Forbidden_Index( shared_ptr<vector<string>> full_id_ranges, int position){
 ///////////////////////////////////////////////////////////////////////////////////////
 //cout << "GammaGenerator::Forbidden_Index" << endl;
-                        
-    return ( full_id_ranges->at(position) != "act");
+  return ( full_id_ranges->at(position) != "act");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////

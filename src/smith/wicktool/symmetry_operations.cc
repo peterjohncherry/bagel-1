@@ -161,6 +161,18 @@ vector<tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int 
   return one_el_symmfuncs;  
 } 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+vector<tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  Expression_Info<DataType>::Expression_Info::identity_only() {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Two_el_symmfuncs(1);
+  int one = 1;
+  shared_ptr<vector<string>> (*symmop7)(shared_ptr<vector<string>>)  = &Expression_Info<DataType>::Expression_Info::identity;
+  Two_el_symmfuncs.push_back(tie(symmop7, one, one));
+
+  return Two_el_symmfuncs;  
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Expression_Info<double>;

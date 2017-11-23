@@ -74,6 +74,7 @@ class Expression_Info {
 
       std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_2el_symmfuncs();
       std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_1el_symmfuncs();
+      std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> identity_only();
 
       struct compare_string_length {
         bool operator()(const std::string& first, const std::string& second) {

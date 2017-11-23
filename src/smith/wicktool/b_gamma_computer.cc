@@ -242,7 +242,7 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 void B_Gamma_Computer::B_Gamma_Computer::compute_sigmaN( shared_ptr<GammaInfo> gammaN_info )  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "B_Gamma_Computer::compute_sigmaN" << endl;
+  cout << "B_Gamma_Computer::compute_sigmaN : " << gammaN_info->sigma_name  << endl;
 
   string  Bra_name = gammaN_info->Bra_name();
   string  Ket_name = gammaN_info->Prev_Bra_name();
@@ -250,14 +250,23 @@ void B_Gamma_Computer::B_Gamma_Computer::compute_sigmaN( shared_ptr<GammaInfo> g
   if ( Bra_name == Ket_name ) { 
 
     get_wfn_data( gammaN_info->prev_Bra_info );
-
-    shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name ); 
+    cout <<"looking for det space for " << Ket_name << " ....."; cout .flush();
+    shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name );  
+    cout << " found it! " << endl;
 
     int sorder  = gammaN_info->order; 
     int orb_dim = pow(Ket_det->norb(), sorder-2);
     int orb2    = Ket_det->norb()*Ket_det->norb();
 
-    shared_ptr<Dvec> prev_sigma = dvec_sigma_map->at( gammaN_info->prev_sigma_name() );
+    if ( dvec_sigma_map->find(gammaN_info->prev_sigma_name()) == dvec_sigma_map->end() ) {
+      cout << " couldn't find dvec_sigma " << gammaN_info->prev_sigma_name() << "in map, must compute " << endl;
+      if (gammaN_info->order > 4 ) {
+        compute_sigmaN( Gamma_info_map->at(gammaN_info->prev_gamma_name()) ); 
+      } else { 
+        compute_sigma2( Gamma_info_map->at(gammaN_info->prev_gamma_name()) ); 
+      }
+    } 
+    shared_ptr<Dvec> prev_sigma = dvec_sigma_map->at( gammaN_info->prev_sigma_name() ); cout <<" found it!" << endl;
     shared_ptr<Dvec> sigmaN     = make_shared<Dvec>( Ket_det, orb_dim*orb2  );
 
     for ( int  ii = 0; ii != orb_dim; ii++) {
@@ -271,7 +280,7 @@ void B_Gamma_Computer::B_Gamma_Computer::compute_sigmaN( shared_ptr<GammaInfo> g
 
   } else {
   
-    cout << "spin transitions sigmas not implemented yet " << endl;  
+    cout << "spin flip sigmas not implemented yet " << endl;  
   
   }
   return;
@@ -346,7 +355,7 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void B_Gamma_Computer::B_Gamma_Computer::compute_sigma2( shared_ptr<GammaInfo> gamma2_info )  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "B_Gamma_Computer::compute_sigma2" << endl;
+  cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name << endl;
 
   string Bra_name = gamma2_info->Bra_name();
   string Ket_name = gamma2_info->Ket_name();
