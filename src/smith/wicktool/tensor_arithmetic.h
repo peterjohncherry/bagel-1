@@ -39,7 +39,7 @@ class Tensor_Arithmetic {
      static std::shared_ptr<Tensor_<DataType>>
      contract_tensor_with_vector( std::shared_ptr<Tensor_<DataType>> Tens1_in,
                                   std::shared_ptr<Tensor_<DataType>> Tens2_in,  
-                                  std::pair<int,int> ctr_todo                  );
+                                  int ctr_todo                                );
 
      static DataType
      contract_vectors( std::shared_ptr<Tensor_<DataType>> Tens1_in,  std::shared_ptr<Tensor_<DataType>> Tens2_in);

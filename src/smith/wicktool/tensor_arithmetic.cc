@@ -182,11 +182,10 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_tensor_with_vector( shared_ptr<Tensor_<DataType>> Tens1_in,
                                                                              shared_ptr<Tensor_<DataType>> Tens2_in,
-                                                                             pair<int,int> ctr_todo){
+                                                                             int ctr_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl; 
 
-  assert(ctr_todo.second == 0 ) ;
 
   vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
   vector<IndexRange> T2_rng = Tens2_in->indexrange();
@@ -195,7 +194,7 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
   iota(T1_org_order->begin(), T1_org_order->end(), 0);
 
   //Fortran column-major ordering, swap indexes here, not later... 
-  shared_ptr<vector<int>>        T1_new_order = put_ctr_at_front( T1_org_order, ctr_todo.first);
+  shared_ptr<vector<int>>        T1_new_order = put_ctr_at_front( T1_org_order, ctr_pos);
   shared_ptr<vector<IndexRange>> T1_new_rngs  = reorder_vector(T1_new_order, T1_org_rngs);
   shared_ptr<vector<int>>        maxs1        = get_num_index_blocks_vec(T1_new_rngs) ;
 

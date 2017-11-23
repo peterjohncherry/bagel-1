@@ -84,7 +84,7 @@ cout << "Gamma_Computer::build_gamma2_tensor" << endl;
    shared_ptr<Tensor_<double>> gamma2 =
    Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at(gamma2_info->sigma_name),
                                                                               CIvec_data_map->at(gamma2_info->Bra_name()),
-                                                                              make_pair(2, 0) );
+                                                                              0 );
 
    Gamma_data_map->emplace(gamma2_info->name, gamma2); 
 //   Print_Tensor(Gamma_data_map->at(gamma2_info->name), "MAP gamma2 from recursive" ) ; cout << endl;
@@ -156,7 +156,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> g
   unique_ptr<double[]> sigma2_block = sigma2->get_block(id_block);
 
   shared_ptr<Tensor_<double>> gamma2 =
-  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( sigma2, CIvec_data_map->at(gamma2_info->Bra_name()), make_pair(2, 0) );
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( sigma2, CIvec_data_map->at(gamma2_info->Bra_name()), 0 );
 
 //  Print_Tensor(gamma2, "DIRECT gamma2 from recursive" ) ; cout << endl;
 
@@ -181,7 +181,7 @@ void Gamma_Computer::Gamma_Computer::build_gammaN_tensor(shared_ptr<GammaInfo> g
    shared_ptr<Tensor_<double>> gammaN =
    Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at(gammaN_info->sigma_name),
                                                                               CIvec_data_map->at(gammaN_info->Bra_name()),
-                                                                              make_pair(gammaN_info->order, 0) );
+                                                                              0 );
  
 //   Print_Tensor( gammaN, "gamma "+to_string(gammaN_info->order)+ " recursive tensor version "  ); cout << endl;
 

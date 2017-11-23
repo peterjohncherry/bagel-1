@@ -361,7 +361,7 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
   convert_civec_to_tensor( Bra_name );
 
   shared_ptr<vector<IndexRange>> gammaN_ranges = Get_Bagel_IndexRanges( gamma2_info->id_ranges ); 
-  shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( Tens_sigma2, CIvec_data_map->at( Bra_name ), make_pair(0, 0) );
+  shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( Tens_sigma2, CIvec_data_map->at( Bra_name ), 0 );
   Gamma_data_map->emplace( gamma2_info->name, Tens_gamma2 ); 
 
   Print_Tensor_column_major( Tens_gamma2, "Tens_gamma2_from_sigma2_contraction column major print" ) ; cout << endl << endl;
