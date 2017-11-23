@@ -224,8 +224,6 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
    }
    cout << endl << endl << endl;
 
-
-   cout << endl; Print_Tensor( Tens_gammaN , gammaN_info->name ) ; cout << endl << endl;
    cout << endl; Print_Tensor_column_major( Tens_gammaN, gammaN_info->name + " column major version"  ) ; cout << endl << endl;
 
    shared_ptr<Dvec> sigma2 = dvec_sigma_map->at(gammaN_info->prev_sigma_name());

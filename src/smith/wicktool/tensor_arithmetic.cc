@@ -8,20 +8,6 @@ using namespace bagel::SMITH;
 using namespace bagel::SMITH::Tensor_Sorter;
 using namespace bagel::SMITH::Tensor_Arithmetic_Utils; 
 using namespace WickUtils;
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Lazy, so can substitute this in to test easily, should remove later
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-shared_ptr<Tensor_<DataType>>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( shared_ptr<Tensor_<DataType>> Tens_in,  pair<int,int>& ctrs_pair) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Tensor_Arithmetic::contract_on_same_tensor_new , pair " << endl;
-
-   vector<int> ctrs_pos = { ctrs_pair.first, ctrs_pair.second };
-
-   return contract_on_same_tensor_new( Tens_in, ctrs_pos) ;
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Specialized routine for summing over the whole tensor, should not be needed by handy for now
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,24 +37,26 @@ cout << "Tensor_Arithemetic_Utils::sum_tensor_elems" << endl;
   return sum_of_elems;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Bad routine using reordering because I just want something which works
+// Bad routine using reordering because I just want something which works
+// All orders of ctrs_pos will give the same answer, but some will require fewer transposes. 
+// Write (small) routine to optimize ordering of ctrs_pos and call at start of routine.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( shared_ptr<Tensor_<DataType>> Tens_in,  vector<int>& ctrs_pos) {
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_ptr<Tensor_<DataType>> Tens_in,  vector<int>& ctrs_pos) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Tensor_Arithmetic::contract_on_same_tensor_new" << endl;
+  cout << "Tensor_Arithmetic::contract_on_same_tensor" << endl;
 
   vector<IndexRange> id_ranges_in = Tens_in->indexrange();
   int num_ids  = id_ranges_in.size();
 
-  // for reordering blocks in loop, put at front, indexes on right move fastest
+  // Put contracted indexes at back so they change slowly; Fortran ordering in index blocks!
   shared_ptr<vector<int>> new_order = make_shared<vector<int>>(num_ids);
   iota(new_order->begin(), new_order->end(), 0);
-  put_ctrs_at_front(*new_order, ctrs_pos);
+  put_ctrs_at_back( *new_order, ctrs_pos );
 
-  vector<int> unc_pos(new_order->begin()+ctrs_pos.size(), new_order->end());
-  vector<IndexRange> unc_idxrng(unc_pos.size());
+  vector<int> unc_pos( new_order->begin(), new_order->end() - ctrs_pos.size() );
+  vector<IndexRange> unc_idxrng( unc_pos.size() );
   for (int qq = 0; qq != unc_pos.size(); qq++ ) 
     unc_idxrng[qq] = id_ranges_in[unc_pos[qq]];
 
@@ -83,11 +71,12 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( sha
   } 
 
   int num_ctr_blocks = id_ranges_in[ctrs_pos.front()].range().size();
+
   shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(unc_idxrng);
   Tens_out->allocate();
   Tens_out->zero();
 
-  //loop over all blocks, unc and ctr . Loop over ctr in middle loop
+  // Outer forvec loop skips ctr ids due to min[i]=max[i].  Inner loop cycles ctr ids.
   do {
    
     shared_ptr<vector<Index>> id_blocks_in = get_rng_blocks( block_pos, id_ranges_in ); 
@@ -111,10 +100,10 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( sha
       id_blocks_in = get_rng_blocks(block_pos, id_ranges_in);
 
       vector<int> ctr_block_strides(ctrs_pos.size(),1);
-      ctr_block_strides.back() = unc_block_size;
+      ctr_block_strides.front() = unc_block_size;
       int ctr_total_stride = unc_block_size;
-      for (int qq = ctrs_pos.size()-2; qq != -1 ; qq-- ) {
-        ctr_block_strides[qq] *= (ctr_block_strides[qq+1] * id_blocks_in->at(ctrs_pos[qq+1]).size());
+      for (int qq = 1; qq != ctrs_pos.size() ; qq++ ) {
+        ctr_block_strides[qq] = (ctr_block_strides[qq-1] * id_blocks_in->at(ctrs_pos[qq-1]).size());
         ctr_total_stride += ctr_block_strides[qq]; 
       }
 
@@ -123,13 +112,12 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( sha
       unique_ptr<DataType[]> reordered_block = reorder_tensor_data( orig_block.get(), new_order, id_blocks_in );
 
       //looping over the id positions within the block
-      for ( int ctr_id = 0 ; ctr_id != id_blocks_in->at(ctrs_pos[0]).size(); ctr_id++){
+      for ( int ctr_id = 0 ; ctr_id != id_blocks_in->at(ctrs_pos[0]).size(); ctr_id++ )
         blas::ax_plus_y_n(1.0, reordered_block.get() + (ctr_total_stride*ctr_id), unc_block_size, contracted_block.get() );
-    
+      
       }
-      }
- 
-    }  
+       
+    }
     
     Tens_out->put_block(contracted_block, unc_id_blocks );
    
@@ -137,235 +125,19 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor_new( sha
 
   return Tens_out;
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Lazy, so can substitute this in to test easily, should remove later
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_ptr<Tensor_<DataType>> Tens_in,  pair<int,int> ctr_todo) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Tensor_Arithmetic::contract_on_same_tensor" << endl;
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_ptr<Tensor_<DataType>> Tens_in,  pair<int,int> ctrs_pair) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic::contract_on_same_tensor , pair " << endl;
 
-   // get original uncontracted ranges and positions of Ctrs relative to the current tensor
-   int ctr1 = ctr_todo.first;
-   int ctr2 = ctr_todo.second;
-   vector<IndexRange> unc_ranges_old = Tens_in->indexrange(); 
-   vector<IndexRange> unc_ranges_new(unc_ranges_old.size()-2);  
-   vector<int> unc_pos_new(unc_ranges_old.size()-2);  
-         
-   vector<IndexRange>::iterator urn_iter = unc_ranges_new.begin();
-   vector<int>::iterator upn_iter = unc_pos_new.begin();
-   for ( int ii = 0 ; ii != unc_ranges_old.size() ; ii++ )
-     if ( (ii != ctr_todo.first) && (ii != ctr_todo.second) ){ 
-       *urn_iter++ = unc_ranges_old[ii];
-       *upn_iter++ = ii;
-     }
+   vector<int> ctrs_pos = { ctrs_pair.first, ctrs_pair.second };
 
-   shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(unc_ranges_new);
-   Tens_out->allocate();
-   Tens_out->zero();
-   int num_ctr_blocks = unc_ranges_old[ctr_todo.first].range().size();
-
-   //loops over index blocks where ctr1 = ctr2 
-   for (int ii = 0 ; ii != num_ctr_blocks ; ii++){ 
-     shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(unc_ranges_old.size(),0);  
-     shared_ptr<vector<int>> mins = make_shared<vector<int>>(unc_ranges_old.size(),0);  
-     shared_ptr<vector<int>> maxs = make_shared<vector<int>>(unc_ranges_old.size(),0);  
-     for ( int jj = 0 ; jj != unc_ranges_old.size() ; jj++ ) 
-        maxs->at(jj) = unc_ranges_old[jj].range().size()-1;
- 
-     mins->at(ctr_todo.first)  = ii;
-     mins->at(ctr_todo.second) = ii; 
-     maxs->at(ctr_todo.first)  = ii;
-     maxs->at(ctr_todo.second) = ii;
-     block_pos->at(ctr_todo.first)  = ii;
-     block_pos->at(ctr_todo.second) = ii;
-     
-     const int ione = 1; 
-     const DataType done = 1.0; 
-     do {
-       
-       vector<Index> Tens_id_blocks_old = *(get_rng_blocks(block_pos, unc_ranges_old)); 
-       vector<Index> Tens_id_blocks_new(Tens_id_blocks_old.size()-2);
-       for (int kk = 0 ; kk != unc_pos_new.size(); kk++)       
-         Tens_id_blocks_new[kk] = Tens_id_blocks_old[unc_pos_new[kk]];
-     
-       vector<int> range_sizes = get_sizes(Tens_id_blocks_old);
-       int total_size = accumulate( range_sizes.begin(), range_sizes.end(), 1, std::multiplies<int>() );
-
-       shared_ptr<vector<int>> Tens_strides = get_Tens_strides(range_sizes);
-       int inner_stride = Tens_strides->at(ctr1) < Tens_strides->at(ctr2) ? Tens_strides->at(ctr1) : Tens_strides->at(ctr2);
-
-       shared_ptr<vector<int>> maxs2 = make_shared<vector<int>>(range_sizes.size(),0);
-       shared_ptr<vector<int>> mins2 = make_shared<vector<int>>(maxs->size(), 0); 
-       shared_ptr<vector<int>> fvec2 = make_shared<vector<int>>(*mins2); 
-
-       //within index block, loop through data copying chunks where ctr1 = ctr2 
-       //Has odd striding; probably very inefficient when ctr1 or ctr2 are the leading index.
-       for (int jj = ctr1+1 ; jj != maxs2->size(); jj++) 
-         maxs2->at(jj) = range_sizes[jj]-1; // note, copying inner block as vector, so want max = min = 0 for those indexes;
-       
-       int ctr1_rlen = range_sizes[ctr1];          
-       int tmp = total_size/(ctr1_rlen*ctr1_rlen); 
-
-       unique_ptr<DataType[]>      Tens_data_block_old = Tens_in->get_block(Tens_id_blocks_old);
-       std::unique_ptr<DataType[]> Tens_data_block_new(new DataType[tmp]);
-       std::fill_n(Tens_data_block_new.get(), tmp, 0.0);
-       shared_ptr<vector<int>>   CTens_strides   =  get_CTens_strides( range_sizes, ctr1, ctr2 );
-       
-       for ( int jj = 0 ; jj != ctr1_rlen ; jj++ ) {
-
-         fill(fvec2->begin(), fvec2->end(), 0);
-         maxs2->at(ctr1) = jj; 
-         maxs2->at(ctr2) = jj; 
-         mins2->at(ctr1) = jj;  
-         mins2->at(ctr2) = jj; 
-         fvec2->at(ctr1) = jj; 
-         fvec2->at(ctr2) = jj; 
-
-         do { 
-           int pos   = inner_product( fvec2->begin(), fvec2->end(), CTens_strides->begin(), 0); 
-           int inpos = inner_product( fvec2->begin(), fvec2->end(), Tens_strides->begin(),  0); 
-
-           blas::ax_plus_y_n(1.0, Tens_data_block_old.get()+inpos, inner_stride, Tens_data_block_new.get()+pos);
-
-         } while (fvec_cycle_skipper_f2b(fvec2, maxs2, mins2));
-       }
- 
-       Tens_out->add_block( Tens_data_block_new, Tens_id_blocks_new );
-     } while (fvec_cycle_skipper(block_pos, maxs, mins ));
-  } 
-
-  return Tens_out;
+   return contract_on_same_tensor( Tens_in, ctrs_pos) ;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Will contract over all the indexes given in the conctracted indexes list. 
-//Note these are indexes relative to the input tensor, not the original Tensor from which the CtrTensorPart was obtained.
-//In principal this could replace the contract_same_tensor routine, as there's a lot of duplicated code
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-shared_ptr<Tensor_<DataType>>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( std::shared_ptr<Tensor_<DataType>> Tens_in, vector<int>& contracted_index_positions ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Tensor_Arithmetic::get_trace_tensor" << endl;
-
-   if ( contracted_index_positions.size()-  Tens_in->indexrange().size() )  {
-     cout << "contracted_index_positions         = [ "; cout.flush();  for ( int pos : contracted_index_positions ) {cout << pos << " " ; } cout << " ] " << endl;
-     cout << "contracted_index_positions.size()  = "<<  contracted_index_positions.size() << endl;
-     cout << "Tens_in->indexrange().size()       = " << Tens_in->indexrange().size()  <<  endl;
-     cout << "trying to contract more indexes than there are in the tensor!" << endl;
-     assert(false);
-   }
-
-   int num_ctrs = contracted_index_positions.size();
-   // get original uncontracted ranges and positions of Ctrs relative to the current tensor
-   vector<IndexRange> unc_ranges_old = Tens_in->indexrange(); 
-   vector<IndexRange> unc_ranges_new(unc_ranges_old.size() - num_ctrs);  
-   vector<int> unc_pos_new(unc_ranges_old.size() - num_ctrs);  
-
-   vector<bool> unc_get(Tens_in->indexrange().size(), true);
-   for( int ii = 0; ii !=contracted_index_positions.size(); ii++ )
-      unc_get[contracted_index_positions[ii]] = false;
-
-   for ( int ii = 0 ; ii != unc_get.size(); ii++  )
-     if (unc_get[ii]) {
-       unc_ranges_new[ii] = unc_ranges_old[ii];
-       unc_pos_new[ii] = ii;
-     }
-
-   shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(unc_ranges_new);
-   Tens_out->allocate();
-   Tens_out->zero();
-
-   // loops over index blocks with same ctr
-   int num_ctr_blocks = unc_ranges_old[contracted_index_positions[0]].range().size();
-   for (int ii = 0 ; ii != num_ctr_blocks ; ii++){ 
-
-     shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(unc_ranges_old.size(),0);  
-     shared_ptr<vector<int>> mins = make_shared<vector<int>>(unc_ranges_old.size(),0);  
-     shared_ptr<vector<int>> maxs = make_shared<vector<int>>(unc_ranges_old.size());  
-
-     for ( int jj = 0 ; jj != unc_ranges_old.size() ; jj++ ) 
-        maxs->at(jj) = unc_ranges_old[jj].range().size()-1;
- 
-     for ( int ctr_idx_pos : contracted_index_positions ) {
-        mins->at(ctr_idx_pos)       = ii;
-        maxs->at(ctr_idx_pos)       = ii;
-        block_pos->at(ctr_idx_pos)  = ii;
-     }
-     
-     do {
-       
-       vector<Index> Tens_id_blocks_old = *(get_rng_blocks(block_pos, unc_ranges_old)); 
-       vector<Index> Tens_id_blocks_new(Tens_id_blocks_old.size()- num_ctrs );
-       for (int kk = 0 ; kk != unc_pos_new.size(); kk++)       
-         Tens_id_blocks_new[kk] = Tens_id_blocks_old[unc_pos_new[kk]];
-    
- 
-       vector<int> range_sizes = get_sizes(Tens_id_blocks_old);
-       shared_ptr<vector<int>> Tens_strides = get_Tens_strides(range_sizes);
-   
-       // To save time,  the contracted parts are copied in blocks i.e. (i, j, k, k, : , : ) 
-       // Inner stride is the size of the data block to the right of the contracted indexes
-       int inner_stride = Tens_strides->at(0); 
-       int innermost_ctr = contracted_index_positions.back() ;
-       for ( int qq = 0 ; qq!=contracted_index_positions.size() ; qq++ ){
-         if ( (inner_stride) > Tens_strides->at(contracted_index_positions[qq])){
-           inner_stride = Tens_strides->at(contracted_index_positions[qq]);
-           innermost_ctr = contracted_index_positions[qq];
-         }
-       }
-
-       cout << "inner_stride  = " << inner_stride << endl;
-       cout << "innermost_ctr = " << innermost_ctr << endl;
-
-       shared_ptr<vector<int>> mins2 = make_shared<vector<int>>(maxs->size(), 0); 
-       shared_ptr<vector<int>> fvec2 = make_shared<vector<int>>(*mins); 
-       shared_ptr<vector<int>> maxs2 = make_shared<vector<int>>(range_sizes.size(),0);
-       // note: copying inner block as vector, so want max = min = 0 for those indexes  
-       // looks backwards, but is countered by use of f2b fvec routine
-       for (int jj = innermost_ctr ; jj != maxs2->size(); jj++) 
-         maxs2->at(jj) = range_sizes[jj]-1; 
-
-       shared_ptr<vector<int>> CTens_strides = get_CTens_strides( range_sizes, contracted_index_positions );
-
-       int ctr_block_len = range_sizes[contracted_index_positions.front()];          
-       int out_block_size = 1;
-       for ( int pos : contracted_index_positions) 
-          out_block_size *= range_sizes[pos];
-
-       unique_ptr<DataType[]>      Tens_data_block_old = Tens_in->get_block(Tens_id_blocks_old);
-       std::unique_ptr<DataType[]> Tens_data_block_new(new DataType[out_block_size]);
-       std::fill_n(Tens_data_block_new.get(), out_block_size, 0.0);
-       
-       for ( int jj = 0 ; jj != ctr_block_len ; jj++ ) {
-
-         fill(fvec2->begin(), fvec2->end(), 0);
-         for ( int ctr_idx_pos : contracted_index_positions ) {
-           maxs2->at(ctr_idx_pos) = jj; 
-           mins2->at(ctr_idx_pos) = jj;  
-           fvec2->at(ctr_idx_pos) = jj; 
-         }
-
-         //within index block, loop through data copying chunks where contracted_ctrs are equal
-         do { 
-           int pos   = inner_product( fvec2->begin(), fvec2->end(), CTens_strides->begin(), 0); 
-           int inpos = inner_product( fvec2->begin(), fvec2->end(), Tens_strides->begin(),  0); 
-           cout << "pos   = "<< pos <<   endl;
-           cout << "inpos = "<< inpos <<   endl;
-            
-           blas::ax_plus_y_n(1.0, Tens_data_block_old.get()+inpos, inner_stride, Tens_data_block_new.get()+pos);
-  
-      
-         } while (fvec_cycle_skipper_f2b(fvec2, maxs2, mins2));
-       }
- 
-       Tens_out->put_block( Tens_data_block_new, Tens_id_blocks_new );
-     } while (fvec_cycle_skipper(block_pos, maxs, mins ));
-  } 
-
-  return Tens_out;
-}
-
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Code is much clearer if we have a seperate routine for this rather than pepper the generic version with ifs
@@ -479,9 +251,9 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors_column_major( shared_ptr<Tensor_<DataType>> Tens1_in,
-                                                                                         shared_ptr<Tensor_<DataType>> Tens2_in,
-                                                                                         pair<int,int> ctr_todo){
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( shared_ptr<Tensor_<DataType>> Tens1_in,
+                                                                            shared_ptr<Tensor_<DataType>> Tens2_in,
+                                                                            pair<int,int> ctr_todo){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl; 
 
@@ -577,110 +349,6 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
       cout << "put block" << endl;
 
     } while(fvec_cycle_skipper(T2_rng_block_pos, maxs2, 0 )) ;//remove last index; contracted index is cycled in T1 loop
-
-  } while (fvec_cycle_test(T1_rng_block_pos, maxs1 ));
-
-  
-  return Tens_out;
-}
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Contracts tensors T1 and T2 over two specified indexes
-//T1_org_rg T2_org_rg are the original index ranges for the tensors (not necessarily normal ordered).
-//T2_new_rg T1_new_rg are the new ranges, with the contracted index at the end, and the rest in normal ordering.
-//T1_new_order and T2_new_order are the new order of indexes, and are used for rearranging the tensor data.
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-shared_ptr<Tensor_<DataType>>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( shared_ptr<Tensor_<DataType>> Tens1_in,
-                                                                            shared_ptr<Tensor_<DataType>> Tens2_in,
-                                                                            pair<int,int> ctr_todo){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Tensor_Arithmetic::contract_on_different_tensor" <<endl; 
-
-  vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
-  vector<IndexRange> T2_org_rngs = Tens2_in->indexrange();
-
-  if ( ( T1_org_rngs.size() == 1 ) && (T2_org_rngs.size() == 1) ) {
-    cout << "vector dot product" << endl;
-  } else if ( ( T1_org_rngs.size() == 1 ) && (T2_org_rngs.size() != 1) ) {
-    cout << "tensor dot vector " << endl;
-  } else if ( ( T1_org_rngs.size() == 1 ) && (T2_org_rngs.size() == 1) ) {
-    cout << "vector dot tensor " << endl;
-  }    
-
-  shared_ptr<vector<int>> T1_org_order= make_shared<vector<int>>(T1_org_rngs.size());
-  iota(T1_org_order->begin(), T1_org_order->end(), 0);
-
-  shared_ptr<vector<int>> T2_org_order= make_shared<vector<int>>(T2_org_rngs.size());
-  iota(T2_org_order->begin(), T2_org_order->end(), 0);
-
-  shared_ptr<vector<int>>        T1_new_order = put_ctr_at_back( T1_org_order, ctr_todo.first);
-  shared_ptr<vector<IndexRange>> T1_new_rngs  = reorder_vector(T1_new_order, T1_org_rngs);
-  shared_ptr<vector<int>>        maxs1        = get_num_index_blocks_vec(T1_new_rngs) ;
-
-  shared_ptr<vector<int>>        T2_new_order = put_ctr_at_front( T2_org_order, ctr_todo.second);
-  shared_ptr<vector<IndexRange>> T2_new_rngs  = reorder_vector(T2_new_order, T2_org_rngs);
-  shared_ptr<vector<int>>        maxs2        = get_num_index_blocks_vec(T2_new_rngs) ;
-
-  vector<IndexRange> Tout_unc_rngs(T1_new_rngs->begin(), T1_new_rngs->end()-1);
-  Tout_unc_rngs.insert(Tout_unc_rngs.end(), T2_new_rngs->begin()+1, T2_new_rngs->end());
-
-  shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(Tout_unc_rngs);  
-  Tens_out->allocate();
-  Tens_out->zero();
-
-  //loops over all index blocks of T1 and T2; final index of T1 is same as first index of T2 due to contraction
-  shared_ptr<vector<int>> T1_rng_block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
-
-  do { 
-    
-     print_vector( *T1_rng_block_pos , "T1_block_pos" );
-
-    shared_ptr<vector<Index>> T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, *T1_new_rngs); 
-    shared_ptr<vector<Index>> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
-    
-    size_t ctr_block_size    = T1_new_rng_blocks->back().size(); 
-    size_t T1_unc_block_size = get_block_size( T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1); 
-    size_t T1_block_size     = get_block_size( T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); 
-
-    std::unique_ptr<DataType[]> T1_data_new;
-    {
-      std::unique_ptr<DataType[]> T1_data_org = Tens1_in->get_block(*T1_org_rng_blocks);
-      T1_data_new = reorder_tensor_data(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
-    }
-   
-    shared_ptr<vector<int>> T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size(), 0);
-    T2_rng_block_pos->front() = T1_rng_block_pos->back();
-  
-    do { 
-
-      print_vector( *T2_rng_block_pos , "T2_block_pos" );
-
-      shared_ptr<vector<Index>> T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, *T2_new_rngs); 
-      shared_ptr<vector<Index>> T2_org_rng_blocks = inverse_reorder_vector( T2_new_order, T2_new_rng_blocks); 
-      size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
-      std::unique_ptr<DataType[]> T2_data_new;
-      {
-        std::unique_ptr<DataType[]> T2_data_org = Tens2_in->get_block(*T2_org_rng_blocks);
-        T2_data_new = reorder_tensor_data(T2_data_org.get(), T2_new_order, T2_org_rng_blocks); 
-      }
-      
-      std::unique_ptr<DataType[]> T_out_data(new DataType[T1_unc_block_size*T2_unc_block_size]);
-      std::fill_n(T_out_data.get(), T1_unc_block_size*T2_unc_block_size, 0.0);
-
-      //should not use transpose; instead build T2_new_order backwards... 
-      dgemm_( "N", "N", T1_unc_block_size, T2_unc_block_size, ctr_block_size, 1.0, T1_data_new, T1_unc_block_size,
-              T2_data_new, ctr_block_size, 0.0, T_out_data, T1_unc_block_size );
-
-      vector<Index> T_out_rng_block(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
-      T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
-      Tens_out->add_block( T_out_data, T_out_rng_block );
-
-      //remove last index; contracted index is cycled in T1 loop
-    } while(fvec_cycle_skipper(T2_rng_block_pos, maxs2, 0 )) ;
 
   } while (fvec_cycle_test(T1_rng_block_pos, maxs1 ));
 
@@ -799,7 +467,8 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data( const DataT
 //Returns a tensor with ranges specified by unc_ranges, where all values are equal to XX  
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor(shared_ptr<vector<IndexRange>> T_id_ranges, DataType XX ){
+shared_ptr<Tensor_<DataType>>
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor(shared_ptr<vector<IndexRange>> T_id_ranges, DataType XX ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Tensor_Arithmetic::get_uniform_Tensor" << endl;
 
