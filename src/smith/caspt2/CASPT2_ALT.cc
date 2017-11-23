@@ -78,6 +78,19 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   Smith_rdm2 = orig_cpt2->rdm2_;
   Smith_rdm3 = orig_cpt2->rdm3_;
   Smith_rdm4 = orig_cpt2->rdm4_;
+  cout << endl << endl << endl << "-------------------------------------------------------------------------------" << endl;
+  Tensor_Arithmetic_Utils::Print_Tensor_column_major(Smith_rdm1, "Smith rdm1" );
+  cout << endl << "-------------------------------------------------------------------------------" << endl;
+  Tensor_Arithmetic_Utils::Print_Tensor_column_major(Smith_rdm2, "Smith rdm2" );
+  cout << endl << endl << endl << "-------------------------------------------------------------------------------" << endl;
+  shared_ptr<Tensor_<double>> Smith_rdm1_from_rdm2 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Smith_rdm2 , make_pair(2,3));
+  
+  Tensor_Arithmetic_Utils::Print_Tensor( Smith_rdm1_from_rdm2, "Smith rdm1 from rdm2" );
+  cout << endl << endl << endl << "-------------------------------------------------------------------------------" << endl;
+  pair<int,int> ctr_tmp = make_pair(2,3);
+  shared_ptr<Tensor_<double>> Smith_rdm1_from_rdm2_new = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor_new( Smith_rdm2 , ctr_tmp);
+  Tensor_Arithmetic_Utils::Print_Tensor( Smith_rdm1_from_rdm2_new, "Smith rdm1 from rdm2 new" );
+  cout << endl << "-------------------------------------------------------------------------------" << endl;
   
   
 }
@@ -113,16 +126,8 @@ void CASPT2_ALT::CASPT2_ALT::set_range_info(shared_ptr<vector<int>> states_of_in
 
     range_conversion_map->emplace( get_civec_name( ii , cc_->data(ii)->det()->norb(), cc_->data(ii)->det()->nelea(), cc_->data(ii)->det()->neleb()),
                                                    make_shared<IndexRange>(cc_->data(ii)->det()->size(), cimaxtile ));  
-
-    cout <<" cc_->data("<<ii<<")->det()->size() = " << cc_->data(ii)->det()->size() <<  endl;
-    cout <<" maxtile = " << maxtile << endl;
-    cout <<" cimaxtile = " << cimaxtile << endl;
     
     shared_ptr<IndexRange>  ci_index_ranges =  make_shared<IndexRange>(cc_->data(ii)->det()->size(), cimaxtile );
-    cout <<" ci_index_ranges->nblock()       = " << ci_index_ranges->nblock()     <<  endl;
-    cout <<" ci_index_ranges->size()         = " << ci_index_ranges->size()       <<  endl;
-    cout <<" ci_index_ranges->range().size() = " << ci_index_ranges->range().size() <<  endl;
-    cout <<" ci_index_ranges->range().size() = " << ci_index_ranges->range().size() <<  endl;
     cout << "cirngs = [ ";  for (auto irng : ci_index_ranges->range()) { cout << irng.size()  << " "; }; cout << "] " << endl;
 
   }    
@@ -326,12 +331,9 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
       
       if ( Gamma_name != "ID" ) {
 
-        cout << " into  B_Gamma_Machine to get " << Gamma_name << endl;
         B_Gamma_Machine.get_gamma( Gamma_name );
-        cout << " out of B_Gamma_Machine to get " << Gamma_name << endl;
 
-        cout << "A_combined_data->dot_product( Gamma_data_map->at(" << Gamma_name << ") ) = " << 
-                 A_combined_data->dot_product( Gamma_data_map->at(Gamma_name) ) << endl;
+        cout << "A_combined_data->dot_product( Gamma_data_map->at(" << Gamma_name << ") ) = " << A_combined_data->dot_product( Gamma_data_map->at(Gamma_name) ) << endl;
 
         result += A_combined_data->dot_product( Gamma_data_map->at(Gamma_name) );
       } else {
