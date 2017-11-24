@@ -79,9 +79,9 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   Smith_rdm3 = orig_cpt2->rdm3_;
   Smith_rdm4 = orig_cpt2->rdm4_;
   cout << endl << endl << endl << "-------------------------------------------------------------------------------" << endl;
-  Tensor_Arithmetic_Utils::Print_Tensor_column_major(Smith_rdm1, "Smith rdm1" );
+  Tensor_Arithmetic_Utils::Print_Tensor(Smith_rdm1, "Smith rdm1" );
   cout << endl << "-------------------------------------------------------------------------------" << endl;
-  Tensor_Arithmetic_Utils::Print_Tensor_column_major(Smith_rdm2, "Smith rdm2" );
+  Tensor_Arithmetic_Utils::Print_Tensor(Smith_rdm2, "Smith rdm2" );
   cout << endl << endl << endl << "-------------------------------------------------------------------------------" << endl;
   shared_ptr<Tensor_<double>> Smith_rdm1_from_rdm2 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Smith_rdm2 , make_pair(2,3));
   

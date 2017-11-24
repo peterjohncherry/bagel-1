@@ -208,23 +208,8 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
    }
 
    cout << endl << endl << endl;
-   shift = 0;
-   cout << "Logic check  (should be all zeroes)" << endl;
-   for ( int ii = 0 ; ii != norb ; ii++) {
-     for ( int jj = 0 ; jj != norb ; jj++) { 
-       cout << " [ 0 0 " << jj << " " << ii << " ] "<< endl;
-       for ( int kk = 0 ; kk != norb ; kk++) { 
-         for ( int ll = 0 ; ll != norb ; ll++) { 
-            cout << gammaN[ shift+ ll*norb + kk ] - gammaN[ ll*norb + kk + n2*jj +n3*ii ] << " " ;
-         }
-         cout << endl; 
-       }
-       shift += norb*norb;
-     }
-   }
-   cout << endl << endl << endl;
 
-   cout << endl; Print_Tensor_column_major( Tens_gammaN, gammaN_info->name + " column major version"  ) ; cout << endl << endl;
+   cout << endl; Print_Tensor( Tens_gammaN, gammaN_info->name ) ; cout << endl << endl;
 
    shared_ptr<Dvec> sigma2 = dvec_sigma_map->at(gammaN_info->prev_sigma_name());
    unique_ptr<double[]> gamma2( new double[orb2]);
@@ -339,23 +324,6 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
     cout <<endl;
   }
 
-////////////////////////////////////////////////////////////////////////////
-  unique_ptr<double[]> gamma4_from_sigma2(new double[norb*norb*norb*norb]);
-  cout << "printing gamma4 from old method sigma2 contraction ijlk" << endl;
-  int pos = 0 ; 
-  for ( int ii = 0 ; ii != norb ; ii++) {
-    for ( int jj = 0 ; jj != norb ; jj++) { 
-      cout << " [ 0 0 " << ii << " " << jj <<" ] "<< endl;
-        for ( int  kk = 0; kk != norb; kk++) {
-          for ( int  ll = 0; ll != norb; ll++) {
-            gamma4_from_sigma2[pos] = ddot_( sigma2->det()->size(), sigma2->data(ii+norb*jj)->data(),1, sigma2->data(kk+norb*ll)->data(), 1);
-            cout << gamma4_from_sigma2[pos++] << " " ;
-        }
-        cout << endl; 
-      }
-    }
-  }
-
   cout << "doing tensor contraction " << endl;
   shared_ptr<Tensor_<double>> Tens_sigma2 = Sigma_data_map->at( sigma2_name );
   convert_civec_to_tensor( Bra_name );
@@ -364,16 +332,16 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
   shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( Tens_sigma2, CIvec_data_map->at( Bra_name ), 0 );
   Gamma_data_map->emplace( gamma2_info->name, Tens_gamma2 ); 
 
-  Print_Tensor_column_major( Tens_gamma2, "Tens_gamma2_from_sigma2_contraction column major print" ) ; cout << endl << endl;
-  Print_Tensor( Tens_gamma2, "Tens_gamma2_from_sigma2_contraction" ) ; cout << endl << endl;
+  Print_Tensor( Tens_gamma2, "Tens_gamma2 from contraction of sigma2 with CI vec" ) ; cout << endl << endl;
+//  Print_Tensor_row_major( Tens_gamma2, "Tens_gamma2_from_sigma2_contraction" ) ; cout << endl << endl;
 
   shared_ptr<Tensor_<double>> Tens_gamma4 = Tensor_Calc->contract_different_tensors( Tens_sigma2, Tens_sigma2, make_pair(0,0) );
  
   shared_ptr<vector<int>> new_order_0213 = make_shared<vector<int>>( vector<int> { 0, 2, 1, 3 } ); 
   shared_ptr<Tensor_<double>> Tens_gamma4_reord = Tensor_Calc->reorder_block_Tensor(  Tens_gamma4, new_order_0213 );
 
-  Print_Tensor_column_major( Tens_gamma4_reord, "Tens_gamma4_from_sigma2_contraction column major print" ) ; cout << endl << endl;
-  Print_Tensor( Tens_gamma4_reord, "Tens_gamma4_from_sigma2_contraction" ) ; cout << endl << endl;
+  Print_Tensor( Tens_gamma4_reord, "Tens_gamma4 from contraction of sigma2 with sigma2") ; cout << endl << endl;
+//  Print_Tensor_row_major( Tens_gamma4_reord, "Tens_gamma4_from_sigma2_contraction" ) ; cout << endl << endl;
 
   cout << "leaving B_Gamma_Computer::B_Gamma_Computer::get_gamma2_from_sigma2 " <<endl;
   return; 

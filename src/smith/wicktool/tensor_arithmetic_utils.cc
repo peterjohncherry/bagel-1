@@ -59,7 +59,7 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor 2arg" << endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Tensor_Arithmetic_Utils::Print_Tensor_column_major( shared_ptr<Tensor_<double>> Tens, string name  ) {
+void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, string name  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
    cout << "---------------------------- " << name <<  " ----------------------------" << endl;
@@ -140,7 +140,7 @@ void Tensor_Arithmetic_Utils::Print_Tensor_column_major( shared_ptr<Tensor_<doub
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, string name  ) {
+void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<double>> Tens, string name  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
    cout << "---------------------------- " << name <<  " ----------------------------" << endl;
