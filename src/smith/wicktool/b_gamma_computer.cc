@@ -115,7 +115,6 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
     double* sigma_block_ptr = sigma_block.get();
 
     int ci_block_size = sigma_id_blocks[0].size();
-    cout << " block_size = " << block_size << endl; cout << " ci_block_size = " << ci_block_size << endl;   cout << " block_size/ci_block_size = " << block_size/ci_block_size << endl; 
     for (int ii = 0; ii != block_size/ci_block_size ; ii++ ) { 
       std::copy( Dvec_sigma->data(orb_pos)->data()+boffset(order), Dvec_sigma->data(orb_pos)->data()+boffset(order)+ci_block_size, sigma_block_ptr );   
       sigma_block_ptr+=ci_block_size;
@@ -333,15 +332,14 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
   Gamma_data_map->emplace( gamma2_info->name, Tens_gamma2 ); 
 
   Print_Tensor( Tens_gamma2, "Tens_gamma2 from contraction of sigma2 with CI vec" ) ; cout << endl << endl;
-//  Print_Tensor_row_major( Tens_gamma2, "Tens_gamma2_from_sigma2_contraction" ) ; cout << endl << endl;
 
   shared_ptr<Tensor_<double>> Tens_gamma4 = Tensor_Calc->contract_different_tensors( Tens_sigma2, Tens_sigma2, make_pair(0,0) );
+  Print_Tensor( Tens_gamma4, "Tens_gamma4 from contraction of sigma2 with sigma2 no reord") ; cout << endl << endl;
  
-  shared_ptr<vector<int>> new_order_0213 = make_shared<vector<int>>( vector<int> { 0, 2, 1, 3 } ); 
-  shared_ptr<Tensor_<double>> Tens_gamma4_reord = Tensor_Calc->reorder_block_Tensor(  Tens_gamma4, new_order_0213 );
+  shared_ptr<vector<int>> new_order_0132 = make_shared<vector<int>>( vector<int> { 0, 1, 3, 2 } ); 
+  shared_ptr<Tensor_<double>> Tens_gamma4_reord = Tensor_Calc->reorder_block_Tensor(  Tens_gamma4, new_order_0132 );
 
-  Print_Tensor( Tens_gamma4_reord, "Tens_gamma4 from contraction of sigma2 with sigma2") ; cout << endl << endl;
-//  Print_Tensor_row_major( Tens_gamma4_reord, "Tens_gamma4_from_sigma2_contraction" ) ; cout << endl << endl;
+  Print_Tensor( Tens_gamma4_reord, "Tens_gamma4 from contraction of sigma2 with sigma2 reord") ; cout << endl << endl;
 
   cout << "leaving B_Gamma_Computer::B_Gamma_Computer::get_gamma2_from_sigma2 " <<endl;
   return; 
