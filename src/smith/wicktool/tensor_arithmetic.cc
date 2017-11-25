@@ -255,7 +255,7 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
 
         cout << "---------Tensor block in new order----------- " << endl;
         if ( TensIn_org_rngs.size() == 2){
-          DataType* TensIn_data_reorder_ptr = TensIn_data_org.get();
+          DataType* TensIn_data_reorder_ptr = TensIn_data_reord.get();
           for ( int qq = 0 ; qq != TensIn_new_rng_blocks->at(0).size(); qq++ ) {
             for ( int rr = 0 ; rr != TensIn_new_rng_blocks->at(1).size(); rr++ ) {
               cout << *(TensIn_data_reorder_ptr + rr*TensIn_new_rng_blocks->at(0).size() + qq ) << " " ;
