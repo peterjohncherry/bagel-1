@@ -13,8 +13,9 @@ namespace Tensor_Arithmetic_Utils {
      std::shared_ptr<std::vector<int>> get_CTens_strides( std::vector<int>& range_sizes, int ctr1 , int ctr2 ) ;
      std::shared_ptr<std::vector<int>> get_CTens_strides( std::vector<int>& range_sizes, std::vector<int>& ctr_idxs_pos );
 
-     std::shared_ptr<std::vector<int>> get_Tens_strides ( std::vector<int>& range_sizes) ;
-     std::shared_ptr<std::vector<int>> get_Tens_strides_column_major( std::vector<int>& range_sizes) ; 
+     std::shared_ptr<std::vector<int>> get_Tens_strides ( std::vector<int>& range_sizes);
+     std::shared_ptr<std::vector<int>> get_Tens_strides_column_major( std::vector<int>& range_sizes); 
+     std::shared_ptr<std::vector<int>> get_Tens_strides_row_major( std::vector<int>& range_sizes);
  
      std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> old_ids) ;
      std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::shared_ptr<std::vector<std::shared_ptr<IndexRange>>> old_ids) ;

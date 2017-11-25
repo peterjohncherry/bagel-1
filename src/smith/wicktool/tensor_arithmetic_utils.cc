@@ -80,9 +80,6 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, st
       
      do {
      
-       vector<int> id_pos(block_pos->size());
-       for ( int ii = 0 ; ii != Bagel_id_ranges.size(); ii++)
-         id_pos[ii] = block_offsets->at(ii).at(block_pos->at(ii));
       
        vector<Index> id_blocks = *(get_rng_blocks( block_pos, Bagel_id_ranges ));
       
@@ -113,8 +110,13 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, st
                id_pos_rel[kk] = id_pos_tmp/Tens_strides->at(kk);
                id_pos_tmp -= id_pos_rel[kk]*Tens_strides->at(kk); 
              }
-             
+
+             vector<int> id_pos(block_pos->size());
+             for ( int ii = 0 ; ii != Bagel_id_ranges.size(); ii++)
+               id_pos[ii] = block_offsets->at(ii).at(block_pos->at(ii)) + id_pos_rel[ii];
+
              print_vector( id_pos_rel, "id_pos_rel" ) ; cout << endl;
+             print_vector( id_pos, "id_pos" ) ; cout << endl;
      
              for (int jj = 0 ; jj != id_blocks_sizes->at(0) ; jj++ ){
                for (int kk = 0 ; kk != id_blocks_sizes->at(1) ; kk++ ){
@@ -127,8 +129,16 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, st
      
            } while (shift < id_block_size );
      
-         } else { cout << " block_pos->size() = " << block_pos->size() << endl; 
-     
+         } else {
+         
+           vector<int> id_pos_rel(Tens_strides->size(), 0 );
+
+           vector<int> id_pos(block_pos->size());
+           for ( int ii = 0 ; ii != Bagel_id_ranges.size(); ii++)
+             id_pos[ii] = block_offsets->at(ii).at(block_pos->at(ii)) + id_pos_rel[ii];
+           
+           print_vector( id_pos, "id_pos" ) ; cout << endl;
+    
            for (int jj = 0 ; jj != id_blocks_sizes->at(0) ; jj++ ){
              for (int kk = 0 ; kk != id_blocks_sizes->at(1) ; kk++ ){
                cout << T_data_block[shift+kk*id_blocks_sizes->at(0)+jj] << " " ; 
@@ -176,7 +186,7 @@ cout << "Tensor_Arithmetic_Utils::Print_Vector_Tensor_Format" <<endl;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<double>> Tens, string name  ) {
+void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<double>> Tens, string name ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
    cout << "---------------------------- " << name <<  " ----------------------------" << endl;
@@ -257,33 +267,46 @@ void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<double>
  
    return ;
 }
-               //for ( int  ll = kk ; ll !=  Tens_strides->size() ; ll++){
-               //  if ( ( jj+1 % Tens_strides->at(ll) == 0) ) 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides(vector<int>& range_sizes) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "get_Tens_strides " << endl;
-
- shared_ptr<vector<int>> Tens_strides= make_shared<vector<int>>(range_sizes.size());
- Tens_strides->front() = 1;
- for ( int ii = 1  ; ii!= range_sizes.size(); ii++ ) 
-   Tens_strides->at(ii) = Tens_strides->at(ii-1) * range_sizes[ii-1];
+  cout << "Tensor_Arithmetic_Utils::get_Tens_strides " << endl;
+ 
+  shared_ptr<vector<int>> Tens_strides= make_shared<vector<int>>(range_sizes.size());
+  Tens_strides->front() = 1;
+  for ( int ii = 1  ; ii!= range_sizes.size(); ii++ ) 
+    Tens_strides->at(ii) = Tens_strides->at(ii-1) * range_sizes[ii-1];
+   
+  return Tens_strides;
   
- return Tens_strides;
-
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides_column_major(vector<int>& range_sizes) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "get_Tens_strides " << endl;
-
- shared_ptr<vector<int>> Tens_strides= make_shared<vector<int>>(range_sizes.size());
- Tens_strides->front() = 1;
- for ( int ii = 1  ; ii!= range_sizes.size(); ii++ ) 
-   Tens_strides->at(ii) = Tens_strides->at(ii-1) * range_sizes[ii-1];
-  
- return Tens_strides;
-
+  cout << "Tensor_Arithmetic_Utils::get_Tens_strides_column_major " << endl;
+ 
+  shared_ptr<vector<int>> Tens_strides= make_shared<vector<int>>(range_sizes.size());
+  Tens_strides->front() = 1;
+  if (range_sizes.size() > 1 ) {
+    for ( int ii = 1  ; ii!= range_sizes.size(); ii++ ) 
+      Tens_strides->at(ii) = Tens_strides->at(ii-1) * range_sizes[ii-1];
+  }
+  return Tens_strides;
+ 
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides_row_major(vector<int>& range_sizes) { 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic_Utils::get_Tens_strides_row_major " << endl;
+ 
+  shared_ptr<vector<int>> Tens_strides= make_shared<vector<int>>(range_sizes.size());
+  Tens_strides->back() = 1;
+  if ( range_sizes.size() > 1 ) {
+    for ( int ii = range_sizes.size()-2; ii != -1 ; ii++ ) 
+      Tens_strides->at(ii) = Tens_strides->at(ii+1) * range_sizes[ii+11];
+  }  
+  return Tens_strides;
+ 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_CTens_strides( vector<int>& range_sizes, int ctr1 , int ctr2 ) {

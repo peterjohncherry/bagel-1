@@ -230,7 +230,8 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
        mins->front() = ii;
        block_pos->front() = ii;
        cout << "TensIn block pos =  [ " ;    for (int block_num : *block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
-      
+
+       print_vector( *TensIn_new_order, "TensIn_new_order" ) ; cout << endl;      
        shared_ptr<vector<Index>> TensIn_org_rng_blocks = inverse_reorder_vector( TensIn_new_order, TensIn_new_rng_blocks); 
        
        int TensIn_block_size = get_block_size( TensIn_org_rng_blocks->begin(), TensIn_org_rng_blocks->end()); 
@@ -589,40 +590,58 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Tensor_Arithmetic::get_test_Tensor" << endl;
 
+   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets(*T_id_ranges) ;
+
    shared_ptr<Tensor_<DataType>> Tens = make_shared<Tensor_<DataType>>(*T_id_ranges);
    Tens->allocate();
 
-   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(T_id_ranges->size(),0);  
-   shared_ptr<vector<int>> mins = make_shared<vector<int>>(T_id_ranges->size(),0);  
-   shared_ptr<vector<int>> range_lengths = get_range_lengths( T_id_ranges ); 
+   shared_ptr<vector<int>> block_pos  = make_shared<vector<int>>(T_id_ranges->size(),0);  
+   shared_ptr<vector<int>> mins       = make_shared<vector<int>>(T_id_ranges->size(),0);  
+   shared_ptr<vector<int>> range_maxs = get_range_lengths( T_id_ranges ); 
 
    double put_after_decimal_point  = pow(10 , block_pos->size());
    vector<double> power_10( block_pos->size() );
    for (int ii = 0  ; ii != power_10.size() ; ii++ ) 
-     power_10[ii] = pow(10, (double)ii );///put_after_decimal_point ;
+     power_10[ii] = pow(10, (double)(power_10.size()-1-ii) );
 
+    // This could be simplified a lot and is slow, however, it is only for testing.
+    // Having seperate id_pos and rel_id_pos seperate is the logically simplest way of doing things.
    do {
 
      vector<Index> T_id_blocks = *(get_rng_blocks( block_pos, *T_id_ranges )); 
      size_t out_size = Tens->get_size(T_id_blocks); 
-
      unique_ptr<DataType[]> T_block_data( new DataType[out_size] );
-  
+
+     vector<int> id_blocks_sizes(T_id_blocks.size());
+     for( int ii = 0 ;  ii != T_id_blocks.size(); ii++)
+       id_blocks_sizes[ii] = T_id_blocks[ii].size();
+
+     shared_ptr<vector<int>> id_strides = get_Tens_strides_column_major(id_blocks_sizes);
+ 
      shared_ptr<vector<int>> id_pos = make_shared<vector<int>>(T_id_ranges->size(),0);  
-     shared_ptr<vector<int>> id_mins = make_shared<vector<int>>(T_id_ranges->size(),0);  
+     for ( int qq = 0 ; qq != block_pos->size(); qq++)
+        id_pos->at(qq) =  block_offsets->at(qq).at(block_pos->at(qq));
+    
+     shared_ptr<vector<int>> id_mins = make_shared<vector<int>>(*id_pos);  
      shared_ptr<vector<int>> id_maxs = make_shared<vector<int>>(T_id_ranges->size());
      for (int xx = 0 ; xx !=id_maxs->size(); xx++ ) 
-       id_maxs->at(xx)  =   T_id_blocks[xx].size()-1;
+       id_maxs->at(xx)  =  id_mins->at(xx)+id_blocks_sizes[xx]-1;
 
-     int  qq =0;
-     //TODO add in offsets at some point
+        
+     shared_ptr<vector<int>> rel_id_pos  = make_shared<vector<int>>(T_id_ranges->size(), 0);  
+     shared_ptr<vector<int>> rel_id_mins = make_shared<vector<int>>(T_id_ranges->size(), 0);  
+     shared_ptr<vector<int>> rel_id_maxs = make_shared<vector<int>>(T_id_ranges->size());
+     for (int xx = 0 ; xx !=rel_id_maxs->size(); xx++ ) 
+       rel_id_maxs->at(xx)  =  id_blocks_sizes[xx]-1;
+
      do {
-        T_block_data[qq++] = inner_product (id_pos->begin(), id_pos->end(), power_10.begin(), 0 );
-     } while (fvec_cycle( id_pos, id_maxs, id_mins ));
+        T_block_data[inner_product( rel_id_pos->begin(), rel_id_pos->end(), id_strides->begin(), 0 )] = inner_product (id_pos->begin(), id_pos->end(), power_10.begin(), 0 );
+        fvec_cycle_skipper(rel_id_pos, rel_id_maxs, rel_id_mins);
+     } while (fvec_cycle_skipper( id_pos, id_maxs, id_mins ));
 
      Tens->put_block(T_block_data, T_id_blocks);
 
-   } while (fvec_cycle(block_pos, range_lengths, mins ));
+   } while (fvec_cycle(block_pos, range_maxs, mins ));
    return Tens;
 }
 
