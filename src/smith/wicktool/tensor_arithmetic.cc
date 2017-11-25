@@ -192,10 +192,10 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
   iota(TensIn_org_order->begin(), TensIn_org_order->end(), 0);
 
   //Fortran column-major ordering, swap indexes here, not later... 
-  shared_ptr<vector<int>>        TensIn_new_order = put_ctr_at_front( TensIn_org_order, ctr_pos);
+  shared_ptr<vector<int>>        TensIn_new_order = put_ctr_at_back( TensIn_org_order, ctr_pos);
   shared_ptr<vector<IndexRange>> TensIn_new_rngs  = reorder_vector(TensIn_new_order, TensIn_org_rngs);
 
-  vector<IndexRange> TensOut_rngs(TensIn_new_rngs->begin()+1, TensIn_new_rngs->end());
+  vector<IndexRange> TensOut_rngs(TensIn_new_rngs->begin(), TensIn_new_rngs->end()-1);
 
   shared_ptr<Tensor_<DataType>> TensOut = make_shared<Tensor_<DataType>>(TensOut_rngs);  
   TensOut->allocate();
@@ -208,7 +208,7 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
   shared_ptr<vector<int>> maxs_test = get_range_lengths( *TensIn_new_rngs) ;
 
   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(TensIn_new_order->size(),0);
-  int num_ctr_blocks = maxs->front()+1; cout << "num_ctr_blocks = " << num_ctr_blocks << endl;
+  int num_ctr_blocks = maxs->back()+1; cout << "num_ctr_blocks = " << num_ctr_blocks << endl;
 
   //This loop looks silly; trying to avoid excessive reallocation, deallocation and zeroing of TensOut_data
   //However, when parallelized, will presumably need to do all that in innermost loop anyway....
@@ -216,7 +216,7 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
 
      shared_ptr<vector<Index>> TensIn_new_rng_blocks = get_rng_blocks( block_pos, *TensIn_new_rngs); 
 
-     shared_ptr<vector<int>>   TensOut_block_pos = make_shared<vector<int>>(block_pos->begin()+1, block_pos->end());
+     shared_ptr<vector<int>>   TensOut_block_pos = make_shared<vector<int>>(block_pos->begin(), block_pos->end()-1);
      shared_ptr<vector<Index>> TensOut_rng_blocks = get_rng_blocks(TensOut_block_pos, TensOut_rngs);
 
      int TensOut_block_size  =  get_block_size( TensOut_rng_blocks->begin(), TensOut_rng_blocks->end() );
@@ -234,7 +234,7 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
        shared_ptr<vector<Index>> TensIn_org_rng_blocks = inverse_reorder_vector( TensIn_new_order, TensIn_new_rng_blocks); 
        
        int TensIn_block_size = get_block_size( TensIn_org_rng_blocks->begin(), TensIn_org_rng_blocks->end()); 
-       int ctr_block_size    = TensIn_new_rng_blocks->front().size(); cout << " ctr_block_size = " << ctr_block_size << endl; 
+       int ctr_block_size    = TensIn_new_rng_blocks->back().size(); cout << " ctr_block_size = " << ctr_block_size << endl; 
  
        cout << "-----------Tensor block in old order----------- " << endl;
        std::unique_ptr<DataType[]> TensIn_data_reord;
@@ -269,7 +269,7 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
        DataType dblone =  1.0;
        int int_one = 1; 
        
-       dgemv_( "T", TensOut_block_size, ctr_block_size, dblone, TensIn_data_reord.get(), TensOut_block_size, VecIn_data.get(), 1, 
+       dgemv_( "N", TensOut_block_size, ctr_block_size, dblone, TensIn_data_reord.get(), TensOut_block_size, VecIn_data.get(), 1, 
                 dblone, TensOut_data.get(), int_one );  
        
        TensIn_new_rng_blocks = get_rng_blocks( block_pos, *TensIn_new_rngs); 
