@@ -335,8 +335,8 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
   shared_ptr<Tensor_<double>> Tens_gamma4 = Tensor_Calc->contract_different_tensors( Tens_sigma2, Tens_sigma2, make_pair(0,0) );
   Print_Tensor( Tens_gamma4, "Tens_gamma4 from contraction of sigma2 with sigma2 no reord") ; cout << endl << endl;
  
-  shared_ptr<vector<int>> new_order_0132 = make_shared<vector<int>>( vector<int> { 0, 1, 3, 2 } ); 
-  shared_ptr<Tensor_<double>> Tens_gamma4_reord = Tensor_Calc->reorder_block_Tensor(  Tens_gamma4, new_order_0132 );
+  shared_ptr<vector<int>> new_order_1023 = make_shared<vector<int>>( vector<int> { 1, 0, 2, 3 } ); 
+  shared_ptr<Tensor_<double>> Tens_gamma4_reord = Tensor_Calc->reorder_block_Tensor(  Tens_gamma4, new_order_1023 );
 
   Print_Tensor( Tens_gamma4_reord, "Tens_gamma4 from contraction of sigma2 with sigma2 reord") ; cout << endl << endl;
 
