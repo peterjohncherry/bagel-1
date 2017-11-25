@@ -323,7 +323,6 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
     cout <<endl;
   }
 
-  cout << "doing tensor contraction " << endl;
   shared_ptr<Tensor_<double>> Tens_sigma2 = Sigma_data_map->at( sigma2_name );
   convert_civec_to_tensor( Bra_name );
 

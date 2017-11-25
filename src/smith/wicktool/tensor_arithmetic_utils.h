@@ -45,7 +45,9 @@ namespace Tensor_Arithmetic_Utils {
 
      void Print_Tensor(std::shared_ptr<Tensor_<double>> Tens, std::string name = "") ;
      void Print_Tensor_row_major( std::shared_ptr<Tensor_<double>> Tens, std::string name = "") ;
-     
+
+     void Print_Vector_Tensor_Format( std::shared_ptr<Tensor_<double>> VecIn, std::string name );
+
      size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
 
      size_t get_unc_block_size( std::vector<Index>& idvec, std::pair<int,int> ctr ) ;

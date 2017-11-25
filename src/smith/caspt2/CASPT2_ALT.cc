@@ -232,16 +232,21 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   cout <<"U_Tens->norm() = "<< U_Tens->norm() << endl;
   shared_ptr<Tensor_<double>> U_contracted_01 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( U_Tens , make_pair(0,1));
   cout << endl ; Print_Tensor( U_contracted_01, "U_contracted_01" ); cout << endl << endl << endl;
-  shared_ptr<Tensor_<double>> U_contracted_02 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( U_Tens , make_pair(0,2));
-  cout << endl ; Print_Tensor( U_contracted_02, "U_contracted_02" ); cout << endl << endl << endl;
-  shared_ptr<Tensor_<double>> U_contracted_03 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( U_Tens , make_pair(0,3));
-  cout << endl ; Print_Tensor( U_contracted_03, "U_contracted_03" ); cout << endl << endl << endl;
-  shared_ptr<Tensor_<double>> U_contracted_12 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( U_Tens , make_pair(1,2));
-  cout << endl ; Print_Tensor( U_contracted_12, "U_contracted_12" ); cout << endl << endl << endl;
-  shared_ptr<Tensor_<double>> U_contracted_13 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( U_Tens , make_pair(1,3));
-  cout << endl ; Print_Tensor( U_contracted_13, "U_contracted_13" ); cout << endl << endl << endl;
-  shared_ptr<Tensor_<double>> U_contracted_23 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( U_Tens , make_pair(2,3));
-  cout << endl ; Print_Tensor( U_contracted_23, "U_contracted_23" ); cout << endl << endl << endl;
+//  shared_ptr<Tensor_<double>> UU_contracted_03 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( U_Tens, U_Tens, make_pair(0,3));
+//  cout << endl ; Print_Tensor( UU_contracted_03, "UU_contracted_03" ); cout << endl << endl << endl;
+
+  shared_ptr<vector<IndexRange>> act_ranges_1 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng } );
+  shared_ptr<Tensor_<double>> Vec_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges_1 );
+  cout << endl ; Print_Tensor( Vec_Tens, "Vec_Tens" ); cout << endl << endl << endl;
+  shared_ptr<Tensor_<double>> UV_contracted_0 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( U_Tens, Vec_Tens, 0);
+  cout << endl ; Print_Tensor( UV_contracted_0, "UV_contracted_0" ); cout << endl << endl << endl;
+
+  shared_ptr<vector<IndexRange>> act_ranges_2 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng } );
+  shared_ptr<Tensor_<double>> Mat_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges_2 );
+  cout << endl ; Print_Tensor( Mat_Tens, "Mat_Tens" ); cout << endl << endl << endl;
+  shared_ptr<Tensor_<double>> MV_contracted_0 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Mat_Tens, Vec_Tens, 0);
+  cout << endl ; Print_Tensor( MV_contracted_0, "MV_contracted_0" ); cout << endl << endl << endl;
+
   }
 
 

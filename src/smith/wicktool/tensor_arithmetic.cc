@@ -175,87 +175,112 @@ cout << "Tensor_Arithmetic::contract_vectors" <<endl;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Contracts a tensor with a vector
-// Tens1 is the tensor ( order >1 ) 
-// Tens2 is the vector 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_tensor_with_vector( shared_ptr<Tensor_<DataType>> Tens1_in,
-                                                                             shared_ptr<Tensor_<DataType>> Tens2_in,
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_tensor_with_vector( shared_ptr<Tensor_<DataType>> TensIn,
+                                                                             shared_ptr<Tensor_<DataType>> VecIn,
                                                                              int ctr_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl; 
 
 
-  vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
-  vector<IndexRange> T2_rng = Tens2_in->indexrange();
+  vector<IndexRange> TensIn_org_rngs = TensIn->indexrange();
+  vector<IndexRange> VecIn_rng = VecIn->indexrange();
 
-  shared_ptr<vector<int>> T1_org_order= make_shared<vector<int>>(T1_org_rngs.size());
-  iota(T1_org_order->begin(), T1_org_order->end(), 0);
+  shared_ptr<vector<int>> TensIn_org_order= make_shared<vector<int>>(TensIn_org_rngs.size());
+  iota(TensIn_org_order->begin(), TensIn_org_order->end(), 0);
 
   //Fortran column-major ordering, swap indexes here, not later... 
-  shared_ptr<vector<int>>        T1_new_order = put_ctr_at_front( T1_org_order, ctr_pos);
-  shared_ptr<vector<IndexRange>> T1_new_rngs  = reorder_vector(T1_new_order, T1_org_rngs);
+  shared_ptr<vector<int>>        TensIn_new_order = put_ctr_at_front( TensIn_org_order, ctr_pos);
+  shared_ptr<vector<IndexRange>> TensIn_new_rngs  = reorder_vector(TensIn_new_order, TensIn_org_rngs);
 
-  vector<IndexRange> Tout_unc_rngs(T1_new_rngs->begin()+1, T1_new_rngs->end());
+  vector<IndexRange> TensOut_rngs(TensIn_new_rngs->begin()+1, TensIn_new_rngs->end());
 
-  shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(Tout_unc_rngs);  
-  Tens_out->allocate();
-  Tens_out->zero();
+  shared_ptr<Tensor_<DataType>> TensOut = make_shared<Tensor_<DataType>>(TensOut_rngs);  
+  TensOut->allocate();
+  TensOut->zero();
 
-  shared_ptr<vector<int>> maxs = get_num_index_blocks_vec(T1_new_rngs) ;
+  shared_ptr<vector<int>> maxs = get_num_index_blocks_vec(TensIn_new_rngs) ;
   shared_ptr<vector<int>> mins = make_shared<vector<int>>(maxs->size(),0);
 
-  shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
-  int num_ctr_blocks = maxs->front()+1;
+  print_vector(*maxs , "maxs" ); cout <<endl; 
+  shared_ptr<vector<int>> maxs_test = get_range_lengths( *TensIn_new_rngs) ;
 
-  //This loop looks silly; trying to avoid excessive reallocation, deallocation and zeroing of T_out_data
+  shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(TensIn_new_order->size(),0);
+  int num_ctr_blocks = maxs->front()+1; cout << "num_ctr_blocks = " << num_ctr_blocks << endl;
+
+  //This loop looks silly; trying to avoid excessive reallocation, deallocation and zeroing of TensOut_data
   //However, when parallelized, will presumably need to do all that in innermost loop anyway....
   do { 
 
-     shared_ptr<vector<Index>> T1_new_rng_blocks = get_rng_blocks( block_pos, *T1_new_rngs); 
-     shared_ptr<vector<int>> T1_out_block_pos = make_shared<vector<int>>(block_pos->begin()+1, block_pos->end());
-     shared_ptr<vector<Index>> T1_out_rng_blocks = get_rng_blocks(T1_out_block_pos, *T1_new_rngs);
+     shared_ptr<vector<Index>> TensIn_new_rng_blocks = get_rng_blocks( block_pos, *TensIn_new_rngs); 
 
-     int T_out_block_size  =  get_block_size( T1_new_rng_blocks->begin()+1, T1_new_rng_blocks->end());
+     shared_ptr<vector<int>>   TensOut_block_pos = make_shared<vector<int>>(block_pos->begin()+1, block_pos->end());
+     shared_ptr<vector<Index>> TensOut_rng_blocks = get_rng_blocks(TensOut_block_pos, TensOut_rngs);
 
-     std::unique_ptr<DataType[]> T_out_data(new DataType[T_out_block_size]);
-     std::fill_n(T_out_data.get(), T_out_block_size, 0.0);
+     int TensOut_block_size  =  get_block_size( TensOut_rng_blocks->begin(), TensOut_rng_blocks->end() );
+
+     std::unique_ptr<DataType[]> TensOut_data(new DataType[TensOut_block_size]);
+     std::fill_n(TensOut_data.get(), TensOut_block_size, 0.0);
 
      for ( int ii = 0 ; ii != num_ctr_blocks; ii++) {
 
-      maxs->front() = ii;
-      mins->front() = ii;
-      block_pos->front() = ii;
-      cout << "T1 block pos =  [ " ;    for (int block_num : *block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
-     
-      shared_ptr<vector<Index>> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
+       maxs->front() = ii;
+       mins->front() = ii;
+       block_pos->front() = ii;
+       cout << "TensIn block pos =  [ " ;    for (int block_num : *block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
       
-      int T1_block_size     = get_block_size( T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); 
-      int ctr_block_size    = T1_new_rng_blocks->front().size(); cout << " ctr_block_size = " << ctr_block_size << endl; 
-      
-      std::unique_ptr<DataType[]> T1_data_new;
-      {
-        std::unique_ptr<DataType[]> T1_data_org = Tens1_in->get_block(*T1_org_rng_blocks);
-        T1_data_new = reorder_tensor_data(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
-      }
-      
-      unique_ptr<DataType[]> T2_data = Tens2_in->get_block(vector<Index> { T2_rng[0].range(block_pos->front()) } ); 
-      
-      DataType dblone =  1.0;
-      int int_one = 1; 
-      
-      dgemv_( "N", T_out_block_size, ctr_block_size, dblone, T1_data_new.get(), T_out_block_size, T2_data.get(), 1, 
-               dblone, T_out_data.get(), int_one );  
-      
+       shared_ptr<vector<Index>> TensIn_org_rng_blocks = inverse_reorder_vector( TensIn_new_order, TensIn_new_rng_blocks); 
+       
+       int TensIn_block_size = get_block_size( TensIn_org_rng_blocks->begin(), TensIn_org_rng_blocks->end()); 
+       int ctr_block_size    = TensIn_new_rng_blocks->front().size(); cout << " ctr_block_size = " << ctr_block_size << endl; 
+ 
+       cout << "-----------Tensor block in old order----------- " << endl;
+       std::unique_ptr<DataType[]> TensIn_data_reord;
+       {
+         std::unique_ptr<DataType[]> TensIn_data_org = TensIn->get_block(*TensIn_org_rng_blocks);
+         if ( TensIn_org_rngs.size() == 2){
+           DataType* TensIn_data_org_ptr = TensIn_data_org.get();
+           for ( int qq = 0 ; qq != TensIn_org_rng_blocks->at(0).size(); qq++ ) {
+              for ( int rr = 0 ; rr != TensIn_org_rng_blocks->at(1).size(); rr++ ) {
+                 cout << *(TensIn_data_org_ptr + rr*TensIn_org_rng_blocks->at(0).size() + qq ) << " " ;
+              } 
+              cout <<endl;
+           }
+         }
 
-      T1_new_rng_blocks = get_rng_blocks( block_pos, *T1_new_rngs); 
-    }
-    Tens_out->put_block( T_out_data, *T1_out_rng_blocks );
+        TensIn_data_reord = reorder_tensor_data(TensIn_data_org.get(), TensIn_new_order, TensIn_org_rng_blocks);
+
+        cout << "---------Tensor block in new order----------- " << endl;
+        if ( TensIn_org_rngs.size() == 2){
+          DataType* TensIn_data_reorder_ptr = TensIn_data_org.get();
+          for ( int qq = 0 ; qq != TensIn_new_rng_blocks->at(0).size(); qq++ ) {
+            for ( int rr = 0 ; rr != TensIn_new_rng_blocks->at(1).size(); rr++ ) {
+              cout << *(TensIn_data_reorder_ptr + rr*TensIn_new_rng_blocks->at(0).size() + qq ) << " " ;
+            } 
+             cout <<endl;
+          }
+        }
+      }
+       
+       unique_ptr<DataType[]> VecIn_data = VecIn->get_block(vector<Index> { VecIn_rng[0].range(block_pos->front()) } ); 
+       
+       DataType dblone =  1.0;
+       int int_one = 1; 
+       
+       dgemv_( "T", TensOut_block_size, ctr_block_size, dblone, TensIn_data_reord.get(), TensOut_block_size, VecIn_data.get(), 1, 
+                dblone, TensOut_data.get(), int_one );  
+       
+       TensIn_new_rng_blocks = get_rng_blocks( block_pos, *TensIn_new_rngs); 
+
+     }
+
+     TensOut->put_block( TensOut_data, *TensOut_rng_blocks );
 
   } while (fvec_cycle_skipper(block_pos, maxs, mins ));
   
-  return Tens_out;
+  return TensOut;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
