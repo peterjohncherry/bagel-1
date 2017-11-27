@@ -35671,6 +35671,22 @@ void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_7( std::shared_ptr<std
   cout << "sort_indices_7 "<< endl;
   return;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_8( std::shared_ptr<std::vector<size_t>> new_id_order,
+                                                            std::shared_ptr<std::vector<size_t>> rlen,
+                                                            std::array<int,4>& sort_options, 
+                                                            const DataType* in, DataType* out ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Sorter::Tensor_Sorter<DataType>::sort_indices_8 " << endl;
+
+  cout << "CANNOT DO 8 INDEXES ON YOUR LAPTOP!!! " << endl;
+  
+  return;
+}
+
+
 /////////////////////////////////////////////////////
 template class Tensor_Sorter::Tensor_Sorter<double>;
 /////////////////////////////////////////////////////

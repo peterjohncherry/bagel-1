@@ -158,8 +158,8 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   Build_Compute_Lists();
 
 //  Execute_Compute_List("Hact_test");
-  Execute_Compute_List("R6_test");
-//  Execute_Compute_List("Q8_test");
+// Execute_Compute_List("R6_test");
+  Execute_Compute_List("Q8_test");
 //  Execute_Compute_List("U4_test");
 
   // <proj_jst|H|0_K> set to sall in ms-caspt2
@@ -267,12 +267,12 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> R_symmfuncs = Expr_Info->identity_only();
   vector<bool(*)(shared_ptr<vector<string>>)>  R_constraints = {  &Expression_Info<double>::Expression_Info::always_true };
 
-  shared_ptr<TensOp<double>> RTens = Expr_Info->Build_TensOp("R", R_dummy_data, R_idxs, R_aops, R_idx_ranges, R_symmfuncs, R_constraints, R_factor, R_TimeRymm, false ) ;
-  Expr_Info->T_map->emplace("R", RTens);
+//  shared_ptr<TensOp<double>> RTens = Expr_Info->Build_TensOp("R", R_dummy_data, R_idxs, R_aops, R_idx_ranges, R_symmfuncs, R_constraints, R_factor, R_TimeRymm, false ) ;
+//  Expr_Info->T_map->emplace("R", RTens);
  
-  shared_ptr<vector<IndexRange>> act_ranges_6 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
-  shared_ptr<Tensor_<double>> R_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges_6);
-  TensOp_data_map->emplace( "R", R_Tens );
+//  shared_ptr<vector<IndexRange>> act_ranges_6 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
+//  shared_ptr<Tensor_<double>> R_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges_6);
+//  TensOp_data_map->emplace( "R", R_Tens );
   }
  
   {
@@ -282,19 +282,22 @@ void CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() {
   shared_ptr<vector<bool>>           Q_aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, true, false, false, false, false}); 
   shared_ptr<vector<vector<string>>> Q_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  act, act, act, act, act, act, act, act }); 
   shared_ptr<double>                 Q_dummy_data;
-  string                             Q_TimeQymm = "none";
+  string                             Q_TimeSymm = "none";
 
   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Q_symmfuncs = Expr_Info->identity_only();
   vector<bool(*)(shared_ptr<vector<string>>)>  Q_constraints = {  &Expression_Info<double>::Expression_Info::always_true };
 
-//  shared_ptr<TensOp<double>> QTens = Expr_Info->Build_TensOp("Q", Q_dummy_data, Q_idxs, Q_aops, Q_idx_ranges, Q_symmfuncs, Q_constraints, Q_factor, Q_TimeQymm, false ) ;
-//  Expr_Info->T_map->emplace("Q", QTens);
+  shared_ptr<TensOp<double>> QTens = Expr_Info->Build_TensOp("Q", Q_dummy_data, Q_idxs, Q_aops, Q_idx_ranges, Q_symmfuncs, Q_constraints, Q_factor, Q_TimeSymm, false ) ;
+  Expr_Info->T_map->emplace("Q", QTens);
 
-//  shared_ptr<vector<IndexRange>> act_ranges_8 =
-//  make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
-
-//  shared_ptr<Tensor_<double>> Q_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act_ranges_8, 1.0 );
-//  TensOp_data_map->emplace( "Q", Q_Tens );
+  shared_ptr<vector<IndexRange>> act_ranges_8 =
+  make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
+  shared_ptr<Tensor_<double>> Q_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges_8);
+  cout << " Q_Tens->norm() = " << Q_Tens->norm() << endl; 
+  TensOp_data_map->emplace( "Q", Q_Tens );
+  shared_ptr<Tensor_<double>> Q_contracted_01 =
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( TensOp_data_map->at("Q") , make_pair(0,1));
+  cout << endl ; Print_Tensor( Q_contracted_01, "Q_contracted_01" ); cout << endl << endl << endl;
   }
   return;
 }
@@ -308,15 +311,15 @@ void CASPT2_ALT::CASPT2_ALT::Build_Compute_Lists() {
 //  shared_ptr<vector<string>> BK_list_S = make_shared<vector<string>>(vector<string> { "<I|H_act|J>" });
 //  Expr_Info->Build_Expression( BK_list_S, "Hact_test") ;
 
-//  shared_ptr<vector<string>> op_list2 = make_shared<vector<string>>(vector<string> { "Q" });
-//  Expr_Info->Set_BraKet_Ops( op_list2, "<I|Q|J>" ) ;
-//  shared_ptr<vector<string>> BK_list_Q = make_shared<vector<string>>(vector<string> { "<I|Q|J>" });
-//  Expr_Info->Build_Expression( BK_list_Q, "Q8_test") ;
+  shared_ptr<vector<string>> op_list2 = make_shared<vector<string>>(vector<string> { "Q" });
+  Expr_Info->Set_BraKet_Ops( op_list2, "<I|Q|J>" ) ;
+  shared_ptr<vector<string>> BK_list_Q = make_shared<vector<string>>(vector<string> { "<I|Q|J>" });
+  Expr_Info->Build_Expression( BK_list_Q, "Q8_test") ;
 
-  shared_ptr<vector<string>> op_list3 = make_shared<vector<string>>(vector<string> { "R" });
-  Expr_Info->Set_BraKet_Ops( op_list3, "<I|R|J>" ) ;
-  shared_ptr<vector<string>> BK_list_R = make_shared<vector<string>>(vector<string> { "<I|R|J>" });
-  Expr_Info->Build_Expression( BK_list_R, "R6_test") ;
+ // shared_ptr<vector<string>> op_list3 = make_shared<vector<string>>(vector<string> { "R" });
+ // Expr_Info->Set_BraKet_Ops( op_list3, "<I|R|J>" ) ;
+ // shared_ptr<vector<string>> BK_list_R = make_shared<vector<string>>(vector<string> { "<I|R|J>" });
+ // Expr_Info->Build_Expression( BK_list_R, "R6_test") ;
 
 //  shared_ptr<vector<string>> op_list4 = make_shared<vector<string>>(vector<string> { "U" });
 //  Expr_Info->Set_BraKet_Ops( op_list4, "<I|U|J>" ) ;
@@ -367,6 +370,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
 	print_AContraction_list(Expr->ACompute_map->at(A_contrib.first), A_contrib.first);
         Expr_computer->Calculate_CTP(A_contrib.first);
 
+//        cout << "TensOp_data_map->at(A_contrib.first)->norm() =  " <<  TensOp_data_map->at(A_contrib.first)->norm() << endl;
         if ( Gamma_name != "ID" ) {
           for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){
             if (TensOp_data_map->find(A_contrib.first) != TensOp_data_map->end() ) {
@@ -375,6 +379,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
               cout << A_contrib.first << " is not done" << endl;
             }
             shared_ptr<Tensor_<double>> A_contrib_reordered = Expr_computer->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
+            cout << "A_contrib_reordered->norm() " <<  A_contrib_reordered->norm() << endl;
             A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_reordered );
           }
         }
@@ -418,6 +423,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
   } else if ( Expression_name == "R6_test" ) {
     reference_result = Smith_rdm3->dot_product( TensOp_data_map->at("R"));
   } else if ( Expression_name == "Q8_test" ) {
+    cout << "Smith_rdm4->norm() = " << Smith_rdm4->norm() << "     TensOp_data_map->at(\"Q\")->norm() = " << TensOp_data_map->at("Q")->norm() << endl;
     reference_result = Smith_rdm4->dot_product( TensOp_data_map->at("Q"));
   }
  

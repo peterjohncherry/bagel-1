@@ -106,11 +106,10 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_
         ctr_block_strides[qq] = (ctr_block_strides[qq-1] * id_blocks_in->at(ctrs_pos[qq-1]).size());
         ctr_total_stride += ctr_block_strides[qq]; 
       }
-
+ 
       {
       unique_ptr<DataType[]> orig_block = Tens_in->get_block(*id_blocks_in);
       unique_ptr<DataType[]> reordered_block = reorder_tensor_data( orig_block.get(), new_order, id_blocks_in );
-
       //looping over the id positions within the block
       for ( int ctr_id = 0 ; ctr_id != id_blocks_in->at(ctrs_pos[0]).size(); ctr_id++ )
         blas::ax_plus_y_n(1.0, reordered_block.get() + (ctr_total_stride*ctr_id), unc_block_size, contracted_block.get() );
@@ -488,6 +487,8 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data( const DataT
     TS.sort_indices_6( new_order_st, rlen, sort_options, orig_data, reordered_data.get() ) ;
   } else if ( num_ids == 7 ) {
     TS.sort_indices_7( new_order_st, rlen, sort_options, orig_data, reordered_data.get() ) ;
+  } else if ( num_ids == 8 ) {
+    TS.sort_indices_8( new_order_st, rlen, sort_options, orig_data, reordered_data.get() ) ;
   }
 
   return reordered_data;
