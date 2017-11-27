@@ -45,10 +45,11 @@ cout << "GammaInfo::GammaInfo" <<  endl;
 
   if ( (idxs_pos->size() > 2 ) && ( idxs_pos->size() % 2 == 0 ) ) {
 
-    prev_gammas_ = vector<string>(idxs_pos->size()/2); cout << "prev_gammas = [ " ; cout.flush();
+    prev_gammas_ = vector<string>(idxs_pos->size()/2); 
     prev_sigmas_ = vector<string>(idxs_pos->size()/2); 
 
-    for (int ii = 2 ; ii != idxs_pos->size() ; ii+=2 ){ cout << "ii = " << ii <<  endl;
+    cout << "prev_gammas = [ " ; cout.flush();
+    for (int ii = 2 ; ii != idxs_pos->size() ; ii+=2 ){ 
 
       shared_ptr<vector<int>> prev_gamma_idxs_pos = make_shared<vector<int>> ( idxs_pos->begin()+ii, idxs_pos->end());
       prev_gammas_[(ii/2)-1] = get_gamma_name( full_idx_ranges, full_aops_vec, prev_gamma_idxs_pos, Bra_info->name(), Ket_info->name());   
@@ -56,11 +57,12 @@ cout << "GammaInfo::GammaInfo" <<  endl;
 
       if ( Gamma_map->find( prev_gammas_[(ii/2)-1] )  == Gamma_map->end() ){ //TODO fix Bra_info for rel case
         shared_ptr<GammaInfo> prev_gamma = make_shared<GammaInfo>( Bra_info, Ket_info, full_aops_vec, full_idx_ranges, prev_gamma_idxs_pos, Gamma_map );
-        if(  ii == 2 ) 
-          prev_Bra_info = prev_gamma->Bra_info ;
-
         Gamma_map->emplace( prev_gammas_[(ii/2)-1], prev_gamma );
-      }
+      } 
+        
+      if(  ii == 2 ){
+        prev_Bra_info = Gamma_map->at( prev_gammas_[0] )->Bra_info ; cout << "prev_Bra_info->name() = " << prev_Bra_info->name() << endl;
+      } 
       
       cout << prev_gammas_[(ii/2)-1] << " " ; cout.flush();
     }
@@ -92,7 +94,7 @@ cout << "GammaGenerator::GammaGenerator" << endl;
   G_to_A_map = G_to_A_map_in;
   Gamma_map = Gamma_map_in;
 
-  //neeeded to keep ordering of contractions consistent 
+  //needed to keep ordering of contractions consistent 
   auto opname = orig_ids->at(0)[0];
   op_order = make_shared<map< char, int>>();
   int ii =0;
@@ -187,9 +189,7 @@ cout << "GammaGenerator::norm_order" << endl;
        Contract_remaining_indexes(kk);
     } else {
       string Gname = WickUtils::get_gamma_name( full_id_ranges, full_aops, ids_pos, TargetStates->name(Bra_num), TargetStates->name(Ket_num) ) ;
-      cout << "No further contractions for ";
-      cout <<  get_Aname(orig_ids, full_id_ranges, deltas_pos ) << " and  ";
-      cout <<  Gname << endl;
+      cout << "No further contractions for " <<  get_Aname(orig_ids, full_id_ranges, deltas_pos ) << " and  " <<  Gname << endl;
       final_gamma_vec->push_back(gamma_vec->at(kk));
       if ( Gamma_map->find(Gname) == Gamma_map->end() ) 
         Gamma_map->emplace( Gname, make_shared<GammaInfo>(  TargetStates->civec_info(Bra_num), TargetStates->civec_info(Ket_num),

@@ -255,8 +255,10 @@ void B_Gamma_Computer::B_Gamma_Computer::compute_sigmaN( shared_ptr<GammaInfo> g
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::compute_sigmaN : " << gammaN_info->sigma_name  << endl;
 
-  string  Bra_name = gammaN_info->Bra_name();
-  string  Ket_name = gammaN_info->Prev_Bra_name();
+  cout << " gammaN_info->order = " << gammaN_info->order << endl;
+
+  string  Bra_name = gammaN_info->Bra_name(); cout << "Bra_name = " << Bra_name << endl;
+  string  Ket_name = gammaN_info->Prev_Bra_name();cout << "Ket_name = " << Ket_name << endl;
 
   if ( Bra_name == Ket_name ) { 
 
