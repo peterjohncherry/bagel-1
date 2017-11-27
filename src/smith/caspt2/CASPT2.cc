@@ -32,8 +32,8 @@
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
 #include <src/smith/caspt2/CASPT2_ALT.h>
-#include <src/smith/wicktool/equation_computer.h>
-#include <src/smith/wicktool/equation.h>
+#include <src/smith/wicktool/tensop_computer.h>
+#include <src/smith/wicktool/expression.h>
 
 using namespace std;
 using namespace bagel;

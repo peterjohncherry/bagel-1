@@ -430,7 +430,7 @@ shared_ptr<vector<int>> Tensor_Arithmetic_Utils::put_ctr_at_front(shared_ptr<vec
 shared_ptr<vector<Index>>
 Tensor_Arithmetic_Utils::get_rng_blocks(shared_ptr<vector<int>> block_pos, vector<IndexRange>& id_ranges) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Equation_Computer::get_rng_blocks " << endl;
+//  cout << "TensOp_Computer::get_rng_blocks " << endl;
   shared_ptr<vector<Index>> id_blocks = make_shared<vector<Index>>(block_pos->size());
   for( int ii =0; ii != block_pos->size(); ii++ ) 
      id_blocks->at(ii) = id_ranges[ii].range(block_pos->at(ii));
@@ -441,7 +441,7 @@ Tensor_Arithmetic_Utils::get_rng_blocks(shared_ptr<vector<int>> block_pos, vecto
 shared_ptr<vector<Index>>
 Tensor_Arithmetic_Utils::get_rng_blocks(shared_ptr<vector<int>> block_pos, shared_ptr<vector<shared_ptr<const IndexRange>>> old_ids) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//cout << "Equation_Computer::get_rng_blocks constver" << endl;
+//cout << "TensOp_Computer::get_rng_blocks constver" << endl;
 
   auto new_ids = make_shared<vector<Index>>(); 
   for( int ii =0; ii != block_pos->size(); ii++ ) {
@@ -454,7 +454,7 @@ Tensor_Arithmetic_Utils::get_rng_blocks(shared_ptr<vector<int>> block_pos, share
 shared_ptr<vector<Index>>
 Tensor_Arithmetic_Utils::get_rng_blocks(shared_ptr<vector<int>> forvec, shared_ptr<vector<shared_ptr<IndexRange>>> old_ids) {
 ////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Equation_Computer::get_rng_blocks " << endl;
+//  cout << "TensOp_Computer::get_rng_blocks " << endl;
 
   auto new_ids = make_shared<vector<Index>>(); 
   for( int ii =0; ii != forvec->size(); ii++ ) {
@@ -635,7 +635,7 @@ shared_ptr<vector<pair<size_t, size_t>>>
 Tensor_Arithmetic_Utils::get_block_start( shared_ptr<vector<IndexRange>> id_ranges, 
                                           shared_ptr<vector<int>> block_pos         ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Equation_Computer::get_block_info" << endl;
+//  cout << "TensOp_Computer::get_block_info" << endl;
 
   vector<pair<size_t,size_t>> block_start_end(block_pos->size());
   for (int ii = 0 ; ii != block_start_end.size() ; ii++){

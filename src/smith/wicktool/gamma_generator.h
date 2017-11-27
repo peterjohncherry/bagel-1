@@ -1,7 +1,7 @@
  #ifndef __SRC_SMITH_Gamma_Generator_H
  #define __SRC_SMITH_Gamma_Generator_H
 
- #include <src/smith/wicktool/WickUtils.h>
+ #include <src/smith/wicktool/wickutils.h>
  #include <src/smith/wicktool/states_info.h> 
 using namespace WickUtils;
 

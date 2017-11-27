@@ -1,14 +1,14 @@
 #ifndef __SRC_SMITH_BraKet_H
 #define __SRC_SMITH_BraKet_H
-  #include <src/smith/wicktool/WickUtils.h>
+  #include <src/smith/wicktool/wickutils.h>
   #include <src/smith/wicktool/gamma_generator.h>
-  #include <src/smith/wicktool/TensOp.h>
+  #include <src/smith/wicktool/tensop.h>
   #include <src/smith/wicktool/spin_manager.h>
   #include <src/smith/wicktool/states_info.h>
 
- //#include "WickUtils.h"
+ //#include "wickutils.h"
  //#include "gamma_generator.h"
- //#include "TensOp.h"
+ //#include "tensop.h"
  //#include "spin_manager.h"
 
 template<class DType> 

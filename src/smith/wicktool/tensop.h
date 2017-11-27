@@ -1,10 +1,10 @@
 #ifndef __SRC_SMITH_TensOp_H
 #define __SRC_SMITH_TensOp_H
- #include <src/smith/wicktool/WickUtils.h>
- #include <src/smith/wicktool/CtrTensOp.h>
+ #include <src/smith/wicktool/wickutils.h>
+ #include <src/smith/wicktool/ctrtensop.h>
 
- //#include "WickUtils.h"
- //#include "CtrTensOp.h"
+ //#include "wickutils.h"
+ //#include "ctrtensop.h"
 
 using namespace WickUtils;
 

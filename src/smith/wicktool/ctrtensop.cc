@@ -1,12 +1,12 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
 
- #include <src/smith/wicktool/CtrTensOp.h>
- #include <src/smith/wicktool/WickUtils.h>
+ #include <src/smith/wicktool/ctrtensop.h>
+ #include <src/smith/wicktool/wickutils.h>
  #include <src/smith/wicktool/gamma_generator.h>
 
- //#include "WickUtils.h"
- //#include "CtrTensOp.h"
+ //#include "wickutils.h"
+ //#include "ctrtensop.h"
  //#include "gamma_generator.h"
 
 using namespace std;

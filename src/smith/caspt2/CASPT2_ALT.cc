@@ -29,7 +29,7 @@
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
-using namespace bagel::SMITH::Equation_Computer; 
+using namespace bagel::SMITH::TensOp_Computer; 
 using namespace bagel::SMITH::Gamma_Computer; 
 using namespace Tensor_Arithmetic_Utils;
 
@@ -67,7 +67,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   set_target_info(states_of_interest) ;
   set_range_info(states_of_interest);
    
-  Expr_Info = make_shared<Expression_Info<double>>(TargetsInfo, true);
+  Expr_Info = make_shared<System_Info<double>>(TargetsInfo, true);
   Expr_Info_map = Expr_Info->expression_map;
 
   /////////////////////////////////////////////////////////  
@@ -269,10 +269,10 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
     cout << "WARNING : You have already calculated this expression....." << Expression_name
     << " = " << scalar_results_map->at(Expression_name) << endl;
  
-  shared_ptr<Equation<double>> Expr = Expr_Info->expression_map->at(Expression_name); 
+  shared_ptr<Expression<double>> Expr = Expr_Info->expression_map->at(Expression_name); 
   double result = 0.0;
 
-  shared_ptr<Equation_Computer::Equation_Computer> Expr_computer = make_shared<Equation_Computer::Equation_Computer>(ref, Expr, range_conversion_map, TensOp_data_map);
+  shared_ptr<TensOp_Computer::TensOp_Computer> TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer>( Expr, range_conversion_map, TensOp_data_map);
 
   B_Gamma_Computer::B_Gamma_Computer B_Gamma_Machine( ref->ciwfn()->civectors(), range_conversion_map, Expr->GammaMap, Gamma_data_map, Sigma_data_map, CIvec_data_map );
 
@@ -284,7 +284,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
     string Gamma_name = AG_contrib.first;
 
     // Build A_tensor to hold sums of different A-tensors
-    shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(Expr_computer->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
+    shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(TensOp_Machine->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
     A_combined_data->allocate();
     A_combined_data->zero(); cout << " Gamma_name  = " << Gamma_name << endl;
 
@@ -299,7 +299,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
           continue;
       
 	print_AContraction_list(Expr->ACompute_map->at(A_contrib.first), A_contrib.first);
-        Expr_computer->Calculate_CTP(A_contrib.first);
+        TensOp_Machine->Calculate_CTP(A_contrib.first);
 
         if ( Gamma_name != "ID" ) {
           for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){
@@ -308,7 +308,7 @@ cout <<  "CASPT2_ALT::CASPT2_ALT::Execute_Compute_List(string expression_name ) 
             } else {
               cout << A_contrib.first << " is not done" << endl;
             }
-            shared_ptr<Tensor_<double>> A_contrib_reordered = Expr_computer->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
+            shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
             A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_reordered );
           }
         }

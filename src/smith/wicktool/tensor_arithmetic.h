@@ -4,7 +4,7 @@
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
 #include <src/util/f77.h>
-#include <src/smith/wicktool/WickUtils.h>
+#include <src/smith/wicktool/wickutils.h>
 #include <src/smith/wicktool/tensor_sorter.h>
 #include <src/smith/wicktool/tensor_arithmetic_utils.h>
 

@@ -1,9 +1,9 @@
 #ifndef __SRC_SMITH_CtrTensOp_H
 #define __SRC_SMITH_CtrTensOp_H
 
-  #include <src/smith/wicktool/WickUtils.h>
+  #include <src/smith/wicktool/wickutils.h>
   #include <unordered_set>
-//  #include "WickUtils.h"
+//  #include "wickutils.h"
 
 //Classes for defining contraction operations
 //ctr_abs pos is the position of the contracted index in the totally uncontracted tensor

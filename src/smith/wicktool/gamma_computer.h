@@ -2,8 +2,8 @@
 #define __SRC_SMITH_WICKTOOL_GAMMA_COMPUTER_H
 
 #include <tuple>
-#include <src/smith/wicktool/equation.h>
-#include <src/smith/wicktool/equation_computer.h>
+#include <src/smith/wicktool/expression.h>
+#include <src/smith/wicktool/tensop_computer.h>
 #include <src/smith/smith_info.h>
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
@@ -49,7 +49,7 @@ class Gamma_Computer {
       std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> Determinants_map;
       std::shared_ptr<std::map< std::string, std::shared_ptr<Determinants>>> Determinants_map_new;
       
-      std::shared_ptr<Equation<double>> Eqn_info;
+      std::shared_ptr<Expression<double>> Eqn_info;
       
       std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> Tensor_Calc;
       

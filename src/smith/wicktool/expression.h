@@ -1,34 +1,31 @@
  #ifndef __SRC_SMITH_EQUATION_H
  #define __SRC_SMITH_EQUATION_H
- #include <src/smith/wicktool/BraKet.h>
- #include <src/smith/wicktool/WickUtils.h>
- #include <src/smith/wicktool/TensOp.h>
+ #include <src/smith/wicktool/braket.h>
+ #include <src/smith/wicktool/wickutils.h>
+ #include <src/smith/wicktool/tensop.h>
  #include <src/smith/wicktool/states_info.h>
  #include <src/smith/tensor.h>
 
- //#include "WickUtils.h"
- //#include "BraKet.h"
- //#include "TensOp.h"
+ //#include "wickutils.h"
+ //#include "braket.h"
+ //#include "tensop.h"
  //
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
 template<class DType> 
-class Equation {
+class Expression {
       public:
 
-      Equation(){};
-      Equation( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list,
+      Expression(){};
+      Expression( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list,
                 std::shared_ptr<StatesInfo<DType>> TargetsInfo);
 
-      ~Equation(){};
-
-      //Equation builder
-      void equation_build(std::shared_ptr<std::vector< std::shared_ptr<std::vector<std::shared_ptr<TensOp<DType>>>> >> BraKet_list);
+      ~Expression(){};
 
       std::shared_ptr<StatesInfo<DType>> TargetStates;
 
-      //Vector of BraKet terms which comprise the equation
+      //Vector of BraKet terms which comprise the expression
       std::vector<std::shared_ptr<BraKet<DType>>> BraKet_Terms;
     
       //Map containing original tensor operators info

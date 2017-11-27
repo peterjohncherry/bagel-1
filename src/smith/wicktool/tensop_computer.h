@@ -2,7 +2,7 @@
 #define __SRC_SMITH_WICKTOOL_EQN_COMPUTER_H
 
 #include <tuple>
-#include <src/smith/wicktool/equation.h>
+#include <src/smith/wicktool/expression.h>
 #include <src/smith/smith_info.h>
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
@@ -15,23 +15,16 @@
 namespace bagel {
 namespace SMITH { 
 
-namespace Equation_Computer { 
+namespace TensOp_Computer { 
 
-class Equation_Computer { 
+class TensOp_Computer { 
 
     public: 
-    Equation_Computer( std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info_in,
-                       std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
-                       std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in );
-    ~Equation_Computer(){};
+    TensOp_Computer( std::shared_ptr<Expression<double>> eqn_info_in,
+                     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
+                     std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in );
+    ~TensOp_Computer(){};
   
-    int nelea_ ;
-    int neleb_ ;
-    int ncore_ ;
-    int norb_  ;
-    int nstate_;
-    int maxtile;
-    int cimaxblock;
     std::shared_ptr<IndexRange> virt_  ;
     std::shared_ptr<IndexRange> active_  ;
     std::shared_ptr<IndexRange> closed_  ;
@@ -42,12 +35,7 @@ class Equation_Computer {
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
 
-
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Dvec>>> dvec_sigma_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Determinants>>> det_old_map  ;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Civec>>> cvec_old_map; 
-
-    std::shared_ptr<Equation<double>> eqn_info;
+    std::shared_ptr<Expression<double>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
 
     std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> Tensor_Calc;

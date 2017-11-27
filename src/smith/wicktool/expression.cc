@@ -1,12 +1,12 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include <src/smith/wicktool/equation.h>
+#include <src/smith/wicktool/expression.h>
 
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-Equation<DType>::Equation( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list,
+Expression<DType>::Expression( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list,
                            std::shared_ptr<StatesInfo<DType>> TargetStates_in ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -21,13 +21,17 @@ Equation<DType>::Equation( std::shared_ptr<std::vector<std::shared_ptr<std::vect
 
   TargetStates = TargetStates_in;
  
-  equation_build(BraKet_list);
+  for (auto BraKet_Tensors : *BraKet_list) 
+    Build_BraKet( BraKet_Tensors );
+  
+  for (auto braket : BraKet_Terms)
+    Get_CMTP_Compute_Terms();
 
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <class DType>
-void Equation<DType>::Initialize(){
+void Expression<DType>::Initialize(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   T_map  = make_shared<map< string, shared_ptr<TensOp<DType>>>>();
@@ -42,7 +46,7 @@ void Equation<DType>::Initialize(){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-shared_ptr<TensOp<DType>> Equation<DType>::Build_TensOp( string op_name,
+shared_ptr<TensOp<DType>> Expression<DType>::Build_TensOp( string op_name,
                                                          shared_ptr<DType> tensor_data, //needs to be templated, should be Bagel tensor
                                                          shared_ptr<vector<string>> op_idxs,
                                                          shared_ptr<vector<bool>> op_aops, 
@@ -70,25 +74,9 @@ cout << "TensOp::BuildTensOp" <<   endl;
   return New_Op;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void  Equation<DType>::equation_build(std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType> > >>>> BraKet_list){
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Into Equation" <<endl;
-
-  for (auto BraKet_Tensors : *BraKet_list) 
-    Build_BraKet( BraKet_Tensors );
-  
-  for (auto braket : BraKet_Terms)
-    Get_CMTP_Compute_Terms();
-  cout << "Leaving Equation" <<endl;
-
-  return ;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-void Equation<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>> Tens_vec ){
+void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>> Tens_vec ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<BraKet<DType>> New_BraKet = make_shared<BraKet<DType>>(G_to_A_map, GammaMap, TargetStates );
@@ -108,7 +96,7 @@ void Equation<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>>
 // Note this 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-void Equation<DType>::Get_CMTP_Compute_Terms(){
+void Expression<DType>::Get_CMTP_Compute_Terms(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Get_CMTP_Compute_Terms" << endl;  
 
@@ -126,7 +114,7 @@ void Equation<DType>::Get_CMTP_Compute_Terms(){
 
       auto ACompute_list_loc = ACompute_map->find(CMTP_name);
       if ( ACompute_list_loc != ACompute_map->end() ){
-        cout << "Equation::Get_CMTP_Compute_Terms::already built compute list for " << CMTP_name << " during generation of earlier compute list" << endl;
+        cout << "Expression::Get_CMTP_Compute_Terms::already built compute list for " << CMTP_name << " during generation of earlier compute list" << endl;
         cout << CMTP_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map->at(CMTP_name)->size() << "  --- Still in if " << endl;
         continue;
       } else {  
@@ -145,7 +133,7 @@ void Equation<DType>::Get_CMTP_Compute_Terms(){
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template class Equation<double>;
+template class Expression<double>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #endif

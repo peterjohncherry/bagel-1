@@ -1,6 +1,6 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include  <src/smith/wicktool/expression_info.h>
+#include  <src/smith/wicktool/system_info.h>
 
 using namespace std;
 
@@ -10,7 +10,7 @@ using namespace std;
 //not the perturbation being applied is spin independent
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-Expression_Info<DataType>::Expression_Info::Expression_Info( shared_ptr<StatesInfo<DataType>> TargetStates_in , bool spinfree ) {
+System_Info<DataType>::System_Info::System_Info( shared_ptr<StatesInfo<DataType>> TargetStates_in , bool spinfree ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   T_map          = make_shared< map <string, shared_ptr<TensOp<DataType>>>>();
@@ -18,7 +18,7 @@ Expression_Info<DataType>::Expression_Info::Expression_Info( shared_ptr<StatesIn
                                           std::shared_ptr<std::vector<std::shared_ptr< TensOp<DataType>>>>>>();
   CTP_map        = make_shared< map <string, shared_ptr<CtrTensorPart<DataType>>>>();
   CMTP_map       = make_shared< map <string, shared_ptr<CtrMultiTensorPart<DataType>>>>();
-  expression_map = make_shared< map <string, shared_ptr<Equation<DataType>>>>();
+  expression_map = make_shared< map <string, shared_ptr<Expression<DataType>>>>();
 
   TargetStates = TargetStates_in;
 
@@ -48,7 +48,7 @@ Expression_Info<DataType>::Expression_Info::Expression_Info( shared_ptr<StatesIn
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<TensOp<DataType>>
-Expression_Info<DataType>::Expression_Info::Build_TensOp( string op_name,
+System_Info<DataType>::System_Info::Build_TensOp( string op_name,
                                                           shared_ptr<DataType> tensor_data, 
                                                           shared_ptr<vector<string>> op_idxs,
                                                           shared_ptr<vector<bool>> op_aops, 
@@ -59,7 +59,7 @@ Expression_Info<DataType>::Expression_Info::Build_TensOp( string op_name,
                                                           string Tsymmetry,
                                                           bool hconj ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Expression_Info<DataType>::Expression_Info::Build_TensOp" <<   endl;
+cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
 
   //NOTE: change to use proper factor
   int tmpfac = 1;
@@ -74,9 +74,9 @@ cout << "Expression_Info<DataType>::Expression_Info::Build_TensOp" <<   endl;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Expression_Info<DataType>::Expression_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op_names, string term_name ) { 
+void System_Info<DataType>::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op_names, string term_name ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout <<  "Expression_Info::Expression_Info::Build_BraKet(shared_ptr<vector<string>> BraKet_names, string expression_name ) " << endl;
+cout <<  "System_Info::System_Info::Build_BraKet(shared_ptr<vector<string>> BraKet_names, string expression_name ) " << endl;
   
   shared_ptr<vector<shared_ptr<TensOp<double>>>> BraKet_Ops = make_shared<vector< shared_ptr<TensOp<double>> > >();
 
@@ -90,23 +90,23 @@ cout <<  "Expression_Info::Expression_Info::Build_BraKet(shared_ptr<vector<strin
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Expression_Info<DataType>::Expression_Info::Build_Expression(shared_ptr<vector<string>> BraKet_names, string expression_name ) { 
+void System_Info<DataType>::System_Info::Build_Expression(shared_ptr<vector<string>> BraKet_names, string expression_name ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout <<  "Expression_Info::Expression_Info::Build_Expression(shared_ptr<vector<string>> BraKet_names, string expression_name ) " << endl;
+cout <<  "System_Info::System_Info::Build_Expression(shared_ptr<vector<string>> BraKet_names, string expression_name ) " << endl;
 
   auto BraKet_List = make_shared<std::vector<std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>>>>(BraKet_names->size()); 
 
   for ( int ii = 0 ; ii != BraKet_names->size() ; ii++ ) 
     BraKet_List->at(ii) = BraKet_map->at(BraKet_names->at(ii)) ;
 
-  shared_ptr<Equation<DataType>> new_expression = make_shared<Equation<DataType>>(BraKet_List, TargetStates);
+  shared_ptr<Expression<DataType>> new_expression = make_shared<Expression<DataType>>(BraKet_List, TargetStates);
 
   expression_map->emplace(expression_name, new_expression);
 
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template class Expression_Info<double>;
+template class System_Info<double>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 

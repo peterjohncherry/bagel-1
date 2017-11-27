@@ -1,10 +1,10 @@
 #include <bagel_config.h>
 #include <map>
 #ifdef COMPILE_SMITH
- #include <src/smith/wicktool/WickUtils.h>
+ #include <src/smith/wicktool/wickutils.h>
  #include <src/smith/wicktool/gamma_generator.h>
 
-// #include "WickUtils.h"
+// #include "wickutils.h"
 // #include "gamma_generator.h"
 using namespace std; 
 using namespace WickUtils;

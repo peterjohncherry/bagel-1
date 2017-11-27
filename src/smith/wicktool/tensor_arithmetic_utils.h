@@ -3,7 +3,7 @@
 
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
-#include <src/smith/wicktool/WickUtils.h>
+#include <src/smith/wicktool/wickutils.h>
 namespace bagel {
 namespace SMITH { 
 

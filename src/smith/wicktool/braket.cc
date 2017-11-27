@@ -1,7 +1,7 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-  #include <src/smith/wicktool/BraKet.h>
- //#include "BraKet.h"
+  #include <src/smith/wicktool/braket.h>
+ //#include "braket.h"
 
 using namespace std;
 using namespace WickUtils;

@@ -1,7 +1,7 @@
 #ifndef __SRC_SMITH_Target_Info_H
 #define __SRC_SMITH_Target_Info_H
 
-#include <src/smith/wicktool/WickUtils.h>
+#include <src/smith/wicktool/wickutils.h>
 
 template<class DataType>
 class CIVecInfo  { 

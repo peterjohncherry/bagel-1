@@ -1,8 +1,8 @@
 #ifndef __SRC_SMITH_Spin_Manager_H
 #define __SRC_SMITH_Spin_Manager_H
- #include <src/smith/wicktool/WickUtils.h>
+ #include <src/smith/wicktool/wickutils.h>
 
- //#include "WickUtils.h"
+ //#include "wickutils.h"
 
 class Spin_Manager  {
   using pint_vec = std::vector<std::pair<int,int>>;

@@ -27,19 +27,19 @@
 #define __SRC_SMITH_CASPT2_ALT_H
 
 #include <tuple>
-#include <src/smith/wicktool/expression_info.h>
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/ci/fci/fci.h>
-#include <src/smith/wicktool/equation_computer.h>
+#include <src/smith/multitensor.h>
+#include <src/smith/wicktool/system_info.h>
+#include <src/smith/wicktool/tensop_computer.h>
 #include <src/smith/wicktool/b_gamma_computer.h>
 #include <src/smith/wicktool/gamma_computer.h>
-#include <src/smith/multitensor.h>
 
 namespace bagel {
 namespace SMITH { 
 
 namespace CASPT2 { class CASPT2; };
-namespace Equation_Computer { class Equation_Computer; };
+namespace TensOp_Computer { class TensOp_Computer; };
 
 namespace CASPT2_ALT{
 
@@ -68,9 +68,7 @@ class CASPT2_ALT {
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> TensOp_data_map;
 
-    std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> Determinants_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Equation<double>>>> Expr_Info_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> Expr_Info_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
     std::shared_ptr<std::map< std::string, double>> scalar_results_map;
     std::shared_ptr<Gamma_Computer::Gamma_Computer> Gamma_Machine;
@@ -98,7 +96,7 @@ class CASPT2_ALT {
     std::shared_ptr<Tensor_<double>> Smith_rdm3;
     std::shared_ptr<Tensor_<double>> Smith_rdm4;
 
-    std::shared_ptr<Expression_Info<double>> Expr_Info;
+    std::shared_ptr<System_Info<double>> Expr_Info;
 
     CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in);
     ~CASPT2_ALT() {};

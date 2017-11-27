@@ -1,6 +1,6 @@
- #ifndef __SRC_SMITH_EXPRESSION_INFO_H
- #define __SRC_SMITH_EXPRESSION_INFO_H
- #include <src/smith/wicktool/equation.h>
+ #ifndef __SRC_SMITH_SYSTEM_INFO_H
+ #define __SRC_SMITH_SYSTEM_INFO_H
+ #include <src/smith/wicktool/expression.h>
  #include <src/smith/tensor.h>
  #include <src/smith/wicktool/states_info.h>
 
@@ -8,15 +8,15 @@ using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
 template<class DataType> 
-class Expression_Info {
+class System_Info {
       private :
         bool spinfree_ = false;
         std::shared_ptr<StatesInfo<DataType>> TargetStates;
 
       public:
 
-      Expression_Info(std::shared_ptr<StatesInfo<DataType>> TargetStates, bool spinfree);
-      ~Expression_Info(){};
+      System_Info(std::shared_ptr<StatesInfo<DataType>> TargetStates, bool spinfree);
+      ~System_Info(){};
 
       std::vector<std::string> free;
       std::vector<std::string> not_core;
@@ -32,7 +32,7 @@ class Expression_Info {
       std::shared_ptr< std::map <std::string, 
                                  std::shared_ptr<std::vector<std::shared_ptr< TensOp<DataType>>>>>> BraKet_map;
   
-      std::shared_ptr< std::map <std::string, std::shared_ptr<Equation<DataType>>>> expression_map;
+      std::shared_ptr< std::map <std::string, std::shared_ptr<Expression<DataType>>>> expression_map;
     
       // key :    Name of contracted part of TensorOp.
       // result : Info for contracted part of TensorOp info.

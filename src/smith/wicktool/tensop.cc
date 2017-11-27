@@ -1,10 +1,10 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
- #include <src/smith/wicktool/WickUtils.h>
- #include <src/smith/wicktool/TensOp.h>
+ #include <src/smith/wicktool/wickutils.h>
+ #include <src/smith/wicktool/tensop.h>
 
- //#include "WickUtils.h"
- //#include "TensOp.h"
+ //#include "wickutils.h"
+ //#include "tensop.h"
 
 using namespace std;
 using namespace WickUtils;
@@ -254,7 +254,7 @@ cout << "MultiTensOp::initialize" << endl;
 //////////////////////////////////////////////////////////////////////////////////////
 cout << "MultiTensOp::initialize" << endl;
 
-//Loosely speaking, MultiTensOp has two kinds of members:
+//Loosely speaking, Multitensop.has two kinds of members:
 //1) Members inherited from the derived class /obtained by merging the members (e.g. the indexes and position
 //of creation and annihilation operators) from the TensOps from which the MultiTensOp is constructed. 
 //2) "Split" members; vectors where each element corresponds to a constituent TensOp of the MultiTensor.

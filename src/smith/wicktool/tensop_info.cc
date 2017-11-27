@@ -1,6 +1,6 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include  <src/smith/wicktool/expression_info.h>
+#include  <src/smith/wicktool/system_info.h>
 
 using namespace std;
 
@@ -8,7 +8,7 @@ using namespace std;
 //Build the operators here. 
 /////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( string OpName ) {
+void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpName ) {
 /////////////////////////////////////////////////////////////////////////////////
  
   if ( T_map->find(OpName) != T_map->end() ) { 
@@ -28,7 +28,7 @@ void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( stri
      
 //      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> S_symmfuncs = set_2el_symmfuncs();
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> S_symmfuncs = identity_only();
-      vector<bool(*)(shared_ptr<vector<string>>)>  S_constraints = {  &Expression_Info<double>::Expression_Info::always_true };
+      vector<bool(*)(shared_ptr<vector<string>>)>  S_constraints = {  &System_Info<double>::System_Info::always_true };
      
       shared_ptr<TensOp<double>> STens = Build_TensOp("S", S_dummy_data, S_idxs, S_aops, S_idx_ranges, S_symmfuncs, S_constraints, S_factor, S_TimeSymm, false ) ;
       T_map->emplace("S", STens);
@@ -43,7 +43,7 @@ void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( stri
       string                             U_TimeSymm = "none";
      
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> U_symmfuncs = identity_only();
-      vector<bool(*)(shared_ptr<vector<string>>)>  U_constraints = {  &Expression_Info<double>::Expression_Info::always_true };
+      vector<bool(*)(shared_ptr<vector<string>>)>  U_constraints = {  &System_Info<double>::System_Info::always_true };
      
       shared_ptr<TensOp<double>> UTens = Build_TensOp( "U", U_dummy_data, U_idxs, U_aops, U_idx_ranges, U_symmfuncs, U_constraints, U_factor, U_TimeSymm, false ) ;
       T_map->emplace("U", UTens);
@@ -58,7 +58,7 @@ void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( stri
       string                             R_TimeRymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> R_symmfuncs = identity_only();
-      vector<bool(*)(shared_ptr<vector<string>>)>  R_constraints = {  &Expression_Info<double>::Expression_Info::always_true };
+      vector<bool(*)(shared_ptr<vector<string>>)>  R_constraints = {  &System_Info<double>::System_Info::always_true };
       
       shared_ptr<TensOp<double>> RTens = Build_TensOp("R", R_dummy_data, R_idxs, R_aops, R_idx_ranges, R_symmfuncs, R_constraints, R_factor, R_TimeRymm, false ) ;
       T_map->emplace("R", RTens);
@@ -73,7 +73,7 @@ void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( stri
       string                             Q_TimeSymm = "none";
    
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Q_symmfuncs = identity_only();
-      vector<bool(*)(shared_ptr<vector<string>>)>  Q_constraints = {  &Expression_Info<double>::Expression_Info::always_true };
+      vector<bool(*)(shared_ptr<vector<string>>)>  Q_constraints = {  &System_Info<double>::System_Info::always_true };
    
       shared_ptr<TensOp<double>> QTens = Build_TensOp("Q", Q_dummy_data, Q_idxs, Q_aops, Q_idx_ranges, Q_symmfuncs, Q_constraints, Q_factor, Q_TimeSymm, false ) ;
       T_map->emplace("Q", QTens);
@@ -88,7 +88,7 @@ void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( stri
       string                             H_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> H_symmfuncs = set_2el_symmfuncs();
-      vector<bool(*)(shared_ptr<vector<string>>)>  H_constraints = {  &Expression_Info<double>::Expression_Info::always_true };
+      vector<bool(*)(shared_ptr<vector<string>>)>  H_constraints = {  &System_Info<double>::System_Info::always_true };
       
       shared_ptr<TensOp<double>> HTens = Build_TensOp("H", H_dummy_data, H_idxs, H_aops, H_idx_ranges, H_symmfuncs, H_constraints, H_factor, H_TimeSymm, false ) ;
       T_map->emplace("H", HTens);
@@ -102,7 +102,7 @@ void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( stri
       string                             h_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> h_symmfuncs = set_1el_symmfuncs();
-      vector<bool(*)(shared_ptr<vector<string>>)>  h_constraints = {  &Expression_Info<double>::Expression_Info::always_true };
+      vector<bool(*)(shared_ptr<vector<string>>)>  h_constraints = {  &System_Info<double>::System_Info::always_true };
       
       shared_ptr<TensOp<double>> hTens = Build_TensOp("h", h_dummy_data, h_idxs, h_aops, h_idx_ranges, h_symmfuncs, h_constraints, h_factor, h_TimeSymm, false ) ;
       T_map->emplace("h", hTens);
@@ -118,7 +118,7 @@ void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( stri
       string                              T_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> T_symmfuncs = set_2el_symmfuncs();
-      vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = {  &Expression_Info<double>::Expression_Info::NotAllAct };
+      vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = {  &System_Info<double>::System_Info::NotAllAct };
       
       shared_ptr<TensOp<double>> TTens = Build_TensOp("T", T_dummy_data, T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
       T_map->emplace("T", TTens);
@@ -133,7 +133,7 @@ void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( stri
       string                              L_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  L_symmfuncs = set_2el_symmfuncs();
-      vector<bool(*)(shared_ptr<vector<string>>)>  L_constraints = { &Expression_Info<double>::Expression_Info::NotAllAct };
+      vector<bool(*)(shared_ptr<vector<string>>)>  L_constraints = { &System_Info<double>::System_Info::NotAllAct };
       
       shared_ptr<TensOp<double>> LTens = Build_TensOp("L", L_dummy_data, L_idxs, L_aops, L_idx_ranges, L_symmfuncs, L_constraints, L_factor, L_TimeSymm, false ) ;
       T_map->emplace("L", LTens);
@@ -148,7 +148,7 @@ void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( stri
       string                              X_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  X_symmfuncs = set_2el_symmfuncs();
-      vector<bool(*)(shared_ptr<vector<string>>)>  X_constraints = { &Expression_Info<double>::Expression_Info::NotAllAct };
+      vector<bool(*)(shared_ptr<vector<string>>)>  X_constraints = { &System_Info<double>::System_Info::NotAllAct };
       
       shared_ptr<TensOp<double>> XTens = Build_TensOp("X", X_dummy_data, X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
       T_map->emplace("X", XTens);
@@ -163,7 +163,7 @@ void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( stri
       string                              Y_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  Y_symmfuncs = set_2el_symmfuncs();
-      vector<bool(*)(shared_ptr<vector<string>>)>  Y_constraints = { &Expression_Info<double>::Expression_Info::NotAllAct };
+      vector<bool(*)(shared_ptr<vector<string>>)>  Y_constraints = { &System_Info<double>::System_Info::NotAllAct };
       
       shared_ptr<TensOp<double>> YTens = Build_TensOp("Y", Y_dummy_data, Y_idxs, Y_aops, Y_idx_ranges, Y_symmfuncs, Y_constraints, Y_factor, Y_TimeSymm, false ) ;
       T_map->emplace("Y", YTens);
@@ -173,6 +173,6 @@ void Expression_Info<DataType>::Expression_Info::Initialize_Tensor_Op_Info( stri
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template class Expression_Info<double>;
+template class System_Info<double>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif

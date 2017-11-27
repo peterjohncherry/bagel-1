@@ -1,6 +1,6 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include <src/smith/wicktool/equation_computer.h>
+#include <src/smith/wicktool/tensop_computer.h>
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
@@ -9,41 +9,28 @@ using namespace bagel::SMITH::Tensor_Arithmetic;
 using namespace bagel::SMITH::Tensor_Arithmetic_Utils; 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Equation_Computer::Equation_Computer::Equation_Computer( std::shared_ptr<const SMITH_Info<double>> ref, std::shared_ptr<Equation<double>> eqn_info_in,
-                                                         std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
-                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in          ){
+TensOp_Computer::TensOp_Computer::TensOp_Computer( std::shared_ptr<Expression<double>> eqn_info_in,
+                                                   std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
+                                                   std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in          ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Equation_Computer::Equation_Computer::Equation_Computer" << endl;
+  cout << "TensOp_Computer::TensOp_Computer::TensOp_Computer" << endl;
   eqn_info =  eqn_info_in;
-  nelea_ = ref->ciwfn()->det()->nelea();
-  neleb_ = ref->ciwfn()->det()->neleb();
-  ncore_ = ref->ciwfn()->ncore();
-  norb_  = ref->ciwfn()->nact();
-  nstate_ = ref->ciwfn()->nstates();
-  cc_ = ref->ciwfn()->civectors();
-  maxtile = ref->maxtile();
   
   CTP_map  = eqn_info->CTP_map;
   GammaMap = eqn_info->GammaMap;
   
   Data_map  = Data_map_in;
 
-  cimaxblock = 10000; //figure out what is best, maxtile is 10000, so this is chosen to have one index block. Must be consistent if contraction routines are to work...
-
   range_conversion_map = range_conversion_map_in;
 
   Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
 
-  //temporary for building gamma checking routine
-  dvec_sigma_map = make_shared<std::map< std::string, std::shared_ptr<Dvec>>>();
-  det_old_map    = make_shared<std::map< std::string, std::shared_ptr<Determinants>>>();
-  cvec_old_map   = make_shared<std::map< std::string, std::shared_ptr<Civec>>>();
 }  
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib ){
+void TensOp_Computer::TensOp_Computer::Calculate_CTP(std::string A_contrib ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << " Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib_name )" << endl;
+  cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP(std::string A_contrib_name )" << endl;
   if (eqn_info->ACompute_map->at(A_contrib)->size() == 0 )
     cout << "THIS COMPUTE LIST IS EMPTY" << endl;
 
@@ -77,9 +64,9 @@ void Equation_Computer::Equation_Computer::Calculate_CTP(std::string A_contrib )
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tensor(string Tname){
+shared_ptr<Tensor_<double>> TensOp_Computer::TensOp_Computer::get_block_Tensor(string Tname){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer::Equation_Computer::get_block_Tensor : " << Tname << endl;
+   cout << "TensOp_Computer::TensOp_Computer::get_block_Tensor : " << Tname << endl;
   
    if(  Data_map->find(Tname) != Data_map->end())
      return Data_map->at(Tname);
@@ -120,9 +107,9 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_block_Tens
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a tensor with ranges specified by unc_ranges, where all values are equal to XX  
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_uniform_Tensor(shared_ptr<vector<string>> unc_ranges, double XX ){
+shared_ptr<Tensor_<double>> TensOp_Computer::TensOp_Computer::get_uniform_Tensor(shared_ptr<vector<string>> unc_ranges, double XX ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer::Equation_Computer::get_uniform_Tensor" << endl;
+   cout << "TensOp_Computer::TensOp_Computer::get_uniform_Tensor" << endl;
 
    shared_ptr<vector<IndexRange>> T_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
@@ -131,9 +118,9 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::get_uniform_Te
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>>
-Equation_Computer::Equation_Computer::contract_on_same_tensor( std::string T_in_name, std::string T_out_name, pair<int,int> ctr_todo) {
+TensOp_Computer::TensOp_Computer::contract_on_same_tensor( std::string T_in_name, std::string T_out_name, pair<int,int> ctr_todo) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer::Equation_Computer::contract_on_same_tensor "; cout.flush();
+   cout << "TensOp_Computer::TensOp_Computer::contract_on_same_tensor "; cout.flush();
    cout << ": "  << T_in_name << " over (" << ctr_todo.first << ", " << ctr_todo.second << ") to get " << T_out_name <<  endl;
 
    return Tensor_Calc->contract_on_same_tensor( find_or_get_CTP_data(T_in_name), ctr_todo  ); 
@@ -141,9 +128,9 @@ Equation_Computer::Equation_Computer::contract_on_same_tensor( std::string T_in_
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::contract_on_same_tensor( string T_in_name, shared_ptr<vector<int>> ctrs_pos) {
+shared_ptr<Tensor_<double>> TensOp_Computer::TensOp_Computer::contract_on_same_tensor( string T_in_name, shared_ptr<vector<int>> ctrs_pos) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Equation_Computer::Equation_Computer::contract_on_same_tensor" << endl;
+   cout << "TensOp_Computer::TensOp_Computer::contract_on_same_tensor" << endl;
    cout << ": "  << T_in_name << " over ( "; cout.flush();
    for ( int pos : *ctrs_pos){ 
      cout << pos << " " ; cout.flush();
@@ -155,10 +142,10 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::contract_on_sa
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>>
-Equation_Computer::Equation_Computer::contract_different_tensors( std::string T1_in_name, std::string T2_in_name, std::string T_out_name,
+TensOp_Computer::TensOp_Computer::contract_different_tensors( std::string T1_in_name, std::string T2_in_name, std::string T_out_name,
                                                                   pair<int,int> ctr_todo ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Equation_Computer::contract_on_different_tensor" <<endl; 
+cout << "TensOp_Computer::contract_on_different_tensor" <<endl; 
 cout << ": "  << T1_in_name << " and " << T2_in_name << " over T1[" << ctr_todo.first << "] and T2[" << ctr_todo.second << "] to get " << T_out_name <<  endl;
 
   shared_ptr<Tensor_<double>> Tens1_in = find_or_get_CTP_data(T1_in_name);
@@ -175,9 +162,9 @@ cout << ": "  << T1_in_name << " and " << T2_in_name << " over T1[" << ctr_todo.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::reorder_block_Tensor(string T_in_name, shared_ptr<vector<int>> new_order){
+shared_ptr<Tensor_<double>> TensOp_Computer::TensOp_Computer::reorder_block_Tensor(string T_in_name, shared_ptr<vector<int>> new_order){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Equation_Computer::Equation_Computer::reorder_block_Tensor "; cout.flush();
+  cout << "TensOp_Computer::TensOp_Computer::reorder_block_Tensor "; cout.flush();
   cout << " : " << T_in_name ; cout.flush();
   cout <<  " New_order = [ "; cout.flush();  for (int pos : *new_order ) { cout << pos << " " ; cout.flush(); } cout << "] " << endl;
   
@@ -195,11 +182,11 @@ shared_ptr<Tensor_<double>> Equation_Computer::Equation_Computer::reorder_block_
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 pair<int,int>
-Equation_Computer::Equation_Computer::relativize_ctr_positions( pair <int,int> ctr_todo, 
+TensOp_Computer::TensOp_Computer::relativize_ctr_positions( pair <int,int> ctr_todo, 
                                                                 shared_ptr<CtrTensorPart<double>> CTP1,
                                                                 shared_ptr<CtrTensorPart<double>> CTP2 ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "Equation_Computer::Equation_Computer::find_or_get_CTP_data" << endl;
+ cout << "TensOp_Computer::TensOp_Computer::find_or_get_CTP_data" << endl;
    pair<int,int> rel_ctr;
 
    int T1_orig_size = CTP1->full_id_ranges->size(); 
@@ -229,9 +216,9 @@ Equation_Computer::Equation_Computer::relativize_ctr_positions( pair <int,int> c
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<Tensor_<double>>
-Equation_Computer::Equation_Computer::find_or_get_CTP_data(string CTP_name){
+TensOp_Computer::TensOp_Computer::find_or_get_CTP_data(string CTP_name){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "Equation_Computer::Equation_Computer::find_or_get_CTP_data  : " <<  CTP_name <<  endl;
+ cout << "TensOp_Computer::TensOp_Computer::find_or_get_CTP_data  : " <<  CTP_name <<  endl;
 
   shared_ptr<Tensor_<double>> CTP_data;
   auto Data_loc =  Data_map->find(CTP_name); 
@@ -246,7 +233,7 @@ Equation_Computer::Equation_Computer::find_or_get_CTP_data(string CTP_name){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<shared_ptr<const IndexRange>>>
-Equation_Computer::Equation_Computer::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
+TensOp_Computer::TensOp_Computer::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Get_Bagel_const_IndexRanges 1arg" << endl;
 
@@ -259,9 +246,9 @@ cout << "Get_Bagel_const_IndexRanges 1arg" << endl;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<shared_ptr<const IndexRange>>>
-Equation_Computer::Equation_Computer::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str, shared_ptr<vector<int>> unc_pos){ 
+TensOp_Computer::TensOp_Computer::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str, shared_ptr<vector<int>> unc_pos){ 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Equation_Computer::Get_Bagel_const_IndexRanges 2arg" ; print_vector(*ranges_str, "ranges_str" ) ;
+cout << "TensOp_Computer::Get_Bagel_const_IndexRanges 2arg" ; print_vector(*ranges_str, "ranges_str" ) ;
 cout <<  "  "; cout.flush();  print_vector(*unc_pos, "unc_pos" ) ; cout << endl;
 
   vector<shared_ptr<const IndexRange>>  ranges_Bagel(unc_pos->size());
@@ -272,9 +259,9 @@ cout <<  "  "; cout.flush();  print_vector(*unc_pos, "unc_pos" ) ; cout << endl;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<IndexRange>> Equation_Computer::Equation_Computer::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
+shared_ptr<vector<IndexRange>> TensOp_Computer::TensOp_Computer::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Equation_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str, "ranges_str" ) ; cout << endl;
+cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str, "ranges_str" ) ; cout << endl;
 
   auto ranges_Bagel = make_shared<vector<IndexRange>>(0);
   for ( auto rng : *ranges_str) 

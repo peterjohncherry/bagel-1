@@ -1,7 +1,7 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
- #include <src/smith/wicktool/WickUtils.h>
- // #include "WickUtils.h"
+ #include <src/smith/wicktool/wickutils.h>
+ // #include "wickutils.h"
 using namespace std;
 
   using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
