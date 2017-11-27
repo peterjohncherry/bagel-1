@@ -18,6 +18,14 @@ class Expression_Info {
       Expression_Info(std::shared_ptr<StatesInfo<DataType>> TargetStates, bool spinfree);
       ~Expression_Info(){};
 
+      std::vector<std::string> free;
+      std::vector<std::string> not_core;
+      std::vector<std::string> not_act;
+      std::vector<std::string> not_virt;
+      std::vector<std::string> core;
+      std::vector<std::string> act;
+      std::vector<std::string> virt;
+
       //only makes sense to specify a and b electrons if non-rel
       // key :    Name of BraKet
       // result : Vector of TensOps corresponding to BraKet
@@ -38,6 +46,7 @@ class Expression_Info {
       // result : Info for contracted part of multitensorop info
       std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map   ;  
 
+      void Initialize_Tensor_Op_Info( std::string OpName ) ;
 
       void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>> Tens_vec  );
       

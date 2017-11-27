@@ -213,7 +213,7 @@ shared_ptr<CtrTensorPart<DType>>
 cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl; 
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors  NEWVER : " << name << endl; 
+   cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors : " << name << endl; 
 
    shared_ptr<CtrTensorPart<DType>> T1;
    shared_ptr<CtrTensorPart<DType>> T2;

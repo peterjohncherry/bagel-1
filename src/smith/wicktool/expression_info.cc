@@ -24,6 +24,25 @@ Expression_Info<DataType>::Expression_Info::Expression_Info( shared_ptr<StatesIn
 
   spinfree_ = spinfree;
 
+  if (spinfree || !spinfree /*TODO like this for testing; obviously must put back*/ ) { 
+    cout << " setting spinfree ranges" << endl;
+    free     = {"cor", "act", "vir"};
+    not_core = {"act", "vir"};
+    not_act  = {"cor", "vir"};
+    not_virt = {"cor", "act"};
+    core     = {"cor"};
+    act      = {"act"};
+    virt     = {"vir"};
+  } else { 
+    free     = {"corA", "actA", "virA", "corB", "actB", "virB"};
+    not_core = {"actA", "virA", "actB", "virB"};
+    not_act  = {"corA", "virA", "corB", "virB"};
+    not_virt = {"corA", "actA", "corB", "actB"};
+    core     = {"corA", "corB"};
+    act      = {"actA", "actB"};
+    virt     = {"virA", "virB"};
+  }
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
