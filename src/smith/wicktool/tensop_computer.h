@@ -20,30 +20,25 @@ namespace TensOp_Computer {
 class TensOp_Computer { 
 
     public: 
-    TensOp_Computer( std::shared_ptr<Expression<double>> eqn_info_in,
+    TensOp_Computer( std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map_in,
+                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
-                     std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in );
+                     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in );
     ~TensOp_Computer(){};
   
-    std::shared_ptr<IndexRange> virt_  ;
-    std::shared_ptr<IndexRange> active_  ;
-    std::shared_ptr<IndexRange> closed_  ;
-    std::shared_ptr<std::map< int , std::shared_ptr<IndexRange>>> ci_idxrng_map;
-
-    std::shared_ptr<const Dvec> cc_; 
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map;
+    std::shared_ptr<std::map< std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
-
-    std::shared_ptr<Expression<double>> eqn_info;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map;
+
+
 
     std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> Tensor_Calc;
 
     /////////// Tensor contraction routines /////////////////////////
 
     //only for two contracted indexes
-    std::shared_ptr<Tensor_<double>> contract_on_same_tensor( std::string Tname, std::string Tout_name, std::pair<int,int> ctr_todo) ;
+    std::shared_ptr<Tensor_<double>> contract_on_same_tensor( std::string Tname, std::string Tout_name, std::pair<int,int> ctr_todo ) ;
 
     //for an arbitrary number of contracted indexes
     std::shared_ptr<Tensor_<double>> contract_on_same_tensor( std::string Tens_in, std::shared_ptr<std::vector<int>> contracted_index_positions ) ;

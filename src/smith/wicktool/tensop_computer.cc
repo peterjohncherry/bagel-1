@@ -9,17 +9,16 @@ using namespace bagel::SMITH::Tensor_Arithmetic;
 using namespace bagel::SMITH::Tensor_Arithmetic_Utils; 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-TensOp_Computer::TensOp_Computer::TensOp_Computer( std::shared_ptr<Expression<double>> eqn_info_in,
-                                                   std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
-                                                   std::shared_ptr<std::map<std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in          ){
+TensOp_Computer::TensOp_Computer::TensOp_Computer( shared_ptr< map< string, shared_ptr<vector<shared_ptr<CtrOp_base>>>>> ACompute_map_in,
+                                                   shared_ptr< map< string, shared_ptr<CtrTensorPart<double>>>> CTP_map_in,
+                                                   shared_ptr< map< string, shared_ptr<IndexRange>>> range_conversion_map_in,
+                                                   shared_ptr< map< string, shared_ptr<Tensor_<double>>>> Data_map_in ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp_Computer::TensOp_Computer::TensOp_Computer" << endl;
-  eqn_info =  eqn_info_in;
-  
-  CTP_map  = eqn_info->CTP_map;
-  GammaMap = eqn_info->GammaMap;
-  
-  Data_map  = Data_map_in;
+
+  ACompute_map = ACompute_map_in;
+  CTP_map      = CTP_map_in;
+  Data_map     = Data_map_in;
 
   range_conversion_map = range_conversion_map_in;
 
@@ -31,10 +30,10 @@ TensOp_Computer::TensOp_Computer::TensOp_Computer( std::shared_ptr<Expression<do
 void TensOp_Computer::TensOp_Computer::Calculate_CTP(std::string A_contrib ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP(std::string A_contrib_name )" << endl;
-  if (eqn_info->ACompute_map->at(A_contrib)->size() == 0 )
+  if (ACompute_map->at(A_contrib)->size() == 0 )
     cout << "THIS COMPUTE LIST IS EMPTY" << endl;
 
-  for (shared_ptr<CtrOp_base> ctr_op : *(eqn_info->ACompute_map->at(A_contrib))){
+  for (shared_ptr<CtrOp_base> ctr_op : *(ACompute_map->at(A_contrib))){
  
     // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
     if( Data_map->find(ctr_op->Tout_name()) == Data_map->end() ) {
@@ -73,7 +72,7 @@ shared_ptr<Tensor_<double>> TensOp_Computer::TensOp_Computer::get_block_Tensor(s
 
    shared_ptr<Tensor_<double>> fulltens;
    if(  Data_map->find(Tname.substr(0,1)) != Data_map->end()){
-     fulltens = Data_map->at(Tname.substr(0,1));
+     fulltens = Data_map->at(Tname.substr(0,1)); // TODO change so this uses Tname
    } else {  
      throw std::runtime_error("cannot find data for tensor op " +  Tname.substr(0,1) ) ; 
    }

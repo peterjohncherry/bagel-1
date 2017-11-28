@@ -1,26 +1,55 @@
+#include <bagel_config.h>
+#ifdef COMPILE_SMITH
+#include <src/smith/wicktool/expression_computer.h>
+
+using namespace std;
+using namespace bagel;
+using namespace bagel::SMITH;
+using namespace Tensor_Arithmetic;
+using namespace Tensor_Arithmetic_Utils;
+using namespace WickUtils;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-Expression_Computer::Expression_Computer::Expression_Computer::(
+template < class DataType >
+Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_ptr<const Dvec >                                  civectors, 
+                                                                         shared_ptr<map< string, shared_ptr<Expression<double>>>> Expression_map_in,
+                                                                         shared_ptr<map< string, shared_ptr<IndexRange>>>         range_conversion_map_in,
+                                                                         shared_ptr<map< string, shared_ptr<Tensor_<double>>>>    TensOp_data_map_in,
+                                                                         shared_ptr<map< string, shared_ptr<Tensor_<double>>>>    Gamma_data_map_in,
+                                                                         shared_ptr<map< string, shared_ptr<Tensor_<double>>>>    Sigma_data_map_in,
+                                                                         shared_ptr<map< string, shared_ptr<Tensor_<double>>>>    CIvec_data_map_in  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+cout <<  "Expression_Computer::Expression_Computer::Expression_Computer " << endl;
 
-  if ( scalar_results_map->find(Expression_name) != scalar_results_map->end() )  
+  Expression_map = Expression_map_in;
+  range_conversion_map_in =  range_conversion_map_in;
+  TensOp_data_map_in      =  TensOp_data_map_in; 
+  Gamma_data_map_in       =  Gamma_data_map_in; 
+  Sigma_data_map_in       =  Sigma_data_map_in; 
+  CIvec_data_map_in       =  CIvec_data_map_in; 
+  civectors               =  civectors;                   
+
+  scalar_results_map = make_shared<map< string, double >>(); 
+
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+template < class DataType >
+void Expression_Computer::Expression_Computer<DataType>::Evaluate_Expression( string Expression_name ) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+cout <<  "Expression_Computer::Expression_Computer::Execute_Compute_List : " << Expression_name <<  endl;
+
+  if ( scalar_results_map->find( Expression_name ) != scalar_results_map->end() )  
     cout << "WARNING : You have already calculated this expression....." << Expression_name
-    << " = " << scalar_results_map->at(Expression_name) << endl;
- 
-  shared_ptr<Expression<double>> Expr = Expr_Info->expression_map->at(Expression_name); 
+    << " = " << scalar_results_map->at( Expression_name ) << endl;
+
+  shared_ptr<Expression<double>> Expr = Expression_map->at(Expression_name); 
+
+  shared_ptr<TensOp_Computer::TensOp_Computer> TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer>( Expr->ACompute_map, Expr->CTP_map, range_conversion_map, TensOp_data_map);
+
+  B_Gamma_Computer::B_Gamma_Computer B_Gamma_Machine( civectors, range_conversion_map, Expr->GammaMap, Gamma_data_map, Sigma_data_map, CIvec_data_map );
+
   double result = 0.0;
-
-  shared_ptr<TensOp_Computer::TensOp_Computer> TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer>(ref, Expr, range_conversion_map, TensOp_data_map);
-
-  B_Gamma_Computer::B_Gamma_Computer B_Gamma_Machine( ref->ciwfn()->civectors(), range_conversion_map, Expr->GammaMap, Gamma_data_map, Sigma_data_map, CIvec_data_map );
-
-  map<string , double > g_result_map;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-void Expression_Computer::Expression_Computer::Execute_Compute_List(string Expression_name) { 
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-cout <<  "Expression_Computer::Expression_Computer::Execute_Compute_List(string expression_name ) " << endl;
-
+  map< string, double > g_result_map;
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(Expr->GammaMap) ) {
    
@@ -90,7 +119,8 @@ cout <<  "Expression_Computer::Expression_Computer::Execute_Compute_List(string 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Expression_Computer::Expression_Computer::print_AContraction_list(shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list, string A_contrib_name ) {
+template < class DataType >
+void Expression_Computer::Expression_Computer<DataType>::print_AContraction_list(shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list, string A_contrib_name ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   cout << "=========================================================================================================" << endl;
@@ -115,7 +145,8 @@ void Expression_Computer::Expression_Computer::print_AContraction_list(shared_pt
 }
  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool Expression_Computer::Expression_Computer::check_AContrib_factors(AContribInfo& AC_info ) {
+template < class DataType >
+bool Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors(AContribInfo& AC_info ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   bool  skip = false;
@@ -128,3 +159,4 @@ bool Expression_Computer::Expression_Computer::check_AContrib_factors(AContribIn
   } 
   return skip;
 }
+#endif
