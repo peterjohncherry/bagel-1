@@ -11,7 +11,7 @@ using namespace WickUtils;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < class DataType >
-Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_ptr<const Dvec >                                  civectors, 
+Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_ptr<const Dvec >                                  civectors_in, 
                                                                          shared_ptr<map< string, shared_ptr<Expression<double>>>> Expression_map_in,
                                                                          shared_ptr<map< string, shared_ptr<IndexRange>>>         range_conversion_map_in,
                                                                          shared_ptr<map< string, shared_ptr<Tensor_<double>>>>    TensOp_data_map_in,
@@ -22,12 +22,12 @@ Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_
 cout <<  "Expression_Computer::Expression_Computer::Expression_Computer " << endl;
 
   Expression_map = Expression_map_in;
-  range_conversion_map_in =  range_conversion_map_in;
-  TensOp_data_map_in      =  TensOp_data_map_in; 
-  Gamma_data_map_in       =  Gamma_data_map_in; 
-  Sigma_data_map_in       =  Sigma_data_map_in; 
-  CIvec_data_map_in       =  CIvec_data_map_in; 
-  civectors               =  civectors;                   
+  range_conversion_map =  range_conversion_map_in;
+  TensOp_data_map      =  TensOp_data_map_in; 
+  Gamma_data_map       =  Gamma_data_map_in; 
+  Sigma_data_map       =  Sigma_data_map_in; 
+  CIvec_data_map       =  CIvec_data_map_in; 
+  civectors            =  civectors_in;                   
 
   scalar_results_map = make_shared<map< string, double >>(); 
 
@@ -36,29 +36,37 @@ cout <<  "Expression_Computer::Expression_Computer::Expression_Computer " << end
 template < class DataType >
 void Expression_Computer::Expression_Computer<DataType>::Evaluate_Expression( string Expression_name ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-cout <<  "Expression_Computer::Expression_Computer::Execute_Compute_List : " << Expression_name <<  endl;
+cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << Expression_name <<  endl;
 
-  if ( scalar_results_map->find( Expression_name ) != scalar_results_map->end() )  
-    cout << "WARNING : You have already calculated this expression....." << Expression_name
-    << " = " << scalar_results_map->at( Expression_name ) << endl;
+ bool new_result = ( scalar_results_map->find( Expression_name ) == scalar_results_map->end() ); 
+ if ( !new_result )  
+   cout << "WARNING : You have already calculated this expression....." << Expression_name << " = " << scalar_results_map->at( Expression_name ) << endl;
 
-  shared_ptr<Expression<double>> Expr = Expression_map->at(Expression_name); 
+  shared_ptr<Expression<double>> Expr = Expression_map->at(Expression_name); cout << "got " << Expression_name << " info "<< endl;
 
   shared_ptr<TensOp_Computer::TensOp_Computer> TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer>( Expr->ACompute_map, Expr->CTP_map, range_conversion_map, TensOp_data_map);
+  cout << "Built_TensOp_Computer" << endl;
+
 
   B_Gamma_Computer::B_Gamma_Computer B_Gamma_Machine( civectors, range_conversion_map, Expr->GammaMap, Gamma_data_map, Sigma_data_map, CIvec_data_map );
+  cout << "Built_B_Gamma_Computer" << endl;
 
   double result = 0.0;
   map< string, double > g_result_map;
+
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(Expr->GammaMap) ) {
-   
+
     string Gamma_name = AG_contrib.first;
+    cout << " Gamma_name  = " << Gamma_name << endl; 
+
+    print_vector( *(Expr->GammaMap->at(Gamma_name)->id_ranges), "id_ranges" );
 
     // Build A_tensor to hold sums of different A-tensors
     shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(TensOp_Machine->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
     A_combined_data->allocate();
-    A_combined_data->zero(); cout << " Gamma_name  = " << Gamma_name << endl;
+    A_combined_data->zero(); 
+    cout << "Built an A-tensor to hold contributions" << endl;
 
     // Loop through A-tensors needed for this gamma
     auto  A_contrib_loc =  Expr->G_to_A_map->find(Gamma_name);
@@ -69,7 +77,7 @@ cout <<  "Expression_Computer::Expression_Computer::Execute_Compute_List : " << 
     
         if (check_AContrib_factors(A_contrib.second))
           continue;
-      
+
 	print_AContraction_list(Expr->ACompute_map->at(A_contrib.first), A_contrib.first);
         TensOp_Machine->Calculate_CTP(A_contrib.first);
 
@@ -99,8 +107,9 @@ cout <<  "Expression_Computer::Expression_Computer::Execute_Compute_List : " << 
 
       } else {
 
-        Print_Tensor( A_combined_data, " A_combined_data for 1D " ) ; cout << endl;
-        double tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( A_combined_data) ;
+//        Print_Tensor( A_combined_data, " A_combined_data for 1D " ) ; cout << endl;
+        double tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( A_combined_data ) ;
+        cout << "tmp_result = " << tmp_result << endl;
         g_result_map.emplace(Gamma_name, tmp_result) ;
         result += tmp_result ; 
 
@@ -113,8 +122,16 @@ cout <<  "Expression_Computer::Expression_Computer::Execute_Compute_List : " << 
   for ( auto elem : g_result_map ) 
     cout << elem.first << " :  " << elem.second << endl; 
 
+  cout << "=========================================================================================================" << endl;
+  cout << "                             RESULT FOR " << Expression_name << " = " << result <<  endl;
+  cout << "=========================================================================================================" << endl;
   cout << endl; 
- 
+
+  if (new_result ) {
+    scalar_results_map->emplace( Expression_name, result );
+  } else {
+    scalar_results_map->at( Expression_name ) = result;
+  }
   return;
 }
 
@@ -159,4 +176,8 @@ bool Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors(
   } 
   return skip;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template class Expression_Computer::Expression_Computer<double>;
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
 #endif

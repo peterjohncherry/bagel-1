@@ -31,9 +31,7 @@
 #include <src/ci/fci/fci.h>
 #include <src/smith/multitensor.h>
 #include <src/smith/wicktool/system_info.h>
-#include <src/smith/wicktool/tensop_computer.h>
-#include <src/smith/wicktool/b_gamma_computer.h>
-#include <src/smith/wicktool/gamma_computer.h>
+#include <src/smith/wicktool/expression_computer.h>
 
 namespace bagel {
 namespace SMITH { 
@@ -46,13 +44,14 @@ namespace CASPT2_ALT{
 class CASPT2_ALT {
   
   public:
-   
-   
-    std::shared_ptr<CASPT2::CASPT2> orig_cpt2;
-    std::shared_ptr<const SMITH_Info<double>> ref;
-
-    std::shared_ptr<const Dvec> cc_; 
-    std::shared_ptr<const Determinants> det_ ; 
+    ///////////// FOR TESTING ///////////////////
+    std::shared_ptr<Tensor_<double>> Smith_rdm1;
+    std::shared_ptr<Tensor_<double>> Smith_rdm2;
+    std::shared_ptr<Tensor_<double>> Smith_rdm3;
+    std::shared_ptr<Tensor_<double>> Smith_rdm4;
+    /////////////////////////////////////////////
+    
+    std::shared_ptr<const Dvec> civectors; 
 
     int ncore ;
     int nact  ;
@@ -61,17 +60,16 @@ class CASPT2_ALT {
     int maxtile;  
     int cimaxtile;  
 
-
-
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> TensOp_data_map;
 
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> Expr_Info_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> GammaMap;
+    std::shared_ptr<System_Info<double>> Sys_Info;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> Expression_map;
+    std::shared_ptr<Expression_Computer::Expression_Computer<double>> Expression_Machine;
+
     std::shared_ptr<std::map< std::string, double>> scalar_results_map;
-    std::shared_ptr<Gamma_Computer::Gamma_Computer> Gamma_Machine;
   
     std::shared_ptr<IndexRange> closed_rng; 
     std::shared_ptr<IndexRange> active_rng;  
@@ -90,22 +88,13 @@ class CASPT2_ALT {
     std::shared_ptr<Tensor_<double>> H_1el_all;
     std::shared_ptr<Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
 
-
-    std::shared_ptr<Tensor_<double>> Smith_rdm1;
-    std::shared_ptr<Tensor_<double>> Smith_rdm2;
-    std::shared_ptr<Tensor_<double>> Smith_rdm3;
-    std::shared_ptr<Tensor_<double>> Smith_rdm4;
-
-    std::shared_ptr<System_Info<double>> Expr_Info;
-
     CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in);
     ~CASPT2_ALT() {};
     
     void solve();
-    void Construct_Tensor_Ops();
-    void build_data_map();
-    void Build_Compute_Lists();
-    void Execute_Compute_List(std::string expression_name );
+    void Set_Tensor_Ops_Data();
+    void Build_Expression();
+    void Evaluate_Expression(std::string expression_name );
     
 
     void set_target_info( std::shared_ptr<std::vector<int>> states_of_interest ) ;

@@ -83,10 +83,10 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   for (int i = 0; i != nstates_; ++i) {
     sall_.push_back(cas.sall_[i]->copy());
   }
-  h1_ = cas.h1_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 1.0  );
-  f1_ = cas.f1_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 1.0  );
+  h1_ = cas.h1_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 0.0  );
+  f1_ = cas.f1_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 0.0  );
   v2_ = cas.v2_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );
-  H_2el_ =  cas.H_2el_; Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );
+  H_2el_ =  cas.H_2el_; 
 
   rdm0all_ = cas.rdm0all_;
   rdm1all_ = cas.rdm1all_;
@@ -156,8 +156,10 @@ void CASPT2::CASPT2::solve() {
    
       set_rdm(jst, istate);
 
-      Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2all_[istate]->at(jst) , 0.0  );
-       
+      Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2all_[istate]->at(jst) , 1.0  );
+      
+      cout << " h1_->norm()  = " << h1_->norm() <<  "    h1_->rms()  = " << h1_->rms() << endl;
+      cout << " v2_->norm()  = " << v2_->norm() <<  "    v2_->rms()  = " << v2_->rms() << endl;
       cout << " t2all_["<< istate << "]->at("<< jst << ")->norm()       = " <<   t2all_[istate]->at(jst)->norm() << endl;
       cout << " t2all_["<< istate << "]->at("<< jst << ")->rms()        = " <<   t2all_[istate]->at(jst)->rms()  <<  endl;
       cout << " t2all_["<< istate << "]->at("<< jst << ")->size_alloc() = " <<   t2all_[istate]->at(jst)->size_alloc()  <<  endl;
@@ -167,10 +169,11 @@ void CASPT2::CASPT2::solve() {
       while(!sourceq->done())
         sourceq->next_compute();
     
+     cout << " sall_[0]->at(0)->norm() = " <<  sall_[0]->at(0)->norm()  <<  endl;
+     cout << " sall_[0]->at(0)->rms() = " <<   sall_[0]->at(0)->rms()  <<  endl;
+
     }
   }
-  cout << " sall_[0]->at(0)->norm() = " <<  sall_[0]->at(0)->norm()  <<  endl;
-  cout << " sall_[0]->at(0)->rms() = " <<   sall_[0]->at(0)->rms()  <<  endl;
 
   // solve linear equation for t amplitudes
   t2all_ = solve_linear(sall_, t2all_);

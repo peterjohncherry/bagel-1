@@ -19,7 +19,6 @@ TensOp_Computer::TensOp_Computer::TensOp_Computer( shared_ptr< map< string, shar
   ACompute_map = ACompute_map_in;
   CTP_map      = CTP_map_in;
   Data_map     = Data_map_in;
-
   range_conversion_map = range_conversion_map_in;
 
   Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
@@ -29,14 +28,16 @@ TensOp_Computer::TensOp_Computer::TensOp_Computer( shared_ptr< map< string, shar
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void TensOp_Computer::TensOp_Computer::Calculate_CTP(std::string A_contrib ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP(std::string A_contrib_name )" << endl;
+  cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP : " <<  A_contrib  << endl;
+
   if (ACompute_map->at(A_contrib)->size() == 0 )
     cout << "THIS COMPUTE LIST IS EMPTY" << endl;
 
   for (shared_ptr<CtrOp_base> ctr_op : *(ACompute_map->at(A_contrib))){
- 
+    cout << "getting " <<  ctr_op->Tout_name() << endl;
+   
     // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
-    if( Data_map->find(ctr_op->Tout_name()) == Data_map->end() ) {
+    if( Data_map->find(ctr_op->Tout_name()) == Data_map->end() ) { cout << A_contrib << " not in data_map, must calculate it " << endl;
        shared_ptr<Tensor_<double>>  New_Tdata; 
  
       if ( ctr_op->ctr_type()[0] == 'g'){  cout << " : no contraction, fetch this tensor part" << endl; 
@@ -258,13 +259,18 @@ cout <<  "  "; cout.flush();  print_vector(*unc_pos, "unc_pos" ) ; cout << endl;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<IndexRange>> TensOp_Computer::TensOp_Computer::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
+shared_ptr<vector<IndexRange>> TensOp_Computer::TensOp_Computer::Get_Bagel_IndexRanges( shared_ptr<vector<string>> ranges_str ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str, "ranges_str" ) ; cout << endl;
 
-  auto ranges_Bagel = make_shared<vector<IndexRange>>(0);
-  for ( auto rng : *ranges_str) 
-    ranges_Bagel->push_back(*range_conversion_map->at(rng));
+  shared_ptr<vector<IndexRange>> ranges_Bagel = make_shared<vector<IndexRange>>(ranges_str->size());
+  for ( int ii = 0 ; ii != ranges_str->size(); ii++){ 
+    cout << "ranges_str->at(" << ii << ") = " << ranges_str->at(ii) << endl;
+    ranges_Bagel->at(ii) = *range_conversion_map->at(ranges_str->at(ii));
+    cout << " GOT ranges_str->at(" << ii << ") = " << ranges_str->at(ii) << endl;
+    
+  }
+  cout << "leaving Get_Bagel_IndexRanges" << endl;
 
   return ranges_Bagel;
 }
