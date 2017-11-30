@@ -72,8 +72,12 @@ cout << "CtrTensorPart<DType>::get_ctp_idxs_ranges" << endl;
     get_unc[ctrs_pos->at(ii).second] = false;
   }
 
+  print_vector( get_unc , "get_unc" ) ; cout << endl;
+
   bool survive_indep = true;
-  int num_unc_ids =  full_idxs->size() - ctrs_pos->size();
+  int num_unc_ids =  get_unc.size() - ctrs_pos->size()*2;
+
+  cout << "num_unc_ids = " << num_unc_ids << endl;
 
   unc_id_ranges = make_shared<vector<string>>( num_unc_ids );
   unc_idxs = make_shared<vector<string>>( num_unc_ids );
@@ -88,13 +92,48 @@ cout << "CtrTensorPart<DType>::get_ctp_idxs_ranges" << endl;
       jj++;
     }
   } 
-  
+ 
   unc_rel_pos = make_shared<map<int,int>>();
   for( int ii =0 ; ii != unc_pos->size(); ii++) 
     unc_rel_pos->emplace(unc_pos->at(ii), ii);
+  
+  print_pair_vector(*ctrs_pos , "ctrs_pos" ); cout << endl;
+
+  cout << "unc_rel_pos = [ " ;
+  for ( auto elem : *unc_rel_pos ) 
+    cout << "(" << elem.first << " -> " << elem.second << " ) ";
+    
+  cout << " ]" <<  endl;
  
   return; 
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+// This is a hack and should be done in a better way, maybe incorporate into constructor
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DType>
+pair<int,int> CtrTensorPart<DType>::get_pre_contract_ctr_rel_pos(pair<int,int>& ctr_pos ) { 
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "CtrTensorPart::get_pre_contract_ctr_rel_pos" << endl;
+
+  vector<bool> get_unc(full_idxs->size(), true);
+  for (int ii = 0 ; ii != ctrs_done->size()-1 ; ii++ )  {
+    get_unc[ctrs_done->at(ii).first] = false;
+    get_unc[ctrs_done->at(ii).second] = false;
+  }
+ 
+  int jj = 0;
+  map<int,int> unc_rel_pos;
+  for ( int ii = 0 ; ii != get_unc.size(); ii++ ) 
+    if (get_unc[ii]){
+      unc_rel_pos[ii] = jj;
+      jj++;
+    }
+ 
+  return make_pair( unc_rel_pos[ctr_pos.first], unc_rel_pos[ctr_pos.second] ); 
+
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
 void CtrTensorPart<DType>::FullContract( shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap,
@@ -124,8 +163,12 @@ cout << endl <<  "CtrTensorPart<DType>::FullContract NEWVER : CTP name =  " << n
       CTP_in = Tmap->at(CTP_in_name);
     }
     CTP_in->dependents.emplace(name);
-  
-    pair<int,int> ctrs_rel_pos_in = make_pair(CTP_in->unc_rel_pos->at(ctrs_done->back().first), CTP_in->unc_rel_pos->at(ctrs_done->back().second));   
+ 
+    // should be from ctrs_done from one befor CTP_in, I think, this is what we are contracting to get CTP in! 
+//    pair<int,int> ctrs_rel_pos_in = make_pair(CTP_in->unc_rel_pos->at(ctrs_done->back().first), CTP_in->unc_rel_pos->at(ctrs_done->back().second));   
+    pair<int,int> ctrs_rel_pos_in = get_pre_contract_ctr_rel_pos( ctrs_done->back() ) ;
+
+    cout << name <<  "   ctrs_rel_pos_in = (" << ctrs_rel_pos_in.first << "," << ctrs_rel_pos_in.second << ")" << endl;
 
     if ( ACompute_map->find(CTP_in_name) == ACompute_map->end()) {                                                       
       shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list_new = make_shared<vector<shared_ptr<CtrOp_base> >>(0);   

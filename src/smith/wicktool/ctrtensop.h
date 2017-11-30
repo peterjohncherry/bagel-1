@@ -137,6 +137,8 @@ class CtrTensorPart /*, public: std::enable_shared_from_this<CtrTensorPart>*/ {
                        std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map);
     
+    std::pair<int,int> get_pre_contract_ctr_rel_pos( std::pair<int,int>& ctr_pos );
+
     ~CtrTensorPart(){};
 };
 
