@@ -77,7 +77,22 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
    
       shared_ptr<TensOp<double>> QTens = Build_TensOp("Q", Q_dummy_data, Q_idxs, Q_aops, Q_idx_ranges, Q_symmfuncs, Q_constraints, Q_factor, Q_TimeSymm, false ) ;
       T_map->emplace("Q", QTens);
-   
+ 
+    } else if ( OpName == "P" ) {  /* ---- test tensor with general H2el shape ----  */
+
+      pair<double,double>                P_factor = make_pair(0.5,0.5);
+      shared_ptr<vector<string>>         P_idxs = make_shared<vector<string>>(vector<string> {"P0", "P1", "P2", "P3"});
+      shared_ptr<vector<bool>>           P_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false});//TODO check this ordering is correct 
+      shared_ptr<vector<vector<string>>> P_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free,free,free }); 
+      shared_ptr<double>                 P_dummy_data;
+      string                             P_TimeSymm = "none";
+      
+      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> P_symmfuncs = set_2el_symmfuncs();
+      vector<bool(*)(shared_ptr<vector<string>>)>  P_constraints = {  &System_Info<double>::System_Info::always_true };
+      
+      shared_ptr<TensOp<double>> PTens = Build_TensOp("P", P_dummy_data, P_idxs, P_aops, P_idx_ranges, P_symmfuncs, P_constraints, P_factor, P_TimeSymm, false ) ;
+      T_map->emplace("P", PTens);
+  
     } else if ( OpName == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
       pair<double,double>                H_factor = make_pair(0.5,0.5);

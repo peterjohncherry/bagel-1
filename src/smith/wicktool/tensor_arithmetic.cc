@@ -45,10 +45,16 @@ template<class DataType>
 DataType
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__number_return( shared_ptr<Tensor_<DataType>> Tens_in ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Tensor_Arithmetic::trace_tensor__number_output" << endl;
+  cout << "Tensor_Arithmetic::trace_tensor__number_return" << endl;
   assert ( Tens_in->indexrange().size() > 0 );
 
   vector<IndexRange> id_ranges = Tens_in->indexrange();
+
+  cout << "id_ranges.size() = " << id_ranges.size() << endl;
+  cout << "id_ranges[0].size()         = " << id_ranges[0].size() << endl;
+  cout << "id_ranges[1].size()         = " << id_ranges[1].size() << endl;
+  cout << "id_ranges[0].range().size() = " << id_ranges[0].range().size() << endl;
+  cout << "id_ranges[1].range().size() = " << id_ranges[1].range().size() << endl;
 
   DataType Tens_trace = 0.0;
 
@@ -59,7 +65,9 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__number_return( sha
       id_blocks[qq] = id_ranges[qq].range(ctr_block_pos);
       
     int ctr_total_stride = 1;
+    cout << "ctr_block_pos = "<< ctr_block_pos <<  "   A2" << endl;
     unique_ptr<DataType[]> data_block = Tens_in->get_block( id_blocks ) ; 
+    cout << "ctr_block_pos = "<< ctr_block_pos <<  "   A3" << endl;
     for ( int ctr_id = 0 ; ctr_id != id_blocks[0].size(); ctr_id++ )
       Tens_trace += *(data_block.get() + (ctr_total_stride*ctr_id));
    
@@ -76,8 +84,15 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__tensor_return( shared_ptr<Tensor_<DataType>> Tens_in ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Tensor_Arithmetic::trace_tensor__tensor_output" << endl;
-  assert ( Tens_in->indexrange().size() > 0 );
+  cout << "Tensor_Arithmetic::trace_tensor__tensor_return" << endl;
+  assert ( Tens_in->indexrange().size() > 1 );
+ 
+  cout << "id_ranges_sizes = [ " << Tens_in->indexrange()[0].size() << " " ;
+  for ( int ii =1 ; ii != Tens_in->indexrange().size(); ii++ ) {
+    cout << Tens_in->indexrange()[ii].size() << " " ;
+    assert( Tens_in->indexrange()[ii].size() == Tens_in->indexrange()[ii-1].size() ) ; 
+  } 
+  cout << " ] " << endl;
 
   vector<IndexRange> id_ranges = Tens_in->indexrange();
   vector<IndexRange> unit_range = { IndexRange( 1, 1, 0, 1 ) };
@@ -85,6 +100,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__tensor_return( sha
   shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(unit_range);
   Tens_out->allocate();
   DataType Tens_trace = 0.0; 
+  cout << "A1" << endl;
 
   for ( int ctr_block_pos = 0 ; ctr_block_pos != id_ranges[0].range().size(); ctr_block_pos++ ) {
    
@@ -94,17 +110,22 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__tensor_return( sha
       
 
     int ctr_total_stride = 1;
+    cout << "ctr_block_pos A2" << endl;
     unique_ptr<DataType[]> data_block = Tens_in->get_block( id_blocks ) ; 
+    cout << "A3" << endl;
     for ( int ctr_id = 0 ; ctr_id != id_blocks[0].size(); ctr_id++ ) {
       Tens_trace += *(data_block.get() + (ctr_total_stride*ctr_id));
     }
  
   } 
+
   unique_ptr<DataType[]> data_block( new double[1] ); 
   data_block[0] = Tens_trace;
 
   vector<Index> unit_index_block = { unit_range[0].range(0) }; 
+  cout << "A4" << endl;
   Tens_out->put_block( data_block, unit_index_block );
+  cout << "A5" << endl;
 
   cout << " out of Tensor trace contract" << endl;
   return Tens_out;
@@ -122,6 +143,13 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Tensor_Arithmetic::contract_on_same_tensor" << endl;
   assert ( Tens_in->indexrange().size() > 0 );
+
+  cout << "id_ranges_sizes = [ " << Tens_in->indexrange()[ctrs_pos[0]].size() << " " ;
+  for ( int ii =1 ; ii != ctrs_pos.size(); ii++ ) {
+    cout << Tens_in->indexrange()[ctrs_pos[ii]].size() << " " ;
+    assert( Tens_in->indexrange()[ctrs_pos[ii]].size() == Tens_in->indexrange()[ctrs_pos[ii-1]].size() ) ; 
+  } 
+  cout << " ] " << endl;
 
   vector<IndexRange> id_ranges_in = Tens_in->indexrange();
   shared_ptr<Tensor_<DataType>> Tens_out ;

@@ -154,21 +154,8 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
 
   Build_Expression();
 
-  Expression_Machine->Evaluate_Expression("Hact_test");
-  Expression_Machine->Evaluate_Expression("<I|XH|J>");
-
-  // <proj_jst|H|0_K> set to sall in ms-caspt2
+  Expression_Machine->Evaluate_Expression("<I|P|J>");
   
-  // Get < M | W H | N  >
-
-  // Input into linear equation solver to get T amplitudes
-  
-  // Should get \sum < M | W ( f- E_{L}+E_{s} ) T_{LN} | N>  in solver
- 
-  // Construct effective Hamiltonian
-  
-  // symmetrize and diagonalize effective Hmailtonian
-
 }
 /////////////////////////////////////////////////////////////////////////////////
 //Build the operators here. 
@@ -177,41 +164,34 @@ void CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() {
 /////////////////////////////////////////////////////////////////////////////////
 cout << "CASPT2_ALT::CASPT2_ALT::Construct_Tensor_Ops() " << endl;
 
-  // Setting_data for TensOps
-//  Sys_Info->Initialize_Tensor_Op_Info( "R" );
-//  shared_ptr<vector<IndexRange>> act_ranges_6 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
-//  shared_ptr<Tensor_<double>> R_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges_6);
-//  TensOp_data_map->emplace( "R", R_Tens );
+  //Setting_data for TensOps
+  Sys_Info->Initialize_Tensor_Op_Info( "P" );
+  shared_ptr<vector<IndexRange>> H2el_ranges = make_shared<vector<IndexRange>>( H_2el_all->indexrange() );
+  shared_ptr<Tensor_<double>> P_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( H2el_ranges);
+  Print_Tensor( P_Tens, "P test tensor" ) ; cout << endl << endl; 
+  TensOp_data_map->emplace( "P", P_Tens );
 
-  Sys_Info->Initialize_Tensor_Op_Info( "S" );
-  vector<IndexRange> act_ranges = { *active_rng, *active_rng, *active_rng, *active_rng };
-  shared_ptr<Tensor_<double>> Hact = Tensor_Arithmetic_Utils::get_sub_tensor( H_2el_all, act_ranges);
-  TensOp_data_map->emplace( "S", Hact );
-     
+  
+  shared_ptr<vector<IndexRange>> P_cvvc_ranges = make_shared<vector<IndexRange>>(vector<IndexRange>{*closed_rng , *virtual_rng, *virtual_rng, *closed_rng}) ;
+  shared_ptr<Tensor_<double>> P_cvvc = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( P_cvvc_ranges );
+  Print_Tensor( P_cvvc, "P_cvvc tensor" ) ; cout << endl << endl; 
+  shared_ptr<Tensor_<double>> P_Tens03 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( P_cvvc, make_pair(0,3) );
+  Print_Tensor( P_Tens03, "P_cvvc_03_contract" ) ; cout << endl << endl; 
+  shared_ptr<Tensor_<double>> P_Tens12 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( P_cvvc, make_pair(1,2) );
+  Print_Tensor( P_Tens12, "P_cvvc_12_contract" ) ; cout << endl << endl; 
+
   Sys_Info->Initialize_Tensor_Op_Info( "H" );
   Sys_Info->Initialize_Tensor_Op_Info( "h" );
   TensOp_data_map->emplace("H" , H_2el_all);
   TensOp_data_map->emplace("h" , H_1el_all);
-   
-  Sys_Info->Initialize_Tensor_Op_Info( "X" );
-  vector<IndexRange> X_ranges = { *not_virtual_rng, *not_virtual_rng, *not_closed_rng , *not_closed_rng} ;
-  shared_ptr<Tensor_<double>> XTens_data =  make_shared<Tensor_<double>>( X_ranges ); 
-  XTens_data->allocate();
-  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( XTens_data , 1.0  );
-  TensOp_data_map->emplace( "X" , XTens_data);
-  
-  Sys_Info->Initialize_Tensor_Op_Info( "T" );
+
+    Sys_Info->Initialize_Tensor_Op_Info( "T" );
   vector<IndexRange> PT2_ranges = {*not_closed_rng , *not_closed_rng, *not_virtual_rng, *not_virtual_rng} ;
   shared_ptr<Tensor_<double>> TTens_data =  make_shared<Tensor_<double>>(PT2_ranges); 
   TTens_data->allocate();
   Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( TTens_data , 1.0  );
   TensOp_data_map->emplace("T" , TTens_data);
    
-  shared_ptr<Tensor_<double>> LTens_data =  make_shared<Tensor_<double>>(PT2_ranges); 
-  LTens_data->allocate();
-  LTens_data->zero();
-  TensOp_data_map->emplace("L" , LTens_data);
-     
   return;
 }
 
@@ -221,15 +201,26 @@ void CASPT2_ALT::CASPT2_ALT::Build_Expression() {
                                                                                      
   Set_Tensor_Ops_Data();
 
-  shared_ptr<vector<string>> op_list1 = make_shared<vector<string>>(vector<string> { "S" });
-  Sys_Info->Set_BraKet_Ops( op_list1, "<I|H_act|J>" ) ;
-  shared_ptr<vector<string>> BK_list_S = make_shared<vector<string>>(vector<string> { "<I|H_act|J>" });
-  Sys_Info->Build_Expression( BK_list_S, "Hact_test") ;
+//  shared_ptr<vector<string>> op_list1 = make_shared<vector<string>>(vector<string> { "S" });
+//  Sys_Info->Set_BraKet_Ops( op_list1, "<I|H_act|J>" ) ;
+//  shared_ptr<vector<string>> BK_list_S = make_shared<vector<string>>(vector<string> { "<I|H_act|J>" });
+//  Sys_Info->Build_Expression( BK_list_S, "Hact_test") ;
 
-  shared_ptr<vector<string>> op_list2 = make_shared<vector<string>>(vector<string> { "X", "H" });
-  Sys_Info->Set_BraKet_Ops( op_list2, "<I|XH|J>" ) ;
-  shared_ptr<vector<string>> BK_list_XH = make_shared<vector<string>>(vector<string> { "<I|XH|J>" });
-  Sys_Info->Build_Expression( BK_list_XH,"<I|XH|J>" ) ;
+ // shared_ptr<vector<string>> op_list4 = make_shared<vector<string>>(vector<string> { "H" });
+ // Sys_Info->Set_BraKet_Ops( op_list4, "<I|H|J>" ) ;
+ // shared_ptr<vector<string>> BK_list_H = make_shared<vector<string>>(vector<string> { "<I|H|J>" });
+ // Sys_Info->Build_Expression( BK_list_H, "<I|H|J>") ;
+
+  shared_ptr<vector<string>> op_list5 = make_shared<vector<string>>(vector<string> { "P" });
+  Sys_Info->Set_BraKet_Ops( op_list5, "<I|P|J>" ) ;
+  shared_ptr<vector<string>> BK_list_P = make_shared<vector<string>>(vector<string> { "<I|P|J>" });
+  Sys_Info->Build_Expression( BK_list_P, "<I|P|J>") ;
+
+
+ // shared_ptr<vector<string>> op_list2 = make_shared<vector<string>>(vector<string> { "X", "H" });
+ // Sys_Info->Set_BraKet_Ops( op_list2, "<I|XH|J>" ) ;
+ // shared_ptr<vector<string>> BK_list_XH = make_shared<vector<string>>(vector<string> { "<I|XH|J>" });
+ // Sys_Info->Build_Expression( BK_list_XH,"<I|XH|J>" ) ;
 
 
 //  shared_ptr<vector<string>> op_list3 = make_shared<vector<string>>(vector<string> { "R" });
@@ -266,10 +257,34 @@ void CASPT2_ALT::CASPT2_ALT::Build_Expression() {
  //  shared_ptr<vector<string>> BK_list_U = make_shared<vector<string>>(vector<string> { "<I|U|J>" });
  //  Sys_Info->Build_Expression( BK_list_U, "U4_test") ;
  //
- //  Sys_Info->Initialize_Tensor_Op_Info( "U" );
+ // Sys_Info->Initialize_Tensor_Op_Info( "U" );
  // shared_ptr<vector<IndexRange>> act_ranges_4 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng } );
  // shared_ptr<Tensor_<double>> U_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges_4 );
  // TensOp_data_map->emplace( "U", U_Tens );
+ //
+ // Sys_Info->Initialize_Tensor_Op_Info( "S" );
+ // vector<IndexRange> act_ranges = { *active_rng, *active_rng, *active_rng, *active_rng };
+ // shared_ptr<Tensor_<double>> Hact = Tensor_Arithmetic_Utils::get_sub_tensor( H_2el_all, act_ranges);
+
+ // <proj_jst|H|0_K> set to sall in ms-caspt2
+  
+  // Get < M | W H | N  >
+
+  // Input into linear equation solver to get T amplitudes
+  
+  // Should get \sum < M | W ( f- E_{L}+E_{s} ) T_{LN} | N>  in solver
+ 
+  // Construct effective Hamiltonian
+  
+  // symmetrize and diagonalize effective Hmailtonian
+// 
+// Sys_Info->Initialize_Tensor_Op_Info( "X" );
+// vector<IndexRange> X_ranges = { *not_virtual_rng, *not_virtual_rng, *not_closed_rng , *not_closed_rng} ;
+// shared_ptr<Tensor_<double>> XTens_data =  make_shared<Tensor_<double>>( X_ranges ); 
+// XTens_data->allocate();
+// Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( XTens_data , 1.0  );
+// TensOp_data_map->emplace( "X", XTens_data);
+// TensOp_data_map->emplace( "S", Hact );
 /////////////////////////////////////////////////////////////////////////////////
  
 

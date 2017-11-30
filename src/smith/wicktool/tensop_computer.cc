@@ -33,6 +33,14 @@ void TensOp_Computer::TensOp_Computer::Calculate_CTP(std::string A_contrib ){
   if (ACompute_map->at(A_contrib)->size() == 0 )
     cout << "THIS COMPUTE LIST IS EMPTY" << endl;
 
+
+  for (shared_ptr<CtrOp_base> ctr_op : *(ACompute_map->at(A_contrib))){
+     cout << "ctr_op->Tout_name()   = " << ctr_op->Tout_name()    << endl;
+     cout << "ctr_op->T1name()      = " << ctr_op->T1name()       << endl;
+     cout << "ctr_op->ctr_abs_pos() = (" << ctr_op->ctr_abs_pos().first << "," << ctr_op->ctr_abs_pos().second << ")" << endl;
+     cout << "ctr_op->ctr_rel_pos() = (" << ctr_op->ctr_rel_pos().first << "," << ctr_op->ctr_rel_pos().second << ")" << endl;
+  }
+
   for (shared_ptr<CtrOp_base> ctr_op : *(ACompute_map->at(A_contrib))){
     cout << "getting " <<  ctr_op->Tout_name() << endl;
    
