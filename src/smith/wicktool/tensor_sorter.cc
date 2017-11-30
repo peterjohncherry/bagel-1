@@ -41,9 +41,6 @@ size_t Tensor_Sorter::Tensor_Sorter<DataType>::get_perm_idnum(shared_ptr<vector<
    
    for ( int ii = 0 ; ii != seq->size() ; ii++)  
      idnum += pow(base, seq->size()-1-ii)*seq->at(ii);
-
-   cout << "seq = [" ; for( size_t ii : *seq ) { cout << ii << " " ; } cout << "]   base = "  << base ;
-   cout << " idnum = " << idnum <<  endl;  
    
    return idnum ;
 }
@@ -53,14 +50,9 @@ template<class DataType>
 size_t Tensor_Sorter::Tensor_Sorter<DataType>::get_sort_options_idnum(array<int,4>& sort_options) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
- 
- 
  size_t idnum =0; 
  for ( int ii = 0 ; ii != 4 ; ii++)  
    idnum += pow(4, ii)*(sort_options[ii]+1);
-
- cout << "sort_options = [" ; for( size_t ii : sort_options ) { cout << ii << " " ; } cout << "]" ; cout.flush();
- cout << " base = 4   idnum = " << idnum << endl;
  
  return idnum ;
 }

@@ -8,7 +8,12 @@
 #include <src/smith/wicktool/tensor_sorter.h>
 #include <src/smith/wicktool/tensor_arithmetic_utils.h>
 
-//Seems ridiculous as all members are static. However, eventually it will be templated, and it is simpler template a class than a name space.
+//Seems ridiculous as all members are static. However, it is simpler to template a class than a name space.
+//TODO At the moment I assume that all indexes running similar ranges are defined using IndexRange objects 
+//     with similar range members. If this is not true, it will impact the id_offsets, and also the block pos
+//     in the contractions.
+//     Whilst this assumption hold true for the current method it may well not if I start to play with the
+//     block size (e.g. set active blocksize = 1 for sigmas), and so it must be fixed.
 
 namespace bagel {
 namespace SMITH { 
@@ -24,6 +29,12 @@ class Tensor_Arithmetic {
 
      static DataType
      sum_tensor_elems( std::shared_ptr<Tensor_<DataType>> Tens_in) ;
+
+     static DataType
+     trace_tensor__number_return( std::shared_ptr<Tensor_<DataType>> Tens_in) ;
+
+     static std::shared_ptr<Tensor_<DataType>>
+     trace_tensor__tensor_return( std::shared_ptr<Tensor_<DataType>> Tens_in) ;
 
      static std::shared_ptr<Tensor_<DataType>>
      contract_on_same_tensor( std::shared_ptr<Tensor_<DataType>> Tens_in,  std::vector<int>& ctrs ); 

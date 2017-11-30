@@ -65,11 +65,24 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, st
    cout << "---------------------------- " << name <<  " ----------------------------" << endl;
 
    vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
+  
+   cout << "Bagel_id_ranges.size() = " << Bagel_id_ranges.size() << endl;
 
    if ( Bagel_id_ranges.size() == 1 ) { //lazy switch; should have generic routine 
 
+     assert( Bagel_id_ranges[0].range(0).size() > 0 ); 
+
+     if ( name == "ID" || ( ( Bagel_id_ranges[0].range().size() == 1 ) && ( Bagel_id_ranges[0].range(0).size() == 1 ) ) ) { 
+       cout << "Bagel_id_ranges[0].range(0).size() == 1  " << endl; 
+       unique_ptr<double[]> data = Tens->get_block( vector<Index> ( 1, Bagel_id_ranges[0].range(0) ) );
+       cout << *data.get()  << endl;
+
+     } else { 
+
        Print_Vector_Tensor_Format( Tens, name );
-   
+
+     }
+
    } else {
 
      shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( Bagel_id_ranges) ;

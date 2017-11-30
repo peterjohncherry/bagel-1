@@ -62,10 +62,16 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
 
     print_vector( *(Expr->GammaMap->at(Gamma_name)->id_ranges), "id_ranges" );
 
+    shared_ptr<Tensor_<double>> A_combined_data;
     // Build A_tensor to hold sums of different A-tensors
-    shared_ptr<Tensor_<double>> A_combined_data = make_shared<Tensor_<double>>( *(TensOp_Machine->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
+    if ( Gamma_name != "ID" ) {
+      A_combined_data = make_shared<Tensor_<double>>( *(TensOp_Machine->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
+    } else {
+      A_combined_data = make_shared<Tensor_<double>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
+    }  
     A_combined_data->allocate();
     A_combined_data->zero(); 
+ 
     cout << "Built an A-tensor to hold contributions" << endl;
 
     // Loop through A-tensors needed for this gamma
@@ -91,7 +97,11 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
             shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
             A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_reordered );
           }
+        } else {
+          for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++)
+            A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), TensOp_data_map->at(A_contrib.first) );
         }
+  
         cout << "added " << A_contrib.first << endl; 
         cout << "=========================================================================================================" << endl << endl;
       }
@@ -107,7 +117,8 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
 
       } else {
 
-//        Print_Tensor( A_combined_data, " A_combined_data for 1D " ) ; cout << endl;
+        Print_Tensor( A_combined_data, " A_combined_data for 1D " ) ; cout << endl;
+
         double tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( A_combined_data ) ;
         cout << "tmp_result = " << tmp_result << endl;
         g_result_map.emplace(Gamma_name, tmp_result) ;

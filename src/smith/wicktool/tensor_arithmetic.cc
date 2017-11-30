@@ -26,6 +26,7 @@ cout << "Tensor_Arithemetic_Utils::sum_tensor_elems" << endl;
 
   do { 
 
+     print_vector( *block_pos, "block_pos");
      vector<Index> id_blocks = *(get_rng_blocks( block_pos, *id_ranges ));
      unique_ptr<double[]> block = Tens_in->get_block( id_blocks );
      Tens_in->get_size(id_blocks);
@@ -37,90 +38,177 @@ cout << "Tensor_Arithemetic_Utils::sum_tensor_elems" << endl;
   return sum_of_elems;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Full takes the trace of the tensor, i.e. sets all indexes equal. Use different routine as reordering of indexes is not necessary here.
+// Returns a number.
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+DataType
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__number_return( shared_ptr<Tensor_<DataType>> Tens_in ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic::trace_tensor__number_output" << endl;
+  assert ( Tens_in->indexrange().size() > 0 );
+
+  vector<IndexRange> id_ranges = Tens_in->indexrange();
+
+  DataType Tens_trace = 0.0;
+
+  for ( int ctr_block_pos = 0 ; ctr_block_pos != id_ranges[0].range().size(); ctr_block_pos++ ) {
+  
+    vector<Index> id_blocks( id_ranges.size() );
+    for ( int qq = 0; qq != id_ranges.size(); qq++ ) 
+      id_blocks[qq] = id_ranges[qq].range(ctr_block_pos);
+      
+    int ctr_total_stride = 1;
+    unique_ptr<DataType[]> data_block = Tens_in->get_block( id_blocks ) ; 
+    for ( int ctr_id = 0 ; ctr_id != id_blocks[0].size(); ctr_id++ )
+      Tens_trace += *(data_block.get() + (ctr_total_stride*ctr_id));
+   
+  } 
+
+  return Tens_trace;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Full takes the trace of the tensor, i.e. sets all indexes equal. Use different routine as reordering of indexes is not necessary here.
+// Returns Tensor
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<Tensor_<DataType>>
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__tensor_return( shared_ptr<Tensor_<DataType>> Tens_in ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic::trace_tensor__tensor_output" << endl;
+  assert ( Tens_in->indexrange().size() > 0 );
+
+  vector<IndexRange> id_ranges = Tens_in->indexrange();
+  vector<IndexRange> unit_range = { IndexRange( 1, 1, 0, 1 ) };
+
+  shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(unit_range);
+  Tens_out->allocate();
+  DataType Tens_trace = 0.0; 
+
+  for ( int ctr_block_pos = 0 ; ctr_block_pos != id_ranges[0].range().size(); ctr_block_pos++ ) {
+   
+    vector<Index> id_blocks( id_ranges.size() );
+    for ( int qq = 0; qq != id_ranges.size(); qq++ ) 
+      id_blocks[qq] = id_ranges[qq].range(ctr_block_pos);
+      
+
+    int ctr_total_stride = 1;
+    unique_ptr<DataType[]> data_block = Tens_in->get_block( id_blocks ) ; 
+    for ( int ctr_id = 0 ; ctr_id != id_blocks[0].size(); ctr_id++ ) {
+      Tens_trace += *(data_block.get() + (ctr_total_stride*ctr_id));
+    }
+ 
+  } 
+  unique_ptr<DataType[]> data_block( new double[1] ); 
+  data_block[0] = Tens_trace;
+
+  vector<Index> unit_index_block = { unit_range[0].range(0) }; 
+  Tens_out->put_block( data_block, unit_index_block );
+
+  cout << " out of Tensor trace contract" << endl;
+  return Tens_out;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Bad routine using reordering because I just want something which works
-// All orders of ctrs_pos will give the same answer, but some will require fewer transposes. 
-// Write (small) routine to optimize ordering of ctrs_pos and call at start of routine.
+// TODO Write (small) routine to optimize ordering of ctrs_pos and call at start of routine.
+//      -> All orders of ctrs_pos will give the same answer, but some will require fewer transposes. 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_ptr<Tensor_<DataType>> Tens_in,  vector<int>& ctrs_pos) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Tensor_Arithmetic::contract_on_same_tensor" << endl;
+  assert ( Tens_in->indexrange().size() > 0 );
 
   vector<IndexRange> id_ranges_in = Tens_in->indexrange();
-  int num_ids  = id_ranges_in.size();
+  shared_ptr<Tensor_<DataType>> Tens_out ;
 
-  // Put contracted indexes at back so they change slowly; Fortran ordering in index blocks!
-  shared_ptr<vector<int>> new_order = make_shared<vector<int>>(num_ids);
-  iota(new_order->begin(), new_order->end(), 0);
-  put_ctrs_at_back( *new_order, ctrs_pos );
+  if ( ctrs_pos.size() == Tens_in->indexrange().size() ) {
 
-  vector<int> unc_pos( new_order->begin(), new_order->end() - ctrs_pos.size() );
-  vector<IndexRange> unc_idxrng( unc_pos.size() );
-  for ( int qq = 0; qq != unc_pos.size(); qq++ ) 
-    unc_idxrng[qq] = id_ranges_in[unc_pos[qq]];
+    double Tensor_trace = trace_tensor__number_return( Tens_in ) ;
+    cout << "Tensor_trace = " << Tensor_trace << endl;
 
-  shared_ptr<vector<int>> maxs      = get_range_lengths( id_ranges_in ) ;
-  shared_ptr<vector<int>> mins      = make_shared<vector<int>>(maxs->size(),0);  
-  shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(maxs->size(),0);  
+    Tens_out = trace_tensor__tensor_return( Tens_in ) ;
 
-  //set max = min so contracted blocks are skipped in fvec_cycle
-  for ( vector<int>::iterator iter = ctrs_pos.begin(); iter != ctrs_pos.end(); iter++ ) {
-     maxs->at(*iter) = 0;
-     mins->at(*iter) = 0;
-  } 
+  } else {
 
-  int num_ctr_blocks = id_ranges_in[ctrs_pos.front()].range().size();
-
-  shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(unc_idxrng);
-  Tens_out->allocate();
-  Tens_out->zero();
-
-  // Outer forvec loop skips ctr ids due to min[i]=max[i].  Inner loop cycles ctr ids.
-  do {
-   
-    shared_ptr<vector<Index>> id_blocks_in = get_rng_blocks( block_pos, id_ranges_in ); 
-
-    int unc_block_size = 1;
-    vector<Index> unc_id_blocks(unc_pos.size());
-    for (int qq = 0 ; qq != unc_pos.size(); qq++ ) {
-      unc_id_blocks[qq] = id_blocks_in->at(unc_pos[qq]);
-      unc_block_size   *= unc_id_blocks[qq].size();
-    }
-
-    unique_ptr<DataType[]> contracted_block(new DataType[unc_block_size]);
-    fill_n(contracted_block.get(), unc_block_size, 0.0);
-    //loop over ctr blocks
-    for ( int ii = 0 ; ii != num_ctr_blocks; ii++) { 
-      
-      for ( int pos : ctrs_pos )  
-         block_pos->at(pos) = ii;
-
-      //redefine block position
-      id_blocks_in = get_rng_blocks(block_pos, id_ranges_in);
-
-      vector<int> ctr_block_strides(ctrs_pos.size(),1);
-      ctr_block_strides.front() = unc_block_size;
-      int ctr_total_stride = unc_block_size;
-      for (int qq = 1; qq != ctrs_pos.size() ; qq++ ) {
-        ctr_block_strides[qq] = (ctr_block_strides[qq-1] * id_blocks_in->at(ctrs_pos[qq-1]).size());
-        ctr_total_stride += ctr_block_strides[qq]; 
-      }
- 
-      {
-      unique_ptr<DataType[]> orig_block = Tens_in->get_block(*id_blocks_in);
-      unique_ptr<DataType[]> reordered_block = reorder_tensor_data( orig_block.get(), new_order, id_blocks_in );
-      //looping over the id positions within the block
-      for ( int ctr_id = 0 ; ctr_id != id_blocks_in->at(ctrs_pos[0]).size(); ctr_id++ )
-        blas::ax_plus_y_n(1.0, reordered_block.get() + (ctr_total_stride*ctr_id), unc_block_size, contracted_block.get() );
-      
-      }
-       
-    }
+    int num_ids  = id_ranges_in.size();
+  
+    // Put contracted indexes at back so they change slowly; Fortran ordering in index blocks!
+    shared_ptr<vector<int>> new_order = make_shared<vector<int>>(num_ids);
+    iota(new_order->begin(), new_order->end(), 0);
+    put_ctrs_at_back( *new_order, ctrs_pos );
     
-    Tens_out->put_block(contracted_block, unc_id_blocks );
+    vector<int> unc_pos( new_order->begin(), new_order->end() - ctrs_pos.size() );
+    vector<IndexRange> unc_idxrng( unc_pos.size() );
+    for ( int qq = 0; qq != unc_pos.size(); qq++ ) 
+      unc_idxrng[qq] = id_ranges_in[unc_pos[qq]];
+    
+    shared_ptr<vector<int>> maxs      = get_range_lengths( id_ranges_in ) ;
+    shared_ptr<vector<int>> mins      = make_shared<vector<int>>(maxs->size(),0);  
+    shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(maxs->size(),0);  
+    
+    //set max = min so contracted blocks are skipped in fvec_cycle
+    for ( vector<int>::iterator iter = ctrs_pos.begin(); iter != ctrs_pos.end(); iter++ ) {
+       maxs->at(*iter) = 0;
+       mins->at(*iter) = 0;
+    } 
+    
+    int num_ctr_blocks = id_ranges_in[ctrs_pos.front()].range().size();
+    
+    Tens_out = make_shared<Tensor_<DataType>>(unc_idxrng);
+    Tens_out->allocate();
+    Tens_out->zero();
+    
+    // Outer forvec loop skips ctr ids due to min[i]=max[i].  Inner loop cycles ctr ids.
+    do {
+     
+      shared_ptr<vector<Index>> id_blocks_in = get_rng_blocks( block_pos, id_ranges_in ); 
+    
+      int unc_block_size = 1;
+      vector<Index> unc_id_blocks(unc_pos.size());
+      for (int qq = 0 ; qq != unc_pos.size(); qq++ ) {
+        unc_id_blocks[qq] = id_blocks_in->at(unc_pos[qq]);
+        unc_block_size   *= unc_id_blocks[qq].size();
+      }
+    
+      unique_ptr<DataType[]> contracted_block(new DataType[unc_block_size]);
+      fill_n(contracted_block.get(), unc_block_size, 0.0);
+      //loop over ctr blocks
+      for ( int ii = 0 ; ii != num_ctr_blocks; ii++) { 
+        
+        for ( int pos : ctrs_pos )  
+           block_pos->at(pos) = ii;
+    
+        //redefine block position
+        id_blocks_in = get_rng_blocks(block_pos, id_ranges_in);
+    
+        vector<int> ctr_block_strides(ctrs_pos.size(),1);
+        ctr_block_strides.front() = unc_block_size;
+        int ctr_total_stride = unc_block_size;
+        for (int qq = 1; qq != ctrs_pos.size() ; qq++ ) {
+          ctr_block_strides[qq] = (ctr_block_strides[qq-1] * id_blocks_in->at(ctrs_pos[qq-1]).size());
+          ctr_total_stride += ctr_block_strides[qq]; 
+        }
    
-  } while( fvec_cycle_skipper(block_pos, maxs, mins));
+        {
+        unique_ptr<DataType[]> orig_block = Tens_in->get_block(*id_blocks_in);
+        unique_ptr<DataType[]> reordered_block = reorder_tensor_data( orig_block.get(), new_order, id_blocks_in );
+        //looping over the id positions within the block
+        for ( int ctr_id = 0 ; ctr_id != id_blocks_in->at(ctrs_pos[0]).size(); ctr_id++ )
+          blas::ax_plus_y_n(1.0, reordered_block.get() + (ctr_total_stride*ctr_id), unc_block_size, contracted_block.get() );
+        
+        }
+         
+      }
+      
+      Tens_out->put_block(contracted_block, unc_id_blocks );
+     
+    } while( fvec_cycle_skipper(block_pos, maxs, mins));
+  }
 
   return Tens_out;
 }
@@ -182,7 +270,6 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_tensor_with_vector( sha
                                                                              int ctr_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl; 
-
 
   vector<IndexRange> TensIn_org_rngs = TensIn->indexrange();
   vector<IndexRange> VecIn_rng = VecIn->indexrange();
