@@ -26,7 +26,7 @@ class TensOp_Computer {
                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map_in );
     ~TensOp_Computer(){};
   
-    std::shared_ptr<std::map< std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<double>>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Data_map;

@@ -8,6 +8,21 @@ using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
 template<class DataType> 
+class Term_Info {
+     public :
+       std::vector<std::string> op_list;
+       std::string Bra_name;
+       std::string Ket_name;
+       DataType factor;
+       std::string type ; // should be "ci_deriv" or "full" 
+       
+       Term_Info( std::vector<std::string> op_list_in, std::string Bra_name_in, std::string Ket_name_in, DataType factor_in , std::string type_in ) :
+                  op_list(op_list_in), Bra_name(Bra_name_in), Ket_name(Ket_name_in), factor(factor_in), type(type_in) {};
+       ~Term_Info(){};
+};
+
+
+template<class DataType> 
 class System_Info {
       private :
         bool spinfree_ = false;
@@ -25,6 +40,8 @@ class System_Info {
       std::vector<std::string> core;
       std::vector<std::string> act;
       std::vector<std::string> virt;
+
+      std::vector<std::string> Op_list;
 
       //only makes sense to specify a and b electrons if non-rel
       // key :    Name of BraKet
@@ -60,7 +77,8 @@ class System_Info {
                                                       std::pair<double,double> factor, std::string Tsymmetry, bool hconj ) ;
      
       void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
-      void Build_Expression(std::shared_ptr<std::vector<std::string>> BraKet_names, std::string expression_name ) ;
+
+      std::string Build_Expression( std::vector<Term_Info<DataType>>&  term_info_list  );
 
       int nalpha(int state_num) { return TargetStates->nalpha( state_num ); };
       int nbeta(int state_num)  { return TargetStates->nbeta( state_num );  };
@@ -92,4 +110,5 @@ class System_Info {
       };
 
 };
+
 #endif

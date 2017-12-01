@@ -430,8 +430,6 @@ cout << "GammaGenerator::swap" << endl;
     gamma_vec->push_back(new_gamma);
 
   }                                                                                                                                 
-//  gamma_vec->at(kk)->my_sign *= -1;
-  print_vector(*full_aops, "full_aops"); cout << "    my_sign = " << gamma_vec->at(kk)->my_sign << endl;
   return ;                                                                                                                          
 } 
 

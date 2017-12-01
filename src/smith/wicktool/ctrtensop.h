@@ -96,7 +96,6 @@ class CtrTensorPart /*, public: std::enable_shared_from_this<CtrTensorPart>*/ {
     bool got_compute_list; 
     bool contracted; 
       
-
     CtrTensorPart(){
                     full_idxs      = std::make_shared<std::vector<std::string>>(0);
                     full_id_ranges = std::make_shared<std::vector<std::string>>(0);
@@ -171,9 +170,9 @@ class CtrMultiTensorPart : public CtrTensorPart<DType>  {
 
     CtrMultiTensorPart(){};
 
-    CtrMultiTensorPart(std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart<DType>>>> CTP_vec_in, 
-                       std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >> cross_ctrs_pos_in ) 
-                       : CtrTensorPart<DType>() {
+    CtrMultiTensorPart( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart<DType>>>> CTP_vec_in, 
+                        std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >> cross_ctrs_pos_in ) 
+                        : CtrTensorPart<DType>() {
                     
                          CTP_vec        = CTP_vec_in;
                          cross_ctrs_pos = cross_ctrs_pos_in;
@@ -200,13 +199,13 @@ class CtrMultiTensorPart : public CtrTensorPart<DType>  {
  
     void get_name(){ CtrTensorPart<DType>::get_name(); return;};
 
-    void get_ctp_idxs_ranges() { CtrTensorPart<DType>::get_ctp_idxs_ranges(); return;};
+    std::string myname(){ return CtrTensorPart<DType>::myname(); };
 
     std::string get_next_name(std::shared_ptr<std::vector<std::pair<int,int>>> new_ctrs_pos) {return CtrTensorPart<DType>::get_next_name(new_ctrs_pos); };
 
-    std::string myname(){ return CtrTensorPart<DType>::myname(); };
+    void get_ctp_idxs_ranges() { CtrTensorPart<DType>::get_ctp_idxs_ranges(); return;};
 
-    void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
+    void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart<DType>> >> Tmap,
                        std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map);
 

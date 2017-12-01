@@ -378,47 +378,48 @@ cout << "MultiTensOp::generate_ranges()" << endl;
           continue;
         }     
 
-        print_vector(posvec , "posvec" ) ;   
- 
         vector<vector<string>> orig_ranges;
         shared_ptr<vector<shared_ptr<vector<string>>>> unique_ranges = make_shared<vector<shared_ptr<vector<string>>>>(0);
         shared_ptr<vector<shared_ptr<vector<string>>>> unique_idxs   = make_shared<vector<shared_ptr<vector<string>>>>(0);
-        shared_ptr<pint_vec>     factors       = make_shared<pint_vec>(0);
-        shared_ptr<vector<bool>> isunique      = make_shared<vector<bool>>(0);
+        shared_ptr<pint_vec>     factors  = make_shared<pint_vec>(0);
+        shared_ptr<vector<bool>> isunique = make_shared<vector<bool>>(0);
     
         for (int jj =0 ; jj != orig_tensors_.size() ; jj++){
-           orig_ranges.push_back(rng_maps[jj]->first);
+
+          orig_ranges.push_back(rng_maps[jj]->first);
     
-           isunique->push_back(get<0>(rng_maps[jj]->second))  ;
+          isunique->push_back(get<0>(rng_maps[jj]->second))  ;
     
-           unique_ranges->push_back(get<1>(rng_maps[jj]->second));  
+          unique_ranges->push_back(get<1>(rng_maps[jj]->second));  
     
-           unique_idxs->push_back(get<2>(rng_maps[jj]->second));  
+          unique_idxs->push_back(get<2>(rng_maps[jj]->second));  
     
-           factors->push_back(get<3>(rng_maps[jj]->second)) ;
+          factors->push_back(get<3>(rng_maps[jj]->second)) ;
+
         }
     
        split_ranges->emplace(orig_ranges, tie(isunique, unique_ranges, factors));
     
-        vector<string> merged_oranges;
-        for(vector<string> orange : orig_ranges )  
-          merged_oranges.insert(merged_oranges.end(), orange.begin(), orange.end());
+       vector<string> merged_oranges;
+       for(vector<string> orange : orig_ranges )  
+         merged_oranges.insert(merged_oranges.end(), orange.begin(), orange.end());
     
-        shared_ptr<vector<string>>  merged_uranges = make_shared<vector<string>>(0);
-        for(shared_ptr<vector<string>>  urange : *unique_ranges )
-          merged_uranges->insert(merged_uranges->end(), urange->begin(), urange->end());
+       shared_ptr<vector<string>>  merged_uranges = make_shared<vector<string>>(0);
+       for(shared_ptr<vector<string>>  urange : *unique_ranges )
+         merged_uranges->insert(merged_uranges->end(), urange->begin(), urange->end());
+       
+    
+       shared_ptr<vector<string>> merged_uqidxs = make_shared<vector<string>>(0);
+       for( shared_ptr<vector<string>> uqidxs : *unique_idxs )
+         merged_uqidxs->insert(merged_uqidxs->end(), uqidxs->begin(), uqidxs->end());
         
     
-        shared_ptr<vector<string>> merged_uqidxs = make_shared<vector<string>>(0);
-        for( shared_ptr<vector<string>> uqidxs : *unique_idxs )
-          merged_uqidxs->insert(merged_uqidxs->end(), uqidxs->begin(), uqidxs->end());
-         
-    
-        bool merged_unique = true;
-        if ( merged_oranges == *merged_uranges )
-          merged_unique = false;
-        
-        combined_ranges->emplace(merged_oranges, tie(merged_unique, merged_uranges, merged_uqidxs, factors));
+       bool merged_unique = true;
+       if ( merged_oranges == *merged_uranges )
+         merged_unique = false;
+       
+       combined_ranges->emplace(merged_oranges, tie(merged_unique, merged_uranges, merged_uqidxs, factors));
+
       }
     } while(ham);
 

@@ -92,10 +92,8 @@ class CASPT2_ALT {
     ~CASPT2_ALT() {};
     
     void solve();
-    void Set_Tensor_Ops_Data();
-    void Build_Expression();
+    void Set_Tensor_Ops_Data( std::string op_name, std::string bra_name, std::string ket_name );
     void Evaluate_Expression(std::string expression_name );
-    
 
     void set_target_info( std::shared_ptr<std::vector<int>> states_of_interest ) ;
     void set_range_info( std::shared_ptr<std::vector<int>> states_of_interest );

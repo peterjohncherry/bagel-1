@@ -88,23 +88,69 @@ cout <<  "System_Info::System_Info::Build_BraKet(shared_ptr<vector<string>> BraK
   return;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void System_Info<DataType>::System_Info::Build_Expression(shared_ptr<vector<string>> BraKet_names, string expression_name ) { 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout <<  "System_Info::System_Info::Build_Expression(shared_ptr<vector<string>> BraKet_names, string expression_name ) " << endl;
+string System_Info<DataType>::System_Info::Build_Expression( vector<Term_Info<DataType>>&  term_info_list  ) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "System_Info::System_Info::Build_Expression" << endl;                                                                                     
+  
+  shared_ptr<vector<string>> BraKet_name_list = make_shared<vector<string>>(0);
+  
+  for ( Term_Info<DataType> BraKet_info : term_info_list ) {
 
-  auto BraKet_List = make_shared<std::vector<std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>>>>(BraKet_names->size()); 
+    for (string op_name : BraKet_info.op_list ) {
+      bool get_op = true;
+      for ( string defined_op : Op_list ) {
+        if ( op_name == defined_op ) {
+          cout << " already defined " << op_name << " will not redefine" << endl;
+          get_op =false; 
+          break;
+        }
+      }
+      if( get_op ) {
+        Initialize_Tensor_Op_Info( op_name );
+//        Set_Tensor_Ops_Data( op_name, BraKet_info.Bra_name, BraKet_info.Ket_name ) ;
+        Op_list.push_back(op_name);
+      }
+    }
 
-  for ( int ii = 0 ; ii != BraKet_names->size() ; ii++ ) 
-    BraKet_List->at(ii) = BraKet_map->at(BraKet_names->at(ii)) ;
+    string BraKet_name = "";
+    
+    if ( BraKet_info.type == "ci_derivative" ) {
+      BraKet_name += "c_{I}^{" + BraKet_info.Bra_name + "} < "+BraKet_info.Bra_name  + " | ";
+    } else { 
+      BraKet_name += "< "+ BraKet_info.Bra_name +" | ";
+    }
+    
+    for ( string op : BraKet_info.op_list ) 
+      BraKet_name += op;
+    
+    BraKet_name += " | " + BraKet_info.Ket_name + " > " ;
+   
+    Set_BraKet_Ops( make_shared<vector<string>>(BraKet_info.op_list), BraKet_name ) ;
+
+    BraKet_name_list->push_back(BraKet_name); 
+    cout << "new BraKet_name = " << BraKet_name << endl;
+
+  }    
+ 
+  string expression_name = accumulate(BraKet_name_list->begin(), BraKet_name_list->end(), string(""));
+  cout << "new_expression_name = " << expression_name << endl;
+
+  auto BraKet_List = make_shared<std::vector<std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>>>>( BraKet_name_list->size() ); 
+
+  for ( int ii = 0 ; ii != BraKet_name_list->size() ; ii++ ) 
+    BraKet_List->at(ii) = BraKet_map->at(BraKet_name_list->at(ii)) ;
 
   shared_ptr<Expression<DataType>> new_expression = make_shared<Expression<DataType>>(BraKet_List, TargetStates);
 
   expression_map->emplace(expression_name, new_expression);
 
-  return;
+  return expression_name;
+
 }
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class System_Info<double>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////

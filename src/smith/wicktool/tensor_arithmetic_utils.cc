@@ -283,7 +283,7 @@ void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<double>
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides(vector<int>& range_sizes) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Tensor_Arithmetic_Utils::get_Tens_strides " << endl;
+//  cout << "Tensor_Arithmetic_Utils::get_Tens_strides row major" << endl;
  
   shared_ptr<vector<int>> Tens_strides= make_shared<vector<int>>(range_sizes.size());
   Tens_strides->front() = 1;
@@ -296,7 +296,7 @@ shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides(vector<int>& r
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides_column_major(vector<int>& range_sizes) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Tensor_Arithmetic_Utils::get_Tens_strides_column_major " << endl;
+  //cout << "Tensor_Arithmetic_Utils::get_Tens_strides_column_major " << endl;
  
   shared_ptr<vector<int>> Tens_strides= make_shared<vector<int>>(range_sizes.size());
   Tens_strides->front() = 1;

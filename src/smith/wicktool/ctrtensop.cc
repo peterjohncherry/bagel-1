@@ -72,12 +72,9 @@ cout << "CtrTensorPart<DType>::get_ctp_idxs_ranges" << endl;
     get_unc[ctrs_pos->at(ii).second] = false;
   }
 
-  print_vector( get_unc , "get_unc" ) ; cout << endl;
 
   bool survive_indep = true;
   int num_unc_ids =  get_unc.size() - ctrs_pos->size()*2;
-
-  cout << "num_unc_ids = " << num_unc_ids << endl;
 
   unc_id_ranges = make_shared<vector<string>>( num_unc_ids );
   unc_idxs = make_shared<vector<string>>( num_unc_ids );
@@ -96,14 +93,6 @@ cout << "CtrTensorPart<DType>::get_ctp_idxs_ranges" << endl;
   unc_rel_pos = make_shared<map<int,int>>();
   for( int ii =0 ; ii != unc_pos->size(); ii++) 
     unc_rel_pos->emplace(unc_pos->at(ii), ii);
-  
-  print_pair_vector(*ctrs_pos , "ctrs_pos" ); cout << endl;
-
-  cout << "unc_rel_pos = [ " ;
-  for ( auto elem : *unc_rel_pos ) 
-    cout << "(" << elem.first << " -> " << elem.second << " ) ";
-    
-  cout << " ]" <<  endl;
  
   return; 
 }
@@ -234,8 +223,9 @@ cout << endl << "CtrMultiTensorPart<DType>::FullContract NEWVER :   CMTP name = 
 
      } else {
        cout << "USING MT BINARY CONTRACT DIFF TENSORS" << endl;
-       auto new_CMTP = Binary_Contract_diff_tensors_MT(CTP_vec->at(cross_ctrs_pos->back().first.first)->myname(),CTP_vec->at(cross_ctrs_pos->back().second.first)->myname(),
-                                                       ctrs_pos->back(), Tmap, ACompute_list, ACompute_map);
+       auto new_CMTP = Binary_Contract_diff_tensors_MT( CTP_vec->at(cross_ctrs_pos->back().first.first)->myname(),
+                                                        CTP_vec->at(cross_ctrs_pos->back().second.first)->myname(),
+                                                        ctrs_pos->back(), Tmap, ACompute_list, ACompute_map);
        new_CMTP->FullContract(Tmap, ACompute_list, ACompute_map);
      }
   }

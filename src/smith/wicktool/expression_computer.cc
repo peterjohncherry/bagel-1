@@ -89,10 +89,12 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
 
         if ( Gamma_name != "ID" ) {
           for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){
-            if (TensOp_data_map->find(A_contrib.first) != TensOp_data_map->end() ) {
+            if ( TensOp_data_map->find(A_contrib.first) != TensOp_data_map->end() ) {
               cout << endl; Print_Tensor(TensOp_data_map->at(A_contrib.first), A_contrib.first); cout << endl << endl << endl;
             } else {
-              cout << A_contrib.first << " is not done" << endl;
+              cout << A_contrib.first << " is not done" << endl; 
+              //TODO  fix this so it recognises when tensor cannot be found due to decomposition.
+              //      Needs alteration here, probably in ctrtensop, and new tensor contraction routine (diff tensor taking vector, not pair, would do) 
             }
             shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
             A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_reordered );
