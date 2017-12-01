@@ -109,7 +109,6 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
       }
       if( get_op ) {
         Initialize_Tensor_Op_Info( op_name );
-//        Set_Tensor_Ops_Data( op_name, BraKet_info.Bra_name, BraKet_info.Ket_name ) ;
         Op_list.push_back(op_name);
       }
     }

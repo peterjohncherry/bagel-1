@@ -99,9 +99,12 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
             shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
             A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_reordered );
           }
+
         } else {
+
           for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++)
             A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), TensOp_data_map->at(A_contrib.first) );
+
         }
   
         cout << "added " << A_contrib.first << endl; 

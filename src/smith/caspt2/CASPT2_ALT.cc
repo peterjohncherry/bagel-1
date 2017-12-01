@@ -162,12 +162,13 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   for ( int ii = 0 ; ii != num_states; ii++) {
     for ( int jj = 0 ; jj != num_states; jj++) {
 
-      for ( pair<vector<string>,double> BK_info : BK_info_list )
+      for ( pair<vector<string>,double> BK_info : BK_info_list ) {
         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "norm" ));
-      
-      string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
+        for ( string Op_name : BK_info.first )  
+          Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
+      }
 
-      //TODO MUST SET DATA HERE
+      string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
 
       Expression_Machine->Evaluate_Expression( expression_name );
 
