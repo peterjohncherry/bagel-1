@@ -519,7 +519,7 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;
   iota( T2_org_order->begin(), T2_org_order->end(), 0);
  
   shared_ptr<vector<int>> T2_new_order = make_shared<vector<int>>( *T2_org_order );
-  put_reversed_ctrs_at_front( *T2_org_order, ctrs_todo.second);
+  put_reversed_ctrs_at_front( *T2_new_order, ctrs_todo.second);
 
   shared_ptr<vector<IndexRange>> T2_new_rngs  = reorder_vector(T2_new_order, T2_org_rngs);
   shared_ptr<vector<int>>        maxs2        = get_num_index_blocks_vec(T2_new_rngs) ;
@@ -589,8 +589,8 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;
       dgemm_( "N", "N", T1_unc_block_size, T2_unc_block_size, ctr_block_size, 1.0, T1_data_new, T1_unc_block_size,
               T2_data_new, ctr_block_size, 0.0, T_out_data, T1_unc_block_size );
 
-      vector<Index> T_out_rng_block(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
-      T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
+      vector<Index> T_out_rng_block(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-num_ctrs);
+      T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin()+num_ctrs, T2_new_rng_blocks->end());
       cout << "putting block" << endl;
       Tens_out->add_block( T_out_data, T_out_rng_block );
       cout << "put block" << endl;
