@@ -48,6 +48,11 @@ class Tensor_Arithmetic {
                                  std::pair<int,int> ctr_todo                  );
 
      static std::shared_ptr<Tensor_<DataType>>
+     contract_different_tensors( std::shared_ptr<Tensor_<DataType>> Tens1_in,
+                                 std::shared_ptr<Tensor_<DataType>> Tens2_in,
+                                 std::pair<std::vector<int>,std::vector<int>>& ctr_todo   );
+
+     static std::shared_ptr<Tensor_<DataType>>
      contract_tensor_with_vector( std::shared_ptr<Tensor_<DataType>> Tens1_in,
                                   std::shared_ptr<Tensor_<DataType>> Tens2_in,  
                                   int ctr_todo                                );

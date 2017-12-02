@@ -705,6 +705,28 @@ shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets(share
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Put ctrs at front, reverse vector version. Note, this will change the input vector orig_pos. Do not change ctrs_pos. 
+// The reversal so that when the indices are flattened matrix multiplication can be used.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Tensor_Arithmetic_Utils::put_reversed_ctrs_at_front( vector<int>& ids_pos, vector<int> ctrs_pos) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic_Utils::put_reversed_ctrs_at_front" << endl;
+  
+  for ( int ctr_pos : ctrs_pos) 
+    for ( vector<int>::iterator iter = ids_pos.begin(); iter != ids_pos.end(); iter++  ) 
+      if (  *iter == ctr_pos  ){
+        ids_pos.erase(iter); 
+        break;
+      }
+
+  reverse(ctrs_pos.begin(), ctrs_pos.end());
+  ids_pos.insert(ids_pos.begin(), ctrs_pos.begin(), ctrs_pos.end());
+
+  return;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Put ctrs at front,  vector version. Note, this will change the input vector orig_pos
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Tensor_Arithmetic_Utils::put_ctrs_at_front( vector<int>& ids_pos, vector<int>& ctrs_pos) {

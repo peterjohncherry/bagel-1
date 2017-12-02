@@ -245,7 +245,6 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_
 
    return contract_on_same_tensor( Tens_in, ctrs_pos) ;
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Code is much clearer if we have a seperate routine for this rather than pepper the generic version with ifs
 // Could be accomplished with dot_product member of Tensor....
@@ -491,6 +490,119 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
   
   return Tens_out;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<Tensor_<DataType>>
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( shared_ptr<Tensor_<DataType>> Tens1_in,
+                                                                            shared_ptr<Tensor_<DataType>> Tens2_in,
+                                                                            pair< vector<int>, vector<int> >& ctrs_todo){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl; 
+  assert( ctrs_todo.first.size() ==  ctrs_todo.second.size() );
+
+  vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
+  vector<IndexRange> T2_org_rngs = Tens2_in->indexrange();
+
+  shared_ptr<vector<int>> T1_org_order= make_shared<vector<int>>(T1_org_rngs.size());
+  iota(T1_org_order->begin(), T1_org_order->end(), 0);
+
+  //note column major ordering
+  shared_ptr<vector<int>> T1_new_order = make_shared<vector<int>>( *T1_org_order );
+  put_ctrs_at_back( *T1_new_order, ctrs_todo.first);
+
+  shared_ptr<vector<IndexRange>> T1_new_rngs  = reorder_vector(T1_new_order, T1_org_rngs);
+  shared_ptr<vector<int>>        maxs1        = get_num_index_blocks_vec(T1_new_rngs) ;
+  shared_ptr<vector<int>>        mins1        = make_shared<vector<int>>(maxs1->size(), 0 );  
+
+  shared_ptr<vector<int>> T2_org_order= make_shared<vector<int>>(T2_org_rngs.size());
+  iota( T2_org_order->begin(), T2_org_order->end(), 0);
+ 
+  shared_ptr<vector<int>> T2_new_order = make_shared<vector<int>>( *T2_org_order );
+  put_reversed_ctrs_at_front( *T2_org_order, ctrs_todo.second);
+
+  shared_ptr<vector<IndexRange>> T2_new_rngs  = reorder_vector(T2_new_order, T2_org_rngs);
+  shared_ptr<vector<int>>        maxs2        = get_num_index_blocks_vec(T2_new_rngs) ;
+  shared_ptr<vector<int>>        mins2        = make_shared<vector<int>>(maxs2->size(), 0 );  
+
+  cout << "established ordering and got ranges" <<endl;
+ 
+  int num_ctrs = ctrs_todo.first.size();
+
+  vector<IndexRange> Tout_unc_rngs(T1_new_rngs->begin(), T1_new_rngs->end()-num_ctrs);
+  Tout_unc_rngs.insert(Tout_unc_rngs.end(), T2_new_rngs->begin()+num_ctrs, T2_new_rngs->end());
+
+  shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(Tout_unc_rngs);  
+  Tens_out->allocate();
+  Tens_out->zero();
+
+  //loops over all index blocks of T1 and T2; final index of T1 is same as first index of T2 due to contraction
+  shared_ptr<vector<int>> T1_rng_block_pos = make_shared<vector<int>>(T1_new_order->size(),0);
+
+  do { 
+    
+    print_vector( *T1_rng_block_pos , "T1_block_pos" ); cout << endl;
+
+    shared_ptr<vector<Index>> T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, *T1_new_rngs); 
+    shared_ptr<vector<Index>> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
+    
+    size_t ctr_block_size    = 1;
+    for ( vector<Index>::reverse_iterator ctr_id_it = T1_new_rng_blocks->rbegin() ; ctr_id_it != T1_new_rng_blocks->rbegin()+num_ctrs; ctr_id_it++) 
+       ctr_block_size *= ctr_id_it->size();      
+
+    cout << "ctr_block_size = " << ctr_block_size << endl;
+ 
+    size_t T1_unc_block_size = get_block_size( T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-num_ctrs); 
+    size_t T1_block_size     = get_block_size( T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); 
+
+    std::unique_ptr<DataType[]> T1_data_new;
+    {
+      std::unique_ptr<DataType[]> T1_data_org = Tens1_in->get_block(*T1_org_rng_blocks);  print_vector(*T1_new_order , "T1_new_order" ); cout << endl;
+      T1_data_new = reorder_tensor_data(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
+    }
+   
+    shared_ptr<vector<int>> T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size(), 0);
+    //remember end is one past the end whilst begin really is the beginning
+    for ( int qq = 0; qq != num_ctrs+1; qq++ ){
+      *(mins2->begin()+qq) = *(maxs1->end()-(qq+1));
+      *(maxs2->begin()+qq) = *(maxs1->end()-(qq+1));
+      *(T2_rng_block_pos->begin()+qq) = *(T1_rng_block_pos->end()-(qq+1));
+    }
+
+    do { 
+
+      print_vector( *T2_rng_block_pos , "T2_block_pos" ); cout << endl;
+
+      shared_ptr<vector<Index>> T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, *T2_new_rngs); 
+      shared_ptr<vector<Index>> T2_org_rng_blocks = inverse_reorder_vector( T2_new_order, T2_new_rng_blocks); 
+      size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin()+num_ctrs, T2_new_rng_blocks->end());
+
+      std::unique_ptr<DataType[]> T2_data_new;   
+      {
+        std::unique_ptr<DataType[]> T2_data_org = Tens2_in->get_block(*T2_org_rng_blocks);  print_vector(*T2_new_order , "T2_new_order" ); cout << endl;
+        T2_data_new = reorder_tensor_data(T2_data_org.get(), T2_new_order, T2_org_rng_blocks); 
+      }
+      
+      std::unique_ptr<DataType[]> T_out_data(new DataType[T1_unc_block_size*T2_unc_block_size]);
+      std::fill_n(T_out_data.get(), T1_unc_block_size*T2_unc_block_size, 0.0);
+
+      dgemm_( "N", "N", T1_unc_block_size, T2_unc_block_size, ctr_block_size, 1.0, T1_data_new, T1_unc_block_size,
+              T2_data_new, ctr_block_size, 0.0, T_out_data, T1_unc_block_size );
+
+      vector<Index> T_out_rng_block(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
+      T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
+      cout << "putting block" << endl;
+      Tens_out->add_block( T_out_data, T_out_rng_block );
+      cout << "put block" << endl;
+
+    } while(fvec_cycle_skipper(T2_rng_block_pos, maxs2, mins2 ));
+
+  } while (fvec_cycle_skipper(T1_rng_block_pos, maxs1, mins1 ));
+
+  
+  return Tens_out;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Sets all elements of input tensor Tens to the value specified by elem_val 

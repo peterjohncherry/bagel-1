@@ -41,6 +41,8 @@ namespace Tensor_Arithmetic_Utils {
      void put_ctrs_at_front( std::vector<int>& id_pos, std::vector<int>& ctr_todo);
      void put_ctrs_at_front( std::vector<int>& id_pos, std::pair<int,int>& ctr_todo);
 
+     void put_reversed_ctrs_at_front( std::vector<int>& id_pos, std::vector<int> ctr_todo);
+
      void put_ctrs_at_back( std::vector<int>& id_pos, std::vector<int>& ctr_todo);
      void put_ctrs_at_back( std::vector<int>& id_pos, std::pair<int,int>& ctr_todo);
 
