@@ -931,64 +931,85 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::direct_tensor_product( shared_pt
                                                                        shared_ptr<Tensor_<DataType>> Tens2  ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Tensor_Arithmetic::direct_tensor_product" <<endl; 
- 
-  //note column major ordering
-  vector<IndexRange>      T1_rngs = Tens1->indexrange();
-  shared_ptr<vector<int>> T1_maxs = get_num_index_blocks_vec( make_shared<vector<IndexRange>>(T1_rngs) );
-  shared_ptr<vector<int>> T1_mins = make_shared<vector<int>>(T1_maxs->size(), 0 );  
-  shared_ptr<vector<int>> T1_block_pos = make_shared<vector<int>>(T1_maxs->size(), 0 );
-
-  vector<IndexRange>      T2_rngs = Tens2->indexrange();
-  shared_ptr<vector<int>> T2_maxs = get_num_index_blocks_vec( make_shared<vector<IndexRange>>(T2_rngs) );
-  shared_ptr<vector<int>> T2_mins = make_shared<vector<int>>(T2_maxs->size(), 0 );  
-  shared_ptr<vector<int>> T2_block_pos = make_shared<vector<int>>(T2_maxs->size(), 0 );
-
-  vector<IndexRange> Tout_rngs(T1_rngs.size() + T2_rngs.size());
-  copy( T1_rngs.begin(), T1_rngs.end(), Tout_rngs.begin() );
-  copy( T2_rngs.begin(), T2_rngs.end(), Tout_rngs.begin()+T1_rngs.size() );
-
-  shared_ptr<Tensor_<DataType>> Tens_out = make_shared<Tensor_<DataType>>(Tout_rngs);  
-  Tens_out->allocate();
-
-  do { 
-    
-    print_vector( *T1_block_pos , "T1_block_pos" ); cout << endl;
-
-    shared_ptr<vector<Index>> T1_id_blocks = get_rng_blocks( T1_block_pos, T1_rngs); 
-    size_t T1_block_size = Tens1->get_size( *T1_id_blocks ); 
-
-    std::unique_ptr<DataType[]> T1_data = Tens1->get_block(*T1_id_blocks);  
   
+  shared_ptr<Tensor_<DataType>> Tens_out;
+
+  if ( Tens1->size_alloc() != 1 && Tens2->size_alloc() != 1 ) {
+
+    //note column major ordering
+    vector<IndexRange>      T1_rngs = Tens1->indexrange();
+    shared_ptr<vector<int>> T1_maxs = get_num_index_blocks_vec( make_shared<vector<IndexRange>>(T1_rngs) );
+    shared_ptr<vector<int>> T1_mins = make_shared<vector<int>>(T1_maxs->size(), 0 );  
+    shared_ptr<vector<int>> T1_block_pos = make_shared<vector<int>>(T1_maxs->size(), 0 );
+    
+    vector<IndexRange>      T2_rngs = Tens2->indexrange();
+    shared_ptr<vector<int>> T2_maxs = get_num_index_blocks_vec( make_shared<vector<IndexRange>>(T2_rngs) );
+    shared_ptr<vector<int>> T2_mins = make_shared<vector<int>>(T2_maxs->size(), 0 );  
+    shared_ptr<vector<int>> T2_block_pos = make_shared<vector<int>>(T2_maxs->size(), 0 );
+    
+    vector<IndexRange> Tout_rngs(T1_rngs.size() + T2_rngs.size());
+    copy( T1_rngs.begin(), T1_rngs.end(), Tout_rngs.begin() );
+    copy( T2_rngs.begin(), T2_rngs.end(), Tout_rngs.begin()+T1_rngs.size() );
+    
+    Tens_out = make_shared<Tensor_<DataType>>(Tout_rngs);  
+    Tens_out->allocate();
+    
     do { 
-
-      print_vector( *T2_block_pos , "T2_block_pos" ); cout << endl;
-
-      shared_ptr<vector<Index>> T2_id_blocks = get_rng_blocks( T2_block_pos, T2_rngs ); 
-      size_t T2_block_size = Tens2->get_size( *T2_id_blocks ); 
-
-      std::unique_ptr<DataType[]> T2_data = Tens2->get_block( *T2_id_blocks ); 
- 
-      std::unique_ptr<DataType[]> Tout_data(new DataType[T1_block_size*T2_block_size]);
       
-      vector<Index> Tout_id_blocks( T1_id_blocks->size() + T2_id_blocks->size() );
-      copy( T1_id_blocks->begin(), T1_id_blocks->end(), Tout_id_blocks.begin() );
-      copy( T2_id_blocks->begin(), T2_id_blocks->end(), Tout_id_blocks.begin()+T1_id_blocks->size() );
-
-      double* T2_data_ptr = T2_data.get();
-      double* Tout_data_ptr = Tout_data.get();
-
-      for ( int qq = 0; qq != T2_block_size ; qq++ ){
-        copy_n( T1_data.get(), T1_block_size, Tout_data_ptr );
-        dscal_( T1_block_size, *T2_data_ptr, Tout_data_ptr, 1); 
-        T2_data_ptr++;
-        Tout_data_ptr += T1_block_size;
-      }
+      print_vector( *T1_block_pos , "T1_block_pos" ); cout << endl;
+    
+      shared_ptr<vector<Index>> T1_id_blocks = get_rng_blocks( T1_block_pos, T1_rngs); 
+      size_t T1_block_size = Tens1->get_size( *T1_id_blocks ); 
+    
+      std::unique_ptr<DataType[]> T1_data = Tens1->get_block(*T1_id_blocks);  
+    
+      do { 
+    
+        print_vector( *T2_block_pos , "T2_block_pos" ); cout << endl;
+    
+        shared_ptr<vector<Index>> T2_id_blocks = get_rng_blocks( T2_block_pos, T2_rngs ); 
+        size_t T2_block_size = Tens2->get_size( *T2_id_blocks ); 
+    
+        std::unique_ptr<DataType[]> T2_data = Tens2->get_block( *T2_id_blocks ); 
    
-      Tens_out->put_block( Tout_data, Tout_id_blocks );
+        std::unique_ptr<DataType[]> Tout_data(new DataType[T1_block_size*T2_block_size]);
+        
+        vector<Index> Tout_id_blocks( T1_id_blocks->size() + T2_id_blocks->size() );
+        copy( T1_id_blocks->begin(), T1_id_blocks->end(), Tout_id_blocks.begin() );
+        copy( T2_id_blocks->begin(), T2_id_blocks->end(), Tout_id_blocks.begin()+T1_id_blocks->size() );
+    
+        double* T2_data_ptr = T2_data.get();
+        double* Tout_data_ptr = Tout_data.get();
+    
+        for ( int qq = 0; qq != T2_block_size ; qq++ ){
+          copy_n( T1_data.get(), T1_block_size, Tout_data_ptr );
+          dscal_( T1_block_size, *T2_data_ptr, Tout_data_ptr, 1); 
+          T2_data_ptr++;
+          Tout_data_ptr += T1_block_size;
+        }
+     
+        Tens_out->put_block( Tout_data, Tout_id_blocks );
+    
+      } while(fvec_cycle_skipper(T2_block_pos, T2_maxs, T2_mins ));
+    
+    } while (fvec_cycle_skipper(T1_block_pos, T1_maxs, T1_mins ));
 
-    } while(fvec_cycle_skipper(T2_block_pos, T2_maxs, T2_mins ));
+  } else  if ( Tens1->size_alloc() == 1 && Tens2->size_alloc() != 1 ) { //silly way of doing things, a stopgap solution
 
-  } while (fvec_cycle_skipper(T1_block_pos, T1_maxs, T1_mins ));
+    Tens_out = Tens2->copy(); 
+    vector<Index> id_block(1,Tens1->indexrange()[0].range(0));
+    unique_ptr<double[]> factor_ptr = Tens1->get_block( id_block ); 
+    Tens_out->scale(factor_ptr[0]);
+
+  } else if ( (Tens1->size_alloc() != 1 && Tens2->size_alloc() == 1) || (Tens1->size_alloc() == 1 && Tens2->size_alloc() == 1 )  ) {
+
+    Tens_out = Tens1->copy(); 
+    vector<Index> id_block(1,Tens2->indexrange()[0].range(0));
+    unique_ptr<double[]> factor_ptr = Tens2->get_block( id_block ); 
+    Tens_out->scale(factor_ptr[0]);
+
+  }   
+
 
   
   return Tens_out;

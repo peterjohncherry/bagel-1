@@ -45,6 +45,11 @@ class TensOp_Computer {
 
     std::shared_ptr<Tensor_<double>> contract_different_tensors( std::string T1name, std::string T2name, std::string Tout_name, std::pair<int,int> ctr_todo );
 
+    std::shared_ptr<Tensor_<double>> contract_different_tensors( std::string T1_in_name, std::string T2_in_name, std::string T_out_name,
+                                                                 std::pair<std::vector<int>,std::vector<int>> ctrs_todo                  );
+
+    std::shared_ptr<Tensor_<double>> direct_product_tensors( std::vector<std::string>& Tensor_names );
+
     std::shared_ptr<Tensor_<double>> reorder_block_Tensor(std::string Tname, std::shared_ptr<std::vector<int>> new_order);
 
     std::shared_ptr<Tensor_<double>> get_block_Tensor(std::string Tname);

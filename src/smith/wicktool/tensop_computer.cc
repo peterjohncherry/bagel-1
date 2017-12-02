@@ -159,10 +159,46 @@ cout << ": "  << T1_in_name << " and " << T2_in_name << " over T1[" << ctr_todo.
   return Tens_out;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<Tensor_<double>>
+TensOp_Computer::TensOp_Computer::contract_different_tensors( std::string T1_in_name, std::string T2_in_name, std::string T_out_name,
+                                                              std::pair<std::vector<int>,std::vector<int>> ctrs_todo                  ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp_Computer::contract_on_different_tensor" << endl; 
+
+  shared_ptr<Tensor_<double>> Tens1_in = find_or_get_CTP_data(T1_in_name);
+  shared_ptr<Tensor_<double>> Tens2_in = find_or_get_CTP_data(T2_in_name);
+
+  shared_ptr<Tensor_<double>> Tens_out = Tensor_Calc->contract_different_tensors(Tens1_in, Tens2_in, ctrs_todo );
+ 
+  return Tens_out;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<Tensor_<double>>
+TensOp_Computer::TensOp_Computer::direct_product_tensors( std::vector<std::string>& Tensor_names ){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp_Computer::direct_product_tensors" << endl; 
+
+  print_vector(Tensor_names, "Tensor_names"); cout <<endl; 
+  
+
+  shared_ptr<Tensor_<double>> Tens_prod = find_or_get_CTP_data(Tensor_names[0]);
+  shared_ptr<Tensor_<double>> Tens_intermediate;
+  for ( int rr = 1 ; rr != Tensor_names.size() ; rr++) {
+    shared_ptr<Tensor_<double>> Tens_next = find_or_get_CTP_data(Tensor_names[rr]);
+    Tens_intermediate = Tensor_Arithmetic::Tensor_Arithmetic<double>::direct_tensor_product( Tens_prod, Tens_next ); 
+    Tens_prod = Tens_intermediate;
+  }           
+ 
+  return Tens_prod;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<Tensor_<double>> TensOp_Computer::TensOp_Computer::reorder_block_Tensor(string T_in_name, shared_ptr<vector<int>> new_order){
+shared_ptr<Tensor_<double>>
+TensOp_Computer::TensOp_Computer::reorder_block_Tensor(string T_in_name, shared_ptr<vector<int>> new_order){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp_Computer::TensOp_Computer::reorder_block_Tensor "; cout.flush();
   cout << " : " << T_in_name ; cout.flush();
@@ -183,10 +219,10 @@ shared_ptr<Tensor_<double>> TensOp_Computer::TensOp_Computer::reorder_block_Tens
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 pair<int,int>
 TensOp_Computer::TensOp_Computer::relativize_ctr_positions( pair <int,int> ctr_todo, 
-                                                                shared_ptr<CtrTensorPart<double>> CTP1,
-                                                                shared_ptr<CtrTensorPart<double>> CTP2 ){
+                                                            shared_ptr<CtrTensorPart<double>> CTP1,
+                                                            shared_ptr<CtrTensorPart<double>> CTP2 ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "TensOp_Computer::TensOp_Computer::find_or_get_CTP_data" << endl;
+ cout << "TensOp_Computer::TensOp_Computer::relativize_ctr_positions" << endl;
    pair<int,int> rel_ctr;
 
    int T1_orig_size = CTP1->full_id_ranges->size(); 
@@ -224,6 +260,7 @@ TensOp_Computer::TensOp_Computer::find_or_get_CTP_data(string CTP_name){
   auto Data_loc =  Data_map->find(CTP_name); 
   if ( Data_loc == Data_map->end() ){
     CTP_data = get_block_Tensor(CTP_name);   
+    Data_map->emplace(CTP_name, CTP_data);   
   } else {
     CTP_data = Data_loc->second;
   }

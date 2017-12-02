@@ -47,7 +47,6 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
   shared_ptr<TensOp_Computer::TensOp_Computer> TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer>( Expr->ACompute_map, Expr->CTP_map, range_conversion_map, TensOp_data_map);
   cout << "Built_TensOp_Computer" << endl;
 
-
   B_Gamma_Computer::B_Gamma_Computer B_Gamma_Machine( civectors, range_conversion_map, Expr->GammaMap, Gamma_data_map, Sigma_data_map, CIvec_data_map );
   cout << "Built_B_Gamma_Computer" << endl;
 
@@ -100,28 +99,38 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
             
               cout << A_contrib.first << " Tensor is decomposed, do contraction in parts"  << endl;
               shared_ptr<vector<shared_ptr<CtrTensorPart<double>>>> CTP_vec = Expr->CMTP_map->at(A_contrib.first)->CTP_vec ;
-            
-              cout <<" CTP_vec->at(0)->myname() = " << CTP_vec->at(0)->myname() << endl;
-              assert( TensOp_data_map->find(CTP_vec->at(0)->myname()) != TensOp_data_map->end() );
+              vector<string> sub_tensor_names(CTP_vec->size()); 
+              for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
+                sub_tensor_names[rr] = CTP_vec->at(rr)->myname();
 
-              shared_ptr<Tensor_<double>> CTP_data = TensOp_data_map->at( CTP_vec->at(0)->myname() );
-              shared_ptr<Tensor_<double>> CMTP_data;
-              for ( int rr = 0 ; rr != CTP_vec->size() ; rr++) {
-                cout <<" CTP_vec->at("<<rr<<")->myname() = " << CTP_vec->at(rr)->myname() << endl;
-                CMTP_data = Tensor_Arithmetic::Tensor_Arithmetic<double>::direct_tensor_product( CTP_data, TensOp_data_map->at(CTP_vec->at(rr)->myname()) ); 
-                CTP_data = CMTP_data;
-              }           
-
+              shared_ptr<Tensor_<double>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
+              TensOp_data_map->emplace(A_contrib.first, A_contrib_data );
+              cout << "got data_for " << A_contrib.first << endl;
               shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
+              cout << "reordered " << A_contrib.first << endl;
               A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_reordered );
 
             }
           }
 
         } else {
+  
+          cout << "A_contrib.first = " << A_contrib.first << endl;
 
-          for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++)
-            A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), TensOp_data_map->at(A_contrib.first) );
+          if ( TensOp_data_map->find(A_contrib.first) == TensOp_data_map->end() ) {
+            shared_ptr<vector<shared_ptr<CtrTensorPart<double>>>> CTP_vec = Expr->CMTP_map->at(A_contrib.first)->CTP_vec ;
+            vector<string> sub_tensor_names(CTP_vec->size()); 
+            for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
+              sub_tensor_names[rr] = CTP_vec->at(rr)->myname();
+            
+            shared_ptr<Tensor_<double>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
+            for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++)
+              A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_data );
+
+          } else {
+            for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++)
+              A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), TensOp_data_map->at(A_contrib.first) );
+          }
 
         }
   
