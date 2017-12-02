@@ -53,6 +53,9 @@ class Tensor_Arithmetic {
                                  std::pair<std::vector<int>,std::vector<int>>& ctr_todo   );
 
      static std::shared_ptr<Tensor_<DataType>>
+     direct_tensor_product( std::shared_ptr<Tensor_<DataType>> Tens1, std::shared_ptr<Tensor_<DataType>> Tens2 );
+
+     static std::shared_ptr<Tensor_<DataType>>
      contract_tensor_with_vector( std::shared_ptr<Tensor_<DataType>> Tens1_in,
                                   std::shared_ptr<Tensor_<DataType>> Tens2_in,  
                                   int ctr_todo                                );

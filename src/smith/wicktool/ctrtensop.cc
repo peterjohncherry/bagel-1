@@ -153,11 +153,7 @@ cout << endl <<  "CtrTensorPart<DType>::FullContract NEWVER : CTP name =  " << n
     }
     CTP_in->dependents.emplace(name);
  
-    // should be from ctrs_done from one befor CTP_in, I think, this is what we are contracting to get CTP in! 
-//    pair<int,int> ctrs_rel_pos_in = make_pair(CTP_in->unc_rel_pos->at(ctrs_done->back().first), CTP_in->unc_rel_pos->at(ctrs_done->back().second));   
     pair<int,int> ctrs_rel_pos_in = get_pre_contract_ctr_rel_pos( ctrs_done->back() ) ;
-
-    cout << name <<  "   ctrs_rel_pos_in = (" << ctrs_rel_pos_in.first << "," << ctrs_rel_pos_in.second << ")" << endl;
 
     if ( ACompute_map->find(CTP_in_name) == ACompute_map->end()) {                                                       
       shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list_new = make_shared<vector<shared_ptr<CtrOp_base> >>(0);   
@@ -166,6 +162,7 @@ cout << endl <<  "CtrTensorPart<DType>::FullContract NEWVER : CTP name =  " << n
 
     shared_ptr<CtrTensorPart<DType>> CTP_out;
     if ( Tmap->find(CTP_out_name) == Tmap->end()) {
+
       shared_ptr<vector<pair<int,int>>> ctrs_pos_in = make_shared<vector<pair<int,int>>>(*ctrs_done);
       shared_ptr<vector<pair<int,int>>> new_ReIm_factors = make_shared<vector<pair<int,int>>>(1, make_pair(1,1));
       CTP_out = make_shared< CtrTensorPart<DType> >( full_idxs, full_id_ranges, ctrs_done, new_ReIm_factors );

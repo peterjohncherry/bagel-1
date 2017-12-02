@@ -153,57 +153,15 @@ void CASPT2_ALT::CASPT2_ALT::solve() {
 cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
 
   vector< pair<vector<string>,double> > BK_info_list(1, make_pair( vector<string>({"H","P"}), 1.0) );
-  
+ 
   shared_ptr<vector<IndexRange>> act_ranges2 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng } );
   shared_ptr<Tensor_<double>> Test_Tens2 = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges2 );
-
-  Print_Tensor( Test_Tens2 , "TT2" ) ; cout << endl << endl;
-
-  shared_ptr<vector<IndexRange>> act_ranges4 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng } );
-  shared_ptr<Tensor_<double>> Test_Tens4 = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges4 );
-
-  Print_Tensor( Test_Tens4 , "TT4" ) ; cout << endl << endl;
-  shared_ptr<vector<IndexRange>> act_ranges6 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
-  shared_ptr<Tensor_<double>> Test_Tens6 = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges6 );
-
-  vector<int> vec0 = { 0 };
-  vector<int> vec1 = { 1 };
-  vector<int> vec3 = { 3 };
-  vector<int> vec01 = { 0,1 };
-  vector<int> vec23 = { 2,3 };
-  vector<int> vec32 = { 3,2 };
-  vector<int> vec0123 = { 0,1,2,3 };
-  
-  pair<vector<int>,vector<int>> ctrs_todo_00( vec0, vec0 );
-  shared_ptr<Tensor_<double>> T2T2_00 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_00 );
-  Print_Tensor( T2T2_00 , "T2T2_00" ) ; cout << endl << endl;
-   
-  pair<vector<int>,vector<int>> ctrs_todo_01( vec0, vec1 );
-  shared_ptr<Tensor_<double>> T2T2_01 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_01 );
-  Print_Tensor( T2T2_01 , "T2T2_01" ) ; cout << endl << endl;
-   
-  pair<vector<int>,vector<int>> ctrs_todo_10( vec1, vec0 );
-  shared_ptr<Tensor_<double>> T2T2_10 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_10 );
-  Print_Tensor( T2T2_10 , "T2T2_10" ) ; cout << endl << endl;
-   
-  pair<vector<int>,vector<int>> ctrs_todo_11( vec1, vec1 );
-  shared_ptr<Tensor_<double>> T2T2_11 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_11 );
-  Print_Tensor( T2T2_11 , "T2T2_11" ) ; cout << endl << endl;
-  
-  pair<vector<int>,vector<int>> ctrs_todo_30( vec3, vec0 );
-  shared_ptr<Tensor_<double>> T4T2_30 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens4, Test_Tens2, ctrs_todo_30 );
-  Print_Tensor( T4T2_30 , "T4T2_30" ) ; cout << endl << endl;
-
-  pair<vector<int>,vector<int>> ctrs_todo_3201( vec32, vec01 );
-  shared_ptr<Tensor_<double>> T4T2_3201 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens4, Test_Tens2, ctrs_todo_3201 );
-  Print_Tensor( T4T2_3201 , "T4T2_3201" ) ; cout << endl << endl;
-
-  pair<vector<int>,vector<int>> ctrs_todo_0101( vec01, vec01 );
-  shared_ptr<Tensor_<double>> T4T4_0101 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens4, Test_Tens4, ctrs_todo_0101 );
-  Print_Tensor( T4T4_0101 , "T4T4_0101" ) ; cout << endl << endl;
+  Print_Tensor ( Test_Tens2, "Test_Tens2"); cout << endl << endl;
+  shared_ptr<Tensor_<double>> TT2TT2 = Tensor_Arithmetic::Tensor_Arithmetic<double>::direct_tensor_product( Test_Tens2, Test_Tens2 ); 
+  Print_Tensor ( TT2TT2, "TT2TT2"); cout << endl << endl;
 
   double factor = 0.0;
-
+ 
   // Building all necessary expressions 
   int  num_states = 1; 
   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
@@ -320,7 +278,53 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
 //    Print_Tensor( P_Tens03, "P_cvvc_03_contract" ) ; cout << endl << endl; 
 //    shared_ptr<Tensor_<double>> P_Tens12 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( P_cvvc, make_pair(1,2) );
 //    Print_Tensor( P_Tens12, "P_cvvc_12_contract" ) ; cout << endl << endl; 
-
+ // shared_ptr<vector<IndexRange>> act_ranges2 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng } );
+ // shared_ptr<Tensor_<double>> Test_Tens2 = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges2 );
+ //
+ // Print_Tensor( Test_Tens2 , "TT2" ) ; cout << endl << endl;
+ //
+ // shared_ptr<vector<IndexRange>> act_ranges4 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng } );
+ // shared_ptr<Tensor_<double>> Test_Tens4 = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges4 );
+ //
+ // Print_Tensor( Test_Tens4 , "TT4" ) ; cout << endl << endl;
+ // shared_ptr<vector<IndexRange>> act_ranges6 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
+ // shared_ptr<Tensor_<double>> Test_Tens6 = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges6 );
+ //
+ // vector<int> vec0 = { 0 };
+ // vector<int> vec1 = { 1 };
+ // vector<int> vec3 = { 3 };
+ // vector<int> vec01 = { 0,1 };
+ // vector<int> vec23 = { 2,3 };
+ // vector<int> vec32 = { 3,2 };
+ // vector<int> vec0123 = { 0,1,2,3 };
+ // 
+ // pair<vector<int>,vector<int>> ctrs_todo_00( vec0, vec0 );
+ // shared_ptr<Tensor_<double>> T2T2_00 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_00 );
+ // Print_Tensor( T2T2_00 , "T2T2_00" ) ; cout << endl << endl;
+ //  
+ // pair<vector<int>,vector<int>> ctrs_todo_01( vec0, vec1 );
+ // shared_ptr<Tensor_<double>> T2T2_01 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_01 );
+ // Print_Tensor( T2T2_01 , "T2T2_01" ) ; cout << endl << endl;
+ //  
+ // pair<vector<int>,vector<int>> ctrs_todo_10( vec1, vec0 );
+ // shared_ptr<Tensor_<double>> T2T2_10 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_10 );
+ // Print_Tensor( T2T2_10 , "T2T2_10" ) ; cout << endl << endl;
+ //  
+ // pair<vector<int>,vector<int>> ctrs_todo_11( vec1, vec1 );
+ // shared_ptr<Tensor_<double>> T2T2_11 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_11 );
+ // Print_Tensor( T2T2_11 , "T2T2_11" ) ; cout << endl << endl;
+ // 
+ // pair<vector<int>,vector<int>> ctrs_todo_30( vec3, vec0 );
+ // shared_ptr<Tensor_<double>> T4T2_30 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens4, Test_Tens2, ctrs_todo_30 );
+ // Print_Tensor( T4T2_30 , "T4T2_30" ) ; cout << endl << endl;
+ //
+ // pair<vector<int>,vector<int>> ctrs_todo_3201( vec32, vec01 );
+ // shared_ptr<Tensor_<double>> T4T2_3201 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens4, Test_Tens2, ctrs_todo_3201 );
+ // Print_Tensor( T4T2_3201 , "T4T2_3201" ) ; cout << endl << endl;
+ //
+ // pair<vector<int>,vector<int>> ctrs_todo_0101( vec01, vec01 );
+ // shared_ptr<Tensor_<double>> T4T4_0101 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens4, Test_Tens4, ctrs_todo_0101 );
+ // Print_Tensor( T4T4_0101 , "T4T4_0101" ) ; cout << endl << endl;
 /////////////////////////////////////////////////////////////////////////////////
  
 

@@ -89,15 +89,33 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
 
         if ( Gamma_name != "ID" ) {
           for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){
+       
             if ( TensOp_data_map->find(A_contrib.first) != TensOp_data_map->end() ) {
-              cout << endl; Print_Tensor(TensOp_data_map->at(A_contrib.first), A_contrib.first); cout << endl << endl << endl;
-            } else {
-              cout << A_contrib.first << " is not done" << endl; 
-              //TODO  fix this so it recognises when tensor cannot be found due to decomposition.
-              //      Needs alteration here, probably in ctrtensop, and new tensor contraction routine (diff tensor taking vector, not pair, would do) 
+            
+               cout << endl; Print_Tensor(TensOp_data_map->at(A_contrib.first), A_contrib.first); cout << endl << endl << endl;
+               shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
+               A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_reordered );
+            
+            } else { //not an efficient way, but do this for now
+            
+              cout << A_contrib.first << " Tensor is decomposed, do contraction in parts"  << endl;
+              shared_ptr<vector<shared_ptr<CtrTensorPart<double>>>> CTP_vec = Expr->CMTP_map->at(A_contrib.first)->CTP_vec ;
+            
+              cout <<" CTP_vec->at(0)->myname() = " << CTP_vec->at(0)->myname() << endl;
+              assert( TensOp_data_map->find(CTP_vec->at(0)->myname()) != TensOp_data_map->end() );
+
+              shared_ptr<Tensor_<double>> CTP_data = TensOp_data_map->at( CTP_vec->at(0)->myname() );
+              shared_ptr<Tensor_<double>> CMTP_data;
+              for ( int rr = 0 ; rr != CTP_vec->size() ; rr++) {
+                cout <<" CTP_vec->at("<<rr<<")->myname() = " << CTP_vec->at(rr)->myname() << endl;
+                CMTP_data = Tensor_Arithmetic::Tensor_Arithmetic<double>::direct_tensor_product( CTP_data, TensOp_data_map->at(CTP_vec->at(rr)->myname()) ); 
+                CTP_data = CMTP_data;
+              }           
+
+              shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
+              A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_reordered );
+
             }
-            shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
-            A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_reordered );
           }
 
         } else {
