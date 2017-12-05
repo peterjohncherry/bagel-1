@@ -21,7 +21,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       cout << "setting info for Hact" << endl; 
       pair<double,double>                S_factor = make_pair(0.5,0.5);
       shared_ptr<vector<string>>         S_idxs = make_shared<vector<string>>(vector<string> {"S0", "S1", "S2", "S3"});
-      shared_ptr<vector<bool>>           S_aops = make_shared<vector<bool>>(vector<bool>  {true, false, true, false}); 
+      shared_ptr<vector<bool>>           S_aops = make_shared<vector<bool>>( vector<bool>  {true, true, false, false} ); 
       shared_ptr<vector<vector<string>>> S_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act }); 
       shared_ptr<double>                 S_dummy_data;
       string                             S_TimeSymm = "none";
@@ -32,7 +32,22 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
      
       shared_ptr<TensOp<double>> STens = Build_TensOp("S", S_dummy_data, S_idxs, S_aops, S_idx_ranges, S_symmfuncs, S_constraints, S_factor, S_TimeSymm, false ) ;
       T_map->emplace("S", STens);
-    
+ 
+   }else if ( OpName == "Z" ) { /* ---- H Tensor  ACTIVE ONLY FOR TEZTING----  */
+      cout << "setting info for Hact" << endl; 
+      pair<double,double>                Z_factor = make_pair(0.5,0.5);
+      shared_ptr<vector<string>>         Z_idxs = make_shared<vector<string>>(vector<string> {"Z0", "Z1", "Z2", "Z3"});
+      shared_ptr<vector<bool>>           Z_aops = make_shared<vector<bool>>( vector<bool>  {true, false, true, false} ); 
+      shared_ptr<vector<vector<string>>> Z_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act }); 
+      shared_ptr<double>                 Z_dummy_data;
+      string                             Z_TimeSymm = "none";
+     
+      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Z_symmfuncs = identity_only();
+      vector<bool(*)(shared_ptr<vector<string>>)>  Z_constraints = {  &System_Info<double>::System_Info::always_true };
+     
+      shared_ptr<TensOp<double>> ZTens = Build_TensOp("Z", Z_dummy_data, Z_idxs, Z_aops, Z_idx_ranges, Z_symmfuncs, Z_constraints, Z_factor, Z_TimeSymm, false ) ;
+      T_map->emplace("Z", ZTens);
+   
     } else if ( OpName == "U" ) {  /* ---- 4idx UNIT Tensor ACTIVE ONLY FOR TESTING----  */
     
       pair<double,double>                U_factor = make_pair(0.5,0.5);

@@ -182,71 +182,6 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
 
   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
 
- /////////////////////////TESTING///////////////////////////
- unique_ptr<double[]> gammaN( new double[orb_dim*orb2]);
- for ( int  ii = 0; ii != orb_dim*orb2; ii++) 
-   gammaN[ii] = ddot_( Bra_det->size(), sigmaN->data(ii)->data(), 1, Bra->data(), 1); 
-
- if ( gammaN_info->order == 4 ) { 
-   int n2 = norb*norb;
-   int n3 = n2*norb;
-   int shift = 0;
-   cout << "printing gamma4 from old method " << endl;
-   int pos = 0 ; 
-   for ( int ii = 0 ; ii != norb ; ii++) {
-     for ( int jj = 0 ; jj != norb ; jj++) { 
-       cout << " [ 0 0 " << jj << " " << ii << " ] "<< endl;
-       for ( int kk = 0 ; kk != norb ; kk++) { 
-         for ( int ll = 0 ; ll != norb ; ll++) { 
-            cout << gammaN[ shift+ ll*norb + kk ] << " " ;
-         }
-         cout << endl; 
-       }
-       shift +=norb*norb;
-     }
-   }
-
-   cout << endl << endl << endl;
-
-   cout << endl; Print_Tensor( Tens_gammaN, gammaN_info->name ) ; cout << endl << endl;
-
-   shared_ptr<Dvec> sigma2 = dvec_sigma_map->at(gammaN_info->prev_sigma_name());
-   unique_ptr<double[]> gamma2( new double[orb2]);
-   for ( int  ii = 0; ii != orb2; ii++) 
-     gamma2[ii] = ddot_( Bra_det->size(), sigma2->data(ii)->data(), 1, Bra->data(), 1); 
-  
-    cout << endl << endl << endl;
-    cout << "======================= TEST rdm4 ======================================= " << endl;
-    unique_ptr<double[]> rdm4( new double[n2*n2]);
-    for ( int ii = 0 ; ii != norb ; ii++) {
-      for ( int jj = 0 ; jj != norb ; jj++) { 
-        for ( int kk = 0 ; kk != norb ; kk++) { 
-          if ( jj == kk ) {
-            for ( int ll = 0 ; ll != norb ; ll++)  
-              rdm4[ ll+ kk*norb + n2*jj +n3*ii ] = gammaN[ ll+ kk*norb + n2*jj +n3*ii ] - gamma2[ll + ii*norb];
-          } else if ( jj != kk ) {
-            for ( int ll = 0 ; ll != norb ; ll++) 
-              rdm4[ ll+ kk*norb + n2*jj +n3*ii ] = gammaN[ ll+ kk*norb + n2*jj +n3*ii ] ;
-          }
-        }
-      }
-    }
-    
-    for ( int ii = 0 ; ii != norb ; ii++) {
-      for ( int jj = 0 ; jj != norb ; jj++) { 
-        cout << " [ 0 0 " << jj << " " << ii << " ] "<< endl;
-        for ( int kk = 0 ; kk != norb ; kk++) { 
-          for ( int ll = 0 ; ll != norb ; ll++) { 
-             cout <<  rdm4[ ll*norb + kk + n2*jj +n3*ii ] << " " ;
-          }
-          cout << endl; 
-        }
-      }
-    }
-    cout << endl << endl << endl;
-
-  }
-  
   return;
 }
 
@@ -263,9 +198,7 @@ void B_Gamma_Computer::B_Gamma_Computer::compute_sigmaN( shared_ptr<GammaInfo> g
   if ( Bra_name == Ket_name ) { 
 
     get_wfn_data( gammaN_info->prev_Bra_info );
-    cout <<"looking for det space for " << Ket_name << " ....."; cout .flush();
     shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name );  
-    cout << " found it! " << endl;
 
     int sorder  = gammaN_info->order; 
     int orb_dim = pow(Ket_det->norb(), sorder-2);
@@ -303,7 +236,6 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gamma2_from_sigma2( shared_ptr<Gamm
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl; 
 
-
   string sigma2_name =  gamma2_info->sigma_name;
   string Bra_name    =  gamma2_info->Bra_name();
   shared_ptr<Dvec>         sigma2 = dvec_sigma_map->at( sigma2_name );  
@@ -331,16 +263,6 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
   shared_ptr<vector<IndexRange>> gammaN_ranges = Get_Bagel_IndexRanges( gamma2_info->id_ranges ); 
   shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( Tens_sigma2, CIvec_data_map->at( Bra_name ), 0 );
   Gamma_data_map->emplace( gamma2_info->name, Tens_gamma2 ); 
-
-  Print_Tensor( Tens_gamma2, "Tens_gamma2 from contraction of sigma2 with CI vec" ) ; cout << endl << endl;
-
-  shared_ptr<Tensor_<double>> Tens_gamma4 = Tensor_Calc->contract_different_tensors( Tens_sigma2, Tens_sigma2, make_pair(0,0) );
-  Print_Tensor( Tens_gamma4, "Tens_gamma4 from contraction of sigma2 with sigma2 no reord") ; cout << endl << endl;
- 
-  shared_ptr<vector<int>> new_order_1023 = make_shared<vector<int>>( vector<int> { 1, 0, 2, 3 } ); 
-  shared_ptr<Tensor_<double>> Tens_gamma4_reord = Tensor_Calc->reorder_block_Tensor(  Tens_gamma4, new_order_1023 );
-
-  Print_Tensor( Tens_gamma4_reord, "Tens_gamma4 from contraction of sigma2 with sigma2 reord") ; cout << endl << endl;
 
   cout << "leaving B_Gamma_Computer::B_Gamma_Computer::get_gamma2_from_sigma2 " <<endl;
   return; 
@@ -452,12 +374,14 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_civec_to_tensor( string civec_n
     shared_ptr<Civec> civector = cvec_old_map->at(civec_name); 
     
     for ( Index idx_block : civec_idxrng[0].range() ){
+
        unique_ptr<double[]> civec_block(new double[idx_block.size()]);
        std::fill_n(civec_block.get(), idx_block.size(), 0.0);
        copy_n( civector->data() + idx_position, idx_block.size(), civec_block.get());
     
        civec_tensor->put_block(civec_block, vector<Index>({ idx_block })) ;  
        idx_position += idx_block.size();  
+
     }
     
     CIvec_data_map->emplace( civec_name, civec_tensor); 
@@ -521,4 +445,11 @@ cout << "B_Gamma_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_st
 //    cout << endl;
 //  }
 //  cout << endl << endl;
+//
+//  Print_Tensor( Tens_gamma2, "Tens_gamma2 from contraction of sigma2 with CI vec" ) ; cout << endl << endl;
+//  shared_ptr<Tensor_<double>> Tens_gamma4 = Tensor_Calc->contract_different_tensors( Tens_sigma2, Tens_sigma2, make_pair(0,0) );
+//  Print_Tensor( Tens_gamma4, "Tens_gamma4 from contraction of sigma2 with sigma2 no reord") ; cout << endl << endl;
+//  shared_ptr<vector<int>> new_order_1023 = make_shared<vector<int>>( vector<int> { 1, 0, 2, 3 } ); 
+//  shared_ptr<Tensor_<double>> Tens_gamma4_reord = Tensor_Calc->reorder_block_Tensor(  Tens_gamma4, new_order_1023 );
+//  Print_Tensor( Tens_gamma4_reord, "Tens_gamma4 from contraction of sigma2 with sigma2 reord") ; cout << endl << endl;
 //  }

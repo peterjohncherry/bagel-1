@@ -69,8 +69,7 @@ void BraKet<DType>::Build_TotalOp(){
 template<class DType>
 void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_ptr<vector<string>> idxs){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Build_Gamma_SpinFree_New" << endl;
-  cout << "aops = " ; for (bool aop : *aops) { cout << aop << " " ; } cout << endl;
+  cout << "BraKet::Build_Gamma_SpinFree_New" << endl;
  
   int Ket_num = 0; 
   int Bra_num = 0; 
@@ -84,17 +83,26 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
   }
  
   for( auto map_it = G_to_A_map->begin() ; map_it != G_to_A_map->end(); map_it++){
+
     cout << "====================================================" << endl;
     cout << map_it->first << endl;
     cout << "====================================================" << endl;
-    for( auto A_map_it = map_it->second->begin() ; A_map_it != map_it->second->end();  A_map_it++){
-      cout <<  A_map_it->first << "  "; cout.flush();
-      AContribInfo AInfo = A_map_it->second ;
-      for ( int qq = 0 ; qq != AInfo.id_orders.size() ; qq++ ){
-        cout << "[ "; for (int pos : AInfo.id_order(qq) ) { cout << pos << " " ;} cout << " ]"; 
-        cout << "(" << AInfo.factor(qq).first  << "," <<  AInfo.factor(qq).second << ")     "; cout.flush();
+
+    if ( map_it->second->size() == 0 ) { 
+       
+      cout << "No Contributions!" <<  endl;   
+          
+    } else {
+
+      for( auto A_map_it = map_it->second->begin() ; A_map_it != map_it->second->end();  A_map_it++){
+        cout <<  A_map_it->first << "  "; cout.flush();
+        AContribInfo AInfo = A_map_it->second ;
+        for ( int qq = 0 ; qq != AInfo.id_orders.size() ; qq++ ){
+          cout << "[ "; for (int pos : AInfo.id_order(qq) ) { cout << pos << " " ;} cout << " ]"; 
+          cout << "(" << AInfo.factor(qq).first  << "," <<  AInfo.factor(qq).second << ")     "; cout.flush();
+        }
+        cout << endl;
       }
-      cout << endl;
     }
   }
 

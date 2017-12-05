@@ -112,7 +112,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> g
   shared_ptr<Tensor_<double>> sigma2 = make_shared<Tensor_<double>>( *ranges );
   sigma2->allocate();
   sigma2->zero();
-  Sigma_data_map->emplace( sigma2_name , sigma2 );
+  Sigma_data_map->emplace( sigma2_name, sigma2 );
 
   shared_ptr<vector<int>> mins          = make_shared<vector<int>>( 3, 0 );  
   shared_ptr<vector<int>> block_pos     = make_shared<vector<int>>( 3, 0 );  
@@ -158,13 +158,6 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> g
   shared_ptr<Tensor_<double>> gamma2 =
   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( sigma2, CIvec_data_map->at(gamma2_info->Bra_name()), 0 );
 
-//  Print_Tensor(gamma2, "DIRECT gamma2 from recursive" ) ; cout << endl;
-
-  shared_ptr<Tensor_<double>> gamma4_test =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( sigma2, sigma2, make_pair(2,2) ); 
-//  Print_Tensor(gamma4_test, "gamma4 from sigma2 contraction recursive 0, 1, 2, 0, 1, 2 " ) ; cout << endl << endl << endl;
-
- // Print_Tensor(sigma2, "sigma2 inside routine recursive" ) ; cout << endl;
-
   return;
 }
 
@@ -183,8 +176,6 @@ void Gamma_Computer::Gamma_Computer::build_gammaN_tensor(shared_ptr<GammaInfo> g
                                                                               CIvec_data_map->at(gammaN_info->Bra_name()),
                                                                               0 );
  
-//   Print_Tensor( gammaN, "gamma "+to_string(gammaN_info->order)+ " recursive tensor version "  ); cout << endl;
-
    Gamma_data_map->emplace(gammaN_info->name, gammaN); 
    
    return;
@@ -262,8 +253,7 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
                                                     string prev_sigma_name, vector<Index>& id_blocks_Iij, vector<int>& offsets_Iij ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::build_sigmaN_block" << endl;
-  cout << "sigmaN_name = " << sigmaN_name << endl;
-  cout << "prev_sigma_name = " << prev_sigma_name << endl;
+  cout << "    sigmaN_name = " << sigmaN_name << "    prev_sigma_name = " << prev_sigma_name << endl;
 
   if ( Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info->name()  == Gamma_info_map->at(prev_sigma_name.substr(2))->Ket_info->name() ){//fix for rel case
    
@@ -288,10 +278,6 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
     cout << " ps_orb_block_size = " << ps_orb_block_size << endl;
     for ( int  ii = 0; ii != ps_orb_block_size; ii++) {
  
-      cout << " ii = " << ii ; cout.flush() ; 
-      cout << " ii*Ket_block_size = " << ii*Ket_block_size << endl;
-      cout << " ii*Iij_block_size = " << ii*Iij_block_size << endl;
-
       sigma_2a1( prev_sigma_block.get()+(ii*Ket_block_size), sigmaN_block.get()+(ii*Iij_block_size), Ket_det,
                  offsets_ps.back(), offsets_Iij, Ket_block_size, Iij_block_sizes );
 
@@ -299,7 +285,6 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
                  offsets_ps.back(), offsets_Iij, Ket_block_size, Iij_block_sizes );
 
     }
-    cout << "A5" << endl; 
     
     vector<Index> id_blocks_sn = {id_blocks_Iij[0], id_blocks_Iij[1]} ;
     id_blocks_sn.insert( id_blocks_sn.end(), id_blocks_ps.begin(), id_blocks_ps.end()-1) ;

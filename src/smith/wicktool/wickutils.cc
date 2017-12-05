@@ -374,46 +374,6 @@ cout << "get_unique_pairs" << endl;
   }
 } 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-string WickUtils::get_name(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_id_ranges,  shared_ptr<pint_vec> all_ctrs_pos) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  string name = "";
-  for(auto idxs : *full_idxs)
-    name += idxs;// + '-'; 
-
-  name+='_'; 
-  for(string id : *full_id_ranges)
-    name += id; //+ '-';
-
-  if (all_ctrs_pos->size() !=0){
-    name+='_'; 
-    for(pair<int,int> ctr : *all_ctrs_pos)
-      name += to_string(ctr.first)+"x"+to_string(ctr.second)+ '-';
-  }
-  name.pop_back(); 
-  return name ;
-};
-
-/////////////////////////////////////////////////////////////////////////////
-string WickUtils::get_name_rdm(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_idx_ranges, 
-                    shared_ptr<vector<pair<int,int>>> all_deltas_pos ){
-/////////////////////////////////////////////////////////////////////////////
-  string  name = "";
-  for(string idx : *full_idxs)
-    name += idx;
-  name+="_"; 
-
-  for(string idx_range : *full_idx_ranges)
-    name += idx_range[0];
-
-  if (all_deltas_pos->size() !=0){
-    name+="_"; 
-    for(pair<int,int> delta : *all_deltas_pos)
-      name += to_string(delta.first)+to_string(delta.second);
-  }
-  return name;
-};
-
 /////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> WickUtils::get_unc_ids_from_deltas_ids(shared_ptr<vector<int>> ids , shared_ptr<vector<pair<int,int>>> deltas ){
 /////////////////////////////////////////////////////////////////////////////
@@ -499,39 +459,40 @@ string WickUtils::get_gamma_name( shared_ptr<vector<string>> full_idx_ranges,  s
   
   return name;
 };
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-string WickUtils::get_gamma_name(shared_ptr<vector<bool>> aops_vec, shared_ptr<vector<string>> full_idx_ranges,  
-                                      shared_ptr<vector<pair<int,int>>> deltas_pos ){
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  string  name = "";
-  
-  vector<bool> unc_get(full_idx_ranges->size(), true);
-  for ( pair<int,int > del : *deltas_pos ){  
-     unc_get[del.first] = false;
-     unc_get[del.second] = false;
-  }
-
-  for ( int ii = 0; ii != unc_get.size() ; ii++)
-    if (unc_get[ii]) 
-      name+=full_idx_ranges->at(ii)[0];
-
-  name+='_';
-  for ( int ii = 0; ii != unc_get.size() ; ii++){
-    if (unc_get[ii]){ 
-      if(aops_vec->at(ii)){ 
-        name += '1';
-      } else {
-        name += '0';
-      }
-    }
-  } 
-  
-  return name;
-};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//same as normal fvec_cycle, but improved to allow skipping. I expect this should be included everywhere, to guard 
-//against max==min problem.....
+string WickUtils::get_gamma_name(shared_ptr<vector<bool>> aops_vec, shared_ptr<vector<string>> full_idx_ranges,                     
+                                      shared_ptr<vector<pair<int,int>>> deltas_pos ){                                               
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  string  name = "";                                                                                                                
+                                                                                                                                    
+  vector<bool> unc_get(full_idx_ranges->size(), true);                                                                              
+  for ( pair<int,int > del : *deltas_pos ){                                                                                         
+     unc_get[del.first] = false;                                                                                                    
+     unc_get[del.second] = false;                                                                                                   
+  }                                                                                                                                 
+                                                                                                                                    
+  for ( int ii = 0; ii != unc_get.size() ; ii++)                                                                                    
+    if (unc_get[ii])                                                                                                                
+      name+=full_idx_ranges->at(ii)[0];                                                                                             
+                                                                                                                                    
+  name+='_';                                                                                                                        
+  for ( int ii = 0; ii != unc_get.size() ; ii++){                                                                                   
+    if (unc_get[ii]){                                                                                                               
+      if(aops_vec->at(ii)){                                                                                                         
+        name += '1';                                                                                                                
+      } else {                                                                                                                      
+        name += '0';                                                                                                                
+      }                                                                                                                             
+    }                                                                                                                               
+  }                                                                                                                                 
+                                                                                                                                    
+  return name;                                                                                                                      
+};                                                                                                                                  
+                                                                                                                                    
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
+//same as normal fvec_cycle, but improved to allow skipping. I expect this should be included everywhere, to guard                     return name;
+//against max==min problem.....                                                                                                      };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool WickUtils::fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

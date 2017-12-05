@@ -59,12 +59,6 @@ namespace WickUtils {
 
   void print_pvec (pint_vec pvec) ;
 
-  std::string get_name(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_id_ranges,  std::shared_ptr<pint_vec> all_ctrs_pos) ;
-
-  std::string get_name_rdm(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
-                           std::shared_ptr<std::vector<std::pair<int,int>>> all_deltas_pos ); 
-
-
   std::shared_ptr<std::vector<int>> get_unc_ids_from_deltas_ids_comparison(std::shared_ptr<std::vector<int>> ids , std::shared_ptr<std::vector<std::pair<int,int>>> deltas );
 
   std::shared_ptr<std::vector<int>> get_unc_ids_from_deltas_ids(std::shared_ptr<std::vector<int>> ids , std::shared_ptr<std::vector<std::pair<int,int>>> deltas );

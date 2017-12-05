@@ -98,10 +98,10 @@ void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>
 template<class DType>
 void Expression<DType>::Get_CMTP_Compute_Terms(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Get_CMTP_Compute_Terms" << endl;  
+  cout << "Expression::Get_CMTP_Compute_Terms" << endl;  
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
-  for (auto  G2A_mapit =G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
+  for (auto  G2A_mapit = G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
     
     auto A_map = G2A_mapit->second;
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){

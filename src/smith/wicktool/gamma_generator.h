@@ -142,15 +142,14 @@ class GammaGenerator{
     std::string get_Aname(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges, 
                           std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
    
+    void Set_A_Contrib( int kk );
+
     bool RangeCheck(std::shared_ptr<std::vector<std::string>> full_id_ranges) ;
     
     bool Forbidden_Index(std::shared_ptr<std::vector<std::string>> full_id_ranges, int position );
 
     bool gamma_survives( std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<std::vector<std::string>> id_ranges) ;
      
-    std::string get_gamma_name(std::shared_ptr<std::vector<bool>> aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
-                               std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
-
     static std::shared_ptr<std::vector<std::pair<int,int>>>
            Standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ) ;
 

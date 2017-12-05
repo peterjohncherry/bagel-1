@@ -301,13 +301,8 @@ shared_ptr<vector<IndexRange>> TensOp_Computer::TensOp_Computer::Get_Bagel_Index
 cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str, "ranges_str" ) ; cout << endl;
 
   shared_ptr<vector<IndexRange>> ranges_Bagel = make_shared<vector<IndexRange>>(ranges_str->size());
-  for ( int ii = 0 ; ii != ranges_str->size(); ii++){ 
-    cout << "ranges_str->at(" << ii << ") = " << ranges_str->at(ii) << endl;
+  for ( int ii = 0 ; ii != ranges_str->size(); ii++)
     ranges_Bagel->at(ii) = *range_conversion_map->at(ranges_str->at(ii));
-    cout << " GOT ranges_str->at(" << ii << ") = " << ranges_str->at(ii) << endl;
-    
-  }
-  cout << "leaving Get_Bagel_IndexRanges" << endl;
 
   return ranges_Bagel;
 }
