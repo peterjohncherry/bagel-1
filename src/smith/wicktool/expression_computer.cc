@@ -87,7 +87,7 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
         if ( Gamma_name != "ID" ) {
           for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
        
-            if ( TensOp_data_map->find(A_contrib_name) != TensOp_data_map->end() ) {
+            if ( TensOp_data_map->find(A_contrib_name) != TensOp_data_map->end() ) { cout << A_contrib_name << " found in map" << endl;
            
               Print_Tensor(TensOp_data_map->at(A_contrib_name), A_contrib_name); cout << endl << endl << endl; 
 //              A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), TensOp_data_map->at(A_contrib_name) );
@@ -95,7 +95,7 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
               shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib.id_order(qq)) );
               A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), A_contrib_reordered );
             
-            } else { //not an efficient way, but do this for now
+            } else { cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO there should be a way to avoid this
             
               cout << A_contrib_name << " Tensor is decomposed, do contraction in parts"  << endl;
               shared_ptr<vector<shared_ptr<CtrTensorPart<double>>>> CTP_vec = Expr->CMTP_map->at(A_contrib_name)->CTP_vec ;
@@ -115,9 +115,9 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
 
         } else {
   
-          cout << "A_contrib_name = " << A_contrib_name << endl;
+          cout << "A_contrib_name = " << A_contrib_name ; cout.flush();
 
-          if ( TensOp_data_map->find(A_contrib_name) == TensOp_data_map->end() ) {
+          if ( TensOp_data_map->find(A_contrib_name) == TensOp_data_map->end() ) {cout << " not yet in map, must form from direct product" << endl;
             shared_ptr<vector<shared_ptr<CtrTensorPart<double>>>> CTP_vec = Expr->CMTP_map->at(A_contrib_name)->CTP_vec ;
             vector<string> sub_tensor_names(CTP_vec->size()); 
             for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
@@ -153,8 +153,9 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
            Gamma_data_map->emplace( "Gamma2", Gamma_data_map->at(Gamma_name) );
 
         } else if ( Gamma_data_map->at(Gamma_name)->rank() == 4 ) {
-          { 
-          shared_ptr<vector<int>> gorder = make_shared<vector<int>>( vector<int> {  1, 2, 0, 3} ); 
+           
+
+          shared_ptr<vector<int>> gorder = make_shared<vector<int>>( vector<int> { 0, 3, 1, 2, } ); 
           shared_ptr<Tensor_<double>> Gamma4_reord = 
           Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( Gamma_data_map->at(Gamma_name), gorder );
           vector<IndexRange> gids = Gamma4_reord->indexrange(); 
@@ -174,16 +175,25 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
             daxpy_( stride2, -1.0, gamma2_data_ptr, 1, gamma4_data_ptr, 1 );
             gamma4_data_ptr += stride3+stride2;
           }
-          gamma_data_ptr = gamma4_data.get();
+          gamma4_data_ptr = gamma4_data.get();
 
           Gamma4_reord->put_block( gamma4_data, g4_id_blocks );
           
-          shared_ptr<vector<int>> gorder_back = make_shared<vector<int>>( vector<int> {  2, 0, 1, 3} ); 
+          shared_ptr<vector<int>> gorder_back = make_shared<vector<int>>( vector<int> {  0, 2, 3, 1} ); 
 
-          shared_ptr<Tensor_<double>> Gamma4_orig = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( Gamma4_reord, gorder_back );
+          shared_ptr<Tensor_<double>> rdm2_from_Gamma4 = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( Gamma4_reord, gorder_back );
 
-          Print_Tensor( Gamma4_orig, "Gamma4_orig" ); cout << endl << endl << endl;    
-          }        
+          Print_Tensor( rdm2_from_Gamma4, "rdm2 from gamma4 wicktool" ); cout << endl << endl << endl;    
+          
+                  
+          cout <<"---------------------------Energy_act_test----------------------------------" << endl;
+          cout << "Smith_rdm2_dot_2el_op   = " << TensOp_data_map->at("Smith_rdm2")->dot_product(TensOp_data_map->at("S")) << endl;
+          cout << "rdm2_from_G4_dot_2el_op = " << rdm2_from_Gamma4->dot_product(TensOp_data_map->at("S")) << endl;
+          cout << "Smith_rdm2_dot_A_contrib   = " << TensOp_data_map->at("Smith_rdm2")->dot_product(A_combined_data) << endl;
+          cout << "rdm2_from_G4_dot_A_contrib = " << rdm2_from_Gamma4->dot_product(A_combined_data) << endl;
+          cout <<"----------------------------------------------------------------------------" << endl;
+
+        }
 
       } else {
 

@@ -73,10 +73,11 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   ////////////////// FOR TESTING ///////////////////////////////////////  
   shared_ptr<CASPT2::CASPT2> orig_cpt2 = make_shared<CASPT2::CASPT2>(orig_cpt2_in);
   orig_cpt2->set_rdm(0,0);
-  Smith_rdm1 = orig_cpt2->rdm1_;TensOp_data_map->emplace("Smith_rdm1", Smith_rdm1 );
-  Smith_rdm2 = orig_cpt2->rdm2_;TensOp_data_map->emplace("Smith_rdm2", Smith_rdm2 );
-  Smith_rdm3 = orig_cpt2->rdm3_;TensOp_data_map->emplace("Smith_rdm3", Smith_rdm3 );
-  Smith_rdm4 = orig_cpt2->rdm4_;TensOp_data_map->emplace("Smith_rdm4", Smith_rdm4 );
+  Smith_rdm1 = orig_cpt2->rdm1_; TensOp_data_map->emplace( "Smith_rdm1", Smith_rdm1 );
+  Smith_rdm2 = orig_cpt2->rdm2_; TensOp_data_map->emplace( "Smith_rdm2", Smith_rdm2 );
+  Smith_rdm3 = orig_cpt2->rdm3_; TensOp_data_map->emplace( "Smith_rdm3", Smith_rdm3 );
+  Smith_rdm4 = orig_cpt2->rdm4_; TensOp_data_map->emplace( "Smith_rdm4", Smith_rdm4 );
+
   cout << endl << endl << endl << "-------------------------------------------------------------------------------" << endl;
   Tensor_Arithmetic_Utils::Print_Tensor(Smith_rdm1, "Smith rdm1" );
   cout << endl << "-------------------------------------------------------------------------------" << endl;
@@ -86,8 +87,38 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   Tensor_Arithmetic_Utils::Print_Tensor( Smith_rdm1_from_rdm2, "Smith rdm1 from rdm2" );
   cout << endl << endl << endl << "-------------------------------------------------------------------------------" << endl;
 
-  ////////////////////////////////////////////////////////////////////
+  shared_ptr<vector<int>> gorder = make_shared<vector<int>>( vector<int> {  1, 2, 0, 3} ); 
+  shared_ptr<Tensor_<double>> rdm2_reord = 
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( Smith_rdm2, gorder );
+ 
+  vector<Index> id_block_rdm2 = { active_rng->range(0), active_rng->range(0), active_rng->range(0),active_rng->range(0)}; 
+  vector<Index> id_block_rdm1 = { active_rng->range(0), active_rng->range(0) }; 
+
+  unique_ptr<double[]> rdm2_data = rdm2_reord->get_block( id_block_rdm2 );
+  unique_ptr<double[]> rdm1_data = Smith_rdm1->get_block( id_block_rdm1 );
+
+
+  int sz = active_rng->range(0).size();
+  int sz2 = sz*sz;
+  int sz3 = sz2*sz;
+
+  ///////////////////////GAMMA 3 check
+  for (int ll = 0 ; ll != sz ; ll++ ) 
+    for (int kk = 0 ; kk != sz ; kk++ ) 
+      for (int jj = 0 ; jj != sz ; jj++ ){ 
+        if ( jj == kk ) {
+          double* rdm1_data_ptr = rdm1_data.get()+ll*sz;
+          double* rdm2_data_ptr = rdm2_data.get()+ll*sz3 +kk*sz2+jj*sz;
+          for (int ii = 0 ; ii != sz ; ii++ ) 
+            *(rdm2_data_ptr++)  += *(rdm1_data_ptr++); 
+        }
+      }
+
+  rdm2_reord->put_block( rdm2_data, id_block_rdm2 );
+
+  Print_Tensor(rdm2_reord, "Gamma4_from_smith_reord"); 
   
+ 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::set_range_info(shared_ptr<vector<int>> states_of_interest ) {
