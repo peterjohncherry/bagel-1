@@ -73,10 +73,10 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   ////////////////// FOR TESTING ///////////////////////////////////////  
   shared_ptr<CASPT2::CASPT2> orig_cpt2 = make_shared<CASPT2::CASPT2>(orig_cpt2_in);
   orig_cpt2->set_rdm(0,0);
-  Smith_rdm1 = orig_cpt2->rdm1_;
-  Smith_rdm2 = orig_cpt2->rdm2_;
-  Smith_rdm3 = orig_cpt2->rdm3_;
-  Smith_rdm4 = orig_cpt2->rdm4_;
+  Smith_rdm1 = orig_cpt2->rdm1_;TensOp_data_map->emplace("Smith_rdm1", Smith_rdm1 );
+  Smith_rdm2 = orig_cpt2->rdm2_;TensOp_data_map->emplace("Smith_rdm2", Smith_rdm2 );
+  Smith_rdm3 = orig_cpt2->rdm3_;TensOp_data_map->emplace("Smith_rdm3", Smith_rdm3 );
+  Smith_rdm4 = orig_cpt2->rdm4_;TensOp_data_map->emplace("Smith_rdm4", Smith_rdm4 );
   cout << endl << endl << endl << "-------------------------------------------------------------------------------" << endl;
   Tensor_Arithmetic_Utils::Print_Tensor(Smith_rdm1, "Smith rdm1" );
   cout << endl << "-------------------------------------------------------------------------------" << endl;
@@ -212,6 +212,11 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
     shared_ptr<Tensor_<double>> P_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( H2el_ranges);
     TensOp_data_map->emplace( "P", P_Tens );
 
+  } else if ( op_name  == "Smith_rdms" ) { 
+   
+    TensOp_data_map->emplace("Smith_rdm1", Smith_rdm1 );
+    TensOp_data_map->emplace("Smith_rdm2", Smith_rdm2 );
+
   } else if ( op_name  == "S" ) { 
 
     vector<IndexRange> act4_ranges = { *active_rng, *active_rng, *active_rng, *active_rng};
@@ -223,12 +228,13 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
     
   } else if ( op_name  == "Z" ) {
  
-    vector<IndexRange> act4_ranges = { *active_rng, *active_rng, *active_rng, *active_rng};
-    shared_ptr<Tensor_<double>> S_Tens = Tensor_Arithmetic_Utils::get_sub_tensor( H_2el_all, act4_ranges );
+    shared_ptr<vector<IndexRange>> act4_ranges = make_shared<vector<IndexRange>> ( vector<IndexRange>  { *active_rng, *active_rng, *active_rng, *active_rng});
+    shared_ptr<Tensor_<double>> S_Tens = Tensor_Arithmetic_Utils::get_sub_tensor( H_2el_all, *act4_ranges );
     shared_ptr<vector<int>>  new_order = make_shared<vector<int>>(vector<int> { 0, 2, 1, 3 });
-    shared_ptr<Tensor_<double>> Z_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( S_Tens , new_order );
+    shared_ptr<Tensor_<double>> Z_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( S_Tens, new_order );
     TensOp_data_map->emplace( "Z", Z_Tens );
 
+    Print_Tensor(  Z_Tens , "Z_original"); cout << endl << endl << endl; 
     cout <<"---------------------------Energy_act_reorder----------------------------------" << endl;
     cout << "Energy_act_reorder = " << Smith_rdm2->dot_product( Z_Tens ) << endl;
     cout <<"----------------------------------------------------------------------------" << endl;

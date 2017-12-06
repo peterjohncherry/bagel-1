@@ -58,7 +58,7 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
     cout << " Gamma_name  = " << Gamma_name << endl; print_vector( *(Expr->GammaMap->at(Gamma_name)->id_ranges), "id_ranges" );
 
     shared_ptr<Tensor_<double>> A_combined_data;
-    // Build A_tensor to hold sums of different A-tensors
+    // Build A_tensor to hold sums of different A-tensors.
     if ( Gamma_name != "ID" ) {
       A_combined_data = make_shared<Tensor_<double>>( *(TensOp_Machine->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
     } else {
@@ -71,7 +71,6 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
 
     // Loop through A-tensors needed for this gamma
     auto  A_contrib_loc =  Expr->G_to_A_map->find(Gamma_name);
-  
     if ( (A_contrib_loc != Expr->G_to_A_map->end()) &&  (A_contrib_loc->second->size() != 0) ) {
    
       for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
@@ -89,11 +88,12 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
           for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
        
             if ( TensOp_data_map->find(A_contrib_name) != TensOp_data_map->end() ) {
-            
-              A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), TensOp_data_map->at(A_contrib_name) );
+           
+              Print_Tensor(TensOp_data_map->at(A_contrib_name), A_contrib_name); cout << endl << endl << endl; 
+//              A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), TensOp_data_map->at(A_contrib_name) );
               print_vector(A_contrib.id_order(qq), "A_contrib_order("+to_string(qq)+")"); cout << endl;
-              // shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib.id_order(qq)) );
-              // A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), A_contrib_reordered );
+              shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib.id_order(qq)) );
+              A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), A_contrib_reordered );
             
             } else { //not an efficient way, but do this for now
             
@@ -147,6 +147,43 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
         cout << "A_combined_data->dot_product( Gamma_data_map->at(" << Gamma_name << ") ) = " << tmp_result  << endl;
         g_result_map.emplace(Gamma_name, tmp_result) ;
         result += tmp_result;
+
+        if ( Gamma_data_map->at(Gamma_name)->rank() == 2 ) {
+          
+           Gamma_data_map->emplace( "Gamma2", Gamma_data_map->at(Gamma_name) );
+
+        } else if ( Gamma_data_map->at(Gamma_name)->rank() == 4 ) {
+          { 
+          shared_ptr<vector<int>> gorder = make_shared<vector<int>>( vector<int> {  1, 2, 0, 3} ); 
+          shared_ptr<Tensor_<double>> Gamma4_reord = 
+          Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( Gamma_data_map->at(Gamma_name), gorder );
+          vector<IndexRange> gids = Gamma4_reord->indexrange(); 
+
+          vector<Index> g2_id_blocks = { gids[0].range(0), gids[1].range(0) }; 
+          vector<Index> g4_id_blocks = { gids[0].range(0), gids[1].range(0), gids[2].range(0), gids[3].range(0) }; 
+
+          unique_ptr<double[]> gamma2_data = Gamma_data_map->at( "Gamma2" )->get_block(g2_id_blocks);
+          unique_ptr<double[]> gamma4_data = Gamma4_reord->get_block(g4_id_blocks); 
+
+          int stride2 = g4_id_blocks[1].size()*g4_id_blocks[0].size();
+          int stride3 = g4_id_blocks[2].size()*stride2;
+
+          double* gamma4_data_ptr = gamma4_data.get();
+          double* gamma2_data_ptr = gamma2_data.get();
+          for ( int qq = 0; qq != g4_id_blocks[3].size(); qq++ ) {
+            daxpy_( stride2, -1.0, gamma2_data_ptr, 1, gamma4_data_ptr, 1 );
+            gamma4_data_ptr += stride3+stride2;
+          }
+          gamma_data_ptr = gamma4_data.get();
+
+          Gamma4_reord->put_block( gamma4_data, g4_id_blocks );
+          
+          shared_ptr<vector<int>> gorder_back = make_shared<vector<int>>( vector<int> {  2, 0, 1, 3} ); 
+
+          shared_ptr<Tensor_<double>> Gamma4_orig = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( Gamma4_reord, gorder_back );
+
+          Print_Tensor( Gamma4_orig, "Gamma4_orig" ); cout << endl << endl << endl;    
+          }        
 
       } else {
 

@@ -45,7 +45,7 @@ void TensOp_Computer::TensOp_Computer::Calculate_CTP(std::string A_contrib ){
         Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
   
       } else if ( ctr_op->ctr_type()[0] == 'd' ){ cout << " : contract different tensors" << endl; 
-        New_Tdata = contract_different_tensors( ctr_op->T1name(), ctr_op->T2name(), ctr_op->Tout_name(), make_pair(ctr_op->T1_ctr_rel_pos(), ctr_op->T2_ctr_rel_pos()));
+        New_Tdata = contract_different_tensors( ctr_op->T1name(), ctr_op->T2name(), ctr_op->Tout_name(), make_pair(ctr_op->T1_ctr_rel_pos(), ctr_op->T2_ctr_rel_pos()) );
         Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
       
       } else if ( ctr_op->ctr_type()[0] == 's' ) { cout << " : contract on same tensor" <<  endl; 

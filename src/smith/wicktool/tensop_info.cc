@@ -20,8 +20,8 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
     if ( OpName == "S" ) { /* ---- H Tensor  ACTIVE ONLY FOR TESTING----  */
       cout << "setting info for Hact" << endl; 
       pair<double,double>                S_factor = make_pair(0.5,0.5);
-      shared_ptr<vector<string>>         S_idxs = make_shared<vector<string>>(vector<string> {"S0", "S1", "S2", "S3"});
-      shared_ptr<vector<bool>>           S_aops = make_shared<vector<bool>>( vector<bool>  {true, true, false, false} ); 
+      shared_ptr<vector<string>>         S_idxs = make_shared<vector<string>>(vector<string> { "S0", "S1", "S2", "S3" });
+      shared_ptr<vector<bool>>           S_aops = make_shared<vector<bool>>( vector<bool>  { true, true, false, false } ); 
       shared_ptr<vector<vector<string>>> S_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act }); 
       shared_ptr<double>                 S_dummy_data;
       string                             S_TimeSymm = "none";
@@ -36,9 +36,9 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
    }else if ( OpName == "Z" ) { /* ---- H Tensor  ACTIVE ONLY FOR TEZTING----  */
       cout << "setting info for Hact" << endl; 
       pair<double,double>                Z_factor = make_pair(0.5,0.5);
-      shared_ptr<vector<string>>         Z_idxs = make_shared<vector<string>>(vector<string> {"Z0", "Z1", "Z2", "Z3"});
-      shared_ptr<vector<bool>>           Z_aops = make_shared<vector<bool>>( vector<bool>  {true, false, true, false} ); 
-      shared_ptr<vector<vector<string>>> Z_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act }); 
+      shared_ptr<vector<string>>         Z_idxs = make_shared<vector<string>>( vector<string> { "Z0", "Z1", "Z2", "Z3" } );
+      shared_ptr<vector<bool>>           Z_aops = make_shared<vector<bool>>( vector<bool>  { true, false, true, false } ); 
+      shared_ptr<vector<vector<string>>> Z_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act } ); 
       shared_ptr<double>                 Z_dummy_data;
       string                             Z_TimeSymm = "none";
      

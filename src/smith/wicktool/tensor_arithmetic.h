@@ -75,6 +75,9 @@ class Tensor_Arithmetic {
      static std::unique_ptr<DataType[]>
      get_block_of_data( DataType* data_ptr , std::shared_ptr<std::vector<IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos) ;
      
+     static DataType
+     get_tensor_element( std::shared_ptr<Tensor_<DataType>> Tens, std::vector<int>& id_pos); 
+
      static void
      set_tensor_elems(std::shared_ptr<Tensor_<DataType>> Tens, DataType elem_val );
  
