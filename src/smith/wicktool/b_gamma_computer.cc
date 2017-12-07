@@ -245,13 +245,18 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
   shared_ptr<Dvec>         sigma2 = dvec_sigma_map->at( sigma2_name );  
   shared_ptr<Civec>        Bra   = cvec_old_map->at( Bra_name );      
   shared_ptr<Determinants> dets   = det_old_map->at( Bra_name ); 
+  int Bra_det_size = dets->size();
  
   int norb = dets->norb();
+  int norb2 = norb*norb;
 
   unique_ptr<double[]> gamma2_data(new double[norb*norb]);
-  for ( int ii = 0 ; ii != norb ; ii++) 
-    for ( int jj = 0 ; jj != norb ; jj++) 
-      *(gamma2_data.get() + (ii*norb+jj)) =  ddot_( sigma2->det()->size(),  sigma2->data(ii*norb+jj)->data(), 1, Bra->data(), 1); 
+  double* gamma2_data_ptr = gamma2_data.get();
+  double* sigma2_data_ptr = sigma2->data(0)->data();
+  for ( int ii = 0 ; ii != norb2; ii++) {
+    *(gamma2_data_ptr++) = ddot_( Bra_det_size,  sigma2_data_ptr, 1, Bra->data(), 1); 
+    sigma2_data_ptr += Bra_det_size; 
+  }
 
   cout << "gamma2 old method " << endl;
   for ( int ii = 0 ; ii != norb ; ii++) {
@@ -264,7 +269,6 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
   shared_ptr<Tensor_<double>> Tens_sigma2 = Sigma_data_map->at( sigma2_name );
   convert_civec_to_tensor( Bra_name );
 
-  shared_ptr<vector<IndexRange>> gammaN_ranges = Get_Bagel_IndexRanges( gamma2_info->id_ranges ); 
   shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( Tens_sigma2, CIvec_data_map->at( Bra_name ), 0 );
   Gamma_data_map->emplace( gamma2_info->name, Tens_gamma2 ); 
 
