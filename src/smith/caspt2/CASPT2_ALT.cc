@@ -102,7 +102,7 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   int sz2 = sz*sz;
   int sz3 = sz2*sz;
 
-  ///////////////////////GAMMA 3 check
+  ///////////////////////GAMMA 4 check
   for (int ll = 0 ; ll != sz ; ll++ ) 
     for (int kk = 0 ; kk != sz ; kk++ ) 
       for (int jj = 0 ; jj != sz ; jj++ ){ 
@@ -183,29 +183,27 @@ void CASPT2_ALT::CASPT2_ALT::solve() {
 ////////////////////////////////////////////////////////////////////
 cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
 
-  {
-    vector< pair<vector<string>,double> > BK_info_list(1, make_pair( vector<string>({"S"}), 1.0) );
-    
-    double factor = 0.0;
-    // Building all necessary expressions 
-    int  num_states = 1; 
-    vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
-    for ( int ii = 0 ; ii != num_states; ii++) {
-      for ( int jj = 0 ; jj != num_states; jj++) {
-    
-        for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-          Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "norm" ));
-          for ( string Op_name : BK_info.first )  
-            Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
-        }
-    
-        string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
-    
-        Expression_Machine->Evaluate_Expression( expression_name );
-    
-      }
-    }
-  }
+ // vector< pair<vector<string>,double> > BK_info_list(1, make_pair( vector<string>({"S"}), 1.0) );
+ // 
+ // double factor = 0.0;
+ // // Building all necessary expressions 
+ // int  num_states = 1; 
+ // vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
+ // for ( int ii = 0 ; ii != num_states; ii++) {
+ //   for ( int jj = 0 ; jj != num_states; jj++) {
+ // 
+ //     for ( pair<vector<string>,double> BK_info : BK_info_list ) {
+ //       Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "norm" ));
+ //       for ( string Op_name : BK_info.first )  
+ //         Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
+ //     }
+ // 
+ //     string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
+ // 
+ //     Expression_Machine->Evaluate_Expression( expression_name );
+ //
+ //   }
+ // }
   {
     // Building all necessary expressions 
     vector< pair<vector<string>,double> > BK_info_list(1, make_pair( vector<string>({"Z"}), 1.0) );
@@ -224,11 +222,11 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
         string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
     
         Expression_Machine->Evaluate_Expression( expression_name );
-    
       }
     }
   }
-}
+ return;
+ } 
 /////////////////////////////////////////////////////////////////////////////////
 //Build the operators here. 
 /////////////////////////////////////////////////////////////////////////////////
@@ -263,9 +261,9 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
     shared_ptr<Tensor_<double>> S_Tens = Tensor_Arithmetic_Utils::get_sub_tensor( H_2el_all, *act4_ranges );
     shared_ptr<vector<int>>  new_order = make_shared<vector<int>>(vector<int> { 0, 2, 1, 3 });
     shared_ptr<Tensor_<double>> Z_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( S_Tens, new_order );
-    TensOp_data_map->emplace( "Z", Z_Tens );
+    TensOp_data_map->emplace( "Z", S_Tens );
 
-    Print_Tensor(  Z_Tens , "Z_original"); cout << endl << endl << endl; 
+    Print_Tensor(  S_Tens , "Z_original"); cout << endl << endl << endl; 
     cout <<"---------------------------Energy_act_reorder----------------------------------" << endl;
     cout << "Energy_act_reorder = " << Smith_rdm2->dot_product( Z_Tens ) << endl;
     cout <<"----------------------------------------------------------------------------" << endl;
