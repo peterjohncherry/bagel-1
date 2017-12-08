@@ -24,25 +24,26 @@ class AContribInfo {
 
 class GammaInfo {
 
-   public :
-     std::shared_ptr<std::vector<std::string>> id_ranges ;
-     std::shared_ptr<std::vector<std::string>> sigma_id_ranges ; //unsummed CI indexes at back, contrary to notation
+   private :
+     std::shared_ptr<std::vector<std::string>> id_ranges_ ;
+     std::shared_ptr<std::vector<std::string>> sigma_id_ranges_ ; 
 
-     std::shared_ptr<std::vector<bool>> aops ;
-     std::pair<int,int> factor ;
+     std::shared_ptr<std::vector<bool>> aops_ ;
+     std::pair<int,int> factor_ ;
 
-     std::string name;     
-     std::string sigma_name;     
-     int order ;
+     std::string name_;     
+     std::string sigma_name_;     
+     int order_ ;
 
      //Follows convention : <I | i j | K > < K | .........| J >  
-     std::shared_ptr<CIVecInfo<double>> Bra_info;      // < I |
-     std::shared_ptr<CIVecInfo<double>> prev_Bra_info; // < K | 
-     std::shared_ptr<CIVecInfo<double>> Ket_info;      // | J >
+     std::shared_ptr<CIVecInfo<double>> Bra_info_;      // < I |
+     std::shared_ptr<CIVecInfo<double>> prev_Bra_info_; // < K | 
+     std::shared_ptr<CIVecInfo<double>> Ket_info_;      // | J >
 
      std::vector<std::string> prev_gammas_; 
      std::vector<std::string> prev_sigmas_; 
 
+   public :
      GammaInfo( std::shared_ptr<CIVecInfo<double>> Bra_info, std::shared_ptr<CIVecInfo<double>> Ket_info, 
                 std::shared_ptr<std::vector<bool>> full_aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
                 std::shared_ptr<std::vector<int>> idxs_pos, std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in );
@@ -50,17 +51,29 @@ class GammaInfo {
      GammaInfo(){};
      ~GammaInfo(){};
 
-     std::vector<std::string> prev_sigmas() { return prev_sigmas_ ; };
-     std::string prev_sigmas(int ii ) { return prev_sigmas_[ii] ; };
+     int order() { return order_ ; };
+
+     std::shared_ptr<std::vector<std::string>> id_ranges(){ return id_ranges_ ;};
+     std::shared_ptr<std::vector<std::string>> sigma_id_ranges(){ return sigma_id_ranges_ ;};
+
+     std::string name() { return name_; };     
+     std::string sigma_name() { return sigma_name_; };     
+
+     std::vector<std::string> prev_sigmas() { return prev_sigmas_; };
+     std::string prev_sigmas(int ii ) { return prev_sigmas_[ii]; };
      std::string prev_sigma_name() { return prev_sigmas_[0]; };  
 
-     std::vector<std::string> prev_gammas() { return prev_gammas_ ; };
+     std::vector<std::string> prev_gammas() { return prev_gammas_; };
      std::string prev_gammas(int ii ) { return prev_gammas_[ii] ; };
      std::string prev_gamma_name() { return prev_gammas_[0]; };  
 
-     std::string Bra_name() { return Bra_info->name(); };
-     std::string Ket_name() { return Ket_info->name(); };
-     std::string Prev_Bra_name() { return prev_Bra_info->name(); };
+     std::string Bra_name() { return Bra_info_->name(); };
+     std::string Ket_name() { return Ket_info_->name(); };
+     std::string Prev_Bra_name() { return prev_Bra_info_->name(); };
+
+     std::shared_ptr<CIVecInfo<double>> Bra_info() {return  Bra_info_; };
+     std::shared_ptr<CIVecInfo<double>> prev_Bra_info(){ return prev_Bra_info_; };
+     std::shared_ptr<CIVecInfo<double>> Ket_info() { return Ket_info_; };
 
 };
 
@@ -88,12 +101,23 @@ class GammaIntermediate {
 
 class GammaGenerator{ 
   friend GammaInfo; 
-  public : 
-
+ 
+  private : 
     // variables
     std::shared_ptr<std::vector<bool>> orig_aops ;
     std::shared_ptr<std::vector<std::string>> orig_ids ;
+ 
+    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
+    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
+
+    std::shared_ptr<std::map< char, int>>         op_order ;
+    std::shared_ptr<std::map< std::string, int>>  idx_order ;
     
+    int Ket_num;
+    int Bra_num; 
+
+    std::shared_ptr<StatesInfo<double>> TargetStates;
+   
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
     std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo>> >> G_to_A_map;
@@ -107,21 +131,11 @@ class GammaGenerator{
     //          second part of pair is factor associated with each reordering.
     std::shared_ptr<std::map<std::string, std::vector< std::pair<std::vector<int>, std::pair<int,int>> >> > Aid_orders_map;
 
-    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
-    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
-
-    std::shared_ptr<std::map< char, int>>         op_order ;
-    std::shared_ptr<std::map< std::string, int>>  idx_order ;
-    
-    int Ket_num;
-    int Bra_num; 
-
-    std::shared_ptr<StatesInfo<double>> TargetStates;
-
-    GammaGenerator(std::shared_ptr<StatesInfo<double>> TargetStates, int Ket_num, int Bra_num,
-                   std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
-                   std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
-                   std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in);
+  public : 
+    GammaGenerator( std::shared_ptr<StatesInfo<double>> TargetStates, int Ket_num, int Bra_num,
+                    std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
+                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
+                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in );
     ~GammaGenerator(){};
 
     void add_gamma(std::shared_ptr<std::vector<std::string>> full_id_ranges_in, int my_sign_in) ;
@@ -138,9 +152,6 @@ class GammaGenerator{
  
     bool ordering(std::pair<std::string,std::string> a, std::pair<std::string,std::string> b) {
                   return( (idx_order->at(a.first) < idx_order->at(b.first) ) ? true : false ); };
-   
-    std::string get_Aname(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges, 
-                          std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
    
     void Set_A_Contrib( int kk );
 
@@ -163,7 +174,7 @@ class GammaGenerator{
 
     std::vector<int> get_standard_idx_order(const std::vector<std::string>& idxs) ;
 
-    std::vector<int> get_standardized_alt_order ( const std::vector<std::string>& rngs ,const std::vector<bool>& aops ) ;
+    std::vector<int> get_standardized_alt_order( const std::vector<std::string>& rngs ,const std::vector<bool>& aops ) ;
 
  };
  #endif

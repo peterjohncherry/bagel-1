@@ -44,7 +44,7 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
 
   shared_ptr<Expression<double>> Expr = Expression_map->at(Expression_name); cout << "got " << Expression_name << " info "<< endl;
 
-  shared_ptr<TensOp_Computer::TensOp_Computer> TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer>( Expr->ACompute_map, Expr->CTP_map, range_conversion_map, TensOp_data_map);
+  shared_ptr<TensOp_Computer::TensOp_Computer<double>> TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<double>>( Expr->ACompute_map, Expr->CTP_map, range_conversion_map, TensOp_data_map);
   B_Gamma_Computer::B_Gamma_Computer B_Gamma_Machine( civectors, range_conversion_map, Expr->GammaMap, Gamma_data_map, Sigma_data_map, CIvec_data_map );
 
   double result = 0.0;
@@ -53,22 +53,18 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(Expr->GammaMap) ) {
 
-    string Gamma_name = AG_contrib.first; 
-
-    cout << " Gamma_name  = " << Gamma_name << endl; print_vector( *(Expr->GammaMap->at(Gamma_name)->id_ranges), "id_ranges" );
+    string Gamma_name = AG_contrib.first;  cout << " Gamma_name  = " << Gamma_name << endl; 
 
     shared_ptr<Tensor_<double>> A_combined_data;
     // Build A_tensor to hold sums of different A-tensors.
     if ( Gamma_name != "ID" ) {
-      A_combined_data = make_shared<Tensor_<double>>( *(TensOp_Machine->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
+      A_combined_data = make_shared<Tensor_<double>>( *(TensOp_Machine->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges())) );
     } else {
       A_combined_data = make_shared<Tensor_<double>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
     }  
     A_combined_data->allocate();
     A_combined_data->zero(); 
  
-    cout << "Built an A-tensor to hold contributions" << endl;
-
     // Loop through A-tensors needed for this gamma
     auto  A_contrib_loc =  Expr->G_to_A_map->find(Gamma_name);
     if ( (A_contrib_loc != Expr->G_to_A_map->end()) &&  (A_contrib_loc->second->size() != 0) ) {
@@ -88,12 +84,8 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
        
           if ( TensOp_data_map->find(A_contrib_name) != TensOp_data_map->end() ) { cout << A_contrib_name << " found in map" << endl;
 
-            Print_Tensor(TensOp_data_map->at(A_contrib_name), A_contrib_name); cout << endl << endl << endl; 
-
             for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
-              print_vector(A_contrib.id_order(qq), "A_contrib_order("+to_string(qq)+")"); cout << endl;
               shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib.id_order(qq)) );
-               
               A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), A_contrib_reordered );
             }
 
@@ -117,9 +109,7 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
 
         } else {
   
-          cout << "A_contrib_name = " << A_contrib_name ; cout.flush();
-
-          if ( TensOp_data_map->find(A_contrib_name) == TensOp_data_map->end() ) {cout << " not yet in map, must form from direct product" << endl;
+          if ( TensOp_data_map->find(A_contrib_name) == TensOp_data_map->end() ) {cout << A_contrib_name <<  " not yet in map, must form from direct product" << endl;
 
             shared_ptr<vector<shared_ptr<CtrTensorPart<double>>>> CTP_vec = Expr->CMTP_map->at(A_contrib_name)->CTP_vec ;
             vector<string> sub_tensor_names(CTP_vec->size()); 
@@ -150,97 +140,6 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
         double tmp_result = A_combined_data->dot_product( Gamma_data_map->at(Gamma_name) );
         g_result_map.emplace(Gamma_name, tmp_result) ;
         result += tmp_result;
-
-////////////////////////////////////////////////// TESTING /////////////////////////////////////////////////////////////////
-        if ( Gamma_data_map->at(Gamma_name)->rank() == 2 ) {
-
-           shared_ptr<Tensor_<double>> g1 = Gamma_data_map->at(Gamma_name);
-           shared_ptr<Tensor_<double>> Smith_rdm1 = TensOp_data_map->at("Smith_rdm1");
-
-           {
-           shared_ptr<Tensor_<double>> tmp_tens = g1->copy();  
-           tmp_tens->ax_plus_y( -1.0 , Smith_rdm1);
-           cout << "(tmp_tens->ax_plus_y( -1.0 , Smith_rdm1))->norm() = " << tmp_tens->norm() << endl;
-           }
-
-           cout << "Smith rdm1 dot A combined data = " << Smith_rdm1->dot_product(A_combined_data) << endl;
-           cout << "gamma1     dot A combined data = " << g1->dot_product(A_combined_data) << endl;
-
-           Gamma_data_map->emplace( "Gamma2", g1 );
-
-        } else if ( Gamma_data_map->at(Gamma_name)->rank() == 4 ) {
-          shared_ptr<vector<int>> gorder = make_shared<vector<int>>( vector<int> { 0, 3, 1, 2, } ); 
-          shared_ptr<vector<int>> gorder_back = make_shared<vector<int>>( vector<int> {  0, 2, 3, 1} ); 
-  
-          shared_ptr<Tensor_<double>> Gamma4_copy = Gamma_data_map->at(Gamma_name)->copy(); 
-          shared_ptr<Tensor_<double>> Gamma4_reord = 
-          Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( Gamma4_copy, gorder );
-
-          vector<IndexRange> gids = Gamma4_reord->indexrange(); 
-
-          vector<Index> g2_id_blocks = { gids[0].range(0), gids[1].range(0) }; 
-          vector<Index> g4_id_blocks = { gids[0].range(0), gids[1].range(0), gids[2].range(0), gids[3].range(0) }; 
-
-          unique_ptr<double[]> gamma2_data = TensOp_data_map->at( "Smith_rdm1" )->get_block(g2_id_blocks); 
-          unique_ptr<double[]> gamma4_data = Gamma4_reord->get_block(g4_id_blocks); 
-
-          int stride2 = g4_id_blocks[1].size()*g4_id_blocks[0].size();
-          int stride3 = g4_id_blocks[2].size()*stride2;
-
-          double* gamma4_data_ptr = gamma4_data.get();
-          double* gamma2_data_ptr = gamma2_data.get();
-          for ( int qq = 0; qq != g4_id_blocks[3].size(); qq++ ) {
-            daxpy_( stride2, -1.0, gamma2_data_ptr, 1, gamma4_data_ptr, 1 );
-            gamma4_data_ptr += stride3+stride2;
-          }
-          gamma4_data_ptr = gamma4_data.get();
-
-          Gamma4_reord->put_block( gamma4_data, g4_id_blocks );
-                  
-          { 
-          shared_ptr<Tensor_<double>> Test_Tens_in = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(gids) );
-          shared_ptr<Tensor_<double>> Test_Tens_reord = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( Test_Tens_in, gorder );
-          shared_ptr<Tensor_<double>> Test_Tens_out   = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( Test_Tens_reord, gorder_back );
-
-          Test_Tens_in->ax_plus_y(-1.0, Test_Tens_out ) ; 
-          cout << "Test_Tens_in->norm() = " << Test_Tens_in->norm() << endl; 
-          }
-
-          shared_ptr<Tensor_<double>> rdm2_from_Gamma4 = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( Gamma4_reord, gorder_back );
-
-          shared_ptr<Tensor_<double>> S_Tens = TensOp_data_map->at("S");;
-          shared_ptr<vector<int>>  new_order = make_shared<vector<int>>( vector<int> { 0, 2, 1, 3 });
-          shared_ptr<Tensor_<double>> S_Tens_reord = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( S_Tens, new_order );
-
-          {
-          shared_ptr<Tensor_<double>> A_m_S_Tens       = A_combined_data->copy();
-          A_m_S_Tens->ax_plus_y(+1.0, S_Tens); cout << "(A_combined_data - S_Tens)->norm() = " << A_m_S_Tens->norm() << endl;
-
-          shared_ptr<Tensor_<double>> A_m_S_Tens_reord = A_combined_data->copy();
-          A_m_S_Tens_reord->ax_plus_y(+1.0, S_Tens_reord); cout << "(A_combined_data - S_Tens_reord) ->norm() = "<< A_m_S_Tens_reord->norm() << endl;
-          }
-
-          shared_ptr<Tensor_<double>> Smith_rdm2 = TensOp_data_map->at("Smith_rdm2");
-          shared_ptr<Tensor_<double>> Gamma4 = Gamma_data_map->at(Gamma_name);
-
-          cout <<"---------------------------Energy_act_test----------------------------------" << endl;
-
-          cout << "Smith_rdm2_dot_2el_op   = "; cout.flush(); cout << TensOp_data_map->at("Smith_rdm2")->dot_product(S_Tens) << endl;
-          cout << "rdm2_from_G4_dot_2el_op = "; cout.flush(); cout << rdm2_from_Gamma4->dot_product(S_Tens) << endl;
-          cout << "G4_dot_2el_op           = "; cout.flush(); cout << Gamma_data_map->at(Gamma_name)->dot_product(S_Tens) << endl;
-
-          cout << "Smith_rdm2_dot_A_contrib   = "; cout.flush(); cout << TensOp_data_map->at("Smith_rdm2")->dot_product(A_combined_data) << endl;
-          cout << "rdm2_from_G4_dot_A_contrib = "; cout.flush(); cout << rdm2_from_Gamma4->dot_product(A_combined_data) << endl;
-          cout << "G4_dot_A_contrib           = "; cout.flush(); cout << Gamma_data_map->at(Gamma_name)->dot_product(A_combined_data) << endl;
-
-          cout << "Smith_rdm2_dot_S_Tens_reord   = "; cout.flush(); cout << TensOp_data_map->at("Smith_rdm2")->dot_product(S_Tens_reord) << endl;
-          cout << "rdm2_from_G4_dot_S_Tens_reord = "; cout.flush(); cout << rdm2_from_Gamma4->dot_product(S_Tens_reord) << endl;
-          cout << "G4_dot_S_Tens_reord           = "; cout.flush(); cout << Gamma_data_map->at(Gamma_name)->dot_product(S_Tens_reord) << endl;
-
-          cout <<"----------------------------------------------------------------------------" << endl;
-
-        }
-////////////////////////////////////////////////// END TESTING ////////////////////////////////////////////////////////////////
 
       } else {
 

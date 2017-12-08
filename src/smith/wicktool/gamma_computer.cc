@@ -20,7 +20,7 @@ Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_
   cout << "Gamma_Computer::Gamma_Computer::Gamma_Computer" << endl;
   maxtile  = 10000;
 
-  Gamma_info_map       = Gamma_info_map_in;             cout << "set Gamma_info_map            "<< endl; 
+  Gamma_info_map       = Gamma_info_map_in;       cout << "set Gamma_info_map            "<< endl; 
   CIvec_data_map       = CIvec_data_map_in;       cout << "set CIvec_data_map      "<< endl;  
   Sigma_data_map       = Sigma_data_map_in;       cout << "set Sigma_data_map      "<< endl;  
   Gamma_data_map       = Gamma_data_map_in;       cout << "set Gamma_data_map      "<< endl;  
@@ -40,8 +40,7 @@ Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Gamma_Computer::Gamma_Computer::get_gamma_tensor_test"  << endl;
-  cout << "Gamma name = " << gamma_name << endl;
+  cout << "Gamma_Computer::Gamma_Computer::get_gamma_tensor_test : " << gamma_name << endl;
 
   if ( gamma_name == "ID" ) { 
  
@@ -54,7 +53,7 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
   } else { 
     
     shared_ptr<GammaInfo> gamma_info = Gamma_info_map->at(gamma_name) ;
-    int order = gamma_info->order;
+    int order = gamma_info->order();
     if ( order == 2 ) { 
 
       build_gamma2_tensor( gamma_info );
@@ -72,9 +71,9 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Gamma_Computer::Gamma_Computer::build_gamma2_tensor(shared_ptr<GammaInfo> gamma2_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Gamma_Computer::build_gamma2_tensor" << endl;
+cout << "Gamma_Computer::build_gamma2_tensor : " << gamma2_info->name() << endl;
   
-   auto sigma2_loc = Sigma_data_map->find(gamma2_info->sigma_name);
+   auto sigma2_loc = Sigma_data_map->find(gamma2_info->sigma_name());
    
    if (sigma2_loc == Sigma_data_map->end()){ 
      
@@ -82,32 +81,30 @@ cout << "Gamma_Computer::build_gamma2_tensor" << endl;
    }
 
    shared_ptr<Tensor_<double>> gamma2 =
-   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at(gamma2_info->sigma_name),
+   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at(gamma2_info->sigma_name()),
                                                                               CIvec_data_map->at(gamma2_info->Bra_name()),
                                                                               0 );
 
-   Gamma_data_map->emplace(gamma2_info->name, gamma2); 
-//   Print_Tensor(Gamma_data_map->at(gamma2_info->name), "MAP gamma2 from recursive" ) ; cout << endl;
+   Gamma_data_map->emplace(gamma2_info->name(), gamma2); 
   
    return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> gamma2_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Gamma_Computer::build_sigma2_tensor" << endl;
+  cout << "Gamma_Computer::build_sigma2_tensor : " << gamma2_info->sigma_name() << endl;
  
-  string sigma2_name     = gamma2_info->sigma_name; cout << "sigma2_name = " << sigma2_name << endl;
-
-  build_detspace( gamma2_info->Bra_info );
-  build_detspace( gamma2_info->Ket_info );
+  string sigma2_name  = gamma2_info->sigma_name();  
+  build_detspace( gamma2_info->Bra_info() );
+  build_detspace( gamma2_info->Ket_info() );
 
   shared_ptr<Tensor_<double>> Ket = CIvec_data_map->at( gamma2_info->Ket_name() );  
   shared_ptr<Determinants>    Ket_det = Determinants_map_new->at( gamma2_info->Ket_name() ); 
   IndexRange                  Ket_range = Ket->indexrange()[0];
 
-  int order = gamma2_info->order;  
+  int order = gamma2_info->order();  
 
-  shared_ptr<vector<IndexRange>> ranges = Get_Bagel_IndexRanges( gamma2_info->sigma_id_ranges ) ;
+  shared_ptr<vector<IndexRange>> ranges = Get_Bagel_IndexRanges( gamma2_info->sigma_id_ranges() ) ;
 
   shared_ptr<Tensor_<double>> sigma2 = make_shared<Tensor_<double>>( *ranges );
   sigma2->allocate();
@@ -166,17 +163,17 @@ void Gamma_Computer::Gamma_Computer::build_gammaN_tensor(shared_ptr<GammaInfo> g
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Gamma_Computer::build_gammaN_tensor" << endl;
   
-   build_detspace( gammaN_info->Bra_info );
-   build_detspace( gammaN_info->Ket_info );
+   build_detspace( gammaN_info->Bra_info() );
+   build_detspace( gammaN_info->Ket_info() );
 
    build_sigmaN_tensor(gammaN_info);
    
    shared_ptr<Tensor_<double>> gammaN =
-   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at(gammaN_info->sigma_name),
+   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at(gammaN_info->sigma_name()),
                                                                               CIvec_data_map->at(gammaN_info->Bra_name()),
                                                                               0 );
  
-   Gamma_data_map->emplace(gammaN_info->name, gammaN); 
+   Gamma_data_map->emplace(gammaN_info->name(), gammaN); 
    
    return;
 
@@ -189,12 +186,12 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor( shared_ptr<GammaInfo> 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::build_sigmaN_tensor" << endl;
  
-  string sigmaN_name     = gammaN_info->sigma_name;        cout << "sigmaN_name = " << sigmaN_name << endl;
+  string sigmaN_name     = gammaN_info->sigma_name();        cout << "sigmaN_name = " << sigmaN_name << endl;
   string prev_sigma_name = gammaN_info->prev_sigma_name(); cout << "prev_sigma_name = " << prev_sigma_name << endl; 
 
-  int order = gammaN_info->order;  
+  int order = gammaN_info->order();  
 
-  shared_ptr<vector<IndexRange>> ranges_sn = Get_Bagel_IndexRanges( gammaN_info->sigma_id_ranges ) ;
+  shared_ptr<vector<IndexRange>> ranges_sn = Get_Bagel_IndexRanges( gammaN_info->sigma_id_ranges() ) ;
 
   shared_ptr<Tensor_<double>> sigmaN = make_shared<Tensor_<double>>( *ranges_sn );
   sigmaN->allocate();
@@ -204,7 +201,7 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor( shared_ptr<GammaInfo> 
   shared_ptr<Tensor_<double>> prev_sigma = Sigma_data_map->at( prev_sigma_name );
   shared_ptr<GammaInfo>       prev_gamma_info = Gamma_info_map->at( gammaN_info->prev_gamma_name() );
 
-  shared_ptr<vector<IndexRange>>  ranges_ps = Get_Bagel_IndexRanges( prev_gamma_info->sigma_id_ranges ) ;
+  shared_ptr<vector<IndexRange>>  ranges_ps = Get_Bagel_IndexRanges( prev_gamma_info->sigma_id_ranges() ) ;
   shared_ptr<vector<vector<int>>> block_offsets_ps = get_block_offsets( *ranges_ps ) ;
 
   shared_ptr<vector<int>> mins_ps          = make_shared<vector<int>>( ranges_ps->size(), 0 );  
@@ -219,9 +216,6 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor( shared_ptr<GammaInfo> 
 
     for ( int ii = 0 ; ii != offsets_ps.size(); ii++ ) offsets_ps[ii] = block_offsets_ps->at(ii)[block_pos_ps->at(ii)]; 
 
-    print_vector( *block_pos_ps , "block_pos_ps"); cout <<endl;
-    print_vector( offsets_ps , "offsets_ps"); cout <<endl;
-
     vector<Index> id_blocks_ps = *(get_rng_blocks( block_pos_ps, *ranges_ps));
 
     shared_ptr<vector<int>> mins_Iij          = make_shared<vector<int>>( 3, 0 );  
@@ -232,9 +226,6 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor( shared_ptr<GammaInfo> 
     do { 
      
       for ( int ii = 0 ; ii != 3 ; ii++ )  offsets_Iij[ii] = block_offsets_Iij->at(ii)[block_pos_Iij->at(ii)];    
-
-      print_vector( *block_pos_Iij , "block_pos_Iij"); cout <<endl;
-      print_vector( offsets_Iij   , "offsets_Iij"); cout <<endl;
 
       vector<Index> id_blocks_Iij = *( get_rng_blocks( block_pos_Iij, ranges_Iij) );
       
@@ -255,7 +246,7 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
   cout << "Gamma_Computer::build_sigmaN_block" << endl;
   cout << "    sigmaN_name = " << sigmaN_name << "    prev_sigma_name = " << prev_sigma_name << endl;
 
-  if ( Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info->name()  == Gamma_info_map->at(prev_sigma_name.substr(2))->Ket_info->name() ){//fix for rel case
+  if ( Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info()->name()  == Gamma_info_map->at(prev_sigma_name.substr(2))->Ket_info()->name() ){//fix for rel case
    
     shared_ptr<Tensor_<double>> sigmaN      = Sigma_data_map->at(sigmaN_name);
     shared_ptr<Tensor_<double>> prev_sigma  = Sigma_data_map->at(prev_sigma_name);
@@ -271,11 +262,8 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
     unique_ptr<double[]> sigmaN_block( new double[Iij_block_size*ps_orb_block_size] );
     fill_n( sigmaN_block.get(), Iij_block_size*ps_orb_block_size, 0.0 );
 
-    shared_ptr<Determinants> Ket_det = Determinants_map_new->at(Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info->name()); 
+    shared_ptr<Determinants> Ket_det = Determinants_map_new->at(Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info()->name()); 
 
-    cout << " Ket_block_size    = " << Ket_block_size << endl;
-    cout << " Iij_block_size    = " << Iij_block_size << endl;
-    cout << " ps_orb_block_size = " << ps_orb_block_size << endl;
     for ( int  ii = 0; ii != ps_orb_block_size; ii++) {
  
       sigma_2a1( prev_sigma_block.get()+(ii*Ket_block_size), sigmaN_block.get()+(ii*Iij_block_size), Ket_det,
@@ -346,15 +334,11 @@ void Gamma_Computer::Gamma_Computer::sigma_2a2( double* cvec_ptr, double* sigma_
 shared_ptr<vector<IndexRange>> Gamma_Computer::Gamma_Computer::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Gamma_Computer::Get_Bagel_IndexRanges 1arg" << endl;
-  print_vector(*ranges_str, "ranges_str" );
-  cout << "ranges_str = [ "; cout.flush();
+
   shared_ptr<vector<IndexRange>> ranges_Bagel = make_shared<vector<IndexRange>>(ranges_str->size());
-  for ( int ii =0 ; ii != ranges_str->size(); ii++) {
-    cout << ranges_str->at(ii) << " " ; cout.flush(); 
+  for ( int ii =0 ; ii != ranges_str->size(); ii++) 
     ranges_Bagel->at(ii) = *range_conversion_map->at(ranges_str->at(ii));
     
-  }
-  cout << endl;
   return ranges_Bagel;
 }
 
@@ -368,33 +352,18 @@ Gamma_Computer::Gamma_Computer::convert_civec_to_tensor( shared_ptr<const Civec>
   string civec_name = get_civec_name(state_num, civector->det()->norb(), civector->det()->nelea(), civector->det()->neleb());  
   vector<IndexRange> civec_idxrng(1, *(range_conversion_map->at(civec_name)) );  
 
-  cout <<" civec_name = " << civec_name << endl;
-  cout <<" civec_idxrng[0].nblock()       = " << civec_idxrng[0].nblock()     <<  endl;
-  cout <<" civec_idxrng[0].size()         = " << civec_idxrng[0].size()       <<  endl;
-  cout <<" civec_idxrng[0].range().size() = " << civec_idxrng[0].range().size() <<  endl;
-  cout <<" civec_idxrng[0].range().size() = " << civec_idxrng[0].range().size() <<  endl;
-  
   shared_ptr<Tensor_<double>> civec_tensor = make_shared<Tensor_<double>>( civec_idxrng );
   civec_tensor->allocate();
   civec_tensor->zero();
 
   size_t idx_position = 0;
-
-  cout << "civectordata = " ; cout.flush(); 
   for ( Index idx_block : civec_idxrng[0].range() ){
-     unique_ptr<double[]> civec_block(new double[idx_block.size()]);
-     std::fill_n(civec_block.get(), idx_block.size(), 0.0);
-     copy_n( civector->data() + idx_position, idx_block.size(), civec_block.get());
-
-     for ( int ii = 0 ; ii != idx_block.size() ; ii++ ) 
-       cout << *(civector->data() + idx_position + ii) << " "; 
-     cout.flush();
-  
-     civec_tensor->add_block(civec_block, vector<Index>({ idx_block })) ;  
-     idx_position += idx_block.size();  
+    unique_ptr<double[]> civec_block(new double[idx_block.size()]);
+    std::fill_n(civec_block.get(), idx_block.size(), 0.0);
+    copy_n( civector->data() + idx_position, idx_block.size(), civec_block.get());
+    civec_tensor->add_block(civec_block, vector<Index>({ idx_block })) ;  
+    idx_position += idx_block.size();  
   }
-
-  cout <<endl;
 
   //will have to modify for relativistic case
   CIvec_data_map->emplace( civec_name, civec_tensor); 
@@ -431,7 +400,7 @@ bool Gamma_Computer::Gamma_Computer::gamma_2idx_contract_test( string gamma_name
    gamma_2idx_transposed->ax_plus_y(-1, gamma_2idx_orig_order) ;
 
 
-   int nel = Gamma_info_map->at(gamma_name)->Bra_info->nele();
+   int nel = Gamma_info_map->at(gamma_name)->Bra_info()->nele();
    if ( (abs(gamma_2idx_trace->rms() -nel) > 0.00000001 ) || (gamma_2idx_transposed->rms() > 0.00000001 )  )  passed = false;
 
    return passed;
@@ -481,14 +450,14 @@ bool Gamma_Computer::Gamma_Computer::build_sigma_4idx_tensor_tests(shared_ptr<Ga
   shared_ptr<GammaInfo> sigma_2idx_KJ_info = Gamma_info_map->at( gamma_4idx_info->prev_gammas(1) );
   shared_ptr<GammaInfo> sigma_2idx_IK_info = Gamma_info_map->at( gamma_4idx_info->prev_gammas(0) );
 
-  string IJ_Bra_name = gamma_4idx_info->Bra_info->name();
-  string IJ_Ket_name = gamma_4idx_info->Ket_info->name();
+  string IJ_Bra_name = gamma_4idx_info->Bra_info()->name();
+  string IJ_Ket_name = gamma_4idx_info->Ket_info()->name();
  
-  string IK_Bra_name = sigma_2idx_IK_info->Bra_info->name();
-  string IK_Ket_name = sigma_2idx_IK_info->Ket_info->name();
+  string IK_Bra_name = sigma_2idx_IK_info->Bra_info()->name();
+  string IK_Ket_name = sigma_2idx_IK_info->Ket_info()->name();
 
-  string KJ_Bra_name = sigma_2idx_KJ_info->Bra_info->name();
-  string KJ_Ket_name = sigma_2idx_KJ_info->Ket_info->name();
+  string KJ_Bra_name = sigma_2idx_KJ_info->Bra_info()->name();
+  string KJ_Ket_name = sigma_2idx_KJ_info->Ket_info()->name();
 
   if ( IJ_Bra_name != IK_Bra_name ) {
     passed =false;  cout << "IJ_Bra_name != IK_Bra_name   : " <<  IJ_Bra_name << " != " << IK_Bra_name  << endl; 
@@ -516,26 +485,3 @@ void Gamma_Computer::Gamma_Computer::build_detspace(shared_ptr<CIVecInfo<double>
 }
 #endif
 #endif
-// auto in_Bra_range = [&sigma_offsets, &Bra_block_size ]( size_t& pos) {
-//     if (( pos > (sigma_offsets[0]+Bra_block_size)) || ( pos < sigma_offsets[0] ) ){
-//        cout << "out of sigma range " << endl;
-//        cout << "pos            = " << pos << endl;
-//        cout << "Bra_offset     = " << sigma_offsets[2] << endl;
-//        cout << "Bra_Block_size = " << Bra_block_size << endl;
-//        return false;
-//     }
-//     return true;
-//     };
-//
-//   auto in_Ket_range = [&Ket_offset ]( size_t& pos , size_t Ket_block_size ) {
-//      if ( ( pos  > (Ket_offset+ Ket_block_size )) || ( pos < Ket_offset ) ){
-//         cout << "out of Ket range " << endl;
-//         cout << "pos             = " << pos << endl;
-//         cout << "Ket_offset      = " << Ket_offset << endl;
-//         cout << "Ket_Block_size  = " << Ket_block_size << endl;
-//         return false;
-//      }
-//      return true;
-//      };
-
-

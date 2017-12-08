@@ -182,8 +182,9 @@ void CASPT2_ALT::CASPT2_ALT::set_target_info( shared_ptr<vector<int>> states_of_
 void CASPT2_ALT::CASPT2_ALT::solve() {
 ////////////////////////////////////////////////////////////////////
 cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
-
-  vector< pair<vector<string>,double> > BK_info_list(1, make_pair( vector<string>({"S"}), 1.0) );
+  {
+  vector<string> op_list = { "H", "T" };
+  vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
   
   double factor = 0.0;
   // Building all necessary expressions 
@@ -204,27 +205,32 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
  
     }
   }
- // {
- //   // Building all necessary expressions 
- //   vector< pair<vector<string>,double> > BK_info_list(1, make_pair( vector<string>({"Z"}), 1.0) );
- //   double factor = 0.0;
- //   int  num_states = 1; 
- //   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
- //   for ( int ii = 0 ; ii != num_states; ii++) {
- //     for ( int jj = 0 ; jj != num_states; jj++) {
- //   
- //       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
- //         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "ztest" ));
- //         for ( string Op_name : BK_info.first )  
- //           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
- //       }
- //   
- //       string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
- //   
- //       Expression_Machine->Evaluate_Expression( expression_name );
- //     }
- //   }
- // }
+  }
+  {
+  vector<string> op_list = { "S" };
+  vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
+  
+  double factor = 0.0;
+  // Building all necessary expressions 
+  int  num_states = 1; 
+  vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
+  for ( int ii = 0 ; ii != num_states; ii++) {
+    for ( int jj = 0 ; jj != num_states; jj++) {
+  
+      for ( pair<vector<string>,double> BK_info : BK_info_list ) {
+        Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "norm" ));
+        for ( string Op_name : BK_info.first )  
+          Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
+      }
+  
+      string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
+  
+      Expression_Machine->Evaluate_Expression( expression_name );
+ 
+    }
+  }
+  }
+
  return;
  } 
 /////////////////////////////////////////////////////////////////////////////////

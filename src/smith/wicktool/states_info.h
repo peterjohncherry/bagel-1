@@ -4,17 +4,18 @@
 #include <src/smith/wicktool/wickutils.h>
 
 template<class DataType>
-class CIVecInfo  { 
-  
-   public: 
-     const int nalpha_;    
+class CIVecInfo  {
+ 
+   private: 
+     const int nalpha_;
      const int nbeta_;
-     const int nact_;    
-     const int state_number_;    
-     const std::string name_; 
+     const int nact_;
+     const int state_number_;
+     const std::string name_;
 
+   public:
      CIVecInfo(int nalpha, int nbeta , int nact, int state_number, std::string name  ) :
-     nalpha_(nalpha), nbeta_(nbeta), nact_(nact), state_number_(state_number), name_(name) {}; 
+     nalpha_(nalpha), nbeta_(nbeta), nact_(nact), state_number_(state_number), name_(name) {};
   
      ~CIVecInfo(){};
 
