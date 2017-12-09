@@ -67,7 +67,6 @@ cout << "TensOp::BuildTensOp" <<   endl;
   int tmpfac =1;
   shared_ptr<TensOp<DType>>  New_Op = make_shared<TensOp<DType>>(op_name, Symmetry_Funcs, Constraint_Funcs);
 
-  New_Op->data = tensor_data;
   New_Op->initialize(*op_idxs, *op_idx_ranges, *op_aops, tmpfac, Tsymmetry);
   New_Op->get_ctrs_tens_ranges();
 

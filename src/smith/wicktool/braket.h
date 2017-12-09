@@ -37,15 +37,6 @@ class BraKet  {
        //Goes from a gamma name to the gamma info
        std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> GammaMap;
        
-       //functions 
-       void add_Op(std::string op_name,
-                   std::shared_ptr<std::vector<std::string>> op_idxs,
-                   std::shared_ptr<std::vector<bool>> op_aops, 
-                   std::shared_ptr<std::vector<std::vector<std::string>>> op_idx_ranges,
-                   std::vector<std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> Symmetry_Funcs,
-                   std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>)> Constraint_Funcs,
-                   std::pair<double,double> factor, std::string Tsymmetry, bool hconj ) ;
-       
        void Build_TotalOp();
        
        void Build_Gamma_WithSpin(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs);

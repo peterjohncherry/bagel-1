@@ -69,7 +69,7 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::build_gamma2_tensor(shared_ptr<GammaInfo> gamma2_info )  {
+void Gamma_Computer::Gamma_Computer::build_gamma2_tensor( shared_ptr<GammaInfo> gamma2_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Gamma_Computer::build_gamma2_tensor : " << gamma2_info->name() << endl;
   
@@ -82,15 +82,14 @@ cout << "Gamma_Computer::build_gamma2_tensor : " << gamma2_info->name() << endl;
 
    shared_ptr<Tensor_<double>> gamma2 =
    Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at(gamma2_info->sigma_name()),
-                                                                              CIvec_data_map->at(gamma2_info->Bra_name()),
-                                                                              0 );
+                                                                              CIvec_data_map->at(gamma2_info->Bra_name()), 0 );
 
    Gamma_data_map->emplace(gamma2_info->name(), gamma2); 
   
    return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::build_sigma2_tensor(shared_ptr<GammaInfo> gamma2_info )  {
+void Gamma_Computer::Gamma_Computer::build_sigma2_tensor( shared_ptr<GammaInfo> gamma2_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::build_sigma2_tensor : " << gamma2_info->sigma_name() << endl;
  
@@ -170,8 +169,7 @@ void Gamma_Computer::Gamma_Computer::build_gammaN_tensor(shared_ptr<GammaInfo> g
    
    shared_ptr<Tensor_<double>> gammaN =
    Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at(gammaN_info->sigma_name()),
-                                                                              CIvec_data_map->at(gammaN_info->Bra_name()),
-                                                                              0 );
+                                                                              CIvec_data_map->at(gammaN_info->Bra_name()), 0 );
  
    Gamma_data_map->emplace(gammaN_info->name(), gammaN); 
    
@@ -284,7 +282,7 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
     cout << "spin flips not implemented yet " <<endl;
 
   }
-
+  return;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -303,7 +301,8 @@ void Gamma_Computer::Gamma_Computer::sigma_2a1(double* cvec_ptr, double* sigma_p
       double* const target_array = target_base + iter.source*lb;                                                          
       blas::ax_plus_y_n(sign, cvec_ptr + iter.target*lb, lb, target_array);                                               
     }                                                                                                                     
-  }                                                                                                                       
+  }
+  return;
 }                                                                                                                         
                                                                                                                           
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                             
@@ -328,6 +327,7 @@ void Gamma_Computer::Gamma_Computer::sigma_2a2( double* cvec_ptr, double* sigma_
       }
     }
   }
+  return;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

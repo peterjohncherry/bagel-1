@@ -24,40 +24,12 @@ BraKet<DType>::BraKet(shared_ptr<map<string,shared_ptr<map<string,AContribInfo>>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-void BraKet<DType>::add_Op( string op_name,
-                            shared_ptr<vector<string>> op_idxs,
-                            shared_ptr<vector<bool>> op_aops, 
-                            shared_ptr<vector<vector<string>>> op_idx_ranges,
-                            vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
-                            vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
-                            pair<double,double> factor, string Tsymmetry, bool hconj ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  if(hconj){
-    reverse(op_idxs->begin(), op_idxs->end());  
-    reverse(op_aops->begin(), op_aops->end());  
-    reverse(op_idx_ranges->begin(), op_idx_ranges->end());  
-    factor.second = -factor.second;// change this 
-  }
-
-  //NOTE: change to use proper factor
-  int tmpfac =1;
-  shared_ptr<TensOp<DType>>  New_Op = make_shared<TensOp<DType>>(op_name, Symmetry_Funcs, Constraint_Funcs);
-
-  New_Op->initialize(*op_idxs, *op_idx_ranges, *op_aops, tmpfac, Tsymmetry);
-  New_Op->get_ctrs_tens_ranges();
-
-  Sub_Ops->push_back(New_Op);
-  return;
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
 void BraKet<DType>::Build_TotalOp(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::Build_TotalOp" << endl;
   string MT_name = "";
   for (auto Tens : *Sub_Ops)
-    MT_name += Tens->name_;
+    MT_name += Tens->name();
 
   Total_Op = make_shared<MultiTensOp<DType>>( MT_name , true);
   Total_Op->initialize( *Sub_Ops );
