@@ -11,9 +11,9 @@ using namespace WickUtils;
 template<class DataType>
 class TensOp {
    protected:
+   /* const */std::string name_;
    /* const */std::string Tsymm_;
    /* const */std::string psymm_;
-   /* const */std::string name_;
    /* const */std::shared_ptr<std::vector<std::string>> idxs_;
    /* const */std::shared_ptr<std::vector<std::vector<std::string>>> idx_ranges_;
    /* const */std::shared_ptr<std::vector<bool>> aops_;
@@ -39,12 +39,12 @@ class TensOp {
      //tuple contained 1: bool is_this_range_unique?, 2: unique range which needs to be calculated, 3: indexes for contraction of this range,  4: factor from transformation 
 
    public:
-     TensOp() {};
      TensOp( std::string name,
              std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs, 
-             std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) > constraints) :
-             name_(name), symmfuncs_(symmfuncs), constraints_(constraints), factor_(1.0) {};
-
+             std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) > constraints,
+             std::vector<std::string> orig_idxs, std::vector<std::vector<std::string>> orig_idx_ranges,                      
+             std::vector<bool> orig_aops, int orig_factor, std::string orig_Tsymm, std::string orig_psymm = "2el");
+     TensOp(std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp<DataType> >> orig_tensors); 
      ~TensOp(){};
   
      std::string name(){ return name_;}
@@ -75,11 +75,8 @@ class TensOp {
 
      bool contracted;
      std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> > > CTP_map ;
- 
-     virtual void initialize( std::vector<std::string> orig_idxs, std::vector<std::vector<std::string>> orig_idx_ranges,
-                              std::vector<bool> orig_aops, int orig_factor, std::string orig_Tsymm, std::string orig_psymm = "2el" );
      
-     virtual // change the mapped type so is [urpose built class; want to avoid tuples for the sake of clarity.
+     virtual // change the mapped type so is purpose built class; want to avoid tuples for the sake of clarity.
      std::shared_ptr<std::map< std::vector<std::string>, 
                      std::tuple<bool, std::shared_ptr<std::vector<std::string>>,  std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > >> all_ranges(){ return all_ranges_; }
 
@@ -147,16 +144,12 @@ class MultiTensOp : public TensOp<DataType> {
                                 std::tuple<std::shared_ptr<std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>>>>> split_ranges;
 
    public: 
-     MultiTensOp() {};
-     MultiTensOp(std::string name, bool spinfree) : name_(name), spinfree_(spinfree) {}; // spin free construction
-
+     MultiTensOp(std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp<DataType> >> orig_tensors);
      ~MultiTensOp() {};
 
      //Multi Tensor analogue of all_ranges; same as normal tensor but with vector of factors. The ordering of these factors is the same as that of the operators in the tensor
      std::shared_ptr<std::map< std::vector<std::string>,
                                std::tuple<bool, std::shared_ptr<std::vector<std::string>>, std::shared_ptr<std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> combined_ranges;
-    
-    void initialize(std::vector<std::shared_ptr<TensOp<DataType> >> orig_tensors);
 
     void generate_ranges();
 

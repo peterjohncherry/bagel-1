@@ -63,9 +63,8 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
 
   //NOTE: change to use proper factor
   int tmpfac = 1;
-  shared_ptr<TensOp<DataType>>  New_Op = make_shared<TensOp<DataType>>(op_name, Symmetry_Funcs, Constraint_Funcs);
-
-  New_Op->initialize(*op_idxs, *op_idx_ranges, *op_aops, tmpfac, Tsymmetry);
+  shared_ptr<TensOp<DataType>>  New_Op = make_shared<TensOp<DataType>>(op_name, Symmetry_Funcs, Constraint_Funcs,
+                                                                       *op_idxs, *op_idx_ranges, *op_aops, tmpfac, Tsymmetry);
   New_Op->get_ctrs_tens_ranges();
 
   return New_Op;

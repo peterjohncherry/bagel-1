@@ -28,13 +28,11 @@ void BraKet<DType>::Build_TotalOp(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::Build_TotalOp" << endl;
   string MT_name = "";
-  for (auto Tens : *Sub_Ops)
+  for( shared_ptr<TensOp<DType>> Tens : *Sub_Ops )
     MT_name += Tens->name();
 
-  Total_Op = make_shared<MultiTensOp<DType>>( MT_name , true);
-  Total_Op->initialize( *Sub_Ops );
-  Total_Op->get_ctrs_tens_ranges() ;
-  cout << "Built_total_op" << endl;
+  Total_Op = make_shared<MultiTensOp<DType>>( MT_name , true, *Sub_Ops );
+  Total_Op->get_ctrs_tens_ranges();
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
