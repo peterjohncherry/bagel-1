@@ -95,7 +95,6 @@ cout << "CtrTensorPart<DType>::get_ctp_idxs_ranges" << endl;
  
   return; 
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // This is a hack and should be done in a better way, maybe incorporate into constructor
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +120,6 @@ cout << "CtrTensorPart::get_pre_contract_ctr_rel_pos" << endl;
   return make_pair( unc_rel_pos[ctr_pos.first], unc_rel_pos[ctr_pos.second] ); 
 
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
 void CtrTensorPart<DType>::FullContract( shared_ptr<map<string,shared_ptr<CtrTensorPart<DType>> >> Tmap,

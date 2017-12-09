@@ -124,8 +124,6 @@ class MultiTensOp : public TensOp<DataType> {
      std::shared_ptr<std::vector<std::string>> names;
 
      std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>> split_idxs   ;
-     std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> split_plus_ops;
-     std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> split_kill_ops;
 
      //cout maps from state and spin-sector to list of possible Aops
      std::shared_ptr<std::map< std::pair< int, std::pair<int,int> > ,

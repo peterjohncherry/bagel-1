@@ -10,8 +10,8 @@ using namespace std;
 using namespace WickUtils;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-void TensOp<DType>::initialize(vector<string> orig_idxs, vector<vector<string>> orig_idx_ranges,
-                               vector<bool> orig_aops, int orig_factor, string orig_Tsymm, string orig_psymm  ){
+void TensOp<DType>::initialize( vector<string> orig_idxs, vector<vector<string>> orig_idx_ranges,
+                                vector<bool> orig_aops, int orig_factor, string orig_Tsymm, string orig_psymm  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_TensOp 
 cout << "TensOp::initialize" <<   endl;
@@ -62,7 +62,6 @@ cout << "TensOp::generate_ranges" <<   endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp::generate_ranges" <<   endl;
-auto prvec = [](shared_ptr<vector<string>> invec){ cout << "[ " ; for (auto elem : *invec) { cout << elem << " " ;} cout << "]" ;};
 
   //set up loop utils
   shared_ptr<vector<int>> fvec = make_shared<vector<int>>(idx_ranges->size(), 0); 
@@ -71,9 +70,9 @@ auto prvec = [](shared_ptr<vector<string>> invec){ cout << "[ " ; for (auto elem
   bool tbool = true;
   pair<int,int> fac(1,1);
   all_ranges_ = make_shared<std::map< std::vector<std::string>, 
-                     std::tuple<bool, std::shared_ptr<std::vector<std::string>>,  std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > >>();
+                                      std::tuple<bool, std::shared_ptr<std::vector<std::string>>,  std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > >>();
 
-  for(auto range : *idx_ranges){
+  for( vector<string> range : *idx_ranges){
     maxs->push_back(range.size()-1);
     num_cycles *= range.size();
   }
@@ -258,49 +257,48 @@ cout << "MultiTensOp::initialize" << endl;
 //2) "Split" members; vectors where each element corresponds to a constituent TensOp of the MultiTensor.
 //   The split members are needed to keep  track of signs resulting from symmetry operations.
 
-  orig_tensors_= orig_tensors;
+  orig_tensors_ = orig_tensors;
+  num_tensors = orig_tensors.size();
 
-  split_idxs     = make_shared<vector<shared_ptr<vector<string>>>>(0) ;
-  split_plus_ops = make_shared<vector<shared_ptr<vector<int>>>>(0) ;
-  split_kill_ops = make_shared<vector<shared_ptr<vector<int>>>>(0) ;
+  int total_size = 0;
+  for ( shared_ptr<TensOp<DType>> tens : orig_tensors_ ) 
+     total_size +=  tens->idxs()->size();
+
+  split_idxs = make_shared<vector<shared_ptr<vector<string>>>>(0) ;
  
   plus_ops = make_shared<vector<int>>(0);
   kill_ops = make_shared<vector<int>>(0);
   idxs     = make_shared<vector<string>>(0);
   aops     = make_shared<vector<bool>>(0);
 
-  Tsizes     = make_shared<vector<int>>(0);
-  cmlsizevec = make_shared<vector<int>>(0);
-  idx_ranges = make_shared<vector<vector<string>>>(0);
- 
-  names = make_shared<vector<string>>(0);
-  num_tensors = orig_tensors.size();
 
+  cmlsizevec = make_shared<vector<int>>(num_tensors);
+
+  idx_ranges = make_shared<vector<vector<string>>>(0);
+  Tsizes     = make_shared<vector<int>>(num_tensors); 
+  names = make_shared<vector<string>>(num_tensors);
 
   int xx= 0;
-  for (auto ii = 0 ; ii != orig_tensors_.size(); ii++) {
+  for (int ii = 0 ; ii != num_tensors; ii++) {
      split_idxs->push_back(orig_tensors_[ii]->idxs());
-     split_plus_ops->push_back(orig_tensors_[ii]->plus_ops());
-     split_kill_ops->push_back(orig_tensors_[ii]->kill_ops());
 
-    for ( auto elem : *(orig_tensors_[ii]->idxs()))
+    for ( string elem : *(orig_tensors_[ii]->idxs()))
       idxs->push_back(elem);
-
-    for ( auto elem : *(orig_tensors_[ii]->plus_ops()))
+    for ( int elem : *(orig_tensors_[ii]->plus_ops()))
       plus_ops->push_back(elem+xx);
-    for ( auto elem : *(orig_tensors_[ii]->kill_ops()))
+    for ( int elem : *(orig_tensors_[ii]->kill_ops()))
       kill_ops->push_back(elem+xx);
-    for ( auto elem : *(orig_tensors_[ii]->idx_ranges()))
+    for ( vector<string> elem : *(orig_tensors_[ii]->idx_ranges()))
       idx_ranges->push_back(elem);
-    for ( auto elem : *(orig_tensors_[ii]->aops()))
+
+    for ( bool elem : *(orig_tensors_[ii]->aops()))
       aops->push_back(elem);
 
-    names->push_back(orig_tensors_[ii]->name());
-    Tsizes->push_back(orig_tensors_[ii]->idxs()->size());
-    cmlsizevec->push_back(xx);
+    names->at(ii) = orig_tensors_[ii]->name();
+    Tsizes->at(ii) = orig_tensors_[ii]->idxs()->size();
+    cmlsizevec->at(ii) = xx;
     xx+=orig_tensors_[ii]->idxs()->size();
   } 
-  cout << "names = " ; for (auto elem : *names) { cout << elem << " " ; } cout << endl;
 
   generate_ranges();
  
@@ -314,7 +312,7 @@ cout << "MultiTensOp::initialize" << endl;
 
   CTP_map = make_shared< map< string, shared_ptr<CtrTensorPart<DType>> >>();
   CMTP_map = make_shared< map< string, shared_ptr<CtrMultiTensorPart<DType>> >>();
-  cout << "MultiTensOp::initialize endl;" << endl;
+  cout << "Leaving MultiTensOp::initialize" << endl;
   return;
 
 }
@@ -329,11 +327,8 @@ cout << "MultiTensOp::generate_ranges()" << endl;
 //////////////////////////////////////////////////////////////////////////////////////
   cout << "MultiTensOp::generate_ranges()" << endl;
 
-  auto prvec = [](shared_ptr<vector<string>> invec){ cout << "[ " ; for (auto elem : *invec) { cout << elem << " " ;} cout << "]" ;};
-
   vector<map< vector<string>,  tuple<bool, shared_ptr<vector<string>>, shared_ptr<vector<string>>,  pair<int,int> > >::iterator> rng_maps;
-  vector<int> posvec; 
-  vector<size_t> sizevec; 
+  vector<int> posvec( num_tensors, 0 ); 
 
   combined_ranges = make_shared< map< vector<string>,
                                       tuple<bool, shared_ptr<vector<string>>,  shared_ptr<vector<string>>, shared_ptr<vector<pair<int,int>>> > >>();
@@ -341,22 +336,18 @@ cout << "MultiTensOp::generate_ranges()" << endl;
   split_ranges    = make_shared< map< vector<vector<string>>,
                                       tuple< shared_ptr<vector<bool>>, shared_ptr<vector<shared_ptr<vector<string>>>>, shared_ptr<vector<pair<int,int>>> > >>();
 
-  if ( orig_tensors_.size() > 1 ) { 
+  if ( num_tensors > 1 ) { 
 
-    for (auto Ten : orig_tensors_) { //this should be merging..
+    for (shared_ptr<TensOp<DType>> Ten : orig_tensors_ )
       rng_maps.push_back(Ten->all_ranges()->begin());
-      sizevec.push_back(Ten->all_ranges()->size());
-      posvec.push_back(0);
-    } 
     
-    cout << "initialized things " << endl;
-    
-
-
-    bool ham =true; //cannot rememeber why I am doing it like this; it looks utterly ridiculous, and I am now unsure it is correct...
+    bool ham =true; //awkward loop to generate all possible combinations of different ranges on different tensors in multitensop
     do{
       for (auto ii = rng_maps.size()-1; ii != 0; ii--){
-         
+        
+        int num_unique_ranges = 0; 
+        int num_unique_idxs = 0; 
+        int num_orig_ranges = 0; 
         if ( (ii == posvec.size()-1) && (posvec[ii] == orig_tensors_[ii]->all_ranges()->size()-1 && (posvec[ii-1] == orig_tensors_[ii-1]->all_ranges()->size()-1  )  ) ) {
           ham =false;  
           break;
@@ -376,47 +367,51 @@ cout << "MultiTensOp::generate_ranges()" << endl;
           continue;
         }     
 
-        vector<vector<string>> orig_ranges;
-        shared_ptr<vector<shared_ptr<vector<string>>>> unique_ranges = make_shared<vector<shared_ptr<vector<string>>>>(0);
-        shared_ptr<vector<shared_ptr<vector<string>>>> unique_idxs   = make_shared<vector<shared_ptr<vector<string>>>>(0);
-        shared_ptr<pint_vec>     factors  = make_shared<pint_vec>(0);
-        shared_ptr<vector<bool>> isunique = make_shared<vector<bool>>(0);
+        vector<vector<string>> orig_ranges(num_tensors);
+        shared_ptr<vector<shared_ptr<vector<string>>>> unique_ranges = make_shared<vector<shared_ptr<vector<string>>>>(num_tensors);
+        shared_ptr<vector<shared_ptr<vector<string>>>> unique_idxs   = make_shared<vector<shared_ptr<vector<string>>>>(num_tensors);
+        shared_ptr<pint_vec>     factors  = make_shared<pint_vec>(num_tensors);
+        shared_ptr<vector<bool>> isunique = make_shared<vector<bool>>(num_tensors);
     
-        for (int jj =0 ; jj != orig_tensors_.size() ; jj++){
+        for (int jj = 0 ; jj != num_tensors ; jj++){
+          orig_ranges[jj] = rng_maps[jj]->first;
+          num_orig_ranges += orig_ranges[jj].size(); 
 
-          orig_ranges.push_back(rng_maps[jj]->first);
-    
-          isunique->push_back(get<0>(rng_maps[jj]->second))  ;
-    
-          unique_ranges->push_back(get<1>(rng_maps[jj]->second));  
-    
-          unique_idxs->push_back(get<2>(rng_maps[jj]->second));  
-    
-          factors->push_back(get<3>(rng_maps[jj]->second)) ;
+          isunique->at(jj) = get<0>(rng_maps[jj]->second);
 
+          unique_ranges->at(jj) = get<1>(rng_maps[jj]->second);  
+          num_unique_ranges += unique_ranges->at(jj)->size(); 
+
+          unique_idxs->at(jj) = get<2>(rng_maps[jj]->second);  
+          num_unique_idxs += unique_idxs->at(jj)->size(); 
+
+          factors->at(jj) = get<3>(rng_maps[jj]->second) ;
         }
     
-       split_ranges->emplace(orig_ranges, tie(isunique, unique_ranges, factors));
-    
-       vector<string> merged_oranges;
-       for(vector<string> orange : orig_ranges )  
-         merged_oranges.insert(merged_oranges.end(), orange.begin(), orange.end());
-    
-       shared_ptr<vector<string>>  merged_uranges = make_shared<vector<string>>(0);
-       for(shared_ptr<vector<string>>  urange : *unique_ranges )
-         merged_uranges->insert(merged_uranges->end(), urange->begin(), urange->end());
-       
-    
-       shared_ptr<vector<string>> merged_uqidxs = make_shared<vector<string>>(0);
-       for( shared_ptr<vector<string>> uqidxs : *unique_idxs )
-         merged_uqidxs->insert(merged_uqidxs->end(), uqidxs->begin(), uqidxs->end());
+        split_ranges->emplace(orig_ranges, tie(isunique, unique_ranges, factors));
         
-    
-       bool merged_unique = true;
-       if ( merged_oranges == *merged_uranges )
-         merged_unique = false;
-       
-       combined_ranges->emplace(merged_oranges, tie(merged_unique, merged_uranges, merged_uqidxs, factors));
+        vector<string>             merged_oranges(num_orig_ranges);
+        shared_ptr<vector<string>> merged_uranges = make_shared<vector<string>>(num_unique_ranges);
+        shared_ptr<vector<string>> merged_uqidxs = make_shared<vector<string>>(num_unique_idxs);
+
+        vector<string>::iterator merged_oranges_it = merged_oranges.begin();
+        vector<string>::iterator merged_uqidxs_it  = merged_uqidxs->begin();
+        vector<string>::iterator merged_uranges_it = merged_uranges->begin();
+
+        for( int qq = 0 ; qq != num_tensors; qq++ ){ 
+
+          copy( orig_ranges[qq].begin(), orig_ranges[qq].end(), merged_oranges_it );             
+          copy( unique_ranges->at(qq)->begin(), unique_ranges->at(qq)->end(), merged_uranges_it ); 
+          copy( unique_idxs->at(qq)->begin(), unique_idxs->at(qq)->end(), merged_uqidxs_it );     
+
+          merged_oranges_it += orig_ranges[qq].size();
+          merged_uranges_it += unique_ranges->at(qq)->size();
+          merged_uqidxs_it += unique_idxs->at(qq)->size();
+
+        }
+        
+        bool merged_unique = ( merged_oranges == *merged_uranges ) ?  false : true;
+        combined_ranges->emplace(merged_oranges, tie(merged_unique, merged_uranges, merged_uqidxs, factors));
 
       }
     } while(ham);
@@ -425,20 +420,19 @@ cout << "MultiTensOp::generate_ranges()" << endl;
      
     for ( auto map_it = orig_tensors_[0]->all_ranges()->begin() ; map_it != orig_tensors_[0]->all_ranges()->end(); map_it++ ){
 
-      auto orig_ranges   = { map_it->first } ;
-      auto isunique      = make_shared<vector<bool>>(vector<bool>{ get<0>(map_it->second) });
-      auto unique_ranges =
+      vector<vector<string>> orig_ranges = { map_it->first } ;
+      shared_ptr<vector<bool>> isunique = make_shared<vector<bool>>(vector<bool>{ get<0>(map_it->second) });
+      shared_ptr<vector<shared_ptr<vector<string>>>> unique_ranges =
       make_shared<vector<shared_ptr<vector<string>>>>( vector<shared_ptr<vector<string>>> { get<1>(map_it->second) });
 
       shared_ptr<pint_vec> factors = make_shared<pint_vec>( pint_vec { get<3>(map_it->second) } );
 
       split_ranges->emplace(orig_ranges, tie( isunique, unique_ranges, factors ) );
 
-      combined_ranges->emplace( map_it->first, tie( get<0>(map_it->second), get<1>(map_it->second),
-                                                    get<2>(map_it->second), factors ) );
+      combined_ranges->emplace( map_it->first, tie( get<0>(map_it->second), get<1>(map_it->second), get<2>(map_it->second), factors ) );
     }
   }    
-  cout <<  "generated_ranges " <<endl;
+  cout << "leaving MultiTensOp::generate_ranges()" << endl;
 
   return;
 
@@ -525,21 +519,21 @@ void MultiTensOp<DType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_ptr<v
 cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
-  auto ctr_idxs_in   = make_shared<pstr_vec>(0);
-  auto ctr_ranges_in = make_shared<pstr_vec>(0);
-  auto ctr_spins_in = make_shared<pstr_vec>(0);
+  shared_ptr<pstr_vec>ctr_idxs_in   = make_shared<pstr_vec>(0);
+  shared_ptr<pstr_vec>ctr_ranges_in = make_shared<pstr_vec>(0);
+  shared_ptr<pstr_vec>ctr_spins_in  = make_shared<pstr_vec>(0);
 
-  auto unc_idxs_in   = make_shared<vector<shared_ptr<vector<string>>>>(0);
-  auto unc_ranges_in = make_shared<vector<shared_ptr<vector<string>>>>(0);
-  auto unc_aops_in = make_shared<vector<shared_ptr<vector<bool>>>>(0);
+  shared_ptr<vector<shared_ptr<vector<string>>>> unc_idxs_in   = make_shared<vector<shared_ptr<vector<string>>>>(0);
+  shared_ptr<vector<shared_ptr<vector<string>>>> unc_ranges_in = make_shared<vector<shared_ptr<vector<string>>>>(0);
+  shared_ptr<vector<shared_ptr<vector<bool>>>>   unc_aops_in   = make_shared<vector<shared_ptr<vector<bool>>>>(0);
 
-  auto CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart<DType>> >> (orig_tensors_.size()); 
+  shared_ptr<vector<shared_ptr<CtrTensorPart<DType>>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart<DType>> >> (num_tensors); 
   vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
-  vector<vector<pair<int,int>>> sameT_ctrs_pos(orig_tensors_.size(),  pint_vec(0));
+  vector<vector<pair<int,int>>> sameT_ctrs_pos( num_tensors,  pint_vec(0));
 
  
   //seperate contractions into those on the same tensor, and those between different tensors 
-  for ( auto ctr_pos : ctr_pos_list ) {
+  for ( pair<int,int> ctr_pos : ctr_pos_list ) {
 
     pair<int,int> ctr1;
     pair<int,int> ctr2;
@@ -566,11 +560,11 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
   }  
 
   //get_ranges for individual tensors
-  for (int ii = 0 ; ii !=orig_tensors_.size() ; ii++ ){ 
+  for (int ii = 0 ; ii !=num_tensors; ii++ ){ 
      shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(0);
-     for(int jj = cmlsizevec->at(ii) ; jj != cmlsizevec->at(ii)+orig_tensors_[ii]->idxs()->size(); jj++){
+     for(int jj = cmlsizevec->at(ii) ; jj != cmlsizevec->at(ii)+orig_tensors_[ii]->idxs()->size(); jj++)
        TS_id_ranges->push_back(id_ranges->at(jj));
-     }
+     
    
      CTP_vec->at(ii) = make_shared< CtrTensorPart<DType> >( orig_tensors_[ii]->idxs(), TS_id_ranges,
                                                             make_shared<vector<pair<int,int>>>(sameT_ctrs_pos.at(ii)),
