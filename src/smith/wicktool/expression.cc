@@ -46,34 +46,6 @@ void Expression<DType>::Initialize(){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-shared_ptr<TensOp<DType>> Expression<DType>::Build_TensOp( string op_name,
-                                                         shared_ptr<DType> tensor_data, //needs to be templated, should be Bagel tensor
-                                                         shared_ptr<vector<string>> op_idxs,
-                                                         shared_ptr<vector<bool>> op_aops, 
-                                                         shared_ptr<vector<vector<string>>> op_idx_ranges,
-                                                         vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
-                                                         vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
-                                                         pair<double,double> factor, string Tsymmetry, bool hconj ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp::BuildTensOp" <<   endl;
-
-  if(hconj){
-    reverse(op_idxs->begin(), op_idxs->end());  
-    reverse(op_aops->begin(), op_aops->end());  
-    reverse(op_idx_ranges->begin(), op_idx_ranges->end());  
-    factor.second = -factor.second;// change this 
-  }
-  //NOTE: change to use proper factor
-  int tmpfac =1;
-  shared_ptr<TensOp<DType>>  New_Op = make_shared<TensOp<DType>>( op_name, Symmetry_Funcs, Constraint_Funcs, 
-                                                                 *op_idxs, *op_idx_ranges, *op_aops, tmpfac, Tsymmetry);
-  New_Op->get_ctrs_tens_ranges();
-
-  return New_Op;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
 void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>> Tens_vec ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

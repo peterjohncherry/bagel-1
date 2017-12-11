@@ -59,8 +59,6 @@ cout << "TensOp_Prep::generate_ranges" <<   endl;
   int  num_cycles = 1;
   const bool tbool = true;
   const pair<int,int> fac(1,1);
-  all_ranges_ = make_shared<std::map< const std::vector<std::string>, 
-                                      std::tuple< const bool, std::shared_ptr< const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, const std::pair<int,int> > >>();
 
   for( int ii = 0; ii != idx_ranges_.size(); ii++ ){
     maxs->push_back( idx_ranges_[ii].size()-1);
@@ -81,7 +79,7 @@ cout << "TensOp_Prep::generate_ranges" <<   endl;
   // Initialize range maps and add in first range to start things off.
   const vector<string> init_range = possible_ranges[0];
   shared_ptr<const vector<string>> tmp_range = make_shared<const vector<string>>(possible_ranges[0]);
-  all_ranges_->emplace( init_range, tie(tbool, tmp_range , idxs_const_ptr, fac ) );
+  all_ranges_.emplace( init_range, tie(tbool, tmp_range , idxs_const_ptr, fac ) );
  
   unique_range_blocks = vector< shared_ptr< const vector<string>>>(1, tmp_range );
   //Apply symmetry operations to remove unnecessary ranges   
@@ -109,7 +107,7 @@ bool TensOp_Prep<DataType>::apply_symmetry( const vector<string>& ranges_1,  con
   const bool tbool = true; 
   const pair<int,int> fac(1,1);
   shared_ptr<const vector<string>> ranges_2_ptr = make_shared<const vector<string>>(ranges_2);
-  all_ranges_->emplace(ranges_2, tie(tbool, ranges_2_ptr, idxs_const_ptr, fac ) );
+  all_ranges_.emplace(ranges_2, tie(tbool, ranges_2_ptr, idxs_const_ptr, fac ) );
   return false;
 }; 
 
@@ -699,7 +697,7 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class TensOp_Prep<double>;
-//template class TensOp_General<double>;
+template class TensOp_General<double>;
 template class TensOp<double>;
 template class MultiTensOp<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

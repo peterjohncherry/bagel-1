@@ -32,8 +32,8 @@ class TensOp_Prep {
      std::vector< std::shared_ptr< const std::vector<std::string>> > unique_range_blocks;
      
      // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
-     std::shared_ptr< std::map< const std::vector<std::string>, 
-                      std::tuple<const bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, const std::pair<int,int> > >> all_ranges_;
+     std::map< const std::vector<std::string>, 
+               std::tuple<const bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, const std::pair<int,int> > > all_ranges_;
      
      TensOp_Prep( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
                   std::vector<bool>& aops, DataType orig_factor,
@@ -60,16 +60,18 @@ class TensOp_Prep {
       const std::vector<int> plus_ops_;
       const std::vector<int> kill_ops_;
       const int num_idxs_;
-    
-     // unique_range_blocks tells you which parts of your tensor actually need to be calculated and stored.
-     const std::vector< std::shared_ptr< const std::vector<std::string>>> unique_ranges_;
      
-     // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
-     const std::map< const std::vector<std::string>,
-                     std::tuple<const bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, const std::pair<int,int>  >> all_ranges_;
-    
-     TensOp_General(TensOp_Prep<DataType> TOp ) : name_(TOp.name_), Tsymm_(TOp.Tsymm_), idxs_(TOp.idxs_), aops_(TOp.aops_), plus_ops_(*TOp.plus_ops_), kill_ops_(*TOp.kill_ops_), 
-                                                  num_idxs_(TOp.num_idxs_), all_ranges_(TOp.all_ranges_) {};
+      // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
+      const std::map< const std::vector<std::string>,
+                      std::tuple<const bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, const std::pair<int,int>  >> all_ranges_;
+     
+      // unique_range_blocks tells you which parts of your tensor actually need to be calculated and stored.
+      const std::vector< std::shared_ptr< const std::vector<std::string>>> unique_range_blocks_;
+ 
+   public:
+     TensOp_General(TensOp_Prep<DataType>& TOp ) : name_(TOp.name_), Tsymm_(TOp.Tsymm_), idxs_(TOp.idxs_), aops_(TOp.aops_), plus_ops_(TOp.plus_ops_),
+                                                   kill_ops_(TOp.kill_ops_), num_idxs_(TOp.num_idxs_), all_ranges_(TOp.all_ranges_),
+                                                   unique_range_blocks_(TOp.unique_range_blocks) {};
      ~TensOp_General(){};
  };
 
@@ -105,8 +107,6 @@ class TensOp {
 
      //map from original index range, to ranges and factors used in calculation
      //tuple contained 1: bool is_this_range_unique?, 2: unique range which needs to be calculated, 3: indexes for contraction of this range,  4: factor from transformation     
-      
-
    public:
      TensOp( std::string name,
              std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs, 
