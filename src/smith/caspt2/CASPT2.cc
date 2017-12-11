@@ -143,8 +143,6 @@ void CASPT2::CASPT2::solve() {
   Timer timer;
   print_iteration();
 
-
-
   // <proj_jst|H|0_K> set to sall in ms-caspt2
   for (int istate = 0; istate != nstates_; ++istate) { //K states
     t2all_[istate]->fac(istate) = 0.0;

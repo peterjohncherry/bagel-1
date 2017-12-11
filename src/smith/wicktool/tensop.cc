@@ -8,7 +8,7 @@ using namespace WickUtils;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 TensOp_Prep<DataType>::TensOp_Prep( string name, vector<string>& idxs, vector<vector<string>>& idx_ranges,
-                               vector<bool>& aops, int orig_factor,
+                               vector<bool>& aops, DataType orig_factor,
                                vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>), int, int > >& symmfuncs, 
                                vector<bool(*)(shared_ptr<vector<string>>) >& constraints,
                                string& Tsymm ) {
@@ -18,8 +18,11 @@ cout << "TensOp_Prep::TensOp_Prep" <<   endl;
    name_  = name;
    idxs_  = idxs; 
    idx_ranges_ = idx_ranges;
+   idxs_const_ptr =  make_shared<const vector<string>>(idxs_);
 
    aops_  = aops; 
+
+   orig_factor_ = orig_factor;
 
    symmfuncs_ = symmfuncs;
    constraints_ = constraints;
@@ -28,26 +31,14 @@ cout << "TensOp_Prep::TensOp_Prep" <<   endl;
    num_idxs_ = idxs.size();
 
    generate_ranges();
-   
-   plus_ops_ = make_shared<vector<int>>();
-   kill_ops_ = make_shared<vector<int>>();
 
-   for ( int ii =0 ; ii != aops_->size() ; ii++ ) {
-     if(aops_->at(ii)) {
-       plus_ops_->push_back(ii);
+   for ( int ii =0 ; ii != aops_.size() ; ii++ ) {
+     if(aops_[ii]) {
+       plus_ops_.push_back(ii);
      } else {
-       kill_ops_->push_back(ii);
+       kill_ops_.push_back(ii);
      }
    }
-
-  plus_combs_ = make_shared<vector<shared_ptr<vector<shared_ptr<vector<int>>>>>>( plus_ops_->size()+1 );
-  kill_combs_ = make_shared<vector<shared_ptr<vector<shared_ptr<vector<int>>>>>>( kill_ops_->size()+1 );
- 
-  for (int  ii = 0 ; ii != (plus_ops_->size() +1) ; ii++) 
-    plus_combs_->at(ii) =  get_N_in_M_combsX( plus_ops_, ii );
-  
-  for (int  ii = 0 ; ii != (kill_ops_->size() +1) ; ii++) 
-    kill_combs_->at(ii) =  get_N_in_M_combsX( kill_ops_, ii );
 
   cout << "TensOp_Prep::TensOp_Prep" << endl;
   return;
@@ -57,41 +48,42 @@ template<class DataType>
 void TensOp_Prep<DataType>::generate_ranges(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_TensOp 
-cout << "TensOp::generate_ranges" <<   endl;
+cout << "TensOp_Prep::generate_ranges" <<   endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp::generate_ranges" <<   endl;
+cout << "TensOp_Prep::generate_ranges" <<   endl;
 
   //set up loop utils
   shared_ptr<vector<int>> fvec = make_shared<vector<int>>( num_idxs_, 0); 
   shared_ptr<vector<int>> maxs = make_shared<vector<int>>( num_idxs_ );
   int  num_cycles = 1;
-  bool tbool = true;
-  pair<int,int> fac(1,1);
-  all_ranges_ = make_shared<std::map< std::vector<std::string>, 
-                                      std::tuple<bool, std::shared_ptr<std::vector<std::string>>,  std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > >>();
+  const bool tbool = true;
+  const pair<int,int> fac(1,1);
+  all_ranges_ = make_shared<std::map< const std::vector<std::string>, 
+                                      std::tuple< const bool, std::shared_ptr< const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, const std::pair<int,int> > >>();
 
-  for( int ii = 0; ii != idx_ranges_->size(); ii++ ){
-    maxs->push_back( idx_ranges_->at(ii).size()-1);
-    num_cycles *= idx_ranges_->at(ii).size();
+  for( int ii = 0; ii != idx_ranges_.size(); ii++ ){
+    maxs->push_back( idx_ranges_[ii].size()-1);
+    num_cycles *= idx_ranges_[ii].size();
   }
 
   //generate all possible ranges
   vector<vector<string>> possible_ranges(0);
   for (int ii = 0 ; ii != num_cycles ; ii++){
-    vector<string> new_range(idx_ranges_->size());
+    vector<string> new_range(idx_ranges_.size());
     for (auto jj = 0 ; jj != fvec->size() ; jj++ )
-       new_range[jj] = idx_ranges_->at(jj)[fvec->at(jj)];
+       new_range[jj] = idx_ranges_[jj][fvec->at(jj)];
     if(satisfies_constraints(new_range))
       possible_ranges.push_back(new_range);
-    fvec_cycle(fvec, maxs);
+    fvec_cycle( fvec, maxs );
   } 
 
   // Initialize range maps and add in first range to start things off.
-  shared_ptr<vector<string>> tmp_range =  make_shared<vector<string>>(possible_ranges[0]);
-  all_ranges_->emplace(possible_ranges[0], tie(tbool, tmp_range , idxs_, fac ) );
+  const vector<string> init_range = possible_ranges[0];
+  shared_ptr<const vector<string>> tmp_range = make_shared<const vector<string>>(possible_ranges[0]);
+  all_ranges_->emplace( init_range, tie(tbool, tmp_range , idxs_const_ptr, fac ) );
  
-  vector<vector<string>> unique_range_blocks(1, possible_ranges[0] );
+  unique_range_blocks = vector< shared_ptr< const vector<string>>>(1, tmp_range );
   //Apply symmetry operations to remove unnecessary ranges   
   for (int ii = 1 ; ii!=possible_ranges.size(); ii++) {
     for (int kk = 0 ; kk != ii; kk++) {
@@ -99,7 +91,7 @@ cout << "TensOp::generate_ranges" <<   endl;
         break;
       }
       if(kk == ii-1){
-        unique_range_blocks.push_back(possible_ranges[ii]);
+        unique_range_blocks.push_back(make_shared<const vector<string>>(possible_ranges[ii]));
         break;
       }
     } 
@@ -110,14 +102,14 @@ cout << "TensOp::generate_ranges" <<   endl;
 //TODO  make it so this actually applies the symmetry; does nothing for now whilst testing
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-bool TensOp_Prep<DataType>::apply_symmetry( vector<string>& ranges_1, vector<string>& ranges_2  ){
+bool TensOp_Prep<DataType>::apply_symmetry( const vector<string>& ranges_1,  const vector<string>& ranges_2  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "TensOp_Prep::apply_symmetry" <<   endl;
 
-  bool tbool = true; 
-  pair<int,int> fac(1,1);
-  shared_ptr<vector<string>> ranges_2_ptr = make_shared<vector<string>>(ranges_2);
-  all_ranges_->emplace(ranges_2, tie(tbool, ranges_2_ptr, idxs_, fac ) );
+  const bool tbool = true; 
+  const pair<int,int> fac(1,1);
+  shared_ptr<const vector<string>> ranges_2_ptr = make_shared<const vector<string>>(ranges_2);
+  all_ranges_->emplace(ranges_2, tie(tbool, ranges_2_ptr, idxs_const_ptr, fac ) );
   return false;
 }; 
 
@@ -131,8 +123,6 @@ bool TensOp_Prep<DataType>::satisfies_constraints( vector<string>& ranges ){
          return false;
     return true;
 }; 
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
@@ -151,33 +141,24 @@ cout << "TensOp<DataType>::TensOp" <<   endl;
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
            
-   name_ = name;
-   symmfuncs_ = symmfuncs;
-   constraints_ = constraints;
-   contracted  = false;
-   num_idxs_ = orig_idxs.size();
+  name_ = name;
+  symmfuncs_ = symmfuncs;
+  constraints_ = constraints;
+  contracted  = false;
+  num_idxs_ = orig_idxs.size();
 
-   generate_ranges();
-   
-   plus_ops_ = make_shared<vector<int>>();
-   kill_ops_ = make_shared<vector<int>>();
-
-   for ( int ii =0 ; ii != aops_->size() ; ii++ ) {
-     if(aops_->at(ii)) {
-       plus_ops_->push_back(ii);
-     } else {
-       kill_ops_->push_back(ii);
-     }
-   }
-
-  plus_combs_ = make_shared<vector<shared_ptr<vector<shared_ptr<vector<int>>>>>>( plus_ops_->size()+1 );
-  kill_combs_ = make_shared<vector<shared_ptr<vector<shared_ptr<vector<int>>>>>>( kill_ops_->size()+1 );
- 
-  for (int  ii = 0 ; ii != (plus_ops_->size() +1) ; ii++) 
-    plus_combs_->at(ii) =  get_N_in_M_combsX( plus_ops_, ii );
+  generate_ranges();
   
-  for (int  ii = 0 ; ii != (kill_ops_->size() +1) ; ii++) 
-    kill_combs_->at(ii) =  get_N_in_M_combsX( kill_ops_, ii );
+  plus_ops_ = make_shared<vector<int>>();
+  kill_ops_ = make_shared<vector<int>>();
+
+  for ( int ii =0 ; ii != aops_->size() ; ii++ ) {
+    if(aops_->at(ii)) {
+      plus_ops_->push_back(ii);
+    } else {
+      kill_ops_->push_back(ii);
+    }
+  }
 
   CTP_map = make_shared< map< string, shared_ptr<CtrTensorPart<DataType>> >>();
 
@@ -297,8 +278,8 @@ void TensOp<DataType>::get_ctrs_tens_ranges() {
   //puts uncontracted ranges into map 
   shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector<pair<int,int>>>(0);
   for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
-    shared_ptr<vector<pair<int,int>>> ReIm_factors = make_shared<vector<pair<int,int>>>(1, get<3>(rng_it->second)); 
-    shared_ptr<vector<string>>        full_ranges  = make_shared<vector<string>>(rng_it->first);
+    shared_ptr<vector<pair<int,int>>>    ReIm_factors = make_shared<vector<pair<int,int>>>(1, get<3>(rng_it->second)); 
+    shared_ptr<vector<string>>           full_ranges  = make_shared<vector<string>>(rng_it->first);
     shared_ptr<CtrTensorPart<DataType>>  CTP          = make_shared< CtrTensorPart<DataType> >(idxs_, full_ranges, noctrs, ReIm_factors ); 
     cout << "CTP->myname() = " << CTP->myname() << " is going into CTP_map" <<  endl;
     CTP_map->emplace(CTP->myname(), CTP); //maybe should be addded in with ctr_idxs.
@@ -407,15 +388,6 @@ TensOp<DataType>::TensOp( std::string name , bool spinfree, std::vector<std::sha
 
     xx+=orig_tens->idxs()->size();
   } 
- 
-  plus_combs_ = make_shared< vector< shared_ptr< vector< shared_ptr<vector<int> > > > > >(plus_ops_->size()+1);
-  kill_combs_ = make_shared< vector< shared_ptr< vector< shared_ptr<vector<int> > > > > >(kill_ops_->size()+1);
- 
-  for (int  ii = 0 ; ii != (plus_ops_->size() +1) ; ii++) {
-    plus_combs_->at(ii) =  get_N_in_M_combsX( plus_ops_, ii );
-    kill_combs_->at(ii) =  get_N_in_M_combsX( kill_ops_, ii );
-  }
-
   CTP_map = make_shared< map< string, shared_ptr<CtrTensorPart<DataType>> >>();
   cout << "TensOp<DataType>::TensOp" << endl;
   return;
@@ -664,9 +636,9 @@ void MultiTensOp<DataType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_pt
 cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
-  shared_ptr<pstr_vec>ctr_idxs_in   = make_shared<pstr_vec>(0);
-  shared_ptr<pstr_vec>ctr_ranges_in = make_shared<pstr_vec>(0);
-  shared_ptr<pstr_vec>ctr_spins_in  = make_shared<pstr_vec>(0);
+  shared_ptr<pstr_vec> ctr_idxs_in   = make_shared<pstr_vec>(0);
+  shared_ptr<pstr_vec> ctr_ranges_in = make_shared<pstr_vec>(0);
+  shared_ptr<pstr_vec> ctr_spins_in  = make_shared<pstr_vec>(0);
 
   shared_ptr<vector<shared_ptr<vector<string>>>> unc_idxs_in   = make_shared<vector<shared_ptr<vector<string>>>>(0);
   shared_ptr<vector<shared_ptr<vector<string>>>> unc_ranges_in = make_shared<vector<shared_ptr<vector<string>>>>(0);
@@ -675,7 +647,6 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
   shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart<DataType>> >> (num_tensors_); 
   vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
   vector<vector<pair<int,int>>> sameT_ctrs_pos( num_tensors_,  pint_vec(0));
-
  
   //seperate contractions into those on the same tensor, and those between different tensors 
   for ( pair<int,int> ctr_pos : ctr_pos_list ) {
@@ -707,7 +678,7 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
   //get_ranges for individual tensors
   for (int ii = 0 ; ii !=num_tensors_; ii++ ){ 
      shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(0);
-     for(int jj = cmlsizevec_->at(ii) ; jj != cmlsizevec_->at(ii)+orig_tensors_[ii]->idxs()->size(); jj++)
+     for( int jj = cmlsizevec_->at(ii) ; jj != cmlsizevec_->at(ii)+orig_tensors_[ii]->idxs()->size(); jj++ )
        TS_id_ranges->push_back(id_ranges->at(jj));
      
    
@@ -727,6 +698,8 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template class TensOp_Prep<double>;
+//template class TensOp_General<double>;
 template class TensOp<double>;
 template class MultiTensOp<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

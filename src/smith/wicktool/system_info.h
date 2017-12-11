@@ -68,13 +68,12 @@ class System_Info {
       void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>> Tens_vec  );
       
       std::shared_ptr<TensOp<DataType>> Build_TensOp( std::string op_name,
-                                                      std::shared_ptr<DataType> tensor_data,
                                                       std::shared_ptr<std::vector<std::string>> op_idxs,
                                                       std::shared_ptr<std::vector<bool>> op_aops, 
                                                       std::shared_ptr<std::vector<std::vector<std::string>>> op_idx_ranges,
                                                       std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> Symmetry_Funcs,
                                                       std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>)> Constraint_Funcs,
-                                                      std::pair<double,double> factor, std::string Tsymmetry, bool hconj ) ;
+                                                      DataType factor, std::string Tsymmetry, bool hconj ) ;
      
       void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
 

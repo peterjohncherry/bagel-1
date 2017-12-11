@@ -267,15 +267,15 @@ cout << "get_N_in_M_combsX" << endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // gets all possible combinations of NN elements from vec1 , all combinations will be unique iff all elements of vec1 are unique
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DT1>
-shared_ptr<vector<shared_ptr<vector<DT1>>>> WickUtils::get_N_in_M_combsX( shared_ptr<vector<DT1>> vec1, int NN ){
+template<class DataType>
+shared_ptr<vector<shared_ptr<vector<DataType>>>> WickUtils::get_N_in_M_combsX( shared_ptr<vector<DataType>> vec1, int NN ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if defined DBG_WickUtils || defined DBG_all 
 cout << "get_N_in_M_combsX" << endl;
 #endif
 //////////////////////////////////////////////////////////////////////////////////////////////
   if (NN == 0 )
-    return make_shared<vector<shared_ptr<vector<DT1>>>>(0);
+    return make_shared<vector<shared_ptr<vector<DataType>>>>(0);
 
 
   auto fvec = make_shared<vector<int>>(NN,0);
@@ -289,10 +289,10 @@ cout << "get_N_in_M_combsX" << endl;
   for (int ii =0 ; ii != vec1->size(); ii++)
     reset_pos.push_back(ii);
   
-  auto N_in_M_combs =  make_shared<vector<shared_ptr<vector<DT1>>>>();
+  auto N_in_M_combs =  make_shared<vector<shared_ptr<vector<DataType>>>>();
   cout << " NN = " << NN << endl; 
   do {   
-    auto perm = make_shared<vector<DT1>>() ;
+    auto perm = make_shared<vector<DataType>>() ;
     vector<int> pos = reset_pos;
     for(int ii= 0; ii !=fvec->size() ; ii++){
        perm->push_back(vec1->at(pos[fvec->at(ii)]));       

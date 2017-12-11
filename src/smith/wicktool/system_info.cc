@@ -49,13 +49,12 @@ System_Info<DataType>::System_Info::System_Info( shared_ptr<StatesInfo<DataType>
 template<class DataType>
 shared_ptr<TensOp<DataType>>
 System_Info<DataType>::System_Info::Build_TensOp( string op_name,
-                                                  shared_ptr<DataType> tensor_data, 
                                                   shared_ptr<vector<string>> op_idxs,
                                                   shared_ptr<vector<bool>> op_aops, 
                                                   shared_ptr<vector<vector<string>>> op_idx_ranges,
                                                   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
                                                   vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
-                                                  pair<double,double> factor, 
+                                                  DataType factor, 
                                                   string Tsymmetry,
                                                   bool hconj ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +64,10 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
   int tmpfac = 1;
   shared_ptr<TensOp<DataType>>  New_Op = make_shared<TensOp<DataType>>(op_name, Symmetry_Funcs, Constraint_Funcs,
                                                                        *op_idxs, *op_idx_ranges, *op_aops, tmpfac, Tsymmetry);
+
+  DataType orig_factor  = factor; 
+  //shared_ptr<TensOp_Prep<DataType>> New_Op_prep = make_shared<TensOp_Prep<DataType>>(  op_name, *op_idxs, *op_idx_ranges, *op_aops, orig_factor,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry);
+
   New_Op->get_ctrs_tens_ranges();
 
   return New_Op;

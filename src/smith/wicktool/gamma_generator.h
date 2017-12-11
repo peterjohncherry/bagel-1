@@ -81,20 +81,15 @@ class GammaIntermediate {
 
    public :
      std::shared_ptr<std::vector<std::string>> full_id_ranges ;
-     std::shared_ptr<std::vector<bool>> full_aops ;
      std::shared_ptr<std::vector<int>> ids_pos ;
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ;
      int my_sign ;
 
      GammaIntermediate(std::shared_ptr<std::vector<std::string>> full_id_ranges_in,
-                       std::shared_ptr<std::vector<bool>> full_aops_in,
                        std::shared_ptr<std::vector<int>> ids_pos_in,
                        std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
                        int my_sign_in): 
-     full_id_ranges(full_id_ranges_in), full_aops(full_aops_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), my_sign(my_sign_in) {}; 
-
-     GammaIntermediate(std::shared_ptr<std::vector<std::string>> full_id_ranges_in, int my_sign_in) {};
-     GammaIntermediate(){};
+     full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), my_sign(my_sign_in) {}; 
      ~GammaIntermediate(){};
 
 };

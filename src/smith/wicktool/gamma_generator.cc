@@ -128,7 +128,7 @@ cout << "GammaGenerator::add_gamma" << endl;
     int my_sign_in = 1;
     shared_ptr<vector<pair<int,int>>> deltas_pos_in = make_shared<vector<pair<int,int>>>(0);
 
-    gamma_vec->push_back( make_shared<GammaIntermediate>(full_id_ranges_in, orig_aops, ids_pos_init, deltas_pos_in, my_sign_in)); 
+    gamma_vec->push_back( make_shared<GammaIntermediate>(full_id_ranges_in, ids_pos_init, deltas_pos_in, my_sign_in)); 
     
   }
 
@@ -147,19 +147,18 @@ cout << "GammaGenerator::norm_order" << endl;
   while ( kk != gamma_vec->size()){                                               
     shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
     shared_ptr<vector<string>>    full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
-    shared_ptr<vector<bool>>           full_aops = gamma_vec->at(kk)->full_aops;        
     shared_ptr<vector<int>>              ids_pos = gamma_vec->at(kk)->ids_pos;        
 
     int num_pops = ( ids_pos->size()/2 )-1;     
  
     for (int ii = ids_pos->size()-1 ; ii != -1; ii--){            
       if ( ii > num_pops ) {                                      
-        if (!full_aops->at(ids_pos->at(ii)))                      
+        if (!orig_aops->at(ids_pos->at(ii)))                      
           continue;                                               
                                                                   
-        while(full_aops->at( ids_pos->at(ii) )){                  
+        while(orig_aops->at( ids_pos->at(ii) )){                  
           for ( int jj = (ii-1); jj != -1 ; jj--) {               
-            if (!full_aops->at( ids_pos->at(jj) )){               
+            if (!orig_aops->at( ids_pos->at(jj) )){               
               swap( jj, jj+1, kk, gamma_vec);           
               break;                                              
             }                                                     
@@ -167,12 +166,12 @@ cout << "GammaGenerator::norm_order" << endl;
         }                                                         
       } else if (ii<=num_pops){                                   
                                                                   
-          if (full_aops->at(ids_pos->at(ii)))                     
+          if (orig_aops->at(ids_pos->at(ii)))                     
             continue;                                             
                                                                   
-        while(!full_aops->at(ids_pos->at(ii))){                   
+        while(!orig_aops->at(ids_pos->at(ii))){                   
           for ( int jj = (ii-1); jj != -1 ; jj--) {               
-             if(full_aops->at(ids_pos->at(jj)) ){                 
+             if(orig_aops->at(ids_pos->at(jj)) ){                 
                swap( jj, jj+1, kk, gamma_vec);          
                break;                                             
              }                                                    
@@ -195,7 +194,7 @@ cout << "GammaGenerator::norm_order" << endl;
     cout << "     LIST OF GAMMAS FOLLOWING NORMAL ORDERING " << endl;
     cout << "-----------------------------------------------------" << endl;
     for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
-      cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, gint->full_aops,  gint->ids_pos, TargetStates->name(Bra_num), TargetStates->name(Ket_num) ) ;
+      cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops,  gint->ids_pos, TargetStates->name(Bra_num), TargetStates->name(Ket_num) ) ;
       cout << "   ("<< gint->my_sign <<","<< gint->my_sign << ")" << endl;
     }
     cout << "-----------------------------------------------------" << endl;
@@ -208,8 +207,7 @@ void GammaGenerator::Set_A_Contrib( int kk ){
 ///////////////////////////////////////////////////////////////////////////////////////
 //cout << "GammaGenerator::Set_A_Contrib" << endl;
 
-   shared_ptr<vector<bool>>           full_aops = gamma_vec->at(kk)->full_aops;        
-   shared_ptr<vector<int>>              ids_pos = gamma_vec->at(kk)->ids_pos;        
+   shared_ptr<vector<int>>              ids_pos = ids_pos;        
    shared_ptr<vector<string>>    full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
    shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
 
@@ -267,7 +265,6 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<vector<bool>>           full_aops = gamma_vec->at(kk)->full_aops;        
   shared_ptr<vector<int>>              ids_pos = gamma_vec->at(kk)->ids_pos;        
   shared_ptr<vector<string>>    full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
@@ -294,7 +291,7 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
     if ( Forbidden_Index( full_id_ranges, ids_pos->at(jj) ) ) {
       do  {
         if( jj != start_pos  &&  rng == diff_rngs[ii] ){
-          if ( full_aops->at(ids_pos->at(jj)) ){
+          if ( orig_aops->at(ids_pos->at(jj)) ){
             make_ops_pos->at(ii)->push_back(ids_pos->at(jj));
           } else {
             kill_ops_pos->at(ii)->push_back(ids_pos->at(jj));
@@ -306,7 +303,7 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
           diff_rngs.push_back(rng);
           shared_ptr<vector<int>> init_vec1_ = make_shared<vector<int>>(1,ids_pos->at(jj));
           shared_ptr<vector<int>> init_vec2_ = make_shared<vector<int>>(0);
-          if ( full_aops->at(ids_pos->at(jj)) ){
+          if ( orig_aops->at(ids_pos->at(jj)) ){
             make_ops_pos->push_back(init_vec1_);
             kill_ops_pos->push_back(init_vec2_);
           } else {
@@ -343,7 +340,7 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
 
     shared_ptr<vector<pair<int,int>>> new_deltas_pos = Standardize_delta_ordering_generic( new_deltas_pos_tmp ) ;                                                                
     shared_ptr<vector<int>> new_ids_pos =  get_unc_ids_from_deltas_ids_comparison( ids_pos , new_deltas_pos );
-    final_gamma_vec->push_back(make_shared<GammaIntermediate>(full_id_ranges, orig_aops, new_ids_pos, new_deltas_pos, my_sign)); 
+    final_gamma_vec->push_back(make_shared<GammaIntermediate>(full_id_ranges, new_ids_pos, new_deltas_pos, my_sign)); 
    
   } while ( fvec_cycle_skipper(forvec, max, min) ) ;
 
@@ -370,20 +367,20 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
 
     int kk = 0;
     while ( kk != gamma_vec->size()){
-      shared_ptr<vector<bool>>           full_aops = gamma_vec->at(kk)->full_aops;
       shared_ptr<vector<int>>              ids_pos = gamma_vec->at(kk)->ids_pos;
       shared_ptr<vector<string>>    full_id_ranges = gamma_vec->at(kk)->full_id_ranges;
       shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos;
+
       cout << " reordering gamma : " <<  get_gamma_name( full_id_ranges, orig_aops, ids_pos, Bra_name, Ket_name ) << " --> ";
 
       vector<string> unc_ranged_idxs(full_id_ranges->size() - 2*deltas_pos->size());
       vector<string>::iterator unc_ranged_idxs_it = unc_ranged_idxs.begin();
-      vector<bool> unc_aops(full_aops->size() - 2*deltas_pos->size());
+      vector<bool> unc_aops(orig_aops->size() - 2*deltas_pos->size());
 
       vector<bool>::iterator unc_aops_it = unc_aops.begin();
       for (int pos : *ids_pos ) {
         *unc_ranged_idxs_it++ = orig_ids->at(pos)+full_id_ranges->at(pos);
-        *unc_aops_it++ = full_aops->at(pos);
+        *unc_aops_it++ = orig_aops->at(pos);
       }
 
       vector<int> standard_alt_order = get_standardized_alt_order( unc_ranged_idxs, unc_aops );
@@ -445,7 +442,7 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
 
       if ( Gamma_map->find( Gname_alt ) == Gamma_map->end() ) {
         Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( TargetStates->civec_info(Bra_num), TargetStates->civec_info(Ket_num), 
-                                                           full_aops, full_id_ranges, ids_pos, Gamma_map) );
+                                                               orig_aops, full_id_ranges, ids_pos, Gamma_map) );
       }
       kk++;
     }
@@ -454,7 +451,7 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
       cout << "     LIST OF GAMMAS FOLLOWING ALT ORDERING " << endl;
       cout << "-----------------------------------------------------" << endl;
       for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
-        cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, gint->full_aops,  gint->ids_pos, TargetStates->name(Bra_num), TargetStates->name(Ket_num) ) ;
+        cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops,  gint->ids_pos, TargetStates->name(Bra_num), TargetStates->name(Ket_num) ) ;
         cout << "   ("<< gint->my_sign <<","<< gint->my_sign << ")" << endl;
       }
       cout << "-----------------------------------------------------" << endl;
@@ -474,7 +471,6 @@ cout << "GammaGenerator::swap" << endl;
 #endif 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  shared_ptr<vector<bool>> full_aops           = gamma_vec->at(kk)->full_aops;
   shared_ptr<vector<string>>  full_id_ranges   = gamma_vec->at(kk)->full_id_ranges;
   shared_ptr<vector<int>>  ids_pos             = gamma_vec->at(kk)->ids_pos;
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos;
@@ -498,7 +494,7 @@ cout << "GammaGenerator::swap" << endl;
       if ( (qq !=ii) && (qq!=jj))
         new_ids_pos->push_back(ids_pos->at(qq));
 
-    shared_ptr<GammaIntermediate> new_gamma = make_shared<GammaIntermediate>(full_id_ranges, orig_aops, new_ids_pos, new_deltas, new_sign);
+    shared_ptr<GammaIntermediate> new_gamma = make_shared<GammaIntermediate>(full_id_ranges, new_ids_pos, new_deltas, new_sign);
     gamma_vec->push_back(new_gamma);
 
   }
@@ -748,7 +744,3 @@ vector<int> GammaGenerator::get_standardized_alt_order ( const vector<string>& r
 };
 
 #endif
-
-//      if ( Gamma_map->find(Gname) == Gamma_map->end() ) 
-//        Gamma_map->emplace( Gname, make_shared<GammaInfo>(  TargetStates->civec_info(Bra_num), TargetStates->civec_info(Ket_num),
-//                                                            full_aops, full_id_ranges, ids_pos, Gamma_map) ) ;

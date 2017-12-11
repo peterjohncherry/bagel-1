@@ -11,43 +11,68 @@ using namespace WickUtils;
 template<class DataType>
 class TensOp_Prep {
    public:
-   std::string name_;
-   std::string Tsymm_;
-   std::string psymm_;
-   std::shared_ptr<std::vector<std::string>> idxs_;
-   std::shared_ptr<std::vector<std::vector<std::string>>> idx_ranges_;
-   std::shared_ptr<std::vector<bool>> aops_;
+     std::string name_;
+     std::string Tsymm_;
+     std::vector<std::string> idxs_;
+     std::vector<std::vector<std::string>> idx_ranges_;
+     std::vector<bool> aops_;
+     
+     std::vector<int> plus_ops_;
+     std::vector<int> kill_ops_;
+     int num_idxs_;
+     
+     std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs_; 
+     std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) > constraints_;
+     
+     DataType orig_factor_;
     
-   std::shared_ptr<std::vector<int>> plus_ops_;
-   std::shared_ptr<std::vector<int>> kill_ops_;
-   std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > >    plus_combs_;
-   std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > >    kill_combs_;
-   int num_idxs_;
-   std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs_; 
-   std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) > constraints_;
-
-  
-   // unique_range_blocks tells you what parts of your tensor actually need to be calculated and stored.
-   std::vector<std::vector<std::string>> unique_ranges_;
-
-   // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
-   std::shared_ptr< std::map< const std::vector<std::string>, 
-                    std::tuple<bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int> > >> all_ranges_;
-
-   TensOp_Prep( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
-                std::vector<bool>& aops, int orig_factor,
-                std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > >& symmfuncs, 
-                std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) >& constraints,
-                std::string& Tsymm );
-   TensOp_Prep(){};
-
-   void generate_ranges();
-   bool apply_symmetry( std::vector<std::string>& ranges_1, std::vector<std::string>& ranges_2  );
-   bool satisfies_constraints( std::vector<std::string>& ranges );
-
+     std::shared_ptr< const std::vector<std::string>> idxs_const_ptr; 
+     
+     // unique_range_blocks tells you what parts of your tensor actually need to be calculated and stored.
+     std::vector< std::shared_ptr< const std::vector<std::string>> > unique_range_blocks;
+     
+     // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
+     std::shared_ptr< std::map< const std::vector<std::string>, 
+                      std::tuple<const bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, const std::pair<int,int> > >> all_ranges_;
+     
+     TensOp_Prep( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
+                  std::vector<bool>& aops, DataType orig_factor,
+                  std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > >& symmfuncs, 
+                  std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) >& constraints,
+                  std::string& Tsymm );
+     TensOp_Prep(){};
+     
+     void generate_ranges();
+     bool apply_symmetry( const std::vector<std::string>& ranges_1, const std::vector<std::string>& ranges_2  );
+     bool satisfies_constraints( std::vector<std::string>& ranges );
 
 
 };
+
+ template<class DataType>
+ class TensOp_General {
+    private:
+      const std::string name_;
+      const std::string Tsymm_;
+      const std::vector<std::string> idxs_;
+      const std::vector<bool> aops_;
+      
+      const std::vector<int> plus_ops_;
+      const std::vector<int> kill_ops_;
+      const int num_idxs_;
+    
+     // unique_range_blocks tells you which parts of your tensor actually need to be calculated and stored.
+     const std::vector< std::shared_ptr< const std::vector<std::string>>> unique_ranges_;
+     
+     // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
+     const std::map< const std::vector<std::string>,
+                     std::tuple<const bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, const std::pair<int,int>  >> all_ranges_;
+    
+     TensOp_General(TensOp_Prep<DataType> TOp ) : name_(TOp.name_), Tsymm_(TOp.Tsymm_), idxs_(TOp.idxs_), aops_(TOp.aops_), plus_ops_(*TOp.plus_ops_), kill_ops_(*TOp.kill_ops_), 
+                                                  num_idxs_(TOp.num_idxs_), all_ranges_(TOp.all_ranges_) {};
+     ~TensOp_General(){};
+ };
+
 
 
 template<class DataType>
@@ -62,24 +87,25 @@ class TensOp {
                
    /* const */std::shared_ptr<std::vector<int>> plus_ops_;
    /* const */std::shared_ptr<std::vector<int>> kill_ops_;
-   /* const */std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > >    plus_combs_;
-   /* const */std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > >    kill_combs_;
    int num_idxs_;
 
    private:
+     std::shared_ptr<const TensOp_General<DataType>> tensop_orig_;
      std::shared_ptr<std::map< std::pair< int, std::pair<int,int> > , std::shared_ptr<std::vector<std::shared_ptr<std::vector<bool>>>> >> spin_paths_;
      std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs_;
      std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>)> constraints_;  
   
-   /*  const*/ DataType factor_;
+   /* const*/ DataType factor_;
 
      std::shared_ptr< std::map< std::vector<std::string>, std::pair<int,int> > > orb_ranges;
      std::shared_ptr< std::map< std::vector<std::string>, 
                       std::tuple<bool, std::shared_ptr<std::vector<std::string>>,  std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > >> all_ranges_;
      
      void get_ctrs_pos() ;
+
      //map from original index range, to ranges and factors used in calculation
-     //tuple contained 1: bool is_this_range_unique?, 2: unique range which needs to be calculated, 3: indexes for contraction of this range,  4: factor from transformation 
+     //tuple contained 1: bool is_this_range_unique?, 2: unique range which needs to be calculated, 3: indexes for contraction of this range,  4: factor from transformation     
+      
 
    public:
      TensOp( std::string name,
@@ -88,6 +114,7 @@ class TensOp {
              std::vector<std::string> orig_idxs, std::vector<std::vector<std::string>> orig_idx_ranges,                      
              std::vector<bool> orig_aops, int orig_factor, std::string orig_Tsymm, std::string orig_psymm = "2el");
      TensOp(std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp<DataType> >> orig_tensors); 
+     TensOp(std::shared_ptr< const TensOp_General<DataType> > tensop_orig  ) : tensop_orig_(tensop_orig) {}; 
      ~TensOp(){};
   
      std::string name(){ return name_;}
@@ -102,8 +129,6 @@ class TensOp {
 
      std::shared_ptr<std::vector<int>> plus_ops(){ return plus_ops_;}
      std::shared_ptr<std::vector<int>> kill_ops(){ return kill_ops_;}
-     std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > > plus_combs(){ return plus_combs_;}
-     std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > > kill_combs(){ return kill_combs_;}
      
      int factor() { return factor_; };
      
@@ -151,8 +176,6 @@ class MultiTensOp : public TensOp<DataType> {
     
     using TensOp<DataType>::plus_ops_;
     using TensOp<DataType>::kill_ops_;
-    using TensOp<DataType>::plus_combs_;
-    using TensOp<DataType>::kill_combs_;
     using TensOp<DataType>::num_idxs_;
 
     std::vector<std::shared_ptr<TensOp<DataType>>> orig_tensors_;
@@ -202,8 +225,6 @@ class MultiTensOp : public TensOp<DataType> {
     
     std::shared_ptr<std::vector<int>> plus_ops(){ return plus_ops_;}
     std::shared_ptr<std::vector<int>> kill_ops(){ return kill_ops_;}
-    std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>>>> plus_combs(){ return plus_combs_;}
-    std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>>>> kill_combs(){ return kill_combs_;}
     
     std::vector<std::shared_ptr<TensOp<DataType>>> orig_tensors(){ return orig_tensors_ ;}
     std::shared_ptr<std::vector<int>> Tsizes() { return Tsizes_ ;}
