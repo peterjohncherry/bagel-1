@@ -9,6 +9,48 @@
 using namespace WickUtils;
 
 template<class DataType>
+class TensOp_Prep {
+   public:
+   std::string name_;
+   std::string Tsymm_;
+   std::string psymm_;
+   std::shared_ptr<std::vector<std::string>> idxs_;
+   std::shared_ptr<std::vector<std::vector<std::string>>> idx_ranges_;
+   std::shared_ptr<std::vector<bool>> aops_;
+    
+   std::shared_ptr<std::vector<int>> plus_ops_;
+   std::shared_ptr<std::vector<int>> kill_ops_;
+   std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > >    plus_combs_;
+   std::shared_ptr< std::vector< std::shared_ptr< std::vector< std::shared_ptr<std::vector<int> > > > > >    kill_combs_;
+   int num_idxs_;
+   std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs_; 
+   std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) > constraints_;
+
+  
+   // unique_range_blocks tells you what parts of your tensor actually need to be calculated and stored.
+   std::vector<std::vector<std::string>> unique_ranges_;
+
+   // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
+   std::shared_ptr< std::map< const std::vector<std::string>, 
+                    std::tuple<bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int> > >> all_ranges_;
+
+   TensOp_Prep( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
+                std::vector<bool>& aops, int orig_factor,
+                std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > >& symmfuncs, 
+                std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) >& constraints,
+                std::string& Tsymm );
+   TensOp_Prep(){};
+
+   void generate_ranges();
+   bool apply_symmetry( std::vector<std::string>& ranges_1, std::vector<std::string>& ranges_2  );
+   bool satisfies_constraints( std::vector<std::string>& ranges );
+
+
+
+};
+
+
+template<class DataType>
 class TensOp {
    protected:
    /* const */std::string name_;
@@ -83,7 +125,7 @@ class TensOp {
      //should be set up to generate hermitian conjugated operator TODO check to see if this is working
      void hconj();
      
-     void generate_ranges( std::shared_ptr<std::vector<std::vector<std::string>>> idx_ranges, std::string symm_type);
+     void generate_ranges();
      virtual void get_ctrs_tens_ranges() ;
      
      bool apply_symmetry( std::shared_ptr<std::vector<std::string>> ranges_1, std::shared_ptr<std::vector<std::string>> ranges_2  );
