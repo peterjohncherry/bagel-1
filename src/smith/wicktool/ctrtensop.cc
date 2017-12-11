@@ -127,10 +127,10 @@ void CtrTensorPart<DType>::FullContract( shared_ptr<map<string,shared_ptr<CtrTen
                                          shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_CtrTensorPart
-cout << "CtrTensorPart<DType>::FullContract new" << endl; 
+cout << "CtrTensorPart<DType>::FullContract" << endl; 
 #endif 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << endl <<  "CtrTensorPart<DType>::FullContract NEWVER : CTP name =  " << name << endl;
+cout << endl <<  "CtrTensorPart<DType>::FullContract : CTP name =  " << name << endl;
 
   while ( ctrs_todo->size() != 0 ){ 
 
