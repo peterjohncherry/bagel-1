@@ -115,154 +115,16 @@ bool TensOp_Prep<DataType>::apply_symmetry( const vector<string>& ranges_1,  con
 template<class DataType>
 bool TensOp_Prep<DataType>::satisfies_constraints( vector<string>& ranges ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-     shared_ptr<vector<string>> ranges_ptr = make_shared<vector<string>>(ranges);
-     for (auto OK : constraints_) 
-       if( !OK(ranges_ptr))
-         return false;
-    return true;
+  shared_ptr<vector<string>> ranges_ptr = make_shared<vector<string>>(ranges);
+  for (auto OK : constraints_) 
+    if( !OK(ranges_ptr))
+      return false;
+  return true;
 }; 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-TensOp<DataType>::TensOp( string name,
-                          vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>), int, int > > symmfuncs, 
-                          vector<bool(*)(shared_ptr<vector<string>>) > constraints,
-                          vector<string> orig_idxs, vector<vector<string>> orig_idx_ranges,
-                          vector<bool> orig_aops, int orig_factor, string orig_Tsymm, string orig_psymm ):
-                          name_(name), Tsymm_(orig_Tsymm), psymm_(orig_psymm), 
-                          idxs_(make_shared<vector<string>>(orig_idxs)), 
-                          idx_ranges_(make_shared<vector<vector<string>>>(orig_idx_ranges)),
-                          aops_(make_shared<vector<bool>>(orig_aops))   {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_TensOp 
-cout << "TensOp<DataType>::TensOp" <<   endl;
-#endif 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-           
-  name_ = name;
-  symmfuncs_ = symmfuncs;
-  constraints_ = constraints;
-  contracted  = false;
-  num_idxs_ = orig_idxs.size();
-
-  generate_ranges();
-  
-  plus_ops_ = make_shared<vector<int>>();
-  kill_ops_ = make_shared<vector<int>>();
-
-  for ( int ii =0 ; ii != aops_->size() ; ii++ ) {
-    if(aops_->at(ii)) {
-      plus_ops_->push_back(ii);
-    } else {
-      kill_ops_->push_back(ii);
-    }
-  }
-
-  CTP_map = make_shared< map< string, shared_ptr<CtrTensorPart<DataType>> >>();
-
-  cout << "TensOp<DataType>::TensOp" << endl;
-  return;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-void TensOp<DataType>::generate_ranges(){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_TensOp 
-cout << "TensOp::generate_ranges" <<   endl;
-#endif 
-//////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp::generate_ranges" <<   endl;
-
-  //set up loop utils
-  shared_ptr<vector<int>> fvec = make_shared<vector<int>>( num_idxs_, 0); 
-  shared_ptr<vector<int>> maxs = make_shared<vector<int>>( num_idxs_ );
-  int  num_cycles = 1;
-  bool tbool = true;
-  pair<int,int> fac(1,1);
-  all_ranges_ = make_shared<std::map< std::vector<std::string>, 
-                                      std::tuple<bool, std::shared_ptr<std::vector<std::string>>,  std::shared_ptr<std::vector<std::string>>, std::pair<int,int> > >>();
-
-  for( int ii = 0; ii != idx_ranges_->size(); ii++ ){
-    maxs->at(ii) = idx_ranges_->at(ii).size()-1;
-    num_cycles *= idx_ranges_->at(ii).size();
-  }
-
-  //generate all possible ranges
-  vector<vector<string>> possible_ranges(0);
-  for (int ii = 0 ; ii != num_cycles ; ii++){
-    vector<string> new_range(idx_ranges_->size());
-    for (auto jj = 0 ; jj != fvec->size() ; jj++ )
-       new_range[jj] = idx_ranges_->at(jj)[fvec->at(jj)];
-    if(satisfies_constraints(new_range))
-      possible_ranges.push_back(new_range);
-    fvec_cycle(fvec, maxs);
-  } 
-
-  //initialize range maps and add in first range to start things off
-  orb_ranges = make_shared< map< vector<string>, pair<int,int> > >();
-  orb_ranges->emplace(possible_ranges[0], make_pair(1,1) );
-  
-  shared_ptr<vector<string>> tmp_range =  make_shared<vector<string>>(possible_ranges[0]);
-  all_ranges_->emplace(possible_ranges[0], tie(tbool, tmp_range , idxs_, fac ) );
-
-  //Apply symmetry operations to remove unnecessary ranges   
-  for (int ii = 1 ; ii!=possible_ranges.size(); ii++) {
-    for (int kk = 0 ; kk != ii; kk++) {
-       if(apply_symmetry(possible_ranges[kk], possible_ranges[ii])){
-         break;
-       }
-       if(kk == ii-1){
-         orb_ranges->emplace(possible_ranges[ii], make_pair(1,1) );
-         break;
-       }
-     } 
-  }
-  cout << "TensOp::generate_ranges" <<   endl;
-  return;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Does nothing for now, abandon symmetry until you have fixed the mapping problem
-//I think it is better (safer) if it takes the arguments by value.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-bool TensOp<DataType>::apply_symmetry(vector<string> ranges_1, vector<string> ranges_2  ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//cout << "TensOp::apply_symmetry" <<   endl;
-
-  bool tbool = true; 
-  pair<int,int> fac(1,1);
-  shared_ptr<vector<string>> ranges_2_ptr = make_shared<vector<string>>(ranges_2);
-  all_ranges_->emplace(ranges_2, tie(tbool, ranges_2_ptr, idxs_, fac ) );
-  return false;
-}; 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-bool TensOp<DataType>::apply_symmetry(shared_ptr<vector<string>> ranges_1, shared_ptr<vector<string>> ranges_2  ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//cout << "TensOp::apply_symmetry" <<   endl;
-
-//  for (auto symmop : symmfuncs_) {
-//    if( *ranges_1 == *(get<0>(symmop)(ranges_2)) ){
-//     bool fbool = false; 
-//      pair<int,int> sfac(get<1>(symmop), get<2>(symmop));
-//      shared_ptr<vector<string>> transformed_idxs = make_shared<vector<string>>(*(get<0>(symmop)(idxs)));
-//      all_ranges_->emplace(ranges_2, tie( fbool, ranges_1, transformed_idxs, sfac));
-//      get<2>(all_ranges_->at(ranges_2)) = transformed_idxs; //WHY DO I NEED TO DO THIS TO MAKE IT WORK? JUST EMPLACING IS NOT ENOUGH!!! VERY SUSPICIOUS! Well, I know why now...
-//      return true;
-//    }
-//  }
-//
-// bool tbool = true; 
-//  pair<int,int> fac(1,1);
-//  all_ranges_->emplace(ranges_2, tie(tbool, ranges_2, idxs, fac ) );
-  return false;
-}; 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//get contractions and ranges
+//get contractions and ranges; note this is done by TensOp not TensOp gen as the contractions needed will be 
+//dependent on the sparsity associated with the relevant state
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void TensOp<DataType>::get_ctrs_tens_ranges() {
@@ -276,8 +138,8 @@ void TensOp<DataType>::get_ctrs_tens_ranges() {
   //puts uncontracted ranges into map 
   shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector<pair<int,int>>>(0);
   for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
-    shared_ptr<vector<pair<int,int>>>    ReIm_factors = make_shared<vector<pair<int,int>>>(1, get<3>(rng_it->second)); 
-    shared_ptr<vector<string>>           full_ranges  = make_shared<vector<string>>(rng_it->first);
+    shared_ptr<vector<const pair<int,int>>>    ReIm_factors = make_shared< vector<const pair<int,int>>>(1, get<3>(rng_it->second)); 
+    shared_ptr<const vector<string>>           full_ranges  = make_shared<const vector<string>>(rng_it->first);
     shared_ptr<CtrTensorPart<DataType>>  CTP          = make_shared< CtrTensorPart<DataType> >(idxs_, full_ranges, noctrs, ReIm_factors ); 
     cout << "CTP->myname() = " << CTP->myname() << " is going into CTP_map" <<  endl;
     CTP_map->emplace(CTP->myname(), CTP); //maybe should be addded in with ctr_idxs.
@@ -309,48 +171,6 @@ void TensOp<DataType>::get_ctrs_tens_ranges() {
   cout << "TensOp get_ctrs_tens_ranges out" << endl;
   return;
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-bool TensOp<DataType>::satisfies_constraints( shared_ptr<vector<string>> ranges ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-     for (auto OK : constraints_) 
-       if( !OK(ranges))
-         return false;
-    return true;
-}; 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-bool TensOp<DataType>::satisfies_constraints( vector<string> ranges ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-     shared_ptr<vector<string>> ranges_ptr = make_shared<vector<string>>(ranges);
-     for (auto OK : constraints_) 
-       if( !OK(ranges_ptr))
-         return false;
-    return true;
-}; 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Performs hermitian conjugate on tensor indexes
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-void TensOp<DataType>::hconj() {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  reverse(idxs_->begin(), idxs_->end());
-
-  for( vector<string> range :  *idx_ranges_)
-    reverse(range.begin(), range.end());
-
-  for (bool op : *aops_)
-    op =!op;      
-
-//  for (auto range_it = orb_ranges->begin(); range_it!=orb_ranges->end(); range_it++ ){
-//    reverse(range_it->first.begin(), range_it->first.end());
-//    range_it->second.second *= -1;
-//  }
-  return;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 TensOp<DataType>::TensOp( std::string name , bool spinfree, std::vector<std::shared_ptr<TensOp<DataType>>> orig_tensors ) {
@@ -443,7 +263,9 @@ cout << "MultiTensOp::generate_ranges()" << endl;
 //////////////////////////////////////////////////////////////////////////////////////
   cout << "MultiTensOp::generate_ranges()" << endl;
 
-  vector<map< vector<string>,  tuple<bool, shared_ptr<vector<string>>, shared_ptr<vector<string>>,  pair<int,int> > >::iterator> rng_maps;
+//  vector<const map< const vector<string>,  tuple< const bool, shared_ptr<const vector<string>>, shared_ptr< const vector<string>>,  const pair<int,int> > >::iterator> rng_maps;
+    vector< const map< const vector<string>, tuple<const bool, shared_ptr<const vector<string>>,  shared_ptr< const vector<string>>, const pair<int,int>  >>::iterator> rng_maps;
+
   vector<int> posvec( num_tensors_, 0 ); 
 
   combined_ranges = make_shared< map< vector<string>,
