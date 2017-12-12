@@ -267,6 +267,86 @@ cout << "get_N_in_M_combsX" << endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // gets all possible combinations of NN elements from vec1 , all combinations will be unique iff all elements of vec1 are unique
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<shared_ptr<vector<int>>>> WickUtils::get_N_in_M_combsX( shared_ptr< const vector<int>> vec1, int NN ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if defined DBG_WickUtils || defined DBG_all 
+cout << "get_N_in_M_combsX" << endl;
+#endif
+//////////////////////////////////////////////////////////////////////////////////////////////
+  if (NN == 0 )
+    return make_shared<vector<shared_ptr<vector<int>>>>(0);
+
+//  cout <<  "getting " << NN << " elements from " ;
+//  cout << "[ ";  for (auto  elem : *vec1) { cout << elem << " " ;} cout << "]"<< endl;
+
+  auto fvec = make_shared<vector<int>>(NN,0);
+  auto maxs = make_shared<vector<int>>();
+  auto mins = make_shared<vector<int>>(NN,0);
+ 
+  for (int ii = 0; ii !=fvec->size();  ii++)
+    maxs->push_back(vec1->size()-1-ii);
+  
+  vector<int> reset_pos;
+  for (int ii =0 ; ii != vec1->size(); ii++)
+    reset_pos.push_back(ii);
+  
+  auto N_in_M_combs =  make_shared<vector<shared_ptr<vector<int>>>>();
+  do {   
+    auto perm = make_shared<vector<int>>() ;
+    vector<int> pos = reset_pos;
+    for(int ii= 0; ii !=fvec->size() ; ii++){
+       perm->push_back(vec1->at(pos[fvec->at(ii)]));       
+       pos.erase(pos.begin()+fvec->at(ii));
+    }
+    N_in_M_combs->push_back(perm);
+  } while (fvec_cycle(fvec, maxs, mins));
+
+  return N_in_M_combs;
+} 
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// gets all possible combinations of NN elements from vec1 , all combinations will be unique iff all elements of vec1 are unique
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<vector<shared_ptr<vector<DataType>>>> WickUtils::get_N_in_M_combsX( shared_ptr< const vector<DataType>> vec1, int NN ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if defined DBG_WickUtils || defined DBG_all 
+cout << "get_N_in_M_combsX" << endl;
+#endif
+//////////////////////////////////////////////////////////////////////////////////////////////
+  if (NN == 0 )
+    return make_shared<vector<shared_ptr<vector<DataType>>>>(0);
+
+  shared_ptr<vector<int>> fvec = make_shared<vector<int>>(NN,0);
+  shared_ptr<vector<int>> mins = make_shared<vector<int>>(NN,0);
+  shared_ptr<vector<int>> maxs = make_shared<vector<int>>(NN,0);
+ 
+  for (int ii = 0; ii !=fvec->size();  ii++)
+    maxs->at(ii) = vec1->size()-1-ii;
+  
+  vector<int> reset_pos; 
+  for (int ii =0 ; ii != vec1->size(); ii++)
+    reset_pos.push_back(ii);
+  
+  auto N_in_M_combs =  make_shared<vector<shared_ptr<vector<DataType>>>>();
+  cout << " NN = " << NN << endl; 
+  do {   
+    auto perm = make_shared<vector<DataType>>() ;
+    vector<int> pos = reset_pos;
+    for(int ii= 0; ii !=fvec->size() ; ii++){
+       perm->push_back(vec1->at(pos[fvec->at(ii)]));       
+       pos.erase(pos.begin()+fvec->at(ii));
+    }
+//    cout << " perm = " ; for (auto elem : *perm) { cout << elem <<  " " ; } cout << endl;
+    N_in_M_combs->push_back(perm);
+  } while (fvec_cycle(fvec, maxs, mins));
+ 
+  return N_in_M_combs;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// gets all possible combinations of NN elements from vec1 , all combinations will be unique iff all elements of vec1 are unique
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<vector<shared_ptr<vector<DataType>>>> WickUtils::get_N_in_M_combsX( shared_ptr<vector<DataType>> vec1, int NN ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -319,6 +399,60 @@ cout << "print_pvec" << endl;
   cout << "]"<< endl;
   return;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> WickUtils::get_unique_pairs(shared_ptr<const vector<int>> ids1 , shared_ptr<const vector<int>> ids2 , int num_pairs){
+//////////////////////////////////////////////////////////////////////////////////////////////
+#if defined DBG_WickUtils || defined DBG_all 
+cout << "get_unique_pairs" << endl;
+#endif
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+  shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> pairs_vec = make_shared<vector<shared_ptr<vector<pair<int,int>>>>>(0);
+
+  //stupid fudge
+  if(num_pairs == 0){
+     return pairs_vec;
+
+  }  else if(num_pairs == 1){
+
+    for (int ii = 0 ; ii !=ids1->size(); ii++){
+      for (int jj = 0 ; jj !=ids2->size(); jj++){
+        shared_ptr<vector<pair<int,int>>> pair_comb = make_shared<vector<pair<int,int>>>(0);
+        pair_comb->push_back(make_pair(ids1->at(ii), ids2->at(jj)));
+        pairs_vec->push_back(pair_comb);
+      }
+    }
+    return pairs_vec;
+
+  } else {
+
+    int half_sz= ids1->size()/2;;
+    shared_ptr<vector<int>> maxs = make_shared<vector<int>>(num_pairs, ids1->size());
+    shared_ptr<vector<int>> fvec = make_shared<vector<int>>(0);
+    
+    for (int ii = 0; ii != maxs->size();  ii++){
+      maxs->at(ii) = ids1->size()-maxs->size() + ii;
+      fvec->push_back(ii);
+    } 
+    
+    //get every rearrangement here
+    auto id2_combs = get_N_in_M_combsX( ids2, num_pairs );
+   
+    do {   
+      for (auto comb : *id2_combs){
+        shared_ptr<vector<pair<int,int>>> pair_comb = make_shared<vector<pair<int,int>>>(0);
+        for (int ii = 0; ii!=fvec->size(); ii++){
+          pair_comb->push_back(make_pair(ids1->at(fvec->at(ii)), comb->at(ii)));  
+        }
+        pairs_vec->push_back(pair_comb); 
+      }
+    } while(constrained_fvec_cycle(fvec, maxs));
+    
+  
+    return pairs_vec;
+  }
+} 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> WickUtils::get_unique_pairs(shared_ptr<vector<int>> ids1 , shared_ptr<vector<int>> ids2 , int num_pairs){
