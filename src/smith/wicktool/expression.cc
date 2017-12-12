@@ -4,13 +4,14 @@
 
 using namespace std;
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-Expression<DType>::Expression( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list,
+Expression<DType>::Expression( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DType>>>>>> BraKet_list,
                            std::shared_ptr<StatesInfo<DType>> TargetStates_in ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  T_map                 = make_shared<map< string, shared_ptr<TensOp<DType>>>>();
+  T_map                 = make_shared<map< string, shared_ptr<TensOp::TensOp<DType>>>>();
   CTP_map               = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
   CMTP_map              = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
   ACompute_map          = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
@@ -34,7 +35,7 @@ template <class DType>
 void Expression<DType>::Initialize(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  T_map  = make_shared<map< string, shared_ptr<TensOp<DType>>>>();
+  T_map  = make_shared<map< string, shared_ptr<TensOp::TensOp<DType>>>>();
   CTP_map    = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
   CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
   ACompute_map = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
@@ -46,7 +47,7 @@ void Expression<DType>::Initialize(){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>> Tens_vec ){
+void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp::TensOp<DType>>>> Tens_vec ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<BraKet<DType>> New_BraKet = make_shared<BraKet<DType>>(G_to_A_map, GammaMap, TargetStates );

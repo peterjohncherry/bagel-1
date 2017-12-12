@@ -13,12 +13,14 @@
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
+
+
 template<class DType> 
 class Expression {
       public:
 
       Expression(){};
-      Expression( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list,
+      Expression( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DType>>>>>> BraKet_list,
                 std::shared_ptr<StatesInfo<DType>> TargetsInfo);
 
       ~Expression(){};
@@ -29,7 +31,7 @@ class Expression {
       std::vector<std::shared_ptr<BraKet<DType>>> BraKet_Terms;
     
       //Map containing original tensor operators info
-      std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp<DType> > >> T_map    ;      
+      std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DType> > >> T_map    ;      
 
       //contracted and uncontracted single tensor info
       std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DType> > >>CTP_map    ;      
@@ -50,7 +52,7 @@ class Expression {
 
       void Initialize();
 
-      void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp<DType>>>> Tens_vec  );
+      void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DType>>>> Tens_vec  );
      
       void Get_CMTP_Compute_Terms();
 

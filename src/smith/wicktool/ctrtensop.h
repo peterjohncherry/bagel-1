@@ -1,8 +1,8 @@
 #ifndef __SRC_SMITH_CtrTensOp_H
 #define __SRC_SMITH_CtrTensOp_H
 
-  #include <src/smith/wicktool/wickutils.h>
-  #include <unordered_set>
+#include <src/smith/wicktool/wickutils.h>
+#include <unordered_set>
 //  #include "wickutils.h"
 
 //Classes for defining contraction operations

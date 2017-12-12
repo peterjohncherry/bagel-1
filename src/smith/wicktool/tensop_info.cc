@@ -4,6 +4,8 @@
 
 using namespace std;
 
+
+
 /////////////////////////////////////////////////////////////////////////////////
 //Build the operators here. 
 /////////////////////////////////////////////////////////////////////////////////
@@ -29,7 +31,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> S_symmfuncs = identity_only();
       vector<bool(*)(shared_ptr<vector<string>>)>  S_constraints = {  &System_Info<double>::System_Info::always_true };
      
-      shared_ptr<TensOp<double>> STens = Build_TensOp("S", S_idxs, S_aops, S_idx_ranges, S_symmfuncs, S_constraints, S_factor, S_TimeSymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> STens = Build_TensOp("S", S_idxs, S_aops, S_idx_ranges, S_symmfuncs, S_constraints, S_factor, S_TimeSymm, false ) ;
       T_map->emplace("S", STens);
  
    }else if ( OpName == "Z" ) { /* ---- H Tensor  ACTIVE ONLY FOR TEZTING----  */
@@ -43,7 +45,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Z_symmfuncs = identity_only();
       vector<bool(*)(shared_ptr<vector<string>>)>  Z_constraints = {  &System_Info<double>::System_Info::always_true };
      
-      shared_ptr<TensOp<double>> ZTens = Build_TensOp("Z",  Z_idxs, Z_aops, Z_idx_ranges, Z_symmfuncs, Z_constraints, Z_factor, Z_TimeSymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> ZTens = Build_TensOp("Z",  Z_idxs, Z_aops, Z_idx_ranges, Z_symmfuncs, Z_constraints, Z_factor, Z_TimeSymm, false ) ;
       T_map->emplace("Z", ZTens);
    
     } else if ( OpName == "U" ) {  /* ---- 4idx UNIT Tensor ACTIVE ONLY FOR TESTING----  */
@@ -57,7 +59,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> U_symmfuncs = identity_only();
       vector<bool(*)(shared_ptr<vector<string>>)>  U_constraints = {  &System_Info<double>::System_Info::always_true };
      
-      shared_ptr<TensOp<double>> UTens = Build_TensOp( "U",U_idxs, U_aops, U_idx_ranges, U_symmfuncs, U_constraints, U_factor, U_TimeSymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> UTens = Build_TensOp( "U",U_idxs, U_aops, U_idx_ranges, U_symmfuncs, U_constraints, U_factor, U_TimeSymm, false ) ;
       T_map->emplace("U", UTens);
     
     } else if ( OpName == "R" ) {  /* ---- 6idx UNIT Tensor ACTIVE ONLY FOR TESTING----  */
@@ -71,7 +73,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> R_symmfuncs = identity_only();
       vector<bool(*)(shared_ptr<vector<string>>)>  R_constraints = {  &System_Info<double>::System_Info::always_true };
       
-      shared_ptr<TensOp<double>> RTens = Build_TensOp("R",  R_idxs, R_aops, R_idx_ranges, R_symmfuncs, R_constraints, R_factor, R_TimeRymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> RTens = Build_TensOp("R",  R_idxs, R_aops, R_idx_ranges, R_symmfuncs, R_constraints, R_factor, R_TimeRymm, false ) ;
       T_map->emplace("R", RTens);
     
     } else if ( OpName == "Q" ) {   /* ---- 8idx UNIT Tensor ACTIVE ONLY FOR TESTING----  */
@@ -85,7 +87,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Q_symmfuncs = identity_only();
       vector<bool(*)(shared_ptr<vector<string>>)>  Q_constraints = {  &System_Info<double>::System_Info::always_true };
    
-      shared_ptr<TensOp<double>> QTens = Build_TensOp("Q",  Q_idxs, Q_aops, Q_idx_ranges, Q_symmfuncs, Q_constraints, Q_factor, Q_TimeSymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> QTens = Build_TensOp("Q",  Q_idxs, Q_aops, Q_idx_ranges, Q_symmfuncs, Q_constraints, Q_factor, Q_TimeSymm, false ) ;
       T_map->emplace("Q", QTens);
  
     } else if ( OpName == "P" ) {  /* ---- test tensor with general H2el shape ----  */
@@ -99,7 +101,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> P_symmfuncs = set_2el_symmfuncs();
       vector<bool(*)(shared_ptr<vector<string>>)>  P_constraints = {  &System_Info<double>::System_Info::always_true };
       
-      shared_ptr<TensOp<double>> PTens = Build_TensOp("P",  P_idxs, P_aops, P_idx_ranges, P_symmfuncs, P_constraints, P_factor, P_TimeSymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> PTens = Build_TensOp("P",  P_idxs, P_aops, P_idx_ranges, P_symmfuncs, P_constraints, P_factor, P_TimeSymm, false ) ;
       T_map->emplace("P", PTens);
   
     } else if ( OpName == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
@@ -113,7 +115,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> H_symmfuncs = set_2el_symmfuncs();
       vector<bool(*)(shared_ptr<vector<string>>)>  H_constraints = {  &System_Info<double>::System_Info::always_true };
       
-      shared_ptr<TensOp<double>> HTens = Build_TensOp("H", H_idxs, H_aops, H_idx_ranges, H_symmfuncs, H_constraints, H_factor, H_TimeSymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> HTens = Build_TensOp("H", H_idxs, H_aops, H_idx_ranges, H_symmfuncs, H_constraints, H_factor, H_TimeSymm, false ) ;
       T_map->emplace("H", HTens);
      } else if ( OpName == "h" ) {  /* ---- h Tensor ( 1 electron Hamiltonian ) ----  */
 
@@ -126,7 +128,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> h_symmfuncs = set_1el_symmfuncs();
       vector<bool(*)(shared_ptr<vector<string>>)>  h_constraints = {  &System_Info<double>::System_Info::always_true };
       
-      shared_ptr<TensOp<double>> hTens = Build_TensOp("h", h_idxs, h_aops, h_idx_ranges, h_symmfuncs, h_constraints, h_factor, h_TimeSymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> hTens = Build_TensOp("h", h_idxs, h_aops, h_idx_ranges, h_symmfuncs, h_constraints, h_factor, h_TimeSymm, false ) ;
       T_map->emplace("h", hTens);
  
     
@@ -141,7 +143,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> T_symmfuncs = set_2el_symmfuncs();
       vector<bool(*)(shared_ptr<vector<string>>)> T_constraints = {  &System_Info<double>::System_Info::NotAllAct };
       
-      shared_ptr<TensOp<double>> TTens = Build_TensOp("T",  T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> TTens = Build_TensOp("T",  T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
       T_map->emplace("T", TTens);
        
     } else if ( OpName == "L" ) {  /* ---- L Tensor ----  */
@@ -155,7 +157,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  L_symmfuncs = set_2el_symmfuncs();
       vector<bool(*)(shared_ptr<vector<string>>)>  L_constraints = { &System_Info<double>::System_Info::NotAllAct };
       
-      shared_ptr<TensOp<double>> LTens = Build_TensOp("L", L_idxs, L_aops, L_idx_ranges, L_symmfuncs, L_constraints, L_factor, L_TimeSymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> LTens = Build_TensOp("L", L_idxs, L_aops, L_idx_ranges, L_symmfuncs, L_constraints, L_factor, L_TimeSymm, false ) ;
       T_map->emplace("L", LTens);
      
     } else if ( OpName == "X" ) {  /* ---- 2el Excitation Op  ----  */
@@ -169,7 +171,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  X_symmfuncs = set_2el_symmfuncs();
       vector<bool(*)(shared_ptr<vector<string>>)>  X_constraints = { &System_Info<double>::System_Info::NotAllAct };
       
-      shared_ptr<TensOp<double>> XTens = Build_TensOp("X", X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> XTens = Build_TensOp("X", X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
       T_map->emplace("X", XTens);
       
     } else if ( OpName == "Y" ) {  /*---- 2el Excitation Op dag  ----  */
@@ -183,7 +185,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  Y_symmfuncs = set_2el_symmfuncs();
       vector<bool(*)(shared_ptr<vector<string>>)>  Y_constraints = { &System_Info<double>::System_Info::NotAllAct };
       
-      shared_ptr<TensOp<double>> YTens = Build_TensOp("Y", Y_idxs, Y_aops, Y_idx_ranges, Y_symmfuncs, Y_constraints, Y_factor, Y_TimeSymm, false ) ;
+      shared_ptr<TensOp::TensOp<double>> YTens = Build_TensOp("Y", Y_idxs, Y_aops, Y_idx_ranges, Y_symmfuncs, Y_constraints, Y_factor, Y_TimeSymm, false ) ;
       T_map->emplace("Y", YTens);
     }
 

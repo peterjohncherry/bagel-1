@@ -5,6 +5,8 @@
 using namespace std;
 
 
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Note, spinfree should tell us not just if the wavefunction is free, but whether or 
 //not the perturbation being applied is spin independent
@@ -13,9 +15,9 @@ template<class DataType>
 System_Info<DataType>::System_Info::System_Info( shared_ptr<StatesInfo<DataType>> TargetStates_in , bool spinfree ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  T_map          = make_shared< map <string, shared_ptr<TensOp<DataType>>>>();
+  T_map          = make_shared< map <string, shared_ptr<TensOp::TensOp<DataType>>>>();
   BraKet_map     = make_shared<  std::map <std::string, 
-                                          std::shared_ptr<std::vector<std::shared_ptr< TensOp<DataType>>>>>>();
+                                          std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>>();
   CTP_map        = make_shared< map <string, shared_ptr<CtrTensorPart<DataType>>>>();
   CMTP_map       = make_shared< map <string, shared_ptr<CtrMultiTensorPart<DataType>>>>();
   expression_map = make_shared< map <string, shared_ptr<Expression<DataType>>>>();
@@ -47,7 +49,7 @@ System_Info<DataType>::System_Info::System_Info( shared_ptr<StatesInfo<DataType>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<TensOp<DataType>>
+shared_ptr<TensOp::TensOp<DataType>>
 System_Info<DataType>::System_Info::Build_TensOp( string op_name,
                                                   shared_ptr<vector<string>> op_idxs,
                                                   shared_ptr<vector<bool>> op_aops, 
@@ -62,15 +64,15 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
 
   //NOTE: change to use proper factor
   int tmpfac = 1;
-  shared_ptr<TensOp<DataType>>  New_Op; //= make_shared<TensOp<DataType>>(op_name, Symmetry_Funcs, Constraint_Funcs,
+  shared_ptr<TensOp::TensOp<DataType>>  New_Op; //= make_shared<TensOp::TensOp<DataType>>(op_name, Symmetry_Funcs, Constraint_Funcs,
                                        //                                *op_idxs, *op_idx_ranges, *op_aops, tmpfac, Tsymmetry);
 //  New_Op->get_ctrs_tens_ranges();
 
-  TensOp_Prep<DataType> New_Op_prep(  op_name, *op_idxs, *op_idx_ranges, *op_aops, factor, Symmetry_Funcs, Constraint_Funcs, Tsymmetry);
+  TensOp_Prep::TensOp_Prep<DataType> New_Op_prep(  op_name, *op_idxs, *op_idx_ranges, *op_aops, factor, Symmetry_Funcs, Constraint_Funcs, Tsymmetry);
 
-  shared_ptr<TensOp_General<DataType>> tensop_dense = make_shared<TensOp_General<DataType>>( New_Op_prep );
+  shared_ptr<TensOp_General::TensOp_General<DataType>> tensop_dense = make_shared<TensOp_General::TensOp_General<DataType>>( New_Op_prep );
   
-  shared_ptr<TensOp<DataType>> tensop_state_specific = make_shared<TensOp<DataType>>( tensop_dense );
+  shared_ptr<TensOp::TensOp<DataType>> tensop_state_specific = make_shared<TensOp::TensOp<DataType>>( tensop_dense );
 
   return New_Op;
 }
@@ -81,7 +83,7 @@ void System_Info<DataType>::System_Info::Set_BraKet_Ops(shared_ptr<vector<string
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout <<  "System_Info::System_Info::Build_BraKet(shared_ptr<vector<string>> BraKet_names, string expression_name ) " << endl;
   
-  shared_ptr<vector<shared_ptr<TensOp<double>>>> BraKet_Ops = make_shared<vector< shared_ptr<TensOp<double>> > >();
+  shared_ptr<vector<shared_ptr<TensOp::TensOp<double>>>> BraKet_Ops = make_shared<vector< shared_ptr<TensOp::TensOp<double>> > >();
 
   for ( string name : *Op_names ) 
     BraKet_Ops->push_back(T_map->at(name));
@@ -139,7 +141,7 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
   string expression_name = accumulate(BraKet_name_list->begin(), BraKet_name_list->end(), string(""));
   cout << "new_expression_name = " << expression_name << endl;
 
-  auto BraKet_List = make_shared<std::vector<std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>>>>( BraKet_name_list->size() ); 
+  auto BraKet_List = make_shared<std::vector<std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>>>>( BraKet_name_list->size() ); 
 
   for ( int ii = 0 ; ii != BraKet_name_list->size() ; ii++ ) 
     BraKet_List->at(ii) = BraKet_map->at(BraKet_name_list->at(ii)) ;

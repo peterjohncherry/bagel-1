@@ -5,6 +5,7 @@
   #include <src/smith/wicktool/tensop.h>
   #include <src/smith/wicktool/spin_manager.h>
   #include <src/smith/wicktool/states_info.h>
+
 template<class DataType> 
 class BraKet  {
       using pint_vec = std::vector<std::pair<int,int>>;
@@ -25,9 +26,9 @@ class BraKet  {
        int spin_max ;
        int spin_min ;
        
-       std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>> Sub_Ops;
+       std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>> Sub_Ops;
        
-       std::shared_ptr<MultiTensOp<DataType>> Total_Op;
+       std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op;
        
        std::shared_ptr< std::map< std::vector<std::string>, std::shared_ptr<std::vector<std::pair< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> >>> >> BK_Compute_List_CMTP;
        

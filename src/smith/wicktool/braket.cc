@@ -6,6 +6,7 @@
 using namespace std;
 using namespace WickUtils;
 
+
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
       
@@ -15,7 +16,7 @@ BraKet<DType>::BraKet(shared_ptr<map<string,shared_ptr<map<string,AContribInfo>>
                       shared_ptr<map<string, shared_ptr< GammaInfo >>> GammaMap_in,
                       shared_ptr<StatesInfo<DType>> TargetStates_in  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Sub_Ops = make_shared<vector<shared_ptr<TensOp<DType>>>>(0);
+  Sub_Ops = make_shared<vector<shared_ptr<TensOp::TensOp<DType>>>>(0);
   G_to_A_map = G_to_A_map_in;
   GammaMap = GammaMap_in;
   TargetStates = TargetStates_in;
@@ -28,10 +29,10 @@ void BraKet<DType>::Build_TotalOp(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::Build_TotalOp" << endl;
   string MT_name = "";
-  for( shared_ptr<TensOp<DType>> Tens : *Sub_Ops )
+  for( shared_ptr<TensOp::TensOp<DType>> Tens : *Sub_Ops )
     MT_name += Tens->name();
 
-  Total_Op = make_shared<MultiTensOp<DType>>( MT_name , true, *Sub_Ops );
+  Total_Op = make_shared<MultiTensOp::MultiTensOp<DType>>( MT_name , true, *Sub_Ops );
   Total_Op->get_ctrs_tens_ranges();
   return;
 }
