@@ -213,12 +213,26 @@ class MultiTensOp_Prep {
      std::vector<int> cmlsizevec_ ;
      std::vector<int> Tsizes_ ;
 
+     std::vector<std::shared_ptr<TensOp_Interface::TensOp_Interface<DataType>>> orig_tensors_; 
+
      // unique_range_blocks tells you what parts of your tensor actually need to be calculated and stored.
      std::vector< std::shared_ptr< const std::vector<std::string>> > unique_range_blocks;
      
      // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
      std::map< const std::vector<std::string>, 
                std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int> > > all_ranges_;
+
+    //Similar to all_ranges, but has the ranges associated with the different operators split up, this may be useful for decomposition, so keep for now
+    std::shared_ptr< std::map< std::vector<const std::vector<std::string>>, 
+                               std::tuple<std::shared_ptr<const std::vector<bool>>, std::shared_ptr<const std::vector<std::shared_ptr<const std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>>>>> split_ranges;
+
+    //Multi Tensor analogue of all_ranges; same as normal tensor but with vector of factors. The ordering of these factors is the same as that of the operators in the tensor
+    std::shared_ptr<std::map< const std::vector<std::string>,
+                              std::tuple<bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<const std::vector<std::pair<int,int>>> > >> combined_ranges;
+
+
+
+
      
       MultiTensOp_Prep( std::string name , bool spinfree, std::vector<std::shared_ptr<TensOp_Interface::TensOp_Interface<DataType>>>& orig_tensors );
       ~MultiTensOp_Prep(){};

@@ -178,16 +178,19 @@ MultiTensOp_Prep::MultiTensOp_Prep<DataType>::MultiTensOp_Prep( std::string name
                                                                 std::vector<std::shared_ptr<TensOp_Interface::TensOp_Interface<DataType>>>& orig_tensors ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
- num_idxs_ = 0;
- for ( shared_ptr<TensOp_Interface::TensOp_Interface<DataType>> tens : orig_tensors ) 
-   num_idxs_ +=  tens->num_idxs();
+  num_idxs_ = 0;
+  
+  orig_tensors_ = orig_tensors;
  
- aops_       = vector<bool>(num_idxs_);
- idxs_       = vector<string>(num_idxs_);
- idx_ranges_ = vector<vector<string>>(num_idxs_);
- 
- plus_ops_ = vector<int>(0);
- kill_ops_ = vector<int>(0);
+  for ( shared_ptr<TensOp_Interface::TensOp_Interface<DataType>> tens : orig_tensors ) 
+    num_idxs_ +=  tens->num_idxs();
+  
+  aops_       = vector<bool>(num_idxs_);
+  idxs_       = vector<string>(num_idxs_);
+  idx_ranges_ = vector<vector<string>>(num_idxs_);
+  
+  plus_ops_ = vector<int>(0);
+  kill_ops_ = vector<int>(0);
  
   int xx = 0;
   for ( shared_ptr<TensOp_Interface::TensOp_Interface<DataType>> orig_tens : orig_tensors) {
@@ -230,77 +233,73 @@ MultiTensOp_Prep::MultiTensOp_Prep<DataType>::MultiTensOp_Prep( std::string name
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void MultiTensOp::MultiTensOp<DataType>::generate_ranges(){
+void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::generate_ranges(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_TensOp 
-cout << "MultiTensOp::generate_ranges()" << endl;
-#endif 
-//////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::generate_ranges()" << endl;
+  cout << "MultiTensOp_Prep::generate_ranges()" << endl;
 
- //vector< map< const vector<string>, tuple<bool, shared_ptr<const vector<string>>, shared_ptr<const vector<string>>, pair<int,int>> >::const_iterator> rng_maps;
- //
- // vector<int> posvec( num_tensors_, 0 ); 
- //
- // combined_ranges = make_shared< map< vector<string>,
- //                                     tuple<bool, shared_ptr<vector<string>>,  shared_ptr<vector<string>>, shared_ptr<vector<pair<int,int>>> > >>();
- //
- // split_ranges = make_shared< map< vector<vector<string>>,
- //                                  tuple< shared_ptr<vector<bool>>, shared_ptr<vector<shared_ptr<vector<string>>>>, shared_ptr<vector<pair<int,int>>> > >>();
- //
- // if ( num_tensors_ > 1 ) { 
- //
- //   for (shared_ptr<TensOp::TensOp<DataType>> Ten : orig_tensors_ )
- //     rng_maps.push_back(Ten->all_ranges()->begin());
- //   
- //   bool ham =true; //awkward loop to generate all possible combinations of different ranges on different tensors in multitensop
- //   do{
- //     for (auto ii = rng_maps.size()-1; ii != 0; ii--){
- //       
- //       int num_unique_ranges = 0; 
- //        int num_unique_idxs = 0; 
-  //       int num_orig_ranges = 0; 
-  //       if ( (ii == posvec.size()-1) && (posvec[ii] == orig_tensors_[ii]->all_ranges()->size()-1 && (posvec[ii-1] == orig_tensors_[ii-1]->all_ranges()->size()-1  )  ) ) {
-  //         ham =false;  
-  //         break;
-  //       } else if ( posvec[ii-1] != orig_tensors_[ii-1]->all_ranges()->size()-1 ) {
-  //
-  //         rng_maps[ii-1]++;
-  //         posvec[ii-1]++;
-  //
-  //       } else if (posvec[ii-1] == orig_tensors_[ii-1]->all_ranges()->size()-1){
-  //
-  //         rng_maps[ii-1] = orig_tensors_[ii-1]->all_ranges()->begin();
-  //         posvec[ii-1] = 0;
-  //
-  //         rng_maps[ii]++;
-  //         posvec[ii]++;
-  //
-  //         continue;
-  //       }     
-  //
- //        vector<vector<string>> orig_ranges(num_tensors_);
-  //       shared_ptr<vector<shared_ptr<vector<string>>>> unique_ranges = make_shared<vector<shared_ptr<vector<string>>>>(num_tensors_);
-  //       shared_ptr<vector<shared_ptr<vector<string>>>> unique_idxs   = make_shared<vector<shared_ptr<vector<string>>>>(num_tensors_);
-  //       shared_ptr<pint_vec>     factors  = make_shared<pint_vec>(num_tensors_);
-  //       shared_ptr<vector<bool>> isunique = make_shared<vector<bool>>(num_tensors_);
+  vector< map< const vector<string>, tuple<bool, shared_ptr<const vector<string>>, shared_ptr<const vector<string>>, pair<int,int>> >::iterator> rng_maps;
+ 
+  vector<int> posvec( num_tensors_, 0 ); 
+ 
+  combined_ranges = make_shared< map< const vector<string>,
+                                      tuple<bool, shared_ptr<const vector<string>>,  shared_ptr<const vector<string>>, shared_ptr<vector<pair<int,int>>> > >>();
+ 
+  split_ranges = make_shared< map< vector<const vector<string>>,
+                                   tuple< shared_ptr<const vector<bool>>, shared_ptr<vector<shared_ptr<const vector<string>>>>, shared_ptr<vector<pair<int,int>>> > >>();
+ 
+  if ( num_tensors_ > 1 ) { 
+ 
+    for (shared_ptr<TensOp_Interface::TensOp_Interface<DataType>> Ten : orig_tensors_ )
+      rng_maps.push_back(Ten->all_ranges()->begin());
+    
+    bool ham =true; //awkward loop to generate all possible combinations of different ranges on different tensors in multitensop
+    do{
+      for (auto ii = rng_maps.size()-1; ii != 0; ii--){
+        
+        int num_unique_ranges = 0; 
+        int num_unique_idxs = 0; 
+        int num_orig_ranges = 0; 
+        if ( (ii == posvec.size()-1) && (posvec[ii] == orig_tensors_[ii]->all_ranges()->size()-1 && (posvec[ii-1] == orig_tensors_[ii-1]->all_ranges()->size()-1  )  ) ) {
+          ham =false;  
+          break;
+        } else if ( posvec[ii-1] != orig_tensors_[ii-1]->all_ranges()->size()-1 ) {
+  
+          rng_maps[ii-1]++;
+          posvec[ii-1]++;
+  
+        } else if (posvec[ii-1] == orig_tensors_[ii-1]->all_ranges()->size()-1){
+  
+          rng_maps[ii-1] = orig_tensors_[ii-1]->all_ranges()->begin();
+          posvec[ii-1] = 0;
+  
+          rng_maps[ii]++;
+          posvec[ii]++;
+  
+          continue;
+        }     
+  
+         vector<shared_ptr<const vector<string>>> orig_ranges(num_tensors_);
+         shared_ptr<const vector<shared_ptr<const vector<string>>>> unique_ranges = make_shared<const vector<shared_ptr<const vector<string>>>>(num_tensors_);
+         shared_ptr<const vector<shared_ptr<const vector<string>>>> unique_idxs   = make_shared<const vector<shared_ptr<const vector<string>>>>(num_tensors_);
+         shared_ptr<pint_vec>     factors  = make_shared<pint_vec>(num_tensors_);
+         shared_ptr<vector<bool>> isunique = make_shared<vector<bool>>(num_tensors_);
+     
+         for (int jj = 0 ; jj != num_tensors_ ; jj++){
+           orig_ranges[jj] = make_shared<const vector<string>>(rng_maps[jj]->first);
+//           num_orig_ranges += orig_ranges[jj].size(); 
+  
+//           isunique->at(jj) = get<0>(rng_maps[jj]->second);
+  
+//           unique_ranges->at(jj) = get<1>(rng_maps[jj]->second);  
+//           num_unique_ranges += unique_ranges->at(jj)->size(); 
+  
+//           unique_idxs->at(jj) = get<2>(rng_maps[jj]->second);  
+//           num_unique_idxs += unique_idxs->at(jj)->size(); 
+  
+//           factors->at(jj) = get<3>(rng_maps[jj]->second) ;
+         }
   //   
-  //       for (int jj = 0 ; jj != num_tensors_ ; jj++){
-  //         orig_ranges[jj] = rng_maps[jj]->first;
-  //         num_orig_ranges += orig_ranges[jj].size(); 
-  //
-  //         isunique->at(jj) = get<0>(rng_maps[jj]->second);
-  //
-  //         unique_ranges->at(jj) = get<1>(rng_maps[jj]->second);  
-  //         num_unique_ranges += unique_ranges->at(jj)->size(); 
-  //
-  //         unique_idxs->at(jj) = get<2>(rng_maps[jj]->second);  
-  //         num_unique_idxs += unique_idxs->at(jj)->size(); 
-  //
-  //         factors->at(jj) = get<3>(rng_maps[jj]->second) ;
-  //       }
-  //   
-  //        split_ranges->emplace(orig_ranges, tie(isunique, unique_ranges, factors));
+  //       split_ranges->emplace(orig_ranges, tie(isunique, unique_ranges, factors));
   //       
   //       vector<string>             merged_oranges(num_orig_ranges);
   //       shared_ptr<vector<string>> merged_uranges = make_shared<vector<string>>(num_unique_ranges);
@@ -324,11 +323,12 @@ cout << "MultiTensOp::generate_ranges()" << endl;
  //        
   //       bool merged_unique = ( merged_oranges == *merged_uranges ) ?  false : true;
   //       combined_ranges->emplace(merged_oranges, tie(merged_unique, merged_uranges, merged_uqidxs, factors));
-  //
-  //     }
-  //   } while(ham);
-  //
-  // } else { 
+  
+       }
+     } while(ham);
+  
+   } else { 
+     cout << "ham " << endl;
   //    
   //   for ( auto map_it = orig_tensors_[0]->all_ranges()->begin() ; map_it != orig_tensors_[0]->all_ranges()->end(); map_it++ ){
   //
@@ -343,11 +343,11 @@ cout << "MultiTensOp::generate_ranges()" << endl;
   //
   //     combined_ranges->emplace( map_it->first, tie( get<0>(map_it->second), get<1>(map_it->second), get<2>(map_it->second), factors ) );
   //   }
-  // }    
-  // cout << "leaving MultiTensOp::generate_ranges()" << endl;
-  //
-  // return;
-  //
+   }    
+   cout << "leaving MultiTensOp::generate_ranges()" << endl;
+ 
+   return;
+  
 }
 
 
