@@ -3,7 +3,6 @@
  #include <src/smith/wicktool/expression.h>
  #include <src/smith/tensor.h>
  #include <src/smith/wicktool/states_info.h>
-
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 

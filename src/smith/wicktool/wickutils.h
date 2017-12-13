@@ -11,6 +11,7 @@
 #include<utility>
 #include<tuple>
 #include<string>
+#include<list>
 #include<memory>
 #include<map>
 #include <iostream>
@@ -83,7 +84,6 @@ namespace WickUtils {
 
   std::shared_ptr<std::vector<pint_vec>>  
   get_cross_pairs( std::shared_ptr<std::vector<int>> vec1 , std::shared_ptr<std::vector<int>> vec2, std::shared_ptr<std::vector<std::string>> id_names );
-
 
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name ="lazy"){
