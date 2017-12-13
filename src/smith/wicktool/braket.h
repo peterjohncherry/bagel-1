@@ -6,7 +6,7 @@
   #include <src/smith/wicktool/spin_manager.h>
   #include <src/smith/wicktool/states_info.h>
 
-template<class DataType> 
+template<typename DataType> 
 class BraKet  {
       using pint_vec = std::vector<std::pair<int,int>>;
       using pstr_vec = std::vector<std::pair<std::string,std::string>>;
@@ -40,9 +40,8 @@ class BraKet  {
        
        void Build_TotalOp();
        
-       void Build_Gamma_WithSpin(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs);
-       
-       void Build_Gamma_SpinFree(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs); 
+       void Build_Gamma_WithSpin(std::shared_ptr<const std::vector<bool>> aops, std::shared_ptr<const std::vector<std::string>> idxs);
+       void Build_Gamma_SpinFree(std::shared_ptr<const std::vector<bool>> aops, std::shared_ptr<const std::vector<std::string>> idxs); 
        void Build_Tensor_Contraction_list_CMTP();
 
 };

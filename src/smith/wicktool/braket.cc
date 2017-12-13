@@ -11,12 +11,12 @@ using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
       
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-BraKet<DType>::BraKet(shared_ptr<map<string,shared_ptr<map<string,AContribInfo>>>> G_to_A_map_in,
+template<typename DataType>
+BraKet<DataType>::BraKet(shared_ptr<map<string,shared_ptr<map<string,AContribInfo>>>> G_to_A_map_in,
                       shared_ptr<map<string, shared_ptr< GammaInfo >>> GammaMap_in,
-                      shared_ptr<StatesInfo<DType>> TargetStates_in  ){
+                      shared_ptr<StatesInfo<DataType>> TargetStates_in  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Sub_Ops = make_shared<vector<shared_ptr<TensOp::TensOp<DType>>>>(0);
+  Sub_Ops = make_shared<vector<shared_ptr<TensOp::TensOp<DataType>>>>(0);
   G_to_A_map = G_to_A_map_in;
   GammaMap = GammaMap_in;
   TargetStates = TargetStates_in;
@@ -24,30 +24,31 @@ BraKet<DType>::BraKet(shared_ptr<map<string,shared_ptr<map<string,AContribInfo>>
 } 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void BraKet<DType>::Build_TotalOp(){
+template<typename DataType>
+void BraKet<DataType>::Build_TotalOp(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::Build_TotalOp" << endl;
   string MT_name = "";
-  for( shared_ptr<TensOp::TensOp<DType>> Tens : *Sub_Ops )
+  for( shared_ptr<TensOp::TensOp<DataType>> Tens : *Sub_Ops )
     MT_name += Tens->name();
 
-  Total_Op = make_shared<MultiTensOp::MultiTensOp<DType>>( MT_name , true, *Sub_Ops );
+  Total_Op = make_shared<MultiTensOp::MultiTensOp<DataType>>( MT_name , true, *Sub_Ops );
   Total_Op->get_ctrs_tens_ranges();
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_ptr<vector<string>> idxs){
+template<typename DataType>
+void BraKet<DataType>::Build_Gamma_SpinFree(shared_ptr<const vector<bool>> aops, shared_ptr<const vector<string>> idxs){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::Build_Gamma_SpinFree_New" << endl;
  
   int Ket_num = 0; 
   int Bra_num = 0; 
  
+  shared_ptr<vector<string>> idxs_buff  = make_shared<vector<string>>(*idxs );
   shared_ptr<vector<bool>> aops_buff  = make_shared<vector<bool>>(*aops );
   for (auto range_map_it = Total_Op->combined_ranges->begin() ;  range_map_it !=Total_Op->combined_ranges->end(); range_map_it++){
-    shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>(TargetStates, Bra_num, Ket_num, aops_buff, idxs, GammaMap, G_to_A_map); 
+    shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>(TargetStates, Bra_num, Ket_num, aops_buff, idxs_buff, GammaMap, G_to_A_map); 
     GGen->add_gamma(make_shared<vector<string>>(range_map_it->first), 1) ;
     GGen->norm_order();
     GGen->optimized_alt_order();
@@ -81,8 +82,8 @@ void BraKet<DType>::Build_Gamma_SpinFree(shared_ptr<vector<bool>> aops, shared_p
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void BraKet<DType>::Build_Gamma_WithSpin(shared_ptr<vector<bool>> aops, shared_ptr<vector<string>> idxs){
+template<typename DataType>
+void BraKet<DataType>::Build_Gamma_WithSpin(shared_ptr<const vector<bool>> aops, shared_ptr< const vector<string>> idxs){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Build_Gamma_WithSpin" << endl;
   return;
@@ -90,8 +91,8 @@ void BraKet<DType>::Build_Gamma_WithSpin(shared_ptr<vector<bool>> aops, shared_p
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Pairs up each gamma term (defined by a spin pathway,and spin sector)  with relevant CtrMultiTensorParts .
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void BraKet<DType>::Build_Tensor_Contraction_list_CMTP(){
+template<typename DataType>
+void BraKet<DataType>::Build_Tensor_Contraction_list_CMTP(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   return;
 }

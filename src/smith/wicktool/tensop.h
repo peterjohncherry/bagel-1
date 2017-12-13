@@ -11,8 +11,29 @@
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
+namespace TensOp_Interface {
+ // A dangerous hack, but if I spend anymore time on the const correctness I will go mad.
+template<typename DataType> 
+ class TensOp_Interface {
+    public:
+      virtual ~TensOp_Interface(){};
+
+    virtual int  num_idxs() = 0;
+    virtual std::string  name() = 0;
+    virtual std::string Tsymm() = 0;
+    virtual DataType factor() = 0;
+    virtual std::shared_ptr<const std::vector<std::string>> idxs() =0;
+    virtual std::shared_ptr<const std::vector<bool>> aops() = 0;
+    virtual std::shared_ptr<const std::vector<int>> plus_ops() = 0;
+    virtual std::shared_ptr<const std::vector<int>> kill_ops() = 0;
+    virtual std::shared_ptr<const std::map< const std::vector<std::string>,
+                                            std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>  >>> range_map() = 0;
+    virtual std::shared_ptr<const std::vector< std::shared_ptr< const std::vector<std::string>>>> unique_range_blocks() = 0 ;
+
+};
+}
 namespace TensOp_Prep {
-template<class DataType>
+template<typename DataType>
 class TensOp_Prep {
    public:
      std::string name_;
@@ -44,8 +65,7 @@ class TensOp_Prep {
                   std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > >& symmfuncs, 
                   std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) >& constraints,
                   std::string& Tsymm );
-//     TensOp_Prep( std::string name , bool spinfree, std::vector<std::shared_ptr<TensOp_Prep<DataType>>> orig_tensors );
-     TensOp_Prep(){};
+     ~TensOp_Prep(){};
      
      void generate_ranges();
      bool apply_symmetry( const std::vector<std::string>& ranges_1, const std::vector<std::string>& ranges_2  );
@@ -56,7 +76,7 @@ class TensOp_Prep {
 }
 namespace TensOp_General {
 
- template<class DataType>
+ template<typename DataType>
  class TensOp_General {
     public:
       const std::string name_;
@@ -93,9 +113,9 @@ namespace TensOp_General {
                                                    aops_ptr(std::make_shared<const std::vector<bool>>(aops_)),
                                                    plus_ops_ptr(std::make_shared<const std::vector<int>>(plus_ops_)),
                                                    kill_ops_ptr(std::make_shared<const std::vector<int>>(kill_ops_)), 
-                                                   all_ranges_ptr(std::make_shared<const std::map< const std::vector<std::string>,
-                                                                  std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,
-                                                                  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>>(all_ranges_)), 
+                                                   all_ranges_ptr( std::make_shared<const std::map< const std::vector<std::string>,
+                                                                   std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,
+                                                                   std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>>(all_ranges_)), 
                                                    unique_range_blocks_ptr(std::make_shared<const std::vector< std::shared_ptr< const std::vector<std::string>>>>(unique_range_blocks_)) 
                                                    {};
      ~TensOp_General(){};
@@ -116,13 +136,13 @@ namespace TensOp_General {
                    std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>  >>>
                    all_ranges() {return  all_ranges_ptr; }
    // unique_range_blocks tells you which parts of your tensor actually need to be calculated and stored.
-   const std::shared_ptr<const std::vector< std::shared_ptr< const std::vector<std::string>>>> unique_range_blocks(){ return  unique_range_blocks_ptr;}
+   std::shared_ptr<const std::vector< std::shared_ptr< const std::vector<std::string>>>> unique_range_blocks(){ return  unique_range_blocks_ptr;}
 
 };
 }
 
 namespace TensOp {
-template<class DataType>
+template<typename DataType>
 class TensOp {
    protected:
    /* const */std::string name_;
@@ -170,26 +190,48 @@ class TensOp {
      
 }; 
 }
+namespace MultiTensOp_Prep {
+template<typename DataType>
+class MultiTensOp_Prep {
+   public:
+     std::string name_;
+     std::string Tsymm_;
+     std::vector<std::string> idxs_;
+     std::vector<std::vector<std::string>> idx_ranges_;
+     std::vector<bool> aops_;
+     
+     std::vector<int> plus_ops_;
+     std::vector<int> kill_ops_;
+     int num_idxs_;
+
+     int num_tensors_;
+     
+     DataType orig_factor_;
+
+     std::vector<std::shared_ptr< const std::vector<std::string>>> split_idxs_ ;
+     std::vector<std::string> names_  ;
+     std::vector<int> cmlsizevec_ ;
+     std::vector<int> Tsizes_ ;
+
+     // unique_range_blocks tells you what parts of your tensor actually need to be calculated and stored.
+     std::vector< std::shared_ptr< const std::vector<std::string>> > unique_range_blocks;
+     
+     // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
+     std::map< const std::vector<std::string>, 
+               std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int> > > all_ranges_;
+     
+      MultiTensOp_Prep( std::string name , bool spinfree, std::vector<std::shared_ptr<TensOp_Interface::TensOp_Interface<DataType>>>& orig_tensors );
+      ~MultiTensOp_Prep(){};
+     
+     void generate_ranges();
+     bool satisfies_constraints( std::vector<std::string>& ranges );
+};
+}
 namespace MultiTensOp {
-template<class DataType>
+template<typename DataType>
 class MultiTensOp : public TensOp::TensOp<DataType> {
   private: 
     // should be a better way; could define both MultiTensOp and TensOp as derived from non-templated class, as none of these depend on DataType
-    using TensOp::TensOp<DataType>::name_;
-    using TensOp::TensOp<DataType>::Tsymm_;
-    using TensOp::TensOp<DataType>::psymm_;
-    using TensOp::TensOp<DataType>::idxs_;
-    using TensOp::TensOp<DataType>::idx_ranges_;
-    using TensOp::TensOp<DataType>::aops_;
-    
-    using TensOp::TensOp<DataType>::plus_ops_;
-    using TensOp::TensOp<DataType>::kill_ops_;
-    using TensOp::TensOp<DataType>::num_idxs_;
-
-    std::vector<std::shared_ptr<TensOp::TensOp<DataType>>> orig_tensors_;
-    std::shared_ptr<std::vector<int>> Tsizes_ ;
-    std::shared_ptr<std::vector<int>> cmlsizevec_ ;
-    std::shared_ptr<std::vector<std::string>> names_;
  
     std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::string>>>> split_idxs_;
 
@@ -220,33 +262,13 @@ class MultiTensOp : public TensOp::TensOp<DataType> {
     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> > > CTP_map ;
     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DataType>> >> CMTP_map; 
 
-    MultiTensOp(std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp::TensOp<DataType> >> orig_tensors);
+    MultiTensOp(std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp::TensOp<DataType> >> orig_tensors) :  TensOp::TensOp<DataType>::TensOp( name, spinfree, orig_tensors) {};
     ~MultiTensOp() {};
-   
-    std::string name(){ return name_;}
-    std::shared_ptr<std::vector<std::string>> idxs(){ return idxs_;}
-    std::shared_ptr<std::vector<std::vector<std::string>>> idx_ranges(){ return idx_ranges_;}
-    std::shared_ptr<std::vector<bool>> aops(){ return aops_;}
-    
-    std::string Tsymm() {return Tsymm_; }
-    std::string psymm(){ return psymm_; }
-    
-    std::shared_ptr<std::vector<int>> plus_ops(){ return plus_ops_;}
-    std::shared_ptr<std::vector<int>> kill_ops(){ return kill_ops_;}
-    
-    std::vector<std::shared_ptr<TensOp::TensOp<DataType>>> orig_tensors(){ return orig_tensors_ ;}
-    std::shared_ptr<std::vector<int>> Tsizes() { return Tsizes_ ;}
-    std::shared_ptr<std::vector<int>> cmlsizevec() { return cmlsizevec_ ; }
-    std::shared_ptr<std::vector<std::string>> names() { return names_; }
     
     void generate_ranges();
-    
     void enter_into_CMTP_map(pint_vec ctr_pos_list, std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors, std::shared_ptr<std::vector<std::string>> id_ranges );
-    
-    void get_ctrs_tens_ranges() override; 
-    
+    void get_ctrs_tens_ranges(); 
     void print_gamma_contribs();
-
 }; 
 }
 #endif
