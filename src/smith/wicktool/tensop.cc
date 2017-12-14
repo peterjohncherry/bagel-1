@@ -120,7 +120,7 @@ cout << "TensOp::generate_ranges" <<   endl;
       }
   }
 
-  tensop_dense_ = make_shared<const TensOp_General>( plus_ops, kill_ops, unique_range_blocks, all_ranges );
+  Op_dense_ = make_shared<const TensOp_General>( plus_ops, kill_ops, unique_range_blocks, all_ranges );
 
   cout << "TensOp::generate_ranges()" <<   endl;
   return;
@@ -371,7 +371,7 @@ void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::generate_ranges(){
      xx+=orig_tensors_->at(ii)->num_idxs();
    } 
   
-  multitensop_dense_ = make_shared<const MultiTensOp_General>( plus_ops, kill_ops, unique_range_blocks, all_ranges );
+  Op_dense_ = make_shared<const MultiTensOp_General>( plus_ops, kill_ops, unique_range_blocks, all_ranges );
 
   cout << "leaving MultiTensOp_prep::generate_ranges()" << endl;
   return;
@@ -379,22 +379,11 @@ void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::generate_ranges(){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-void MultiTensOp::MultiTensOp<DataType>::generate_ranges(){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_TensOp 
-cout << "MultiTensOp::generate_ranges()" << endl;
-#endif 
-//////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::generate_ranges()" << endl;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //get contractions and range, looks totally inefficient, but generating everything and then checking in sequence
 //seems to work out faster; it's either check everything lots of times, or regenerate it lots of times. 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void MultiTensOp::MultiTensOp<DataType>::get_ctrs_tens_ranges() {
+void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::get_ctrs_tens_ranges() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_TensOp 
 cout << "MultiTensOp get_ctrs_tens_ranges" << endl;
@@ -463,7 +452,7 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
 }  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void MultiTensOp::MultiTensOp<DataType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_ptr<vector<pair<int,int>>> ReIm_factors, shared_ptr<vector<string>> id_ranges ){
+void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_ptr<vector<pair<int,int>>> ReIm_factors, shared_ptr<vector<string>> id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_TensOp 
 cout << "MultiTensOp::enter_into_CMTP_map" << endl;
