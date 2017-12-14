@@ -11,6 +11,24 @@
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
+class transformed_range_info {
+    public :
+
+    bool is_unique;
+    std::shared_ptr<const std::vector<std::string>> unique_block;
+    std::shared_ptr<const std::vector<std::string>> transformed_idxs;
+    std::shared_ptr<const std::vector<std::pair<int,int>>> factors; 
+                                
+    transformed_range_info( bool is_unique_in,
+                 std::shared_ptr<const std::vector<std::string>> unique_block_in,
+                 std::shared_ptr<const std::vector<std::string>> transformed_idxs_in,
+                 std::shared_ptr<const std::vector<std::pair<int,int>>> factors_in ) : 
+                 is_unique(is_unique_in), unique_block(unique_block_in), transformed_idxs(transformed_idxs_in), factors(factors_in) {};
+    ~transformed_range_info(){};
+
+};
+
+
 namespace TensOp_Interface {
 template<typename DataType> 
  class TensOp_Interface {
@@ -70,6 +88,22 @@ class TensOp_General {
                     all_ranges()const  {return  all_ranges_ptr_; }
 
 };
+
+class MultiTensOp_General : public  TensOp_General {
+  public:
+ 
+    //Similar to all_ranges, but has the ranges associated with the different operators split up, this may be useful for decomposition, so keep for now
+    std::shared_ptr< std::map< const std::vector<std::string>, 
+                               std::tuple<std::shared_ptr<const std::vector<bool>>, std::shared_ptr<const std::vector<std::shared_ptr<const std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>>>>> split_ranges_map;
+ 
+    MultiTensOp_General( std::vector<int> plus_ops, std::vector<int> kill_ops,
+                         std::vector< std::shared_ptr<const std::vector<std::string>>> unique_range_blocks,
+                         std::map< const std::vector<std::string>, 
+                              std::tuple< bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>> all_ranges );
+    ~MultiTensOp_General(){};
+
+};
+
 
 namespace TensOp {
 template<typename DataType>
@@ -134,17 +168,15 @@ class TensOp {
 namespace MultiTensOp_Prep {
 template<typename DataType>
 class MultiTensOp_Prep {
-   public:
+
+   private :
+
+     std::shared_ptr<const MultiTensOp_General> multitensop_dense_;
+
+   public :
      std::string name_;
      std::string Tsymm_;
-     std::vector<std::string> idxs_;
-     std::vector<std::vector<std::string>> idx_ranges_;
-     std::vector<bool> aops_;
-     
-     std::vector<int> plus_ops_;
-     std::vector<int> kill_ops_;
-     int num_idxs_;
-
+    
      int num_tensors_;
      
      DataType orig_factor_;
@@ -227,17 +259,6 @@ class MultiTensOp {
     //Multi Tensor analogue of all_ranges; same as normal tensor but with vector of factors. The ordering of these factors is the same as that of the operators in the tensor
     std::shared_ptr<std::map< const std::vector<std::string>,
                               std::tuple<bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<const std::vector<std::pair<int,int>>> > >> combined_ranges;
-
-
-
-
-
-
-
-
-
-
-
 
 
     // should be a better way; could define both MultiTensOp and TensOp as derived from non-templated class, as nothing but factors depends on DataType
