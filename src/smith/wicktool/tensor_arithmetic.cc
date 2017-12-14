@@ -26,7 +26,6 @@ cout << "Tensor_Arithemetic_Utils::sum_tensor_elems" << endl;
 
   do { 
 
-     print_vector( *block_pos, "block_pos");
      vector<Index> id_blocks = *(get_rng_blocks( block_pos, *id_ranges ));
      unique_ptr<double[]> block = Tens_in->get_block( id_blocks );
      Tens_in->get_size(id_blocks);
@@ -309,11 +308,8 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
   shared_ptr<vector<int>> maxs = get_num_index_blocks_vec(TensIn_new_rngs) ;
   shared_ptr<vector<int>> mins = make_shared<vector<int>>(maxs->size(),0);
 
-  print_vector(*maxs , "maxs" ); cout <<endl; 
-  shared_ptr<vector<int>> maxs_test = get_range_lengths( *TensIn_new_rngs) ;
-
   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(TensIn_new_order->size(),0);
-  int num_ctr_blocks = maxs->back()+1; cout << "num_ctr_blocks = " << num_ctr_blocks << endl;
+  int num_ctr_blocks = maxs->back()+1; 
 
   //This loop looks silly; trying to avoid excessive reallocation, deallocation and zeroing of TensOut_data
   //However, when parallelized, will presumably need to do all that in innermost loop anyway....
@@ -334,41 +330,18 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
        maxs->front() = ii;
        mins->front() = ii;
        block_pos->front() = ii;
-       cout << "TensIn block pos =  [ " ;    for (int block_num : *block_pos )  { cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
 
-       print_vector( *TensIn_new_order, "TensIn_new_order" ) ; cout << endl;      
        shared_ptr<vector<Index>> TensIn_org_rng_blocks = inverse_reorder_vector( TensIn_new_order, TensIn_new_rng_blocks); 
        
        int TensIn_block_size = get_block_size( TensIn_org_rng_blocks->begin(), TensIn_org_rng_blocks->end()); 
-       int ctr_block_size    = TensIn_new_rng_blocks->back().size(); cout << " ctr_block_size = " << ctr_block_size << endl; 
+       int ctr_block_size    = TensIn_new_rng_blocks->back().size();  
  
        cout << "-----------Tensor block in old order----------- " << endl;
        std::unique_ptr<DataType[]> TensIn_data_reord;
        {
-         std::unique_ptr<DataType[]> TensIn_data_org = TensIn->get_block(*TensIn_org_rng_blocks);
-         if ( TensIn_org_rngs.size() == 2){
-           DataType* TensIn_data_org_ptr = TensIn_data_org.get();
-           for ( int qq = 0 ; qq != TensIn_org_rng_blocks->at(0).size(); qq++ ) {
-              for ( int rr = 0 ; rr != TensIn_org_rng_blocks->at(1).size(); rr++ ) {
-                 cout << *(TensIn_data_org_ptr + rr*TensIn_org_rng_blocks->at(0).size() + qq ) << " " ;
-              } 
-              cout <<endl;
-           }
-         }
-
-        TensIn_data_reord = reorder_tensor_data(TensIn_data_org.get(), TensIn_new_order, TensIn_org_rng_blocks);
-
-        cout << "---------Tensor block in new order----------- " << endl;
-        if ( TensIn_org_rngs.size() == 2){
-          DataType* TensIn_data_reorder_ptr = TensIn_data_reord.get();
-          for ( int qq = 0 ; qq != TensIn_new_rng_blocks->at(0).size(); qq++ ) {
-            for ( int rr = 0 ; rr != TensIn_new_rng_blocks->at(1).size(); rr++ ) {
-              cout << *(TensIn_data_reorder_ptr + rr*TensIn_new_rng_blocks->at(0).size() + qq ) << " " ;
-            } 
-             cout <<endl;
-          }
-        }
-      }
+       std::unique_ptr<DataType[]> TensIn_data_org = TensIn->get_block(*TensIn_org_rng_blocks);
+       TensIn_data_reord = reorder_tensor_data(TensIn_data_org.get(), TensIn_new_order, TensIn_org_rng_blocks);
+       }
        
        unique_ptr<DataType[]> VecIn_data = VecIn->get_block(vector<Index> { VecIn_rng[0].range(block_pos->front()) } ); 
        
@@ -423,8 +396,6 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
   shared_ptr<vector<int>>        maxs2        = get_num_index_blocks_vec(T2_new_rngs) ;
   shared_ptr<vector<int>>        mins2        = make_shared<vector<int>>(maxs2->size(), 0 );  
 
-   cout << "established ordering and got ranges" <<endl;
- 
   vector<IndexRange> Tout_unc_rngs(T1_new_rngs->begin(), T1_new_rngs->end()-1);
   Tout_unc_rngs.insert(Tout_unc_rngs.end(), T2_new_rngs->begin()+1, T2_new_rngs->end());
 
@@ -437,8 +408,6 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
 
   do { 
     
-    print_vector( *T1_rng_block_pos , "T1_block_pos" ); cout << endl;
-
     shared_ptr<vector<Index>> T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, *T1_new_rngs); 
     shared_ptr<vector<Index>> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
     
@@ -448,10 +417,9 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
 
     std::unique_ptr<DataType[]> T1_data_new;
     {
-      std::unique_ptr<DataType[]> T1_data_org = Tens1_in->get_block(*T1_org_rng_blocks);  print_vector(*T1_new_order , "T1_new_order" ); cout << endl;
+      std::unique_ptr<DataType[]> T1_data_org = Tens1_in->get_block(*T1_org_rng_blocks);
       T1_data_new = reorder_tensor_data(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
     }
-   
     shared_ptr<vector<int>> T2_rng_block_pos = make_shared<vector<int>>(T2_new_order->size(), 0);
     T2_rng_block_pos->front() = T1_rng_block_pos->back();
     mins2->front() = maxs1->back();
@@ -459,15 +427,13 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
   
     do { 
 
-      print_vector( *T2_rng_block_pos , "T2_block_pos" ); cout << endl;
-
       shared_ptr<vector<Index>> T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, *T2_new_rngs); 
       shared_ptr<vector<Index>> T2_org_rng_blocks = inverse_reorder_vector( T2_new_order, T2_new_rng_blocks); 
       size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
 
       std::unique_ptr<DataType[]> T2_data_new;   
       {
-        std::unique_ptr<DataType[]> T2_data_org = Tens2_in->get_block(*T2_org_rng_blocks);  print_vector(*T2_new_order , "T2_new_order" ); cout << endl;
+        std::unique_ptr<DataType[]> T2_data_org = Tens2_in->get_block(*T2_org_rng_blocks);  
         T2_data_new = reorder_tensor_data(T2_data_org.get(), T2_new_order, T2_org_rng_blocks); 
       }
       
@@ -479,9 +445,7 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
 
       vector<Index> T_out_rng_block(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
       T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
-      cout << "putting block" << endl;
       Tens_out->add_block( T_out_data, T_out_rng_block );
-      cout << "put block" << endl;
 
     } while(fvec_cycle_skipper(T2_rng_block_pos, maxs2, mins2 ));
 
@@ -526,8 +490,6 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;
   shared_ptr<vector<int>>        maxs2        = get_num_index_blocks_vec(T2_new_rngs) ;
   shared_ptr<vector<int>>        mins2        = make_shared<vector<int>>(maxs2->size(), 0 );  
 
-  cout << "established ordering and got ranges" <<endl;
- 
   int num_ctrs = ctrs_todo.first.size();
 
   vector<IndexRange> Tout_unc_rngs(T1_new_rngs->begin(), T1_new_rngs->end()-num_ctrs);
@@ -542,8 +504,6 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;
 
   do { 
     
-    print_vector( *T1_rng_block_pos , "T1_block_pos" ); cout << endl;
-
     shared_ptr<vector<Index>> T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, *T1_new_rngs); 
     shared_ptr<vector<Index>> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
     
@@ -551,14 +511,12 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;
     for ( vector<Index>::reverse_iterator ctr_id_it = T1_new_rng_blocks->rbegin() ; ctr_id_it != T1_new_rng_blocks->rbegin()+num_ctrs; ctr_id_it++) 
        ctr_block_size *= ctr_id_it->size();      
 
-    cout << "ctr_block_size = " << ctr_block_size << endl;
- 
     size_t T1_unc_block_size = get_block_size( T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-num_ctrs); 
     size_t T1_block_size     = get_block_size( T1_org_rng_blocks->begin(), T1_org_rng_blocks->end()); 
 
     std::unique_ptr<DataType[]> T1_data_new;
     {
-      std::unique_ptr<DataType[]> T1_data_org = Tens1_in->get_block(*T1_org_rng_blocks);  print_vector(*T1_new_order , "T1_new_order" ); cout << endl;
+      std::unique_ptr<DataType[]> T1_data_org = Tens1_in->get_block(*T1_org_rng_blocks); 
       T1_data_new = reorder_tensor_data(T1_data_org.get(), T1_new_order, T1_org_rng_blocks);
     }
    
@@ -572,15 +530,13 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;
 
     do { 
 
-      print_vector( *T2_rng_block_pos , "T2_block_pos" ); cout << endl;
-
       shared_ptr<vector<Index>> T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, *T2_new_rngs); 
       shared_ptr<vector<Index>> T2_org_rng_blocks = inverse_reorder_vector( T2_new_order, T2_new_rng_blocks); 
       size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks->begin()+num_ctrs, T2_new_rng_blocks->end());
 
       std::unique_ptr<DataType[]> T2_data_new;   
       {
-        std::unique_ptr<DataType[]> T2_data_org = Tens2_in->get_block(*T2_org_rng_blocks);  print_vector(*T2_new_order , "T2_new_order" ); cout << endl;
+        std::unique_ptr<DataType[]> T2_data_org = Tens2_in->get_block(*T2_org_rng_blocks);  
         T2_data_new = reorder_tensor_data(T2_data_org.get(), T2_new_order, T2_org_rng_blocks); 
       }
       
@@ -592,9 +548,7 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;
 
       vector<Index> T_out_rng_block(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-num_ctrs);
       T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin()+num_ctrs, T2_new_rng_blocks->end());
-      cout << "putting block" << endl;
       Tens_out->add_block( T_out_data, T_out_rng_block );
-      cout << "put block" << endl;
 
     } while(fvec_cycle_skipper(T2_rng_block_pos, maxs2, mins2 ));
 
@@ -616,15 +570,10 @@ void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems(shared_ptr
    vector<IndexRange> id_ranges = Tens->indexrange();
 
    shared_ptr<vector<int>> range_lengths = get_range_lengths( id_ranges ) ; 
-
-//   cout << " range_lengths = [ " ; cout.flush(); for ( int pos : *range_lengths ) { cout << pos << " "  ; cout.flush(); } cout << "] " << endl;
-
    shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
    shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
    do {
-     // cout << " block_pos = [ " ; cout.flush(); for ( int pos : *block_pos ) { cout << pos << " "  ; cout.flush(); } cout << "] " << endl;
      vector<Index> id_blocks =  *(get_rng_blocks( block_pos, id_ranges ));
- 
      if ( Tens->exists(id_blocks) ) { 
        unique_ptr<DataType[]> block_data = Tens->get_block(id_blocks);
        std::fill_n(block_data.get(), Tens->get_size(id_blocks), elem_val);
@@ -654,22 +603,19 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(shared_ptr<
    shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(T_id_ranges->size(),0);  
    shared_ptr<vector<int>> mins      = make_shared<vector<int>>(T_id_ranges->size(),0);  
    do {
-     cout << " block pos =  [ " ; for(int block_num : *block_pos ){ cout << block_num << " " ; cout.flush(); } cout << " ] " << endl;
-     
-     shared_ptr<vector<Index>> orig_id_blocks      = get_rng_blocks( block_pos, *T_id_ranges ); 
 
-     unique_ptr<DataType[]> reordered_data_block; 
+     shared_ptr<vector<Index>> orig_id_blocks      = get_rng_blocks( block_pos, *T_id_ranges );
+
+     unique_ptr<DataType[]> reordered_data_block;
      {
      unique_ptr<DataType[]> orig_data_block = Tens_in->get_block( *orig_id_blocks );
      reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks );
      }
-      
      shared_ptr<vector<Index>> reordered_id_blocks = reorder_vector( new_order, orig_id_blocks );
      reordered_block_tensor->put_block( reordered_data_block, *reordered_id_blocks );
 
    } while ( fvec_cycle_skipper( block_pos, range_lengths, mins ) );
 
-   cout << "reordered_block_tensor" << endl;   
    return reordered_block_tensor;
 }
 
@@ -763,7 +709,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor(shared_ptr<ve
 template<class DataType>
 shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_Tensor_row_major(shared_ptr<vector<IndexRange>> T_id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Tensor_Arithmetic::get_test_Tensor" << endl;
+   cout << "Tensor_Arithmetic::get_test_Tensor_row_major" << endl;
 
    shared_ptr<Tensor_<DataType>> Tens = make_shared<Tensor_<DataType>>(*T_id_ranges);
    Tens->allocate();
@@ -809,7 +755,7 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
 template<class DataType>
 shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_Tensor_column_major(shared_ptr<vector<IndexRange>> T_id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Tensor_Arithmetic::get_test_Tensor" << endl;
+   cout << "Tensor_Arithmetic::get_test_Tensor_column_major" << endl;
 
    shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets(*T_id_ranges) ;
 
@@ -868,19 +814,18 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
 
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 unique_ptr<DataType[]>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_block_of_data( DataType* data_ptr ,
-                                                         shared_ptr<vector<IndexRange>> id_ranges, 
-                                                         shared_ptr<vector<int>> block_pos) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_block_of_data( DataType* data_ptr, shared_ptr<vector<IndexRange>> id_ranges, 
+                                                                   shared_ptr<vector<int>> block_pos) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Tensor_Arithmetic::get_block_of_data" << endl;
 
  // merge this to one loop, but keep until debugged, as this is likely to go wrong...
  // getting id position of id_block ; list of block sizes looks like [n,n,n,n,... , n-1, n-1 n-1] 
+ // TODO on closer inspection, the list of block sizes _doesn't_ look like that.
   vector<size_t> id_pos(block_pos->size());
-  cout <<endl << "id_pos = ";
   for (int ii = 0 ; ii != id_ranges->size() ; ii++){
 
     const size_t range_size         = id_ranges->at(ii).size();
@@ -894,7 +839,6 @@ cout << "Tensor_Arithmetic::get_block_of_data" << endl;
     } else if ( block_pos->at(ii) > remainder ) {
        id_pos[ii] = num_blocks*(range_size - remainder)+(num_blocks-1)*(remainder - block_pos->at(ii));// + id_ranges->at(ii).range(block_pos->at(ii)).offset(); 
     }; 
-    cout << id_pos[ii] << " " ;
   }
 
   // getting size of ranges (seems to be correctly offset for node)
@@ -910,9 +854,6 @@ cout << "Tensor_Arithmetic::get_block_of_data" << endl;
   }
 
   data_block_size *= id_ranges->back().range(block_pos->back()).size();
- 
-  cout << "data_block_size = " << data_block_size << endl;
-  cout << "data_block_pos = "  << data_block_pos << endl;
  
   unique_ptr<DataType[]> data_block(new DataType[data_block_size])  ;
 
@@ -956,16 +897,12 @@ cout << "Tensor_Arithmetic::direct_tensor_product" <<endl;
     
     do { 
       
-      print_vector( *T1_block_pos , "T1_block_pos" ); cout << endl;
-    
       shared_ptr<vector<Index>> T1_id_blocks = get_rng_blocks( T1_block_pos, T1_rngs); 
       size_t T1_block_size = Tens1->get_size( *T1_id_blocks ); 
     
       std::unique_ptr<DataType[]> T1_data = Tens1->get_block(*T1_id_blocks);  
     
       do { 
-    
-        print_vector( *T2_block_pos , "T2_block_pos" ); cout << endl;
     
         shared_ptr<vector<Index>> T2_id_blocks = get_rng_blocks( T2_block_pos, T2_rngs ); 
         size_t T2_block_size = Tens2->get_size( *T2_id_blocks ); 
@@ -1013,6 +950,41 @@ cout << "Tensor_Arithmetic::direct_tensor_product" <<endl;
 
   
   return Tens_out;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Gets a single element of the tensor, inefficient. Try to use other version which takes block_offsets as arg if getting
+// more than one element
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+DataType
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_tensor_element( shared_ptr<Tensor_<DataType>> Tens, vector<int>& id_pos){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithmetic::get_tensor_element" ; cout.flush(); print_vector(id_pos, "id_pos"); cout << endl; 
+
+   vector<IndexRange> id_ranges = Tens->indexrange();
+   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( id_ranges ) ;
+ 
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(id_pos.size());  
+   vector<int> rel_id_pos(id_pos.size());  
+   for ( int ii = 0; ii != id_pos.size(); ii++ ) 
+     for ( int jj = 0 ; jj != block_offsets->at(ii).size() ; jj++) 
+       if ( (id_pos.at(ii) < block_offsets->at(ii)[jj]) || (jj == block_offsets->at(ii).size()-1) ){ 
+         block_pos->at(ii) = jj-1 == -1 ? 0 : jj-1;
+         rel_id_pos[ii] == id_pos[ii]-block_offsets->at(ii)[jj];
+       } 
+
+   shared_ptr<vector<Index>> id_blocks = get_rng_blocks( block_pos, id_ranges );
+
+   shared_ptr<vector<int>> id_blocks_sizes= make_shared<vector<int>>(id_blocks->size());
+   for( int ii = 0 ;  ii != id_blocks->size(); ii++) id_blocks_sizes->at(ii) = id_blocks->at(ii).size();
+   shared_ptr<vector<int>> Tens_strides = get_Tens_strides_column_major(*id_blocks_sizes);
+
+   int shift = inner_product(rel_id_pos.begin(), rel_id_pos.end(), Tens_strides->begin(), 0 );
+
+   unique_ptr<DataType[]> T_data_block = Tens->get_block(*id_blocks);
+      
+   return *(T_data_block.get()+shift);
+;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Tensor_Arithmetic::Tensor_Arithmetic<double>;

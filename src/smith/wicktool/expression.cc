@@ -4,13 +4,14 @@
 
 using namespace std;
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-Expression<DType>::Expression( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp<DType>>>>>> BraKet_list,
+Expression<DType>::Expression( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DType>>>>>> BraKet_list,
                            std::shared_ptr<StatesInfo<DType>> TargetStates_in ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  T_map                 = make_shared<map< string, shared_ptr<TensOp<DType>>>>();
+  T_map                 = make_shared<map< string, shared_ptr<TensOp::TensOp<DType>>>>();
   CTP_map               = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
   CMTP_map              = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
   ACompute_map          = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
@@ -34,7 +35,7 @@ template <class DType>
 void Expression<DType>::Initialize(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  T_map  = make_shared<map< string, shared_ptr<TensOp<DType>>>>();
+  T_map  = make_shared<map< string, shared_ptr<TensOp::TensOp<DType>>>>();
   CTP_map    = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
   CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
   ACompute_map = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
@@ -46,48 +47,18 @@ void Expression<DType>::Initialize(){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
-shared_ptr<TensOp<DType>> Expression<DType>::Build_TensOp( string op_name,
-                                                         shared_ptr<DType> tensor_data, //needs to be templated, should be Bagel tensor
-                                                         shared_ptr<vector<string>> op_idxs,
-                                                         shared_ptr<vector<bool>> op_aops, 
-                                                         shared_ptr<vector<vector<string>>> op_idx_ranges,
-                                                         vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
-                                                         vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
-                                                         pair<double,double> factor, string Tsymmetry, bool hconj ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp::BuildTensOp" <<   endl;
-
-  if(hconj){
-    reverse(op_idxs->begin(), op_idxs->end());  
-    reverse(op_aops->begin(), op_aops->end());  
-    reverse(op_idx_ranges->begin(), op_idx_ranges->end());  
-    factor.second = -factor.second;// change this 
-  }
-  //NOTE: change to use proper factor
-  int tmpfac =1;
-  shared_ptr<TensOp<DType>>  New_Op = make_shared<TensOp<DType>>(op_name, Symmetry_Funcs, Constraint_Funcs);
-
-  New_Op->data = tensor_data;
-  New_Op->initialize(*op_idxs, *op_idx_ranges, *op_aops, tmpfac, Tsymmetry);
-  New_Op->get_ctrs_tens_ranges();
-
-  return New_Op;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>>> Tens_vec ){
+void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp::TensOp<DType>>>> Tens_vec ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<BraKet<DType>> New_BraKet = make_shared<BraKet<DType>>(G_to_A_map, GammaMap, TargetStates );
-  New_BraKet->Sub_Ops = Tens_vec;
+//  shared_ptr<BraKet<DType>> New_BraKet = make_shared<BraKet<DType>>(G_to_A_map, GammaMap, TargetStates );
+//  New_BraKet->Sub_Ops = Tens_vec;
  
-  New_BraKet->Build_TotalOp();
-  New_BraKet->Build_Gamma_SpinFree(New_BraKet->Total_Op->aops, New_BraKet->Total_Op->idxs); 
+//  New_BraKet->Build_TotalOp();
+//  New_BraKet->Build_Gamma_SpinFree(New_BraKet->Total_Op->aops(), New_BraKet->Total_Op->idxs()); 
 
-  CMTP_map->insert(New_BraKet->Total_Op->CMTP_map->begin(), New_BraKet->Total_Op->CMTP_map->end());
-  CTP_map->insert(New_BraKet->Total_Op->CTP_map->begin(), New_BraKet->Total_Op->CTP_map->end());
-  BraKet_Terms.push_back(New_BraKet);   
+//  CMTP_map->insert(New_BraKet->Total_Op->CMTP_map->begin(), New_BraKet->Total_Op->CMTP_map->end());
+//  CTP_map->insert(New_BraKet->Total_Op->CTP_map->begin(), New_BraKet->Total_Op->CTP_map->end());
+//  BraKet_Terms.push_back(New_BraKet);   
 
   return;
 }
@@ -98,10 +69,10 @@ void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp<DType>>
 template<class DType>
 void Expression<DType>::Get_CMTP_Compute_Terms(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Get_CMTP_Compute_Terms" << endl;  
+  cout << "Expression::Get_CMTP_Compute_Terms" << endl;  
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
-  for (auto  G2A_mapit =G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
+  for (auto  G2A_mapit = G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
     
     auto A_map = G2A_mapit->second;
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){

@@ -37,7 +37,7 @@ namespace bagel {
 namespace SMITH { 
 
 namespace CASPT2 { class CASPT2; };
-namespace TensOp_Computer { class TensOp_Computer; };
+namespace TensOp_Computer { class TensOp_Computer<double>; };
 
 namespace CASPT2_ALT{
 

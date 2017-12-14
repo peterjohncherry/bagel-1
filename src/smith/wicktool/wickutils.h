@@ -11,6 +11,7 @@
 #include<utility>
 #include<tuple>
 #include<string>
+#include<list>
 #include<memory>
 #include<map>
 #include <iostream>
@@ -51,19 +52,17 @@ namespace WickUtils {
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<T1>>>> combgen( std::shared_ptr<std::vector<T1>> invec);
 
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<std::vector<int>> vec1, int NN );
+  std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<const std::vector<int>> vec1, int NN );
 
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
   get_unique_pairs(std::shared_ptr<std::vector<int>> ids1 , std::shared_ptr<std::vector<int>> ids2 , int num_pairs);
+  
+  std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
+  get_unique_pairs(std::shared_ptr< const std::vector<int>> ids1 , std::shared_ptr< const std::vector<int>> ids2 , int num_pairs);
 
   std::shared_ptr<std::vector<int>> reorder_vector(std::vector<int>& neworder , const std::vector<int>& origvec ) ;
 
   void print_pvec (pint_vec pvec) ;
-
-  std::string get_name(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_id_ranges,  std::shared_ptr<pint_vec> all_ctrs_pos) ;
-
-  std::string get_name_rdm(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
-                           std::shared_ptr<std::vector<std::pair<int,int>>> all_deltas_pos ); 
-
 
   std::shared_ptr<std::vector<int>> get_unc_ids_from_deltas_ids_comparison(std::shared_ptr<std::vector<int>> ids , std::shared_ptr<std::vector<std::pair<int,int>>> deltas );
 
@@ -85,7 +84,6 @@ namespace WickUtils {
 
   std::shared_ptr<std::vector<pint_vec>>  
   get_cross_pairs( std::shared_ptr<std::vector<int>> vec1 , std::shared_ptr<std::vector<int>> vec2, std::shared_ptr<std::vector<std::string>> id_names );
-
 
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name ="lazy"){

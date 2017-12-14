@@ -44,11 +44,8 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
 
   shared_ptr<Expression<double>> Expr = Expression_map->at(Expression_name); cout << "got " << Expression_name << " info "<< endl;
 
-  shared_ptr<TensOp_Computer::TensOp_Computer> TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer>( Expr->ACompute_map, Expr->CTP_map, range_conversion_map, TensOp_data_map);
-  cout << "Built_TensOp_Computer" << endl;
-
+  shared_ptr<TensOp_Computer::TensOp_Computer<double>> TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<double>>( Expr->ACompute_map, Expr->CTP_map, range_conversion_map, TensOp_data_map);
   B_Gamma_Computer::B_Gamma_Computer B_Gamma_Machine( civectors, range_conversion_map, Expr->GammaMap, Gamma_data_map, Sigma_data_map, CIvec_data_map );
-  cout << "Built_B_Gamma_Computer" << endl;
 
   double result = 0.0;
   map< string, double > g_result_map;
@@ -56,103 +53,97 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(Expr->GammaMap) ) {
 
-    string Gamma_name = AG_contrib.first;
-    cout << " Gamma_name  = " << Gamma_name << endl; 
-
-    print_vector( *(Expr->GammaMap->at(Gamma_name)->id_ranges), "id_ranges" );
+    string Gamma_name = AG_contrib.first;  cout << " Gamma_name  = " << Gamma_name << endl; 
 
     shared_ptr<Tensor_<double>> A_combined_data;
-    // Build A_tensor to hold sums of different A-tensors
+    // Build A_tensor to hold sums of different A-tensors.
     if ( Gamma_name != "ID" ) {
-      A_combined_data = make_shared<Tensor_<double>>( *(TensOp_Machine->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges)) );
+      A_combined_data = make_shared<Tensor_<double>>( *(TensOp_Machine->Get_Bagel_IndexRanges(Expr->GammaMap->at(Gamma_name)->id_ranges())) );
     } else {
       A_combined_data = make_shared<Tensor_<double>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
     }  
     A_combined_data->allocate();
     A_combined_data->zero(); 
  
-    cout << "Built an A-tensor to hold contributions" << endl;
-
     // Loop through A-tensors needed for this gamma
     auto  A_contrib_loc =  Expr->G_to_A_map->find(Gamma_name);
-  
-    if ( A_contrib_loc !=  Expr->G_to_A_map->end() ) {
+    if ( (A_contrib_loc != Expr->G_to_A_map->end()) &&  (A_contrib_loc->second->size() != 0) ) {
    
-      for ( auto A_contrib : *A_contrib_loc->second ) {
-    
-        if (check_AContrib_factors(A_contrib.second))
-          continue;
+      for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
+      
+        string  A_contrib_name  = A_contrib_map_elem.first;    
+        AContribInfo A_contrib  = A_contrib_map_elem.second;    
 
-	print_AContraction_list(Expr->ACompute_map->at(A_contrib.first), A_contrib.first);
-        TensOp_Machine->Calculate_CTP(A_contrib.first);
+        if (check_AContrib_factors(A_contrib))
+          continue;
+      
+	print_AContraction_list( Expr->ACompute_map->at(A_contrib_name), A_contrib_name );
+        TensOp_Machine->Calculate_CTP( A_contrib_name );
 
         if ( Gamma_name != "ID" ) {
-          for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++){
        
-            if ( TensOp_data_map->find(A_contrib.first) != TensOp_data_map->end() ) {
+          if ( TensOp_data_map->find(A_contrib_name) != TensOp_data_map->end() ) { cout << A_contrib_name << " found in map" << endl;
+
+            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
+              shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib.id_order(qq)) );
+              A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), A_contrib_reordered );
+            }
+
+         } else { cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO there should be a way to avoid this
             
-               cout << endl; Print_Tensor(TensOp_data_map->at(A_contrib.first), A_contrib.first); cout << endl << endl << endl;
-               shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
-               A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_reordered );
-            
-            } else { //not an efficient way, but do this for now
-            
-              cout << A_contrib.first << " Tensor is decomposed, do contraction in parts"  << endl;
-              shared_ptr<vector<shared_ptr<CtrTensorPart<double>>>> CTP_vec = Expr->CMTP_map->at(A_contrib.first)->CTP_vec ;
+           for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
+
+              shared_ptr<vector<shared_ptr<CtrTensorPart<double>>>> CTP_vec = Expr->CMTP_map->at(A_contrib_name)->CTP_vec ;
               vector<string> sub_tensor_names(CTP_vec->size()); 
+
               for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
                 sub_tensor_names[rr] = CTP_vec->at(rr)->myname();
 
-              shared_ptr<Tensor_<double>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
-              TensOp_data_map->emplace(A_contrib.first, A_contrib_data );
-              cout << "got data_for " << A_contrib.first << endl;
-              shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib.first, make_shared<vector<int>>(A_contrib.second.id_order(qq)) );
-              cout << "reordered " << A_contrib.first << endl;
-              A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_reordered );
+              shared_ptr<Tensor_<double>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );//TODO fix so uses piecewise contraction where possible 
+              TensOp_data_map->emplace( A_contrib_name, A_contrib_data );
+              shared_ptr<Tensor_<double>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib.id_order(qq)) );
+              A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), A_contrib_reordered );
 
             }
           }
 
         } else {
   
-          cout << "A_contrib.first = " << A_contrib.first << endl;
+          if ( TensOp_data_map->find(A_contrib_name) == TensOp_data_map->end() ) {cout << A_contrib_name <<  " not yet in map, must form from direct product" << endl;
 
-          if ( TensOp_data_map->find(A_contrib.first) == TensOp_data_map->end() ) {
-            shared_ptr<vector<shared_ptr<CtrTensorPart<double>>>> CTP_vec = Expr->CMTP_map->at(A_contrib.first)->CTP_vec ;
+            shared_ptr<vector<shared_ptr<CtrTensorPart<double>>>> CTP_vec = Expr->CMTP_map->at(A_contrib_name)->CTP_vec ;
             vector<string> sub_tensor_names(CTP_vec->size()); 
             for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
               sub_tensor_names[rr] = CTP_vec->at(rr)->myname();
             
             shared_ptr<Tensor_<double>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
-            for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++)
-              A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), A_contrib_data );
+            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++)
+              A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), A_contrib_data );
 
           } else {
-            for ( int qq = 0 ; qq != A_contrib.second.id_orders.size(); qq++)
-              A_combined_data->ax_plus_y( (double)(A_contrib.second.factor(qq).first), TensOp_data_map->at(A_contrib.first) );
+
+            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++)
+              A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), TensOp_data_map->at(A_contrib_name) );
+
           }
 
         }
   
-        cout << "added " << A_contrib.first << endl; 
+        cout << "added " << A_contrib_name << endl; 
         cout << "=========================================================================================================" << endl << endl;
       }
-      
+     
       if ( Gamma_name != "ID" ) {
-
+        
         B_Gamma_Machine.get_gamma( Gamma_name );
-       
+ 
         double tmp_result = A_combined_data->dot_product( Gamma_data_map->at(Gamma_name) );
-        cout << "A_combined_data->dot_product( Gamma_data_map->at(" << Gamma_name << ") ) = " << tmp_result  << endl;
         g_result_map.emplace(Gamma_name, tmp_result) ;
         result += tmp_result;
 
       } else {
 
-        Print_Tensor( A_combined_data, " A_combined_data for 1D " ) ; cout << endl;
-
-        double tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( A_combined_data ) ;
-        cout << "tmp_result = " << tmp_result << endl;
+        double tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<double>::sum_tensor_elems( A_combined_data ) ; cout << "tmp_result = " << tmp_result << endl;
         g_result_map.emplace(Gamma_name, tmp_result) ;
         result += tmp_result ; 
 
@@ -182,7 +173,7 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
 template < class DataType >
 void Expression_Computer::Expression_Computer<DataType>::print_AContraction_list(shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list, string A_contrib_name ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+cout << "Expression_Computer::print_AContraction_list" << endl;  
   cout << "=========================================================================================================" << endl;
   cout << A_contrib_name << endl;
   cout << "=========================================================================================================" << endl;
@@ -211,9 +202,12 @@ bool Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors(
  
   bool  skip = false;
   for ( int qq = 0 ; qq != AC_info.id_orders.size(); qq++) { 
-     if ( AC_info.factor(qq).first != 0 || AC_info.factor(qq).second !=0) 
+     if ( AC_info.factor(qq).first != 0 || AC_info.factor(qq).second !=0) { 
+       print_vector( AC_info.id_orders[qq], "AC_info.id_orders["+to_string(qq)+"]") ; cout << "has non-zero factor (" <<  AC_info.factor(qq).first <<","<< AC_info.factor(qq).second << ")" <<endl; 
        break;
+     }
      if ( qq == AC_info.id_orders.size()-1 ) {
+       print_vector( AC_info.id_orders[qq], "AC_info.id_orders["+to_string(qq)+"]") ; cout << "has NO non-zero factors" <<endl; 
        skip =true;
      }
   } 

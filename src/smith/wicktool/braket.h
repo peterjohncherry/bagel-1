@@ -5,7 +5,8 @@
   #include <src/smith/wicktool/tensop.h>
   #include <src/smith/wicktool/spin_manager.h>
   #include <src/smith/wicktool/states_info.h>
-template<class DataType> 
+
+template<typename DataType> 
 class BraKet  {
       using pint_vec = std::vector<std::pair<int,int>>;
       using pstr_vec = std::vector<std::pair<std::string,std::string>>;
@@ -25,9 +26,9 @@ class BraKet  {
        int spin_max ;
        int spin_min ;
        
-       std::shared_ptr<std::vector<std::shared_ptr<TensOp<DataType>>>> Sub_Ops;
+       std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>> Sub_Ops;
        
-       std::shared_ptr<MultiTensOp<DataType>> Total_Op;
+       std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op;
        
        std::shared_ptr< std::map< std::vector<std::string>, std::shared_ptr<std::vector<std::pair< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> >>> >> BK_Compute_List_CMTP;
        
@@ -37,20 +38,10 @@ class BraKet  {
        //Goes from a gamma name to the gamma info
        std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> GammaMap;
        
-       //functions 
-       void add_Op(std::string op_name,
-                   std::shared_ptr<std::vector<std::string>> op_idxs,
-                   std::shared_ptr<std::vector<bool>> op_aops, 
-                   std::shared_ptr<std::vector<std::vector<std::string>>> op_idx_ranges,
-                   std::vector<std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> Symmetry_Funcs,
-                   std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>)> Constraint_Funcs,
-                   std::pair<double,double> factor, std::string Tsymmetry, bool hconj ) ;
-       
        void Build_TotalOp();
        
-       void Build_Gamma_WithSpin(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs);
-       
-       void Build_Gamma_SpinFree(std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<std::vector<std::string>> idxs); 
+       void Build_Gamma_WithSpin(std::shared_ptr<const std::vector<bool>> aops, std::shared_ptr<const std::vector<std::string>> idxs);
+       void Build_Gamma_SpinFree(std::shared_ptr<const std::vector<bool>> aops, std::shared_ptr<const std::vector<std::string>> idxs); 
        void Build_Tensor_Contraction_list_CMTP();
 
 };

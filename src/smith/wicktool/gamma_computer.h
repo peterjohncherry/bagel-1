@@ -78,8 +78,6 @@ class Gamma_Computer {
       
       std::shared_ptr<std::vector<IndexRange>> Get_Bagel_IndexRanges( std::shared_ptr<std::vector<std::string>> ranges_str);
       
-      std::string get_sigma_name( std::string Bra_name, std::string Ket_name , std::shared_ptr<std::vector<std::string>>  orb_ranges, std::shared_ptr<std::vector<bool>> aops ) ;
-      
       std::string get_det_name(std::shared_ptr<const Determinants> Detspace ) ;
        
       void get_civector_indexranges(int nstates) ;
