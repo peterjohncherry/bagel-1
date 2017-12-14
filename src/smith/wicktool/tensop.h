@@ -135,7 +135,6 @@ class TensOp {
              std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > >& symmfuncs, 
              std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) >& constraints,
              std::string& Tsymm );
-      TensOp( std::string name);
      ~TensOp(){};
 
      virtual int num_idxs() { return num_idxs_; }
@@ -167,7 +166,7 @@ class TensOp {
 
 namespace MultiTensOp {
 template<typename DataType>
-class MultiTensOp : public TensOp_Interface::TensOp_Interface<double>  {
+class MultiTensOp : public TensOp_Interface::TensOp_Interface<DataType>  {
 
    private :
      std::shared_ptr<const MultiTensOp_General> Op_dense_;
@@ -203,8 +202,11 @@ class MultiTensOp : public TensOp_Interface::TensOp_Interface<double>  {
 
     MultiTensOp( std::string name , bool spinfree, std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors );
     ~MultiTensOp(){};
-     
-    void generate_ranges();
+
+   std::tuple<std::shared_ptr<std::map< const std::vector<std::string>, std::tuple<bool,                            std::shared_ptr<const std::vector<std::string>>,                     std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >>,
+         std::shared_ptr<std::map< const std::vector<std::string>, std::tuple<bool,                            std::shared_ptr<const std::vector<std::string>>,                     std::shared_ptr<const std::vector<std::string>>, std::pair<int,int>>  >>, 
+         std::shared_ptr<std::map< const std::vector<std::string>, std::tuple< std::shared_ptr<const std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>> >>>>
+    generate_ranges( int num_idxs, std::vector<int>& cmlsizevec );
     void get_ctrs_tens_ranges(); 
     void enter_into_CMTP_map(pint_vec ctr_pos_list, std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors, std::shared_ptr<std::vector<std::string>> id_ranges );
 
