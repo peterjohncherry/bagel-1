@@ -50,15 +50,15 @@ template<class DType>
 void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp::TensOp<DType>>>> Tens_vec ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<BraKet<DType>> New_BraKet = make_shared<BraKet<DType>>(G_to_A_map, GammaMap, TargetStates );
-  New_BraKet->Sub_Ops = Tens_vec;
+//  shared_ptr<BraKet<DType>> New_BraKet = make_shared<BraKet<DType>>(G_to_A_map, GammaMap, TargetStates );
+//  New_BraKet->Sub_Ops = Tens_vec;
  
-  New_BraKet->Build_TotalOp();
-  New_BraKet->Build_Gamma_SpinFree(New_BraKet->Total_Op->aops(), New_BraKet->Total_Op->idxs()); 
+//  New_BraKet->Build_TotalOp();
+//  New_BraKet->Build_Gamma_SpinFree(New_BraKet->Total_Op->aops(), New_BraKet->Total_Op->idxs()); 
 
-  CMTP_map->insert(New_BraKet->Total_Op->CMTP_map->begin(), New_BraKet->Total_Op->CMTP_map->end());
-  CTP_map->insert(New_BraKet->Total_Op->CTP_map->begin(), New_BraKet->Total_Op->CTP_map->end());
-  BraKet_Terms.push_back(New_BraKet);   
+//  CMTP_map->insert(New_BraKet->Total_Op->CMTP_map->begin(), New_BraKet->Total_Op->CMTP_map->end());
+//  CTP_map->insert(New_BraKet->Total_Op->CTP_map->begin(), New_BraKet->Total_Op->CTP_map->end());
+//  BraKet_Terms.push_back(New_BraKet);   
 
   return;
 }

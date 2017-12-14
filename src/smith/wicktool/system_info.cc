@@ -68,7 +68,7 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
                                        //                                *op_idxs, *op_idx_ranges, *op_aops, tmpfac, Tsymmetry);
 //  New_Op->get_ctrs_tens_ranges();
 
-  TensOp_Prep::TensOp_Prep<DataType> New_Op_prep(  op_name, *op_idxs, *op_idx_ranges, *op_aops, factor, Symmetry_Funcs, Constraint_Funcs, Tsymmetry);
+//  TensOp_Prep::TensOp_Prep<DataType> New_Op_prep(  op_name, *op_idxs, *op_idx_ranges, *op_aops, factor, Symmetry_Funcs, Constraint_Funcs, Tsymmetry);
 
  // shared_ptr<TensOp_General::TensOp_General<DataType>> tensop_dense = make_shared<TensOp_General::TensOp_General<DataType>>( New_Op_prep );
   
