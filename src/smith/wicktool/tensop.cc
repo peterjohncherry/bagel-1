@@ -6,6 +6,25 @@
 using namespace std;
 using namespace WickUtils;
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+TensOp_General::TensOp_General( std::vector<int> plus_ops, std::vector<int> kill_ops,
+                                std::vector< std::shared_ptr<const std::vector<std::string>>> unique_range_blocks,
+                                std::map< const std::vector<std::string>, 
+                                          std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,
+                                          std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>> all_ranges ) :
+                    plus_ops_(plus_ops), kill_ops_(kill_ops), unique_range_blocks_(unique_range_blocks), all_ranges_(all_ranges){                         
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "TensOp_General::TensOp_General "<< endl;
+
+  plus_ops_ptr_ = std::make_shared<const std::vector<int>>(plus_ops);
+  kill_ops_ptr_ = std::make_shared<const std::vector<int>>(kill_ops);
+
+  unique_range_blocks_ptr_ = std::make_shared<const std::vector< std::shared_ptr< const std::vector<std::string>>>>(unique_range_blocks);
+
+  all_ranges_ptr_ = std::make_shared<const std::map< const std::vector<std::string>,
+                                                     std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,
+                                                     std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>>(all_ranges);
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vector<string>>& idx_ranges,
@@ -19,7 +38,8 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp::TensOp" <<   endl;
            
-  idxs_const_ptr =  make_shared<const vector<string>>(idxs_);
+  idxs_const_ptr_ =  make_shared<const vector<string>>(idxs_);
+  aops_const_ptr_ =  make_shared<const vector<bool>>(aops_);
 
   generate_ranges();
 
@@ -63,7 +83,7 @@ cout << "TensOp::generate_ranges" <<   endl;
   // Initialize range maps and add in first range to start things off.
   const vector<string> init_range = possible_ranges[0];
   shared_ptr<const vector<string>> tmp_range = make_shared<const vector<string>>(possible_ranges[0]);
-  all_ranges.emplace( init_range, tie(tbool, tmp_range , idxs_const_ptr, fac ) );
+  all_ranges.emplace( init_range, tie(tbool, tmp_range , idxs_const_ptr_, fac ) );
  
   unique_range_blocks = vector< shared_ptr< const vector<string>>>(1, tmp_range );
   //Apply symmetry operations to remove unnecessary ranges   
@@ -90,8 +110,7 @@ cout << "TensOp::generate_ranges" <<   endl;
       }
   }
 
-//  shared_ptr<TensOp_General::TensOp_General<DataType>> bob = make_shared<TensOp_General::TensOp_General<DataType>>( plus_ops, kill_ops, unique_range_blocks, all_ranges );
-//  TensOp_Dense_Info = *bob; 
+  tensop_dense_ = make_shared<const TensOp_General>( plus_ops, kill_ops, unique_range_blocks, all_ranges );
 
   cout << "TensOp::generate_ranges()" <<   endl;
   return;
@@ -102,14 +121,14 @@ template<typename DataType>
 bool TensOp::TensOp<DataType>::apply_symmetry( const vector<string>& ranges_1,  const vector<string>& ranges_2,
 std::map< const std::vector<std::string>, 
             std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int> > >& all_ranges){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////:w
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp::apply_symmetry" <<   endl;
 
   const bool a_unique_range_block = true; 
   if (a_unique_range_block) {
     const pair<int,int> fac(1,1);
     shared_ptr<const vector<string>> ranges_2_ptr = make_shared<const vector<string>>(ranges_2);
-    all_ranges.emplace(ranges_2, tie( a_unique_range_block,  ranges_2_ptr, idxs_const_ptr, fac ) );
+    all_ranges.emplace(ranges_2, tie( a_unique_range_block,  ranges_2_ptr, idxs_const_ptr_, fac ) );
   }
   return false;
 }; 
@@ -136,42 +155,42 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
   cout << "TensOp get_ctrs_tens_ranges" << endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
- // cout << "TensOp get_ctrs_tens_ranges" << endl;
+  cout << "TensOp get_ctrs_tens_ranges" << endl;
  
     //puts uncontracted ranges into map 
-//  shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
-//  for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
-//    shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, get<3>(rng_it->second)); 
-//    shared_ptr<const vector<string>>   full_ranges  = make_shared<const vector<string>>(rng_it->first);
-      //shared_ptr<CtrTensorPart<DataType>>  CTP       = make_shared< CtrTensorPart<DataType> >(idxs_, full_ranges, noctrs, ReIm_factors ); 
-//    cout << "CTP->myname() = "; // << CTP->myname() << " is going into CTP_map" <<  endl;
-//    CTP_map->emplace(CTP->myname(), CTP); //maybe should be addded in with ctr_idxs.
- // }
+ shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
+ for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
+   shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, get<3>(rng_it->second)); 
+   shared_ptr<const vector<string>>   full_ranges  = make_shared<const vector<string>>(rng_it->first);
+   //shared_ptr<CtrTensorPart<DataType>>  CTP       = make_shared< CtrTensorPart<DataType> >(idxs_, full_ranges, noctrs, ReIm_factors ); 
+   cout << "CTP->myname() = "; // << CTP->myname() << " is going into CTP_map" <<  endl;
+//   CTP_map->emplace(CTP->myname(), CTP); //maybe should be addded in with ctr_idxs.
+ }
  
     //puts_contracted ranges into map
-//  for ( int nctrs = 1 ; nctrs != (idxs_->size()/2)+1 ; nctrs++ ){
-//    shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>  ctr_lists = get_unique_pairs(plus_ops_, kill_ops_, nctrs);
-//    for (shared_ptr<vector<pair<int,int>>> ctr_vec : *ctr_lists) {
-//      for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
-//        bool valid =true;
-//        for (int ii = 0 ; ii != ctr_vec->size(); ii++){
-//          if ( rng_it->first[ctr_vec->at(ii).first] != rng_it->first[ctr_vec->at(ii).second]){
-//            valid = false;
-//            break;
-//          }
-//        }
-//
-//        if (valid) {
-//          shared_ptr<vector<pair<int,int>>> ReIm_factors = make_shared<vector<pair<int,int>>>(1, get<3>(rng_it->second)); 
-//          shared_ptr<const vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
-//          shared_ptr<CtrTensorPart<DataType>> CTP = make_shared<CtrTensorPart<DataType>>(idxs_, full_ranges, ctr_vec, ReIm_factors ); 
-//          cout << "CTP->myname() = ";// << CTP->myname() << "is going into CTP_map " << endl;
-//          CTP_map->emplace(CTP->myname(), CTP); //maybe should be added in with ctr_idxs.
-//        }
-//      }
-//    }
-//  }
-//  cout << "TensOp_Prep::get_ctrs_tens_ranges out" << endl;
+  for ( int nctrs = 1 ; nctrs != (idxs_.size()/2)+1 ; nctrs++ ){
+    shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>  ctr_lists = get_unique_pairs(plus_ops(), kill_ops(), nctrs);
+    for (shared_ptr<vector<pair<int,int>>> ctr_vec : *ctr_lists) {
+      for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
+        bool valid =true;
+        for (int ii = 0 ; ii != ctr_vec->size(); ii++){
+          if ( rng_it->first[ctr_vec->at(ii).first] != rng_it->first[ctr_vec->at(ii).second]){
+            valid = false;
+            break;
+          }
+        }
+
+        if (valid) {
+          shared_ptr<vector<pair<int,int>>> ReIm_factors = make_shared<vector<pair<int,int>>>(1, get<3>(rng_it->second)); 
+          shared_ptr<const vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
+        //  shared_ptr<CtrTensorPart<DataType>> CTP = make_shared<CtrTensorPart<DataType>>(idxs_, full_ranges, ctr_vec, ReIm_factors ); 
+          cout << "CTP->myname() = ";// << CTP->myname() << "is going into CTP_map " << endl;
+        //  CTP_map->emplace(CTP->myname(), CTP); //maybe should be added in with ctr_idxs.
+        }
+      }
+    }
+  }
+  cout << "TensOp_Prep::get_ctrs_tens_ranges out" << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
