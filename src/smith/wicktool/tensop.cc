@@ -56,6 +56,16 @@ cout << "TensOp::TensOp" <<   endl;
   cout << "TensOp::TensOp" << endl;
   return;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+TensOp::TensOp<DataType>::TensOp( std::string name ) : name_(name) {          
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+
+  cout << "TensOp_Prep::TensOp_Prep<DataType>::TensOp constructor for MT" << endl;
+   
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
@@ -205,9 +215,9 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-MultiTensOp_Prep::MultiTensOp_Prep<DataType>::MultiTensOp_Prep( std::string name , bool spinfree,
-                                                                std::vector<std::shared_ptr<TensOp_Interface::TensOp_Interface<DataType>>>& orig_tensors ):
-                                                                orig_tensors_(orig_tensors), num_tensors_(orig_tensors.size()) {          
+MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name , bool spinfree,
+                                                 std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors ):
+                                                 name_(name), orig_tensors_(orig_tensors), num_tensors_(orig_tensors.size()) {          
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   
@@ -220,7 +230,7 @@ MultiTensOp_Prep::MultiTensOp_Prep<DataType>::MultiTensOp_Prep( std::string name
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::generate_ranges(){
+void MultiTensOp::MultiTensOp<DataType>::generate_ranges(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "MultiTensOp_Prep::generate_ranges()" << endl;
 
@@ -234,7 +244,7 @@ void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::generate_ranges(){
  
   if ( num_tensors_ > 1 ) { 
  
-    for (shared_ptr<TensOp_Interface::TensOp_Interface<DataType>> Ten : orig_tensors_ )
+    for (shared_ptr<TensOp::TensOp<DataType>> Ten : orig_tensors_ )
       rng_maps.push_back(Ten->all_ranges()->begin());
     
     bool ham =true; //awkward loop to generate all possible combinations of different ranges on different tensors in multitensop
@@ -263,7 +273,7 @@ void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::generate_ranges(){
           continue;
         }     
   
-         vector<vector<string>> orig_ranges(num_tensors_);
+         vector<shared_ptr<const vector<string>>> orig_ranges(num_tensors_);
          shared_ptr<const vector<shared_ptr<const vector<string>>>> unique_ranges = make_shared<const vector<shared_ptr<const vector<string>>>>(num_tensors_);
          shared_ptr<const vector<shared_ptr<const vector<string>>>> unique_idxs   = make_shared<const vector<shared_ptr<const vector<string>>>>(num_tensors_);
          shared_ptr<pint_vec>     factors  = make_shared<pint_vec>(num_tensors_);
@@ -271,20 +281,18 @@ void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::generate_ranges(){
     
          int  Re_factor = 1;
          int  Im_factor = 1;
- 
+
          for (int jj = 0 ; jj != num_tensors_ ; jj++){
-           orig_ranges[jj] = vector<string>(rng_maps[jj]->first);
-           num_orig_ranges += orig_ranges.size(); 
   
-           isunique->at(jj) = get<0>(rng_maps[jj]->second);
-
+           orig_ranges[jj]       = vector<string>(rng_maps[jj]->first);
+           isunique->at(jj)      = get<0>(rng_maps[jj]->second);
            unique_ranges->at(jj) = get<1>(rng_maps[jj]->second);  
+           unique_idxs->at(jj)   = get<2>(rng_maps[jj]->second);  
+           factors->at(jj)       = get<3>(rng_maps[jj]->second);
+
+           num_orig_ranges += orig_ranges.size(); 
            num_unique_ranges += unique_ranges->at(jj)->size(); 
-
-           unique_idxs->at(jj) = get<2>(rng_maps[jj]->second);  
            num_unique_idxs += unique_idxs->at(jj)->size(); 
-
-           factors->at(jj) = get<3>(rng_maps[jj]->second) ;
          
            int Re_factor_buff = Re_factor;  
 //           int Im_factor_buff = Im_factor;
@@ -357,18 +365,18 @@ void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::generate_ranges(){
      num_idxs += Tsizes[ii];
      names[ii] = orig_tensors_[ii]->name();
    
-     idxs.insert(  idxs.end(),orig_tensors_->at(ii)->idxs()->begin(), orig_tensors_->at(ii)->idxs()->end());
-     aops.insert(  aops.end(),orig_tensors_->at(ii)->aops()->begin(), orig_tensors_->at(ii)->aops()->end());
-     split_idxs.push_back(orig_tensors_->at(ii)->idxs()) ;
+     idxs.insert( idxs.end(),orig_tensors_[ii]->idxs()->begin(), orig_tensors_[ii]->idxs()->end() );
+     aops.insert( aops.end(),orig_tensors_[ii]->aops()->begin(), orig_tensors_[ii]->aops()->end() );
+     split_idxs.push_back(orig_tensors_[ii]->idxs()) ;
    
      // pushing back here as, in principle, we don't know how long these are (particle number may not be conserved).
-     for ( int elem : *(orig_tensors_->at(ii)->plus_ops()) )
+     for ( int elem : *(orig_tensors_[ii]->plus_ops()) )
        plus_ops.push_back(elem+xx);
    
-     for ( int elem : *(orig_tensors_->at(ii)->kill_ops()) )
+     for ( int elem : *(orig_tensors_[ii]->kill_ops()) )
        kill_ops.push_back(elem+xx);
    
-     xx+=orig_tensors_->at(ii)->num_idxs();
+     xx+=orig_tensors_[ii]->num_idxs();
    } 
   
   Op_dense_ = make_shared<const MultiTensOp_General>( plus_ops, kill_ops, unique_range_blocks, all_ranges );
@@ -383,7 +391,7 @@ void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::generate_ranges(){
 //seems to work out faster; it's either check everything lots of times, or regenerate it lots of times. 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::get_ctrs_tens_ranges() {
+void MultiTensOp::MultiTensOp<DataType>::get_ctrs_tens_ranges() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_TensOp 
 cout << "MultiTensOp get_ctrs_tens_ranges" << endl;
@@ -452,7 +460,7 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
 }  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void MultiTensOp_Prep::MultiTensOp_Prep<DataType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_ptr<vector<pair<int,int>>> ReIm_factors, shared_ptr<vector<string>> id_ranges ){
+void MultiTensOp::MultiTensOp<DataType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_ptr<vector<pair<int,int>>> ReIm_factors, shared_ptr<vector<string>> id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_TensOp 
 cout << "MultiTensOp::enter_into_CMTP_map" << endl;
