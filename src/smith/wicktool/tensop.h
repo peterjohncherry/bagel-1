@@ -202,7 +202,7 @@ class MultiTensOp : public  TensOp::TensOp<DataType> {
 
     void get_ctrs_tens_ranges(); 
 
-    void enter_into_CMTP_map(pint_vec ctr_pos_list, std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors, std::shared_ptr<std::vector<std::string>> id_ranges );
+    void enter_into_CMTP_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges );
 
 };
 }

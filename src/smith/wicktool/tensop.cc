@@ -309,6 +309,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
          vector<string>             merged_oranges(num_idxs_);
          shared_ptr<vector<string>> merged_uranges = make_shared<vector<string>>(num_idxs_);
          shared_ptr<vector<string>> merged_uqidxs = make_shared<vector<string>>(num_idxs_);
+
          for (int jj = 0 ; jj != num_tensors_ ; jj++){
   
            isunique->at(jj)      = get<0>(rng_maps[jj]->second);
@@ -372,69 +373,66 @@ cout << "MultiTensOp get_ctrs_tens_ranges" << endl;
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
- //   //puts uncontracted ranges into map 
-  //  shared_ptr<vector<pair<int,int>>> noctrs = make_shared<vector<pair<int,int>>>(0);
-  //  
-  //  //silly, should just test {act,act,....} against contraints, and check if act in each ranges... 
-  //  for (auto rng_it = combined_ranges->begin(); rng_it != combined_ranges->end(); rng_it++) {
-  //    bool check = true;
-  //    for (int xx = 0; xx !=rng_it->first.size() ; xx++ ) {
-  //      if (rng_it->first[xx] != "act") {
-  //        check=false;
-  //        break;
-  //      }
-  //    }
-  //    if(!check){
-  //      continue;
-  //    } else {
-  //      enter_into_CMTP_map(*noctrs, get<3>(rng_it->second), make_shared<vector<string>>(rng_it->first) );
-  //    }
-  //  }
-  //  //puts_contractions, with specified ranges, into the map
-  //  for ( int nctrs = 1 ; nctrs != (num_idxs_/2)+1 ; nctrs++ ){
-  //    shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> ctr_lists = get_unique_pairs(plus_ops_, kill_ops_, nctrs);
-  // 
-   //   for (shared_ptr<vector<pair<int,int>>> ctr_vec : *ctr_lists) {
-   //     for (auto rng_it = combined_ranges->begin(); rng_it != combined_ranges->end(); rng_it++) {
-   //
-   //       bool valid =true;
-   //       //checks ranges for contractions match
-   //       for (int ii = 0 ; ii != ctr_vec->size(); ii++){
-   //         if ( rng_it->first[ctr_vec->at(ii).first] != rng_it->first[ctr_vec->at(ii).second]){
-   //           valid = false;
-   //           break;
-   //         }
-   //       }
-   //
-   //       if (!valid) 
-   //         continue;
-   //
-   //        //checks all uncontracted indexes are active. Should call constraint functions instead
-   //       if (valid){	 
-   //         vector<bool> unc_get(rng_it->first.size(),true);
-   //         for (pair<int,int> ctr_pos : *ctr_vec){
-   //           unc_get[ctr_pos.first]  = false;
-  //            unc_get[ctr_pos.second] = false;
-   //         }
-   //         for (int xx = 0; xx !=rng_it->first.size() ; xx++ ) {
-   //           if (unc_get[xx]  && (rng_it->first[xx].substr(0,3) != "act") ) {
-   //             valid = false;  
-   //             break;
-   //           }
-   //         }
-   //       } 
-   //
-   //       if (valid) { 
-   //         enter_into_CMTP_map(*ctr_vec, get<3>(rng_it->second), make_shared<vector<string>>(rng_it->first) );
-   //       }
-   //     }
-   //   }
-   // }
-   // return;
+  //puts uncontracted ranges into map 
+  shared_ptr<vector<pair<int,int>>> noctrs = make_shared<vector<pair<int,int>>>(0);
+  
+  //silly, should just test {act,act,....} against contraints, and check if act in each ranges... 
+  for (auto rng_it = this->all_ranges()->begin(); rng_it != this->all_ranges()->end(); rng_it++) {
+    bool check = true;
+    for (int xx = 0; xx !=rng_it->first.size() ; xx++ ) {
+      if (rng_it->first[xx] != "act") {
+        check=false;
+        break;
+      }
+    }
+    if(!check){
+      continue;
+    } else {
+      enter_into_CMTP_map(*noctrs, get<3>(rng_it->second), rng_it->first );
+    }
+  }
+  //puts_contractions, with specified ranges, into the map
+  for ( int nctrs = 1 ; nctrs != (this->num_idxs()/2)+1 ; nctrs++ ){
+    shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> ctr_lists = get_unique_pairs( this->plus_ops(), this->kill_ops(), nctrs );
+  
+    for (shared_ptr<vector<pair<int,int>>> ctr_vec : *ctr_lists) {
+      for (auto rng_it = this->all_ranges()->begin(); rng_it != this->all_ranges()->end(); rng_it++) {
+  
+        bool valid =true;
+        //checks ranges for contractions match
+        for (int ii = 0 ; ii != ctr_vec->size(); ii++){
+          if ( rng_it->first[ctr_vec->at(ii).first] != rng_it->first[ctr_vec->at(ii).second]){
+            valid = false;
+            break;
+          }
+        }
+  
+        //checks all uncontracted indexes are active. Should call constraint functions instead
+        if (!valid) { 
+          continue;
+        } else {	 
+          vector<bool> unc_get(rng_it->first.size(),true);
+          for( pair<int,int> ctr_pos : *ctr_vec ){
+            unc_get[ctr_pos.first]  = false;
+            unc_get[ctr_pos.second] = false;
+          }
+          for (int xx = 0; xx !=rng_it->first.size() ; xx++ ) {
+            if (unc_get[xx]  && (rng_it->first[xx].substr(0,3) != "act") ) {
+              valid = false;  
+              break;
+            }
+          }
+        } 
+        if (valid) 
+          enter_into_CMTP_map(*ctr_vec, get<3>(rng_it->second), rng_it->first );
+      }
+    }
+  }
+  return;
 }  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void MultiTensOp::MultiTensOp<DataType>::enter_into_CMTP_map(pint_vec ctr_pos_list, shared_ptr<vector<pair<int,int>>> ReIm_factors, shared_ptr<vector<string>> id_ranges ){
+void MultiTensOp::MultiTensOp<DataType>::enter_into_CMTP_map(pint_vec ctr_pos_list, pair<int,int> ReIm_factors, const vector<string>& id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_TensOp 
 cout << "MultiTensOp::enter_into_CMTP_map" << endl;
