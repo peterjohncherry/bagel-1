@@ -7,41 +7,44 @@ using namespace std;
 using namespace WickUtils;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-TensOp_General::TensOp_General( vector<int> plus_ops, vector<int> kill_ops,
-                                vector< shared_ptr<const vector<string>>> unique_range_blocks,
-                                map< const vector<string>, 
-                                          tuple< bool, shared_ptr<const vector<string>>,
-                                          shared_ptr< const vector<string>>, pair<int,int>>> all_ranges ) :
-                    plus_ops_(plus_ops), kill_ops_(kill_ops), unique_range_blocks_(unique_range_blocks), all_ranges_(all_ranges){                         
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+TensOp_General::TensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
+                                std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
+                                std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
+                                std::shared_ptr<std::map< const std::vector<std::string>, 
+                                std::tuple< bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>> all_ranges):  
+                                idxs_(idxs),  aops_(aops), plus_ops_(plus_ops), kill_ops_(kill_ops), idx_ranges_(idx_ranges), orig_factor_(factor), num_idxs_(idxs.size()),
+                                unique_range_blocks_(*unique_range_blocks), all_ranges_(*all_ranges) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp_General::TensOp_General "<< endl;
+           
+  idxs_ptr_ =  make_shared<const vector<string>>(idxs_);
+  aops_ptr_ =  make_shared<const vector<bool>>(aops_);
+  idx_ranges_ptr_ =  make_shared<const vector<vector<string>>>(idx_ranges_);
 
   plus_ops_ptr_ = make_shared<const vector<int>>(plus_ops);
   kill_ops_ptr_ = make_shared<const vector<int>>(kill_ops);
 
-  unique_range_blocks_ptr_ = make_shared<const vector< shared_ptr< const vector<string>>>>(unique_range_blocks);
+  unique_range_blocks_ptr_ = make_shared<const vector< shared_ptr< const vector<string>>>>(unique_range_blocks_);
 
   all_ranges_ptr_ =
-  make_shared<const map< const vector<string>, tuple<bool, shared_ptr<const vector<string>>, shared_ptr< const vector<string>>, pair<int,int>>>>(all_ranges);
-}
+  make_shared<const map< const vector<string>, tuple<bool, shared_ptr<const vector<string>>, shared_ptr< const vector<string>>, pair<int,int>>>>(all_ranges_);
 
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 MultiTensOp_General::MultiTensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                           std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor, std::vector<int>& cmlsizevec, 
-                           std::vector< std::shared_ptr<const std::vector<std::string>>>& unique_range_blocks,
-                           std::shared_ptr<std::map< const std::vector<std::string>, 
-                           std::tuple< bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>> all_ranges, 
-                           std::shared_ptr<std::map< const std::vector<std::string>,
-                           std::tuple<bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> split_ranges_map ) :  TensOp_General::TensOp_General( plus_ops, kill_ops, unique_range_blocks, *all_ranges ), 
-                                                             idxs_(idxs),  aops_(aops),   idx_ranges_(idx_ranges), orig_factor_(factor), num_idxs_(idxs.size()),
-                                                             cmlsizevec_(cmlsizevec),  split_ranges_map_(*split_ranges_map){
+                                          std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor, std::vector<int>& cmlsizevec, 
+                                          std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
+                                          std::shared_ptr<std::map< const std::vector<std::string>, 
+                                          std::tuple< bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>> all_ranges, 
+                                          std::shared_ptr<std::map< const std::vector<std::string>,
+                                          std::tuple<bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> split_ranges_map ) :
+                                          TensOp_General::TensOp_General( idxs, aops, plus_ops, kill_ops, idx_ranges, factor, unique_range_blocks, all_ranges ),
+                                          cmlsizevec_(cmlsizevec),  split_ranges_map_(*split_ranges_map){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "MultiTensOp_General::MultiTensOp_General "<< endl;
            
-  idxs_ptr_ =  make_shared<const vector<string>>(idxs_);
-  aops_ptr_ =  make_shared<const vector<bool>>(aops_);
   cmlsizevec_ptr_ =  make_shared<const vector<int>>(cmlsizevec_);
-  idx_ranges_ptr_ =  make_shared<const vector<vector<string>>>(idx_ranges_);
+  split_ranges_map_ptr_ = split_ranges_map;
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +55,7 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
                                                  vector<bool(*)(shared_ptr<vector<string>>) >& constraints,
                                                  string& Tsymm ) :
                                                  name_(name), idxs_(idxs), idx_ranges_(idx_ranges), aops_(aops), 
-                                                 orig_factor_(orig_factor), symmfuncs_(symmfuncs), constraints_(constraints),
+                                                 orig_factor_(make_pair(orig_factor, orig_factor)), symmfuncs_(symmfuncs), constraints_(constraints),
                                                  Tsymm_(Tsymm), num_idxs_(idxs_.size()) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp::TensOp" <<   endl;
@@ -61,7 +64,21 @@ cout << "TensOp::TensOp" <<   endl;
   aops_const_ptr_ =  make_shared<const vector<bool>>(aops_);
   idx_ranges_ptr_ =  make_shared<const std::vector<std::vector<std::string>>>(idx_ranges_);
 
-  generate_ranges();
+  std::vector<int> plus_ops;
+  std::vector<int> kill_ops;
+ 
+  for ( int ii =0 ; ii != aops_.size() ; ii++ ) {
+      if(aops_[ii]) {
+        plus_ops.push_back(ii);
+      } else {
+        kill_ops.push_back(ii);
+      }
+  }
+
+  tuple< std::shared_ptr<std::map< const std::vector<std::string>, std::tuple< bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>>,
+         std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>> > test_var = generate_ranges();
+  pair<double, double> orig_factor_tmp =  make_pair(1.0, 1.0);
+  Op_dense_ = make_shared<const TensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, orig_factor_tmp, get<1>(test_var), get<0>(test_var) );
 
   cout << "TensOp::TensOp" << endl;
   return;
@@ -69,7 +86,9 @@ cout << "TensOp::TensOp" <<   endl;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void TensOp::TensOp<DataType>::generate_ranges(){
+tuple< std::shared_ptr<std::map< const std::vector<std::string>, std::tuple< bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>>,
+       std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>> >
+TensOp::TensOp<DataType>::generate_ranges(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp::generate_ranges" <<   endl;
   //set up loop utils
@@ -130,10 +149,12 @@ cout << "TensOp::generate_ranges" <<   endl;
       }
   }
 
-  Op_dense_ = make_shared<const TensOp_General>( plus_ops, kill_ops, unique_range_blocks, all_ranges );
 
+  auto all_ranges_ptr = make_shared<std::map< const std::vector<std::string>, std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int> > >> (all_ranges);
+  auto unique_ranges_ptr = make_shared<std::vector< std::shared_ptr< const std::vector<std::string>> >>(unique_range_blocks);                                                                                                                
+  return tie ( all_ranges_ptr, unique_ranges_ptr );
+              
   cout << "TensOp::generate_ranges()" <<   endl;
-  return;
 }
 //TODO  make it so this actually applies the symmetry; does nothing for now whilst testing
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -163,7 +184,6 @@ bool TensOp::TensOp<DataType>::satisfies_constraints( vector<string>& ranges ){
       return false;
   return true;
 }; 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //get contractions and ranges; note this is done by TensOp not TensOp gen as the contractions needed will be 
 //dependent on the sparsity associated with the relevant state
@@ -246,7 +266,7 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name , bool spinfre
    num_idxs += orig_tensors_[ii]->num_idxs();
    cmlsizevec[ii]  = num_idxs;
  } 
- auto bob =  generate_ranges(num_idxs, cmlsizevec);
+ auto bob = generate_ranges(num_idxs, cmlsizevec);
 
  // CTP_map = make_shared< map< string, shared_ptr<CtrTensorPart<DataType>> >>();
   cout << "TensOp_Prep::TensOp_Prep<DataType>::TensOp_Prep" << endl;
