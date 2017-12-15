@@ -65,20 +65,29 @@ void CtrTensorPart<DType>::get_ctp_idxs_ranges(){
 cout << "CtrTensorPart<DType>::get_ctp_idxs_ranges" << endl; 
 #endif 
 //////////////////////////////////////////////////////////////////////////////
+cout << "CtrTensorPart<DType>::get_ctp_idxs_ranges" << endl; 
 
   vector<bool> get_unc(full_idxs->size(), true);
+  cout << "full_idxs->size() = " << full_idxs->size() << endl;
+  print_pair_vector(*ctrs_pos, "ctrs_pos" ) ; cout << endl;
   for (int ii =0; ii != ctrs_pos->size() ; ii++){
     get_unc[ctrs_pos->at(ii).first] = false;
     get_unc[ctrs_pos->at(ii).second] = false;
   }
 
+  print_vector(get_unc, " get_unc") ; cout << endl;
   bool survive_indep = true;
   int num_unc_ids =  get_unc.size() - ctrs_pos->size()*2;
+  cout << "num_nuc_ids "<< num_unc_ids << endl;
+  cout << "ctrs_pos->size() " <<  ctrs_pos->size() << endl;
 
   unc_id_ranges = make_shared<vector<string>>( num_unc_ids );
   unc_idxs = make_shared<vector<string>>( num_unc_ids );
   unc_pos = make_shared<vector<int>>( num_unc_ids );
 
+  print_vector(*unc_id_ranges, " unc_id_ranges") ; cout << endl;
+  print_vector(*unc_idxs, " unc_idxs") ; cout << endl;
+  print_vector(*unc_pos, " unc_pos") ; cout << endl;
   int jj = 0;
   for ( int ii = 0 ; ii !=get_unc.size() ; ii++ ) {
     if (get_unc[ii]){
@@ -88,7 +97,8 @@ cout << "CtrTensorPart<DType>::get_ctp_idxs_ranges" << endl;
       jj++;
     }
   } 
- 
+
+  cout << " found unc things " << endl; 
   unc_rel_pos = make_shared<map<int,int>>();
   for( int ii =0 ; ii != unc_pos->size(); ii++) 
     unc_rel_pos->emplace(unc_pos->at(ii), ii);

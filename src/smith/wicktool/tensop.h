@@ -93,25 +93,32 @@ class MultiTensOp_General : public  TensOp_General {
     const std::vector<int> cmlsizevec_;
 
     //Similar to all_ranges, but has the ranges associated with the different operators split up, this may be useful for decomposition, so keep for now
+//    const std::map< const std::vector<std::string>,
+//    std::tuple<bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>>>> split_ranges_map_ ;
     const std::map< const std::vector<std::string>,
-    std::tuple<bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>>>> split_ranges_map_ ;
+    std::tuple< std::shared_ptr<const std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>> >> split_ranges_map_;
 
-    std::shared_ptr<const std::vector<std::string>> idxs_ptr_;
-    std::shared_ptr<const std::vector<bool>> aops_ptr_;
-    std::shared_ptr<const std::vector<std::vector<std::string>>> idx_ranges_ptr_;
     std::shared_ptr<const std::vector<int>> cmlsizevec_ptr_;
 
     std::shared_ptr<std::map< const std::vector<std::string>,
-                           std::tuple<bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> split_ranges_map_ptr_;
+    std::tuple< std::shared_ptr<const std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>> >>> split_ranges_map_ptr_;
 
     MultiTensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
                          std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor, std::vector<int>& cmlsizevec, 
                          std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
                          std::shared_ptr<std::map< const std::vector<std::string>, 
                          std::tuple< bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>> all_ranges, 
+//                         std::shared_ptr<std::map< const std::vector<std::string>,
+//                         std::tuple<bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> split_ranges_map ) ; 
                          std::shared_ptr<std::map< const std::vector<std::string>,
-                         std::tuple<bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> split_ranges_map ) ; 
+                         std::tuple< std::shared_ptr<const std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>> >>> split_ranges_map );
     ~MultiTensOp_General(){};
+
+     std::shared_ptr<const std::vector<int>> cmlsizevec() const { return cmlsizevec_ptr_;}
+     int cmlsizevec(int ii )const { return cmlsizevec_[ii];}
+
+//     std::shared_ptr<std::map< const std::vector<std::string>,
+//     std::tuple<bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >>  split_ranges_map() const { return split_ranges_map_ptr_;}
 
 };
 
@@ -187,7 +194,8 @@ class MultiTensOp : public  TensOp::TensOp<DataType> {
 
    public :
      std::vector<std::shared_ptr<TensOp::TensOp<DataType>>> orig_tensors_; 
-    
+     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >> CTP_map;
+     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map;
      int num_tensors_;
      
      DataType orig_factor_;
@@ -199,6 +207,9 @@ class MultiTensOp : public  TensOp::TensOp<DataType> {
                std::shared_ptr<std::map< const std::vector<std::string>, std::tuple<bool,                                      std::shared_ptr<const std::vector<std::string>>,                     std::shared_ptr<const std::vector<std::string>>, std::pair<int,int>>  >>, 
                std::shared_ptr<std::map< const std::vector<std::string>, std::tuple< std::shared_ptr<const std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>> >>>>
     generate_ranges( int num_idxs, std::vector<int>& cmlsizevec );
+
+    std::shared_ptr<const std::vector<int>> cmlsizevec() const { return Op_dense_->cmlsizevec();}
+    int cmlsizevec(int ii ) const { return Op_dense_->cmlsizevec(ii) ;}
 
     void get_ctrs_tens_ranges(); 
 
