@@ -93,8 +93,6 @@ class MultiTensOp_General : public  TensOp_General {
     const std::vector<int> cmlsizevec_;
 
     //Similar to all_ranges, but has the ranges associated with the different operators split up, this may be useful for decomposition, so keep for now
-//    const std::map< const std::vector<std::string>,
-//    std::tuple<bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>>>> split_ranges_map_ ;
     const std::map< const std::vector<std::string>,
     std::tuple< std::shared_ptr<const std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>> >> split_ranges_map_;
 
@@ -108,8 +106,6 @@ class MultiTensOp_General : public  TensOp_General {
                          std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
                          std::shared_ptr<std::map< const std::vector<std::string>, 
                          std::tuple< bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>> all_ranges, 
-//                         std::shared_ptr<std::map< const std::vector<std::string>,
-//                         std::tuple<bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr<const std::vector<std::string>>, std::shared_ptr<std::vector<std::pair<int,int>>> > >> split_ranges_map ) ; 
                          std::shared_ptr<std::map< const std::vector<std::string>,
                          std::tuple< std::shared_ptr<const std::vector<bool>>, std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>>, std::shared_ptr<std::vector<std::pair<int,int>>> >>> split_ranges_map );
     ~MultiTensOp_General(){};
@@ -210,6 +206,29 @@ class MultiTensOp : public  TensOp::TensOp<DataType> {
 
     std::shared_ptr<const std::vector<int>> cmlsizevec() const { return Op_dense_->cmlsizevec();}
     int cmlsizevec(int ii ) const { return Op_dense_->cmlsizevec(ii) ;}
+
+
+    std::string const name(){ return name_;}
+
+    int num_idxs(){ return Op_dense_->num_idxs();}
+
+    std::pair<double,double> factor(){ return Op_dense_->factor(); };
+
+    std::shared_ptr<const std::vector<std::string>> idxs(){ return Op_dense_->idxs();}
+
+    std::shared_ptr<const std::vector<bool>> aops(){ return Op_dense_->aops();}
+
+    std::shared_ptr<const std::vector<std::vector<std::string>>> idx_ranges(){ return Op_dense_->idx_ranges();}
+
+    std::shared_ptr<const std::vector<int>> plus_ops(){ return Op_dense_->plus_ops();}
+
+    std::shared_ptr<const std::vector<int>> kill_ops(){ return Op_dense_->kill_ops();}
+
+    std::shared_ptr<const std::vector< std::shared_ptr< const std::vector<std::string>>>> unique_range_blocks() const { return Op_dense_->unique_range_blocks(); }
+    
+    std::shared_ptr<const std::map< const std::vector<std::string>,
+                                    std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>  >>>
+                                    all_ranges() const  {return Op_dense_->all_ranges(); }
 
     void get_ctrs_tens_ranges(); 
 

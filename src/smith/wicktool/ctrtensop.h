@@ -110,22 +110,15 @@ class CtrTensorPart /*, public: std::enable_shared_from_this<CtrTensorPart>*/ {
                   std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos_in,
                   std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors_in ) {
 
-                  std::cout << "CtrTensorPart construction " << std::endl;
                   full_id_ranges = full_id_ranges_in; 
                   full_idxs = full_idxs_in;
                   ctrs_pos = ctrs_pos_in;
                   ReIm_factors = ReIm_factors_in;
-                  std::cout << "CtrTensorPart construction1 " << std::endl;
                   ctrs_todo = std::make_shared<std::vector<std::pair<int,int>>>(*ctrs_pos_in);
-                  std::cout << "CtrTensorPart construction2 " << std::endl;
                   ctrs_done = std::make_shared<std::vector<std::pair<int,int>>>(0);
-                  std::cout << "CtrTensorPart construction3 " << std::endl;
                   got_data = false;
-                  std::cout << "CtrTensorPart construction4 " << std::endl;
                   get_ctp_idxs_ranges();
-                  std::cout << "CtrTensorPart construction5 " << std::endl;
                   get_name();
-                  std::cout << "CtrTensorPart construction6 " << std::endl;
                 };
 
 

@@ -209,7 +209,6 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   {
   vector<string> op_list = { "S" };
   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
-  
   double factor = 0.0;
   // Building all necessary expressions 
   int  num_states = 1; 

@@ -44,6 +44,7 @@ cout << "TensOp_General::TensOp_General "<< endl;
 cout << "MultiTensOp_General::MultiTensOp_General "<< endl;
            
   cmlsizevec_ptr_ =  make_shared<const vector<int>>(cmlsizevec_);
+
   split_ranges_map_ptr_ = split_ranges_map;
 
 }
@@ -60,7 +61,8 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
           
   CTP_map  = make_shared< map< string, shared_ptr<CtrTensorPart<DataType>> >>();
   std::string Tsymm_ = Tsymm;
- 
+
+   
   std::vector<int> plus_ops;
   std::vector<int> kill_ops;
   for ( int ii =0 ; ii != aops.size() ; ii++ ) {
@@ -70,6 +72,7 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
       kill_ops.push_back(ii);
     }
   }
+
 
   tuple< std::shared_ptr<std::map< const std::vector<std::string>, std::tuple< bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>>,
          std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>> > test_var = generate_ranges(idxs.size(), idxs, idx_ranges);
@@ -95,8 +98,9 @@ cout << "TensOp::generate_ranges" <<   endl;
   std::map< const std::vector<std::string>, 
             std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int> > > all_ranges;
 
+  
   auto apply_symmetry = [ &all_ranges, &idxs_ptr ]( const vector<string>& ranges_1,  const vector<string>& ranges_2 ) {
-     const bool a_unique_range_block = true; 
+     const bool a_unique_range_block = true; //TODO put symmetry back in
      if (a_unique_range_block) {
        const pair<int,int> fac(1,1);
        shared_ptr<const vector<string>> ranges_2_ptr = make_shared<const vector<string>>(ranges_2);
@@ -234,6 +238,7 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
   int xx = 0;
   for ( int ii = 0;  ii != orig_tensors_.size() ; ii++ ) {
   
+    cmlsizevec[ii]  = num_idxs;
     idx_ranges.insert(  idx_ranges.end(), orig_tensors_[ii]->idx_ranges()->begin(), orig_tensors_[ii]->idx_ranges()->end() );
     idxs.insert( idxs.end(),orig_tensors_[ii]->idxs()->begin(), orig_tensors_[ii]->idxs()->end() );
     aops.insert( aops.end(),orig_tensors_[ii]->aops()->begin(), orig_tensors_[ii]->aops()->end() );
@@ -244,10 +249,8 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
     for ( int elem : *(orig_tensors_[ii]->kill_ops()) )
       kill_ops.push_back(elem + cmlsizevec[ii]);
   
-    cmlsizevec[ii]  = num_idxs;
     num_idxs += orig_tensors_[ii]->num_idxs();
   } 
-  print_vector(cmlsizevec, "cmlsizevec"); cout << endl; 
   auto bob = generate_ranges(num_idxs, cmlsizevec);
 
   auto  unique_range_blocks = make_shared<std::vector< std::shared_ptr<const std::vector<std::string>>>>(0) ;
@@ -255,11 +258,8 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
 //     unique_range_blocks->push_back( make_shared<std::vector<std::string>>(elem.first) ); 
 
   Op_dense_ = make_shared<const MultiTensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, make_pair(1.0,1.0), cmlsizevec,  unique_range_blocks, get<1>(bob), get<2>(bob) ); 
-  cout << " made the dense operator" << endl;
   CTP_map  = make_shared< map< string, shared_ptr<CtrTensorPart<DataType>> >>();
-  cout << " made the CTP map" << endl;
   CMTP_map = make_shared< map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>();
-  cout << "TensOp_Prep::TensOp_Prep<DataType>::TensOp_Prep" << endl;
    
 }
 
@@ -280,8 +280,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
   auto all_ranges       = make_shared<map< const vector<string>, tuple< bool,                           shared_ptr<const vector<string>>,                     shared_ptr<const vector<string>>, pair<int,int>> >>();
   auto split_ranges_map = make_shared<map< const vector<string>, tuple< shared_ptr<const vector<bool>>, shared_ptr<vector<shared_ptr<const vector<string>>>>, shared_ptr<vector<pair<int,int>>> >>>();
 
-  cout << "starting main loop " << endl;
- 
   if ( num_tensors_ > 1 ) { 
  
     for (shared_ptr<TensOp::TensOp<DataType>> Ten : orig_tensors_ )
@@ -326,9 +324,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
 
 
          for (int jj = 0 ; jj != num_tensors_ ; jj++){
-
-           cout << " jj = " << jj << endl;
-
            isunique->at(jj)      = get<0>(rng_maps[jj]->second);
            unique_ranges->at(jj) = get<1>(rng_maps[jj]->second);  
            unique_idxs->at(jj)   = get<2>(rng_maps[jj]->second);  
@@ -347,10 +342,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
 
          }
   
-         print_vector( merged_oranges, "merged_oranges" ); cout << endl;
-         print_vector( *merged_uranges, "merged_uranges" ); cout << endl;
-         print_vector( *merged_uqidxs, "merged_uqidxs" );  cout << endl;
-         print_vector( cmlsizevec, "cmlsizevec" ); cout << endl; 
          pair<int,int> combined_factor = make_pair(Re_factor, Im_factor);
          bool merged_unique = ( merged_oranges == *merged_uranges ) ?  false : true;
 
@@ -399,7 +390,6 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
   //puts uncontracted ranges into map 
   shared_ptr<vector<pair<int,int>>> noctrs = make_shared<vector<pair<int,int>>>(0);
  
- cout << "hello1" << endl; int qtest= 0; 
   //silly, should just test {act,act,....} against contraints, and check if act in each ranges... 
   for (auto rng_it = Op_dense_->all_ranges()->begin(); rng_it != Op_dense_->all_ranges()->end(); rng_it++) {
     bool check = true;
@@ -419,6 +409,8 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
   //puts_contractions, with specified ranges, into the map
   for ( int nctrs = 1 ; nctrs != (Op_dense_->num_idxs()/2)+1 ; nctrs++ ){
     shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> ctr_lists = get_unique_pairs( Op_dense_->plus_ops(), Op_dense_->kill_ops(), nctrs );
+//    for (shared_ptr<vector<pair<int,int>>> ctr_vec : *ctr_lists) {  print_pair_vector( *ctr_vec , "ctr_vec orig" ); cout << endl; }
+
     for (shared_ptr<vector<pair<int,int>>> ctr_vec : *ctr_lists) {
       for (auto rng_it = Op_dense_->all_ranges()->begin(); rng_it != Op_dense_->all_ranges()->end(); rng_it++) {
   
@@ -447,6 +439,8 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
             }
           }
         } 
+
+
         if (valid){
           enter_into_CMTP_map(*ctr_vec, get<3>(rng_it->second), rng_it->first );
         }
@@ -464,7 +458,7 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 #endif 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-cout << "MultiTensOp::enter_into_CMTP_map" << endl;
+//cout << "MultiTensOp::enter_into_CMTP_map" << endl;
    shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart<DataType>> >> (num_tensors_); 
    vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
    vector<vector<pair<int,int>>> sameT_ctrs_pos( num_tensors_,  pint_vec(0));
@@ -472,76 +466,52 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
   shared_ptr<vector<pair<int,int>>> no_ctrs =  make_shared<vector<pair<int,int>>>(0);
  
   shared_ptr<vector<pair<int,int>>> ReIm_factor_vec = make_shared<vector<pair<int,int>>>(1, ReIm_factors ) ; 
-  cout << " X num_tensors_ = " << num_tensors_ << endl; 
    //seperate contractions into those on the same tensor, and those between different tensors 
+   // TODO tidy up this, it seems the definition of cmlsivevec has changed.
    for ( pair<int,int> ctr_pos : ctr_pos_list ) {
- 
-     print_pair_vector(ctr_pos_list, " ctr_pos_list" ) ; cout << endl; 
-     print_vector( *(Op_dense_->cmlsizevec()), " cmlsizevec" ) ; cout << endl; 
  
      pair<int,int> ctr1;
      pair<int,int> ctr2;
-  
-     for ( int ii = 0; ii != num_tensors_ ; ii++ ) { 
-       if (ii == num_tensors_-1 ) {  
-         ctr1 = make_pair(ii, ctr_pos.first- Op_dense_->cmlsizevec()->at(ii));
-         break;
-       } else if( ctr_pos.first > Op_dense_->cmlsizevec()->at(ii) ) {
-         continue; 
-       } else {
-         ctr1 = make_pair(ii, ctr_pos.first- Op_dense_->cmlsizevec()->at(ii));
-         break;
-       }
-     }
-     for ( int ii = 0; ii != num_tensors_ ; ii++ ) { 
-       if (ii == num_tensors_-1 ) {  
-         ctr2 = make_pair(ii, ctr_pos.second- Op_dense_->cmlsizevec()->at(ii));
-         break;
-       } else if( ctr_pos.second > Op_dense_->cmlsizevec()->at(ii) ) {
-         continue; 
-       } else {
-         ctr2 = make_pair(ii, ctr_pos.second- Op_dense_->cmlsizevec()->at(ii));
-         break;
-       }
-     }
-
-
+//     if ( num_tensors_ == 1 )  {
+//
+//       ctr1 = make_pair( 0 , ctr_pos.first);
+//       ctr2 = make_pair( 0 , ctr_pos.second);
+//       sameT_ctrs_pos.at(ctr1.first).push_back(make_pair(ctr1.second, ctr2.second));  
+//
+//     } else {
+       for ( int ii = 0; ii != num_tensors_ ; ii++ )  
+         if ( (ctr_pos.first -= orig_tensors_[ii]->num_idxs()) < 0 ){
+            ctr1 = make_pair(ii, ctr_pos.first + orig_tensors_[ii]->num_idxs());
+           break;
+         }
+       for ( int ii = 0; ii != num_tensors_ ; ii++ )  
+         if ( (ctr_pos.second -= orig_tensors_[ii]->num_idxs()) < 0 ){
+            ctr2 = make_pair(ii, ctr_pos.second + orig_tensors_[ii]->num_idxs());
+           break;
+         } 
      if (ctr1.first == ctr2.first) {
        sameT_ctrs_pos.at(ctr1.first).push_back(make_pair(ctr1.second, ctr2.second));  
      } else {
        diffT_ctrs_pos.push_back(make_pair(ctr1,ctr2));
      }
-   
-   }  
-   
+//   }  
+   } 
     //get_ranges for individual tensors
     for (int ii = 0 ; ii !=num_tensors_; ii++ ){ 
       shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(id_ranges.begin()+Op_dense_->cmlsizevec(ii), id_ranges.begin()+cmlsizevec(ii)+orig_tensors_[ii]->num_idxs());
       shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *(orig_tensors_[ii]->idxs()) );
      
-      print_vector( *TS_idxs, "TS_idxs" ); cout <<  endl;
-      print_vector( *TS_id_ranges, "TS_id_ranges" ); cout <<  endl;
       if( sameT_ctrs_pos[ii].size() != 0 ) {
-        cout  << "hello1 " << endl;
-        
         CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, make_shared<vector<pair<int,int>>>(sameT_ctrs_pos[ii]), ReIm_factor_vec ) ; 
-       cout << "hello3a" << endl;
       } else { 
-        cout << "hello2" << endl;
          CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec ); 
-        cout << "hello3b" << endl;
       }
-
    
-      cout << " X6" << endl; 
       CTP_map->emplace(CTP_vec->at(ii)->name, CTP_vec->at(ii)); 
-      cout << " X7" << endl; 
    }
    
-  cout << " X8" << endl; 
    shared_ptr<CtrMultiTensorPart<DataType>> CMTP = make_shared<CtrMultiTensorPart<DataType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos)); 
   
-  cout << " X9" << endl; 
    CMTP_map->emplace(CMTP->myname(), CMTP); 
    CTP_map->emplace(CMTP->myname(), CMTP); 
   
