@@ -483,17 +483,29 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
      pair<int,int> ctr2;
   
      for ( int ii = 0; ii != num_tensors_ ; ii++ ) { 
-       if( ii == num_tensors_-1  || ctr_pos.first < Op_dense_->cmlsizevec()->at(ii)){
-          ctr1 = make_pair(ii, ctr_pos.first- Op_dense_->cmlsizevec()->at(ii));
+       if (ii == num_tensors_-1 ) {  
+         ctr1 = make_pair(ii, ctr_pos.first- Op_dense_->cmlsizevec()->at(ii));
+         break;
+       } else if( ctr_pos.first > Op_dense_->cmlsizevec()->at(ii) ) {
+         continue; 
+       } else {
+         ctr1 = make_pair(ii, ctr_pos.first- Op_dense_->cmlsizevec()->at(ii));
          break;
        }
      }
      for ( int ii = 0; ii != num_tensors_ ; ii++ ) { 
-       if( ii == num_tensors_-1  || ctr_pos.first < Op_dense_->cmlsizevec()->at(ii)){
+       if (ii == num_tensors_-1 ) {  
+         ctr2 = make_pair(ii, ctr_pos.second- Op_dense_->cmlsizevec()->at(ii));
+         break;
+       } else if( ctr_pos.second > Op_dense_->cmlsizevec()->at(ii) ) {
+         continue; 
+       } else {
          ctr2 = make_pair(ii, ctr_pos.second- Op_dense_->cmlsizevec()->at(ii));
          break;
        }
      }
+
+
      if (ctr1.first == ctr2.first) {
        sameT_ctrs_pos.at(ctr1.first).push_back(make_pair(ctr1.second, ctr2.second));  
      } else {
