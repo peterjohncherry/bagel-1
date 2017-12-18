@@ -29,15 +29,12 @@ void BraKet<DataType>::Build_TotalOp(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::Build_TotalOp" << endl;
   string MT_name = "";
-  cout << "hellO" << endl;
   for( shared_ptr<TensOp::TensOp<DataType>> Tens : *Sub_Ops )
     MT_name += Tens->name();
 
-  cout << "hellO2" << endl;
   Total_Op = make_shared<MultiTensOp::MultiTensOp<DataType>>( MT_name , true, *Sub_Ops );
-  cout << "hellO3" << endl;
   Total_Op->get_ctrs_tens_ranges();
-  cout << "hellO4" << endl;
+
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

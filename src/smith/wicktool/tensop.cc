@@ -55,13 +55,11 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
                                                  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>), int, int > >& symmfuncs, 
                                                  vector<bool(*)(shared_ptr<vector<string>>) >& constraints,
                                                  string& Tsymm ) :
-                                                 name_(name), spinfree_(true)  {
+                                                 name_(name), spinfree_(true), symmfuncs_(symmfuncs), constraints_(constraints), Tsymm_(Tsymm)  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp" <<   endl;
           
   CTP_map  = make_shared< map< string, shared_ptr<CtrTensorPart<DataType>> >>();
-  std::string Tsymm_ = Tsymm;
-
    
   std::vector<int> plus_ops;
   std::vector<int> kill_ops;
@@ -338,8 +336,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
            Re_factor = ( Re_factor_buff * (get<3>(rng_maps[jj]->second)).first ) - ( Im_factor_buff * (get<3>(rng_maps[jj]->second)).second );
            Im_factor = ( Im_factor_buff * (get<3>(rng_maps[jj]->second)).first ) + ( Re_factor_buff * (get<3>(rng_maps[jj]->second)).second );
 
-
-
          }
   
          pair<int,int> combined_factor = make_pair(Re_factor, Im_factor);
@@ -441,9 +437,9 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
         } 
 
 
-        if (valid){
+        if (valid)
           enter_into_CMTP_map(*ctr_vec, get<3>(rng_it->second), rng_it->first );
-        }
+        
       }
     }
   }
@@ -466,56 +462,52 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
   shared_ptr<vector<pair<int,int>>> no_ctrs =  make_shared<vector<pair<int,int>>>(0);
  
   shared_ptr<vector<pair<int,int>>> ReIm_factor_vec = make_shared<vector<pair<int,int>>>(1, ReIm_factors ) ; 
-   //seperate contractions into those on the same tensor, and those between different tensors 
-   // TODO tidy up this, it seems the definition of cmlsivevec has changed.
-   for ( pair<int,int> ctr_pos : ctr_pos_list ) {
+  //seperate contractions into those on the same tensor, and those between different tensors 
+  // TODO tidy up this, it seems the definition of cmlsivevec has changed.
+  for ( pair<int,int> ctr_pos : ctr_pos_list ) {
  
-     pair<int,int> ctr1;
-     pair<int,int> ctr2;
-//     if ( num_tensors_ == 1 )  {
-//
-//       ctr1 = make_pair( 0 , ctr_pos.first);
-//       ctr2 = make_pair( 0 , ctr_pos.second);
-//       sameT_ctrs_pos.at(ctr1.first).push_back(make_pair(ctr1.second, ctr2.second));  
-//
-//     } else {
-       for ( int ii = 0; ii != num_tensors_ ; ii++ )  
-         if ( (ctr_pos.first -= orig_tensors_[ii]->num_idxs()) < 0 ){
-            ctr1 = make_pair(ii, ctr_pos.first + orig_tensors_[ii]->num_idxs());
-           break;
-         }
-       for ( int ii = 0; ii != num_tensors_ ; ii++ )  
-         if ( (ctr_pos.second -= orig_tensors_[ii]->num_idxs()) < 0 ){
-            ctr2 = make_pair(ii, ctr_pos.second + orig_tensors_[ii]->num_idxs());
-           break;
-         } 
-     if (ctr1.first == ctr2.first) {
-       sameT_ctrs_pos.at(ctr1.first).push_back(make_pair(ctr1.second, ctr2.second));  
-     } else {
-       diffT_ctrs_pos.push_back(make_pair(ctr1,ctr2));
-     }
-//   }  
-   } 
-    //get_ranges for individual tensors
-    for (int ii = 0 ; ii !=num_tensors_; ii++ ){ 
-      shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(id_ranges.begin()+Op_dense_->cmlsizevec(ii), id_ranges.begin()+cmlsizevec(ii)+orig_tensors_[ii]->num_idxs());
-      shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *(orig_tensors_[ii]->idxs()) );
-     
-      if( sameT_ctrs_pos[ii].size() != 0 ) {
-        CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, make_shared<vector<pair<int,int>>>(sameT_ctrs_pos[ii]), ReIm_factor_vec ) ; 
-      } else { 
-         CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec ); 
+    pair<int,int> ctr1;
+    pair<int,int> ctr2;
+
+    for ( int ii = 0; ii != num_tensors_ ; ii++ )  
+      if ( (ctr_pos.first -= orig_tensors_[ii]->num_idxs()) < 0 ){
+         ctr1 = make_pair(ii, ctr_pos.first + orig_tensors_[ii]->num_idxs());
+        break;
       }
-   
-      CTP_map->emplace(CTP_vec->at(ii)->name, CTP_vec->at(ii)); 
-   }
-   
-   shared_ptr<CtrMultiTensorPart<DataType>> CMTP = make_shared<CtrMultiTensorPart<DataType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos)); 
+
+    for ( int ii = 0; ii != num_tensors_ ; ii++ )  
+      if ( (ctr_pos.second -= orig_tensors_[ii]->num_idxs()) < 0 ){
+         ctr2 = make_pair(ii, ctr_pos.second + orig_tensors_[ii]->num_idxs());
+        break;
+      } 
+
+    if (ctr1.first == ctr2.first) {
+      sameT_ctrs_pos.at(ctr1.first).push_back(make_pair(ctr1.second, ctr2.second));  
+    } else {
+      diffT_ctrs_pos.push_back(make_pair(ctr1,ctr2));
+    }
+  } 
+
+   //get_ranges for individual tensors
+   for (int ii = 0 ; ii !=num_tensors_; ii++ ){ 
+     shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(id_ranges.begin()+Op_dense_->cmlsizevec(ii), id_ranges.begin()+cmlsizevec(ii)+orig_tensors_[ii]->num_idxs());
+     shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *(orig_tensors_[ii]->idxs()) );
+    
+     if( sameT_ctrs_pos[ii].size() != 0 ) {
+       CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, make_shared<vector<pair<int,int>>>(sameT_ctrs_pos[ii]), ReIm_factor_vec ) ; 
+     } else { 
+       CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec ); 
+     }
   
-   CMTP_map->emplace(CMTP->myname(), CMTP); 
-   CTP_map->emplace(CMTP->myname(), CMTP); 
+     CTP_map->emplace(CTP_vec->at(ii)->name, CTP_vec->at(ii)); 
+  }
   
-   return;
+  shared_ptr<CtrMultiTensorPart<DataType>> CMTP = make_shared<CtrMultiTensorPart<DataType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos)); 
+  
+  CMTP_map->emplace(CMTP->myname(), CMTP); 
+  CTP_map->emplace(CMTP->myname(), CMTP); 
+  
+  return;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
