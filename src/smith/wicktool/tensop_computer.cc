@@ -171,7 +171,6 @@ TensOp_Computer::TensOp_Computer<DataType>::direct_product_tensors( std::vector<
   cout << "TensOp_Computer::direct_product_tensors" << endl; 
 
   print_vector(Tensor_names, "Tensor_names"); cout <<endl; 
-  
 
   shared_ptr<Tensor_<DataType>> Tens_prod = find_or_get_CTP_data(Tensor_names[0]);
   shared_ptr<Tensor_<DataType>> Tens_intermediate;

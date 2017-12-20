@@ -251,14 +251,14 @@ void GammaGenerator::Set_A_Contrib( int kk ){
 // Replace this with something more sophisticated which can account
 // for different constraints
 ///////////////////////////////////////////////////////////////////////////////////////
-bool GammaGenerator::Forbidden_Index( shared_ptr<vector<string>> full_id_ranges, int position){
+bool GammaGenerator::Forbidden_Index( shared_ptr<vector<string>> full_id_ranges, int position ){
 ///////////////////////////////////////////////////////////////////////////////////////
 //cout << "GammaGenerator::Forbidden_Index" << endl;
   return ( full_id_ranges->at(position) != "act");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
-void GammaGenerator::Contract_remaining_indexes(int kk){
+void GammaGenerator::Contract_remaining_indexes( int kk ){
 //////////////////////////////////////////////////////////////////////////////////////  
 #ifdef DBG_GammaGenerator 
 cout << "GammaGenerator::Contract_remaining_indexes" << endl; 

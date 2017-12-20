@@ -12,19 +12,28 @@ using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
 class transformed_range_info {
-    public :
 
-    bool is_unique;
-    std::shared_ptr<const std::vector<std::string>> unique_block;
-    std::shared_ptr<const std::vector<std::string>> transformed_idxs;
-    std::shared_ptr<const std::vector<std::pair<int,int>>> factors; 
+    private :
+    const bool is_unique_;
+    const std::pair<int,int> factors_; 
+    const std::shared_ptr<const std::vector<std::string>> orig_block_;
+    const std::shared_ptr<const std::vector<std::string>> unique_block_;
+    const std::shared_ptr<const std::vector<std::string>> transformed_idxs_;
                                 
-    transformed_range_info( bool is_unique_in,
-                 std::shared_ptr<const std::vector<std::string>> unique_block_in,
-                 std::shared_ptr<const std::vector<std::string>> transformed_idxs_in,
-                 std::shared_ptr<const std::vector<std::pair<int,int>>> factors_in ) : 
-                 is_unique(is_unique_in), unique_block(unique_block_in), transformed_idxs(transformed_idxs_in), factors(factors_in) {};
+    public :
+    transformed_range_info( bool is_unique,
+                            std::pair<int,int> factors, 
+                            std::shared_ptr<const std::vector<std::string>> orig_block,
+                            std::shared_ptr<const std::vector<std::string>> unique_block,
+                            std::shared_ptr<const std::vector<std::string>> transformed_idxs) :
+                            orig_block_(orig_block), is_unique_(is_unique), unique_block_(unique_block), transformed_idxs_(transformed_idxs), factors_(factors) {};
     ~transformed_range_info(){};
+
+    bool is_unique() const { return is_unique_ ; }
+    std::pair<int,int> factors() const { return factors_; }  
+    std::shared_ptr<const std::vector<std::string>> orig_block()       { return orig_block_;      }
+    std::shared_ptr<const std::vector<std::string>> unique_block()     { return unique_block_;    }
+    std::shared_ptr<const std::vector<std::string>> transformed_idxs() { return transformed_idxs_;}
 
 };
 
