@@ -54,17 +54,13 @@ void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp::TensOp
   New_BraKet->Sub_Ops = Tens_vec;
 
   New_BraKet->Build_TotalOp();
-  cout << "built total op" << endl;
-  cout << New_BraKet->Total_Op->name()  <<  endl;
-  print_vector(*( New_BraKet->Total_Op->aops()), "aops for total op" ) ; cout <<  endl;
-
+  cout << New_BraKet->Total_Op->name();   print_vector(*( New_BraKet->Total_Op->aops()), " aops " ) ; cout <<  endl;
   New_BraKet->Build_Gamma_SpinFree(New_BraKet->Total_Op->aops(), New_BraKet->Total_Op->idxs()); 
-  cout << "built gamma spin_free op" << endl;
+
+  CTP_map->insert( New_BraKet->Total_Op->CTP_map->begin(),  New_BraKet->Total_Op->CTP_map->end());
 
   CMTP_map->insert(New_BraKet->Total_Op->CMTP_map->begin(), New_BraKet->Total_Op->CMTP_map->end());
-  cout << "inserted into CMTP map" << endl;
-  CTP_map->insert(New_BraKet->Total_Op->CTP_map->begin(), New_BraKet->Total_Op->CTP_map->end());
-  cout << "inserted into CTP map" << endl;
+
   BraKet_Terms.push_back(New_BraKet);   
   cout << "pushed back into braket terms" << endl;
 

@@ -95,7 +95,6 @@ cout << "TensOp::generate_ranges" <<   endl;
   std::vector< std::shared_ptr< const std::vector<std::string>> > unique_range_blocks;
   std::map< const std::vector<std::string>, 
             std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int> > > all_ranges;
-
   
   auto apply_symmetry = [ &all_ranges, &idxs_ptr ]( const vector<string>& ranges_1,  const vector<string>& ranges_2 ) {
      const bool a_unique_range_block = true; //TODO put symmetry back in
@@ -150,6 +149,11 @@ cout << "TensOp::generate_ranges" <<   endl;
 
   auto all_ranges_ptr = make_shared<std::map< const std::vector<std::string>, std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int> > >> (all_ranges);
   auto unique_ranges_ptr = make_shared<std::vector< std::shared_ptr< const std::vector<std::string>> >>(unique_range_blocks);                                                                                                                
+
+  for ( auto part : all_ranges ) 
+    print_vector( part.first  , "all_ranges member" ) ; cout << endl;
+  
+
   return tie ( all_ranges_ptr, unique_ranges_ptr );
               
   cout << "TensOp::generate_ranges()" <<   endl;
@@ -253,6 +257,10 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
   auto bob = generate_ranges(num_idxs, cmlsizevec);
 
   auto  unique_range_blocks = make_shared<std::vector< std::shared_ptr<const std::vector<std::string>>>>(0) ;
+  for ( auto all_range_map_it : *(get<1>(bob)) ) { 
+    unique_range_blocks->push_back( make_shared<const vector<string>>(all_range_map_it.first) ); 
+    print_vector(all_range_map_it.first , "possible_range" ) ; cout << endl;
+  }
 //  for ( auto elem : *(get<2>bob) ) 
 //     unique_range_blocks->push_back( make_shared<std::vector<std::string>>(elem.first) ); 
 
@@ -279,8 +287,10 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
   auto all_ranges       = make_shared<map< const vector<string>, tuple< bool,                           shared_ptr<const vector<string>>,                     shared_ptr<const vector<string>>, pair<int,int>> >>();
   auto split_ranges_map = make_shared<map< const vector<string>, tuple< shared_ptr<const vector<bool>>, shared_ptr<vector<shared_ptr<const vector<string>>>>, shared_ptr<vector<pair<int,int>>> >>>();
 
+  cout << " num_tensors_ = " << num_tensors_ << endl;
+
   if ( num_tensors_ > 1 ) { 
- 
+  
     for (shared_ptr<TensOp::TensOp<DataType>> Ten : orig_tensors_ )
       rng_maps.push_back(Ten->all_ranges()->begin());
     
@@ -317,12 +327,13 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
          int  Re_factor = 1;
          int  Im_factor = 1;
 
-         vector<string>             merged_oranges (num_idxs_);
+         vector<string>             merged_oranges( num_idxs_);
          shared_ptr<vector<string>> merged_uranges = make_shared<vector<string>>(num_idxs_);
          shared_ptr<vector<string>> merged_uqidxs  = make_shared<vector<string>>(num_idxs_);
 
 
          for (int jj = 0 ; jj != num_tensors_ ; jj++){
+
            isunique->at(jj)      = get<0>(rng_maps[jj]->second);
            unique_ranges->at(jj) = get<1>(rng_maps[jj]->second);  
            unique_idxs->at(jj)   = get<2>(rng_maps[jj]->second);  
@@ -341,7 +352,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
   
          pair<int,int> combined_factor = make_pair(Re_factor, Im_factor);
          bool merged_unique = ( merged_oranges == *merged_uranges ) ?  false : true;
-
+         print_vector( merged_oranges, "merged_oranges"); cout << endl; 
          combined_ranges->emplace(merged_oranges, tie(merged_unique, merged_uranges, merged_uqidxs, factors));
          all_ranges->emplace(merged_oranges, tie(merged_unique, merged_uranges, merged_uqidxs, combined_factor ));
          split_ranges_map->emplace(merged_oranges, tie(isunique, unique_ranges, factors));
@@ -350,7 +361,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
      } while(ham);
   
    } else { 
-     cout << "ham " << endl;
       
      for ( auto map_it = orig_tensors_[0]->all_ranges()->begin() ; map_it != orig_tensors_[0]->all_ranges()->end(); map_it++ ){
   
@@ -364,10 +374,11 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
        split_ranges_map->emplace(orig_ranges, tie( isunique, unique_ranges, factors ) );
   
        combined_ranges->emplace( map_it->first, tie( get<0>(map_it->second), get<1>(map_it->second), get<2>(map_it->second), factors ) );
+       print_vector( map_it->first, "merged_oranges"); cout << endl; 
        all_ranges->emplace( map_it->first, tie( get<0>(map_it->second), get<1>(map_it->second), get<2>(map_it->second), get<3>(map_it->second) ) );
      }
    }
-   
+  
   cout << "leaving MultiTensOp::generate_ranges()" << endl;
   return tie(combined_ranges, all_ranges, split_ranges_map) ;
   

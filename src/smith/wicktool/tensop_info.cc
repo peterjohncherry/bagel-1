@@ -38,7 +38,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       cout << "setting info for Hact" << endl; 
       DataType                           Z_factor = (DataType) (1.0);
       shared_ptr<vector<string>>         Z_idxs = make_shared<vector<string>>( vector<string> { "Z0", "Z1", "Z2", "Z3" } );
-      shared_ptr<vector<bool>>           Z_aops = make_shared<vector<bool>>( vector<bool>  { true, false, true, false } ); 
+      shared_ptr<vector<bool>>           Z_aops = make_shared<vector<bool>>( vector<bool>  { true, true, false, false } ); 
       shared_ptr<vector<vector<string>>> Z_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act } ); 
       string                             Z_TimeSymm = "none";
      
@@ -47,7 +47,22 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
      
       shared_ptr<TensOp::TensOp<double>> ZTens = Build_TensOp("Z",  Z_idxs, Z_aops, Z_idx_ranges, Z_symmfuncs, Z_constraints, Z_factor, Z_TimeSymm, false ) ;
       T_map->emplace("Z", ZTens);
+  
+   }else if ( OpName == "F" ) { /* ---- H Tensor  ACTIVE ONLY FOR TEFTING----  */
+      cout << "setting info for Hact" << endl; 
+      DataType                           F_factor = (DataType) (1.0);
+      shared_ptr<vector<string>>         F_idxs = make_shared<vector<string>>( vector<string> { "F0", "F1", "F2", "F3" } );
+      shared_ptr<vector<bool>>           F_aops = make_shared<vector<bool>>( vector<bool>  { true, true, false, false } ); 
+      shared_ptr<vector<vector<string>>> F_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act } ); 
+      string                             F_TimeSymm = "none";
+     
+      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> F_symmfuncs = identity_only();
+      vector<bool(*)(shared_ptr<vector<string>>)>  F_constraints = {  &System_Info<double>::System_Info::always_true };
+     
+      shared_ptr<TensOp::TensOp<double>> FTens = Build_TensOp("F",  F_idxs, F_aops, F_idx_ranges, F_symmfuncs, F_constraints, F_factor, F_TimeSymm, false ) ;
+      T_map->emplace("F", FTens);
    
+  
     } else if ( OpName == "U" ) {  /* ---- 4idx UNIT Tensor ACTIVE ONLY FOR TESTING----  */
     
       DataType                           U_factor = (DataType) (1.0);
@@ -174,16 +189,16 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       shared_ptr<TensOp::TensOp<double>> XTens = Build_TensOp("X", X_idxs, X_aops, X_idx_ranges, X_symmfuncs, X_constraints, X_factor, X_TimeSymm, false ) ;
       T_map->emplace("X", XTens);
       
-    } else if ( OpName == "Y" ) {  /*---- 2el Excitation Op dag  ----  */
+    } else if ( OpName == "Y" ) {  /*---- 4el Excitation Op dag  ----  */
 
-      DataType                           Y_factor = (DataType) (1.0);
-      shared_ptr<vector<string>>          Y_idxs = make_shared<vector<string>>(vector<string> {"Y0", "Y1", "Y2", "Y3"});
-      shared_ptr<vector<bool>>            Y_aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false }); 
-      shared_ptr<vector<vector<string>>>  Y_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt }); 
+      DataType                            Y_factor = (DataType) (1.0);
+      shared_ptr<vector<string>>          Y_idxs = make_shared<vector<string>>(vector<string> {"Y0", "Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7"});
+      shared_ptr<vector<bool>>            Y_aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false, true, true, false, false }); 
+      shared_ptr<vector<vector<string>>>  Y_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  act, act, act, act, act, act, act, act }); 
       string                              Y_TimeSymm = "none";
       
-      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  Y_symmfuncs = set_2el_symmfuncs();
-      vector<bool(*)(shared_ptr<vector<string>>)>  Y_constraints = { &System_Info<double>::System_Info::NotAllAct };
+      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  Y_symmfuncs = identity_only();
+      vector<bool(*)(shared_ptr<vector<string>>)>  Y_constraints = {  &System_Info<double>::System_Info::always_true };
       
       shared_ptr<TensOp::TensOp<double>> YTens = Build_TensOp("Y", Y_idxs, Y_aops, Y_idx_ranges, Y_symmfuncs, Y_constraints, Y_factor, Y_TimeSymm, false ) ;
       T_map->emplace("Y", YTens);

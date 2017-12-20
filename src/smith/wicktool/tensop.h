@@ -214,8 +214,8 @@ class MultiTensOp : public  TensOp::TensOp<DataType> {
     generate_ranges( int num_idxs, std::vector<int>& cmlsizevec );
 
     std::shared_ptr<const std::vector<int>> cmlsizevec() const { return Op_dense_->cmlsizevec();}
-    int cmlsizevec(int ii ) const { return Op_dense_->cmlsizevec(ii) ;}
 
+    int cmlsizevec(int ii ) const { return Op_dense_->cmlsizevec(ii) ;}
 
     std::string const name(){ return name_;}
 

@@ -183,7 +183,7 @@ void CASPT2_ALT::CASPT2_ALT::solve() {
 ////////////////////////////////////////////////////////////////////
 cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   {
-  vector<string> op_list = { "H", "T" };
+  vector<string> op_list = { "F", "Z" };
   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
   
   double factor = 0.0;
@@ -207,7 +207,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   }
   }
   {
-  vector<string> op_list = { "S" };
+  vector<string> op_list = { "Y" };
   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
   double factor = 0.0;
   // Building all necessary expressions 
@@ -262,16 +262,21 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
     
   } else if ( op_name  == "Z" ) {
  
-    shared_ptr<vector<IndexRange>> act4_ranges = make_shared<vector<IndexRange>> ( vector<IndexRange>  { *active_rng, *active_rng, *active_rng, *active_rng});
-    shared_ptr<Tensor_<double>> S_Tens = Tensor_Arithmetic_Utils::get_sub_tensor( H_2el_all, *act4_ranges );
-    shared_ptr<vector<int>>  new_order = make_shared<vector<int>>(vector<int> { 0, 2, 1, 3 });
-    shared_ptr<Tensor_<double>> Z_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( S_Tens, new_order );
+    shared_ptr<vector<IndexRange>> act4_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng} );
+    shared_ptr<Tensor_<double>> Z_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act4_ranges, 2.0 );
     TensOp_data_map->emplace( "Z", Z_Tens );
 
-    Print_Tensor(  S_Tens , "Z_original"); cout << endl << endl << endl; 
-    cout <<"---------------------------Energy_act_reorder----------------------------------" << endl;
-    cout << "Energy_act_reorder = " << Smith_rdm2->dot_product( Z_Tens ) << endl;
-    cout <<"----------------------------------------------------------------------------" << endl;
+  } else if ( op_name  == "F" ) {
+ 
+    shared_ptr<vector<IndexRange>> act4_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng} );
+    shared_ptr<Tensor_<double>> F_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act4_ranges, 2.0 );
+    TensOp_data_map->emplace( "F", F_Tens );
+
+  } else if ( op_name  == "Y" ) {
+ 
+    shared_ptr<vector<IndexRange>> act8_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng} );
+    shared_ptr<Tensor_<double>> Y_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act8_ranges, 2.0 );
+    TensOp_data_map->emplace( "Y", Y_Tens );
 
   } else if ( op_name  == "H" ) { 
 
