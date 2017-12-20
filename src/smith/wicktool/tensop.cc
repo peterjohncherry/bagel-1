@@ -222,6 +222,7 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
                                                  TensOp::TensOp<DataType>( name, spinfree ),
                                                  orig_tensors_(orig_tensors), num_tensors_(orig_tensors.size()) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "MultiTensOp::MultiTensOp<DataType>::MultiTensOp" << endl;
 
   int num_idxs = 0;
     
@@ -363,6 +364,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
        split_ranges_map->emplace(orig_ranges, tie( isunique, unique_ranges, factors ) );
   
        combined_ranges->emplace( map_it->first, tie( get<0>(map_it->second), get<1>(map_it->second), get<2>(map_it->second), factors ) );
+       all_ranges->emplace( map_it->first, tie( get<0>(map_it->second), get<1>(map_it->second), get<2>(map_it->second), get<3>(map_it->second) ) );
      }
    }
    
@@ -388,6 +390,7 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
  
   //silly, should just test {act,act,....} against contraints, and check if act in each ranges... 
   for (auto rng_it = Op_dense_->all_ranges()->begin(); rng_it != Op_dense_->all_ranges()->end(); rng_it++) {
+    print_vector( rng_it->first, "rng_it->first" ); cout << endl; 
     bool check = true;
     for (int xx = 0; xx !=rng_it->first.size() ; xx++ ) {
       if (rng_it->first[xx] != "act") {
