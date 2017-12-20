@@ -183,7 +183,7 @@ void CASPT2_ALT::CASPT2_ALT::solve() {
 ////////////////////////////////////////////////////////////////////
 cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   {
-  vector<string> op_list = { "F", "Z" };
+  vector<string> op_list = { "Z", "G" };
   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
   
   double factor = 0.0;
@@ -207,7 +207,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   }
   }
   {
-  vector<string> op_list = { "Y" };
+  vector<string> op_list = { "R" };
   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
   double factor = 0.0;
   // Building all necessary expressions 
@@ -262,15 +262,28 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
     
   } else if ( op_name  == "Z" ) {
  
-    shared_ptr<vector<IndexRange>> act4_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng} );
+    shared_ptr<vector<IndexRange>> act4_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *free_rng, *free_rng, *free_rng, *free_rng} );
     shared_ptr<Tensor_<double>> Z_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act4_ranges, 2.0 );
     TensOp_data_map->emplace( "Z", Z_Tens );
 
+  } else if ( op_name  == "G" ) {
+ 
+    shared_ptr<vector<IndexRange>> act2_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *not_closed_rng, *not_virtual_rng } );
+    shared_ptr<Tensor_<double>> G_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act2_ranges, 2.0 );
+    TensOp_data_map->emplace( "G", G_Tens );
+
+
   } else if ( op_name  == "F" ) {
  
-    shared_ptr<vector<IndexRange>> act4_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng} );
+    shared_ptr<vector<IndexRange>> act4_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *free_rng, *free_rng, *free_rng, *free_rng} );
     shared_ptr<Tensor_<double>> F_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act4_ranges, 2.0 );
     TensOp_data_map->emplace( "F", F_Tens );
+
+  } else if ( op_name  == "R" ) {
+ 
+    shared_ptr<vector<IndexRange>> act6_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *free_rng, *free_rng, *free_rng, *free_rng, *not_closed_rng, *not_virtual_rng } );
+    shared_ptr<Tensor_<double>> R_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act6_ranges, 4.0 );
+    TensOp_data_map->emplace( "R", R_Tens );
 
   } else if ( op_name  == "Y" ) {
  

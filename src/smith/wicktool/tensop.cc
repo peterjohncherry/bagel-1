@@ -279,8 +279,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "MultiTensOp::generate_ranges()" << endl;
 
-  vector< map< const vector<string>, tuple<bool, shared_ptr<const vector<string>>, shared_ptr<const vector<string>>, pair<int,int>> >::const_iterator> rng_maps;
-
+  vector< map< const  vector<string>, tuple<bool, shared_ptr<const vector<string>>, shared_ptr<const vector<string>>, pair<int,int>> >::const_iterator> rng_maps(num_tensors_);  
   vector<int> posvec( num_tensors_, 0 ); 
 
   auto combined_ranges  = make_shared<map< const vector<string>, tuple< bool,                           shared_ptr<const vector<string>>,                     shared_ptr<const vector<string>>, shared_ptr<vector<pair<int,int>>> >>>();
@@ -290,75 +289,66 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
   cout << " num_tensors_ = " << num_tensors_ << endl;
 
   if ( num_tensors_ > 1 ) { 
-  
-    for (shared_ptr<TensOp::TensOp<DataType>> Ten : orig_tensors_ )
-      rng_maps.push_back(Ten->all_ranges()->begin());
     
-    bool ham = true; // Generate all possible combinations of different ranges on different tensors in multitensop
-                     // TODO recheck this; I remember it took a while, and there was a reason for doing this without forvecs, but 
-                     //      cannot for the life of me work out or remember why... The reason involved duplication, I think. 
-    do{
-      for (auto ii = rng_maps.size()-1; ii != 0; ii--){
-        
-        if ( (ii == posvec.size()-1) && (posvec[ii] == orig_tensors_[ii]->all_ranges()->size()-1 && (posvec[ii-1] == orig_tensors_[ii-1]->all_ranges()->size()-1  )  ) ) {
-          ham =false;  
-          break;
-        } else if ( posvec[ii-1] != orig_tensors_[ii-1]->all_ranges()->size()-1 ) {
-  
-          rng_maps[ii-1]++;
-          posvec[ii-1]++;
-  
-        } else if (posvec[ii-1] == orig_tensors_[ii-1]->all_ranges()->size()-1){
-  
-          rng_maps[ii-1] = orig_tensors_[ii-1]->all_ranges()->begin();
-          posvec[ii-1] = 0;
-  
-          rng_maps[ii]++;
-          posvec[ii]++;
-  
-          continue;
-        }     
-  
+    shared_ptr<vector<int>> forvec = make_shared<vector<int>>(num_tensors_, 0 ); 
+    shared_ptr<vector<int>> mins   = make_shared<vector<int>>(num_tensors_, 0 );  
+    shared_ptr<vector<int>> maxs   = make_shared<vector<int>>(num_tensors_, 0 );  
+    for ( int ii = 0 ; ii != orig_tensors_.size() ; ii++ ) 
+      maxs->at(ii) = orig_tensors_[ii]->all_ranges()->size()-1;
+    
+    print_vector(*maxs, "maxs = " ) ; cout << endl;
+
+    do {
+         print_vector(*forvec, "forvec = " ) ; cout << endl;
+         cout << "possible range comb = [ " ; cout.flush();
+         for ( int ii = 0 ; ii != forvec->size() ; ii++ ) {
+           if ( forvec->at(ii) != 0 ) {
+             rng_maps[ii]++; cout << " [ "; cout.flush(); for ( auto elem : rng_maps[ii]->first ) { cout << elem << " "; } cout << "] " ;cout.flush();
+           } else {
+             rng_maps[ii] = orig_tensors_[ii]->all_ranges()->begin() ; cout << " [ "; cout.flush(); for ( auto elem : rng_maps[ii]->first ) { cout << elem << " "; } cout << "] " ; cout.flush();
+           }
+         }
+         cout << " ] " << endl;
+
          shared_ptr<vector<shared_ptr<const vector<string>>>> unique_ranges = make_shared<vector<shared_ptr<const vector<string>>>>(num_tensors_);
          shared_ptr<vector<shared_ptr<const vector<string>>>> unique_idxs   = make_shared<vector<shared_ptr<const vector<string>>>>(num_tensors_);
          shared_ptr<pint_vec>     factors  = make_shared<pint_vec>(num_tensors_);
          shared_ptr<vector<bool>> isunique = make_shared<vector<bool>>(num_tensors_);
-    
+         
          int  Re_factor = 1;
          int  Im_factor = 1;
-
+         
          vector<string>             merged_oranges( num_idxs_);
          shared_ptr<vector<string>> merged_uranges = make_shared<vector<string>>(num_idxs_);
          shared_ptr<vector<string>> merged_uqidxs  = make_shared<vector<string>>(num_idxs_);
-
-
+         
+         
          for (int jj = 0 ; jj != num_tensors_ ; jj++){
-
+         
            isunique->at(jj)      = get<0>(rng_maps[jj]->second);
            unique_ranges->at(jj) = get<1>(rng_maps[jj]->second);  
            unique_idxs->at(jj)   = get<2>(rng_maps[jj]->second);  
-        
+         
            copy( rng_maps[jj]->first.begin(), rng_maps[jj]->first.end(), merged_oranges.begin() + cmlsizevec[jj] );             
            copy( unique_ranges->at(jj)->begin(), unique_ranges->at(jj)->end(), merged_uranges->begin() + cmlsizevec[jj] ); 
            copy( unique_idxs->at(jj)->begin(), unique_idxs->at(jj)->end(), merged_uqidxs->begin() + cmlsizevec[jj] );     
-
+         
            factors->at(jj)       = get<3>(rng_maps[jj]->second);
            int Re_factor_buff = Re_factor;  
            int Im_factor_buff = Im_factor; //TODO only need one buff, but I'm very tired so could be wrong. fix later.
            Re_factor = ( Re_factor_buff * (get<3>(rng_maps[jj]->second)).first ) - ( Im_factor_buff * (get<3>(rng_maps[jj]->second)).second );
            Im_factor = ( Im_factor_buff * (get<3>(rng_maps[jj]->second)).first ) + ( Re_factor_buff * (get<3>(rng_maps[jj]->second)).second );
-
+         
          }
-  
+         
          pair<int,int> combined_factor = make_pair(Re_factor, Im_factor);
          bool merged_unique = ( merged_oranges == *merged_uranges ) ?  false : true;
          print_vector( merged_oranges, "merged_oranges"); cout << endl; 
          combined_ranges->emplace(merged_oranges, tie(merged_unique, merged_uranges, merged_uqidxs, factors));
          all_ranges->emplace(merged_oranges, tie(merged_unique, merged_uranges, merged_uqidxs, combined_factor ));
          split_ranges_map->emplace(merged_oranges, tie(isunique, unique_ranges, factors));
-  
-       }
-     } while(ham);
+       
+    } while( fvec_cycle_skipper( forvec, maxs, mins ) );
   
    } else { 
       

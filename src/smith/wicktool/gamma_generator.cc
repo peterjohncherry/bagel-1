@@ -191,6 +191,7 @@ cout << "GammaGenerator::norm_order" << endl;
   gamma_vec = final_gamma_vec;
 
   if ( gamma_vec->size() > 0 ){
+    cout << "-----------------------------------------------------" << endl;
     cout << "     LIST OF GAMMAS FOLLOWING NORMAL ORDERING " << endl;
     cout << "-----------------------------------------------------" << endl;
     for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
@@ -448,11 +449,13 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
     }
 
     if ( final_gamma_vec->size() > 0 ) {
+    cout << "-----------------------------------------------------" << endl;
       cout << "     LIST OF GAMMAS FOLLOWING ALT ORDERING " << endl;
       cout << "-----------------------------------------------------" << endl;
       for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
-        cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops,  gint->ids_pos, TargetStates->name(Bra_num), TargetStates->name(Ket_num) ) ;
-        cout << "   ("<< gint->my_sign <<","<< gint->my_sign << ")" << endl;
+        string Gname_tmp = WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops,  gint->ids_pos, TargetStates->name(Bra_num), TargetStates->name(Ket_num) ) ;
+        cout << Gname_tmp << "   ("<< gint->my_sign <<","<< gint->my_sign << ") : "; cout.flush(); 
+        cout << get_Aname( orig_ids, gint->full_id_ranges, gint->deltas_pos ) << endl;
       }
       cout << "-----------------------------------------------------" << endl;
     }

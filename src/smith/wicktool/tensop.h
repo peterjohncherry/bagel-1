@@ -237,7 +237,7 @@ class MultiTensOp : public  TensOp::TensOp<DataType> {
     
     std::shared_ptr<const std::map< const std::vector<std::string>,
                                     std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>  >>>
-                                    all_ranges() const  {return Op_dense_->all_ranges(); }
+                                    all_ranges() const  { return Op_dense_->all_ranges(); }
 
     void get_ctrs_tens_ranges(); 
 

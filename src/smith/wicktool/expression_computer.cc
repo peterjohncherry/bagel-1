@@ -68,7 +68,7 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
     // Loop through A-tensors needed for this gamma
     auto  A_contrib_loc =  Expr->G_to_A_map->find(Gamma_name);
     if ( (A_contrib_loc != Expr->G_to_A_map->end()) &&  (A_contrib_loc->second->size() != 0) ) {
-   
+  
       for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
       
         string  A_contrib_name  = A_contrib_map_elem.first;    
