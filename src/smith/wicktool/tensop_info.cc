@@ -62,35 +62,19 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       T_map->emplace("G", GTens);
  
  
-   }else if ( OpName == "F" ) { /* ---- H Tensor  ACTIVE ONLY FOR TEFTING----  */
-      cout << "setting info for Hact" << endl; 
+   } else if ( OpName == "F" ) { /* ---- H Tensor  ACTIVE ONLY FOR TEFTING----  */
       DataType                           F_factor = (DataType) (1.0);
       shared_ptr<vector<string>>         F_idxs = make_shared<vector<string>>( vector<string> { "F0", "F1", "F2", "F3" } );
       shared_ptr<vector<bool>>           F_aops = make_shared<vector<bool>>( vector<bool>  { true, true, false, false } ); 
-      shared_ptr<vector<vector<string>>> F_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act } ); 
+      shared_ptr<vector<vector<string>>> F_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt } ); 
       string                             F_TimeSymm = "none";
      
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> F_symmfuncs = identity_only();
-      vector<bool(*)(shared_ptr<vector<string>>)>  F_constraints = {  &System_Info<double>::System_Info::always_true };
+      vector<bool(*)(shared_ptr<vector<string>>)>  F_constraints = {  &System_Info<double>::System_Info::NotAllAct };
      
       shared_ptr<TensOp::TensOp<double>> FTens = Build_TensOp("F",  F_idxs, F_aops, F_idx_ranges, F_symmfuncs, F_constraints, F_factor, F_TimeSymm, false ) ;
       T_map->emplace("F", FTens);
-   
-  
-    } else if ( OpName == "U" ) {  /* ---- 4idx UNIT Tensor ACTIVE ONLY FOR TESTING----  */
-    
-      DataType                           U_factor = (DataType) (1.0);
-      shared_ptr<vector<string>>         U_idxs = make_shared<vector<string>>(vector<string> {"U0", "U1", "U2", "U3"});
-      shared_ptr<vector<bool>>           U_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false}); 
-      shared_ptr<vector<vector<string>>> U_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  act, act, act, act }); 
-      string                             U_TimeSymm = "none";
-     
-      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> U_symmfuncs = identity_only();
-      vector<bool(*)(shared_ptr<vector<string>>)>  U_constraints = {  &System_Info<double>::System_Info::always_true };
-     
-      shared_ptr<TensOp::TensOp<double>> UTens = Build_TensOp( "U",U_idxs, U_aops, U_idx_ranges, U_symmfuncs, U_constraints, U_factor, U_TimeSymm, false ) ;
-      T_map->emplace("U", UTens);
-    
+ 
     } else if ( OpName == "R" ) {  /* ---- 6idx UNIT Tensor ACTIVE ONLY FOR TESTING----  */
     
       DataType                           R_factor = (DataType) (1.0);

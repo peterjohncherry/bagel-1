@@ -78,15 +78,6 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   Smith_rdm3 = orig_cpt2->rdm3_; TensOp_data_map->emplace( "Smith_rdm3", Smith_rdm3 );
   Smith_rdm4 = orig_cpt2->rdm4_; TensOp_data_map->emplace( "Smith_rdm4", Smith_rdm4 );
 
-  cout << endl << endl << endl << "-------------------------------------------------------------------------------" << endl;
-  Tensor_Arithmetic_Utils::Print_Tensor(Smith_rdm1, "Smith rdm1" );
-  cout << endl << "-------------------------------------------------------------------------------" << endl;
-  Tensor_Arithmetic_Utils::Print_Tensor(Smith_rdm2, "Smith rdm2" );
-  cout << endl << endl << endl << "-------------------------------------------------------------------------------" << endl;
-  shared_ptr<Tensor_<double>> Smith_rdm1_from_rdm2 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Smith_rdm2 , make_pair(1,2));
-  Tensor_Arithmetic_Utils::Print_Tensor( Smith_rdm1_from_rdm2, "Smith rdm1 from rdm2" );
-  cout << endl << endl << endl << "-------------------------------------------------------------------------------" << endl;
-
   shared_ptr<vector<int>> gorder = make_shared<vector<int>>( vector<int> {  1, 2, 0, 3} ); 
   shared_ptr<Tensor_<double>> rdm2_reord = 
   Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( Smith_rdm2, gorder );
@@ -96,28 +87,6 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
 
   unique_ptr<double[]> rdm2_data = rdm2_reord->get_block( id_block_rdm2 );
   unique_ptr<double[]> rdm1_data = Smith_rdm1->get_block( id_block_rdm1 );
-
-
-  int sz = active_rng->range(0).size();
-  int sz2 = sz*sz;
-  int sz3 = sz2*sz;
-
-  ///////////////////////GAMMA 4 check
-  for (int ll = 0 ; ll != sz ; ll++ ) 
-    for (int kk = 0 ; kk != sz ; kk++ ) 
-      for (int jj = 0 ; jj != sz ; jj++ ){ 
-        if ( jj == kk ) {
-          double* rdm1_data_ptr = rdm1_data.get()+ll*sz;
-          double* rdm2_data_ptr = rdm2_data.get()+ll*sz3 +kk*sz2+jj*sz;
-          for (int ii = 0 ; ii != sz ; ii++ ) 
-            *(rdm2_data_ptr++)  += *(rdm1_data_ptr++); 
-        }
-      }
-
-  rdm2_reord->put_block( rdm2_data, id_block_rdm2 );
-
-  Print_Tensor(rdm2_reord, "Gamma4_from_smith_reord"); 
-  
  
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -137,6 +106,9 @@ void CASPT2_ALT::CASPT2_ALT::set_range_info(shared_ptr<vector<int>> states_of_in
   not_closed_rng  =  make_shared<IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
   not_active_rng  =  make_shared<IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
   not_virtual_rng =  make_shared<IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
+
+  PT2_ranges_ = { *not_closed_rng, *not_closed_rng, *not_virtual_rng, *not_virtual_rng};
+  PT2_ranges_herm_conj_ = { *not_closed_rng, *not_closed_rng, *not_virtual_rng, *not_virtual_rng};
 
   range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
   range_conversion_map->emplace("act", active_rng);
@@ -183,7 +155,7 @@ void CASPT2_ALT::CASPT2_ALT::solve() {
 ////////////////////////////////////////////////////////////////////
 cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   {
-  vector<string> op_list = { "Z", "G" };
+  vector<string> op_list = { "L", "T" };
   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
   
   double factor = 0.0;
@@ -194,7 +166,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
     for ( int jj = 0 ; jj != num_states; jj++) {
   
       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-        Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "norm" ));
+        Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "wicktool norm test" ));
         for ( string Op_name : BK_info.first )  
           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
       }
@@ -207,8 +179,9 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   }
   }
   {
-  vector<string> op_list = { "R" };
+  vector<string> op_list = { "L", "F" };
   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
+  
   double factor = 0.0;
   // Building all necessary expressions 
   int  num_states = 1; 
@@ -217,7 +190,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
     for ( int jj = 0 ; jj != num_states; jj++) {
   
       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-        Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "norm" ));
+        Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "wicktool HE ones test" ));
         for ( string Op_name : BK_info.first )  
           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
       }
@@ -263,7 +236,7 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
   } else if ( op_name  == "Z" ) {
  
     shared_ptr<vector<IndexRange>> act4_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *free_rng, *free_rng, *free_rng, *free_rng} );
-    shared_ptr<Tensor_<double>> Z_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act4_ranges, 2.0 );
+    shared_ptr<Tensor_<double>> Z_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act4_ranges, 1.0 );
     TensOp_data_map->emplace( "Z", Z_Tens );
 
   } else if ( op_name  == "G" ) {
@@ -272,18 +245,11 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
     shared_ptr<Tensor_<double>> G_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act2_ranges, 2.0 );
     TensOp_data_map->emplace( "G", G_Tens );
 
-
   } else if ( op_name  == "F" ) {
  
-    shared_ptr<vector<IndexRange>> act4_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *free_rng, *free_rng, *free_rng, *free_rng} );
-    shared_ptr<Tensor_<double>> F_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act4_ranges, 2.0 );
+    shared_ptr<vector<IndexRange>> free4_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *free_rng, *free_rng, *free_rng, *free_rng} );
+    shared_ptr<Tensor_<double>> F_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( free4_ranges, 1.0 );
     TensOp_data_map->emplace( "F", F_Tens );
-
-  } else if ( op_name  == "R" ) {
- 
-    shared_ptr<vector<IndexRange>> act6_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *free_rng, *free_rng, *free_rng, *free_rng, *not_closed_rng, *not_virtual_rng } );
-    shared_ptr<Tensor_<double>> R_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act6_ranges, 4.0 );
-    TensOp_data_map->emplace( "R", R_Tens );
 
   } else if ( op_name  == "Y" ) {
  
@@ -293,6 +259,7 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
 
   } else if ( op_name  == "H" ) { 
 
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( H_2el_all , 0.5  );
     TensOp_data_map->emplace("H" , H_2el_all);
 
   } else if ( op_name  == "h" ) { 
@@ -301,21 +268,18 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
 
   } else if ( op_name  == "T" ) { 
 
-    vector<IndexRange> PT2_ranges = {*not_closed_rng , *not_closed_rng, *not_virtual_rng, *not_virtual_rng} ;
-    shared_ptr<Tensor_<double>> TTens_data =  make_shared<Tensor_<double>>(PT2_ranges); 
+    shared_ptr<Tensor_<double>> TTens_data =  make_shared<Tensor_<double>>(PT2_ranges_); 
     TTens_data->allocate();
     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( TTens_data , 1.0  );
     TensOp_data_map->emplace("T" , TTens_data);
 
-  } else if ( op_name  == "X" ) { 
+  } else if ( op_name  == "L" ) { 
 
-    vector<IndexRange> PT2_ranges = { *not_virtual_rng, *not_virtual_rng, *not_closed_rng , *not_closed_rng,   } ;
-    shared_ptr<Tensor_<double>> XTens_data =  make_shared<Tensor_<double>>(PT2_ranges); 
-    XTens_data->allocate();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( XTens_data , 1.0  );
-    TensOp_data_map->emplace("X" , XTens_data);
-
-  }  
+    shared_ptr<Tensor_<double>> LTens_data =  make_shared<Tensor_<double>>(PT2_ranges_herm_conj_); 
+    LTens_data->allocate();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( LTens_data , 1.0  );
+    TensOp_data_map->emplace("L" , LTens_data);
+  }
 
   return;
 }

@@ -71,7 +71,6 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
     }
   }
 
-
   tuple< std::shared_ptr<std::map< const std::vector<std::string>, std::tuple< bool, std::shared_ptr<const std::vector<std::string>>, std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>>>>,
          std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>> > test_var = generate_ranges(idxs.size(), idxs, idx_ranges);
 
@@ -149,11 +148,6 @@ cout << "TensOp::generate_ranges" <<   endl;
 
   auto all_ranges_ptr = make_shared<std::map< const std::vector<std::string>, std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int> > >> (all_ranges);
   auto unique_ranges_ptr = make_shared<std::vector< std::shared_ptr< const std::vector<std::string>> >>(unique_range_blocks);                                                                                                                
-
-  for ( auto part : all_ranges ) 
-    print_vector( part.first  , "all_ranges member" ) ; cout << endl;
-  
-
   return tie ( all_ranges_ptr, unique_ranges_ptr );
               
   cout << "TensOp::generate_ranges()" <<   endl;
@@ -257,10 +251,9 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
   auto bob = generate_ranges(num_idxs, cmlsizevec);
 
   auto  unique_range_blocks = make_shared<std::vector< std::shared_ptr<const std::vector<std::string>>>>(0) ;
-  for ( auto all_range_map_it : *(get<1>(bob)) ) { 
+  for ( auto all_range_map_it : *(get<1>(bob)) ) 
     unique_range_blocks->push_back( make_shared<const vector<string>>(all_range_map_it.first) ); 
-    print_vector(all_range_map_it.first , "possible_range" ) ; cout << endl;
-  }
+  
 //  for ( auto elem : *(get<2>bob) ) 
 //     unique_range_blocks->push_back( make_shared<std::vector<std::string>>(elem.first) ); 
 
@@ -288,7 +281,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
 
   cout << " num_tensors_ = " << num_tensors_ << endl;
 
-
   // Such an ugly loop that this should be fixed when switch ranges to numbers
   // The reason for it is that maps can't map->begin()+ii , so must iterate
   // This is why you had the ugly thing before; it was much faster than this stupid thing with all it's checking.
@@ -300,10 +292,8 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
     shared_ptr<vector<int>> maxs   = make_shared<vector<int>>(num_tensors_, 0 );  
     for ( int ii = 0 ; ii != orig_tensors_.size() ; ii++ ){ 
       maxs->at(ii) = orig_tensors_[ii]->all_ranges()->size()-1;
-      rng_maps[ii] = orig_tensors_[ii]->all_ranges()->begin() ; print_vector( rng_maps[ii]->first, " "); cout.flush();
+      rng_maps[ii] = orig_tensors_[ii]->all_ranges()->begin() ; 
     }
-    print_vector(*maxs, "maxs = " ) ; cout << endl;
-
     shared_ptr<vector<int>> old_forvec = make_shared<vector<int>>(*forvec);
 
     do {
@@ -317,11 +307,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
            }
          }
 
-         print_vector(*forvec, "forvec = " ) ; cout << endl;
-         cout << "possible range comb = [ " ; cout.flush();
-         for ( auto elem : rng_maps ) 
-           print_vector( elem->first, " "); cout.flush();
-         cout << " ] " << endl;
          old_forvec = make_shared<vector<int>>(*forvec);
 
          shared_ptr<vector<shared_ptr<const vector<string>>>> unique_ranges = make_shared<vector<shared_ptr<const vector<string>>>>(num_tensors_);
@@ -377,7 +362,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
        split_ranges_map->emplace(orig_ranges, tie( isunique, unique_ranges, factors ) );
   
        combined_ranges->emplace( map_it->first, tie( get<0>(map_it->second), get<1>(map_it->second), get<2>(map_it->second), factors ) );
-       print_vector( map_it->first, "merged_oranges"); cout << endl; 
        all_ranges->emplace( map_it->first, tie( get<0>(map_it->second), get<1>(map_it->second), get<2>(map_it->second), get<3>(map_it->second) ) );
      }
    }
@@ -404,7 +388,6 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
  
   //silly, should just test {act,act,....} against contraints, and check if act in each ranges... 
   for (auto rng_it = Op_dense_->all_ranges()->begin(); rng_it != Op_dense_->all_ranges()->end(); rng_it++) {
-    print_vector( rng_it->first, "rng_it->first" ); cout << endl; 
     bool check = true;
     for (int xx = 0; xx !=rng_it->first.size() ; xx++ ) {
       if (rng_it->first[xx] != "act") {

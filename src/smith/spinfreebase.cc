@@ -89,11 +89,12 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
     K2ext<DataType> v2k(info_, coeff_, {occ, virt, occ, virt});
     v2_ = v2k.tensor();
   }
-  // temp H_2el tensor for testing
+  ////////////////////// temp H_2el tensor for testing//////////////////////////////////////////
   {
     K2ext<DataType> v2k(info_, coeff_, {all_, all_, all_, all_});
     H_2el_ = v2k.tensor();
   }
+  //////////////////////////////////////////////////////////////////////////////////////////////
 
 
 

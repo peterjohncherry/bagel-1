@@ -217,6 +217,38 @@ void CASPT2::CASPT2::solve() {
   if (info_->shift() && info_->do_ms() && !info_->shift_diag())
     cout << "    Applying levelshift correction to diagonal elements of the Hamiltonian only.  (Off-diagonals have not been implemented for non-relativistic CASPT2.)" << endl << endl;
 
+  /////////////////////////////////// PT2 energy test////////////////////////////////////////////////
+  {
+    shared_ptr<Tensor> h1_buff = make_shared<Tensor>(*h1_);
+    shared_ptr<Tensor> v2_buff = make_shared<Tensor>(*v2_);
+    h1_->zero();
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );
+
+    shared_ptr<Tensor> t2_one = t2all_[0]->at(0)->clone();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one , 1.0  );
+    shared_ptr<MultiTensor> sist = make_shared<MultiTensor>(1);
+
+    set_rdm(0, 0);
+
+    s = init_residual();
+
+    cout << "s->norm() = " << s->norm() << endl;
+    shared_ptr<Queue> sourceq = make_sourceq(false, true);
+    while(!sourceq->done())
+      sourceq->next_compute();
+
+    sist->at(0) = s;  cout << "sist->at(0)->norm() = " << sist->at(0)->norm() << endl;
+    cout << "sist->at(0)->rank() = " << sist->at(0)->rank() << endl;
+
+    cout<<" dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+
+    h1_ = h1_buff;
+    v2_ = v2_buff;
+  }
+  /////////////////////////////////// PT2 energy test////////////////////////////////////////////////
+
   // MS-CASPT2
   if (info_->do_ms() && nstates_ > 1) {
     heff_ = make_shared<Matrix>(nstates_, nstates_);

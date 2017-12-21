@@ -51,7 +51,6 @@ void BraKet<DataType>::Build_Gamma_SpinFree(shared_ptr<const vector<bool>> aops,
   print_vector( *idxs_buff , "idxs_buff" ) ; 
   print_vector( *aops_buff , "    aops_buff" ) ; cout << endl;
   for (auto range_map_it = Total_Op->all_ranges()->begin() ;  range_map_it !=Total_Op->all_ranges()->end(); range_map_it++){
-    print_vector( range_map_it->first,  "range_map_it->first "); cout <<endl;
     shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>(TargetStates, Bra_num, Ket_num, aops_buff, idxs_buff, GammaMap, G_to_A_map); 
     GGen->add_gamma(make_shared<vector<string>>(range_map_it->first), 1) ;
     GGen->norm_order();

@@ -249,15 +249,18 @@ void GammaGenerator::Set_A_Contrib( int kk ){
    return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////
-// Replace this with something more sophisticated which can account
-// for different constraints
+// Replace this with something more sophisticated which uses constraint functions.
 ///////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::Forbidden_Index( shared_ptr<vector<string>> full_id_ranges, int position ){
 ///////////////////////////////////////////////////////////////////////////////////////
 //cout << "GammaGenerator::Forbidden_Index" << endl;
-  return ( full_id_ranges->at(position) != "act");
+  bool  test = true;
+  if ( full_id_ranges->at(position) != "act"){
+    return true;
+  } else if ( orig_ids->at(position)[0] == 'X' ) {
+    return true;
+  }
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::Contract_remaining_indexes( int kk ){
 //////////////////////////////////////////////////////////////////////////////////////  
@@ -324,7 +327,7 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
   vector<shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>> new_contractions(diff_rngs.size());
 
   for (int ii =0 ; ii != new_contractions.size(); ii++)
-    new_contractions[ii] = get_unique_pairs( make_ops_pos->at(ii),  kill_ops_pos->at(ii), make_ops_pos->at(ii)->size());
+    new_contractions[ii] = get_unique_pairs( make_ops_pos->at(ii), kill_ops_pos->at(ii), make_ops_pos->at(ii)->size() );
 
   shared_ptr<vector<int>> forvec = make_shared<vector<int>>(diff_rngs.size(),0) ;
   shared_ptr<vector<int>> min = make_shared<vector<int>>(diff_rngs.size(),0) ;

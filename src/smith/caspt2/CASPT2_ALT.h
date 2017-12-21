@@ -78,6 +78,9 @@ class CASPT2_ALT {
     std::shared_ptr<IndexRange> not_closed_rng ; 
     std::shared_ptr<IndexRange> not_active_rng  ;
     std::shared_ptr<IndexRange> not_virtual_rng ;
+    std::vector<IndexRange> PT2_ranges_;
+    std::vector<IndexRange> PT2_ranges_herm_conj_;
+
 
     std::shared_ptr<StatesInfo<double>> TargetsInfo;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map ;
