@@ -155,7 +155,7 @@ void CASPT2_ALT::CASPT2_ALT::solve() {
 ////////////////////////////////////////////////////////////////////
 cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   {
-  vector<string> op_list = { "L", "T" };
+  vector<string> op_list = { "H" };
   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
   
   double factor = 0.0;
@@ -166,7 +166,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
     for ( int jj = 0 ; jj != num_states; jj++) {
   
       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-        Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "wicktool norm test" ));
+        Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "H check" ));
         for ( string Op_name : BK_info.first )  
           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
       }

@@ -91,16 +91,21 @@ cout << "TensOp::generate_ranges" <<   endl;
   //set up loop utils
 
   shared_ptr<vector<string>> idxs_ptr = make_shared<vector<string>>(idxs);
-  std::vector< std::shared_ptr< const std::vector<std::string>> > unique_range_blocks;
-  std::map< const std::vector<std::string>, 
-            std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int> > > all_ranges;
+  shared_ptr<const vector<string>> idxs_ptr_new = make_shared<const vector<string>>(idxs);
+  vector< shared_ptr< const vector<string>> > unique_range_blocks;
+  map< const vector<string>, tuple< bool, shared_ptr<const vector<string>>,  shared_ptr< const vector<string>>, pair<int,int> > > all_ranges;
+  map< const vector<string>, shared_ptr<const transformed_range_info> > all_ranges_new;
   
-  auto apply_symmetry = [ &all_ranges, &idxs_ptr ]( const vector<string>& ranges_1,  const vector<string>& ranges_2 ) {
+  auto apply_symmetry = [ &all_ranges, &all_ranges_new, &idxs_ptr , &idxs_ptr_new ]( const vector<string>& ranges_1,  const vector<string>& ranges_2 ) {
      const bool a_unique_range_block = true; //TODO put symmetry back in
      if (a_unique_range_block) {
        const pair<int,int> fac(1,1);
+       const pair<double,double> fac_new(1.0,1.0);
        shared_ptr<const vector<string>> ranges_2_ptr = make_shared<const vector<string>>(ranges_2);
+ 
        all_ranges.emplace(ranges_2, tie( a_unique_range_block,  ranges_2_ptr, idxs_ptr, fac ) );
+       all_ranges_new.emplace(ranges_2, make_shared< const transformed_range_info >( a_unique_range_block, true, fac_new, ranges_2_ptr, ranges_2_ptr, idxs_ptr_new ) );
+        
      }
      return false;
   };
@@ -110,6 +115,7 @@ cout << "TensOp::generate_ranges" <<   endl;
   int  num_cycles = 1;
   bool tbool = true;
   const pair<int,int> fac(1,1);
+  const pair<double,double> fac_new(1.0,1.0);
 
   for( int ii = 0; ii != idx_ranges.size(); ii++ ){
     maxs->at(ii) = ( idx_ranges[ii].size()-1 );
@@ -131,6 +137,7 @@ cout << "TensOp::generate_ranges" <<   endl;
   const vector<string> init_range = possible_ranges[0];
   shared_ptr<const vector<string>> tmp_range = make_shared<const vector<string>>(possible_ranges[0]);
   all_ranges.emplace( init_range, tie( tbool, tmp_range, idxs_ptr, fac ) );
+  all_ranges_new.emplace(init_range, make_shared< const transformed_range_info >( tbool, true, fac_new, tmp_range, tmp_range, idxs_ptr_new ) );
  
   unique_range_blocks = vector< shared_ptr< const vector<string>>>(1, tmp_range );
   //Apply symmetry operations to remove unnecessary ranges   
@@ -383,14 +390,16 @@ cout << "MultiTensOp get_ctrs_tens_ranges" << endl;
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
+
   //puts uncontracted ranges into map 
   shared_ptr<vector<pair<int,int>>> noctrs = make_shared<vector<pair<int,int>>>(0);
  
   //silly, should just test {act,act,....} against contraints, and check if act in each ranges... 
   for (auto rng_it = Op_dense_->all_ranges()->begin(); rng_it != Op_dense_->all_ranges()->end(); rng_it++) {
     bool check = true;
+//    print_vector( rng_it->first , "rng_it->first" ) ; cout << endl;
     for (int xx = 0; xx !=rng_it->first.size() ; xx++ ) {
-      if (rng_it->first[xx] != "act") {
+      if (rng_it->first[xx][0] != 'a') {
         check=false;
         break;
       }
@@ -398,6 +407,7 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
     if(!check){
       continue;
     } else {
+      
       enter_into_CMTP_map(*noctrs, get<3>(rng_it->second), rng_it->first );
     }
   }
@@ -405,7 +415,6 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
   //puts_contractions, with specified ranges, into the map
   for ( int nctrs = 1 ; nctrs != (Op_dense_->num_idxs()/2)+1 ; nctrs++ ){
     shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> ctr_lists = get_unique_pairs( Op_dense_->plus_ops(), Op_dense_->kill_ops(), nctrs );
-//    for (shared_ptr<vector<pair<int,int>>> ctr_vec : *ctr_lists) {  print_pair_vector( *ctr_vec , "ctr_vec orig" ); cout << endl; }
 
     for (shared_ptr<vector<pair<int,int>>> ctr_vec : *ctr_lists) {
       for (auto rng_it = Op_dense_->all_ranges()->begin(); rng_it != Op_dense_->all_ranges()->end(); rng_it++) {
@@ -429,7 +438,7 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
             unc_get[ctr_pos.second] = false;
           }
           for (int xx = 0; xx !=rng_it->first.size() ; xx++ ) {
-            if (unc_get[xx]  && (rng_it->first[xx].substr(0,3) != "act") ) {
+            if (unc_get[xx]  && (rng_it->first[xx][0] != 'a') ) {
               valid = false;
               break;
             }

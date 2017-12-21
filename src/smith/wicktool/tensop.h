@@ -15,6 +15,7 @@ class transformed_range_info {
 
     private :
     const bool is_unique_;
+    const bool survives_;
     const std::pair<int,int> factors_; 
     const std::shared_ptr<const std::vector<std::string>> orig_block_;
     const std::shared_ptr<const std::vector<std::string>> unique_block_;
@@ -22,14 +23,17 @@ class transformed_range_info {
                                 
     public :
     transformed_range_info( bool is_unique,
+                            bool survives,
                             std::pair<int,int> factors, 
                             std::shared_ptr<const std::vector<std::string>> orig_block,
                             std::shared_ptr<const std::vector<std::string>> unique_block,
                             std::shared_ptr<const std::vector<std::string>> transformed_idxs) :
-                            orig_block_(orig_block), is_unique_(is_unique), unique_block_(unique_block), transformed_idxs_(transformed_idxs), factors_(factors) {};
+                            orig_block_(orig_block), is_unique_(is_unique),
+                            survives_(survives), unique_block_(unique_block), transformed_idxs_(transformed_idxs), factors_(factors) {};
     ~transformed_range_info(){};
 
     bool is_unique() const { return is_unique_ ; }
+    bool survives() const { return survives_ ; }
     std::pair<int,int> factors() const { return factors_; }  
     std::shared_ptr<const std::vector<std::string>> orig_block()       { return orig_block_;      }
     std::shared_ptr<const std::vector<std::string>> unique_block()     { return unique_block_;    }
@@ -51,6 +55,7 @@ class TensOp_General {
      const std::vector< std::shared_ptr< const std::vector<std::string>>> unique_range_blocks_;
      const std::map< const std::vector<std::string>,
                      std::tuple< bool, std::shared_ptr<const std::vector<std::string>>,  std::shared_ptr< const std::vector<std::string>>, std::pair<int,int>  >> all_ranges_;
+     const std::map< const std::vector<std::string>, std::shared_ptr<const transformed_range_info> > all_ranges_new_; 
 
    public:
      std::shared_ptr<const std::vector<std::string>> idxs_ptr_;

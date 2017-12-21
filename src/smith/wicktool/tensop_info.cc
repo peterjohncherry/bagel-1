@@ -161,7 +161,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
        
     } else if ( OpName == "L" ) {  /* ---- L Tensor ----  */
 
-      DataType                           L_factor = (DataType) (1.0);
+      DataType                            L_factor = (DataType) (1.0);
       shared_ptr<vector<string>>          L_idxs = make_shared<vector<string>>(vector<string> {"L0", "L1", "L2", "L3"});
       shared_ptr<vector<bool>>            L_aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true }); 
       shared_ptr<vector<vector<string>>>  L_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt, not_virt, not_core, not_core }); 

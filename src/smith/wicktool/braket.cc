@@ -50,6 +50,7 @@ void BraKet<DataType>::Build_Gamma_SpinFree(shared_ptr<const vector<bool>> aops,
   shared_ptr<vector<bool>> aops_buff  = make_shared<vector<bool>>(*aops );
   print_vector( *idxs_buff , "idxs_buff" ) ; 
   print_vector( *aops_buff , "    aops_buff" ) ; cout << endl;
+  cout << "Total_Op->all_ranges()->size() = " << Total_Op->all_ranges()->size() << endl;
   for (auto range_map_it = Total_Op->all_ranges()->begin() ;  range_map_it !=Total_Op->all_ranges()->end(); range_map_it++){
     shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>(TargetStates, Bra_num, Ket_num, aops_buff, idxs_buff, GammaMap, G_to_A_map); 
     GGen->add_gamma(make_shared<vector<string>>(range_map_it->first), 1) ;
@@ -71,10 +72,10 @@ void BraKet<DataType>::Build_Gamma_SpinFree(shared_ptr<const vector<bool>> aops,
 
       for( auto A_map_it = map_it->second->begin() ; A_map_it != map_it->second->end();  A_map_it++){
         cout <<  A_map_it->first << "  "; cout.flush();
-        AContribInfo AInfo = A_map_it->second ;
-        for ( int qq = 0 ; qq != AInfo.id_orders.size() ; qq++ ){
-          cout << "[ "; for (int pos : AInfo.id_order(qq) ) { cout << pos << " " ;} cout << " ]"; 
-          cout << "(" << AInfo.factor(qq).first  << "," <<  AInfo.factor(qq).second << ")     "; cout.flush();
+        for ( int qq = 0; qq !=A_map_it->second.id_orders.size(); qq++) {
+          cout << "[ " ; 
+          print_vector( A_map_it->second.id_order(qq), " " ); 
+          cout << " (" << A_map_it->second.factor(qq).first <<  "," <<  A_map_it->second.factor(qq).first<<  ") ]" ; cout <<endl;
         }
         cout << endl;
       }

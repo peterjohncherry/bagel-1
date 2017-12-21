@@ -120,10 +120,9 @@ cout << "GammaGenerator::add_gamma" << endl;
 
   if(RangeCheck(full_id_ranges_in)){
 
+    cout << " a valid range is : " ; print_vector(*full_id_ranges_in, " " ); cout <<endl;
     shared_ptr<vector<int>> ids_pos_init =  make_shared<vector<int>>(full_id_ranges_in->size());
-
-    for ( int ii = 0; ii != full_id_ranges_in->size(); ii++)
-        ids_pos_init->at(ii) = ii; 
+    iota( ids_pos_init->begin() , ids_pos_init->end() , 0 );
     
     int my_sign_in = 1;
     shared_ptr<vector<pair<int,int>>> deltas_pos_in = make_shared<vector<pair<int,int>>>(0);
@@ -254,11 +253,14 @@ void GammaGenerator::Set_A_Contrib( int kk ){
 bool GammaGenerator::Forbidden_Index( shared_ptr<vector<string>> full_id_ranges, int position ){
 ///////////////////////////////////////////////////////////////////////////////////////
 //cout << "GammaGenerator::Forbidden_Index" << endl;
-  bool  test = true;
-  if ( full_id_ranges->at(position) != "act"){
+
+  if ( full_id_ranges->at(position)[0] != 'a'){
     return true;
-  } else if ( orig_ids->at(position)[0] == 'X' ) {
-    return true;
+//  } else if ( orig_ids->at(position)[0] == 'X' ) {
+//    return true;
+//  } 
+  } else {
+    return false;
   }
 }
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -596,6 +598,8 @@ cout << "GammaGenerator::gamma_survives" << endl;
 
 }
 
+//////////////////////////////////////////////////////////////////////////////
+// This should not be necessary, but keep it for debugging
 //////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::RangeCheck(shared_ptr<vector<string>> full_id_ranges) {
 //////////////////////////////////////////////////////////////////////////////
