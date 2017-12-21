@@ -288,27 +288,41 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
 
   cout << " num_tensors_ = " << num_tensors_ << endl;
 
+
+  // Such an ugly loop that this should be fixed when switch ranges to numbers
+  // The reason for it is that maps can't map->begin()+ii , so must iterate
+  // This is why you had the ugly thing before; it was much faster than this stupid thing with all it's checking.
+  // Maybe add some comments in future so you can understand things...
   if ( num_tensors_ > 1 ) { 
     
     shared_ptr<vector<int>> forvec = make_shared<vector<int>>(num_tensors_, 0 ); 
     shared_ptr<vector<int>> mins   = make_shared<vector<int>>(num_tensors_, 0 );  
     shared_ptr<vector<int>> maxs   = make_shared<vector<int>>(num_tensors_, 0 );  
-    for ( int ii = 0 ; ii != orig_tensors_.size() ; ii++ ) 
+    for ( int ii = 0 ; ii != orig_tensors_.size() ; ii++ ){ 
       maxs->at(ii) = orig_tensors_[ii]->all_ranges()->size()-1;
-    
+      rng_maps[ii] = orig_tensors_[ii]->all_ranges()->begin() ; print_vector( rng_maps[ii]->first, " "); cout.flush();
+    }
     print_vector(*maxs, "maxs = " ) ; cout << endl;
 
+    shared_ptr<vector<int>> old_forvec = make_shared<vector<int>>(*forvec);
+
     do {
-         print_vector(*forvec, "forvec = " ) ; cout << endl;
-         cout << "possible range comb = [ " ; cout.flush();
          for ( int ii = 0 ; ii != forvec->size() ; ii++ ) {
-           if ( forvec->at(ii) != 0 ) {
-             rng_maps[ii]++; cout << " [ "; cout.flush(); for ( auto elem : rng_maps[ii]->first ) { cout << elem << " "; } cout << "] " ;cout.flush();
-           } else {
-             rng_maps[ii] = orig_tensors_[ii]->all_ranges()->begin() ; cout << " [ "; cout.flush(); for ( auto elem : rng_maps[ii]->first ) { cout << elem << " "; } cout << "] " ; cout.flush();
+           if ( old_forvec->at(ii) != forvec->at(ii) ) {
+             if ( forvec->at(ii) == 0 ) {
+               rng_maps[ii] = orig_tensors_[ii]->all_ranges()->begin() ;
+             } else {
+               rng_maps[ii]++;
+             }
            }
          }
+
+         print_vector(*forvec, "forvec = " ) ; cout << endl;
+         cout << "possible range comb = [ " ; cout.flush();
+         for ( auto elem : rng_maps ) 
+           print_vector( elem->first, " "); cout.flush();
          cout << " ] " << endl;
+         old_forvec = make_shared<vector<int>>(*forvec);
 
          shared_ptr<vector<shared_ptr<const vector<string>>>> unique_ranges = make_shared<vector<shared_ptr<const vector<string>>>>(num_tensors_);
          shared_ptr<vector<shared_ptr<const vector<string>>>> unique_idxs   = make_shared<vector<shared_ptr<const vector<string>>>>(num_tensors_);
@@ -342,8 +356,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges(int num_idxs_, vector<int>& 
          }
          
          pair<int,int> combined_factor = make_pair(Re_factor, Im_factor);
-         bool merged_unique = ( merged_oranges == *merged_uranges ) ?  false : true;
-         print_vector( merged_oranges, "merged_oranges"); cout << endl; 
+         bool merged_unique = ( merged_oranges == *merged_uranges ) ?  false : true ;
          combined_ranges->emplace(merged_oranges, tie(merged_unique, merged_uranges, merged_uqidxs, factors));
          all_ranges->emplace(merged_oranges, tie(merged_unique, merged_uranges, merged_uqidxs, combined_factor ));
          split_ranges_map->emplace(merged_oranges, tie(isunique, unique_ranges, factors));
