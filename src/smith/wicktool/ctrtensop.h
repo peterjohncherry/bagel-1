@@ -73,6 +73,51 @@ class CtrOp_same_T : public CtrOp_base {
 };      
 
 template<typename DataType>
+class CtrTensorPart_Base  {
+  private :
+    const std::string name_;
+    const std::shared_ptr<const std::vector<std::string>> full_idxs_;                                                                              
+    const std::shared_ptr<const std::vector<std::string>> full_id_ranges_;
+    const std::shared_ptr<const std::vector<std::pair<double,double>>> ReIm_factors_; 
+
+    const std::vector<int> unc_pos_;
+    const std::map<int,int> unc_rel_pos_;
+    const std::vector<std::string> unc_idxs_;
+    const std::vector<std::string> unc_id_ranges_;
+    const std::vector<std::pair<int,int>> ctrs_pos_;      
+
+    const std::shared_ptr<const std::vector<int>> unc_pos_ptr_;
+    const std::shared_ptr<const std::vector<std::string>> unc_idxs_ptr_;
+    const std::shared_ptr<const std::vector<std::string>> unc_id_ranges_ptr_;
+    const std::shared_ptr<const std::vector<std::pair<int,int>>> ctrs_pos_ptr_;      
+
+  public :
+    CtrTensorPart_Base(std::string name,
+                       std::shared_ptr<const std::vector<std::string>> full_idxs,                                                                              
+                       std::shared_ptr<const std::vector<std::string>> full_id_ranges,
+                       std::shared_ptr<const std::vector<std::pair<double,double>>> ReIm_factors, 
+                       std::vector<int>& unc_pos,
+                       std::map<int,int>& unc_rel_pos,
+                       std::vector<std::string>& unc_idxs,
+                       std::vector<std::string>& unc_id_ranges,
+                       std::vector<std::pair<int,int>>& ctrs_pos) :
+                       name_(name), full_idxs_(full_idxs), full_id_ranges_(full_id_ranges), ReIm_factors_(ReIm_factors),
+                       unc_pos_(unc_pos), unc_rel_pos_(unc_rel_pos), unc_idxs_(unc_idxs), unc_id_ranges_(unc_id_ranges),
+                       ctrs_pos_(ctrs_pos),      
+                       unc_pos_ptr_(std::make_shared<const std::vector<int>>(unc_pos)),
+                       unc_idxs_ptr_(std::make_shared<const std::vector<std::string>>(unc_idxs)),
+                       unc_id_ranges_ptr_(std::make_shared<const std::vector<std::string>>(unc_id_ranges)),
+                       ctrs_pos_ptr_(std::make_shared<const std::vector<std::pair<int,int>>>(ctrs_pos)){}      
+    ~CtrTensorPart_Base(){}; 
+
+    std::shared_ptr<const std::vector<int>> unc_pos() const { return unc_pos_ptr_; };
+    std::shared_ptr<const std::vector<std::string>> unc_idxs() const { return unc_idxs_ptr_ ; };
+    std::shared_ptr<const std::vector<std::string>> unc_id_ranges() const { return unc_id_ranges_ptr_; };
+    std::shared_ptr<const std::vector<std::pair<int,int>>> ctrs_pos() const { return ctrs_pos_ptr_; };      
+
+};
+
+template<typename DataType>
 class CtrTensorPart /*, public: std::enable_shared_from_this<CtrTensorPart>*/ {
    public:
   

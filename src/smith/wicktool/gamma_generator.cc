@@ -111,7 +111,7 @@ cout << "GammaGenerator::GammaGenerator" << endl;
 }
  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GammaGenerator::add_gamma(shared_ptr<vector<string>> full_id_ranges_in, int my_sign_in) {
+void GammaGenerator::add_gamma( shared_ptr<vector<string>> full_id_ranges_in, int my_sign_in) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_GammaGenerator 
 cout << "GammaGenerator::add_gamma" << endl; 

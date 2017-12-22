@@ -85,6 +85,8 @@ namespace WickUtils {
   std::shared_ptr<std::vector<pint_vec>>  
   get_cross_pairs( std::shared_ptr<std::vector<int>> vec1 , std::shared_ptr<std::vector<int>> vec2, std::shared_ptr<std::vector<std::string>> id_names );
 
+  bool RangeCheck(const std::vector<std::string>& id_ranges, const std::vector<bool>& aops ) ;
+
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name ="lazy"){
     std::cout << name <<" = [ ";

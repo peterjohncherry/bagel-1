@@ -20,24 +20,20 @@ class range_block_info {
     const std::pair<double,double> factors_; 
     const std::shared_ptr<const std::vector<std::string>> orig_block_;
     const std::shared_ptr<const std::vector<std::string>> unique_block_;
+    const std::shared_ptr<const std::vector<std::string>> orig_idxs_;
     const std::shared_ptr<const std::vector<std::string>> transformed_idxs_;
                                 
     public :
     range_block_info( bool is_unique,
-                            bool survives,
-                            std::pair<double,double> factors, 
-                            std::shared_ptr<const std::vector<std::string>> orig_block,   
-                            std::shared_ptr<const std::vector<std::string>> unique_block, 
-                            std::shared_ptr<const std::vector<std::string>> transformed_idxs) : 
-                            is_unique_(is_unique), survives_(survives),factors_(factors),
-                            orig_block_(orig_block), unique_block_(unique_block), transformed_idxs_(transformed_idxs) {};
-
-    range_block_info( std::shared_ptr<const std::vector<std::string>> orig_block,   
+                      bool survives,
+                      std::pair<double,double> factors, 
+                      std::shared_ptr<const std::vector<std::string>> orig_block,   
                       std::shared_ptr<const std::vector<std::string>> unique_block, 
+                      std::shared_ptr<const std::vector<std::string>> orig_idxs,   
                       std::shared_ptr<const std::vector<std::string>> transformed_idxs) : 
-                      is_unique_(true), survives_(true), factors_(std::make_pair(1.0,1.0)),
-                      orig_block_(orig_block), unique_block_(unique_block), transformed_idxs_(transformed_idxs)  {};
-
+                      is_unique_(is_unique), survives_(survives),factors_(factors),
+                      orig_block_(orig_block), unique_block_(unique_block),
+                      orig_idxs_(orig_idxs), transformed_idxs_(transformed_idxs) {};
     ~range_block_info(){};
 
     bool is_unique() const { return is_unique_ ; } //get<0>
@@ -47,6 +43,7 @@ class range_block_info {
     double Re_factor() const { return factors_.first; } 
     double Im_factor() const { return factors_.second; } 
 
+    std::shared_ptr<const std::vector<std::string>> orig_idxs() const      { return orig_idxs_;      } 
     std::shared_ptr<const std::vector<std::string>> orig_block() const      { return orig_block_;      }// key 
     std::shared_ptr<const std::vector<std::string>> unique_block() const    { return unique_block_;    }// get<1>
     std::shared_ptr<const std::vector<std::string>> transformed_idxs() const { return transformed_idxs_;}// get<2>
@@ -176,7 +173,7 @@ class TensOp {
      std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> > > CTP_map ;
 
      std::tuple< std::shared_ptr< const std::map< const std::vector<std::string> , std::shared_ptr<const range_block_info> >>, std::shared_ptr<std::vector< std::shared_ptr< const std::vector<std::string>> >>>
-     generate_ranges( int num_idxs, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges );
+     generate_ranges( std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges, std::vector<bool>& aops );
 
      void get_ctrs_tens_ranges() ;
 
@@ -203,7 +200,8 @@ class MultiTensOp : public  TensOp::TensOp<DataType> {
      MultiTensOp( std::string name , bool spinfree, std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors );
     ~MultiTensOp(){};
 
-    std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<const range_block_info >>>  generate_ranges( int num_idxs, std::vector<int>& cmlsizevec );
+    std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<const range_block_info >>>
+    generate_ranges( std::vector<std::string>& idxs, std::vector<bool>& aops, std::vector<int>& cmlsizevec );
 
     std::shared_ptr<const std::vector<int>> cmlsizevec() const { return Op_dense_->cmlsizevec();}
 

@@ -732,5 +732,53 @@ cout << "WickUtils::get_gamma_name" << endl;
   return name;
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Check if the range block will survive without contraction with another
+// range block (i.e. see if as many particles are being created in a given
+// range as are destroyed) 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+bool WickUtils::RangeCheck(const vector<string>& id_ranges, const vector<bool>& aops ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "WickUtils::RangeCheck" << endl;
+
+  vector<string> diff_rngs(1, id_ranges[0] );
+  vector<int> updown(1, ( aops[0] ? 1 : -1)  );
+
+  for ( int jj = 1;  jj !=id_ranges.size() ; jj++){
+    int ii = 0;
+
+    string rng = id_ranges[jj];
+
+    do {
+      if(rng == diff_rngs[ii]){
+        if ( aops[jj]){
+          updown[ii]+=1;
+        } else {         
+          updown[ii]-=1;
+        }
+        break;
+      }
+      if ( ii == diff_rngs.size()-1){
+        diff_rngs.push_back(rng);
+        if ( aops[jj]){
+          updown.push_back(1);  
+        } else {
+          updown.push_back(-1); 
+
+        }
+        break;
+      }
+
+      ii++;
+    } while (true);
+  } 
+
+  for (int ac : updown ) 
+    if (ac != 0 )
+      return false;
+ 
+  return true;
+
+}
 
 #endif
