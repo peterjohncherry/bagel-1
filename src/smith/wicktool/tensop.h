@@ -11,6 +11,9 @@
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
+// On reflection, all this information is not needed, only the original ranges (maybe also idxs and aops), and the transformation vector.
+// It could be done this way, but a lot will need to be fed into the gamma generator.
+// Factor is still necessary though.
 class range_block_info {
 
     // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
@@ -177,6 +180,7 @@ class TensOp {
 
      void get_ctrs_tens_ranges() ;
 
+     void get_ctp_idxs_ranges( std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos, std::shared_ptr<const range_block_info> block_info );
 };
 }
 

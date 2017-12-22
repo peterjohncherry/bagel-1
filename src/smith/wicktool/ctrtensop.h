@@ -78,7 +78,7 @@ class CtrTensorPart_Base  {
     const std::string name_;
     const std::shared_ptr<const std::vector<std::string>> full_idxs_;                                                                              
     const std::shared_ptr<const std::vector<std::string>> full_id_ranges_;
-    const std::shared_ptr<const std::vector<std::pair<double,double>>> ReIm_factors_; 
+    const std::pair<double,double> ReIm_factors_; 
 
     const std::vector<int> unc_pos_;
     const std::map<int,int> unc_rel_pos_;
@@ -95,7 +95,7 @@ class CtrTensorPart_Base  {
     CtrTensorPart_Base(std::string name,
                        std::shared_ptr<const std::vector<std::string>> full_idxs,                                                                              
                        std::shared_ptr<const std::vector<std::string>> full_id_ranges,
-                       std::shared_ptr<const std::vector<std::pair<double,double>>> ReIm_factors, 
+                       const std::pair<double,double>& ReIm_factors, 
                        std::vector<int>& unc_pos,
                        std::map<int,int>& unc_rel_pos,
                        std::vector<std::string>& unc_idxs,

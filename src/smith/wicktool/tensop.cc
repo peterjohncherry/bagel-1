@@ -177,7 +177,7 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
 //////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp get_ctrs_tens_ranges" << endl;
  
-    //puts uncontracted ranges into map 
+ //puts uncontracted ranges into map 
  shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
  for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
    shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, rng_it->second->factors()); 
@@ -223,7 +223,6 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
                                                  orig_tensors_(orig_tensors), num_tensors_(orig_tensors.size()) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "MultiTensOp::MultiTensOp<DataType>::MultiTensOp" << endl;
-
     
   vector<string> idxs;
   vector<vector<string>> idx_ranges;
@@ -372,7 +371,6 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
   //silly, should just test {act,act,....} against contraints, and check if act in each ranges... 
   for (auto rng_it = Op_dense_->all_ranges()->begin(); rng_it != Op_dense_->all_ranges()->end(); rng_it++) {
     bool check = true;
-//    print_vector( rng_it->first , "rng_it->first" ) ; cout << endl;
     for (int xx = 0; xx !=rng_it->first.size() ; xx++ ) {
       if (rng_it->first[xx][0] != 'a') {
         check=false;
@@ -402,24 +400,6 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
             break;
           }
         }
-  
-        //checks all uncontracted indexes are active. Should call constraint functions instead
-        if (!valid) {
-          continue;
-        } else {
-          vector<bool> unc_get(rng_it->first.size(),true);
-          for( pair<int,int> ctr_pos : *ctr_vec ){
-            unc_get[ctr_pos.first]  = false;
-            unc_get[ctr_pos.second] = false;
-          }
-          for (int xx = 0; xx !=rng_it->first.size() ; xx++ ) {
-            if (unc_get[xx]  && (rng_it->first[xx][0] != 'a') ) {
-              valid = false;
-              break;
-            }
-          }
-        } 
-
         if (valid)
           enter_into_CMTP_map(*ctr_vec, rng_it->second->factors(), rng_it->first );
         
@@ -444,7 +424,7 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
   shared_ptr<vector<pair<int,int>>> no_ctrs =  make_shared<vector<pair<int,int>>>(0);
   shared_ptr<vector<pair<int,int>>> ReIm_factor_vec = make_shared<vector<pair<int,int>>>(1, ReIm_factors ) ; 
   //seperate contractions into those on the same tensor, and those between different tensors 
-  // TODO tidy up this, it seems the definition of cmlsivevec has changed.
+  // TODO tidy this up, e.g., use lambda to get cross pos
   for ( pair<int,int> ctr_pos : ctr_pos_list ) {
  
     pair<int,int> ctr1;
@@ -491,8 +471,42 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
   return;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Only build the CTP for the unique ranges; these are the only ones needed. If gamma generator
+// asks for any other ones, then you have a bug.
+///////////////////////////.///////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DType>
+void TensOp::TensOp<DType>::get_ctp_idxs_ranges( shared_ptr<vector<pair<int,int>>> ctrs_pos, shared_ptr<const range_block_info> block_info ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector<bool> get_unc(block_info->orig_idxs()->size(), true);
+  for (int ii =0; ii != ctrs_pos->size() ; ii++){
+    get_unc[ctrs_pos->at(ii).first] = false;
+    get_unc[ctrs_pos->at(ii).second] = false;
+  }
+
+  int num_unc_ids =  get_unc.size() - ctrs_pos->size()*2;
+
+  vector<string> unc_id_ranges( num_unc_ids );
+  vector<string> unc_idxs( num_unc_ids );
+  vector<int> unc_pos( num_unc_ids );
+  map<int,int> unc_rel_pos;
+
+  int jj = 0;
+  for ( int ii = 0 ; ii !=get_unc.size() ; ii++ ) {
+    if (get_unc[ii]){
+      unc_id_ranges[jj] = block_info->orig_block()->at(ii);
+      unc_idxs[jj]      = block_info->orig_idxs()->at(ii);
+      unc_pos[jj]       = ii;
+      unc_rel_pos.emplace(ii, jj);
+      jj++;
+    }
+  } 
+ 
+  return; 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class TensOp::TensOp<double>;
 template class MultiTensOp::MultiTensOp<double>;
-///////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif

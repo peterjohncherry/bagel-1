@@ -739,7 +739,7 @@ cout << "WickUtils::get_gamma_name" << endl;
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 bool WickUtils::RangeCheck(const vector<string>& id_ranges, const vector<bool>& aops ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "WickUtils::RangeCheck" << endl;
+//  cout << "WickUtils::RangeCheck" << endl;
 
   vector<string> diff_rngs(1, id_ranges[0] );
   vector<int> updown(1, ( aops[0] ? 1 : -1)  );
