@@ -108,7 +108,7 @@ void CASPT2_ALT::CASPT2_ALT::set_range_info(shared_ptr<vector<int>> states_of_in
   not_virtual_rng =  make_shared<IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
 
   PT2_ranges_ = { *not_closed_rng, *not_closed_rng, *not_virtual_rng, *not_virtual_rng};
-  PT2_ranges_herm_conj_ = { *not_closed_rng, *not_closed_rng, *not_virtual_rng, *not_virtual_rng};
+  PT2_ranges_herm_conj_ = {  *not_virtual_rng, *not_virtual_rng, *not_closed_rng, *not_closed_rng};
 
   range_conversion_map->emplace("cor", closed_rng);//change the naming of the ranges from cor to clo... 
   range_conversion_map->emplace("act", active_rng);
@@ -179,7 +179,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   }
   }
   {
-  vector<string> op_list = { "L", "F" };
+  vector<string> op_list = { "L", "H" };
   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
   
   double factor = 0.0;
@@ -258,8 +258,9 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
     TensOp_data_map->emplace( "Y", Y_Tens );
 
   } else if ( op_name  == "H" ) { 
-
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( H_2el_all , 0.5  );
+    
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( H_2el_all , 1.0  );
+    //Print_Tensor( H_2el_all , "H_2el_all" ) ; cout << endl << endl;
     TensOp_data_map->emplace("H" , H_2el_all);
 
   } else if ( op_name  == "h" ) { 

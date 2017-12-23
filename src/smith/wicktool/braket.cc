@@ -42,21 +42,24 @@ template<typename DataType>
 void BraKet<DataType>::Build_Gamma_SpinFree(shared_ptr<const vector<bool>> aops, shared_ptr<const vector<string>> idxs){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::Build_Gamma_SpinFree_New" << endl;
- 
-  int Ket_num = 0; 
-  int Bra_num = 0; 
+  //TODO fix this so it uses proper number of states; if statement in center should call Bra_num Ket_num appropriate Ops
+  //     GammaGen should be initialized outside states loop, and wipe Gamma_Vec for each new range.
+  //     Loop through dense ranges on the outside, then check sparsity on the inner when adding to GammaMap.
+  int nstates = 1;
  
   shared_ptr<vector<string>> idxs_buff  = make_shared<vector<string>>(*idxs );
-  shared_ptr<vector<bool>> aops_buff  = make_shared<vector<bool>>(*aops );
-  print_vector( *idxs_buff , "idxs_buff" ) ; 
-  print_vector( *aops_buff , "    aops_buff" ) ; cout << endl;
-  cout << "Total_Op->all_ranges()->size() = " << Total_Op->all_ranges()->size() << endl;
-  for (auto range_map_it = Total_Op->all_ranges()->begin() ;  range_map_it !=Total_Op->all_ranges()->end(); range_map_it++){
-    if ( range_map_it->second->survives() ) { 
-      shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>(TargetStates, Bra_num, Ket_num, idxs_buff, aops_buff, GammaMap, G_to_A_map); 
-      GGen->add_gamma( range_map_it->second ) ;
-      GGen->norm_order();
-      GGen->optimized_alt_order();
+  shared_ptr<vector<bool>> aops_buff  = make_shared<vector<bool>>(*aops );    
+  
+  for ( int Ket_num = 0 ; Ket_num != nstates; Ket_num++ ){
+    for ( int Bra_num = 0 ; Bra_num != nstates; Bra_num++ ){
+      for (auto range_map_it = Total_Op->all_ranges()->begin() ;  range_map_it !=Total_Op->all_ranges()->end(); range_map_it++){
+        if ( range_map_it->second->survives() ) { 
+          shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>(TargetStates, Bra_num, Ket_num, idxs_buff, aops_buff, GammaMap, G_to_A_map); 
+          GGen->add_gamma( range_map_it->second ) ;
+          GGen->norm_order();
+          GGen->optimized_alt_order();
+        }
+      }
     }
   }
  

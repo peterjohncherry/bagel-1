@@ -201,9 +201,8 @@ bool GammaGenerator::Forbidden_Index( shared_ptr<vector<string>> full_id_ranges,
 
   if ( full_id_ranges->at(position)[0] != 'a'){
     return true;
-//  } else if ( orig_ids_->at(position)[0] == 'X' ) {
-//    return true;
-//  } 
+  //} else if ( orig_ids_->at(position)[0] == 'X' ) {
+  //  return true;
   } else {
     return false;
   }
