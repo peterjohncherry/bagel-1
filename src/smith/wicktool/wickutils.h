@@ -71,15 +71,15 @@ namespace WickUtils {
   std::string get_Aname(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges, 
                         std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
 
-  std::string get_gamma_name(std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> aops_vec,
-                             std::shared_ptr<std::vector<int>> idxs_pos );
-
-  std::string get_gamma_name(std::shared_ptr<std::vector<bool>> aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,  
-                             std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
+  std::string get_Aname(const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges, 
+                        const std::vector<std::pair<int,int>>& all_ctrs_pos );
 
   std::string get_civec_name( const int state_num,  const int norb,  const int nalpha, const int nbeta);
 
   std::string get_gamma_name( std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> aops_vec,
+                              std::shared_ptr<std::vector<int>> idxs_pos, std::string Bra_name, std::string Ket_name );
+
+  std::string get_gamma_name( std::shared_ptr<const std::vector<std::string>> full_idx_ranges,  std::shared_ptr<const std::vector<bool>> aops_vec,
                               std::shared_ptr<std::vector<int>> idxs_pos, std::string Bra_name, std::string Ket_name );
 
   std::shared_ptr<std::vector<pint_vec>>  

@@ -568,64 +568,29 @@ string WickUtils::get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<vec
   }
   return name;
 };
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-string WickUtils::get_gamma_name( shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> aops_vec,
-                                  shared_ptr<vector<int>> idxs_pos ){
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  string  name = "";
  
-  if (idxs_pos->size() == 0 ) {
-     name = "ID" ;
-  } else {  
-    for (int pos : *idxs_pos ) 
-        name+=full_idx_ranges->at(pos)[0];
-    
-    name+='_';
-    for (int pos : *idxs_pos ) {
-      if(aops_vec->at(pos)){ 
-        name += '1';
-      } else {
-        name += '0';
-      }
-    } 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
+string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges, 
+                             const vector<pair<int,int>>& all_ctrs_pos ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  string  name = "";
+  for(string idx : full_idxs)
+    name += idx;
+  name+="_"; 
+
+  for(string idx_range : full_idx_ranges)
+    name += idx_range[0];
+
+  if (all_ctrs_pos.size() !=0 ){
+    name+="_"; 
+    for(pair<int,int> delta : all_ctrs_pos)
+      name += to_string(delta.first)+to_string(delta.second);
   }
-  
   return name;
 };
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-string WickUtils::get_gamma_name(shared_ptr<vector<bool>> aops_vec, shared_ptr<vector<string>> full_idx_ranges,                     
-                                      shared_ptr<vector<pair<int,int>>> deltas_pos ){                                               
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  string  name = "";                                                                                                                
-                                                                                                                                    
-  vector<bool> unc_get(full_idx_ranges->size(), true);                                                                              
-  for ( pair<int,int > del : *deltas_pos ){                                                                                         
-     unc_get[del.first] = false;                                                                                                    
-     unc_get[del.second] = false;                                                                                                   
-  }                                                                                                                                 
-                                                                                                                                    
-  for ( int ii = 0; ii != unc_get.size() ; ii++)                                                                                    
-    if (unc_get[ii])                                                                                                                
-      name+=full_idx_ranges->at(ii)[0];                                                                                             
-                                                                                                                                    
-  name+='_';                                                                                                                        
-  for ( int ii = 0; ii != unc_get.size() ; ii++){                                                                                   
-    if (unc_get[ii]){                                                                                                               
-      if(aops_vec->at(ii)){                                                                                                         
-        name += '1';                                                                                                                
-      } else {                                                                                                                      
-        name += '0';                                                                                                                
-      }                                                                                                                             
-    }                                                                                                                               
-  }                                                                                                                                 
-                                                                                                                                    
-  return name;                                                                                                                      
-};                                                                                                                                  
-                                                                                                                                    
+                                                                                                                                                         
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-//same as normal fvec_cycle, but improved to allow skipping. I expect this should be included everywhere, to guard                     return name;
-//against max==min problem.....                                                                                                      };
+//same as  fvec_cycle, but allows skipping. Should be included everywhere to guard against max==min problem};
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool WickUtils::fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -700,6 +665,37 @@ string WickUtils::get_civec_name(const int state_num, const int norb, const int 
   string name = to_string(state_num) + "_["+ to_string(norb)+"o{" + to_string(nalpha) + "a," + to_string(nbeta) + "b}]" ;
   return name ;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+string WickUtils::get_gamma_name( shared_ptr<const vector<string>> full_idx_ranges,  shared_ptr<const vector<bool>> aops_vec,
+                                  shared_ptr<vector<int>> idxs_pos, string Bra_name, string Ket_name ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef DBG_WickUtils 
+cout << "WickUtils::get_gamma_name" << endl; 
+#endif 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  string  name;
+ 
+  if (idxs_pos->size() == 0 ) {
+     name = "ID" ;
+  } else {  
+    name = "<" + Bra_name + "|_(";
+    for (int pos : *idxs_pos ) 
+      name+=full_idx_ranges->at(pos)[0];
+    
+    name+='_';
+    for (int pos : *idxs_pos ) {
+      if(aops_vec->at(pos)){ 
+        name += '1';
+      } else {
+        name += '0';
+      }
+    } 
+    name += ")_|" + Ket_name + ">";
+  }
+  
+  return name;
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 string WickUtils::get_gamma_name( shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> aops_vec,

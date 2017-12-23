@@ -1,9 +1,9 @@
- #ifndef __SRC_SMITH_Gamma_Generator_H
- #define __SRC_SMITH_Gamma_Generator_H
+#ifndef __SRC_SMITH_Gamma_Generator_H
+#define __SRC_SMITH_Gamma_Generator_H
 
- #include <src/smith/wicktool/wickutils.h>
- #include <src/smith/wicktool/states_info.h> 
- #include <src/smith/wicktool/range_block_info.h>
+#include <src/smith/wicktool/wickutils.h>
+#include <src/smith/wicktool/states_info.h> 
+#include <src/smith/wicktool/range_block_info.h>
 
 using namespace WickUtils;
 
@@ -27,6 +27,13 @@ class AContribInfo {
 class GammaInfo {
 
    private :
+     int order_ ;
+
+     //Follows convention : <I | i j | K > < K | .........| J >  
+     std::shared_ptr<CIVecInfo<double>> Bra_info_;      // < I |
+     std::shared_ptr<CIVecInfo<double>> Ket_info_;      // | J >
+     std::shared_ptr<CIVecInfo<double>> prev_Bra_info_; // < K | 
+
      std::shared_ptr<std::vector<std::string>> id_ranges_ ;
      std::shared_ptr<std::vector<std::string>> sigma_id_ranges_ ; 
 
@@ -35,19 +42,13 @@ class GammaInfo {
 
      std::string name_;     
      std::string sigma_name_;     
-     int order_ ;
-
-     //Follows convention : <I | i j | K > < K | .........| J >  
-     std::shared_ptr<CIVecInfo<double>> Bra_info_;      // < I |
-     std::shared_ptr<CIVecInfo<double>> prev_Bra_info_; // < K | 
-     std::shared_ptr<CIVecInfo<double>> Ket_info_;      // | J >
 
      std::vector<std::string> prev_gammas_; 
      std::vector<std::string> prev_sigmas_; 
 
    public :
      GammaInfo( std::shared_ptr<CIVecInfo<double>> Bra_info, std::shared_ptr<CIVecInfo<double>> Ket_info, 
-                std::shared_ptr<std::vector<bool>> full_aops_vec, std::shared_ptr<std::vector<std::string>> full_idx_ranges,
+                std::shared_ptr<const std::vector<bool>> full_aops_vec, std::shared_ptr<const std::vector<std::string>> full_idx_ranges,
                 std::shared_ptr<std::vector<int>> idxs_pos, std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in );
 
      GammaInfo(){};
@@ -82,12 +83,12 @@ class GammaInfo {
 class GammaIntermediate {
 
    public :
-     std::shared_ptr<std::vector<std::string>> full_id_ranges ;
+     std::shared_ptr<const std::vector<std::string>> full_id_ranges ;
      std::shared_ptr<std::vector<int>> ids_pos ;
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ;
      int my_sign ;
 
-     GammaIntermediate(std::shared_ptr<std::vector<std::string>> full_id_ranges_in,
+     GammaIntermediate(std::shared_ptr<const std::vector<std::string>> full_id_ranges_in,
                        std::shared_ptr<std::vector<int>> ids_pos_in,
                        std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
                        int my_sign_in): 
@@ -106,8 +107,8 @@ class GammaGenerator{
     int Ket_num_;   
     int Bra_num_; 
 
-    std::shared_ptr<std::vector<bool>> orig_aops_ ;
-    std::shared_ptr<std::vector<std::string>> orig_ids_ ;
+    std::shared_ptr<const std::vector<bool>> orig_aops_ ;
+    std::shared_ptr<const std::vector<std::string>> orig_ids_ ;
 
    
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
@@ -131,7 +132,7 @@ class GammaGenerator{
 
   public : 
     GammaGenerator( std::shared_ptr<StatesInfo<double>> TargetStates, int Ket_num, int Bra_num,
-                    std::shared_ptr<std::vector<std::string>> orig_ids, std::shared_ptr<std::vector<bool>> orig_aops,
+                    std::shared_ptr<const std::vector<std::string>> orig_ids, std::shared_ptr< const std::vector<bool>> orig_aops,
                     std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in );
     ~GammaGenerator(){};
@@ -151,11 +152,11 @@ class GammaGenerator{
     bool ordering(std::pair<std::string,std::string> a, std::pair<std::string,std::string> b) {
                   return( (idx_order->at(a.first) < idx_order->at(b.first) ) ? true : false ); };
    
-    bool RangeCheck(std::shared_ptr<std::vector<std::string>> full_id_ranges) ;
+    bool RangeCheck(std::shared_ptr<const std::vector<std::string>> full_id_ranges) ;
     
-    bool Forbidden_Index(std::shared_ptr<std::vector<std::string>> full_id_ranges, int position );
+    bool Forbidden_Index( std::shared_ptr<const std::vector<std::string>> id_ranges, int position );
 
-    bool gamma_survives( std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<std::vector<std::string>> id_ranges) ;
+    bool gamma_survives( std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<const std::vector<std::string>> id_ranges) ;
      
     static std::shared_ptr<std::vector<std::pair<int,int>>>
            Standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ) ;
