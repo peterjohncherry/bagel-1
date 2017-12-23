@@ -3,6 +3,8 @@
 
  #include <src/smith/wicktool/wickutils.h>
  #include <src/smith/wicktool/states_info.h> 
+ #include <src/smith/wicktool/range_block_info.h>
+
 using namespace WickUtils;
 
 class AContribInfo { 
@@ -98,21 +100,22 @@ class GammaGenerator{
   friend GammaInfo; 
  
   private : 
-    // variables
-    std::shared_ptr<std::vector<bool>> orig_aops ;
-    std::shared_ptr<std::vector<std::string>> orig_ids ;
- 
+    // TODO Should replace this with the states infos  and pointer to CIVecInfo map, 
+    //      Do cycling over states outside of GammaGenerator.
+    std::shared_ptr<StatesInfo<double>> TargetStates_;
+    int Ket_num_;   
+    int Bra_num_; 
+
+    std::shared_ptr<std::vector<bool>> orig_aops_ ;
+    std::shared_ptr<std::vector<std::string>> orig_ids_ ;
+
+   
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
 
     std::shared_ptr<std::map< char, int>>         op_order ;
     std::shared_ptr<std::map< std::string, int>>  idx_order ;
-    
-    int Ket_num;
-    int Bra_num; 
-
-    std::shared_ptr<StatesInfo<double>> TargetStates;
-   
+       
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
     std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo>> >> G_to_A_map;
@@ -128,12 +131,12 @@ class GammaGenerator{
 
   public : 
     GammaGenerator( std::shared_ptr<StatesInfo<double>> TargetStates, int Ket_num, int Bra_num,
-                    std::shared_ptr<std::vector<bool>> aops_init, std::shared_ptr<std::vector<std::string>> ids_init,
+                    std::shared_ptr<std::vector<std::string>> orig_ids, std::shared_ptr<std::vector<bool>> orig_aops,
                     std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in );
     ~GammaGenerator(){};
 
-    void add_gamma(std::shared_ptr<std::vector<std::string>> full_id_ranges_in, int my_sign_in) ;
+    void add_gamma(std::shared_ptr<const range_block_info> block_info );
     
     void norm_order();
     
@@ -148,8 +151,6 @@ class GammaGenerator{
     bool ordering(std::pair<std::string,std::string> a, std::pair<std::string,std::string> b) {
                   return( (idx_order->at(a.first) < idx_order->at(b.first) ) ? true : false ); };
    
-    void Set_A_Contrib( int kk );
-
     bool RangeCheck(std::shared_ptr<std::vector<std::string>> full_id_ranges) ;
     
     bool Forbidden_Index(std::shared_ptr<std::vector<std::string>> full_id_ranges, int position );
@@ -171,5 +172,5 @@ class GammaGenerator{
 
     std::vector<int> get_standardized_alt_order( const std::vector<std::string>& rngs ,const std::vector<bool>& aops ) ;
 
- };
- #endif
+};
+#endif

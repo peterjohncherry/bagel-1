@@ -53,8 +53,8 @@ void BraKet<DataType>::Build_Gamma_SpinFree(shared_ptr<const vector<bool>> aops,
   cout << "Total_Op->all_ranges()->size() = " << Total_Op->all_ranges()->size() << endl;
   for (auto range_map_it = Total_Op->all_ranges()->begin() ;  range_map_it !=Total_Op->all_ranges()->end(); range_map_it++){
     if ( range_map_it->second->survives() ) { 
-      shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>(TargetStates, Bra_num, Ket_num, aops_buff, idxs_buff, GammaMap, G_to_A_map); 
-      GGen->add_gamma(make_shared<vector<string>>(range_map_it->first), 1) ; //TODO should be range block info as arg to use transformations
+      shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>(TargetStates, Bra_num, Ket_num, idxs_buff, aops_buff, GammaMap, G_to_A_map); 
+      GGen->add_gamma( range_map_it->second ) ;
       GGen->norm_order();
       GGen->optimized_alt_order();
     }

@@ -1,6 +1,5 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-#include <src/smith/wicktool/wickutils.h>
 #include <src/smith/wicktool/tensop.h>
 
 using namespace std;
