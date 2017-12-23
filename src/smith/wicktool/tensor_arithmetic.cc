@@ -119,7 +119,102 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__tensor_return( sha
   cout << " out of Tensor trace contract" << endl;
   return Tens_out;
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Sum over indexes on a tensor, is used for excitation operators. Note the output tensor may have an odd number of indexes,
+//as a rule, this may mess up some of the other routines....
+//Currently using reordering, as other wise there's going to be a huge amount of hopping about (weird stride). Don't know what is best.
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<Tensor_<DataType>>
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_over_idxs( shared_ptr<Tensor_<DataType>> Tens_in, vector<int>& summed_idxs_pos) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic::contract_on_same_tensor" << endl;
+  assert ( Tens_in->indexrange().size() > 0 );
 
+  vector<IndexRange> id_ranges = Tens_in->indexrange();
+  shared_ptr<Tensor_<DataType>> Tens_out ;
+
+  int num_ids  = id_ranges.size();
+  int num_ctrs = summed_idxs_pos.size();
+  int num_uncs = num_ids - num_ctrs;
+  
+  // Put contracted indexes at back so they change slowly; Fortran ordering in index blocks!
+  shared_ptr<vector<int>> new_order = make_shared<vector<int>>(num_ids);
+  iota(new_order->begin(), new_order->end(), 0);
+  put_ctrs_at_back( *new_order, summed_idxs_pos );
+
+
+  vector<int> unc_pos( new_order->begin(), new_order->end() - num_ctrs );
+  vector<IndexRange> unc_idxrng( unc_pos.size() );
+  for ( int qq = 0; qq != unc_pos.size(); qq++ )
+    unc_idxrng[qq] = id_ranges[unc_pos[qq]];
+  
+  shared_ptr<vector<int>> unc_maxs      = get_range_lengths( id_ranges );
+  shared_ptr<vector<int>> unc_mins      = make_shared<vector<int>>(unc_maxs->size(),0);
+  shared_ptr<vector<int>> unc_block_pos = make_shared<vector<int>>(unc_maxs->size(),0);
+  
+  shared_ptr<vector<int>> ctr_maxs      = make_shared<vector<int>>(*unc_maxs);
+  shared_ptr<vector<int>> ctr_mins      = make_shared<vector<int>>(unc_maxs->size(),0);
+  //set max = min so contracted blocks are skipped in fvec_cycle
+  for ( int qq = num_ctrs-1; qq!= num_ids; qq++ ) {
+    unc_maxs->at(qq) = 0;
+    unc_mins->at(qq) = 0;
+  }
+  
+  Tens_out = make_shared<Tensor_<DataType>>(unc_idxrng);
+  Tens_out->allocate();
+  Tens_out->zero();
+  
+  // Outer forvec loop skips ctr ids due to min[i]=max[i].  Inner loop cycles ctr ids.
+  do {
+   
+    shared_ptr<vector<Index>> id_blocks = get_rng_blocks( unc_block_pos, id_ranges );
+  
+    int unc_block_size = 1;
+    vector<Index> unc_id_blocks(unc_pos.size());
+    for (int qq = 0 ; qq != unc_pos.size(); qq++ ) {
+      unc_id_blocks[qq] = id_blocks->at(unc_pos[qq]);
+      unc_block_size   *= unc_id_blocks[qq].size();
+    }
+ 
+    int ctr_block_size = 1;
+    for (int qq = 0 ; qq != summed_idxs_pos.size(); qq++ ) 
+      ctr_block_size   *= unc_id_blocks[qq].size();
+
+
+    unique_ptr<DataType[]> contracted_block(new DataType[unc_block_size]);
+    fill_n(contracted_block.get(), unc_block_size, 0.0);
+    //set max = min so unc ids are skipped due to min = max
+    for ( int qq = 0 ; qq != unc_pos.size(); qq++ ) {
+      ctr_maxs->at(qq) = unc_block_pos->at(qq);
+      ctr_mins->at(qq) = unc_block_pos->at(qq);
+    }
+
+    shared_ptr<vector<int>> ctr_block_pos = make_shared<vector<int>>(unc_maxs->size(),0);
+    //loop over ctr blocks
+    do {
+
+      //redefine block position
+      id_blocks = get_rng_blocks(ctr_block_pos, id_ranges);
+
+      {
+
+      unique_ptr<DataType[]> orig_block = Tens_in->get_block(*id_blocks);
+      unique_ptr<DataType[]> reordered_block = reorder_tensor_data( orig_block.get(), new_order, id_blocks );
+      //looping over the id positions within the block
+      for ( int flattened_ctr_id = 0 ; flattened_ctr_id != ctr_block_size; flattened_ctr_id++ )
+        blas::ax_plus_y_n(1.0, reordered_block.get() + (unc_block_size*flattened_ctr_id), unc_block_size, contracted_block.get() );
+
+      }
+       
+    } while( fvec_cycle_skipper(ctr_block_pos, ctr_maxs, ctr_mins ));
+
+    Tens_out->put_block(contracted_block, unc_id_blocks );
+
+  } while( fvec_cycle_skipper(unc_block_pos, unc_maxs, unc_mins));
+
+  return Tens_out;
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Bad routine using reordering because I just want something which works

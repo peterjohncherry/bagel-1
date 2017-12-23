@@ -76,7 +76,6 @@ cout << "GammaGenerator::GammaGenerator" << endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
   //needed to keep ordering of contractions consistent, should find better way of defining opname 
   auto opname = orig_ids_->at(0)[0];
   op_order = make_shared<map< char, int>>();
@@ -210,8 +209,8 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<vector<int>>              ids_pos = gamma_vec->at(kk)->ids_pos;        
-  shared_ptr<const vector<string>>    full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
+  shared_ptr<vector<int>>           ids_pos = gamma_vec->at(kk)->ids_pos;        
+  shared_ptr<const vector<string>>  full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
   int my_sign = gamma_vec->at(kk)->my_sign;
   
@@ -345,7 +344,7 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
         }
       }
 
-      int my_sign  = gamma_vec->at(kk)->my_sign ;
+      double my_sign = 1.0*gamma_vec->at(kk)->my_sign ;
 
       string Aname_alt = get_Aname( *orig_ids_, *full_id_ranges, *deltas_pos );
       string Gname_alt = get_gamma_name( full_id_ranges, orig_aops_, ids_pos, Bra_name, Ket_name );
@@ -375,8 +374,8 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
               if (AInfo.id_orders.size() == 0 ) 
                 G_to_A_map->at( Gname_alt )->erase(Aid_orders_map_loc);
             }
-
             break;
+
           } else if ( qq == AInfo.id_orders.size()-1) { 
             AInfo.id_orders.push_back(Aid_order_new);
             AInfo.factors.push_back(make_pair(my_sign,my_sign));
@@ -384,10 +383,10 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
         }
       }
 
-      if ( Gamma_map->find( Gname_alt ) == Gamma_map->end() ) {
+      if ( Gamma_map->find( Gname_alt ) == Gamma_map->end() ) 
         Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( TargetStates_->civec_info(Bra_num_), TargetStates_->civec_info(Ket_num_), 
                                                                orig_aops_, full_id_ranges, ids_pos, Gamma_map) );
-      }
+      
       kk++;
     }
 
@@ -417,7 +416,7 @@ cout << "GammaGenerator::swap" << endl;
 #endif 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  shared_ptr<const vector<string>>  full_id_ranges   = gamma_vec->at(kk)->full_id_ranges;
+  shared_ptr<const vector<string>> full_id_ranges = gamma_vec->at(kk)->full_id_ranges;
   shared_ptr<vector<int>>  ids_pos             = gamma_vec->at(kk)->ids_pos;
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos;
 
@@ -426,7 +425,7 @@ cout << "GammaGenerator::swap" << endl;
   ids_pos->at(jj) = idx_buff;
                                                                                                                                     
   if ( (full_id_ranges->at(ids_pos->at(jj)) == full_id_ranges->at(ids_pos->at(ii))) && 
-     (orig_aops_->at(ids_pos->at(ii)) !=  orig_aops_->at(ids_pos->at(jj))) )  {
+       (orig_aops_->at(ids_pos->at(ii)) !=  orig_aops_->at(ids_pos->at(jj))) ){
 
     shared_ptr<pint_vec> new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);                                                                       
 
@@ -444,7 +443,7 @@ cout << "GammaGenerator::swap" << endl;
     gamma_vec->push_back(new_gamma);
 
   }
-  gamma_vec->at(kk)->my_sign *=-1;
+  gamma_vec->at(kk)->my_sign *= -1;
 
   return;
 }
@@ -591,7 +590,6 @@ vector<int> GammaGenerator::get_standard_range_order(const vector<string> &rngs)
   
   vector<int> pos(rngs.size());
   iota(pos.begin(), pos.end(), 0);
-  
   sort(pos.begin(), pos.end(), [&rngs](int i1, int i2){
                                  if ( rngs[i1][0] == 'X' ){
                                    return false;
@@ -611,11 +609,13 @@ vector<int> GammaGenerator::get_standard_idx_order(const vector<string>&idxs) {
  
   auto op_order_tmp = op_order; 
   sort(pos.begin(), pos.end(), [&idxs, &op_order_tmp](int i1, int i2){
-                                 if ( idxs[i1][0] == 'X' ){
-                                   return false;
-                                 } else {
+                            //     if ( idxs[i1][0] == 'X' ){
+                            //       return false;
+                            //     } else {
                                    return (bool)( op_order_tmp->at(idxs[i1][0]) < op_order_tmp->at(idxs[i2][0]) );
-                                 }});
+                            //     }
+                                 }
+                            );
   
   return pos;
 }

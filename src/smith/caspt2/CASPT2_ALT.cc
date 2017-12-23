@@ -202,6 +202,31 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
     }
   }
   }
+  {
+  vector<string> op_list = { "X", "H" };
+  vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
+  
+  double factor = 0.0;
+  // Building all necessary expressions 
+  int  num_states = 1; 
+  vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
+  for ( int ii = 0 ; ii != num_states; ii++) {
+    for ( int jj = 0 ; jj != num_states; jj++) {
+  
+      for ( pair<vector<string>,double> BK_info : BK_info_list ) {
+        Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "wicktool HE ones test" ));
+        for ( string Op_name : BK_info.first )  
+          Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
+      }
+  
+      string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
+  
+      Expression_Machine->Evaluate_Expression( expression_name );
+ 
+    }
+  }
+  }
+
 
  return;
 } 
@@ -280,6 +305,13 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
     LTens_data->allocate();
     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( LTens_data , 1.0  );
     TensOp_data_map->emplace("L" , LTens_data);
+
+  } else if ( op_name  == "X" ) { 
+
+    shared_ptr<Tensor_<double>> XTens_data =  make_shared<Tensor_<double>>(PT2_ranges_herm_conj_); 
+    XTens_data->allocate();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( XTens_data , 1.0  );
+    TensOp_data_map->emplace( "X" , XTens_data);
   }
 
   return;

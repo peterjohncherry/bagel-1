@@ -11,16 +11,16 @@ class AContribInfo {
 
    public : 
      std::vector<std::vector<int>> id_orders;
-     std::vector<std::pair<int,int>> factors;
+     std::vector<std::pair<double,double>> factors;
 
-     AContribInfo(std::vector<int> init_order_in , std::pair<int,int> factor_in ){
+     AContribInfo(std::vector<int> init_order_in , std::pair<double,double> factor_in ){
                   id_orders.push_back(init_order_in);
                   factors.push_back(factor_in); 
      };
      ~AContribInfo(){};
 
      std::vector<int>   id_order(int qq) {return id_orders[qq]; }; 
-     std::pair<int,int> factor(int qq) {return factors[qq]; }; 
+     std::pair<double,double> factor(int qq) {return factors[qq]; }; 
 
 };
 
@@ -149,10 +149,10 @@ class GammaGenerator{
     
     std::shared_ptr<pint_vec> Standardize_delta_ordering(std::shared_ptr<pint_vec> deltas_pos ) ;
  
-    bool ordering(std::pair<std::string,std::string> a, std::pair<std::string,std::string> b) {
+    bool ordering( std::pair<std::string,std::string> a, std::pair<std::string,std::string> b ) {
                   return( (idx_order->at(a.first) < idx_order->at(b.first) ) ? true : false ); };
    
-    bool RangeCheck(std::shared_ptr<const std::vector<std::string>> full_id_ranges) ;
+    bool RangeCheck( std::shared_ptr<const std::vector<std::string>> full_id_ranges );
     
     bool Forbidden_Index( std::shared_ptr<const std::vector<std::string>> id_ranges, int position );
 

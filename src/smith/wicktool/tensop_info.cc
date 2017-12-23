@@ -173,13 +173,13 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       shared_ptr<TensOp::TensOp<double>> LTens = Build_TensOp("L", L_idxs, L_aops, L_idx_ranges, L_symmfuncs, L_constraints, L_factor, L_TimeSymm, false ) ;
       T_map->emplace("L", LTens);
      
-    } else if ( OpName == "X" ) {  /* ---- 2el Excitation Op  ----  */
+    } else if ( OpName == "X" ) {  /* ---- 2el Excitation Op dag ----  */  //NOTE X should not have any data, but needs it until the summing routines are checked.
 
       DataType                           X_factor = (DataType) (1.0);
-      shared_ptr<vector<string>>          X_idxs = make_shared<vector<string>>( vector<string> {"X0", "X1", "X2", "X3"} );
-      shared_ptr<vector<bool>>            X_aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } ); 
-      shared_ptr<vector<vector<string>>>  X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt, not_virt, not_core, not_core } ); 
-      string                              X_TimeSymm = "none";
+      shared_ptr<vector<string>>         X_idxs = make_shared<vector<string>>( vector<string> {"X0", "X1", "X2", "X3"} );
+      shared_ptr<vector<bool>>           X_aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } ); 
+      shared_ptr<vector<vector<string>>> X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt, not_virt, not_core, not_core } ); 
+      string                             X_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  X_symmfuncs = set_2el_symmfuncs();
       vector<bool(*)(shared_ptr<vector<string>>)>  X_constraints = { &System_Info<double>::System_Info::NotAllAct };

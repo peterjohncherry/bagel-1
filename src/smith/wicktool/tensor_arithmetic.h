@@ -37,6 +37,9 @@ class Tensor_Arithmetic {
      trace_tensor__tensor_return( std::shared_ptr<Tensor_<DataType>> Tens_in) ;
 
      static std::shared_ptr<Tensor_<DataType>>
+     sum_over_idxs( std::shared_ptr<Tensor_<DataType>> Tens_in, std::vector<int>& summed_idxs_pos); 
+
+     static std::shared_ptr<Tensor_<DataType>>
      contract_on_same_tensor( std::shared_ptr<Tensor_<DataType>> Tens_in,  std::vector<int>& ctrs ); 
 
      static std::shared_ptr<Tensor_<DataType>>
