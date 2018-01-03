@@ -170,9 +170,16 @@ cout << endl <<  "CtrTensorPart<DType>::FullContract : CTP name =  " << name << 
     }
     CTP_out->dependencies.emplace(name);
 
-    cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done->back().first << ","<< ctrs_done->back().second << ") to get " << CTP_out_name ; cout.flush();
- 
-    ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name << "'s Acompute_list"<<  endl;
+    if ( full_idxs->at(ctrs_done->back().first)[0] == 'X' || full_idxs->at(ctrs_done->back().second)[0] == 'X' ) { 
+      if ( full_idxs->at(ctrs_done->back().first)[0] != 'X' || full_idxs->at(ctrs_done->back().second)[0] != 'X' ) { // TODO replace with CtrOp_single_id
+        ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name << "'s Acompute_list"<<  endl;
+      } else { //TODO replace with CtrOp_exc_ids
+        ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name << "'s Acompute_list"<<  endl;
+      }
+    } else  {  
+      cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done->back().first << ","<< ctrs_done->back().second << ") to get " << CTP_out_name ; cout.flush();
+      ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name << "'s Acompute_list"<<  endl;
+    }
 
     shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list_out =  make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list);
     ACompute_map->emplace(CTP_out_name, ACompute_list_out);
@@ -299,8 +306,20 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    CTP_new->ctrs_done = ctrs_done;
    Tmap->emplace(CTP_new->name, CTP_new);
     
-   ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done),
-                                                       abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+
+    if ( full_idxs->at(abs_ctr.first)[0] == 'X' || full_idxs->at(abs_ctr.second)[0] == 'X' ) {
+      if ( full_idxs->at(abs_ctr.first)[0] != 'X' || full_idxs->at(abs_ctr.second)[0] != 'X' ) { // TODO replace with CtrOp_single_id
+        ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done),
+                                                            abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+      } else {  // TODO replace with CtrOp_exc_ids 
+        ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done),
+                                                            abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+      }
+    } else  {  
+       ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done),
+                                                           abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+    }
+
    ACompute_map->emplace( CTP_new->get_next_name(CTP_new->ctrs_done), make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list));
    
    //Add intermediate compute list into map seperately
