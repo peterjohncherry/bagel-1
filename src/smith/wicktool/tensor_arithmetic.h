@@ -84,6 +84,9 @@ class Tensor_Arithmetic {
      static void
      set_tensor_elems(std::shared_ptr<Tensor_<DataType>> Tens, DataType elem_val );
  
+     static void
+     set_tensor_elems(std::shared_ptr<Tensor_<DataType>> Tens, std::vector<IndexRange>& id_ranges, DataType elem_val );
+
      static std::shared_ptr<Tensor_<DataType>>
      get_uniform_Tensor(std::shared_ptr<std::vector<IndexRange>> T_id_ranges, DataType XX );
 

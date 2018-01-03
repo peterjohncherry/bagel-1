@@ -660,7 +660,7 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;
 template<class DataType>
 void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems(shared_ptr<Tensor_<DataType>> Tens, DataType elem_val  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Tensor_Arithmetic::set_tensor_elems  " << endl;
+   cout << "Tensor_Arithmetic::set_tensor_elems all " << endl;
   
    vector<IndexRange> id_ranges = Tens->indexrange();
 
@@ -678,6 +678,31 @@ void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems(shared_ptr
 
    return;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Sets all elements of input tensor Tens to the value specified by elem_val 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( shared_ptr<Tensor_<DataType>> Tens, vector<IndexRange>& id_ranges,
+                                                                       DataType elem_val  ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Tensor_Arithmetic::set_tensor_elems range_block_specific  " << endl;
+  
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( id_ranges ) ; 
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
+   do {
+     vector<Index> id_blocks =  *(get_rng_blocks( block_pos, id_ranges ));
+     if ( Tens->exists( id_blocks ) ) { 
+       unique_ptr<DataType[]> block_data = Tens->get_block(id_blocks);
+       std::fill_n( block_data.get(), Tens->get_size(id_blocks), elem_val );
+       Tens->put_block(block_data, id_blocks);
+     }
+   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
+
+   return;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

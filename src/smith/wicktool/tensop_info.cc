@@ -121,7 +121,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
 
       DataType                           H_factor = (DataType) (1.0);
       shared_ptr<vector<string>>         H_idxs = make_shared<vector<string>>(vector<string> {"H0", "H1", "H2", "H3"});
-      shared_ptr<vector<bool>>           H_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false});//TODO check this ordering is correct 
+      shared_ptr<vector<bool>>           H_aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false});//TODO check this ordering is correct 
       shared_ptr<vector<vector<string>>> H_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free,free,free }); 
       string                             H_TimeSymm = "none";
       
@@ -130,6 +130,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       
       shared_ptr<TensOp::TensOp<double>> HTens = Build_TensOp("H", H_idxs, H_aops, H_idx_ranges, H_symmfuncs, H_constraints, H_factor, H_TimeSymm, false ) ;
       T_map->emplace("H", HTens);
+
      } else if ( OpName == "h" ) {  /* ---- h Tensor ( 1 electron Hamiltonian ) ----  */
 
       DataType                           h_factor = (DataType) (1.0);

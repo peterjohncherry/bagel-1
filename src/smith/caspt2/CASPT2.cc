@@ -223,7 +223,12 @@ void CASPT2::CASPT2::solve() {
     shared_ptr<Tensor> v2_buff = make_shared<Tensor>(*v2_);
     h1_->zero();
     v2_->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 0.0  );
+
+    vector<IndexRange> act4 =  { active_ , active_ , active_ , active_ };
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ ,act4, 1.0  );
+    vector<IndexRange> avav = { active_, virt_, active_, virt_};
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avav,  1.0  );
 
     shared_ptr<Tensor> t2_one = t2all_[0]->at(0)->clone();
     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one , 1.0  );

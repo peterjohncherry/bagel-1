@@ -104,14 +104,14 @@ cout << "GammaGenerator::add_gamma" << endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  //TODO have new gamma intermediate constructor with most of this as default.
   shared_ptr<vector<int>> ids_pos_init =  make_shared<vector<int>>(block_info->orig_idxs()->size());
   iota( ids_pos_init->begin() , ids_pos_init->end(), 0 );
-
   int my_sign_in = 1;
-
   shared_ptr<vector<pair<int,int>>> deltas_pos_in = make_shared<vector<pair<int,int>>>(0);
   shared_ptr<vector<string>> id_ranges_in = make_shared<vector<string>>(*block_info->orig_block());
 
+  print_vector(*id_ranges_in, " id_ranges_for gamma_init" ) ; print_vector( *ids_pos_init, "     id_pos_init" ) ; cout << endl; 
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(1, make_shared<GammaIntermediate>(id_ranges_in, ids_pos_init, deltas_pos_in, my_sign_in)); 
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
 
@@ -164,8 +164,10 @@ cout << "GammaGenerator::norm_order" << endl;
     }
     
     if (!gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
+       cout << " These indexes won't survive : [ ";  for ( int pos : *ids_pos ) {cout <<  full_id_ranges->at(pos) << " " ;} cout << "]" << endl;
        Contract_remaining_indexes(kk);
     } else {
+       cout << " These indexes will survive : [ ";  for ( int pos : *ids_pos ) {cout <<  full_id_ranges->at(pos) << " " ;} cout << "]" << endl;
       final_gamma_vec->push_back(gamma_vec->at(kk));
     } 
     kk++;                                                         
@@ -589,11 +591,12 @@ vector<int> GammaGenerator::get_standard_range_order(const vector<string> &rngs)
   vector<int> pos(rngs.size());
   iota(pos.begin(), pos.end(), 0);
   sort(pos.begin(), pos.end(), [&rngs](int i1, int i2){
-                                 if ( rngs[i1][0] == 'X' ){
-                                   return false;
-                                 } else {
+//                                 if ( rngs[i1][0] == 'X' ){
+//                                   return false;
+//                                 } else {
                                    return (bool)( rngs[i1] < rngs[i2] );
-                                 }});
+//                                 }
+});
   
   return pos;
 }
