@@ -155,6 +155,31 @@ void CASPT2_ALT::CASPT2_ALT::solve() {
 ////////////////////////////////////////////////////////////////////
 cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
   {
+  vector<string> op_list = { "S" };
+  vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
+  
+  double factor = 0.0;
+  // Building all necessary expressions 
+  int  num_states = 1; 
+  vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
+  for ( int ii = 0 ; ii != num_states; ii++) {
+    for ( int jj = 0 ; jj != num_states; jj++) {
+  
+      for ( pair<vector<string>,double> BK_info : BK_info_list ) {
+        Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "S check" ));
+        for ( string Op_name : BK_info.first )  
+          Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
+      }
+  
+      string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
+  
+      Expression_Machine->Evaluate_Expression( expression_name );
+ 
+    }
+  }
+  }
+
+  {
   vector<string> op_list = { "H" };
   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
   
@@ -227,7 +252,9 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
   } else if ( op_name  == "S" ) { 
 
     vector<IndexRange> act4_ranges = { *active_rng, *active_rng, *active_rng, *active_rng};
-    shared_ptr<Tensor_<double>> S_Tens = Tensor_Arithmetic_Utils::get_sub_tensor( H_2el_all, act4_ranges );
+    shared_ptr<vector<IndexRange>> act4_ranges_ptr = make_shared<vector<IndexRange>>( act4_ranges ) ;
+    shared_ptr<Tensor_<double>> S_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act4_ranges_ptr, 0.5 );
+//    shared_ptr<Tensor_<double>> S_Tens = Tensor_Arithmetic_Utils::get_sub_tensor( H_2el_all, act4_ranges );
     TensOp_data_map->emplace( "S", S_Tens );
     cout <<"---------------------------Energy_act_test----------------------------------" << endl;
     cout << "Energy_act S = " << Smith_rdm2->dot_product(S_Tens) << endl;
@@ -262,7 +289,7 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
    shared_ptr<vector<IndexRange>> free4_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *free_rng, *free_rng, *free_rng, *free_rng} );
    shared_ptr<Tensor_<double>> HTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( free4_ranges, 0.0 );
    vector<IndexRange> act4 = { *active_rng, *active_rng, *active_rng, *active_rng};
-   Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( HTens , act4,  1.0  );
+   Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( HTens , act4,  0.5  );
 //    vector<IndexRange> virt2_act2 = { *active_rng, *virtual_rng, *active_rng, *virtual_rng};
 //    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( H_2el_all , virt2_act2,  1.0  );
     TensOp_data_map->emplace( "H" , HTens );
@@ -282,9 +309,10 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
 
   } else if ( op_name  == "L" ) { 
 
-    shared_ptr<Tensor_<double>> LTens_data =  make_shared<Tensor_<double>>(PT2_ranges_herm_conj_); 
-    LTens_data->allocate();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( LTens_data , 1.0  );
+    shared_ptr<vector<IndexRange>> PT2_ranges_herm_conj_ptr = make_shared<vector<IndexRange>>(PT2_ranges_herm_conj_); 
+    shared_ptr<Tensor_<double>> LTens_data = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( PT2_ranges_herm_conj_ptr, 1.0 );
+//   vector<IndexRange> aavv = { *active_rng, *active_rng, *virtual_rng, *virtual_rng };
+//   Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( LTens_data , aavv, 1.0  );
     TensOp_data_map->emplace("L" , LTens_data);
 
   } else if ( op_name  == "X" ) { 

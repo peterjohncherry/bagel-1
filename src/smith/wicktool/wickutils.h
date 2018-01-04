@@ -88,8 +88,10 @@ namespace WickUtils {
   bool RangeCheck(const std::vector<std::string>& id_ranges, const std::vector<bool>& aops ) ;
 
   template<class DataType>
-  void print_vector(std::vector<DataType> invec, std::string name ="lazy"){
-    std::cout << name <<" = [ ";
+  void print_vector(std::vector<DataType> invec, std::string name =""){
+    if (name != "n" ) 
+      std::cout << name << " ="; 
+    std::cout << " [ ";
     for (auto  elem : invec)
       std::cout << elem << " " ;
     std::cout << "]  " ;
@@ -98,8 +100,10 @@ namespace WickUtils {
 
 
   template<class DataType>
-  void print_pair_vector(std::vector<std::pair<DataType,DataType>> invec, std::string name ="lazy"){
-    std::cout << name <<" = [ ";
+  void print_pair_vector(std::vector<std::pair<DataType,DataType>> invec, std::string name =""){
+    if (name != "" ) 
+      std::cout << name << " ="; 
+    std::cout << " [ ";
     for (auto  elem : invec)
       std::cout << "(" << elem.first << "," << elem.second << ") ";
     std::cout << "]  " ;

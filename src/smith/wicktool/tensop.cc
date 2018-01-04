@@ -73,6 +73,7 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// TODO this is too slow; just build ranges using symmetry, don't check.
 template<typename DataType>
 tuple< std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<const range_block_info> >>,
        std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>> >
@@ -92,11 +93,10 @@ cout << "TensOp::generate_ranges" <<   endl;
      if (a_unique_range_block) {
        const pair<int,int> fac(1,1);
        const pair<double,double> fac_new(1.0,1.0);
-       shared_ptr<const vector<string>> ranges_1_ptr = make_shared<const vector<string>>(ranges_1);
-       shared_ptr<const vector<string>> ranges_2_ptr = make_shared<const vector<string>>(ranges_2);
+       shared_ptr<const vector<string>> unique_ranges = make_shared<const vector<string>>(ranges_2); 
        shared_ptr<const vector<string>> trans_idxs = orig_idxs;
        bool survives = WickUtils::RangeCheck( ranges_2, aops );
-       all_ranges.emplace(ranges_2, make_shared< const range_block_info >( a_unique_range_block, survives, fac_new, ranges_1_ptr, ranges_2_ptr, orig_idxs, trans_idxs ) );
+       all_ranges.emplace(ranges_2, make_shared< const range_block_info >( a_unique_range_block, survives, fac_new, unique_ranges, unique_ranges, orig_idxs, trans_idxs ) );
      }
      return false;
   };
@@ -134,7 +134,7 @@ cout << "TensOp::generate_ranges" <<   endl;
   all_ranges.emplace(init_range, make_shared< const range_block_info >( is_unique, survives, fac_new, orig_range, trans_range, orig_idxs, trans_idxs ) );
  
   unique_range_blocks = vector< shared_ptr< const vector<string>>>(1, trans_range );
-  //Apply symmetry operations to remove unnecessary ranges  
+  //Apply symmetry operations to remove unnecessary ranges 
   for (int ii = 1 ; ii!=possible_ranges.size(); ii++) {
     for (int kk = 0 ; kk != ii; kk++) {
       if( apply_symmetry(possible_ranges[kk], possible_ranges[ii]) ){ //note that this sets the elements of all_ranges_

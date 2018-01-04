@@ -111,7 +111,7 @@ cout << "GammaGenerator::add_gamma" << endl;
   shared_ptr<vector<pair<int,int>>> deltas_pos_in = make_shared<vector<pair<int,int>>>(0);
   shared_ptr<vector<string>> id_ranges_in = make_shared<vector<string>>(*block_info->orig_block());
 
-  print_vector(*id_ranges_in, " id_ranges_for gamma_init" ) ; print_vector( *ids_pos_init, "     id_pos_init" ) ; cout << endl; 
+  //print_vector(*id_ranges_in, " id_ranges_for gamma_init" ) ; print_vector( *ids_pos_init, "     id_pos_init" ) ; cout << endl; 
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(1, make_shared<GammaIntermediate>(id_ranges_in, ids_pos_init, deltas_pos_in, my_sign_in)); 
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
 
@@ -181,7 +181,8 @@ cout << "GammaGenerator::norm_order" << endl;
     cout << "-----------------------------------------------------" << endl;
     for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
       cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, TargetStates_->name(Bra_num_), TargetStates_->name(Ket_num_) ) ;
-      cout << "   ("<< gint->my_sign <<","<< gint->my_sign << ")" << endl;
+      cout << "   ("<< gint->my_sign <<","<< gint->my_sign << ")       ";
+      cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos) ) << endl;
     }
     cout << "-----------------------------------------------------" << endl;
   }
@@ -353,7 +354,6 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
       if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() ) 
         G_to_A_map->emplace( Gname_alt, make_shared<map<string, AContribInfo>>() );
 
-
       vector<int> Aid_order_new = get_Aid_order ( *ids_pos ) ; 
       auto Aid_orders_map_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
       if ( Aid_orders_map_loc == G_to_A_map->at( Gname_alt )->end() ) {
@@ -396,7 +396,7 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
       cout << "-----------------------------------------------------" << endl;
       for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
         string Gname_tmp = WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, TargetStates_->name(Bra_num_), TargetStates_->name(Ket_num_) ) ;
-        cout <<Gname_tmp <<  "   ("<< gint->my_sign <<","<< gint->my_sign << ")" ; cout << endl;
+        cout <<Gname_tmp <<  "   ("<< gint->my_sign <<","<< gint->my_sign << ")       " ;
         cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos) ) << endl;
       }
       cout << "-----------------------------------------------------" << endl;

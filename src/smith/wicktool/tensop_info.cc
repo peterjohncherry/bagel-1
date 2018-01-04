@@ -125,7 +125,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       shared_ptr<vector<vector<string>>> H_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free,free,free }); 
       string                             H_TimeSymm = "none";
       
-      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> H_symmfuncs = set_2el_symmfuncs();
+      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> H_symmfuncs = identity_only();
       vector<bool(*)(shared_ptr<vector<string>>)>  H_constraints = {  &System_Info<double>::System_Info::always_true };
       
       shared_ptr<TensOp::TensOp<double>> HTens = Build_TensOp("H", H_idxs, H_aops, H_idx_ranges, H_symmfuncs, H_constraints, H_factor, H_TimeSymm, false ) ;

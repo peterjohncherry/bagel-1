@@ -227,8 +227,8 @@ void CASPT2::CASPT2::solve() {
 
     vector<IndexRange> act4 =  { active_ , active_ , active_ , active_ };
     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ ,act4, 1.0  );
-    vector<IndexRange> avav = { active_, virt_, active_, virt_};
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avav,  1.0  );
+//    vector<IndexRange> avav = { active_, virt_, active_, virt_};
+//    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avav,  0.0  );
 
     shared_ptr<Tensor> t2_one = t2all_[0]->at(0)->clone();
     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one , 1.0  );
@@ -245,6 +245,7 @@ void CASPT2::CASPT2::solve() {
 
     sist->at(0) = s;  cout << "sist->at(0)->norm() = " << sist->at(0)->norm() << endl;
     cout << "sist->at(0)->rank() = " << sist->at(0)->rank() << endl;
+    cout << "sist->at(0)->size_alloc() = " << sist->at(0)->size_alloc() << endl;
 
     cout<<" dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
     cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
