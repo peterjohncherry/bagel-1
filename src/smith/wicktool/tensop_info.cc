@@ -64,7 +64,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       DataType                            L_factor = (DataType) (1.0);
       shared_ptr<vector<string>>          L_idxs = make_shared<vector<string>>(vector<string> {"L0", "L1", "L2", "L3"});
       shared_ptr<vector<bool>>            L_aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true }); 
-      shared_ptr<vector<vector<string>>>  L_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt }); 
+      shared_ptr<vector<vector<string>>>  L_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, not_virt }); 
       string                              L_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  L_symmfuncs = identity_only();
@@ -72,42 +72,55 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       
       shared_ptr<TensOp::TensOp<double>> LTens = Build_TensOp("L", L_idxs, L_aops, L_idx_ranges, L_symmfuncs, L_constraints, L_factor, L_TimeSymm, false ) ;
       T_map->emplace("L", LTens);
-     
- 
-    } else if ( OpName == "P" ) {  /* ---- test tensor with general H2el shape ----  */
+        
+    } else if ( OpName == "M" ) {  /* ---- M Tensor ----  */
 
-      DataType                           P_factor = (DataType) (1.0);
-      shared_ptr<vector<string>>         P_idxs = make_shared<vector<string>>(vector<string> {"P0", "P1", "P2", "P3"});
-      shared_ptr<vector<bool>>           P_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false});//TODO check this ordering is correct 
-      shared_ptr<vector<vector<string>>> P_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free,free,free }); 
-      string                             P_TimeSymm = "none";
+      DataType                            M_factor = (DataType) (1.0);
+      shared_ptr<vector<string>>          M_idxs = make_shared<vector<string>>(vector<string> {"M0", "M1", "M2", "M3"});
+      shared_ptr<vector<bool>>            M_aops = make_shared<vector<bool>>(vector<bool>  { false, true, false, true }); 
+      shared_ptr<vector<vector<string>>>  M_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, not_virt, virt, not_virt }); 
+      string                              M_TimeSymm = "none";
       
-      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> P_symmfuncs = set_2el_symmfuncs();
-      vector<bool(*)(shared_ptr<vector<string>>)>  P_constraints = {  &System_Info<double>::System_Info::always_true };
+      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  M_symmfuncs = identity_only();
+      vector<bool(*)(shared_ptr<vector<string>>)>  M_constraints = { &System_Info<double>::System_Info::NotAllAct };
       
-      shared_ptr<TensOp::TensOp<double>> PTens = Build_TensOp("P",  P_idxs, P_aops, P_idx_ranges, P_symmfuncs, P_constraints, P_factor, P_TimeSymm, false ) ;
-      T_map->emplace("P", PTens);
-    
-    } else if ( OpName == "Q" ) {   /* ---- 8idx UNIT Tensor ACTIVE ONLY FOR TESTING----  */
+      shared_ptr<TensOp::TensOp<double>> MTens = Build_TensOp("M", M_idxs, M_aops, M_idx_ranges, M_symmfuncs, M_constraints, M_factor, M_TimeSymm, false ) ;
+      T_map->emplace("M", MTens);
+ 
+    } else if ( OpName == "N" ) {  /* ---- N Tensor ----  */
+
+      DataType                            N_factor = (DataType) (1.0);
+      shared_ptr<vector<string>>          N_idxs = make_shared<vector<string>>(vector<string> {"N0", "N1", "N2", "N3"});
+      shared_ptr<vector<bool>>            N_aops = make_shared<vector<bool>>(vector<bool>  { true, false, true, false }); 
+      shared_ptr<vector<vector<string>>>  N_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, not_virt, virt, not_virt }); 
+      string                              N_TimeSymm = "none";
+      
+      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  N_symmfuncs = identity_only();
+      vector<bool(*)(shared_ptr<vector<string>>)>  N_constraints = { &System_Info<double>::System_Info::NotAllAct };
+      
+      shared_ptr<TensOp::TensOp<double>> NTens = Build_TensOp("N", N_idxs, N_aops, N_idx_ranges, N_symmfuncs, N_constraints, N_factor, N_TimeSymm, false ) ;
+      T_map->emplace("N", NTens);
+ 
+    } else if ( OpName == "Q" ) {  
     
       DataType                           Q_factor = (DataType) (1.0);
-      shared_ptr<vector<string>>         Q_idxs = make_shared<vector<string>>(vector<string> {"Q0", "Q1", "Q2", "Q3","Q4", "Q5", "Q6", "Q7"});
-      shared_ptr<vector<bool>>           Q_aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, true, false, false, false, false}); 
-      shared_ptr<vector<vector<string>>> Q_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  act, act, act, act, act, act, act, act }); 
+      shared_ptr<vector<string>>         Q_idxs = make_shared<vector<string>>(vector<string> { "Q0", "Q1", "Q2", "Q3" } );
+      shared_ptr<vector<bool>>           Q_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false, } ); 
+      shared_ptr<vector<vector<string>>> Q_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, not_virt }); 
       string                             Q_TimeSymm = "none";
-   
+      
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Q_symmfuncs = identity_only();
       vector<bool(*)(shared_ptr<vector<string>>)>  Q_constraints = {  &System_Info<double>::System_Info::always_true };
-   
-      shared_ptr<TensOp::TensOp<double>> QTens = Build_TensOp("Q",  Q_idxs, Q_aops, Q_idx_ranges, Q_symmfuncs, Q_constraints, Q_factor, Q_TimeSymm, false ) ;
+      
+      shared_ptr<TensOp::TensOp<double>> QTens = Build_TensOp( "Q",  Q_idxs, Q_aops, Q_idx_ranges, Q_symmfuncs, Q_constraints, Q_factor, Q_TimeSymm, false ) ;
       T_map->emplace("Q", QTens);
- 
-    } else if ( OpName == "R" ) {  /* ---- 6idx UNIT Tensor ACTIVE ONLY FOR TESTING----  */
+     
+    } else if ( OpName == "R" ) {  
     
       DataType                           R_factor = (DataType) (1.0);
-      shared_ptr<vector<string>>         R_idxs = make_shared<vector<string>>(vector<string> { "R0", "R1", "R2", "R3", "R4", "R5" } );
-      shared_ptr<vector<bool>>           R_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false, true, false,} ); 
-      shared_ptr<vector<vector<string>>> R_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  free, free, free, free, not_core, not_virt }); 
+      shared_ptr<vector<string>>         R_idxs = make_shared<vector<string>>(vector<string> { "R0", "R1", "R2", "R3" } );
+      shared_ptr<vector<bool>>           R_aops = make_shared<vector<bool>>(vector<bool>  {true, true, false, false, } ); 
+      shared_ptr<vector<vector<string>>> R_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, act }); 
       string                             R_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> R_symmfuncs = identity_only();
@@ -121,10 +134,9 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       DataType                           S_factor = (DataType) (1.0);
       shared_ptr<vector<string>>         S_idxs = make_shared<vector<string>>(vector<string> { "S0", "S1", "S2", "S3" });
       shared_ptr<vector<bool>>           S_aops = make_shared<vector<bool>>( vector<bool>  { true, true, false, false } ); 
-      shared_ptr<vector<vector<string>>> S_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act }); 
+      shared_ptr<vector<vector<string>>> S_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, act });   
       string                             S_TimeSymm = "none";
      
-//      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> S_symmfuncs = set_2el_symmfuncs();
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> S_symmfuncs = identity_only();
       vector<bool(*)(shared_ptr<vector<string>>)>  S_constraints = {  &System_Info<double>::System_Info::always_true };
      
@@ -136,7 +148,7 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       DataType                            T_factor = (DataType) (1.0);
       shared_ptr<vector<string>>          T_idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
       shared_ptr<vector<bool>>            T_aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} ); 
-      shared_ptr<vector<vector<string>>>  T_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });   
+      shared_ptr<vector<vector<string>>>  T_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, not_virt });   
       string                              T_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> T_symmfuncs = set_2el_symmfuncs();
@@ -145,12 +157,54 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       shared_ptr<TensOp::TensOp<double>> TTens = Build_TensOp("T",  T_idxs, T_aops, T_idx_ranges, T_symmfuncs, T_constraints, T_factor, T_TimeSymm, false ) ;
       T_map->emplace("T", TTens);
 
-    } else if ( OpName == "X" ) {  /* ---- 2el Excitation Op dag ----  */  //NOTE X should not have any data, but needs it until the summing routines are checked.
+    } else if ( OpName == "U" ) {  /* ----UUensor ----  */
+
+      DataType                           U_factor = (DataType) (1.0);
+      shared_ptr<vector<string>>         U_idxs = make_shared<vector<string>>(vector<string>{"U0", "U1", "U2", "U3"}  );
+      shared_ptr<vector<bool>>           U_aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} ); 
+      shared_ptr<vector<vector<string>>> U_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, core, not_virt });   
+      string                             U_TimeSymm = "none";
+      
+      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>U_symmfuncs = set_2el_symmfuncs();
+      vector<bool(*)(shared_ptr<vector<string>>)>U_constraints = {  &System_Info<double>::System_Info::NotAllAct };
+      
+      shared_ptr<TensOp::TensOp<double>>UTens = Build_TensOp("U", U_idxs,U_aops,U_idx_ranges,U_symmfuncs,U_constraints,U_factor,U_TimeSymm, false ) ;
+      T_map->emplace("U", UTens);
+
+    } else if ( OpName == "V" ) {  /* ----VVensor ----  */
+
+      DataType                           V_factor = (DataType) (1.0);
+      shared_ptr<vector<string>>         V_idxs = make_shared<vector<string>>(vector<string>{"V0", "V1", "V2", "V3"}  );
+      shared_ptr<vector<bool>>           V_aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} ); 
+      shared_ptr<vector<vector<string>>> V_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, core });   
+      string                             V_TimeSymm = "none";
+      
+      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>V_symmfuncs = set_2el_symmfuncs();
+      vector<bool(*)(shared_ptr<vector<string>>)>V_constraints = {  &System_Info<double>::System_Info::NotAllAct };
+      
+      shared_ptr<TensOp::TensOp<double>>VTens = Build_TensOp("V", V_idxs,V_aops,V_idx_ranges,V_symmfuncs,V_constraints,V_factor,V_TimeSymm, false ) ;
+      T_map->emplace("V", VTens);
+
+    } else if ( OpName == "W" ) {  /* ----WWensor ----  */
+
+      DataType                           W_factor = (DataType) (1.0);
+      shared_ptr<vector<string>>         W_idxs = make_shared<vector<string>>(vector<string>{"W0", "W1", "W2", "W3"}  );
+      shared_ptr<vector<bool>>           W_aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} ); 
+      shared_ptr<vector<vector<string>>> W_idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, core, act });   
+      string                             W_TimeSymm = "none";
+      
+      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>W_symmfuncs = set_2el_symmfuncs();
+      vector<bool(*)(shared_ptr<vector<string>>)>W_constraints = {  &System_Info<double>::System_Info::NotAllAct };
+      
+      shared_ptr<TensOp::TensOp<double>>WTens = Build_TensOp("W", W_idxs,W_aops,W_idx_ranges,W_symmfuncs,W_constraints,W_factor,W_TimeSymm, false ) ;
+      T_map->emplace("W", WTens);
+
+    } else if ( OpName == "X" ) { 
 
       DataType                           X_factor = (DataType) (1.0);
       shared_ptr<vector<string>>         X_idxs = make_shared<vector<string>>( vector<string> {"X0", "X1", "X2", "X3"} );
       shared_ptr<vector<bool>>           X_aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } ); 
-      shared_ptr<vector<vector<string>>> X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt, not_virt, not_core, not_core } ); 
+      shared_ptr<vector<vector<string>>> X_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, act } ); 
       string                             X_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  X_symmfuncs = set_2el_symmfuncs();
@@ -162,9 +216,9 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
     } else if ( OpName == "Y" ) {  /*---- 4el Excitation Op dag  ----  */
 
       DataType                            Y_factor = (DataType) (1.0);
-      shared_ptr<vector<string>>          Y_idxs = make_shared<vector<string>>(vector<string> {"Y0", "Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7"});
-      shared_ptr<vector<bool>>            Y_aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false, true, true, false, false }); 
-      shared_ptr<vector<vector<string>>>  Y_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  act, act, act, act, act, act, act, act }); 
+      shared_ptr<vector<string>>          Y_idxs = make_shared<vector<string>>(vector<string> {"Y0", "Y1", "Y2", "Y3"});
+      shared_ptr<vector<bool>>            Y_aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false}); 
+      shared_ptr<vector<vector<string>>>  Y_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  virt, virt, core, core }); 
       string                              Y_TimeSymm = "none";
       
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >>  Y_symmfuncs = identity_only();
@@ -176,7 +230,8 @@ void System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string OpNam
       DataType                           Z_factor = (DataType) (1.0);
       shared_ptr<vector<string>>         Z_idxs = make_shared<vector<string>>( vector<string> { "Z0", "Z1", "Z2", "Z3" } );
       shared_ptr<vector<bool>>           Z_aops = make_shared<vector<bool>>( vector<bool>  { true, true, false, false } ); 
-      shared_ptr<vector<vector<string>>> Z_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, act } ); 
+//      shared_ptr<vector<vector<string>>> Z_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, not_virt } ); 
+      shared_ptr<vector<vector<string>>> Z_idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, core } ); 
       string                             Z_TimeSymm = "none";
 
       vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Z_symmfuncs = identity_only();

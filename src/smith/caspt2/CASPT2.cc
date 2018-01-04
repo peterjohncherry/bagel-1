@@ -222,33 +222,138 @@ void CASPT2::CASPT2::solve() {
     shared_ptr<Tensor> h1_buff = make_shared<Tensor>(*h1_);
     shared_ptr<Tensor> v2_buff = make_shared<Tensor>(*v2_);
     h1_->zero();
-    v2_->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 0.0  );
 
-    vector<IndexRange> aaaa =  { active_ , active_ , active_ , active_ };
-    vector<IndexRange> avav = { active_, virt_, active_, virt_};
-//    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ ,aaaa, 1.0  );
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avav,  1.0  ); // should correspond to vvaa in norm ordering?
+    IndexRange not_virt = closed_; not_virt.merge(active_);
+
+    vector<IndexRange> avav = { active_,  virt_, active_,  virt_};
+    vector<IndexRange> cvcv = { closed_,  virt_, closed_,  virt_};
+    vector<IndexRange> cvav = { closed_,  virt_, active_,  virt_};
+    vector<IndexRange> avcv = { active_,  virt_, closed_,  virt_};
+    vector<IndexRange> cvov = { closed_,  virt_, not_virt, virt_};
+    vector<IndexRange> ovcv = { not_virt, virt_, closed_,  virt_};
+    vector<IndexRange> avov = { active_,  virt_, not_virt, virt_};
+    vector<IndexRange> ovav = { not_virt, virt_, active_,  virt_};
+    vector<IndexRange> ovov = { not_virt, virt_, not_virt, virt_ };
 
     shared_ptr<Tensor> t2_one = t2all_[0]->at(0)->clone();
     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one , 1.0  );
     shared_ptr<MultiTensor> sist = make_shared<MultiTensor>(1);
 
+    {
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avav,  1.0  );  
     set_rdm(0, 0);
-
     s = init_residual();
-
-    cout << "s->norm() = " << s->norm() << endl;
     shared_ptr<Queue> sourceq = make_sourceq(false, true);
     while(!sourceq->done())
       sourceq->next_compute();
-
-    sist->at(0) = s;  cout << "sist->at(0)->norm() = " << sist->at(0)->norm() << endl;
-    cout << "sist->at(0)->rank() = " << sist->at(0)->rank() << endl;
-    cout << "sist->at(0)->size_alloc() = " << sist->at(0)->size_alloc() << endl;
-
-    cout<<" dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    sist->at(0) = s;  
+    cout<<" ::AVAV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
     cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    }
+
+    {
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avcv,  1.0  );  
+    set_rdm(0, 0);
+    s = init_residual();
+    shared_ptr<Queue> sourceq = make_sourceq(false, true);
+    while(!sourceq->done())
+      sourceq->next_compute();
+    sist->at(0) = s;  
+    cout<<" ::AVCV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    }
+
+    {
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , cvav,  1.0  );  
+    set_rdm(0, 0);
+    s = init_residual();
+    shared_ptr<Queue> sourceq = make_sourceq(false, true);
+    while(!sourceq->done())
+      sourceq->next_compute();
+    sist->at(0) = s;  
+    cout<<" ::CVAV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    }
+
+
+    {
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , cvcv,  1.0  );  
+    set_rdm(0, 0);
+    s = init_residual();
+    shared_ptr<Queue> sourceq = make_sourceq(false, true);
+    while(!sourceq->done())
+      sourceq->next_compute();
+    sist->at(0) = s;  
+    cout<<" ::CVCV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    }
+
+    {
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , ovcv,  1.0  );  
+    set_rdm(0, 0);
+    s = init_residual();
+    shared_ptr<Queue> sourceq = make_sourceq(false, true);
+    while(!sourceq->done())
+      sourceq->next_compute();
+    sist->at(0) = s;  
+    cout<<" ::OVCV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    }
+    {
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , ovav,  1.0  );  
+    set_rdm(0, 0);
+    s = init_residual();
+    shared_ptr<Queue> sourceq = make_sourceq(false, true);
+    while(!sourceq->done())
+      sourceq->next_compute();
+    sist->at(0) = s;  
+    cout<<" ::OVAV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    }
+
+    {
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avov,  1.0  );  
+    set_rdm(0, 0);
+    s = init_residual();
+    shared_ptr<Queue> sourceq = make_sourceq(false, true);
+    while(!sourceq->done())
+      sourceq->next_compute();
+    sist->at(0) = s;  
+    cout<<" ::AVOV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    }
+
+    {
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , cvov,  1.0  );  
+    set_rdm(0, 0);
+    s = init_residual();
+    shared_ptr<Queue> sourceq = make_sourceq(false, true);
+    while(!sourceq->done())
+      sourceq->next_compute();
+    sist->at(0) = s;  
+    cout<<" ::CVOV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    }
+    {
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , ovov,  1.0  );  
+    set_rdm(0, 0);
+    s = init_residual();
+    shared_ptr<Queue> sourceq = make_sourceq(false, true);
+    while(!sourceq->done())
+      sourceq->next_compute();
+    sist->at(0) = s;  
+    cout<<" ::OVOV:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    }
 
     h1_ = h1_buff;
     v2_ = v2_buff;
