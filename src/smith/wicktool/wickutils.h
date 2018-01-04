@@ -89,7 +89,7 @@ namespace WickUtils {
 
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
-    if (name != "n" ) 
+    if (name != "" ) 
       std::cout << name << " ="; 
     std::cout << " [ ";
     for (auto  elem : invec)

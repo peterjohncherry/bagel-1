@@ -355,25 +355,28 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
         G_to_A_map->emplace( Gname_alt, make_shared<map<string, AContribInfo>>() );
 
       vector<int> Aid_order_new = get_Aid_order ( *ids_pos ) ; 
-      auto Aid_orders_map_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
-      if ( Aid_orders_map_loc == G_to_A_map->at( Gname_alt )->end() ) {
+      auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
+      if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
         AContribInfo AInfo( Aid_order_new, make_pair(my_sign,my_sign));
         G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
+        cout << "adding " << Aname_alt << "contrib to " << Gname_alt << endl;
 
       } else {
 
         //put new contributions into map, change factors as appropriate, if all factors go to zero remove entry from map.
-        AContribInfo AInfo = Aid_orders_map_loc->second;
+        AContribInfo AInfo = AInfo_loc->second;
         for ( int qq = 0 ; qq != AInfo.id_orders.size(); qq++ ) {
           if( Aid_order_new == AInfo.id_order(qq) ){
             AInfo.factors[qq].first  += my_sign;
-            AInfo.factors[qq].second += my_sign;
-            if ( AInfo.factors[qq].first == 0 &&  AInfo.factors[qq].second == 0 ) {
-              AInfo.factors.erase( AInfo.factors.begin()+qq ); 
-              AInfo.id_orders.erase( AInfo.id_orders.begin()+qq ); 
-              if (AInfo.id_orders.size() == 0 ) 
-                G_to_A_map->at( Gname_alt )->erase(Aid_orders_map_loc);
-            }
+            AInfo.factors[qq].second += my_sign; 
+      //      if ( AInfo.factors[qq].first == 0 &&  AInfo.factors[qq].second == 0 ) {
+      //        AInfo.factors.erase( AInfo.factors.begin()+qq ); 
+      //        AInfo.id_orders.erase( AInfo.id_orders.begin()+qq ); 
+      //        if (AInfo.id_orders.size() == 0 ){ 
+      //          cout << "erasing " << Aname_alt << " contrib to " << Gname_alt << endl; 
+      //          G_to_A_map->at( Gname_alt )->erase(AInfo_loc);
+      //        }
+      //    }
             break;
 
           } else if ( qq == AInfo.id_orders.size()-1) { 
@@ -382,10 +385,9 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
           }
         }
       }
-
-      if ( Gamma_map->find( Gname_alt ) == Gamma_map->end() ) 
-        Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( TargetStates_->civec_info(Bra_num_), TargetStates_->civec_info(Ket_num_), 
-                                                               orig_aops_, full_id_ranges, ids_pos, Gamma_map) );
+      
+      Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( TargetStates_->civec_info(Bra_num_), TargetStates_->civec_info(Ket_num_), 
+                                                             orig_aops_, full_id_ranges, ids_pos, Gamma_map) );
       
       kk++;
     }

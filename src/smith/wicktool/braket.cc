@@ -49,13 +49,15 @@ void BraKet<DataType>::Build_Gamma_SpinFree(shared_ptr<const vector<bool>> aops,
   for ( int Ket_num = 0 ; Ket_num != nstates; Ket_num++ ){
     for ( int Bra_num = 0 ; Bra_num != nstates; Bra_num++ ){
       for ( auto range_map_it = Total_Op->all_ranges()->begin(); range_map_it !=Total_Op->all_ranges()->end(); range_map_it++ ){
-        if ( range_map_it->second->survives() ) { 
-          print_vector( *(range_map_it->second->unique_block()), " ranges into gamma " ); print_vector( *(range_map_it->second->orig_block()), " " ); cout << endl;
+        
+        print_vector( *(range_map_it->second->unique_block()), " ranges into gamma? " );  if ( !range_map_it->second->survives() ) {  cout << " ... no " << endl; } 
+
+        if ( range_map_it->second->survives() ) {  cout << " ... yes " << endl; 
           shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>(TargetStates, Bra_num, Ket_num, idxs_buff, aops_buff, GammaMap, G_to_A_map); 
           GGen->add_gamma( range_map_it->second );
           GGen->norm_order();
           GGen->optimized_alt_order();
-        }
+        } 
       }
     }
   }
@@ -68,7 +70,7 @@ void BraKet<DataType>::Build_Gamma_SpinFree(shared_ptr<const vector<bool>> aops,
 
     if ( map_it->second->size() == 0 ) { 
        
-      cout << "No Contributions!" <<  endl;   
+      cout << endl << "      - No Contributions! -" <<  endl << endl;    
           
     } else {
 
