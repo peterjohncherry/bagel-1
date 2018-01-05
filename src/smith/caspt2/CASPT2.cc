@@ -235,125 +235,182 @@ void CASPT2::CASPT2::solve() {
     vector<IndexRange> ovav = { not_virt, virt_, active_,  virt_};
     vector<IndexRange> ovov = { not_virt, virt_, not_virt, virt_ };
 
+  vector<IndexRange> vvaa = { virt_,   virt_,   active_, active_} ;
+
+  vector<IndexRange> vvcc = { virt_, virt_, closed_, closed_} ;
+  vector<IndexRange> vvac = { virt_, virt_, active_, closed_} ;
+  vector<IndexRange> vvca = { virt_, virt_, closed_, active_} ;
+
+  vector<IndexRange> vvoo = { virt_,     virt_,    not_virt, not_virt } ;
+  vector<IndexRange> vovo = { virt_,     not_virt, virt_,    not_virt } ;
+
+  vector<IndexRange> vvoc = { virt_, virt_, not_virt, closed_} ;
+  vector<IndexRange> vvco = { virt_, virt_, closed_,   not_virt} ;
+  vector<IndexRange> vvoa = { virt_, virt_, not_virt, active_} ;
+  vector<IndexRange> vvao = { virt_, virt_, active_,   not_virt} ;
+
+  shared_ptr<vector<int>> normal_to_alt_order = make_shared<vector<int>>( vector<int> { 0, 2, 1, 3} );   // ++-- -> +-+- 
+  shared_ptr<vector<int>> alt_to_normal_order = make_shared<vector<int>>( vector<int> { 0, 2, 1, 3} );   // +-+- -> ++--
+  shared_ptr<vector<int>> normal_to_smith_order1 = make_shared<vector<int>>( vector<int> { 2, 0, 3, 1} ); // ++-- -> -+-+  //no conj 
+  shared_ptr<vector<int>> normal_to_smith_order2 = make_shared<vector<int>>( vector<int> { 3, 0, 2, 1} ); // ++-- -> -+-+   
+  shared_ptr<vector<int>> normal_to_smith_order3 = make_shared<vector<int>>( vector<int> { 2, 1, 3, 0} ); // ++-- -> -+-+   
+  shared_ptr<vector<int>> normal_to_smith_order4 = make_shared<vector<int>>( vector<int> { 3, 1, 2, 0} ); // ++-- -> -+-+   //full conj
+  shared_ptr<vector<int>> alt_to_smith_order = make_shared<vector<int>>( vector<int> { 3, 2, 0, 1} );    // +-+- -> -+-+ 2031
+
+  shared_ptr<Tensor_<double>> LTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vvoo),1.0);
+  shared_ptr<Tensor_<double>> MTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vovo),1.0);
+
+  shared_ptr<Tensor_<double>> NTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vovo) );
+  shared_ptr<Tensor_<double>> QTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor(NTens, alt_to_normal_order);
+
+  shared_ptr<Tensor_<double>> RTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvaa));
+  shared_ptr<Tensor_<double>> TTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvao));
+  shared_ptr<Tensor_<double>> UTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvco));
+  shared_ptr<Tensor_<double>> YTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvcc));
+  shared_ptr<Tensor_<double>> ZTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvac));
+
+
     shared_ptr<Tensor> t2_one = t2all_[0]->at(0)->clone();
     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one , 1.0  );
     shared_ptr<MultiTensor> sist = make_shared<MultiTensor>(1);
 
     {
     v2_->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avav,  1.0  );  
+//  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avav,  1.0  );  
+    
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( NTens, vovo, v2_, ovov, alt_to_smith_order );
+    
     set_rdm(0, 0);
     s = init_residual();
     shared_ptr<Queue> sourceq = make_sourceq(false, true);
     while(!sourceq->done())
       sourceq->next_compute();
     sist->at(0) = s;  
-    cout<<" ::AVAV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    cout<<" ::VOVO -> OVOV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one)<< endl;; // + (*eref_)(0, 0);
     }
 
     {
     v2_->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avcv,  1.0  );  
+//  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avcv,  1.0  );  
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( QTens, vvoo, v2_, ovov, normal_to_smith_order1 );
+
     set_rdm(0, 0);
     s = init_residual();
     shared_ptr<Queue> sourceq = make_sourceq(false, true);
     while(!sourceq->done())
       sourceq->next_compute();
     sist->at(0) = s;  
-    cout<<" ::AVCV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    cout<<" ::VVOO -> OVOV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one)<< endl; // + (*eref_)(0, 0);
     }
 
     {
     v2_->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , cvav,  1.0  );  
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( RTens, vvaa, v2_, avav, normal_to_smith_order1 );
     set_rdm(0, 0);
     s = init_residual();
     shared_ptr<Queue> sourceq = make_sourceq(false, true);
     while(!sourceq->done())
       sourceq->next_compute();
     sist->at(0) = s;  
-    cout<<" ::CVAV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    cout<<" ::VVAA -> AVAV reord 1:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one)<< endl;; // + (*eref_)(0, 0);
     }
 
 
     {
     v2_->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , cvcv,  1.0  );  
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( YTens, vvcc, v2_, cvcv, normal_to_smith_order1 );
     set_rdm(0, 0);
     s = init_residual();
     shared_ptr<Queue> sourceq = make_sourceq(false, true);
     while(!sourceq->done())
       sourceq->next_compute();
     sist->at(0) = s;  
-    cout<<" ::CVCV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    cout<<" ::VVCC -> CVCV reord 2:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one)<< endl;; // + (*eref_)(0, 0);
     }
 
     {
     v2_->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , ovcv,  1.0  );  
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, v2_, avcv, normal_to_smith_order1 );
     set_rdm(0, 0);
     s = init_residual();
     shared_ptr<Queue> sourceq = make_sourceq(false, true);
     while(!sourceq->done())
       sourceq->next_compute();
     sist->at(0) = s;  
-    cout<<" ::OVCV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
-    }
-    {
-    v2_->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , ovav,  1.0  );  
-    set_rdm(0, 0);
-    s = init_residual();
-    shared_ptr<Queue> sourceq = make_sourceq(false, true);
-    while(!sourceq->done())
-      sourceq->next_compute();
-    sist->at(0) = s;  
-    cout<<" ::OVAV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    cout<<" ::VVAC -> AVCV reord 1:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one)<< endl;
     }
 
     {
     v2_->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , avov,  1.0  );  
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, v2_, avcv, normal_to_smith_order3 );
     set_rdm(0, 0);
     s = init_residual();
     shared_ptr<Queue> sourceq = make_sourceq(false, true);
     while(!sourceq->done())
       sourceq->next_compute();
     sist->at(0) = s;  
-    cout<<" ::AVOV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    cout<<" ::VVAC -> AVCV reord 3:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one)<< endl;
     }
 
     {
     v2_->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , cvov,  1.0  );  
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( TTens, vvao, v2_, avov, normal_to_smith_order1 );
     set_rdm(0, 0);
     s = init_residual();
     shared_ptr<Queue> sourceq = make_sourceq(false, true);
     while(!sourceq->done())
       sourceq->next_compute();
     sist->at(0) = s;  
-    cout<<" ::CVOV::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    cout<<" ::VVAC -> AVCV reord 1:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one)<< endl;
     }
+
     {
     v2_->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , ovov,  1.0  );  
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( TTens, vvao, v2_, avov, normal_to_smith_order3 );
     set_rdm(0, 0);
     s = init_residual();
     shared_ptr<Queue> sourceq = make_sourceq(false, true);
     while(!sourceq->done())
       sourceq->next_compute();
     sist->at(0) = s;  
-    cout<<" ::OVOV:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one); // + (*eref_)(0, 0);
+    cout<<" ::VVAC -> AVCV reord 3:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one)<< endl;
     }
+
+
+    {
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( UTens, vvoc, v2_, cvov, normal_to_smith_order1 );
+    set_rdm(0, 0);
+    s = init_residual();
+    shared_ptr<Queue> sourceq = make_sourceq(false, true);
+    while(!sourceq->done())
+      sourceq->next_compute();
+    sist->at(0) = s;  
+    cout<<" ::VVAC -> AVCV reord 1:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one)<< endl;
+    }
+
+    {
+    v2_->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( UTens, vvoc, v2_, cvov, normal_to_smith_order3 );
+    set_rdm(0, 0);
+    s = init_residual();
+    shared_ptr<Queue> sourceq = make_sourceq(false, true);
+    while(!sourceq->done())
+      sourceq->next_compute();
+    sist->at(0) = s;  
+    cout<<" ::VVAC -> AVCV reord 3:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
+    cout<< dot_product_transpose(s, t2_one)<< endl;
+    }
+
 
     h1_ = h1_buff;
     v2_ = v2_buff;

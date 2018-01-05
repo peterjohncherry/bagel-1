@@ -485,171 +485,66 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
 
   } else if ( op_name  == "N" ) { 
 
-    shared_ptr<Tensor_<double>> NTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vovo), 0.5 );
+    shared_ptr<Tensor_<double>> NTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vovo));
     TensOp_data_map->emplace("N" , NTens);
 
   } else if ( op_name  == "Q" ) { 
 
-    shared_ptr<Tensor_<double>> QTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vvoo), 0.5 );
+    shared_ptr<Tensor_<double>> QTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvoo) );
     TensOp_data_map->emplace("Q" , QTens);
 
   } else if ( op_name  == "R" ) { 
 
-    shared_ptr<Tensor_<double>> RTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( make_shared<vector<IndexRange>>(vvaa), 0.5 );
+    shared_ptr<Tensor_<double>> RTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvaa) );
     TensOp_data_map->emplace( "R" , RTens);
 
   } else if ( op_name  == "S" ) { 
 
-    shared_ptr<Tensor_<double>> STens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( make_shared<vector<IndexRange>>(vvoa), 0.5 );
+    shared_ptr<Tensor_<double>> TTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvao) );
+    shared_ptr<vector<int>> vvao_to_vvoa = make_shared<vector<int>>( vector<int> { 0, 1, 3, 2} ) ;  
+    shared_ptr<Tensor_<double>> STens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor(TTens, vvao_to_vvoa);
     TensOp_data_map->emplace( "S", STens );
 
   } else if ( op_name  == "T" ) { 
 
-    shared_ptr<Tensor_<double>> TTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( make_shared<vector<IndexRange>>(vvao), 0.5 );
+    shared_ptr<Tensor_<double>> TTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvao) );
     TensOp_data_map->emplace("T", TTens);
 
   } else if ( op_name  == "U" ) { 
 
-    shared_ptr<Tensor_<double>> UTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( make_shared<vector<IndexRange>>(vvco), 0.5 );
+    shared_ptr<Tensor_<double>> UTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvco) );
     TensOp_data_map->emplace("U", UTens);
 
   } else if ( op_name  == "V" ) { 
 
-    shared_ptr<Tensor_<double>> VTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( make_shared<vector<IndexRange>>(vvoc), 0.5 );
+    shared_ptr<Tensor_<double>> UTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvco) );
+    shared_ptr<vector<int>> vvco_to_vvoc = make_shared<vector<int>>( vector<int> { 0, 1, 3, 2} ) ;  
+    shared_ptr<Tensor_<double>> VTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor(UTens, vvco_to_vvoc);
     TensOp_data_map->emplace("V", VTens);
 
   } else if ( op_name  == "W" ) { 
 
-    shared_ptr<Tensor_<double>> WTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( make_shared<vector<IndexRange>>(vvca), 0.5 );
+    shared_ptr<Tensor_<double>> ZTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(  make_shared<vector<IndexRange>>(vvac) );
+    shared_ptr<vector<int>> vvac_to_vvca = make_shared<vector<int>>( vector<int> { 0, 1, 3, 2} ) ;  
+    shared_ptr<Tensor_<double>> WTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor(ZTens, vvac_to_vvca);
     TensOp_data_map->emplace("W", WTens);
 
   } else if ( op_name  == "X" ) { 
 
-    shared_ptr<Tensor_<double>> XTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( make_shared<vector<IndexRange>>(vvaa), 0.5 );
+    shared_ptr<Tensor_<double>> XTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvaa) );
     TensOp_data_map->emplace( "X" , XTens);
  
   } else if ( op_name  == "Y" ) {
  
-    shared_ptr<Tensor_<double>> YTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(  make_shared<vector<IndexRange>>(vvcc), 0.5 );
+    shared_ptr<Tensor_<double>> YTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvcc) );
     TensOp_data_map->emplace( "Y", YTens );
    
   } else if ( op_name  == "Z" ) {
  
-    shared_ptr<Tensor_<double>> ZTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(  make_shared<vector<IndexRange>>(vvac), 0.5 );
+    shared_ptr<Tensor_<double>> ZTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvac) );
     TensOp_data_map->emplace( "Z", ZTens );
   }
 
   return;
 }
 #endif
-
-/////////////////////////////////////////////////////////////////////////////////
-  /*tests; keep for now so can check if anything starts to go wrong */
- // shared_ptr<vector<IndexRange>> act_ranges_1 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng } );
- // shared_ptr<Tensor_<double>> Vec_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges_1 );
- // cout << endl ; Print_Tensor( Vec_Tens, "Vec_Tens" ); cout << endl << endl << endl;
- // shared_ptr<Tensor_<double>> UV_contracted_0 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( U_Tens, Vec_Tens, 0);
- // cout << endl ; Print_Tensor( UV_contracted_0, "UV_contracted_0" ); cout << endl << endl << endl;
- //
- // shared_ptr<vector<IndexRange>> act_ranges_2 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng } );
- // shared_ptr<Tensor_<double>> Mat_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges_2 );
- // cout << endl ; Print_Tensor( Mat_Tens, "Mat_Tens" ); cout << endl << endl << endl;
- // shared_ptr<Tensor_<double>> MV_contracted_0 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Mat_Tens, Vec_Tens, 0);
- // cout << endl ; Print_Tensor( MV_contracted_0, "MV_contracted_0" ); cout << endl << endl << endl;
- //
- // shared_ptr<vector<IndexRange>> actvir_ranges_2 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *virtual_rng } );
- // shared_ptr<Tensor_<double>> Rect_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( actvir_ranges_2 );
- // cout << endl ; Print_Tensor( Rect_Tens, "Rect_Tens" ); cout << endl << endl << endl;
- // shared_ptr<Tensor_<double>> RectV_contracted_0 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Rect_Tens, Vec_Tens, 0);
- // cout << endl ; Print_Tensor( RectV_contracted_0, "RectV_contracted_0" ); cout << endl << endl << endl;
- //  shared_ptr<vector<string>> op_list4 = make_shared<vector<string>>(vector<string> { "U" });
- //  Sys_Info->Set_BraKet_Ops( op_list4, "<I|U|J>" ) ;
- //  shared_ptr<vector<string>> BK_list_U = make_shared<vector<string>>(vector<string> { "<I|U|J>" });
- //  Sys_Info->Build_Expression( BK_list_U, "U4_test") ;
- //
- // Sys_Info->Initialize_Tensor_Op_Info( "U" );
- // shared_ptr<vector<IndexRange>> act_ranges_4 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng } );
- // shared_ptr<Tensor_<double>> U_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges_4 );
- // TensOp_data_map->emplace( "U", U_Tens );
- //
- // Sys_Info->Initialize_Tensor_Op_Info( "S" );
- // vector<IndexRange> act_ranges = { *active_rng, *active_rng, *active_rng, *active_rng };
- // shared_ptr<Tensor_<double>> Hact = Tensor_Arithmetic_Utils::get_sub_tensor( H_2el_all, act_ranges);
-
- // <proj_jst|H|0_K> set to sall in ms-caspt2
-  
-  // Get < M | W H | N  >
-
-  // Input into linear equation solver to get T amplitudes
-  
-  // Should get \sum < M | W ( f- E_{L}+E_{s} ) T_{LN} | N>  in solver
- 
-  // Construct effective Hamiltonian
-  
-  // symmetrize and diagonalize effective Hmailtonian
-// 
-// Sys_Info->Initialize_Tensor_Op_Info( "X" );
-// vector<IndexRange> X_ranges = { *not_virtual_rng, *not_virtual_rng, *not_closed_rng , *not_closed_rng} ;
-// shared_ptr<Tensor_<double>> XTens_data =  make_shared<Tensor_<double>>( X_ranges ); 
-// XTens_data->allocate();
-// Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( XTens_data , 1.0  );
-// TensOp_data_map->emplace( "X", XTens_data);
-// TensOp_data_map->emplace( "S", Hact );
-//
-//    shared_ptr<vector<IndexRange>> P_cvvc_ranges = make_shared<vector<IndexRange>>(vector<IndexRange>{*closed_rng , *virtual_rng, *virtual_rng, *closed_rng}) ;
-//    shared_ptr<Tensor_<double>> P_cvvc = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( P_cvvc_ranges );
-//    Print_Tensor( P_cvvc, "P_cvvc tensor" ) ; cout << endl << endl; 
-//    shared_ptr<Tensor_<double>> P_Tens03 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( P_cvvc, make_pair(0,3) );
-//    Print_Tensor( P_Tens03, "P_cvvc_03_contract" ) ; cout << endl << endl; 
-//    shared_ptr<Tensor_<double>> P_Tens12 = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( P_cvvc, make_pair(1,2) );
-//    Print_Tensor( P_Tens12, "P_cvvc_12_contract" ) ; cout << endl << endl; 
- // shared_ptr<vector<IndexRange>> act_ranges2 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng } );
- // shared_ptr<Tensor_<double>> Test_Tens2 = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges2 );
- //
- // Print_Tensor( Test_Tens2 , "TT2" ) ; cout << endl << endl;
- //
- // shared_ptr<vector<IndexRange>> act_ranges4 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng } );
- // shared_ptr<Tensor_<double>> Test_Tens4 = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges4 );
- //
- // Print_Tensor( Test_Tens4 , "TT4" ) ; cout << endl << endl;
- // shared_ptr<vector<IndexRange>> act_ranges6 = make_shared<vector<IndexRange>>( vector<IndexRange> { *active_rng, *active_rng, *active_rng, *active_rng, *active_rng, *active_rng } );
- // shared_ptr<Tensor_<double>> Test_Tens6 = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( act_ranges6 );
- //
- // vector<int> vec0 = { 0 };
- // vector<int> vec1 = { 1 };
- // vector<int> vec3 = { 3 };
- // vector<int> vec01 = { 0,1 };
- // vector<int> vec23 = { 2,3 };
- // vector<int> vec32 = { 3,2 };
- // vector<int> vec0123 = { 0,1,2,3 };
- // 
- // pair<vector<int>,vector<int>> ctrs_todo_00( vec0, vec0 );
- // shared_ptr<Tensor_<double>> T2T2_00 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_00 );
- // Print_Tensor( T2T2_00 , "T2T2_00" ) ; cout << endl << endl;
- //  
- // pair<vector<int>,vector<int>> ctrs_todo_01( vec0, vec1 );
- // shared_ptr<Tensor_<double>> T2T2_01 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_01 );
- // Print_Tensor( T2T2_01 , "T2T2_01" ) ; cout << endl << endl;
- //  
- // pair<vector<int>,vector<int>> ctrs_todo_10( vec1, vec0 );
- // shared_ptr<Tensor_<double>> T2T2_10 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_10 );
- // Print_Tensor( T2T2_10 , "T2T2_10" ) ; cout << endl << endl;
- //  
- // pair<vector<int>,vector<int>> ctrs_todo_11( vec1, vec1 );
- // shared_ptr<Tensor_<double>> T2T2_11 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens2, Test_Tens2, ctrs_todo_11 );
- // Print_Tensor( T2T2_11 , "T2T2_11" ) ; cout << endl << endl;
- // 
- // pair<vector<int>,vector<int>> ctrs_todo_30( vec3, vec0 );
- // shared_ptr<Tensor_<double>> T4T2_30 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens4, Test_Tens2, ctrs_todo_30 );
- // Print_Tensor( T4T2_30 , "T4T2_30" ) ; cout << endl << endl;
- //
- // pair<vector<int>,vector<int>> ctrs_todo_3201( vec32, vec01 );
- // shared_ptr<Tensor_<double>> T4T2_3201 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens4, Test_Tens2, ctrs_todo_3201 );
- // Print_Tensor( T4T2_3201 , "T4T2_3201" ) ; cout << endl << endl;
- //
- // pair<vector<int>,vector<int>> ctrs_todo_0101( vec01, vec01 );
- // shared_ptr<Tensor_<double>> T4T4_0101 =   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_different_tensors( Test_Tens4, Test_Tens4, ctrs_todo_0101 );
- // Print_Tensor( T4T4_0101 , "T4T4_0101" ) ; cout << endl << endl;
-/////////////////////////////////////////////////////////////////////////////////
- 
-
