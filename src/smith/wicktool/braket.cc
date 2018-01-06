@@ -5,20 +5,6 @@
 
 using namespace std;
 using namespace WickUtils;
-      
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-BraKet<DataType>::BraKet(shared_ptr<map<string,shared_ptr<map<string,AContribInfo>>>> G_to_A_map_in,
-                      shared_ptr<map<string, shared_ptr< GammaInfo >>> GammaMap_in,
-                      shared_ptr<StatesInfo<DataType>> TargetStates_in  ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  Sub_Ops = make_shared<vector<shared_ptr<TensOp::TensOp<DataType>>>>(0);
-  G_to_A_map = G_to_A_map_in;
-  GammaMap = GammaMap_in;
-  TargetStates = TargetStates_in;
-
-} 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void BraKet<DataType>::Build_TotalOp(){

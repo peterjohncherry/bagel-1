@@ -8,15 +8,20 @@ using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
 template<class DataType> 
 class Term_Info {
+
      public :
-       std::vector<std::string> op_list;
-       std::string Bra_name;
-       std::string Ket_name;
-       DataType factor;
-       std::string type ; // should be "ci_deriv" or "full" 
-       
-       Term_Info( std::vector<std::string> op_list_in, std::string Bra_name_in, std::string Ket_name_in, DataType factor_in , std::string type_in ) :
-                  op_list(op_list_in), Bra_name(Bra_name_in), Ket_name(Ket_name_in), factor(factor_in), type(type_in) {};
+       const std::vector<std::string> op_list;
+       const std::string Bra_name;
+       const std::string Ket_name;
+       const DataType factor;
+       const std::string type ; // should be "ci_deriv" or "full" 
+       const std::string term_name;
+
+     public :
+       Term_Info( std::vector<std::string> op_list_in, std::string Bra_name_in, std::string Ket_name_in, DataType factor_in,
+                  std::string type_in, std::string term_name_in ) :
+                  op_list(op_list_in), Bra_name(Bra_name_in), Ket_name(Ket_name_in), factor(factor_in), type(type_in),
+                  term_name(term_name_in) {};
        ~Term_Info(){};
 };
 
@@ -45,8 +50,7 @@ class System_Info {
       //only makes sense to specify a and b electrons if non-rel
       // key :    Name of BraKet
       // result : Vector of TensOps corresponding to BraKet
-      std::shared_ptr< std::map <std::string, 
-                                 std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> BraKet_map;
+      std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> BraKet_map;
   
       std::shared_ptr< std::map <std::string, std::shared_ptr<Expression<DataType>>>> expression_map;
     

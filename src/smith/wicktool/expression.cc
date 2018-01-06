@@ -6,14 +6,15 @@ using namespace std;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-Expression<DType>::Expression( std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DType>>>>>> BraKet_list,
-                           std::shared_ptr<StatesInfo<DType>> TargetStates_in ){
+template<class DataType>
+Expression<DataType>::Expression( shared_ptr< vector< pair< string, DataType >>> BraKet_list,
+                                  shared_ptr< map < string, shared_ptr< vector < shared_ptr< TensOp::TensOp<DataType> >>>>> BraKet_map,
+                                  shared_ptr< StatesInfo<DataType> > TargetStates_in ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  T_map                 = make_shared<map< string, shared_ptr<TensOp::TensOp<DType>>>>();
-  CTP_map               = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
-  CMTP_map              = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
+  T_map                 = make_shared<map< string, shared_ptr<TensOp::TensOp<DataType>>>>();
+  CTP_map               = make_shared<map< string, shared_ptr<CtrTensorPart<DataType>> >>();    
+  CMTP_map              = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>(); 
   ACompute_map          = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
   CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
 
@@ -22,8 +23,9 @@ Expression<DType>::Expression( std::shared_ptr<std::vector<std::shared_ptr<std::
 
   TargetStates = TargetStates_in;
  
-  for (auto BraKet_Tensors : *BraKet_list) 
-    Build_BraKet( BraKet_Tensors );
+  
+  for ( pair<string,DataType> bk_name_factor :  *BraKet_list )
+    Build_BraKet( BraKet_map->at( bk_name_factor.first), bk_name_factor.second );
   
   for (auto braket : BraKet_Terms)
     Get_CMTP_Compute_Terms();
@@ -31,13 +33,13 @@ Expression<DType>::Expression( std::shared_ptr<std::vector<std::shared_ptr<std::
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class DType>
-void Expression<DType>::Initialize(){
+template <class DataType>
+void Expression<DataType>::Initialize(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  T_map  = make_shared<map< string, shared_ptr<TensOp::TensOp<DType>>>>();
-  CTP_map    = make_shared<map< string, shared_ptr<CtrTensorPart<DType>> >>();    
-  CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DType>> >>(); 
+  T_map  = make_shared<map< string, shared_ptr<TensOp::TensOp<DataType>>>>();
+  CTP_map    = make_shared<map< string, shared_ptr<CtrTensorPart<DataType>> >>();    
+  CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>(); 
   ACompute_map = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
   CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
   G_to_A_map   = make_shared< map<string, shared_ptr< map<string, AContribInfo >>>>(); 
@@ -46,11 +48,11 @@ void Expression<DType>::Initialize(){
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp::TensOp<DType>>>> Tens_vec ){
+template<class DataType>
+void Expression<DataType>::Build_BraKet( shared_ptr<vector<shared_ptr<TensOp::TensOp<DataType>>>> Tens_vec, DataType factor  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<BraKet<DType>> New_BraKet = make_shared<BraKet<DType>>(G_to_A_map, GammaMap, TargetStates );
+  shared_ptr<BraKet<DataType>> New_BraKet = make_shared<BraKet<DataType>>(G_to_A_map, GammaMap, TargetStates );
   New_BraKet->Sub_Ops = Tens_vec;
 
   New_BraKet->Build_TotalOp();
@@ -58,7 +60,6 @@ void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp::TensOp
   New_BraKet->Build_Gamma_SpinFree(New_BraKet->Total_Op->aops(), New_BraKet->Total_Op->idxs()); 
 
   CTP_map->insert( New_BraKet->Total_Op->CTP_map->begin(),  New_BraKet->Total_Op->CTP_map->end());
-
   CMTP_map->insert(New_BraKet->Total_Op->CMTP_map->begin(), New_BraKet->Total_Op->CMTP_map->end());
 
   BraKet_Terms.push_back(New_BraKet);   
@@ -70,13 +71,13 @@ void Expression<DType>::Build_BraKet(shared_ptr<vector<shared_ptr<TensOp::TensOp
 // Adds terms associated with each gamma into the map
 // Note this 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DType>
-void Expression<DType>::Get_CMTP_Compute_Terms(){
+template<class DataType>
+void Expression<DataType>::Get_CMTP_Compute_Terms(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression::Get_CMTP_Compute_Terms" << endl;  
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
-  for (auto  G2A_mapit = G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
+  for (auto G2A_mapit = G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
     
     auto A_map = G2A_mapit->second;
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
@@ -96,7 +97,7 @@ void Expression<DType>::Get_CMTP_Compute_Terms(){
         ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
         CMTP_map->at(CMTP_name)->FullContract(CTP_map, ACompute_list, ACompute_map);
         ACompute_map->emplace(CMTP_name, ACompute_list);
-        CMTP_map->at(CMTP_name)->got_compute_list =true; 
+        CMTP_map->at(CMTP_name)->got_compute_list = true; 
       }
   
       cout << CMTP_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map->at(CMTP_name)->size() << endl;

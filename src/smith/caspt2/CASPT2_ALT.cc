@@ -158,7 +158,10 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
  {
    vector<string> op_list = { "L", "Q" };
    vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
-   
+  
+//   shared_ptr<unordered_map<pair<int,int>, vector<Term_Info<double>>>> Term_info_map =
+//   make_shared<unordered_map<pair<int,int>, vector<Term_Info<double>>>>();
+ 
    double factor = 0.0;
    // Building all necessary expressions 
    int  num_states = 1; 
@@ -167,7 +170,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
      for ( int jj = 0 ; jj != num_states; jj++) {
    
        for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "LQ" ));
+         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LQ" ));
          for ( string Op_name : BK_info.first )  
            Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
        }
@@ -192,7 +195,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
      for ( int jj = 0 ; jj != num_states; jj++) {
    
        for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "LR" ));
+         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LR" ));
          for ( string Op_name : BK_info.first )  
            Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
        }
@@ -218,7 +221,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
      for ( int jj = 0 ; jj != num_states; jj++) {
    
        for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "LU" ));
+         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LU" ));
          for ( string Op_name : BK_info.first )  
            Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
        }
@@ -244,7 +247,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
      for ( int jj = 0 ; jj != num_states; jj++) {
    
        for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "LV" ));
+         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LV" ));
          for ( string Op_name : BK_info.first )  
            Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
        }
@@ -269,7 +272,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
      for ( int jj = 0 ; jj != num_states; jj++) {
    
        for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "LY" ));
+         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LY" ));
          for ( string Op_name : BK_info.first )  
            Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
        }
@@ -294,7 +297,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
      for ( int jj = 0 ; jj != num_states; jj++) {
    
        for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "LW" ));
+         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LW" ));
          for ( string Op_name : BK_info.first )  
            Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
        }
@@ -319,7 +322,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
      for ( int jj = 0 ; jj != num_states; jj++) {
    
        for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "LZ" ));
+         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LZ" ));
          for ( string Op_name : BK_info.first )  
            Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
        }
@@ -344,7 +347,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
      for ( int jj = 0 ; jj != num_states; jj++) {
    
        for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "LS" ));
+         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LS" ));
          for ( string Op_name : BK_info.first )  
            Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
        }
@@ -369,7 +372,7 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
      for ( int jj = 0 ; jj != num_states; jj++) {
    
        for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second , "LT" ));
+         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LT" ));
          for ( string Op_name : BK_info.first )  
            Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
        }

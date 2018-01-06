@@ -89,7 +89,7 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
               A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), A_contrib_reordered );
             }
 
-         } else { cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO there should be a way to avoid this
+         } else { cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO is a way to avoid this, implement it
             
            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
 

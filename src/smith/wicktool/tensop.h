@@ -36,21 +36,21 @@ class TensOp_General {
                     std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
                     std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
                     std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr< const range_block_info> >> all_ranges ); 
-    ~TensOp_General(){};
+   ~TensOp_General(){};
 
-     int num_idxs() const { return num_idxs_; }
+    int num_idxs() const { return num_idxs_; }
 
-     std::pair<double,double> factor() const { return orig_factor_; };
+    std::pair<double,double> factor() const { return orig_factor_; };
 
-     std::shared_ptr<const std::vector<std::string>> idxs() const { return idxs_ptr_;}
+    std::shared_ptr<const std::vector<std::string>> idxs() const { return idxs_ptr_;}
 
-     std::shared_ptr<const std::vector<std::vector<std::string>>> idx_ranges() const { return idx_ranges_ptr_;}
+    std::shared_ptr<const std::vector<std::vector<std::string>>> idx_ranges() const { return idx_ranges_ptr_;}
 
-     std::shared_ptr<const std::vector<bool>> aops() const { return aops_ptr_;}
+    std::shared_ptr<const std::vector<bool>> aops() const { return aops_ptr_;}
 
-     std::shared_ptr<const std::vector<int>> plus_ops()const { return plus_ops_ptr_;}
+    std::shared_ptr<const std::vector<int>> plus_ops()const { return plus_ops_ptr_;}
 
-     std::shared_ptr<const std::vector<int>> kill_ops() const{ return kill_ops_ptr_;}
+    std::shared_ptr<const std::vector<int>> kill_ops() const{ return kill_ops_ptr_;}
 
     std::shared_ptr<const std::vector< std::shared_ptr< const std::vector<std::string>>>> unique_range_blocks() const { return  unique_range_blocks_ptr_;}
     
