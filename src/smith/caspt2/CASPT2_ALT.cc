@@ -428,38 +428,37 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
   vector<IndexRange> vvac = { *virtual_rng, *virtual_rng, *active_rng,      *closed_rng} ;
   vector<IndexRange> vvca = { *virtual_rng, *virtual_rng, *closed_rng,      *active_rng} ;
 
+  vector<IndexRange> vcvc = { *virtual_rng, *closed_rng, *virtual_rng,      *closed_rng} ;
+  vector<IndexRange> vavc = { *virtual_rng, *active_rng, *virtual_rng,      *closed_rng} ;
+  vector<IndexRange> vcva = { *virtual_rng, *closed_rng, *virtual_rng,      *active_rng} ;
+  vector<IndexRange> vava = { *virtual_rng, *active_rng, *virtual_rng,      *active_rng} ;
+
   vector<IndexRange> vvoo = { *virtual_rng,     *virtual_rng,     *not_virtual_rng, *not_virtual_rng } ;
   vector<IndexRange> vovo = { *virtual_rng,     *not_virtual_rng, *virtual_rng,     *not_virtual_rng } ;
   vector<IndexRange> ovov = { *not_virtual_rng, *virtual_rng,     *not_virtual_rng, *virtual_rng     } ;
+
 
   vector<IndexRange> vvoc = { *virtual_rng, *virtual_rng, *not_virtual_rng, *closed_rng} ;
   vector<IndexRange> vvco = { *virtual_rng, *virtual_rng, *closed_rng,      *not_virtual_rng} ;
   vector<IndexRange> vvoa = { *virtual_rng, *virtual_rng, *not_virtual_rng, *active_rng} ;
   vector<IndexRange> vvao = { *virtual_rng, *virtual_rng, *active_rng,      *not_virtual_rng} ;
 
+  shared_ptr<Tensor_<double>> LTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vvoo),1.0);
+  shared_ptr<Tensor_<double>> MTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vovo),1.0);
+
+  shared_ptr<Tensor_<double>> RTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvaa));
+  shared_ptr<Tensor_<double>> YTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvcc));
+  shared_ptr<Tensor_<double>> ZTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvac));
+
+  shared_ptr<vector<int>> normal_to_alt_order1 = make_shared<vector<int>>( vector<int> { 0, 2, 1, 3} );   // ++-- -> +-+- 
+  shared_ptr<vector<int>> normal_to_alt_order2 = make_shared<vector<int>>( vector<int> { 0, 3, 1, 2} );   // ++-- -> +-+- 
+  shared_ptr<vector<int>> switch_last_two_ids = make_shared<vector<int>>( vector<int> { 0, 1, 3, 2} );   // ++-- -> +-+- 
+    
   //Setting_data for TensOps
-  if ( op_name  == "P" ) { 
-
-    shared_ptr<vector<IndexRange>> H2el_ranges = make_shared<vector<IndexRange>>( H_2el_all->indexrange() );
-    shared_ptr<Tensor_<double>> P_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( H2el_ranges);
-    TensOp_data_map->emplace( "P", P_Tens );
-
-  } else if ( op_name  == "Smith_rdms" ) { 
+  if ( op_name  == "Smith_rdms" ) { 
    
     TensOp_data_map->emplace("Smith_rdm1", Smith_rdm1 );
     TensOp_data_map->emplace("Smith_rdm2", Smith_rdm2 );
-
-  } else if ( op_name  == "F" ) {
- 
-    shared_ptr<Tensor_<double>> F_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( make_shared<vector<IndexRange>>(ffff), 1.0 );
-    TensOp_data_map->emplace( "F", F_Tens );
-
-
-  } else if ( op_name  == "G" ) {
- 
-    shared_ptr<vector<IndexRange>> act2_ranges = make_shared<vector<IndexRange>>( vector<IndexRange> { *not_closed_rng, *not_virtual_rng } );
-    shared_ptr<Tensor_<double>> G_Tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( act2_ranges, 2.0 );
-    TensOp_data_map->emplace( "G", G_Tens );
 
   } else if ( op_name  == "H" ) { 
     
@@ -485,63 +484,81 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
 
   } else if ( op_name  == "N" ) { 
 
-    shared_ptr<Tensor_<double>> NTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vovo));
+    shared_ptr<Tensor_<double>> NTens = make_shared<Tensor_<double>>( vovo ); 
+    NTens->allocate();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( RTens, vvaa, NTens, vava, normal_to_alt_order1 );
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, NTens, vcva, normal_to_alt_order1 );
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, NTens, vavc, normal_to_alt_order2 );
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( YTens, vvcc, NTens, vcvc, normal_to_alt_order1 );
+
     TensOp_data_map->emplace("N" , NTens);
 
   } else if ( op_name  == "Q" ) { 
 
-    shared_ptr<Tensor_<double>> QTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvoo) );
+    shared_ptr<Tensor_<double>> QTens = make_shared<Tensor_<double>>(vvoo);
+    QTens->allocate();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( RTens, QTens, vvaa);
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( YTens, QTens, vvcc);
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( ZTens, QTens, vvac);
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, QTens, vvac, switch_last_two_ids );
     TensOp_data_map->emplace("Q" , QTens);
 
   } else if ( op_name  == "R" ) { 
 
-    shared_ptr<Tensor_<double>> RTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvaa) );
     TensOp_data_map->emplace( "R" , RTens);
 
   } else if ( op_name  == "S" ) { 
-
-    shared_ptr<Tensor_<double>> TTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvao) );
-    shared_ptr<vector<int>> vvao_to_vvoa = make_shared<vector<int>>( vector<int> { 0, 1, 3, 2} ) ;  
-    shared_ptr<Tensor_<double>> STens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor(TTens, vvao_to_vvoa);
+   
+    shared_ptr<Tensor_<double>> STens = make_shared<Tensor_<double>>(vvoa);
+    STens->allocate();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( RTens, STens, vvaa );
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, STens, vvca, switch_last_two_ids );
     TensOp_data_map->emplace( "S", STens );
 
   } else if ( op_name  == "T" ) { 
 
-    shared_ptr<Tensor_<double>> TTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvao) );
+    shared_ptr<Tensor_<double>> TTens = make_shared<Tensor_<double>>(vvao);
+    TTens->allocate();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( RTens, TTens, vvaa);
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( ZTens, TTens, vvac);
     TensOp_data_map->emplace("T", TTens);
 
   } else if ( op_name  == "U" ) { 
 
-    shared_ptr<Tensor_<double>> UTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvco) );
+    shared_ptr<Tensor_<double>> UTens = make_shared<Tensor_<double>>(vvco);
+    UTens->allocate();
+    cout << "a" << endl;
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, UTens, vvca, switch_last_two_ids);
+    cout << "b" << endl;
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( YTens, UTens, vvcc);
+    cout << "c" << endl;
     TensOp_data_map->emplace("U", UTens);
 
   } else if ( op_name  == "V" ) { 
 
-    shared_ptr<Tensor_<double>> UTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvco) );
-    shared_ptr<vector<int>> vvco_to_vvoc = make_shared<vector<int>>( vector<int> { 0, 1, 3, 2} ) ;  
-    shared_ptr<Tensor_<double>> VTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor(UTens, vvco_to_vvoc);
+    shared_ptr<Tensor_<double>> VTens = make_shared<Tensor_<double>>(vvoc);
+    VTens->allocate();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( YTens, VTens, vvcc );
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( ZTens, VTens, vvac );
     TensOp_data_map->emplace("V", VTens);
 
   } else if ( op_name  == "W" ) { 
 
-    shared_ptr<Tensor_<double>> ZTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(  make_shared<vector<IndexRange>>(vvac) );
-    shared_ptr<vector<int>> vvac_to_vvca = make_shared<vector<int>>( vector<int> { 0, 1, 3, 2} ) ;  
-    shared_ptr<Tensor_<double>> WTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor(ZTens, vvac_to_vvca);
+    shared_ptr<Tensor_<double>> WTens = make_shared<Tensor_<double>>(vvca);
+    WTens->allocate();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, WTens, vvca, switch_last_two_ids);
     TensOp_data_map->emplace("W", WTens);
 
   } else if ( op_name  == "X" ) { 
 
-    shared_ptr<Tensor_<double>> XTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvaa) );
-    TensOp_data_map->emplace( "X" , XTens);
+    TensOp_data_map->emplace( "X" , RTens);
  
   } else if ( op_name  == "Y" ) {
  
-    shared_ptr<Tensor_<double>> YTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvcc) );
     TensOp_data_map->emplace( "Y", YTens );
    
   } else if ( op_name  == "Z" ) {
  
-    shared_ptr<Tensor_<double>> ZTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major( make_shared<vector<IndexRange>>(vvac) );
     TensOp_data_map->emplace( "Z", ZTens );
   }
 
