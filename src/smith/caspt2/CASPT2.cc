@@ -265,8 +265,14 @@ void CASPT2::CASPT2::solve() {
   shared_ptr<Tensor_<double>> ZTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvac));
 
 
-    shared_ptr<Tensor> t2_one = t2all_[0]->at(0)->clone();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one , 1.0  );
+    vector<IndexRange> t2_id_ranges =  t2all_[0]->at(0)->indexrange();  
+    shared_ptr<vector<IndexRange>> t2_id_ranges_ptr =  make_shared<vector<IndexRange>>(t2_id_ranges);  
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( RTens, vvaa, v2_, avav, normal_to_smith_order1 );
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, v2_, avcv, normal_to_smith_order1 );
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, v2_, cvav, normal_to_smith_order2 );
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( YTens, vvcc, v2_, cvcv, normal_to_smith_order1 );
+
+    shared_ptr<Tensor_<double>> t2_one = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(t2_id_ranges_ptr);
     shared_ptr<MultiTensor> sist = make_shared<MultiTensor>(1);
 
     {

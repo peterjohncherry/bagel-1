@@ -443,8 +443,8 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
   vector<IndexRange> vvoa = { *virtual_rng, *virtual_rng, *not_virtual_rng, *active_rng} ;
   vector<IndexRange> vvao = { *virtual_rng, *virtual_rng, *active_rng,      *not_virtual_rng} ;
 
-  shared_ptr<Tensor_<double>> LTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vvoo),1.0);
-  shared_ptr<Tensor_<double>> MTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vovo),1.0);
+  shared_ptr<Tensor_<double>> LTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvoo));
+  shared_ptr<Tensor_<double>> MTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vovo));
 
   shared_ptr<Tensor_<double>> RTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvaa));
   shared_ptr<Tensor_<double>> YTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvcc));
@@ -474,12 +474,11 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
 
   } else if ( op_name  == "L" ) { 
 
-    shared_ptr<Tensor_<double>> LTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vvoo), 1.0 );
     TensOp_data_map->emplace("L" , LTens);
 
   } else if ( op_name  == "M" ) { 
 
-    shared_ptr<Tensor_<double>> MTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vovo), 1.0 );
+    shared_ptr<Tensor_<double>> MTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( LTens, normal_to_alt_order1  );
     TensOp_data_map->emplace("M" , MTens);
 
   } else if ( op_name  == "N" ) { 
