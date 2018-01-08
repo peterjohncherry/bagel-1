@@ -19,10 +19,13 @@ class BraKet{
        
         std::shared_ptr<StatesInfo<DataType>> TargetStates;
 
+        //factor; this is specific to the expression to which this BraKet object belongs
+        DataType factor_;
+
         BraKet(std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map_in,
                std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> GammaMap_in ,
-               std::shared_ptr<StatesInfo<DataType>> TargetStates_in ) : 
-               G_to_A_map(G_to_A_map_in), GammaMap(GammaMap_in),TargetStates(TargetStates_in)
+               std::shared_ptr<StatesInfo<DataType>> TargetStates_in, DataType factor ) : 
+               G_to_A_map(G_to_A_map_in), GammaMap(GammaMap_in), TargetStates(TargetStates_in), factor_(factor)
                {
                  Sub_Ops = std::make_shared<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>>(0);
                }

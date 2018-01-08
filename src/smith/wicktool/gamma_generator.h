@@ -116,7 +116,9 @@ class GammaGenerator{
 
     std::shared_ptr<std::map< char, int>>         op_order ;
     std::shared_ptr<std::map< std::string, int>>  idx_order ;
-       
+
+    double bk_factor;
+
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
     std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo>> >> G_to_A_map;
@@ -134,7 +136,8 @@ class GammaGenerator{
     GammaGenerator( std::shared_ptr<StatesInfo<double>> TargetStates, int Ket_num, int Bra_num,
                     std::shared_ptr<const std::vector<std::string>> orig_ids, std::shared_ptr< const std::vector<bool>> orig_aops,
                     std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
-                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in );
+                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in,
+                    double bk_factor );
     ~GammaGenerator(){};
 
     void add_gamma(std::shared_ptr<const range_block_info> block_info );

@@ -66,10 +66,11 @@ cout << "GammaInfo::GammaInfo" <<  endl;
 GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> TargetStates, int Bra_num, int Ket_num,
                                 shared_ptr<const vector<string>> orig_ids, shared_ptr<const vector<bool>> orig_aops, 
                                 shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
-                                shared_ptr<map<string, shared_ptr<map<string, AContribInfo >>>> G_to_A_map_in):
+                                shared_ptr<map<string, shared_ptr<map<string, AContribInfo >>>> G_to_A_map_in,
+                                double bk_factor_in ):
                                 TargetStates_(TargetStates), Bra_num_(Bra_num), Ket_num_(Ket_num), 
                                 orig_ids_(orig_ids), orig_aops_(orig_aops), 
-                                G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in) {
+                                G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in), bk_factor(bk_factor_in) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_GammaGenerator
 cout << "GammaGenerator::GammaGenerator" << endl; 
@@ -345,7 +346,10 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
         }
       }
 
-      double my_sign = 1.0*gamma_vec->at(kk)->my_sign ;
+      // should be fully reordered by this point, so can apply factor. 
+      // This section should be taking out and put into a seperate function; keep ordering and
+      // map creation parts seperate
+      double my_sign = bk_factor*gamma_vec->at(kk)->my_sign ;
 
       string Aname_alt = get_Aname( *orig_ids_, *full_id_ranges, *deltas_pos );
       string Gname_alt = get_gamma_name( full_id_ranges, orig_aops_, ids_pos, Bra_name, Ket_name );

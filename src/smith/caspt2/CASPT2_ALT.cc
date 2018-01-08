@@ -155,53 +155,94 @@ void CASPT2_ALT::CASPT2_ALT::solve() {
 ////////////////////////////////////////////////////////////////////
 cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
 
- {
-   vector<string> op_list = { "L", "Q" };
-   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
+ vector<string> lz = { "L", "Z" };
+ vector<string> lq = { "L", "Q" };
+ vector<string> ly = { "L", "Y" };
+ vector<string> lr = { "L", "R" };
+{
+   vector< pair<vector<string>,double> > BK_info_list = {  make_pair( ly, 1.0 ) }  ;
   
-//   shared_ptr<unordered_map<pair<int,int>, vector<Term_Info<double>>>> Term_info_map =
-//   make_shared<unordered_map<pair<int,int>, vector<Term_Info<double>>>>();
- 
-   double factor = 0.0;
+   map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
+  
    // Building all necessary expressions 
    int  num_states = 1; 
-   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
-   for ( int ii = 0 ; ii != num_states; ii++) {
-     for ( int jj = 0 ; jj != num_states; jj++) {
    
-       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LQ" ));
+   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
+   for ( auto ii  :  TargetsInfo->civec_info_map) {
+     for ( auto jj : TargetsInfo->civec_info_map) {
+       string Bra_name = ii.first ;            
+       string Ket_name = jj.first ;            
+
+       shared_ptr<vector<Term_Info<double>>> term_info_ss = make_shared<vector<Term_Info<double>>>(); 
+       Term_info_map.emplace(make_pair( Bra_name, Ket_name), term_info_ss); 
+
+       for ( pair<vector<string>,double> BK_info : BK_info_list ){
+         term_info_ss->push_back(Term_Info<double>( BK_info, Bra_name, Ket_name, "expectation" ));
          for ( string Op_name : BK_info.first )  
-           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
+           Set_Tensor_Ops_Data( Op_name, Bra_name, Ket_name ); 
        }
    
-       string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
-   
+       string expression_name = Sys_Info->Build_Expression( *term_info_ss );
        Expression_Machine->Evaluate_Expression( expression_name );
   
      }
    }
  }
 
- {
-   vector<string> op_list = { "L", "R" };
-   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
-   
-   double factor = 0.0;
+{
+   vector< pair<vector<string>,double> > BK_info_list = {  make_pair( lr, 1.0 ) }  ;
+  
+   map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
+  
    // Building all necessary expressions 
    int  num_states = 1; 
-   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
-   for ( int ii = 0 ; ii != num_states; ii++) {
-     for ( int jj = 0 ; jj != num_states; jj++) {
    
-       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LR" ));
+   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
+   for ( auto ii  :  TargetsInfo->civec_info_map) {
+     for ( auto jj : TargetsInfo->civec_info_map) {
+       string Bra_name = ii.first ;            
+       string Ket_name = jj.first ;            
+
+       shared_ptr<vector<Term_Info<double>>> term_info_ss = make_shared<vector<Term_Info<double>>>(); 
+       Term_info_map.emplace(make_pair( Bra_name, Ket_name), term_info_ss); 
+
+       for ( pair<vector<string>,double> BK_info : BK_info_list ){
+         term_info_ss->push_back(Term_Info<double>( BK_info, Bra_name, Ket_name, "expectation" ));
          for ( string Op_name : BK_info.first )  
-           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
+           Set_Tensor_Ops_Data( Op_name, Bra_name, Ket_name ); 
        }
    
-       string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
+       string expression_name = Sys_Info->Build_Expression( *term_info_ss );
+       Expression_Machine->Evaluate_Expression( expression_name );
+  
+     }
+   }
+ }
+
+{
+   vector< pair<vector<string>,double> > BK_info_list = {  make_pair( lz, 1.0 ) }  ;
+  
+   map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
+  
+   // Building all necessary expressions 
+   int  num_states = 1; 
    
+   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
+   for ( auto ii  :  TargetsInfo->civec_info_map) {
+     for ( auto jj : TargetsInfo->civec_info_map) {
+       string Bra_name = ii.first ;            
+       string Ket_name = jj.first ;            
+
+       shared_ptr<vector<Term_Info<double>>> term_info_ss = make_shared<vector<Term_Info<double>>>(); 
+       Term_info_map.emplace(make_pair( Bra_name, Ket_name), term_info_ss); 
+
+       for ( pair<vector<string>,double> BK_info : BK_info_list ){
+         term_info_ss->push_back(Term_Info<double>( BK_info, Bra_name, Ket_name, "expectation" ));
+         for ( string Op_name : BK_info.first )  
+           Set_Tensor_Ops_Data( Op_name, Bra_name, Ket_name ); 
+       }
+   
+       string expression_name = Sys_Info->Build_Expression( *term_info_ss );
        Expression_Machine->Evaluate_Expression( expression_name );
   
      }
@@ -210,175 +251,29 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
 
 
  {
-   vector<string> op_list = { "L", "U" };
-   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
-   
-   double factor = 0.0;
-   // Building all necessary expressions 
-   int  num_states = 1; 
-   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
-   for ( int ii = 0 ; ii != num_states; ii++) {
-     for ( int jj = 0 ; jj != num_states; jj++) {
-   
-       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LU" ));
-         for ( string Op_name : BK_info.first )  
-           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
-       }
-   
-       string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
-   
-       Expression_Machine->Evaluate_Expression( expression_name );
+   vector< pair<vector<string>,double> > BK_info_list = {  make_pair( ly, 1.0 ), make_pair(lr, -2.0), make_pair(lz, 1.0) }  ;
   
-     }
-   }
- }
-
-
- {
-   vector<string> op_list = { "L", "V" };
-   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
-   
-   double factor = 0.0;
-   // Building all necessary expressions 
-   int  num_states = 1; 
-   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
-   for ( int ii = 0 ; ii != num_states; ii++) {
-     for ( int jj = 0 ; jj != num_states; jj++) {
-   
-       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LV" ));
-         for ( string Op_name : BK_info.first )  
-           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
-       }
-   
-       string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
-   
-       Expression_Machine->Evaluate_Expression( expression_name );
+   map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
   
-     }
-   }
- }
-
- {
-   vector<string> op_list = { "L", "Y" };
-   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
-   
-   double factor = 0.0;
    // Building all necessary expressions 
    int  num_states = 1; 
+   
    vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
-   for ( int ii = 0 ; ii != num_states; ii++) {
-     for ( int jj = 0 ; jj != num_states; jj++) {
-   
-       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LY" ));
-         for ( string Op_name : BK_info.first )  
-           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
-       }
-   
-       string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
-   
-       Expression_Machine->Evaluate_Expression( expression_name );
-  
-     }
-   }
- }
+   for ( auto ii  :  TargetsInfo->civec_info_map) {
+     for ( auto jj : TargetsInfo->civec_info_map) {
+       string Bra_name = ii.first ;            
+       string Ket_name = jj.first ;            
 
- {
-   vector<string> op_list = { "L", "W" };
-   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
-   
-   double factor = 0.0;
-   // Building all necessary expressions 
-   int  num_states = 1; 
-   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
-   for ( int ii = 0 ; ii != num_states; ii++) {
-     for ( int jj = 0 ; jj != num_states; jj++) {
-   
-       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LW" ));
-         for ( string Op_name : BK_info.first )  
-           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
-       }
-   
-       string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
-   
-       Expression_Machine->Evaluate_Expression( expression_name );
-  
-     }
-   }
- }
+       shared_ptr<vector<Term_Info<double>>> term_info_ss = make_shared<vector<Term_Info<double>>>(); 
+       Term_info_map.emplace(make_pair( Bra_name, Ket_name), term_info_ss); 
 
- {
-   vector<string> lz = { "L", "Z" };
-   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( lz, 1.0 ) );
-   
-   double factor = 0.0;
-   // Building all necessary expressions 
-   int  num_states = 1; 
-   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
-   for ( int ii = 0 ; ii != num_states; ii++) {
-     for ( int jj = 0 ; jj != num_states; jj++) {
-   
-       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LZ" ));
+       for ( pair<vector<string>,double> BK_info : BK_info_list ){
+         term_info_ss->push_back(Term_Info<double>( BK_info, Bra_name, Ket_name, "expectation" ));
          for ( string Op_name : BK_info.first )  
-           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
+           Set_Tensor_Ops_Data( Op_name, Bra_name, Ket_name ); 
        }
    
-       string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
-   
-       Expression_Machine->Evaluate_Expression( expression_name );
-  
-      }
-    }
-  }
-
- {
-   vector<string> op_list = { "L", "S" };
-   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
-   
-   double factor = 0.0;
-   // Building all necessary expressions 
-   int  num_states = 1; 
-   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
-   for ( int ii = 0 ; ii != num_states; ii++) {
-     for ( int jj = 0 ; jj != num_states; jj++) {
-   
-       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LS" ));
-         for ( string Op_name : BK_info.first )  
-           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
-       }
-   
-       string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
-   
-       Expression_Machine->Evaluate_Expression( expression_name );
-  
-     }
-   }
- }
-
- {
-   vector<string> op_list = { "L", "T" };
-   vector< pair<vector<string>,double> > BK_info_list( 1, make_pair( op_list, 1.0 ) );
-   
-   double factor = 0.0;
-   // Building all necessary expressions 
-   int  num_states = 1; 
-   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
-   for ( int ii = 0 ; ii != num_states; ii++) {
-     for ( int jj = 0 ; jj != num_states; jj++) {
-   
-       for ( pair<vector<string>,double> BK_info : BK_info_list ) {
-         Term_info_list[ii*num_states+jj].push_back(Term_Info<double>( BK_info.first, TargetsInfo->name(ii), TargetsInfo->name(jj), BK_info.second, "expectation", "LT" ));
-         for ( string Op_name : BK_info.first )  
-           Set_Tensor_Ops_Data( Op_name, TargetsInfo->name(ii), TargetsInfo->name(jj) ); 
-       }
-   
-       string expression_name = Sys_Info->Build_Expression( Term_info_list[ii*num_states+jj] );
-   
+       string expression_name = Sys_Info->Build_Expression( *term_info_ss );
        Expression_Machine->Evaluate_Expression( expression_name );
   
      }

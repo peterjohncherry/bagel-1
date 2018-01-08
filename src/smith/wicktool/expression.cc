@@ -52,7 +52,7 @@ template<class DataType>
 void Expression<DataType>::Build_BraKet( shared_ptr<vector<shared_ptr<TensOp::TensOp<DataType>>>> Tens_vec, DataType factor  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<BraKet<DataType>> New_BraKet = make_shared<BraKet<DataType>>(G_to_A_map, GammaMap, TargetStates );
+  shared_ptr<BraKet<DataType>> New_BraKet = make_shared<BraKet<DataType>>(G_to_A_map, GammaMap, TargetStates, factor );
   New_BraKet->Sub_Ops = Tens_vec;
 
   New_BraKet->Build_TotalOp();

@@ -112,18 +112,17 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
         Op_list.push_back(op_name);
       }
     }
-
     string BraKet_name = "";
-    
+
     if ( BraKet_info.type == "ci_derivative" ) {
       BraKet_name += "c_{I}^{" + BraKet_info.Bra_name + "} < "+BraKet_info.Bra_name  + " | ";
-    } else { 
+    } else if (BraKet_info.type == "expectation")  { 
       BraKet_name += "< "+ BraKet_info.Bra_name +" | ";
     }
     
     for ( string op : BraKet_info.op_list ) 
       BraKet_name += op;
-    
+     
     BraKet_name += " | " + BraKet_info.Ket_name + " > " ;
    
     if ( BraKet_map->find(BraKet_name) == BraKet_map->end() ) 
@@ -131,23 +130,18 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
 
     BraKet_name_list->push_back( make_pair( BraKet_name, BraKet_info.factor ) );
     cout << "new BraKet_name = " << BraKet_name << endl;
-
-  }    
+  }
 
   string expression_name = "";
-  for ( pair<string, DataType> name_fac_pair : *BraKet_name_list ) 
-    expression_name += name_fac_pair.first;
-
+  for ( pair<string, DataType> name_fac_pair : *BraKet_name_list ) {
+    if (name_fac_pair.second > 0.0 ) 
+      expression_name += "+";
+    expression_name += "(" + to_string(name_fac_pair.second) + ")" + name_fac_pair.first;
+  }
   cout << "new_expression_name = " << expression_name << endl;
-
-  //auto BraKet_List = make_shared<vector< pair< DataType, shared_ptr<vector<shared_ptr<TensOp::TensOp<DataType>>>>>>>( BraKet_name_list->size() ); 
-  auto BraKet_List = make_shared<vector< shared_ptr<vector<shared_ptr<TensOp::TensOp<DataType>>> >>>( BraKet_name_list->size() ); 
-
-  for ( int ii = 0 ; ii != BraKet_name_list->size() ; ii++ ) 
-    BraKet_List->at(ii) = BraKet_map->at(BraKet_name_list->at(ii).first );
-
+    
   shared_ptr<Expression<DataType>> new_expression = make_shared<Expression<DataType>>(BraKet_name_list, BraKet_map, TargetStates);
-
+  
   expression_map->emplace( expression_name, new_expression );
 
   return expression_name;
