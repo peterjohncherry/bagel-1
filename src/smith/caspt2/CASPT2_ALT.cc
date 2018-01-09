@@ -45,7 +45,9 @@ CASPT2_ALT::CASPT2_ALT::CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in ) {
   F_1el_all  = orig_cpt2_in.f1_;     cout << "F_1el_all->rms()" <<  F_1el_all->rms() << endl; 
   H_1el_all  = orig_cpt2_in.h1_;     cout << "H_1el_all->rms()" <<  H_1el_all->rms() << endl; 
   H_2el_all  = orig_cpt2_in.H_2el_;  cout << "H_2el_all->rms()" <<  H_2el_all->rms() << endl; 
- 
+  v2_        = orig_cpt2_in.v2_;     cout << "v2_->rms()" <<  v2_->rms() << endl; 
+
+
   ncore   = orig_cpt2_in.info_->ncore();
   nclosed = orig_cpt2_in.info_->nclosed();
   nact    = orig_cpt2_in.info_->nact();
@@ -120,6 +122,16 @@ void CASPT2_ALT::CASPT2_ALT::set_range_info(shared_ptr<vector<int>> states_of_in
   range_conversion_map->emplace("notact", not_active_rng);
   range_conversion_map->emplace("notvir", not_virtual_rng); 
  
+  cout << "range sizes" << endl;
+  cout << "cor    : " <<  closed_rng->size() << endl; 
+  cout << "act    : " <<  active_rng->size() << endl; 
+  cout << "A      : " <<  active_rng->size()<< endl;  
+  cout << "vir    : " <<  virtual_rng->size()<< endl; 
+  cout << "free   : " <<  free_rng->size()<< endl; 
+  cout << "notcor : " <<  not_closed_rng->size()<< endl; 
+  cout << "notact : " <<  not_active_rng->size() << endl; 
+  cout << "notvir : " <<  not_virtual_rng->size() << endl;  
+ 
   for ( int ii : *states_of_interest ) {
 
     range_conversion_map->emplace( get_civec_name( ii , civectors->data(ii)->det()->norb(), civectors->data(ii)->det()->nelea(), civectors->data(ii)->det()->neleb()),
@@ -150,17 +162,49 @@ void CASPT2_ALT::CASPT2_ALT::set_target_info( shared_ptr<vector<int>> states_of_
   return;
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CASPT2_ALT::CASPT2_ALT::calculate_term( vector<int>& Target_states_list, vector<pair<vector<string>,double>>& BK_info_list, string term_type ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
+  
+  int num_states = Target_states_list.size();
+
+  // Building all necessary expressions 
+  vector<vector<Term_Info<double>>> Term_info_list( Target_states_list.size()*Target_states_list.size() );
+  for ( int ii : Target_states_list ) {
+    string Bra_name = TargetsInfo->name(ii); // TODO change to vector for relativistic case           
+    for ( int  jj : Target_states_list ) {
+      string Ket_name = TargetsInfo->name(jj); // TODO change to vector for relativistic case           
+
+      shared_ptr<vector<Term_Info<double>>> term_info_ss = make_shared<vector<Term_Info<double>>>(); 
+      for ( pair<vector<string>,double> BK_info : BK_info_list ){
+        term_info_ss->push_back(Term_Info<double>( BK_info, Bra_name, Ket_name, term_type ));
+        for ( string Op_name : BK_info.first )  
+          Set_Tensor_Ops_Data( Op_name, Bra_name, Ket_name ); 
+      }
+  
+      string expression_name = Sys_Info->Build_Expression( *term_info_ss );
+      Expression_Machine->Evaluate_Expression( expression_name );
+  
+    }
+  }
+
+}
 ////////////////////////////////////////////////////////////////////
 void CASPT2_ALT::CASPT2_ALT::solve() {
 ////////////////////////////////////////////////////////////////////
 cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
 
- vector<string> lz = { "L", "Z" };
+ vector<string> lp = { "L", "P" };
+ vector<string> lm = { "L", "M" };
+ vector<string> ln = { "L", "N" };
+ vector<string> lh = { "L", "H" };
  vector<string> lq = { "L", "Q" };
- vector<string> ly = { "L", "Y" };
- vector<string> lr = { "L", "R" };
-{
-   vector< pair<vector<string>,double> > BK_info_list = {  make_pair( ly, 1.0 ) }  ;
+
+ {
+   vector< pair<vector<string>,double> > BK_info_list = {  make_pair( lm, 1.0 ), make_pair(ln, 1.0), make_pair(lp, 1.0) }  ;
   
    map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
   
@@ -188,39 +232,8 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
      }
    }
  }
-
-{
-   vector< pair<vector<string>,double> > BK_info_list = {  make_pair( lr, 1.0 ) }  ;
-  
-   map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
-  
-   // Building all necessary expressions 
-   int  num_states = 1; 
-   
-   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
-   for ( auto ii  :  TargetsInfo->civec_info_map) {
-     for ( auto jj : TargetsInfo->civec_info_map) {
-       string Bra_name = ii.first ;            
-       string Ket_name = jj.first ;            
-
-       shared_ptr<vector<Term_Info<double>>> term_info_ss = make_shared<vector<Term_Info<double>>>(); 
-       Term_info_map.emplace(make_pair( Bra_name, Ket_name), term_info_ss); 
-
-       for ( pair<vector<string>,double> BK_info : BK_info_list ){
-         term_info_ss->push_back(Term_Info<double>( BK_info, Bra_name, Ket_name, "expectation" ));
-         for ( string Op_name : BK_info.first )  
-           Set_Tensor_Ops_Data( Op_name, Bra_name, Ket_name ); 
-       }
-   
-       string expression_name = Sys_Info->Build_Expression( *term_info_ss );
-       Expression_Machine->Evaluate_Expression( expression_name );
-  
-     }
-   }
- }
-
-{
-   vector< pair<vector<string>,double> > BK_info_list = {  make_pair( lz, 1.0 ) }  ;
+ {
+   vector< pair<vector<string>,double> > BK_info_list = {  make_pair(lm, 1.0) }  ;
   
    map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
   
@@ -251,7 +264,65 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
 
 
  {
-   vector< pair<vector<string>,double> > BK_info_list = {  make_pair( ly, 1.0 ), make_pair(lr, -2.0), make_pair(lz, 1.0) }  ;
+   vector< pair<vector<string>,double> > BK_info_list = {  make_pair(ln, 1.0) }  ;
+  
+   map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
+  
+   // Building all necessary expressions 
+   int  num_states = 1; 
+   
+   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
+   for ( auto ii  :  TargetsInfo->civec_info_map) {
+     for ( auto jj : TargetsInfo->civec_info_map) {
+       string Bra_name = ii.first ;            
+       string Ket_name = jj.first ;            
+
+       shared_ptr<vector<Term_Info<double>>> term_info_ss = make_shared<vector<Term_Info<double>>>(); 
+       Term_info_map.emplace(make_pair( Bra_name, Ket_name), term_info_ss); 
+
+       for ( pair<vector<string>,double> BK_info : BK_info_list ){
+         term_info_ss->push_back(Term_Info<double>( BK_info, Bra_name, Ket_name, "expectation" ));
+         for ( string Op_name : BK_info.first )  
+           Set_Tensor_Ops_Data( Op_name, Bra_name, Ket_name ); 
+       }
+   
+       string expression_name = Sys_Info->Build_Expression( *term_info_ss );
+       Expression_Machine->Evaluate_Expression( expression_name );
+  
+     }
+   }
+ }
+ {
+   vector< pair<vector<string>,double> > BK_info_list = { make_pair(lp, 1.0) }  ;
+  
+   map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
+  
+   // Building all necessary expressions 
+   int  num_states = 1; 
+   
+   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
+   for ( auto ii  :  TargetsInfo->civec_info_map) {
+     for ( auto jj : TargetsInfo->civec_info_map) {
+       string Bra_name = ii.first ;            
+       string Ket_name = jj.first ;            
+
+       shared_ptr<vector<Term_Info<double>>> term_info_ss = make_shared<vector<Term_Info<double>>>(); 
+       Term_info_map.emplace(make_pair( Bra_name, Ket_name), term_info_ss); 
+
+       for ( pair<vector<string>,double> BK_info : BK_info_list ){
+         term_info_ss->push_back(Term_Info<double>( BK_info, Bra_name, Ket_name, "expectation" ));
+         for ( string Op_name : BK_info.first )  
+           Set_Tensor_Ops_Data( Op_name, Bra_name, Ket_name ); 
+       }
+   
+       string expression_name = Sys_Info->Build_Expression( *term_info_ss );
+       Expression_Machine->Evaluate_Expression( expression_name );
+  
+     }
+   }
+ }
+ {
+   vector< pair<vector<string>,double> > BK_info_list = { make_pair(lq, 1.0) }  ;
   
    map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
   
@@ -281,6 +352,35 @@ cout <<  " CASPT2_ALT::CASPT2_ALT::solve() " << endl;
  }
 
 
+{
+   vector< pair<vector<string>,double> > BK_info_list = { make_pair(lh, 1.0) }  ;
+   map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map;
+  
+   // Building all necessary expressions 
+   int  num_states = 1; 
+   
+   vector<vector<Term_Info<double>>> Term_info_list( num_states*num_states );
+   for ( auto ii  :  TargetsInfo->civec_info_map) {
+     for ( auto jj : TargetsInfo->civec_info_map) {
+       string Bra_name = ii.first ;            
+       string Ket_name = jj.first ;            
+
+       shared_ptr<vector<Term_Info<double>>> term_info_ss = make_shared<vector<Term_Info<double>>>(); 
+       Term_info_map.emplace(make_pair( Bra_name, Ket_name), term_info_ss); 
+
+       for ( pair<vector<string>,double> BK_info : BK_info_list ){
+         term_info_ss->push_back(Term_Info<double>( BK_info, Bra_name, Ket_name, "expectation" ));
+         for ( string Op_name : BK_info.first )  
+           Set_Tensor_Ops_Data( Op_name, Bra_name, Ket_name ); 
+       }
+   
+       string expression_name = Sys_Info->Build_Expression( *term_info_ss );
+       Expression_Machine->Evaluate_Expression( expression_name );
+  
+     }
+   }
+ }
+
  return;
 } 
 /////////////////////////////////////////////////////////////////////////////////
@@ -292,30 +392,32 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
 
   vector<IndexRange> ffff = { *free_rng, *free_rng, *free_rng, *free_rng};
 
-  vector<IndexRange> aaaa = { *active_rng,  *active_rng,  *active_rng,      *active_rng};
-  vector<IndexRange> vvaa = { *virtual_rng, *virtual_rng, *active_rng,      *active_rng} ;
+  vector<IndexRange> aaaa = { *active_rng,  *active_rng,  *active_rng, *active_rng};
+  vector<IndexRange> vvaa = { *virtual_rng, *virtual_rng, *active_rng, *active_rng} ;
 
-  vector<IndexRange> vvcc = { *virtual_rng, *virtual_rng, *closed_rng,      *closed_rng} ;
-  vector<IndexRange> vvac = { *virtual_rng, *virtual_rng, *active_rng,      *closed_rng} ;
-  vector<IndexRange> vvca = { *virtual_rng, *virtual_rng, *closed_rng,      *active_rng} ;
+  vector<IndexRange> vvcc = { *virtual_rng, *virtual_rng, *closed_rng, *closed_rng} ;
+  vector<IndexRange> vvac = { *virtual_rng, *virtual_rng, *active_rng, *closed_rng} ;
+  vector<IndexRange> vvca = { *virtual_rng, *virtual_rng, *closed_rng, *active_rng} ;
 
-  vector<IndexRange> vcvc = { *virtual_rng, *closed_rng, *virtual_rng,      *closed_rng} ;
-  vector<IndexRange> vavc = { *virtual_rng, *active_rng, *virtual_rng,      *closed_rng} ;
-  vector<IndexRange> vcva = { *virtual_rng, *closed_rng, *virtual_rng,      *active_rng} ;
-  vector<IndexRange> vava = { *virtual_rng, *active_rng, *virtual_rng,      *active_rng} ;
+  vector<IndexRange> vcvc = { *virtual_rng, *closed_rng, *virtual_rng, *closed_rng} ;
+  vector<IndexRange> vavc = { *virtual_rng, *active_rng, *virtual_rng, *closed_rng} ;
+  vector<IndexRange> vcva = { *virtual_rng, *closed_rng, *virtual_rng, *active_rng} ;
+  vector<IndexRange> vava = { *virtual_rng, *active_rng, *virtual_rng, *active_rng} ;
+
+  vector<IndexRange> cvcv = { *closed_rng, *virtual_rng,  *closed_rng,      *virtual_rng } ;
+  vector<IndexRange> avcv = { *active_rng, *virtual_rng,  *closed_rng,      *virtual_rng } ;
+  vector<IndexRange> cvav = { *closed_rng, *virtual_rng,  *active_rng,      *virtual_rng } ;
+  vector<IndexRange> avav = { *active_rng, *virtual_rng,  *active_rng,      *virtual_rng } ;
+  vector<IndexRange> avov = { *active_rng, *virtual_rng,  *not_virtual_rng, *virtual_rng } ;
 
   vector<IndexRange> vvoo = { *virtual_rng,     *virtual_rng,     *not_virtual_rng, *not_virtual_rng } ;
   vector<IndexRange> vovo = { *virtual_rng,     *not_virtual_rng, *virtual_rng,     *not_virtual_rng } ;
   vector<IndexRange> ovov = { *not_virtual_rng, *virtual_rng,     *not_virtual_rng, *virtual_rng     } ;
 
-
   vector<IndexRange> vvoc = { *virtual_rng, *virtual_rng, *not_virtual_rng, *closed_rng} ;
   vector<IndexRange> vvco = { *virtual_rng, *virtual_rng, *closed_rng,      *not_virtual_rng} ;
   vector<IndexRange> vvoa = { *virtual_rng, *virtual_rng, *not_virtual_rng, *active_rng} ;
   vector<IndexRange> vvao = { *virtual_rng, *virtual_rng, *active_rng,      *not_virtual_rng} ;
-
-//  shared_ptr<Tensor_<double>> LTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvoo));
-//  shared_ptr<Tensor_<double>> MTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vovo));
 
   shared_ptr<Tensor_<double>> RTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvaa));
   shared_ptr<Tensor_<double>> YTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvcc));
@@ -324,72 +426,78 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
   shared_ptr<vector<int>> normal_to_alt_order1 = make_shared<vector<int>>( vector<int> { 0, 2, 1, 3} );   // ++-- -> +-+- 
   shared_ptr<vector<int>> normal_to_alt_order2 = make_shared<vector<int>>( vector<int> { 0, 3, 1, 2} );   // ++-- -> +-+- 
   shared_ptr<vector<int>> switch_last_two_ids = make_shared<vector<int>>( vector<int> { 0, 1, 3, 2} );   // ++-- -> +-+- 
-    
+  shared_ptr<vector<int>> smith_to_normal_order1 = make_shared<vector<int>>( vector<int> { 1, 3, 0, 2} );   // -+-+ -> ++-- 
+ 
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_, 1.0);
+  shared_ptr<Tensor_<double>> HTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( v2_, smith_to_normal_order1 );
+  TensOp_data_map->emplace( "H" , HTens );
   //Setting_data for TensOps
   if ( op_name  == "Smith_rdms" ) { 
    
     TensOp_data_map->emplace("Smith_rdm1", Smith_rdm1 );
     TensOp_data_map->emplace("Smith_rdm2", Smith_rdm2 );
 
-  } else if ( op_name  == "H" ) { 
-    
-   shared_ptr<Tensor_<double>> HTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor( make_shared<vector<IndexRange>>(ffff), 0.0 );
-   Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( HTens , vvcc,  0.5  );
-   TensOp_data_map->emplace( "H" , HTens );
-
-  cout << "HTens->norm() = "<< HTens->norm() << endl;
-
   } else if ( op_name  == "h" ) { 
 
     TensOp_data_map->emplace("h" , H_1el_all);
 
   } else if ( op_name  == "L" ) { 
-    shared_ptr<Tensor_<double>> PTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vvac), 1.0);
+
+    shared_ptr<Tensor_<double>> T2 = T2_all[0]->at(0);
+    vector<IndexRange> T2_id_ranges = T2->indexrange(); 
+    cout << " T id_ranges :" ; cout.flush(); 
+    for ( IndexRange idxrange : T2_id_ranges ) 
+       cout <<  idxrange.size() << "  " ;
+    cout << endl; 
+ 
     shared_ptr<Tensor_<double>> LTens = make_shared<Tensor_<double>>(vvoo);
-    LTens->allocate(); 
-    LTens->zero(); 
+    LTens->allocate();
+    LTens->zero();
+   
+    cout << "T2->norm() = " << T2->norm() << endl; 
+    cout << "LTens->norm() = " << LTens->norm() << endl; 
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( LTens, 1.0);
+//  Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( T2, avov, LTens, vvao, smith_to_normal_order1 );
+    cout << "reordered LTens " <<  endl;
 
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( RTens, LTens, vvaa);
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( YTens, LTens, vvcc);
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( ZTens, LTens, vvac);
-  //  Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, LTens, vvca, switch_last_two_ids );
-
+    vector<IndexRange> L_id_ranges = LTens->indexrange(); 
+    cout << " L id_ranges :" ; cout.flush(); 
+    for ( IndexRange idxrange : L_id_ranges ) 
+       cout <<  idxrange.size() << "  " ;
+    cout << endl; 
+  
+    cout << "LTens->norm() = " << LTens->norm() << endl; 
+   
     TensOp_data_map->emplace("L" , LTens);
+     cout << "put L into map" << endl;
+    
+  } else if ( op_name  == "P" ) { 
 
-  } else if ( op_name  == "M" ) { 
-
-    shared_ptr<Tensor_<double>> PTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vvac), 1.0);
-    shared_ptr<Tensor_<double>> LTens = make_shared<Tensor_<double>>(vvoo);
-    LTens->allocate(); 
-    LTens->zero(); 
-
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( RTens, LTens, vvaa);
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( YTens, LTens, vvcc);
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( PTens, LTens, vvac);
-//    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( PTens, vvac, LTens, vvac, switch_last_two_ids );
-
-    shared_ptr<Tensor_<double>> MTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( LTens, normal_to_alt_order1  );
-    TensOp_data_map->emplace("M" , MTens);
+    shared_ptr<Tensor_<double>> PTens = make_shared<Tensor_<double>>( vvaa ); 
+    PTens->allocate();
+    PTens->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( v2_, avav, PTens, vvaa, smith_to_normal_order1 );
+    TensOp_data_map->emplace("P" , PTens);
 
   } else if ( op_name  == "N" ) { 
 
-    shared_ptr<Tensor_<double>> NTens = make_shared<Tensor_<double>>( vovo ); 
+    shared_ptr<Tensor_<double>> NTens = make_shared<Tensor_<double>>( vvac ); 
     NTens->allocate();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( RTens, vvaa, NTens, vava, normal_to_alt_order1 );
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, NTens, vcva, normal_to_alt_order1 );
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, NTens, vavc, normal_to_alt_order2 );
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( YTens, vvcc, NTens, vcvc, normal_to_alt_order1 );
-
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( NTens, 1.0);
     TensOp_data_map->emplace("N" , NTens);
+
+  } else if ( op_name  == "M" ) { 
+
+    shared_ptr<Tensor_<double>> MTens = make_shared<Tensor_<double>>( vvcc ); 
+    MTens->allocate();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( MTens, 1.0);
+    TensOp_data_map->emplace("M" , MTens);
 
   } else if ( op_name  == "Q" ) { 
 
-    shared_ptr<Tensor_<double>> QTens = make_shared<Tensor_<double>>(vvoo);
+    shared_ptr<Tensor_<double>> QTens = make_shared<Tensor_<double>>(vvca);
     QTens->allocate();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( RTens, QTens, vvaa);
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( YTens, QTens, vvcc);
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( ZTens, QTens, vvac);
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, QTens, vvac, switch_last_two_ids );
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( QTens, 1.0);
     TensOp_data_map->emplace("Q" , QTens);
 
   } else if ( op_name  == "R" ) { 
@@ -411,25 +519,6 @@ cout << "CASPT2_ALT::CASPT2_ALT::Set_Tensor_Ops_Data() " << endl;
     Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( RTens, TTens, vvaa);
     Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( ZTens, TTens, vvac);
     TensOp_data_map->emplace("T", TTens);
-
-  } else if ( op_name  == "U" ) { 
-
-    shared_ptr<Tensor_<double>> UTens = make_shared<Tensor_<double>>(vvco);
-    UTens->allocate();
-    cout << "a" << endl;
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_reordered_range_block( ZTens, vvac, UTens, vvca, switch_last_two_ids);
-    cout << "b" << endl;
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( YTens, UTens, vvcc);
-    cout << "c" << endl;
-    TensOp_data_map->emplace("U", UTens);
-
-  } else if ( op_name  == "V" ) { 
-
-    shared_ptr<Tensor_<double>> VTens = make_shared<Tensor_<double>>(vvoc);
-    VTens->allocate();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( YTens, VTens, vvcc );
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( ZTens, VTens, vvac );
-    TensOp_data_map->emplace("V", VTens);
 
   } else if ( op_name  == "W" ) { 
 

@@ -814,16 +814,18 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(shared_ptr<
    shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(T_id_ranges->size(),0);  
    shared_ptr<vector<int>> mins      = make_shared<vector<int>>(T_id_ranges->size(),0);  
    do {
-
+ 
      shared_ptr<vector<Index>> orig_id_blocks      = get_rng_blocks( block_pos, *T_id_ranges );
 
-     unique_ptr<DataType[]> reordered_data_block;
-     {
-     unique_ptr<DataType[]> orig_data_block = Tens_in->get_block( *orig_id_blocks );
-     reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks );
+     if ( Tens_in->exists(*orig_id_blocks) ){
+       unique_ptr<DataType[]> reordered_data_block;
+       {
+       unique_ptr<DataType[]> orig_data_block = Tens_in->get_block( *orig_id_blocks );
+       reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks );
+       }
+       shared_ptr<vector<Index>> reordered_id_blocks = reorder_vector( new_order, orig_id_blocks );
+       reordered_block_tensor->put_block( reordered_data_block, *reordered_id_blocks );
      }
-     shared_ptr<vector<Index>> reordered_id_blocks = reorder_vector( new_order, orig_id_blocks );
-     reordered_block_tensor->put_block( reordered_data_block, *reordered_id_blocks );
 
    } while ( fvec_cycle_skipper( block_pos, range_lengths, mins ) );
 

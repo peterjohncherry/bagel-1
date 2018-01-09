@@ -71,17 +71,19 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void System_Info<DataType>::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op_names, string term_name ) { 
+void System_Info<DataType>::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op_names, string BraKet_name ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout <<  "System_Info::System_Info::Build_BraKet(shared_ptr<vector<string>> BraKet_names, string expression_name ) " << endl;
+cout <<  "System_Info::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op_names, string term_name ) " << endl;
   
   shared_ptr<vector<shared_ptr<TensOp::TensOp<double>>>> BraKet_Ops = make_shared<vector< shared_ptr<TensOp::TensOp<double>> > >( Op_names->size());
 
   vector<shared_ptr<TensOp::TensOp<double>>>::iterator BraKet_Ops_it = BraKet_Ops->begin();
-  for ( string name : *Op_names ) 
+  for ( string name : *Op_names ){  
+     cout << "looking_for " << name << " ... " ; cout.flush();
     *BraKet_Ops_it++ = T_map->at(name);
-
-  BraKet_map->emplace(term_name, BraKet_Ops);
+     cout << " found it! " << endl;    
+  }
+  BraKet_map->emplace(BraKet_name, BraKet_Ops);
 
   return;
 }
