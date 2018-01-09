@@ -26,7 +26,6 @@
 #ifndef __SRC_SMITH_CASPT2_ALT_H
 #define __SRC_SMITH_CASPT2_ALT_H
 
-#include <tuple>
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/ci/fci/fci.h>
 #include <src/smith/multitensor.h>
