@@ -54,8 +54,8 @@ class System_Info {
   
       std::shared_ptr< std::map <std::string, std::shared_ptr<Expression<DataType>>>> expression_map;
     
-      // key :    Name of contracted part of TensorOp.
-      // result : Info for contracted part of TensorOp info.
+      // key :    Name of uncontracted part of TensorOp.
+      // result : Info for uncontracted part of TensorOp info.
       std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType> > >> T_map    ;      
 
       // key :    Name of contracted part of TensorOp

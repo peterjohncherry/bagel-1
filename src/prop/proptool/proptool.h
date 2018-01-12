@@ -41,6 +41,16 @@
 namespace bagel {
 namespace PropTool { 
 
+  struct Term_Init { 
+
+    std::vector<std::vector<std::string>> op_names;
+    std::vector<std::vector<int>> target_states; 
+    std::vector<double> factors;
+    std::vector<std::string> types; 
+
+  }; 
+ 
+
   class PropTool {
     
     std::shared_ptr<const PTree> idata_;
@@ -54,52 +64,56 @@ namespace PropTool {
     int nact_; 
     int nvirt_; 
     int nocc_; 
-    
-    std::shared_ptr<System_Info<double>> Sys_Info_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> Expression_map_;
-    std::shared_ptr<SMITH::Expression_Computer::Expression_Computer<double>> Expression_Machine_;
+   
+    size_t maxtile_;
+    size_t cimaxtile_;
+ 
+    std::shared_ptr<System_Info<double>> sys_info_;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> expression_map_;
+    std::shared_ptr<SMITH::Expression_Computer::Expression_Computer<double>> expression_machine_;
     std::shared_ptr<std::map< std::string, double>> scalar_results_map_;
 
     std::vector<int> target_states_;
-    std::shared_ptr<StatesInfo<double>> TargetsInfo_; 
+    std::shared_ptr<StatesInfo<double>> targets_info_; 
 
     void set_target_info() ;
     void set_range_info();
 
-    void calculate_term( std::vector<int>& target_states, std::vector<std::pair<std::vector<std::string>,double>>& BK_info_list, std::string term_type );
+    void build_expressions( std::vector<int>& target_states, std::vector<std::pair<std::vector<std::string>,double>>& BK_info_list, std::string term_type );
+    void build_op_tensors( std::vector<std::string>& expression_list ) ;
+    std::shared_ptr<std::vector<SMITH::IndexRange>> convert_to_indexrange( std::shared_ptr<const std::vector<std::string>> range_block_str ) ;
 
     public: 
+
       PropTool(std::shared_ptr<const PTree> idata, std::shared_ptr<const Geometry> g, std::shared_ptr<const Reference> r);
       PropTool(); 
       ~PropTool(){};
-
     
       void compute() { std::cout << " not connected to anything yet" << std::endl;}; 
 
-    std::shared_ptr<SMITH::IndexRange> closed_rng_; 
-    std::shared_ptr<SMITH::IndexRange> active_rng_;  
-    std::shared_ptr<SMITH::IndexRange> virtual_rng_;
-    std::shared_ptr<SMITH::IndexRange> free_rng_  ; 
-    std::shared_ptr<SMITH::IndexRange> not_closed_rng_ ; 
-    std::shared_ptr<SMITH::IndexRange> not_active_rng_  ;
-    std::shared_ptr<SMITH::IndexRange> not_virtual_rng_ ;
-    std::vector<SMITH::IndexRange> PT2_ranges_;
-    std::vector<SMITH::IndexRange> PT2_ranges_herm_conj_;
-
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> Sigma_data_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> CIvec_data_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> Gamma_data_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> TensOp_data_map_;
-
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_ ;
-     
-    std::vector<std::shared_ptr<SMITH::MultiTensor_<double>>> T2_all;
-    std::vector<std::shared_ptr<SMITH::MultiTensor_<double>>> lambda_all;
-    std::shared_ptr<SMITH::Tensor_<double>> F_1el_all;
-    std::shared_ptr<SMITH::Tensor_<double>> H_1el_all;
-    std::shared_ptr<SMITH::Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
-    std::shared_ptr<SMITH::Tensor_<double>> v2_; 
-
+      std::shared_ptr<SMITH::IndexRange> closed_rng_; 
+      std::shared_ptr<SMITH::IndexRange> active_rng_;  
+      std::shared_ptr<SMITH::IndexRange> virtual_rng_;
+      std::shared_ptr<SMITH::IndexRange> free_rng_  ; 
+      std::shared_ptr<SMITH::IndexRange> not_closed_rng_ ; 
+      std::shared_ptr<SMITH::IndexRange> not_active_rng_  ;
+      std::shared_ptr<SMITH::IndexRange> not_virtual_rng_ ;
+      std::vector<SMITH::IndexRange> pt2_ranges_;
+      std::vector<SMITH::IndexRange> pt2_ranges_herm_conj_;
+      
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> sigma_data_map_;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> civec_data_map_;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> gamma_data_map_;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> tensop_data_map_;
+      
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_ ;
+       
+      std::vector<std::shared_ptr<SMITH::MultiTensor_<double>>> T2_all;
+      std::vector<std::shared_ptr<SMITH::MultiTensor_<double>>> lambda_all;
+      std::shared_ptr<SMITH::Tensor_<double>> F_1el_all;
+      std::shared_ptr<SMITH::Tensor_<double>> H_1el_all;
+      std::shared_ptr<SMITH::Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
+      std::shared_ptr<SMITH::Tensor_<double>> v2_; 
 
 };
 };

@@ -14,14 +14,13 @@ Expression<DataType>::Expression( shared_ptr< vector< pair< string, DataType >>>
   T_map                 = make_shared<map< string, shared_ptr<TensOp::TensOp<DataType>>>>();
   CTP_map               = make_shared<map< string, shared_ptr<CtrTensorPart<DataType>> >>();    
   CMTP_map              = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>(); 
-  ACompute_map          = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
+  ACompute_map          = make_shared<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
   CMTP_Eqn_Compute_List = make_shared<map< vector<string>, shared_ptr<vector<pair<shared_ptr<vector<string>>, pair<int,int> >>> >>();
 
-  GammaMap              = make_shared< map<string, shared_ptr<GammaInfo> > >(); 
-  G_to_A_map            = make_shared< map<string, shared_ptr< map<string, AContribInfo  >>>>(); 
+  GammaMap              = make_shared< map< string, shared_ptr<GammaInfo> > >(); 
+  G_to_A_map            = make_shared< map< string, shared_ptr< map<string, AContribInfo  >>>>(); 
 
   TargetStates = TargetStates_in;
- 
   
   for ( pair<string,DataType> bk_name_factor :  *BraKet_list )
     Build_BraKet( BraKet_map->at( bk_name_factor.first), bk_name_factor.second );

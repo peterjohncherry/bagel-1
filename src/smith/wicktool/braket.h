@@ -40,7 +40,6 @@ class BraKet{
         int spin_max ;
         int spin_min ;
         
-        
         std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>> Sub_Ops;
         
         std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op;
