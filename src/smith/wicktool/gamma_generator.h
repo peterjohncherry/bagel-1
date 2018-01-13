@@ -12,8 +12,10 @@ class AContribInfo {
    public : 
      std::vector<std::vector<int>> id_orders;
      std::vector<std::pair<double,double>> factors;
+     int Bra_num;
+     int Ket_num;
 
-     AContribInfo(std::vector<int> init_order_in , std::pair<double,double> factor_in ){
+     AContribInfo(std::vector<int> init_order_in , std::pair<double,double> factor_in, int Bra_num, int Ket_num ){
                   id_orders.push_back(init_order_in);
                   factors.push_back(factor_in); 
      };
@@ -103,7 +105,7 @@ class GammaGenerator{
   private : 
     // TODO Should replace this with the states infos  and pointer to CIVecInfo map, 
     //      Do cycling over states outside of GammaGenerator.
-    std::shared_ptr<StatesInfo<double>> TargetStates_;
+    std::shared_ptr<StatesInfo<double>> target_states__;
     int Ket_num_;   
     int Bra_num_; 
 
@@ -133,7 +135,7 @@ class GammaGenerator{
     std::shared_ptr<std::map<std::string, std::vector< std::pair<std::vector<int>, std::pair<int,int>> >> > Aid_orders_map;
 
   public : 
-    GammaGenerator( std::shared_ptr<StatesInfo<double>> TargetStates, int Ket_num, int Bra_num,
+    GammaGenerator( std::shared_ptr<StatesInfo<double>> target_states_, int Ket_num, int Bra_num,
                     std::shared_ptr<const std::vector<std::string>> orig_ids, std::shared_ptr< const std::vector<bool>> orig_aops,
                     std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in,

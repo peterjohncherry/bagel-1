@@ -46,8 +46,9 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
                                   vector<bool>& aops, DataType orig_factor,
                                   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>), int, int > >& symmfuncs, 
                                   vector<bool(*)(shared_ptr<vector<string>>) >& constraints,
-                                  string& Tsymm ) :
-                                  name_(name), spinfree_(true), symmfuncs_(symmfuncs), constraints_(constraints), Tsymm_(Tsymm)  {
+                                  string& Tsymm, shared_ptr<StatesInfo<DataType>> target_states ) :
+                                  name_(name), spinfree_(true), symmfuncs_(symmfuncs), constraints_(constraints), Tsymm_(Tsymm),
+                                  target_states_(target_states)  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp" <<   endl;
           
@@ -184,7 +185,12 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
    shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
    shared_ptr<CtrTensorPart<DataType>>  CTP       = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors ); 
    cout << "CTP->myname() = " << CTP->myname() << " is going into CTP_map" <<  endl;
-   CTP_map->emplace(CTP->myname(), CTP); //maybe should be addded in with ctr_idxs
+
+   for ( int Bra_num : target_states_->target_state_nums_ ){
+     for ( int Ket_num : target_states_->target_state_nums_ ){ 
+       CTP_map->emplace(CTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CTP); //maybe should be addded in with ctr_idxs
+     }
+   }
  }
  
   //puts_contracted ranges into map
@@ -206,7 +212,13 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
           shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
           shared_ptr<CtrTensorPart<DataType>> CTP = make_shared<CtrTensorPart<DataType>>( full_idxs, full_ranges, ctr_vec, ReIm_factors ); 
           cout << "CTP->myname() = " << CTP->myname() << "is going into CTP_map " << endl;
-          CTP_map->emplace(CTP->myname(), CTP); //maybe should be added in with ctr_idxs.
+
+          for ( int Bra_num : target_states_->target_state_nums_ ){
+            for ( int Ket_num : target_states_->target_state_nums_ ){ 
+              CTP_map->emplace(CTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CTP); //TODO silly hack way of dealing with states find a better way 
+            }
+          }
+
         }
       }
     }
@@ -217,8 +229,9 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree,
-                                                 std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors ):
-                                                 TensOp::TensOp<DataType>( name, spinfree ),
+                                                 std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors,
+                                                 shared_ptr<StatesInfo<DataType>> target_states ):
+                                                 TensOp::TensOp<DataType>( name, spinfree, target_states ),
                                                  orig_tensors_(orig_tensors), num_tensors_(orig_tensors.size()) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "MultiTensOp::MultiTensOp<DataType>::MultiTensOp" << endl;
@@ -456,25 +469,33 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
     }
   } 
 
-   //get_ranges for individual tensors
-   for (int ii = 0 ; ii !=num_tensors_; ii++ ){ 
-     shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(id_ranges.begin()+Op_dense_->cmlsizevec(ii), id_ranges.begin()+cmlsizevec(ii)+orig_tensors_[ii]->num_idxs());
-     shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *(orig_tensors_[ii]->idxs()) );
-    
-     if( sameT_ctrs_pos[ii].size() != 0 ) {
-       CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, make_shared<vector<pair<int,int>>>(sameT_ctrs_pos[ii]), ReIm_factor_vec ) ; 
-     } else { 
-       CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec ); 
-     }
-  
-     CTP_map->emplace(CTP_vec->at(ii)->name, CTP_vec->at(ii)); 
+  //get_ranges for individual tensors
+  for (int ii = 0 ; ii !=num_tensors_; ii++ ){ 
+    shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(id_ranges.begin()+Op_dense_->cmlsizevec(ii), id_ranges.begin()+cmlsizevec(ii)+orig_tensors_[ii]->num_idxs());
+    shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *(orig_tensors_[ii]->idxs()) );
+   
+    if( sameT_ctrs_pos[ii].size() != 0 ) {
+      CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, make_shared<vector<pair<int,int>>>(sameT_ctrs_pos[ii]), ReIm_factor_vec ) ; 
+    } else { 
+      CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec ); 
+    }
+    for ( int Bra_num : target_states_->target_state_nums_ ) {
+      for ( int Ket_num : target_states_->target_state_nums_ ) {
+        CTP_map->emplace(CTP_vec->at(ii)->name+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CTP_vec->at(ii)); //TODO silly hack way of dealing with states find a better way 
+      }
+    }
   }
   
   shared_ptr<CtrMultiTensorPart<DataType>> CMTP = make_shared<CtrMultiTensorPart<DataType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos)); 
-  
-  CMTP_map->emplace(CMTP->myname(), CMTP); 
-  CTP_map->emplace(CMTP->myname(), CMTP); 
-  
+
+  //TODO silly hack way of dealing with states find a better way
+  for ( int Bra_num : target_states_->target_state_nums_ ) {
+    for ( int Ket_num : target_states_->target_state_nums_ ) {
+      CMTP_map->emplace(CMTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CMTP);
+      CTP_map->emplace(CMTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CMTP);
+    }
+  }
+
   return;
 }
 

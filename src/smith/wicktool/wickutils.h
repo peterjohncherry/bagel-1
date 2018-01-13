@@ -68,11 +68,8 @@ namespace WickUtils {
 
   std::shared_ptr<std::vector<int>> get_unc_ids_from_deltas_ids(std::shared_ptr<std::vector<int>> ids , std::shared_ptr<std::vector<std::pair<int,int>>> deltas );
 
-  std::string get_Aname(std::shared_ptr<std::vector<std::string>> full_idxs, std::shared_ptr<std::vector<std::string>> full_idx_ranges, 
-                        std::shared_ptr<std::vector<std::pair<int,int>>> all_ctrs_pos );
-
-  std::string get_Aname(const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges, 
-                        const std::vector<std::pair<int,int>>& all_ctrs_pos );
+  std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges, 
+                         const std::vector<std::pair<int,int>>& all_ctrs_pos, int Bra_num,  int Ket_num );
 
   std::string get_civec_name( const int state_num,  const int norb,  const int nalpha, const int nbeta);
 

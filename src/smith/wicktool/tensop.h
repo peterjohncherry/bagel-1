@@ -3,6 +3,7 @@
 #include <src/smith/wicktool/wickutils.h>
 #include <src/smith/wicktool/ctrtensop.h>
 #include <src/smith/wicktool/range_block_info.h>
+#include <src/smith/wicktool/states_info.h>
 
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
@@ -86,6 +87,8 @@ class TensOp {
      const std::string name_;
      const bool spinfree_;
 
+     const std::shared_ptr<StatesInfo<DataType>> target_states_;
+
    private :
      std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs_; 
      std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) > constraints_;
@@ -95,18 +98,21 @@ class TensOp {
 
      std::shared_ptr<const TensOp_General> Op_dense_;
 
+
    public:
-     TensOp( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree){};
+     TensOp( std::string name, bool spinfree, std::shared_ptr<StatesInfo<DataType>> target_states ) : name_(name), spinfree_(spinfree), target_states_(target_states) {};
      TensOp( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
              std::vector<bool>& aops, DataType orig_factor,
              std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > >& symmfuncs, 
              std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) >& constraints,
-             std::string& Tsymm );
+             std::string& Tsymm, std::shared_ptr<StatesInfo<DataType>> target_states_ );
      ~TensOp(){};
 
      std::string const name(){ return name_;}
 
      std::string const Tsymm(){ return Tsymm_;}
+     
+     std::shared_ptr<StatesInfo<DataType>> const target_states(){ return target_states_; }
 
      int num_idxs(){ return Op_dense_->num_idxs();}
 
@@ -141,6 +147,8 @@ namespace MultiTensOp {
 template<typename DataType>
 class MultiTensOp : public  TensOp::TensOp<DataType> {
 
+   using TensOp::TensOp<DataType>::target_states_;
+
    private :
      const std::string name_;
      const bool spinfree_ = true;
@@ -148,6 +156,7 @@ class MultiTensOp : public  TensOp::TensOp<DataType> {
 
    public :
      std::vector<std::shared_ptr<TensOp::TensOp<DataType>>> orig_tensors_; 
+
      std::map< const std::vector<std::string>, std::shared_ptr<std::vector<std::shared_ptr<const range_block_info>>> > split_ranges_; 
      std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >> CTP_map;
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map;
@@ -155,7 +164,7 @@ class MultiTensOp : public  TensOp::TensOp<DataType> {
      
      DataType orig_factor_;
 
-     MultiTensOp( std::string name , bool spinfree, std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors );
+     MultiTensOp( std::string name , bool spinfree, std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors, std::shared_ptr<StatesInfo<DataType>> target_states );
     ~MultiTensOp(){};
 
     std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<const range_block_info >>>

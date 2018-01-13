@@ -10,7 +10,8 @@ using namespace std;
 //not the perturbation being applied is spin independent
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-System_Info<DataType>::System_Info::System_Info( shared_ptr<StatesInfo<DataType>> TargetStates_in , bool spinfree ) {
+System_Info<DataType>::System_Info::System_Info( shared_ptr<StatesInfo<DataType>> target_states , bool spinfree ) :
+                                                 target_states_(target_states), spinfree_(spinfree) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   T_map          = make_shared< map <string, shared_ptr<TensOp::TensOp<DataType>>>>();
@@ -19,11 +20,7 @@ System_Info<DataType>::System_Info::System_Info( shared_ptr<StatesInfo<DataType>
   CMTP_map       = make_shared< map <string, shared_ptr<CtrMultiTensorPart<DataType>>>>();
   expression_map = make_shared< map <string, shared_ptr<Expression<DataType>>>>();
 
-  TargetStates = TargetStates_in;
-
-  spinfree_ = spinfree;
-
-  if (spinfree || !spinfree /*TODO like this for testing; obviously must put back*/ ) { 
+  if (spinfree_ /*TODO like this for testing; obviously must put back*/ || !spinfree_ ) { 
     cout << " setting spinfree ranges" << endl;
     free     = {"cor", "act", "vir"};
     not_core = {"act", "vir"};
@@ -62,7 +59,7 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
   //NOTE: change to use proper factor
   int tmpfac = 1;
   shared_ptr<TensOp::TensOp<DataType>>  New_Op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
-                                                                                        tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry);
+                                                                                        tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, target_states_);
   // change to be state specific
   New_Op->get_ctrs_tens_ranges();
 
@@ -142,7 +139,7 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
   }
   cout << "new_expression_name = " << expression_name << endl;
     
-  shared_ptr<Expression<DataType>> new_expression = make_shared<Expression<DataType>>(BraKet_name_list, BraKet_map, TargetStates);
+  shared_ptr<Expression<DataType>> new_expression = make_shared<Expression<DataType>>(BraKet_name_list, BraKet_map, target_states_);
   
   expression_map->emplace( expression_name, new_expression );
 
@@ -152,6 +149,4 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class System_Info<double>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 #endif

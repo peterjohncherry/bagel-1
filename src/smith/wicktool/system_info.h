@@ -30,11 +30,11 @@ template<class DataType>
 class System_Info {
       private :
         bool spinfree_ = false;
-        std::shared_ptr<StatesInfo<DataType>> TargetStates;
+        std::shared_ptr<StatesInfo<DataType>> target_states_;
 
       public:
 
-      System_Info(std::shared_ptr<StatesInfo<DataType>> TargetStates, bool spinfree);
+      System_Info(std::shared_ptr<StatesInfo<DataType>> target_states_, bool spinfree);
       ~System_Info(){};
 
       std::vector<std::string> free;
@@ -82,9 +82,9 @@ class System_Info {
 
       std::string Build_Expression( std::vector<Term_Info<DataType>>&  term_info_list  );
 
-      int nalpha(int state_num) { return TargetStates->nalpha( state_num ); };
-      int nbeta(int state_num)  { return TargetStates->nbeta( state_num );  };
-      int nact(int state_num)   { return TargetStates->nact( state_num );   };
+      int nalpha(int state_num) { return target_states_->nalpha( state_num ); };
+      int nbeta(int state_num)  { return target_states_->nbeta( state_num );  };
+      int nact(int state_num)   { return target_states_->nact( state_num );   };
       bool spinfree(){return spinfree_;}
 
       static std::string flip(std::string idx);

@@ -17,7 +17,7 @@ class Expression {
 
       ~Expression(){};
 
-      std::shared_ptr<StatesInfo<DataType>> TargetStates;
+      std::shared_ptr<StatesInfo<DataType>> target_states_;
 
       // Vector of BraKet terms which comprise the expression
       std::vector<std::shared_ptr<BraKet<DataType>>> BraKet_Terms;

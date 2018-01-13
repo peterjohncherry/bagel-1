@@ -8,7 +8,7 @@ using namespace std;
 template<class DataType>
 Expression<DataType>::Expression( shared_ptr< vector< pair< string, DataType >>> BraKet_list,
                                   shared_ptr< map < string, shared_ptr< vector < shared_ptr< TensOp::TensOp<DataType> >>>>> BraKet_map,
-                                  shared_ptr< StatesInfo<DataType> > TargetStates_in ){
+                                  shared_ptr< StatesInfo<DataType> > target_states ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   T_map                 = make_shared<map< string, shared_ptr<TensOp::TensOp<DataType>>>>();
@@ -20,7 +20,7 @@ Expression<DataType>::Expression( shared_ptr< vector< pair< string, DataType >>>
   GammaMap              = make_shared< map< string, shared_ptr<GammaInfo> > >(); 
   G_to_A_map            = make_shared< map< string, shared_ptr< map<string, AContribInfo  >>>>(); 
 
-  TargetStates = TargetStates_in;
+  target_states_ = target_states;
   
   for ( pair<string,DataType> bk_name_factor :  *BraKet_list )
     Build_BraKet( BraKet_map->at( bk_name_factor.first), bk_name_factor.second );
@@ -50,7 +50,7 @@ template<class DataType>
 void Expression<DataType>::Build_BraKet( shared_ptr<vector<shared_ptr<TensOp::TensOp<DataType>>>> Tens_vec, DataType factor  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<BraKet<DataType>> New_BraKet = make_shared<BraKet<DataType>>(G_to_A_map, GammaMap, TargetStates, factor );
+  shared_ptr<BraKet<DataType>> New_BraKet = make_shared<BraKet<DataType>>(G_to_A_map, GammaMap, target_states_, factor );
   New_BraKet->Sub_Ops = Tens_vec;
 
   New_BraKet->Build_TotalOp();
