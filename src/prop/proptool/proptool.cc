@@ -27,50 +27,9 @@ using namespace bagel;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 PropTool::PropTool::PropTool(std::shared_ptr<const PTree> idata, std::shared_ptr<const Geometry> g, std::shared_ptr<const Reference> r): 
-                   idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn())  {
+                   idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "PropTool::PropTool::PropTool" << endl;
-  maxtile_   = idata->get<int>("maxtile", 10);
-  cimaxtile_ = idata->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
-  
- // op_name_list_ = idata->get<int>("op_info") ;
-  
-
-  //should read from idata
-  nclosed_  = idata->get<int>("nclosed", ref_->nclosed()) ; cout << " nclosed_ = " <<  nclosed_  << endl;
-  nact_     = idata->get<int>("nact", ref_->nact());        cout << " nact_    = " <<  nact_  << endl;
-  ncore_    = idata->get<int>("ncore", ciwfn_->ncore());    cout << " ncore_   = " <<  ncore_  << endl;
-  nvirt_    = idata->get<int>("nvirt", ref_->nvirt());      cout << " nvirt_   = " <<  nvirt_  << endl;
-  nocc_     = nclosed_ + nact_; 
-
-  vector< Term_Init > expression_init;
- 
-  auto expression_inp = idata->get_child("expression"); 
-  for ( auto& bk_info_tree : *expression_inp ){
-
-    Term_Init term_inp;
-
-    for ( auto& bk_info : *bk_info_tree ) {
-      auto op_list =  bk_info->get_child("ops"); 
-
-      vector<string> op_names(0);  
-      for (auto& op_name : *op_list)
-        op_names.push_back(lexical_cast<string>(op_name->data()));
-
-      term_inp.op_names.push_back(op_names);
-
-      auto target_states_ptree =  bk_info->get_child("target_states"); 
-      vector<int> target_states(0);
-      for (auto& state_num : *target_states_ptree)
-        target_states.push_back(lexical_cast<int>(state_num->data()));
-
-      term_inp.target_states.push_back(target_states);
-      term_inp.types.push_back(bk_info->get<string>("type"));
-      term_inp.factors.push_back(bk_info->get<double>("factor"));
-       
-    }
-    expression_init.push_back(term_inp);
-  }
 
   sigma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
   civec_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
@@ -79,22 +38,87 @@ cout << "PropTool::PropTool::PropTool" << endl;
   
   range_conversion_map_ = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
 
-  civectors_ = ciwfn_->civectors();
-  set_target_info() ;
-  set_range_info();
+  //Initializing range sizes either from idate or reference wfn 
+  maxtile_   = idata->get<int>("maxtile", 10);
+  cimaxtile_ = idata->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
+  nclosed_  = idata->get<int>("nclosed", ref_->nclosed()); cout << " nclosed_ = " <<  nclosed_  << endl;
+  nact_     = idata->get<int>("nact", ref_->nact());        cout << " nact_    = " <<  nact_  << endl;
+  ncore_    = idata->get<int>("ncore", ciwfn_->ncore());    cout << " ncore_   = " <<  ncore_  << endl;
+  nvirt_    = idata->get<int>("nvirt", ref_->nvirt());      cout << " nvirt_   = " <<  nvirt_  << endl;
+  nocc_     = nclosed_ + nact_; 
+  set_ao_range_info();
+
+  //Getting info about target expression (this includes which states are relevant)
+  shared_ptr<vector< Term_Init<double>>> expression_init = get_expression_init( idata->get_child("expression") ); 
+  set_target_state_info() ;
+  set_ci_range_info() ;
    
   sys_info_ = make_shared<System_Info<double>>(targets_info_, true);
   expression_map_ = sys_info_->expression_map;
   expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, expression_map_, range_conversion_map_, tensop_data_map_, 
                                                                                               gamma_data_map_, sigma_data_map_, civec_data_map_ );
 
-  
+  cout << "expression_init->size()  = " << expression_init->size() << endl;
+  for ( Term_Init<double> term_inp : *expression_init ) {
+    shared_ptr<vector<string>> expr_list = build_expressions( term_inp );
+    cout << "expr_list = [ " ; cout.flush();
+    for ( string expr_name : *expr_list ){
+      cout << expr_name << " " ; cout.flush();
+    }
+    cout << "]" <<  endl;
+  }
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void PropTool::PropTool::set_range_info() {
+shared_ptr< vector<PropTool::PropTool::Term_Init<double> > > PropTool::PropTool::get_expression_init( shared_ptr<const PTree> expression_inp ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "PropTool::PropTool::set_range_info" << endl;
+  cout << "PropTool::PropTool::get_expression_init" << endl;
+
+  vector< Term_Init<double>> expression_init; 
+  for ( auto& term_info_tree : *expression_inp ){
+  
+    std::vector<std::vector<std::string>> term_init_op_names;
+    std::vector<std::vector<int>> term_init_bra_states; 
+    std::vector<std::vector<int>> term_init_ket_states; 
+    std::vector<double> term_init_factors;
+    std::vector<std::string> term_init_types; 
+  
+    for ( auto& term_info : *term_info_tree ) {
+      auto op_list =  term_info->get_child("ops"); 
+  
+      vector<string> op_names(0);  
+      for (auto& op_name : *op_list)
+        op_names.push_back(lexical_cast<string>(op_name->data()));
+      
+  
+      auto bra_states_ptree =  term_info->get_child("bra_states"); 
+      vector<int> bra_states(0);
+      for (auto& state_num : *bra_states_ptree)
+        bra_states.push_back(lexical_cast<int>(state_num->data()));
+  
+      auto ket_states_ptree =  term_info->get_child("ket_states"); 
+      vector<int> ket_states(0);
+      for (auto& state_num : *ket_states_ptree)
+        ket_states.push_back(lexical_cast<int>(state_num->data()));
+  
+      term_init_op_names.push_back(op_names);
+      term_init_bra_states.push_back(bra_states);
+      term_init_ket_states.push_back(ket_states);
+      term_init_types.push_back(term_info->get<string>("type"));
+      term_init_factors.push_back(term_info->get<double>("factor"));
+    }
+    Term_Init<double> new_term = Term_Init<double>(term_init_op_names, term_init_bra_states, term_init_ket_states, term_init_factors, term_init_types);
+    vector<vector<int>> tmp = { target_states_, new_term.all_states_ };
+    target_states_ = new_term.merge_states( tmp );
+  
+    expression_init.push_back(new_term);
+  }
+  return make_shared<vector<Term_Init<double>>>(expression_init); 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::set_ao_range_info() {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "PropTool::PropTool::set_ao_range_info" << endl;
 
   closed_rng_  =  make_shared<SMITH::IndexRange>(SMITH::IndexRange(nclosed_-ncore_, maxtile_, 0, ncore_));
   active_rng_  =  make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact_, min((size_t)10,maxtile_), closed_rng_->nblock(), ncore_ + closed_rng_->size()));
@@ -103,22 +127,27 @@ cout << "PropTool::PropTool::set_range_info" << endl;
   free_rng_->merge(*active_rng_);
   free_rng_->merge(*virtual_rng_);
 
-  cout << " set first ranges " << endl;
   not_closed_rng_  =  make_shared<SMITH::IndexRange>(*active_rng_); not_closed_rng_->merge(*virtual_rng_);
   not_active_rng_  =  make_shared<SMITH::IndexRange>(*closed_rng_); not_active_rng_->merge(*virtual_rng_);
   not_virtual_rng_ =  make_shared<SMITH::IndexRange>(*closed_rng_); not_virtual_rng_->merge(*active_rng_);
 
-  cout << " set seocnd  ranges " << endl;
   range_conversion_map_->emplace("cor", closed_rng_); 
   range_conversion_map_->emplace("act", active_rng_);
   range_conversion_map_->emplace("vir", virtual_rng_);
   range_conversion_map_->emplace("free", free_rng_);
  
-  cout << " set third ranges " << endl;
   range_conversion_map_->emplace("notcor", not_closed_rng_);
   range_conversion_map_->emplace("notact", not_active_rng_);
   range_conversion_map_->emplace("notvir", not_virtual_rng_); 
-                      
+  
+  return;                    
+}
+ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::set_ci_range_info() {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "PropTool::PropTool::set_ci_range_info" << endl;
+
   cout << " set ci ranges " << endl;
   for ( int ii : target_states_ ) {
 
@@ -136,46 +165,46 @@ cout << "PropTool::PropTool::set_range_info" << endl;
  
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
-void PropTool::PropTool::set_target_info() {
+void PropTool::PropTool::set_target_state_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////
 cout << "PropTool::PropTool::set_target_info" << endl;
   targets_info_ = make_shared<StatesInfo<double>> ( target_states_ ) ;
-  
+
   for ( int state_num : target_states_ ) 
      targets_info_->add_state( civectors_->data(state_num)->det()->nelea(), civectors_->data(state_num)->det()->neleb(),
-                               civectors_->data(state_num)->det()->norb(), state_num ) ;
+                               civectors_->data(state_num)->det()->norb(), state_num );
   
   return;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void PropTool::PropTool::build_expressions( vector<int>& target_states, vector<pair<vector<string>,double>>& BK_info_list, string term_type ) {
+shared_ptr<vector<string>> PropTool::PropTool::build_expressions( Term_Init<double>& term_inp ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "PropTool::PropTool::calculate_term" << endl;
+  cout << "PropTool::PropTool::build_expressions" << endl;
 
   map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map_;
-  int num_states = target_states.size();
-  vector<string> op_names_got(0);
-  map<pair<string,string>,shared_ptr<vector<Term_Info<double>>> > term_map; 
+  map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > term_map; 
 
   vector<string>  expression_list(0);
-  // Building all necessary expressions 
-  for ( int ii : target_states ) {
-    string Bra_name = targets_info_->name(ii); // TODO change to vector for relativistic case           
-    for ( int  jj : target_states ) {
-      string Ket_name = targets_info_->name(jj); // TODO change to vector for relativistic case           
-
-      shared_ptr<vector<Term_Info<double>>> term_info_ss = make_shared<vector<Term_Info<double>>>(); 
-      for ( pair<vector<string>,double> BK_info : BK_info_list )
-        term_info_ss->push_back(Term_Info<double>( BK_info, Bra_name, Ket_name, term_type ));
-    
-      term_map.emplace(make_pair(Bra_name, Ket_name) , term_info_ss ); 
-      expression_list.push_back(sys_info_->Build_Expression( *term_info_ss ));
+  // Loops through states, and if states contributes to that term, add to term info for building expression
+  // restatement of Bra and Ket name is redundant, and redundancy means I've probably gone wrong somewhere....
+  for ( int ii : term_inp.bra_states_merged_ ) {
+    for ( int  jj : term_inp.ket_states_merged_ ) {
+      shared_ptr<vector<Term_Info<double>>> term_info = make_shared<vector<Term_Info<double>>>();
+      for ( int kk = 0; kk != term_inp.op_names_.size(); kk++ ){
+        if ( std::find(term_inp.bra_states_[kk].begin(), term_inp.bra_states_[kk].end(), ii) != term_inp.bra_states_[kk].end() ) {
+          string Bra_name = targets_info_->name(ii);
+          if ( std::find(term_inp.ket_states_[kk].begin(), term_inp.ket_states_[kk].end(), jj) != term_inp.ket_states_[kk].end() ) {
+            string Ket_name = targets_info_->name(jj);
+            term_info->push_back(Term_Info<double>( make_pair( term_inp.op_names_[kk], term_inp.factors_[kk] ), Bra_name, Ket_name, term_inp.types_[kk] ));
+            expression_list.push_back( sys_info_->Build_Expression( *term_info ));
+          }
+        }
+      }
     }
   }
-
+  return make_shared<vector<string>>(expression_list);
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::build_op_tensors( vector<string>& expression_list ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -186,14 +215,11 @@ void PropTool::PropTool::build_op_tensors( vector<string>& expression_list ) {
     for ( auto tensop_it : *(sys_info_->expression_map->at(expression_name)->T_map) ) {
       std::vector< std::shared_ptr< const std::vector<std::string>>> unique_range_blocks = *(tensop_it.second->unique_range_blocks());
       for ( shared_ptr<const vector<string>> range_block : unique_range_blocks ) {
-        shared_ptr<vector<SMITH::IndexRange>> range_block_bgl = convert_to_indexrange( range_block ); 
+        shared_ptr<vector<SMITH::IndexRange>> range_block_bgl = convert_to_indexrange( range_block );
       }
     }
   }
-
-
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<SMITH::IndexRange>> PropTool::PropTool::convert_to_indexrange( shared_ptr<const vector<string>> range_block_str ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

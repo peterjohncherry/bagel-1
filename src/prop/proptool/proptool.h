@@ -41,17 +41,47 @@
 namespace bagel {
 namespace PropTool { 
 
-  struct Term_Init { 
-
-    std::vector<std::vector<std::string>> op_names;
-    std::vector<std::vector<int>> target_states; 
-    std::vector<double> factors;
-    std::vector<std::string> types; 
-
-  }; 
- 
 
   class PropTool {
+ 
+  template <typename DataType> 
+    class Term_Init { 
+    
+      public :
+        std::vector<std::vector<std::string>> op_names_;
+        std::vector<std::vector<int>> bra_states_;
+        std::vector<std::vector<int>> ket_states_;
+        std::vector<DataType> factors_;
+        std::vector<std::string> types_;
+        std::vector<int> bra_states_merged_;
+        std::vector<int> ket_states_merged_;
+        std::vector<int> all_states_;
+    
+        Term_Init( std::vector<std::vector<std::string>>& op_names, std::vector<std::vector<int>>& bra_states, std::vector<std::vector<int>>& ket_states,
+                   std::vector<DataType>& factors, std::vector<std::string> types) :
+                   op_names_(op_names), bra_states_(bra_states), ket_states_(ket_states), factors_(factors), types_(types) {
+    
+                    bra_states_merged_ = merge_states(bra_states_);
+                    ket_states_merged_ = merge_states(ket_states_);
+    
+                    std::vector<std::vector<int>> tmp  = { bra_states_merged_, ket_states_merged_ };
+                    all_states_ = merge_states(tmp);
+    
+                  }
+    
+        std::vector<int> merge_states( std::vector<std::vector<int>>& all_st_lists )  { //gross, but it's only ever short
+                            std::vector<int> st_list = all_st_lists[0];
+                            for ( int ii = 1 ; ii!= all_st_lists.size(); ii++ ){
+                              std::vector<int> tmp(st_list.size() + all_st_lists[ii].size());
+                              std::copy(st_list.begin(), st_list.end(), tmp.begin() );
+                              std::copy(all_st_lists[ii].begin(), all_st_lists[ii].end(), tmp.begin()+st_list.size() );
+                              std::sort(tmp.begin(), tmp.end()); 
+                              std::vector<int>::iterator it = std::unique(tmp.begin(), tmp.end()); 
+                              st_list = std::vector<int>( tmp.begin(), it );
+                            }
+                            return st_list;
+                          }
+    }; 
     
     std::shared_ptr<const PTree> idata_;
     std::shared_ptr<const Geometry> geom_;
@@ -74,15 +104,18 @@ namespace PropTool {
     std::shared_ptr<std::map< std::string, double>> scalar_results_map_;
 
     std::vector<int> target_states_;
+    std::vector<int> all_states_;
     std::shared_ptr<StatesInfo<double>> targets_info_; 
 
-    void set_target_info() ;
-    void set_range_info();
+    void set_target_state_info();
+    void set_ao_range_info();
+    void set_ci_range_info();
 
-    void build_expressions( std::vector<int>& target_states, std::vector<std::pair<std::vector<std::string>,double>>& BK_info_list, std::string term_type );
+    std::shared_ptr<std::vector<std::string>> build_expressions( Term_Init<double>& term_inp );
     void build_op_tensors( std::vector<std::string>& expression_list ) ;
     std::shared_ptr<std::vector<SMITH::IndexRange>> convert_to_indexrange( std::shared_ptr<const std::vector<std::string>> range_block_str ) ;
 
+    std::shared_ptr<std::vector< Term_Init<double> >> get_expression_init( std::shared_ptr<const PTree> expression_inp ); 
     public: 
 
       PropTool(std::shared_ptr<const PTree> idata, std::shared_ptr<const Geometry> g, std::shared_ptr<const Reference> r);
