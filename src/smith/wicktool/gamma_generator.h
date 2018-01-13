@@ -142,9 +142,9 @@ class GammaGenerator{
 
     void add_gamma(std::shared_ptr<const range_block_info> block_info );
     
-    void norm_order();
+    bool norm_order();
     
-    void optimized_alt_order();
+    bool optimized_alt_order();
 
     void Contract_remaining_indexes(int kk);
    

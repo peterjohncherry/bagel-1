@@ -311,7 +311,8 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
       vector<string> merged_uranges(num_idxs);
       vector<string> merged_uqidxs(num_idxs);
       vector<string> merged_org_idxs(num_idxs);
-      
+       
+      auto split_block = make_shared< vector <shared_ptr<const range_block_info >>>(0);
       for (int jj = 0 ; jj != num_tensors_ ; jj++){
        
         shared_ptr<const range_block_info> block = rng_maps[jj]->second;
@@ -336,6 +337,8 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
                                                                               make_shared<const vector<string>>(merged_oranges), make_shared<const vector<string>>(merged_uranges),
                                                                               orig_idxs, make_shared<const vector<string>>(merged_uqidxs) ));
 
+      split_ranges_.emplace( merged_oranges, split_block );
+ 
     } while( fvec_cycle_skipper( forvec, maxs, mins ) );
   
     all_ranges_tmp_ptr =  make_shared< const map < const vector<string> , shared_ptr<const range_block_info > > >( all_ranges );
@@ -343,7 +346,12 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
   } else { 
 
     all_ranges_tmp_ptr =  orig_tensors_[0]->all_ranges();
-
+   
+    for ( auto  elem : *all_ranges_tmp_ptr ) {
+      auto tmp = make_shared<vector<shared_ptr<const range_block_info >>>(1, elem.second);
+      split_ranges_.emplace( elem.first , tmp ); 
+    }
+   
   }
   cout << "leaving MultiTensOp::generate_ranges()" << endl;
 

@@ -42,7 +42,8 @@ void BraKet<DataType>::Build_Gamma_SpinFree(shared_ptr<const vector<bool>> aops,
           shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>(TargetStates, Bra_num, Ket_num, idxs_buff, aops_buff, GammaMap, G_to_A_map, factor_); 
           GGen->add_gamma( range_map_it->second );
           GGen->norm_order();
-          GGen->optimized_alt_order();
+          bool does_this_block_contribute = GGen->optimized_alt_order();
+
         } 
       }
     }

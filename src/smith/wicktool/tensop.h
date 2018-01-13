@@ -148,6 +148,7 @@ class MultiTensOp : public  TensOp::TensOp<DataType> {
 
    public :
      std::vector<std::shared_ptr<TensOp::TensOp<DataType>>> orig_tensors_; 
+     std::map< const std::vector<std::string>, std::shared_ptr<std::vector<std::shared_ptr<const range_block_info>>> > split_ranges_; 
      std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >> CTP_map;
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map;
      int num_tensors_;

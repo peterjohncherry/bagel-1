@@ -120,13 +120,15 @@ cout << "GammaGenerator::add_gamma" << endl;
 
 }                     
 /////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
-void GammaGenerator::norm_order(){                                                                                   
+bool GammaGenerator::norm_order(){                                                                                   
 //////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
 #ifdef DBG_GammaGenerator 
 cout << "GammaGenerator::norm_order" << endl; 
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
   int kk = 0;                                                                                                      
+ 
+  bool does_it_contribute = false;
 
   while ( kk != gamma_vec->size()){                                               
     shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
@@ -177,6 +179,7 @@ cout << "GammaGenerator::norm_order" << endl;
   gamma_vec = final_gamma_vec;
 
   if ( gamma_vec->size() > 0 ){
+    does_it_contribute = true;
     cout << "-----------------------------------------------------" << endl;
     cout << "     LIST OF GAMMAS FOLLOWING NORMAL ORDERING ";  cout << endl;
     cout << "-----------------------------------------------------" << endl;
@@ -188,7 +191,7 @@ cout << "GammaGenerator::norm_order" << endl;
     cout << "-----------------------------------------------------" << endl;
   }
 
-  return;
+  return does_it_contribute;
 }
 ///////////////////////////////////////////////////////////////////////////////////////
 // Replace this with something more sophisticated which uses constraint functions.
@@ -299,13 +302,14 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
 //
 //Must add special case for dealing with excitation operators.
 ///////////////////////////////////////////////////////////////////////////////////////
-void GammaGenerator::optimized_alt_order(){
+bool GammaGenerator::optimized_alt_order(){
 //////////////////////////////////////////////////////////////////////////////////////  
 #ifdef DBG_GammaGenerator 
 cout << "GammaGenerator::optimized_alt_order" << endl; 
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////
 
+  bool does_it_contribute = false;
   if ( gamma_vec->size() != 0 ) {
 
     string Bra_name = TargetStates_->name(Bra_num_);
@@ -395,8 +399,8 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
       
       kk++;
     }
-
     if ( final_gamma_vec->size() > 0 ) {
+    does_it_contribute = true; 
     cout << "-----------------------------------------------------" << endl;
       cout << "     LIST OF GAMMAS FOLLOWING ALT ORDERING " << endl; 
       cout << "-----------------------------------------------------" << endl;
@@ -406,9 +410,11 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
         cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos) ) << endl;
       }
       cout << "-----------------------------------------------------" << endl;
+      
     }
   } 
-  return;
+ 
+  return does_it_contribute;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
