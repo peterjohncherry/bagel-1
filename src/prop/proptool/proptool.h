@@ -116,6 +116,8 @@ namespace PropTool {
     std::shared_ptr<std::vector<SMITH::IndexRange>> convert_to_indexrange( std::shared_ptr<const std::vector<std::string>> range_block_str ) ;
 
     std::shared_ptr<std::vector< Term_Init<double> >> get_expression_init( std::shared_ptr<const PTree> expression_inp ); 
+    void get_new_ops_init( std::shared_ptr<const PTree> ops_def_tree ) ;
+
     public: 
 
       PropTool(std::shared_ptr<const PTree> idata, std::shared_ptr<const Geometry> g, std::shared_ptr<const Reference> r);
@@ -147,6 +149,8 @@ namespace PropTool {
       std::shared_ptr<SMITH::Tensor_<double>> H_1el_all;
       std::shared_ptr<SMITH::Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
       std::shared_ptr<SMITH::Tensor_<double>> v2_; 
+
+     //std::shared_ptr<std::vector<std::string>> identity( std::shared_ptr<std::vector<std::string>> invec ) { return invec; }
 
 };
 };

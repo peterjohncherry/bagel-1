@@ -26,7 +26,7 @@ using namespace std;
 using namespace bagel;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-PropTool::PropTool::PropTool(std::shared_ptr<const PTree> idata, std::shared_ptr<const Geometry> g, std::shared_ptr<const Reference> r): 
+PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, shared_ptr<const Reference> r): 
                    idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "PropTool::PropTool::PropTool" << endl;
@@ -35,25 +35,29 @@ cout << "PropTool::PropTool::PropTool" << endl;
   civec_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
   gamma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
   tensop_data_map_ = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
-  
+
   range_conversion_map_ = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
 
   //Initializing range sizes either from idate or reference wfn 
   maxtile_   = idata->get<int>("maxtile", 10);
   cimaxtile_ = idata->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
-  nclosed_  = idata->get<int>("nclosed", ref_->nclosed()); cout << " nclosed_ = " <<  nclosed_  << endl;
-  nact_     = idata->get<int>("nact", ref_->nact());        cout << " nact_    = " <<  nact_  << endl;
-  ncore_    = idata->get<int>("ncore", ciwfn_->ncore());    cout << " ncore_   = " <<  ncore_  << endl;
-  nvirt_    = idata->get<int>("nvirt", ref_->nvirt());      cout << " nvirt_   = " <<  nvirt_  << endl;
+  nclosed_  = idata->get<int>( "nclosed" , ref_->nclosed()); cout << " nclosed_ = " <<  nclosed_  << endl;
+  nact_     = idata->get<int>( "nact"  , ref_->nact());      cout << " nact_    = " <<  nact_  << endl;
+  ncore_    = idata->get<int>( "ncore" , ciwfn_->ncore());   cout << " ncore_   = " <<  ncore_  << endl;
+  nvirt_    = idata->get<int>( "nvirt" , ref_->nvirt());     cout << " nvirt_   = " <<  nvirt_  << endl;
   nocc_     = nclosed_ + nact_; 
   set_ao_range_info();
 
   //Getting info about target expression (this includes which states are relevant)
-  shared_ptr<vector< Term_Init<double>>> expression_init = get_expression_init( idata->get_child("expression") ); 
-  set_target_state_info() ;
-  set_ci_range_info() ;
-   
-  sys_info_ = make_shared<System_Info<double>>(targets_info_, true);
+  shared_ptr<vector<Term_Init<double>>> expression_init = get_expression_init( idata->get_child("expression") ); 
+  set_target_state_info();
+  set_ci_range_info();
+
+  sys_info_ = make_shared<System_Info<double>>( targets_info_, true );
+  shared_ptr< const PTree > ops_def_tree = idata->get_child_optional( "operators" ) ;
+  if (ops_def_tree)
+    get_new_ops_init( ops_def_tree ); 
+
   expression_map_ = sys_info_->expression_map;
   expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, expression_map_, range_conversion_map_, tensop_data_map_, 
                                                                                               gamma_data_map_, sigma_data_map_, civec_data_map_ );
@@ -62,12 +66,64 @@ cout << "PropTool::PropTool::PropTool" << endl;
   for ( Term_Init<double> term_inp : *expression_init ) {
     shared_ptr<vector<string>> expr_list = build_expressions( term_inp );
     cout << "expr_list = [ " ; cout.flush();
-    for ( string expr_name : *expr_list ){
+    for ( string expr_name : *expr_list )
       cout << expr_name << " " ; cout.flush();
-    }
     cout << "]" <<  endl;
   }
 
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //this shouldn't be necessary, but the conversion doesn't seem to work otherwise....
+  auto conv_to_bool = []( int aop ) { return aop == 1 ? true : false ; };
+
+  // keep this so you don't have to get names correct, needs modification for spin case
+  auto conv_to_range = []( string rng ) {
+           if( rng[0] == 'c' ) return "cor";
+           if( rng[0] == 'a' ) return "act";
+           if( rng[0] == 'v' ) return "vir";
+      };
+
+  for ( auto& op_def_inp : *ops_def_tree ){
+  
+    auto idxs_ptree =  op_def_inp->get_child("idxs"); 
+    vector<string> idxs(0);
+    for (auto& idx : *idxs_ptree)
+      idxs.push_back(lexical_cast<string>(idx->data()));
+ 
+    auto ranges_ptree =  op_def_inp->get_child("ranges"); 
+    vector<vector<string>> ranges(0);
+    for (auto& idx_range : *ranges_ptree){
+      vector<string> idx_range_vec(0);
+      for (auto& ranges : *idx_range )
+        idx_range_vec.push_back(conv_to_range(lexical_cast<string>(ranges->data())));
+      ranges.push_back(idx_range_vec);
+    }
+
+    auto aops_ptree =  op_def_inp->get_child("aops"); 
+    vector<bool> aops(0);
+    for (auto& aop : *aops_ptree)
+      aops.push_back(conv_to_bool(lexical_cast<int>(aop->data())));
+
+    string                             name = op_def_inp->get<string>( "name" );
+    double                             factor = op_def_inp->get<double>( "factor", 1.0 );
+    shared_ptr<vector<string>>         idxs_ptr = make_shared<vector<string>>( idxs );
+    shared_ptr<vector<bool>>           aops_ptr = make_shared<vector<bool>>( aops );
+    shared_ptr<vector<vector<string>>> ranges_ptr = make_shared<vector<vector<string>>>( ranges );
+    string                             TimeSymm = op_def_inp->get<string>( "TimeSymm", "none" );
+    bool                               hconj = conv_to_bool(op_def_inp->get<int>( "HermConj", false ));
+      
+    vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> symmfuncs =  sys_info_->identity_only() ; // TODO define this by list of pairs of vectors
+    vector<bool(*)(shared_ptr<vector<string>>)> constraints = { &System_Info<double>::System_Info::always_true };  // TODO define this by list of vectors 
+    
+    sys_info_->T_map->emplace(name, sys_info_->Build_TensOp(name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj ));
+
+  }
+
+  return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr< vector<PropTool::PropTool::Term_Init<double> > > PropTool::PropTool::get_expression_init( shared_ptr<const PTree> expression_inp ) {
@@ -84,7 +140,7 @@ shared_ptr< vector<PropTool::PropTool::Term_Init<double> > > PropTool::PropTool:
     std::vector<std::string> term_init_types; 
   
     for ( auto& term_info : *term_info_tree ) {
-      auto op_list =  term_info->get_child("ops"); 
+      auto op_list = term_info->get_child("ops"); 
   
       vector<string> op_names(0);  
       for (auto& op_name : *op_list)
