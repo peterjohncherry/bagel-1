@@ -26,7 +26,6 @@
 #ifndef __SRC_SMITH_CASPT2_ALT_H
 #define __SRC_SMITH_CASPT2_ALT_H
 
-#include <tuple>
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/ci/fci/fci.h>
 #include <src/smith/multitensor.h>
@@ -89,6 +88,10 @@ class CASPT2_ALT {
     std::shared_ptr<Tensor_<double>> F_1el_all;
     std::shared_ptr<Tensor_<double>> H_1el_all;
     std::shared_ptr<Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
+    std::shared_ptr<Tensor_<double>> v2_; 
+
+    void calculate_term( std::vector<int>& Target_states_list, std::vector<std::pair<std::vector<std::string>,double>>& BK_info_list,
+                         std::string term_type );
 
     CASPT2_ALT(const CASPT2::CASPT2& orig_cpt2_in);
     ~CASPT2_ALT() {};

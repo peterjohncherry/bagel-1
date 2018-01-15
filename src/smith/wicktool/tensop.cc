@@ -46,8 +46,9 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
                                   vector<bool>& aops, DataType orig_factor,
                                   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>), int, int > >& symmfuncs, 
                                   vector<bool(*)(shared_ptr<vector<string>>) >& constraints,
-                                  string& Tsymm ) :
-                                  name_(name), spinfree_(true), symmfuncs_(symmfuncs), constraints_(constraints), Tsymm_(Tsymm)  {
+                                  string& Tsymm, shared_ptr<StatesInfo<DataType>> target_states ) :
+                                  name_(name), spinfree_(true), symmfuncs_(symmfuncs), constraints_(constraints), Tsymm_(Tsymm),
+                                  target_states_(target_states)  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp" <<   endl;
           
@@ -73,6 +74,7 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// TODO this is too slow; just build ranges using symmetry, don't check.
 template<typename DataType>
 tuple< std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<const range_block_info> >>,
        std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>> >
@@ -92,11 +94,10 @@ cout << "TensOp::generate_ranges" <<   endl;
      if (a_unique_range_block) {
        const pair<int,int> fac(1,1);
        const pair<double,double> fac_new(1.0,1.0);
-       shared_ptr<const vector<string>> ranges_1_ptr = make_shared<const vector<string>>(ranges_1);
-       shared_ptr<const vector<string>> ranges_2_ptr = make_shared<const vector<string>>(ranges_2);
+       shared_ptr<const vector<string>> unique_ranges = make_shared<const vector<string>>(ranges_2); 
        shared_ptr<const vector<string>> trans_idxs = orig_idxs;
        bool survives = WickUtils::RangeCheck( ranges_2, aops );
-       all_ranges.emplace(ranges_2, make_shared< const range_block_info >( a_unique_range_block, survives, fac_new, ranges_1_ptr, ranges_2_ptr, orig_idxs, trans_idxs ) );
+       all_ranges.emplace(ranges_2, make_shared< const range_block_info >( a_unique_range_block, survives, fac_new, unique_ranges, unique_ranges, orig_idxs, trans_idxs ) );
      }
      return false;
   };
@@ -134,7 +135,7 @@ cout << "TensOp::generate_ranges" <<   endl;
   all_ranges.emplace(init_range, make_shared< const range_block_info >( is_unique, survives, fac_new, orig_range, trans_range, orig_idxs, trans_idxs ) );
  
   unique_range_blocks = vector< shared_ptr< const vector<string>>>(1, trans_range );
-  //Apply symmetry operations to remove unnecessary ranges  
+  //Apply symmetry operations to remove unnecessary ranges 
   for (int ii = 1 ; ii!=possible_ranges.size(); ii++) {
     for (int kk = 0 ; kk != ii; kk++) {
       if( apply_symmetry(possible_ranges[kk], possible_ranges[ii]) ){ //note that this sets the elements of all_ranges_
@@ -182,9 +183,14 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
    shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, rng_it->second->factors()); 
    shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
    shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
-   shared_ptr<CtrTensorPart<DataType>>  CTP       = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors ); 
-   cout << "CTP->myname() = " << CTP->myname() << " is going into CTP_map" <<  endl;
-   CTP_map->emplace(CTP->myname(), CTP); //maybe should be addded in with ctr_idxs
+
+   for ( int Bra_num : target_states_->target_state_nums_ ){
+     for ( int Ket_num : target_states_->target_state_nums_ ){ 
+       shared_ptr<CtrTensorPart<DataType>>  CTP       = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors, Bra_num, Ket_num ); 
+       cout << "CTP->myname() = " << CTP->myname() << " is going into CTP_map" <<  endl;
+       CTP_map->emplace(CTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CTP); //maybe should be addded in with ctr_idxs
+     }
+   }
  }
  
   //puts_contracted ranges into map
@@ -204,9 +210,15 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
           shared_ptr<vector<pair<int,int>>> ReIm_factors = make_shared<vector<pair<int,int>>>(1, rng_it->second->factors()); 
           shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
           shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
-          shared_ptr<CtrTensorPart<DataType>> CTP = make_shared<CtrTensorPart<DataType>>( full_idxs, full_ranges, ctr_vec, ReIm_factors ); 
-          cout << "CTP->myname() = " << CTP->myname() << "is going into CTP_map " << endl;
-          CTP_map->emplace(CTP->myname(), CTP); //maybe should be added in with ctr_idxs.
+
+          for ( int Bra_num : target_states_->target_state_nums_ ){
+            for ( int Ket_num : target_states_->target_state_nums_ ){ 
+              shared_ptr<CtrTensorPart<DataType>> CTP = make_shared<CtrTensorPart<DataType>>( full_idxs, full_ranges, ctr_vec, ReIm_factors, Bra_num, Ket_num ); 
+              cout << "CTP->myname() = " << CTP->myname() << "is going into CTP_map " << endl;
+              CTP_map->emplace(CTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CTP); //TODO silly hack way of dealing with states find a better way 
+            }
+          }
+
         }
       }
     }
@@ -217,8 +229,9 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree,
-                                                 std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors ):
-                                                 TensOp::TensOp<DataType>( name, spinfree ),
+                                                 std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors,
+                                                 shared_ptr<StatesInfo<DataType>> target_states ):
+                                                 TensOp::TensOp<DataType>( name, spinfree, target_states ),
                                                  orig_tensors_(orig_tensors), num_tensors_(orig_tensors.size()) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "MultiTensOp::MultiTensOp<DataType>::MultiTensOp" << endl;
@@ -311,7 +324,8 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
       vector<string> merged_uranges(num_idxs);
       vector<string> merged_uqidxs(num_idxs);
       vector<string> merged_org_idxs(num_idxs);
-      
+       
+      auto split_block = make_shared< vector <shared_ptr<const range_block_info >>>(0);
       for (int jj = 0 ; jj != num_tensors_ ; jj++){
        
         shared_ptr<const range_block_info> block = rng_maps[jj]->second;
@@ -336,6 +350,8 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
                                                                               make_shared<const vector<string>>(merged_oranges), make_shared<const vector<string>>(merged_uranges),
                                                                               orig_idxs, make_shared<const vector<string>>(merged_uqidxs) ));
 
+      split_ranges_.emplace( merged_oranges, split_block );
+ 
     } while( fvec_cycle_skipper( forvec, maxs, mins ) );
   
     all_ranges_tmp_ptr =  make_shared< const map < const vector<string> , shared_ptr<const range_block_info > > >( all_ranges );
@@ -343,7 +359,12 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
   } else { 
 
     all_ranges_tmp_ptr =  orig_tensors_[0]->all_ranges();
-
+   
+    for ( auto  elem : *all_ranges_tmp_ptr ) {
+      auto tmp = make_shared<vector<shared_ptr<const range_block_info >>>(1, elem.second);
+      split_ranges_.emplace( elem.first , tmp ); 
+    }
+   
   }
   cout << "leaving MultiTensOp::generate_ranges()" << endl;
 
@@ -448,25 +469,34 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
     }
   } 
 
-   //get_ranges for individual tensors
-   for (int ii = 0 ; ii !=num_tensors_; ii++ ){ 
-     shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(id_ranges.begin()+Op_dense_->cmlsizevec(ii), id_ranges.begin()+cmlsizevec(ii)+orig_tensors_[ii]->num_idxs());
-     shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *(orig_tensors_[ii]->idxs()) );
-    
-     if( sameT_ctrs_pos[ii].size() != 0 ) {
-       CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, make_shared<vector<pair<int,int>>>(sameT_ctrs_pos[ii]), ReIm_factor_vec ) ; 
-     } else { 
-       CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec ); 
-     }
-  
-     CTP_map->emplace(CTP_vec->at(ii)->name, CTP_vec->at(ii)); 
+  //get_ranges for individual tensors
+  for (int ii = 0 ; ii !=num_tensors_; ii++ ){ 
+    shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(id_ranges.begin()+Op_dense_->cmlsizevec(ii), id_ranges.begin()+cmlsizevec(ii)+orig_tensors_[ii]->num_idxs());
+    shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *(orig_tensors_[ii]->idxs()) );
+   
+    // TODO Fix this loop so it will not add if CTP is sparse block
+    for ( int Bra_num : target_states_->target_state_nums_ ) {
+      for ( int Ket_num : target_states_->target_state_nums_ ) {
+        if( sameT_ctrs_pos[ii].size() != 0 ) {
+          CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, make_shared<vector<pair<int,int>>>(sameT_ctrs_pos[ii]), ReIm_factor_vec, Bra_num, Ket_num ) ; 
+        } else { 
+          CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec, Bra_num, Ket_num ); 
+        }
+        CTP_map->emplace(CTP_vec->at(ii)->name+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CTP_vec->at(ii)); //TODO silly hack way of dealing with states find a better way 
+      }
+    }
   }
   
-  shared_ptr<CtrMultiTensorPart<DataType>> CMTP = make_shared<CtrMultiTensorPart<DataType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos)); 
-  
-  CMTP_map->emplace(CMTP->myname(), CMTP); 
-  CTP_map->emplace(CMTP->myname(), CMTP); 
-  
+
+  //TODO silly hack way of dealing with states find a better way
+  for ( int Bra_num : target_states_->target_state_nums_ ) {
+    for ( int Ket_num : target_states_->target_state_nums_ ) {
+      shared_ptr<CtrMultiTensorPart<DataType>> CMTP = make_shared<CtrMultiTensorPart<DataType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos), Bra_num, Ket_num ); 
+      CMTP_map->emplace(CMTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CMTP);
+      CTP_map->emplace(CMTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CMTP);
+    }
+  }
+
   return;
 }
 

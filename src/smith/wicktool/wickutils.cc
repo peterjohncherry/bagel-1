@@ -548,35 +548,33 @@ shared_ptr<vector<int>> WickUtils::get_unc_ids_from_deltas_ids_comparison(shared
 //   cout << "unc_ids = [ " ;   for ( int pos : unc_ids) {cout << pos << " " ; } cout << "] " << endl;
    return make_shared<vector<int>>(unc_ids);
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
-string WickUtils::get_Aname(shared_ptr<vector<string>> full_idxs, shared_ptr<vector<string>> full_idx_ranges, 
-                                 shared_ptr<vector<pair<int,int>>> all_ctrs_pos ){
+string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges, int Bra_num, int Ket_num ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  string  name = "";
-  for(string idx : *full_idxs)
-    name += idx;
-  name+="_"; 
 
-  for(string idx_range : *full_idx_ranges)
+  string  name = "";
+  for(string idx : full_idxs)
+    name += idx;
+
+  name+="_";
+
+  for(string idx_range : full_idx_ranges)
     name += idx_range[0];
 
-  if (all_ctrs_pos->size() !=0 ){
-    name+="_"; 
-    for(pair<int,int> delta : *all_ctrs_pos)
-      name += to_string(delta.first)+to_string(delta.second);
-  }
+  name+="_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">"; 
+
   return name;
+
 };
- 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
 string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges, 
-                             const vector<pair<int,int>>& all_ctrs_pos ){
+                             const vector<pair<int,int>>& all_ctrs_pos, int Bra_num, int Ket_num ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   string  name = "";
   for(string idx : full_idxs)
     name += idx;
-  name+="_"; 
+
+  name+="_";
 
   for(string idx_range : full_idx_ranges)
     name += idx_range[0];
@@ -586,6 +584,7 @@ string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<strin
     for(pair<int,int> delta : all_ctrs_pos)
       name += to_string(delta.first)+to_string(delta.second);
   }
+  name+="_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">"; 
   return name;
 };
                                                                                                                                                          

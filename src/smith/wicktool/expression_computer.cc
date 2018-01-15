@@ -66,13 +66,13 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
     A_combined_data->zero(); 
  
     // Loop through A-tensors needed for this gamma
-    auto  A_contrib_loc =  Expr->G_to_A_map->find(Gamma_name);
+    auto A_contrib_loc = Expr->G_to_A_map->find( Gamma_name );
     if ( (A_contrib_loc != Expr->G_to_A_map->end()) &&  (A_contrib_loc->second->size() != 0) ) {
   
       for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
       
-        string  A_contrib_name  = A_contrib_map_elem.first;    
-        AContribInfo A_contrib  = A_contrib_map_elem.second;    
+        string  A_contrib_name = A_contrib_map_elem.first;    
+        AContribInfo A_contrib = A_contrib_map_elem.second;    
 
         if (check_AContrib_factors(A_contrib))
           continue;
@@ -89,7 +89,7 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
               A_combined_data->ax_plus_y( (double)(A_contrib.factor(qq).first), A_contrib_reordered );
             }
 
-         } else { cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO there should be a way to avoid this
+         } else { cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO is a way to avoid this, implement it
             
            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
 
@@ -134,7 +134,7 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
       }
      
       if ( Gamma_name != "ID" ) {
-        
+
         B_Gamma_Machine.get_gamma( Gamma_name );
  
         double tmp_result = A_combined_data->dot_product( Gamma_data_map->at(Gamma_name) );

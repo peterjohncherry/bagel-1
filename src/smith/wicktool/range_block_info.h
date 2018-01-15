@@ -42,4 +42,23 @@ class range_block_info {
     std::shared_ptr<const std::vector<std::string>> transformed_idxs() const { return transformed_idxs_;}// get<2>
 
 };
+class split_range_block_info {
+
+  // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
+  public :
+    std::shared_ptr<std::vector<std::string>> op_names_;
+    std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>> range_blocks_;
+    std::shared_ptr<std::vector<std::pair<double,double>>> factors_;
+    std::shared_ptr<std::vector<std::shared_ptr<const std::vector<int>>>> transformations_;
+                              
+    split_range_block_info( std::shared_ptr<std::vector<std::string>> op_names,   
+                            std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> range_blocks,
+                            std::shared_ptr<std::vector<std::pair<double,double>>> factors,
+                            std::shared_ptr<std::vector< std::shared_ptr<const std::vector<int>>>> transformations):
+                            op_names_(op_names), range_blocks_(range_blocks),
+                            factors_(factors), transformations_(transformations) {};
+    ~split_range_block_info(){};
+
+};
+
 #endif

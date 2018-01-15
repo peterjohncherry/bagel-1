@@ -143,7 +143,7 @@ TensOp_Computer::TensOp_Computer<DataType>::contract_different_tensors( std::str
                                                                   pair<int,int> ctr_todo ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp_Computer::contract_on_different_tensor" << ": "  << T1_in_name << " and " << T2_in_name << " over T1[" << ctr_todo.first << "] and T2[" << ctr_todo.second << "] to get " << T_out_name <<  endl;
-
+ 
   shared_ptr<Tensor_<DataType>> Tens1_in = find_or_get_CTP_data(T1_in_name);
   shared_ptr<Tensor_<DataType>> Tens2_in = find_or_get_CTP_data(T2_in_name);
   return Tensor_Calc->contract_different_tensors(Tens1_in, Tens2_in, ctr_todo );
@@ -241,6 +241,11 @@ TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//TODO This should be replaced; ultimately, each of the blocks should be it's own tensor; this duplicates everything.
+//     Which blocks exist should be determined after the equation editor has run, so this should ultimately link to
+//     allocation and initialization routines, etc..
+//     As an intermediate step could perhaps erase the newly created CTP block as soon as it's extracted from the tensor.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>

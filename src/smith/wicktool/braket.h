@@ -7,42 +7,52 @@
   #include <src/smith/wicktool/states_info.h>
 
 template<typename DataType> 
-class BraKet  {
-      using pint_vec = std::vector<std::pair<int,int>>;
-      using pstr_vec = std::vector<std::pair<std::string,std::string>>;
+class BraKet{
 
       public:
-       BraKet(std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map_in,
-              std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> GammaMap ,
-              std::shared_ptr<StatesInfo<DataType>> TargetStates  );
-       ~BraKet(){};
-      
-       std::shared_ptr<StatesInfo<DataType>> TargetStates;
-       int nact_orb;
-       int nact_el;
-       int nidxs;
        
-       bool spinfree;
-       int spin_max ;
-       int spin_min ;
+        //Takes each gamma name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors
+        std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map;
        
-       std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>> Sub_Ops;
+        //Goes from a gamma name to the gamma info
+        std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> GammaMap;
        
-       std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op;
+        std::shared_ptr<StatesInfo<DataType>> target_states_;
+
+        //factor; this is specific to the expression to which this BraKet object belongs
+        DataType factor_;
        
-       std::shared_ptr< std::map< std::vector<std::string>, std::shared_ptr<std::vector<std::pair< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> >>> >> BK_Compute_List_CMTP;
+        int nact_orb;
+        int nact_el;
+        int nidxs;
+        
+        bool spinfree;
+        int spin_max ;
+        int spin_min ;
+
+        std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>> Sub_Ops;
+        
+        std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op;
+        
+        std::shared_ptr< std::map< std::vector<std::string>, std::shared_ptr<std::vector<std::pair< std::shared_ptr<std::vector<std::string>>, std::pair<int,int> >>> >> BK_Compute_List_CMTP;
+
+        BraKet(std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map_in,
+               std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> GammaMap_in ,
+               std::shared_ptr<StatesInfo<DataType>> target_states, DataType factor ) : 
+               G_to_A_map(G_to_A_map_in), GammaMap(GammaMap_in), target_states_(target_states), factor_(factor)
+               {
+                 Sub_Ops = std::make_shared<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>>(0);
+               }
+        
+        ~BraKet(){};
        
-       //Takes each gamma name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors
-       std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map;
-       
-       //Goes from a gamma name to the gamma info
-       std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> GammaMap;
-       
-       void Build_TotalOp();
-       
-       void Build_Gamma_WithSpin(std::shared_ptr<const std::vector<bool>> aops, std::shared_ptr<const std::vector<std::string>> idxs);
-       void Build_Gamma_SpinFree(std::shared_ptr<const std::vector<bool>> aops, std::shared_ptr<const std::vector<std::string>> idxs); 
-       void Build_Tensor_Contraction_list_CMTP();
+        void Build_TotalOp();
+        
+        void Build_Gamma_WithSpin(std::shared_ptr<const std::vector<bool>> aops, std::shared_ptr<const std::vector<std::string>> idxs);
+
+        void Build_Gamma_SpinFree(std::shared_ptr<const std::vector<bool>> aops, std::shared_ptr<const std::vector<std::string>> idxs); 
+
+        void Build_Tensor_Contraction_list_CMTP();
 
 };
 #endif

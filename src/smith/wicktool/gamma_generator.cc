@@ -63,13 +63,14 @@ cout << "GammaInfo::GammaInfo" <<  endl;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> TargetStates, int Bra_num, int Ket_num,
+GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states_, int Bra_num, int Ket_num,
                                 shared_ptr<const vector<string>> orig_ids, shared_ptr<const vector<bool>> orig_aops, 
                                 shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
-                                shared_ptr<map<string, shared_ptr<map<string, AContribInfo >>>> G_to_A_map_in):
-                                TargetStates_(TargetStates), Bra_num_(Bra_num), Ket_num_(Ket_num), 
+                                shared_ptr<map<string, shared_ptr<map<string, AContribInfo >>>> G_to_A_map_in,
+                                double bk_factor_in ):
+                                target_states__(target_states_), Bra_num_(Bra_num), Ket_num_(Ket_num), 
                                 orig_ids_(orig_ids), orig_aops_(orig_aops), 
-                                G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in) {
+                                G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in), bk_factor(bk_factor_in) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_GammaGenerator
 cout << "GammaGenerator::GammaGenerator" << endl; 
@@ -104,14 +105,14 @@ cout << "GammaGenerator::add_gamma" << endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  //TODO have new gamma intermediate constructor with most of this as default.
   shared_ptr<vector<int>> ids_pos_init =  make_shared<vector<int>>(block_info->orig_idxs()->size());
   iota( ids_pos_init->begin() , ids_pos_init->end(), 0 );
-
   int my_sign_in = 1;
-
   shared_ptr<vector<pair<int,int>>> deltas_pos_in = make_shared<vector<pair<int,int>>>(0);
   shared_ptr<vector<string>> id_ranges_in = make_shared<vector<string>>(*block_info->orig_block());
 
+  //print_vector(*id_ranges_in, " id_ranges_for gamma_init" ) ; print_vector( *ids_pos_init, "     id_pos_init" ) ; cout << endl; 
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(1, make_shared<GammaIntermediate>(id_ranges_in, ids_pos_init, deltas_pos_in, my_sign_in)); 
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
 
@@ -119,13 +120,15 @@ cout << "GammaGenerator::add_gamma" << endl;
 
 }                     
 /////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
-void GammaGenerator::norm_order(){                                                                                   
+bool GammaGenerator::norm_order(){                                                                                   
 //////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
 #ifdef DBG_GammaGenerator 
 cout << "GammaGenerator::norm_order" << endl; 
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
   int kk = 0;                                                                                                      
+ 
+  bool does_it_contribute = false;
 
   while ( kk != gamma_vec->size()){                                               
     shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
@@ -164,8 +167,10 @@ cout << "GammaGenerator::norm_order" << endl;
     }
     
     if (!gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
+       cout << " These indexes won't survive : [ ";  for ( int pos : *ids_pos ) {cout <<  full_id_ranges->at(pos) << " " ;} cout << "]" << endl;
        Contract_remaining_indexes(kk);
     } else {
+       cout << " These indexes will survive : [ ";  for ( int pos : *ids_pos ) {cout <<  full_id_ranges->at(pos) << " " ;} cout << "]" << endl;
       final_gamma_vec->push_back(gamma_vec->at(kk));
     } 
     kk++;                                                         
@@ -174,17 +179,19 @@ cout << "GammaGenerator::norm_order" << endl;
   gamma_vec = final_gamma_vec;
 
   if ( gamma_vec->size() > 0 ){
+    does_it_contribute = true;
     cout << "-----------------------------------------------------" << endl;
     cout << "     LIST OF GAMMAS FOLLOWING NORMAL ORDERING ";  cout << endl;
     cout << "-----------------------------------------------------" << endl;
     for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
-      cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, TargetStates_->name(Bra_num_), TargetStates_->name(Ket_num_) ) ;
-      cout << "   ("<< gint->my_sign <<","<< gint->my_sign << ")" << endl;
+      cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, target_states__->name(Bra_num_), target_states__->name(Ket_num_) ) ;
+      cout << "   ("<< gint->my_sign <<","<< gint->my_sign << ")       ";
+      cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos), Bra_num_, Ket_num_ ) << endl;
     }
     cout << "-----------------------------------------------------" << endl;
   }
 
-  return;
+  return does_it_contribute;
 }
 ///////////////////////////////////////////////////////////////////////////////////////
 // Replace this with something more sophisticated which uses constraint functions.
@@ -194,8 +201,6 @@ bool GammaGenerator::Forbidden_Index( shared_ptr<const vector<string>> full_id_r
 //cout << "GammaGenerator::Forbidden_Index" << endl;
 
   if ( full_id_ranges->at(position)[0] != 'a'){
-    return true;
-  } else if ( orig_ids_->at(position)[0] == 'X' ) {
     return true;
   } else {
     return false;
@@ -297,17 +302,18 @@ cout << "GammaGenerator::Contract_remaining_indexes" << endl;
 //
 //Must add special case for dealing with excitation operators.
 ///////////////////////////////////////////////////////////////////////////////////////
-void GammaGenerator::optimized_alt_order(){
+bool GammaGenerator::optimized_alt_order(){
 //////////////////////////////////////////////////////////////////////////////////////  
 #ifdef DBG_GammaGenerator 
 cout << "GammaGenerator::optimized_alt_order" << endl; 
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////
 
+  bool does_it_contribute = false;
   if ( gamma_vec->size() != 0 ) {
 
-    string Bra_name = TargetStates_->name(Bra_num_);
-    string Ket_name = TargetStates_->name(Ket_num_);
+    string Bra_name = target_states__->name(Bra_num_);
+    string Ket_name = target_states__->name(Ket_num_);
 
     int kk = 0;
     while ( kk != gamma_vec->size()){
@@ -344,36 +350,41 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
         }
       }
 
-      double my_sign = 1.0*gamma_vec->at(kk)->my_sign ;
+      // should be fully reordered by this point, so can apply factor. 
+      // This section should be taking out and put into a seperate function; keep ordering and
+      // map creation parts seperate
+      double my_sign = bk_factor*gamma_vec->at(kk)->my_sign ;
 
-      string Aname_alt = get_Aname( *orig_ids_, *full_id_ranges, *deltas_pos );
+      string Aname_alt = get_Aname( *orig_ids_, *full_id_ranges, *deltas_pos, Bra_num_, Ket_num_ );
       string Gname_alt = get_gamma_name( full_id_ranges, orig_aops_, ids_pos, Bra_name, Ket_name );
       cout << Gname_alt << endl;
 
       if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() ) 
         G_to_A_map->emplace( Gname_alt, make_shared<map<string, AContribInfo>>() );
 
-
       vector<int> Aid_order_new = get_Aid_order ( *ids_pos ) ; 
-      auto Aid_orders_map_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
-      if ( Aid_orders_map_loc == G_to_A_map->at( Gname_alt )->end() ) {
-        AContribInfo AInfo( Aid_order_new, make_pair(my_sign,my_sign));
+      auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
+      if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
+        AContribInfo AInfo( Aid_order_new, make_pair(my_sign,my_sign), Bra_num_, Ket_num_ );
         G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
+        cout << "adding " << Aname_alt << "contrib to " << Gname_alt << endl;
 
       } else {
 
         //put new contributions into map, change factors as appropriate, if all factors go to zero remove entry from map.
-        AContribInfo AInfo = Aid_orders_map_loc->second;
+        AContribInfo AInfo = AInfo_loc->second;
         for ( int qq = 0 ; qq != AInfo.id_orders.size(); qq++ ) {
           if( Aid_order_new == AInfo.id_order(qq) ){
             AInfo.factors[qq].first  += my_sign;
-            AInfo.factors[qq].second += my_sign;
-            if ( AInfo.factors[qq].first == 0 &&  AInfo.factors[qq].second == 0 ) {
-              AInfo.factors.erase( AInfo.factors.begin()+qq ); 
-              AInfo.id_orders.erase( AInfo.id_orders.begin()+qq ); 
-              if (AInfo.id_orders.size() == 0 ) 
-                G_to_A_map->at( Gname_alt )->erase(Aid_orders_map_loc);
-            }
+            AInfo.factors[qq].second += my_sign; 
+      //      if ( AInfo.factors[qq].first == 0 &&  AInfo.factors[qq].second == 0 ) {
+      //        AInfo.factors.erase( AInfo.factors.begin()+qq ); 
+      //        AInfo.id_orders.erase( AInfo.id_orders.begin()+qq ); 
+      //        if (AInfo.id_orders.size() == 0 ){ 
+      //          cout << "erasing " << Aname_alt << " contrib to " << Gname_alt << endl; 
+      //          G_to_A_map->at( Gname_alt )->erase(AInfo_loc);
+      //        }
+      //    }
             break;
 
           } else if ( qq == AInfo.id_orders.size()-1) { 
@@ -382,27 +393,28 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
           }
         }
       }
-
-      if ( Gamma_map->find( Gname_alt ) == Gamma_map->end() ) 
-        Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( TargetStates_->civec_info(Bra_num_), TargetStates_->civec_info(Ket_num_), 
-                                                               orig_aops_, full_id_ranges, ids_pos, Gamma_map) );
+      
+      Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states__->civec_info(Bra_num_), target_states__->civec_info(Ket_num_), 
+                                                             orig_aops_, full_id_ranges, ids_pos, Gamma_map) );
       
       kk++;
     }
-
     if ( final_gamma_vec->size() > 0 ) {
+    does_it_contribute = true; 
     cout << "-----------------------------------------------------" << endl;
       cout << "     LIST OF GAMMAS FOLLOWING ALT ORDERING " << endl; 
       cout << "-----------------------------------------------------" << endl;
       for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
-        string Gname_tmp = WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, TargetStates_->name(Bra_num_), TargetStates_->name(Ket_num_) ) ;
-        cout <<Gname_tmp <<  "   ("<< gint->my_sign <<","<< gint->my_sign << ")" ; cout << endl;
-        cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos) ) << endl;
+        string Gname_tmp = WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, target_states__->name(Bra_num_), target_states__->name(Ket_num_) ) ;
+        cout <<Gname_tmp <<  "   ("<< gint->my_sign <<","<< gint->my_sign << ")       " ;
+        cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos), Bra_num_, Ket_num_ ) << endl;
       }
       cout << "-----------------------------------------------------" << endl;
+      
     }
   } 
-  return;
+ 
+  return does_it_contribute;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
@@ -591,11 +603,12 @@ vector<int> GammaGenerator::get_standard_range_order(const vector<string> &rngs)
   vector<int> pos(rngs.size());
   iota(pos.begin(), pos.end(), 0);
   sort(pos.begin(), pos.end(), [&rngs](int i1, int i2){
-                                 if ( rngs[i1][0] == 'X' ){
-                                   return false;
-                                 } else {
+//                                 if ( rngs[i1][0] == 'X' ){
+//                                   return false;
+//                                 } else {
                                    return (bool)( rngs[i1] < rngs[i2] );
-                                 }});
+//                                 }
+});
   
   return pos;
 }

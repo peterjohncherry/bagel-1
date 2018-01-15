@@ -5,28 +5,22 @@
 using namespace std;
 
 
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Note, spinfree should tell us not just if the wavefunction is free, but whether or 
 //not the perturbation being applied is spin independent
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-System_Info<DataType>::System_Info::System_Info( shared_ptr<StatesInfo<DataType>> TargetStates_in , bool spinfree ) {
+System_Info<DataType>::System_Info::System_Info( shared_ptr<StatesInfo<DataType>> target_states , bool spinfree ) :
+                                                 target_states_(target_states), spinfree_(spinfree) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   T_map          = make_shared< map <string, shared_ptr<TensOp::TensOp<DataType>>>>();
-  BraKet_map     = make_shared<  std::map <std::string, 
-                                          std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>>();
+  BraKet_map     = make_shared<  map < string, shared_ptr<vector<shared_ptr< TensOp::TensOp<DataType>>>>>>();
   CTP_map        = make_shared< map <string, shared_ptr<CtrTensorPart<DataType>>>>();
   CMTP_map       = make_shared< map <string, shared_ptr<CtrMultiTensorPart<DataType>>>>();
   expression_map = make_shared< map <string, shared_ptr<Expression<DataType>>>>();
 
-  TargetStates = TargetStates_in;
-
-  spinfree_ = spinfree;
-
-  if (spinfree || !spinfree /*TODO like this for testing; obviously must put back*/ ) { 
+  if (spinfree_ /*TODO like this for testing; obviously must put back*/ || !spinfree_ ) { 
     cout << " setting spinfree ranges" << endl;
     free     = {"cor", "act", "vir"};
     not_core = {"act", "vir"};
@@ -65,7 +59,7 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
   //NOTE: change to use proper factor
   int tmpfac = 1;
   shared_ptr<TensOp::TensOp<DataType>>  New_Op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
-                                                                                        tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry);
+                                                                                        tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, target_states_);
   // change to be state specific
   New_Op->get_ctrs_tens_ranges();
 
@@ -74,16 +68,19 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void System_Info<DataType>::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op_names, string term_name ) { 
+void System_Info<DataType>::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op_names, string BraKet_name ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout <<  "System_Info::System_Info::Build_BraKet(shared_ptr<vector<string>> BraKet_names, string expression_name ) " << endl;
+cout <<  "System_Info::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op_names, string term_name ) " << endl;
   
-  shared_ptr<vector<shared_ptr<TensOp::TensOp<double>>>> BraKet_Ops = make_shared<vector< shared_ptr<TensOp::TensOp<double>> > >();
+  shared_ptr<vector<shared_ptr<TensOp::TensOp<double>>>> BraKet_Ops = make_shared<vector< shared_ptr<TensOp::TensOp<double>> > >( Op_names->size());
 
-  for ( string name : *Op_names ) 
-    BraKet_Ops->push_back(T_map->at(name));
-
-  BraKet_map->emplace(term_name, BraKet_Ops);
+  vector<shared_ptr<TensOp::TensOp<double>>>::iterator BraKet_Ops_it = BraKet_Ops->begin();
+  for ( string name : *Op_names ){  
+     cout << "looking_for " << name << " ... " ; cout.flush();
+    *BraKet_Ops_it++ = T_map->at(name);
+     cout << " found it! " << endl;    
+  }
+  BraKet_map->emplace(BraKet_name, BraKet_Ops);
 
   return;
 }
@@ -94,8 +91,10 @@ string System_Info<DataType>::System_Info::Build_Expression( vector<Term_Info<Da
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "System_Info::System_Info::Build_Expression" << endl;                                                                                     
   
-  shared_ptr<vector<string>> BraKet_name_list = make_shared<vector<string>>(0);
+  shared_ptr< vector<pair<string, DataType>> > BraKet_name_list = make_shared<vector<pair< string, DataType >>>(0);
   
+  // This is looping over states; op sparsity depends on states, should replace with term_info_map, and
+  // have double loop, outer for ket state, inner for brastate
   for ( Term_Info<DataType> BraKet_info : term_info_list ) {
 
     for (string op_name : BraKet_info.op_list ) {
@@ -112,47 +111,42 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
         Op_list.push_back(op_name);
       }
     }
-
     string BraKet_name = "";
-    
+
     if ( BraKet_info.type == "ci_derivative" ) {
       BraKet_name += "c_{I}^{" + BraKet_info.Bra_name + "} < "+BraKet_info.Bra_name  + " | ";
-    } else { 
+    } else if (BraKet_info.type == "expectation")  { 
       BraKet_name += "< "+ BraKet_info.Bra_name +" | ";
     }
     
     for ( string op : BraKet_info.op_list ) 
       BraKet_name += op;
-    
+     
     BraKet_name += " | " + BraKet_info.Ket_name + " > " ;
    
-    Set_BraKet_Ops( make_shared<vector<string>>(BraKet_info.op_list), BraKet_name ) ;
+    if ( BraKet_map->find(BraKet_name) == BraKet_map->end() ) 
+      Set_BraKet_Ops( make_shared<vector<string>>(BraKet_info.op_list), BraKet_name ) ;
 
-    BraKet_name_list->push_back(BraKet_name); 
+    BraKet_name_list->push_back( make_pair( BraKet_name, BraKet_info.factor ) );
     cout << "new BraKet_name = " << BraKet_name << endl;
+  }
 
-  }    
- 
-  string expression_name = accumulate(BraKet_name_list->begin(), BraKet_name_list->end(), string(""));
+  string expression_name = "";
+  for ( pair<string, DataType> name_fac_pair : *BraKet_name_list ) {
+    if (name_fac_pair.second > 0.0 ) 
+      expression_name += "+";
+    expression_name += "(" + to_string(name_fac_pair.second) + ")" + name_fac_pair.first;
+  }
   cout << "new_expression_name = " << expression_name << endl;
-
-  auto BraKet_List = make_shared<std::vector<std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>>>>( BraKet_name_list->size() ); 
-
-  for ( int ii = 0 ; ii != BraKet_name_list->size() ; ii++ ) 
-    BraKet_List->at(ii) = BraKet_map->at(BraKet_name_list->at(ii)) ;
-
-  shared_ptr<Expression<DataType>> new_expression = make_shared<Expression<DataType>>(BraKet_List, TargetStates);
-
-  expression_map->emplace(expression_name, new_expression);
+    
+  shared_ptr<Expression<DataType>> new_expression = make_shared<Expression<DataType>>(BraKet_name_list, BraKet_map, target_states_);
+  
+  expression_map->emplace( expression_name, new_expression );
 
   return expression_name;
 
 }
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class System_Info<double>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 #endif

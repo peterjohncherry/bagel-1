@@ -84,6 +84,25 @@ class Tensor_Arithmetic {
      static void
      set_tensor_elems(std::shared_ptr<Tensor_<DataType>> Tens, DataType elem_val );
  
+     static void
+     put_sub_tensor( std::shared_ptr<Tensor_<DataType>> Tens1, std::shared_ptr<Tensor_<DataType>> Tens2 );
+
+     static void
+     put_tensor_range_block( std::shared_ptr<Tensor_<DataType>> Tens1, std::shared_ptr<Tensor_<DataType>> Tens2, std::vector<IndexRange>& id_ranges );
+
+     static void
+     put_reordered_range_block( std::shared_ptr<Tensor_<DataType>> Tens1, std::shared_ptr<Tensor_<DataType>> Tens2,
+                                std::vector<IndexRange>& id_ranges, std::shared_ptr<std::vector<int>> new_order     );
+
+
+     static void 
+     put_reordered_range_block( std::shared_ptr<Tensor_<DataType>> T1, std::vector<IndexRange>& id_ranges_T1,
+                                std::shared_ptr<Tensor_<DataType>> T2, std::vector<IndexRange>& id_ranges_T2,
+                                std::shared_ptr<std::vector<int>> new_order );
+
+     static void
+     set_tensor_elems(std::shared_ptr<Tensor_<DataType>> Tens, std::vector<IndexRange>& id_ranges, DataType elem_val );
+
      static std::shared_ptr<Tensor_<DataType>>
      get_uniform_Tensor(std::shared_ptr<std::vector<IndexRange>> T_id_ranges, DataType XX );
 

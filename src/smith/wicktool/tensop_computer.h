@@ -32,8 +32,6 @@ class TensOp_Computer {
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> Data_map;
 
-
-
     std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<DataType>> Tensor_Calc;
 
     /////////// Tensor contraction routines /////////////////////////

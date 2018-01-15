@@ -96,10 +96,6 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
   }
   //////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
-
-
   timer.tick_print("MO integral evaluation");
 
   auto fockact = make_shared<MatType>(active_.size(), active_.size());

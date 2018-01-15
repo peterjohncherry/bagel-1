@@ -8,15 +8,20 @@ using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
 template<class DataType> 
 class Term_Info {
+
      public :
-       std::vector<std::string> op_list;
-       std::string Bra_name;
-       std::string Ket_name;
-       DataType factor;
-       std::string type ; // should be "ci_deriv" or "full" 
-       
-       Term_Info( std::vector<std::string> op_list_in, std::string Bra_name_in, std::string Ket_name_in, DataType factor_in , std::string type_in ) :
-                  op_list(op_list_in), Bra_name(Bra_name_in), Ket_name(Ket_name_in), factor(factor_in), type(type_in) {};
+       const std::vector<std::string> op_list;
+       const DataType factor;
+       const std::string Bra_name;
+       const std::string Ket_name;
+       const std::string type ; // should be "ci_deriv" or "full" 
+       const std::string term_name;
+
+     public :
+       Term_Info( std::pair< std::vector<std::string>, DataType > BraKet_info, 
+                  std::string Bra_name_in, std::string Ket_name_in, std::string type_in ) :
+                  op_list(BraKet_info.first), factor(BraKet_info.second), Bra_name(Bra_name_in), Ket_name(Ket_name_in),
+                  type(type_in) {};
        ~Term_Info(){};
 };
 
@@ -25,11 +30,11 @@ template<class DataType>
 class System_Info {
       private :
         bool spinfree_ = false;
-        std::shared_ptr<StatesInfo<DataType>> TargetStates;
+        std::shared_ptr<StatesInfo<DataType>> target_states_;
 
       public:
 
-      System_Info(std::shared_ptr<StatesInfo<DataType>> TargetStates, bool spinfree);
+      System_Info(std::shared_ptr<StatesInfo<DataType>> target_states_, bool spinfree);
       ~System_Info(){};
 
       std::vector<std::string> free;
@@ -45,13 +50,12 @@ class System_Info {
       //only makes sense to specify a and b electrons if non-rel
       // key :    Name of BraKet
       // result : Vector of TensOps corresponding to BraKet
-      std::shared_ptr< std::map <std::string, 
-                                 std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> BraKet_map;
+      std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> BraKet_map;
   
       std::shared_ptr< std::map <std::string, std::shared_ptr<Expression<DataType>>>> expression_map;
     
-      // key :    Name of contracted part of TensorOp.
-      // result : Info for contracted part of TensorOp info.
+      // key :    Name of uncontracted part of TensorOp.
+      // result : Info for uncontracted part of TensorOp info.
       std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType> > >> T_map    ;      
 
       // key :    Name of contracted part of TensorOp
@@ -78,9 +82,9 @@ class System_Info {
 
       std::string Build_Expression( std::vector<Term_Info<DataType>>&  term_info_list  );
 
-      int nalpha(int state_num) { return TargetStates->nalpha( state_num ); };
-      int nbeta(int state_num)  { return TargetStates->nbeta( state_num );  };
-      int nact(int state_num)   { return TargetStates->nact( state_num );   };
+      int nalpha(int state_num) { return target_states_->nalpha( state_num ); };
+      int nbeta(int state_num)  { return target_states_->nbeta( state_num );  };
+      int nact(int state_num)   { return target_states_->nact( state_num );   };
       bool spinfree(){return spinfree_;}
 
       static std::string flip(std::string idx);

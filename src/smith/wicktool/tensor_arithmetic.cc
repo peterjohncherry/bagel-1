@@ -483,13 +483,13 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
   //note column major ordering
   shared_ptr<vector<int>>        T1_new_order = put_ctr_at_back( T1_org_order, ctr_todo.first);
   shared_ptr<vector<IndexRange>> T1_new_rngs  = reorder_vector(T1_new_order, T1_org_rngs);
-  shared_ptr<vector<int>>        maxs1        = get_num_index_blocks_vec(T1_new_rngs) ;
-  shared_ptr<vector<int>>        mins1        = make_shared<vector<int>>(maxs1->size(), 0 );  
+  shared_ptr<vector<int>>        maxs1        = get_num_index_blocks_vec(T1_new_rngs);
+  shared_ptr<vector<int>>        mins1        = make_shared<vector<int>>( maxs1->size(), 0 );  
 
   shared_ptr<vector<int>>        T2_new_order = put_ctr_at_front( T2_org_order, ctr_todo.second);
   shared_ptr<vector<IndexRange>> T2_new_rngs  = reorder_vector(T2_new_order, T2_org_rngs);
   shared_ptr<vector<int>>        maxs2        = get_num_index_blocks_vec(T2_new_rngs) ;
-  shared_ptr<vector<int>>        mins2        = make_shared<vector<int>>(maxs2->size(), 0 );  
+  shared_ptr<vector<int>>        mins2        = make_shared<vector<int>>( maxs2->size(), 0 );  
 
   vector<IndexRange> Tout_unc_rngs(T1_new_rngs->begin(), T1_new_rngs->end()-1);
   Tout_unc_rngs.insert(Tout_unc_rngs.end(), T2_new_rngs->begin()+1, T2_new_rngs->end());
@@ -660,7 +660,7 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;
 template<class DataType>
 void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems(shared_ptr<Tensor_<DataType>> Tens, DataType elem_val  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Tensor_Arithmetic::set_tensor_elems  " << endl;
+//   cout << "Tensor_Arithmetic::set_tensor_elems all " << endl;
   
    vector<IndexRange> id_ranges = Tens->indexrange();
 
@@ -678,8 +678,124 @@ void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems(shared_ptr
 
    return;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Sets all elements of input tensor Tens to the value specified by elem_val 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( shared_ptr<Tensor_<DataType>> Tens, vector<IndexRange>& id_ranges,
+                                                                       DataType elem_val  ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//   cout << "Tensor_Arithmetic::set_tensor_elems range_block_specific  " << endl;
+  
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( id_ranges ) ; 
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
+   do {
+     vector<Index> id_blocks =  *(get_rng_blocks( block_pos, id_ranges ));
+     if ( Tens->exists( id_blocks ) ) { 
+       unique_ptr<DataType[]> block_data = Tens->get_block(id_blocks);
+       std::fill_n( block_data.get(), Tens->get_size(id_blocks), elem_val );
+       Tens->put_block(block_data, id_blocks);
+     }
+   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
+
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copies the data of Tens_sub into the appropriate block of Tens_main
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( shared_ptr<Tensor_<DataType>> Tens_sub, shared_ptr<Tensor_<DataType>> Tens_main ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Tensor_Arithmetic::put_sub_tensor range_block_specific  " << endl;
+  
+   vector<IndexRange> id_ranges = Tens_sub->indexrange();
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( id_ranges ) ; 
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
+   do {
+     vector<Index> id_blocks =  *(get_rng_blocks( block_pos, id_ranges ));
+     assert( Tens_main->exists( id_blocks ) );
+     assert( Tens_sub->exists( id_blocks ) );
+     unique_ptr<DataType[]> data_block = Tens_sub->get_block(id_blocks);
+     Tens_main->put_block(data_block, id_blocks);
+   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
+
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copies block of index ranges from Tens1 into the appropriate block of Tens2
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_tensor_range_block( shared_ptr<Tensor_<DataType>> Tens1, shared_ptr<Tensor_<DataType>> Tens2,
+                                                                             vector<IndexRange>& id_ranges ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Tensor_Arithmetic::put_sub_tensor range_block_specific  " << endl;
+  
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( id_ranges ) ; 
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
+   do {
+     vector<Index> id_blocks =  *(get_rng_blocks( block_pos, id_ranges ));
+     assert( Tens1->exists( id_blocks ) );
+     assert( Tens2->exists( id_blocks ) );
+     unique_ptr<DataType[]> data_block = Tens1->get_block(id_blocks);
+     Tens2->put_block(data_block, id_blocks);
+   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
+
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Copies block of index ranges from Tens1, reorder, and then put into the appropriate block of Tens2 
+// TODO clear up the mess with the arguments; pick either shared_ptrs or references and stick to it.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_reordered_range_block( shared_ptr<Tensor_<DataType>> T1, vector<IndexRange>& id_ranges_T1,
+                                                                                shared_ptr<Tensor_<DataType>> T2, vector<IndexRange>& id_ranges_T2,
+                                                                                shared_ptr<vector<int>> new_order ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Tensor_Arithmetic::put_reordered_range_block range_block_specific  " << endl;
+  
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( id_ranges_T1 ) ; 
+   shared_ptr<vector<int>> block_pos_T1 = make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
+   do {
+
+     shared_ptr<vector<Index>> id_blocks_T1 = get_rng_blocks( block_pos_T1, id_ranges_T1 );
+
+     shared_ptr<vector<int>> block_pos_T2 = reorder_vector( *new_order, *block_pos_T1 );
+     shared_ptr<vector<Index>> id_blocks_T2 = get_rng_blocks( block_pos_T2, id_ranges_T2 );
+
+     //print_vector( *block_pos_T1, "block_pos_T1" ); cout << endl;
+     //cout << " id_blocks_T1 sizes = [ " ;  for ( Index idb : *id_blocks_T1) { cout << idb.size()  << " " ; }  cout << "]" << endl;
+     //cout << " id_blocks_T2 sizes = [ " ;  for ( Index idb : *id_blocks_T2) { cout << idb.size()  << " " ; }  cout << "]" << endl;
+
+     assert( T1->exists( *id_blocks_T1 ) );
+     assert( T2->exists( *id_blocks_T2 ) );
+
+     unique_ptr<DataType[]> reordered_data_block;
+     {
+      // cout << " getting T1 block " << endl;
+       unique_ptr<DataType[]> data_block = T1->get_block(*id_blocks_T1);
+       //cout << " got T1 block " << endl;
+       reordered_data_block =  reorder_tensor_data( data_block.get(), new_order, id_blocks_T1 );
+       //cout << " reordered data block " << endl;
+     }
+     T2->put_block(reordered_data_block, *id_blocks_T2);
+     //cout << " put data block " << endl;
+
+   } while (fvec_cycle_skipper(block_pos_T1, range_lengths, mins ));
+
+   return;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
+//TODO Write a modified version of this which erases the old block immediately after the relevant reordered block is created.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
@@ -698,16 +814,18 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(shared_ptr<
    shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(T_id_ranges->size(),0);  
    shared_ptr<vector<int>> mins      = make_shared<vector<int>>(T_id_ranges->size(),0);  
    do {
-
+ 
      shared_ptr<vector<Index>> orig_id_blocks      = get_rng_blocks( block_pos, *T_id_ranges );
 
-     unique_ptr<DataType[]> reordered_data_block;
-     {
-     unique_ptr<DataType[]> orig_data_block = Tens_in->get_block( *orig_id_blocks );
-     reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks );
+     if ( Tens_in->exists(*orig_id_blocks) ){
+       unique_ptr<DataType[]> reordered_data_block;
+       {
+       unique_ptr<DataType[]> orig_data_block = Tens_in->get_block( *orig_id_blocks );
+       reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks );
+       }
+       shared_ptr<vector<Index>> reordered_id_blocks = reorder_vector( new_order, orig_id_blocks );
+       reordered_block_tensor->put_block( reordered_data_block, *reordered_id_blocks );
      }
-     shared_ptr<vector<Index>> reordered_id_blocks = reorder_vector( new_order, orig_id_blocks );
-     reordered_block_tensor->put_block( reordered_data_block, *reordered_id_blocks );
 
    } while ( fvec_cycle_skipper( block_pos, range_lengths, mins ) );
 
@@ -888,7 +1006,6 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
      shared_ptr<vector<int>> id_maxs = make_shared<vector<int>>(T_id_ranges->size());
      for (int xx = 0 ; xx !=id_maxs->size(); xx++ ) 
        id_maxs->at(xx)  =  id_mins->at(xx)+id_blocks_sizes[xx]-1;
-
         
      shared_ptr<vector<int>> rel_id_pos  = make_shared<vector<int>>(T_id_ranges->size(), 0);  
      shared_ptr<vector<int>> rel_id_mins = make_shared<vector<int>>(T_id_ranges->size(), 0);  
@@ -904,6 +1021,7 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
      Tens->put_block(T_block_data, T_id_blocks);
 
    } while (fvec_cycle(block_pos, range_maxs, mins ));
+
    return Tens;
 }
 
@@ -1081,6 +1199,7 @@ cout << "Tensor_Arithmetic::get_tensor_element" ; cout.flush(); print_vector(id_
    return *(T_data_block.get()+shift);
 ;
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Tensor_Arithmetic::Tensor_Arithmetic<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
