@@ -549,6 +549,24 @@ shared_ptr<vector<int>> WickUtils::get_unc_ids_from_deltas_ids_comparison(shared
    return make_shared<vector<int>>(unc_ids);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
+string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges, int Bra_num, int Ket_num ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  string  name = "";
+  for(string idx : full_idxs)
+    name += idx;
+
+  name+="_";
+
+  for(string idx_range : full_idx_ranges)
+    name += idx_range[0];
+
+  name+="_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">"; 
+
+  return name;
+
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
 string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges, 
                              const vector<pair<int,int>>& all_ctrs_pos, int Bra_num, int Ket_num ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -51,5 +51,6 @@ class Expression {
      
       void Get_CMTP_Compute_Terms();
 
+      void necessary_tensor_blocks();
 };
 #endif
