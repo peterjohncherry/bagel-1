@@ -39,6 +39,10 @@ class System_Info {
       // result : Info for uncontracted part of TensorOp info.
       std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType> > >> T_map    ;      
 
+      // key :    Name of uncontracted part of MultiTensorOp.
+      // result : Info for uncontracted part of MultiTensorOp info.
+      std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map    ;      
+
       // key :    Name of contracted part of TensorOp
       // result : Info for contracted part of TensorOp info
       std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >> CTP_map    ;      
@@ -61,7 +65,9 @@ class System_Info {
      
       void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
 
-      std::string Build_Expression( std::vector<Term_Info<DataType>>&  term_info_list  );
+      std::string Build_Expression( std::vector<Term_Info<DataType>>&  term_info_list  ); // TODO Term_Info is currently what BraKet_Info should be
+
+      std::string Get_BraKet_name( Term_Info<DataType>& BraKet_info  ) ;
 
       int nalpha(int state_num) { return target_states_->nalpha( state_num ); };
       int nbeta(int state_num)  { return target_states_->nbeta( state_num );  };

@@ -69,6 +69,8 @@ template<class DataType>
 void Expression<DataType>::Build_BraKet( shared_ptr<vector<shared_ptr<TensOp::TensOp<DataType>>>> Tens_vec, DataType factor  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+   //TODO Feed MultiTensOp in as arg, no need for SubOps/Build_TotalOp() 
   shared_ptr<BraKet<DataType>> New_BraKet = make_shared<BraKet<DataType>>(G_to_A_map, GammaMap, target_states_, factor );
   New_BraKet->Sub_Ops = Tens_vec;
 
