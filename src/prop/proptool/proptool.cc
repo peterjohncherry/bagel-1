@@ -38,6 +38,9 @@ cout << "PropTool::PropTool::PropTool" << endl;
 
   range_conversion_map_ = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
 
+  // get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
+  get_expression_variables( idata->get_child("variables") );
+
   //Initializing range sizes either from idate or reference wfn 
   maxtile_   = idata->get<int>("maxtile", 10);
   cimaxtile_ = idata->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
@@ -47,6 +50,8 @@ cout << "PropTool::PropTool::PropTool" << endl;
   nvirt_    = idata->get<int>( "nvirt" , ref_->nvirt());     cout << " nvirt_   = " <<  nvirt_  << endl;
   nocc_     = nclosed_ + nact_; 
   set_ao_range_info();
+
+  
 
   //Getting info about target expression (this includes which states are relevant)
   shared_ptr<vector<Term_Init<double>>> expression_init = get_expression_init( idata->get_child("expression") ); 
@@ -71,9 +76,60 @@ cout << "PropTool::PropTool::PropTool" << endl;
     cout << "]" <<  endl;
   }
 
+  
 
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Gets ranges and factors from the input which will be used in definition of terms
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> variable_def_tree ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  auto range_info_tree =  variable_def_tree->get_child_optional("ranges"); // can be mo or state.. 
+  for ( auto& range_info : *range_info_tree ) {
+   
+    string range_name = range_info->get<string>( "name" ) ;
+    auto range_vec_inp = range_info->get_child( "range_vec" ) ;
+    vector<int> range_vec(0);
+   
+    for (auto& id : *range_vec_inp) 
+      range_vec.push_back(lexical_cast<int>( id->data() ) );
+   
+    if ( inp_range_map_.find(range_name) != inp_range_map_.end() )
+      throw runtime_error("Range \"" + range_name + "\" has been defined twice in input!!! ... aborting" ) ;
+     
+    inp_range_map_.emplace(range_name, range_vec); 
+
+  }
+
+  auto factor_info_tree =  variable_def_tree->get_child_optional("factors"); //
+  for ( auto& factor_info : *factor_info_tree ) {
+   
+    string factor_name = factor_info->get<string>( "name" ) ;
+    double factor_value = factor_info->get<double>( "value" ) ;
+    if ( inp_factor_map_.find(factor_name) != inp_factor_map_.end() )
+      throw runtime_error("Factor \"" + factor_name + "\" has been defined twice in input!!! ... aborting" ) ;
+     
+    inp_factor_map_.emplace(factor_name, factor_value ); 
+
+  }
+
+  cout << "USER DEFINED FACTORS " << endl;
+  for ( auto elem : inp_factor_map_ ) 
+    cout << elem.first << " = " << elem.second << endl; 
+
+  cout << "USER DEFINED RANGES " << endl;
+  for ( auto elem : inp_range_map_ ) {
+    cout << elem.first << " = [ " ;
+    for (int orb_num :  elem.second ) {
+      cout << orb_num << " " ; cout.flush();
+    }
+    cout << "]" << endl;
+  }
+
+  return;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -131,6 +187,8 @@ shared_ptr< vector<PropTool::PropTool::Term_Init<double> > > PropTool::PropTool:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "PropTool::PropTool::get_expression_init" << endl;
 
+  vector<int> ground = {0};
+
   vector< Term_Init<double>> expression_init; 
   for ( auto& term_info_tree : *expression_inp ){
   
@@ -147,23 +205,19 @@ shared_ptr< vector<PropTool::PropTool::Term_Init<double> > > PropTool::PropTool:
       for (auto& op_name : *op_list)
         op_names.push_back(lexical_cast<string>(op_name->data()));
       
-  
-      auto bra_states_ptree =  term_info->get_child("bra_states"); 
-      vector<int> bra_states(0);
-      for (auto& state_num : *bra_states_ptree)
-        bra_states.push_back(lexical_cast<int>(state_num->data()));
-  
-      auto ket_states_ptree =  term_info->get_child("ket_states"); 
-      vector<int> ket_states(0);
-      for (auto& state_num : *ket_states_ptree)
-        ket_states.push_back(lexical_cast<int>(state_num->data()));
-  
+      vector<int> bra_states = inp_range_map_.at(term_info->get<string>("bra_states")); 
+      vector<int> ket_states = inp_range_map_.at(term_info->get<string>("ket_states")); 
+ 
+      bool sum_bra = ( term_info->get<string>( "Sum_over_bra", "false" ) == "false" ) ? false : true ;
+      bool sum_ket = ( term_info->get<string>( "Sum_over_ket", "false" ) == "false" ) ? false : true ;
+ 
       term_init_op_names.push_back(op_names);
       term_init_bra_states.push_back(bra_states);
       term_init_ket_states.push_back(ket_states);
       term_init_types.push_back(term_info->get<string>("type"));
       term_init_factors.push_back(term_info->get<double>("factor"));
     }
+
     Term_Init<double> new_term = Term_Init<double>(term_init_op_names, term_init_bra_states, term_init_ket_states, term_init_factors, term_init_types);
     vector<vector<int>> tmp = { target_states_, new_term.all_states_ };
     target_states_ = new_term.merge_states( tmp );

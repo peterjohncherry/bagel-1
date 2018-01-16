@@ -61,7 +61,7 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
   shared_ptr<TensOp::TensOp<DataType>>  New_Op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
                                                                                         tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, target_states_);
   // change to be state specific
-  New_Op->get_ctrs_tens_ranges();
+  // New_Op->get_ctrs_tens_ranges();
 
   return New_Op;
 }

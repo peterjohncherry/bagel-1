@@ -4,6 +4,7 @@
 #include <src/smith/wicktool/wickutils.h>
 #include <src/smith/wicktool/tensop.h>
 #include <src/smith/wicktool/states_info.h>
+#include <src/smith/wicktool/term.h>
 #include <src/smith/tensor.h>
 
 template<class DataType>

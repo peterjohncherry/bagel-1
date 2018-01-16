@@ -37,6 +37,7 @@
 #include <src/smith/wicktool/system_info.h>
 #include <src/smith/wicktool/expression_computer.h>
 #include <src/smith/wicktool/expression.h>
+#include <src/smith/wicktool/term.h>
 
 namespace bagel {
 namespace PropTool { 
@@ -117,6 +118,10 @@ namespace PropTool {
 
     std::shared_ptr<std::vector< Term_Init<double> >> get_expression_init( std::shared_ptr<const PTree> expression_inp ); 
     void get_new_ops_init( std::shared_ptr<const PTree> ops_def_tree ) ;
+    void get_expression_variables( std::shared_ptr<const PTree> ops_def_tree ) ;
+
+    std::map< std::string , std::vector<int> > inp_range_map_;
+    std::map< std::string , double > inp_factor_map_;
 
     public: 
 

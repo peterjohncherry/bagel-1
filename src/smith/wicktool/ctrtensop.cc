@@ -1,13 +1,8 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
-
- #include <src/smith/wicktool/ctrtensop.h>
- #include <src/smith/wicktool/wickutils.h>
- #include <src/smith/wicktool/gamma_generator.h>
-
- //#include "wickutils.h"
- //#include "ctrtensop.h"
- //#include "gamma_generator.h"
+#include <src/smith/wicktool/ctrtensop.h>
+#include <src/smith/wicktool/wickutils.h>
+#include <src/smith/wicktool/gamma_generator.h>
 
 using namespace std;
 
@@ -247,6 +242,9 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors : " << name << endl; 
 
+   int Bra_num_ = 0 ;
+   int Ket_num_ = 0 ;
+
    int T1pos, T2pos, T1ctr, T2ctr;
 
    //Swapping tensors round to maintain consistent ordering
@@ -344,6 +342,9 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl;
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl; 
+
+   int Bra_num_ = 0 ;
+   int Ket_num_ = 0 ;
 
    shared_ptr<CtrTensorPart<DType>> T1T2_ctrd =  Binary_Contract_diff_tensors(cross_ctrs_pos->back(), ctr, Tmap, ACompute_list, ACompute_map );
    Tmap->emplace(T1T2_ctrd->name, T1T2_ctrd);

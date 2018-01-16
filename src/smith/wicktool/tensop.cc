@@ -74,7 +74,7 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//// TODO this is too slow; just build ranges using symmetry, don't check.
+// TODO this is too slow; just build ranges using symmetry, don't check.
 template<typename DataType>
 tuple< std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<const range_block_info> >>,
        std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>> >
@@ -176,6 +176,9 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp get_ctrs_tens_ranges" << endl;
+
+  int Bra_num_ = 0 ;
+  int Ket_num_ = 0 ;
  
  //puts uncontracted ranges into map 
  shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
@@ -184,13 +187,9 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
    shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
    shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
 
-   for ( int Bra_num : target_states_->target_state_nums_ ){
-     for ( int Ket_num : target_states_->target_state_nums_ ){ 
-       shared_ptr<CtrTensorPart<DataType>>  CTP       = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors, Bra_num, Ket_num ); 
-       cout << "CTP->myname() = " << CTP->myname() << " is going into CTP_map" <<  endl;
-       CTP_map->emplace(CTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CTP); //maybe should be addded in with ctr_idxs
-     }
-   }
+   shared_ptr<CtrTensorPart<DataType>>  CTP       = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors, Bra_num_, Ket_num_ ); 
+   cout << "CTP->myname() = " << CTP->myname() << " is going into CTP_map" <<  endl;
+   CTP_map->emplace(CTP->myname()+"_<"+to_string(Bra_num_)+"|"+to_string(Ket_num_)+">", CTP); //maybe should be addded in with ctr_idxs
  }
  
   //puts_contracted ranges into map
@@ -211,13 +210,9 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
           shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
           shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
 
-          for ( int Bra_num : target_states_->target_state_nums_ ){
-            for ( int Ket_num : target_states_->target_state_nums_ ){ 
-              shared_ptr<CtrTensorPart<DataType>> CTP = make_shared<CtrTensorPart<DataType>>( full_idxs, full_ranges, ctr_vec, ReIm_factors, Bra_num, Ket_num ); 
-              cout << "CTP->myname() = " << CTP->myname() << "is going into CTP_map " << endl;
-              CTP_map->emplace(CTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CTP); //TODO silly hack way of dealing with states find a better way 
-            }
-          }
+          shared_ptr<CtrTensorPart<DataType>> CTP = make_shared<CtrTensorPart<DataType>>( full_idxs, full_ranges, ctr_vec, ReIm_factors, Bra_num_, Ket_num_ ); 
+          cout << "CTP->myname() = " << CTP->myname() << "is going into CTP_map " << endl;
+          CTP_map->emplace(CTP->myname()+"_<"+to_string(Bra_num_)+"|"+to_string(Ket_num_)+">", CTP); //TODO silly hack way of dealing with states find a better way 
 
         }
       }
@@ -437,6 +432,8 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 #endif 
 ////////////////////////////////////////////////////////////////////////////////////////
 
+  int Bra_num_ = 0 ;
+  int Ket_num_ = 0 ;
 //cout << "MultiTensOp::enter_into_CMTP_map" << endl;
   shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart<DataType>> >> (num_tensors_); 
   vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
@@ -474,28 +471,20 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
     shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(id_ranges.begin()+Op_dense_->cmlsizevec(ii), id_ranges.begin()+cmlsizevec(ii)+orig_tensors_[ii]->num_idxs());
     shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *(orig_tensors_[ii]->idxs()) );
    
-    // TODO Fix this loop so it will not add if CTP is sparse block
-    for ( int Bra_num : target_states_->target_state_nums_ ) {
-      for ( int Ket_num : target_states_->target_state_nums_ ) {
-        if( sameT_ctrs_pos[ii].size() != 0 ) {
-          CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, make_shared<vector<pair<int,int>>>(sameT_ctrs_pos[ii]), ReIm_factor_vec, Bra_num, Ket_num ) ; 
-        } else { 
-          CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec, Bra_num, Ket_num ); 
-        }
-        CTP_map->emplace(CTP_vec->at(ii)->name+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CTP_vec->at(ii)); //TODO silly hack way of dealing with states find a better way 
-      }
+    // TODO Fix constructor so it will not add if CTP is sparse block
+    if( sameT_ctrs_pos[ii].size() != 0 ) {
+      CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, make_shared<vector<pair<int,int>>>(sameT_ctrs_pos[ii]), ReIm_factor_vec, Bra_num_, Ket_num_ ) ; 
+    } else { 
+      CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec, Bra_num_, Ket_num_ ); 
     }
+    CTP_map->emplace(CTP_vec->at(ii)->name+"_<"+to_string(Bra_num_)+"|"+to_string(Ket_num_)+">", CTP_vec->at(ii)); //TODO silly hack way of dealing with states find a better way 
   }
   
 
   //TODO silly hack way of dealing with states find a better way
-  for ( int Bra_num : target_states_->target_state_nums_ ) {
-    for ( int Ket_num : target_states_->target_state_nums_ ) {
-      shared_ptr<CtrMultiTensorPart<DataType>> CMTP = make_shared<CtrMultiTensorPart<DataType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos), Bra_num, Ket_num ); 
-      CMTP_map->emplace(CMTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CMTP);
-      CTP_map->emplace(CMTP->myname()+"_<"+to_string(Bra_num)+"|"+to_string(Ket_num)+">", CMTP);
-    }
-  }
+  shared_ptr<CtrMultiTensorPart<DataType>> CMTP = make_shared<CtrMultiTensorPart<DataType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos), Bra_num_, Ket_num_ ); 
+  CMTP_map->emplace(CMTP->myname()+"_<"+to_string(Bra_num_)+"|"+to_string(Ket_num_)+">", CMTP);
+  CTP_map->emplace(CMTP->myname()+"_<"+to_string(Bra_num_)+"|"+to_string(Ket_num_)+">", CMTP);
 
   return;
 }
