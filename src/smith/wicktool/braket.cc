@@ -10,12 +10,17 @@ template<typename DataType>
 void BraKet<DataType>::Build_TotalOp(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::Build_TotalOp" << endl;
-  string MT_name = "";
-  for( shared_ptr<TensOp::TensOp<DataType>> Tens : *Sub_Ops )
-    MT_name += Tens->name();
 
-  Total_Op = make_shared<MultiTensOp::MultiTensOp<DataType>>( MT_name , true, *Sub_Ops, target_states_ );
-  Total_Op->get_ctrs_tens_ranges();
+
+  //TODO TensOps and Multi Tens Ops must be initialized in system_info at start up. 
+  //     Perhaps here the necessary states can be added and checked for.
+  //     
+  //  string MT_name = "";
+  //  for( shared_ptr<TensOp::TensOp<DataType>> Tens : *Sub_Ops )
+  //  MT_name += Tens->name();
+  //
+  //Total_Op = make_shared<MultiTensOp::MultiTensOp<DataType>>( MT_name , true, *Sub_Ops, target_states_ );
+  //Total_Op->get_ctrs_tens_ranges();
 
   return;
 }
@@ -29,11 +34,9 @@ void BraKet<DataType>::Build_Gamma_SpinFree(shared_ptr<const vector<bool>> aops,
   //     Loop through dense ranges on the outside, then check sparsity on the inner when adding to GammaMap.
   shared_ptr<vector<string>> idxs_buff  = make_shared<vector<string>>(*idxs );
   shared_ptr<vector<bool>> aops_buff  = make_shared<vector<bool>>(*aops );    
-  
 
   int Bra_num = 0;
   int Ket_num = 0;
-
 
   for ( auto range_map_it = Total_Op->all_ranges()->begin(); range_map_it !=Total_Op->all_ranges()->end(); range_map_it++ ){
     
