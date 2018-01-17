@@ -1,18 +1,19 @@
 #ifndef __SRC_SMITH_EQUATION_H
 #define __SRC_SMITH_EQUATION_H
+#include <src/smith/wicktool/term.h>
 #include <src/smith/wicktool/braket.h>
 #include <src/smith/wicktool/wickutils.h>
 #include <src/smith/wicktool/tensop.h>
 #include <src/smith/wicktool/states_info.h>
-#include <src/smith/wicktool/term.h>
 #include <src/smith/tensor.h>
 
-template<class DataType>
+
+template<typename DataType>
 class Expression {
 
       public : 
          
-        std::shared_ptr<std::vector< std::shared_ptr<Term_Info<DataType>>>> Term_list_;                                       
+        std::vector< BraKet_Init<DataType>> Term_list_;                                       
         std::shared_ptr<std::map< std::string, std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map_;                
         std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >> CTP_map_;                          
         std::shared_ptr<std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DataType>> >> CMTP_map_;                    
@@ -20,20 +21,12 @@ class Expression {
         std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >  GammaMap_; 
         std::shared_ptr<std::map< std::string, std::shared_ptr<std::map<std::string, AContribInfo >>>>G_to_A_map_;
 
-      public:
-
-      Expression(){};
-      Expression( std::shared_ptr<std::vector< std::shared_ptr<Term_Info<DataType>>>> Term_list,
+      Expression( std::vector<BraKet_Init<DataType>>&  Term_list,
                   std::shared_ptr<std::map< std::string, std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,      
-                  std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >> CTP_map,     
-                  std::shared_ptr<std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DataType>> >> CMTP_map,    
-                  std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
-                  std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >  GammaMap );
-
-      Expression( std::shared_ptr<std::vector<std::pair<std::string, DataType>>> BraKet_list,
-                  std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> BraKet_map,
-                  std::shared_ptr<StatesInfo<DataType>> TargetsInfo );
-
+                  std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,     
+                  std::shared_ptr<std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,    
+                  std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>>     ACompute_map,
+                  std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >                         GammaMap );    
       ~Expression(){};
 
       std::shared_ptr<StatesInfo<DataType>> target_states_;
@@ -63,7 +56,7 @@ class Expression {
 
       void Initialize();
 
-      void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>> Tens_vec, DataType factor  );
+      void Build_BraKet( BraKet_Init<DataType>& bk_info ); 
      
       void Get_CMTP_Compute_Terms();
 

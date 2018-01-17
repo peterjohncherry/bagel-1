@@ -293,21 +293,23 @@ shared_ptr<vector<string>> PropTool::PropTool::build_expressions( Term_Init<doub
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "PropTool::PropTool::build_expressions" << endl;
 
-  map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > Term_info_map_;
-  map< pair<string,string>, shared_ptr<vector<Term_Info<double>>> > term_map; 
+  map< pair<string,string>, shared_ptr<vector<BraKet_Init<double>>> > Term_info_map_;
+  map< pair<string,string>, shared_ptr<vector<BraKet_Init<double>>> > term_map; 
 
   vector<string>  expression_list(0);
   // Loops through states, and if states contributes to that term, add to term info for building expression
   // restatement of Bra and Ket name is redundant, and redundancy means I've probably gone wrong somewhere....
-  for ( int ii : term_inp.bra_states_merged_ ) {
-    for ( int  jj : term_inp.ket_states_merged_ ) {
-      shared_ptr<vector<Term_Info<double>>> term_info = make_shared<vector<Term_Info<double>>>();
+  for ( int bra_num : term_inp.bra_states_merged_ ) {
+    for ( int  ket_num : term_inp.ket_states_merged_ ) {
+
+      shared_ptr<vector<BraKet_Init<double>>> term_info = make_shared<vector<BraKet_Init<double>>>();
+
       for ( int kk = 0; kk != term_inp.op_names_.size(); kk++ ){
-        if ( std::find(term_inp.bra_states_[kk].begin(), term_inp.bra_states_[kk].end(), ii) != term_inp.bra_states_[kk].end() ) {
-          string Bra_name = targets_info_->name(ii);
-          if ( std::find(term_inp.ket_states_[kk].begin(), term_inp.ket_states_[kk].end(), jj) != term_inp.ket_states_[kk].end() ) {
-            string Ket_name = targets_info_->name(jj);
-            term_info->push_back(Term_Info<double>( make_pair( term_inp.op_names_[kk], term_inp.factors_[kk] ), Bra_name, Ket_name, term_inp.types_[kk] ));
+
+        if ( std::find(term_inp.bra_states_[kk].begin(), term_inp.bra_states_[kk].end(), bra_num) != term_inp.bra_states_[kk].end() ) {
+
+          if ( std::find(term_inp.ket_states_[kk].begin(), term_inp.ket_states_[kk].end(), ket_num) != term_inp.ket_states_[kk].end() ) {
+            term_info->push_back(BraKet_Init<double>( make_pair( term_inp.op_names_[kk], term_inp.factors_[kk] ), bra_num, ket_num, term_inp.types_[kk] ));
             expression_list.push_back( sys_info_->Build_Expression( *term_info ));
           }
         }

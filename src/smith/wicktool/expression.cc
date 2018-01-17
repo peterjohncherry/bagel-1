@@ -4,84 +4,41 @@
 
 using namespace std;
 
+//TODO GammaMap should be generated outside and not fed in here. It constains _no_ Expression specific information.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-Expression<DataType>::Expression( shared_ptr<vector< shared_ptr<Term_Info<DataType>>>>                      Term_list,
+Expression<DataType>::Expression( vector< BraKet_Init<DataType>>&                    Term_list,
                                   shared_ptr<map< string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,      
                                   shared_ptr<map< string, shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,     
                                   shared_ptr<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,    
                                   shared_ptr<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>     ACompute_map,
                                   shared_ptr<map< string, shared_ptr<GammaInfo> > >                         GammaMap ):    
                                   Term_list_(Term_list), MT_map_(MT_map), CTP_map_(CTP_map), CMTP_map_(CMTP_map),
-                                  ACompute_map_(ACompute_map), GammaMap_(GammaMap){
-                                  //TODO GammaMap should be generated outside and not fed in here. It constains _no_ Expression specific information.
-                                  //   G_to_A_map does, and it is G_to_A_map which should be used for looping in Expression_Computer.
-                                  //   Doing it this way will result in a larger GammaMap, but there will only be one of them, the only issue is how large?
-                                  //   Potentially can generate all expressions, and then generate elements of gamma map as need be from G_to_A_map
-                                  //   info.
-                                  //   ACompute_map contains information only used by this expression, but I do not think it is expression specific.
-                                  //   However, state information must be incorporated.
+                                  ACompute_map_(ACompute_map), GammaMap_(GammaMap) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression<DataType>::Expression (new constructor) " << endl; 
   G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, AContribInfo >>>>();
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-Expression<DataType>::Expression( shared_ptr< vector< pair< string, DataType >>> BraKet_list,
-                                  shared_ptr< map < string, shared_ptr< vector < shared_ptr< TensOp::TensOp<DataType> >>>>> BraKet_map,
-                                  shared_ptr< StatesInfo<DataType> > target_states ){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  T_map        = make_shared<map< string, shared_ptr<TensOp::TensOp<DataType>>>>();
-  CTP_map      = make_shared<map< string, shared_ptr<CtrTensorPart<DataType>> >>();    
-  CMTP_map     = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>(); 
-  ACompute_map = make_shared<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
+  GammaMap_ = GammaMap;
+  for ( BraKet_Init<DataType> bk_info : Term_list_ )
+    Build_BraKet( bk_info ); 
 
-  GammaMap     = make_shared< map< string, shared_ptr<GammaInfo> > >(); 
-  G_to_A_map   = make_shared< map< string, shared_ptr< map<string, AContribInfo  >>>>(); 
-
-  target_states_ = target_states;
-  
-  for ( pair<string,DataType> bk_name_factor :  *BraKet_list )
-    Build_BraKet( BraKet_map->at( bk_name_factor.first), bk_name_factor.second );
-  
-  for (auto braket : BraKet_Terms)
+  for ( auto braket : BraKet_Terms)
     Get_CMTP_Compute_Terms();
 
 }
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <class DataType>
-void Expression<DataType>::Initialize(){
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  T_map  = make_shared<map< string, shared_ptr<TensOp::TensOp<DataType>>>>();
-  CTP_map    = make_shared<map< string, shared_ptr<CtrTensorPart<DataType>> >>();    
-  CMTP_map   = make_shared<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>(); 
-  ACompute_map = make_shared<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >>(); 
-  G_to_A_map   = make_shared< map<string, shared_ptr< map<string, AContribInfo >>>>(); 
-  GammaMap = make_shared< map<string, shared_ptr<GammaInfo> > >(); 
-
-  return;
-}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Expression<DataType>::Build_BraKet( shared_ptr<vector<shared_ptr<TensOp::TensOp<DataType>>>> Tens_vec, DataType factor  ){
+void Expression<DataType>::Build_BraKet( BraKet_Init<DataType>& bk_info ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  //TODO Feed MultiTensOp in as arg, no need for SubOps/Build_TotalOp() 
+  shared_ptr<BraKet<DataType>> braket = make_shared<BraKet<DataType>>( bk_info, MT_map_, G_to_A_map_, GammaMap_, target_states_ );
 
-   //TODO Feed MultiTensOp in as arg, no need for SubOps/Build_TotalOp() 
-  shared_ptr<BraKet<DataType>> New_BraKet = make_shared<BraKet<DataType>>(G_to_A_map, GammaMap, target_states_, factor );
-  New_BraKet->Sub_Ops = Tens_vec;
+  CTP_map->insert( braket->Total_Op_->CTP_map->begin(),  braket->Total_Op_->CTP_map->end());
+  CMTP_map->insert(braket->Total_Op_->CMTP_map->begin(), braket->Total_Op_->CMTP_map->end());
 
-  New_BraKet->Build_TotalOp();
-  cout << New_BraKet->Total_Op->name();   print_vector(*( New_BraKet->Total_Op->aops()), " aops " ) ; cout << endl;
-  New_BraKet->Build_Gamma_SpinFree(New_BraKet->Total_Op->aops(), New_BraKet->Total_Op->idxs()); 
-
-  CTP_map->insert( New_BraKet->Total_Op->CTP_map->begin(),  New_BraKet->Total_Op->CTP_map->end());
-  CMTP_map->insert(New_BraKet->Total_Op->CMTP_map->begin(), New_BraKet->Total_Op->CMTP_map->end());
-
-  BraKet_Terms.push_back(New_BraKet);   
+  BraKet_Terms.push_back(braket);   
   cout << "pushed back into braket terms" << endl;
 
   return;
@@ -139,8 +96,7 @@ void Expression<DataType>::necessary_tensor_blocks(){
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Adds terms associated with each gamma into the map
-// Note this 
+// Adds terms associated with each gamma (as determined by BraKet) into the map
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void Expression<DataType>::Get_CMTP_Compute_Terms(){

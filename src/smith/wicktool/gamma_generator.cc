@@ -81,11 +81,8 @@ cout << "GammaInfo::GammaInfo" <<  endl;
     }
     print_vector( prev_gammas_ , "prev gammas of " + name_ ); cout << endl;
   }
-  
 
 }
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, int Bra_num, int Ket_num,
                                 shared_ptr<const vector<string>> orig_ids, shared_ptr<const vector<bool>> orig_aops, 

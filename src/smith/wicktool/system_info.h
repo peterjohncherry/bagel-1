@@ -51,6 +51,15 @@ class System_Info {
       // result : Info for contracted part of multitensorop info
       std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map   ;  
 
+      // key : name of ATensor     
+      // result : intruction list for calculating that ATensor
+      std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map;
+
+      // ket : name of Gamma
+      // result : GammaInfo
+      std::shared_ptr< std::map <std::string, std::shared_ptr<GammaInfo>>> Gamma_map;
+
+
       void Initialize_Tensor_Op_Info( std::string OpName ) ;
 
       void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>> Tens_vec  );
@@ -65,9 +74,9 @@ class System_Info {
      
       void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
 
-      std::string Build_Expression( std::vector<Term_Info<DataType>>&  term_info_list  ); // TODO Term_Info is currently what BraKet_Info should be
+      std::string Build_Expression( std::vector<BraKet_Init<DataType>>&  term_info_list  ); // TODO BraKet_Init is currently what BraKet_Info should be
 
-      std::string Get_BraKet_name( Term_Info<DataType>& BraKet_info  ) ;
+      std::string Get_BraKet_name( BraKet_Init<DataType>& BraKet_info  ) ;
 
       int nalpha(int state_num) { return target_states_->nalpha( state_num ); };
       int nbeta(int state_num)  { return target_states_->nbeta( state_num );  };
