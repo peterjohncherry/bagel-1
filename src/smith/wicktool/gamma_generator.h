@@ -105,7 +105,7 @@ class GammaGenerator{
   private : 
     // TODO Should replace this with the states infos  and pointer to CIVecInfo map, 
     //      Do cycling over states outside of GammaGenerator.
-    std::shared_ptr<StatesInfo<double>> target_states__;
+    std::shared_ptr<StatesInfo<double>> target_states_;
     int Ket_num_;   
     int Bra_num_; 
 

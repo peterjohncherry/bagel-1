@@ -10,7 +10,7 @@ class CIVecInfo  {
 };
 
 
-template<> class CIVecInfo<double>  {
+template<> class CIVecInfo<double> {
  
    protected: 
      const int nalpha_;
@@ -18,7 +18,6 @@ template<> class CIVecInfo<double>  {
      const int nact_;
      const int state_number_;
      const std::string name_;
-     
 
    public:
 
@@ -28,7 +27,6 @@ template<> class CIVecInfo<double>  {
      nalpha_(nalpha), nbeta_(nbeta), nact_(nact), state_number_(state_number), name_(name), sparse_(false) {};
   
      ~CIVecInfo(){};
-
       
      int nele()   { return nalpha_+nbeta_; };
      int nalpha() { return nalpha_; };

@@ -28,6 +28,29 @@ cout << "GammaInfo::GammaInfo" <<  endl;
     aops_->at(ii)      = full_aops_vec->at(idxs_pos->at(ii));     
   }
 
+  map< string , vector<int> > shift_map ; 
+  vector<string> diff_ranges = { "act" } ; // obtain from diff ranges function
+  if ( diff_ranges.size() > 1 ){
+    for ( string rng : diff_ranges){ 
+      vector<int> shift_vec = vector<int>(idxs_pos->size());
+      vector<string>::reverse_iterator rngs_it = id_ranges_->rbegin(); 
+      vector<bool>::reverse_iterator   aops_it = aops_->rbegin(); 
+      int shift = 0;
+      for ( vector<int>::reverse_iterator shift_it = shift_vec.rbegin(); shift_it != shift_vec.rend(); shift_it++){
+        if ( *rngs_it++ == rng ){
+          if ( ( *aops_it++ ) ) {
+            shift++;
+          } else {
+            shift--;
+          }
+        }
+        *shift_it = shift;
+        rngs_it++;
+      }
+      shift_map.emplace(rng, shift_vec); 
+    }
+  }
+
   sigma_id_ranges_ = make_shared<vector<string>>(id_ranges_->size()+1);
   sigma_id_ranges_->at(0) = Bra_info_->name();
   for ( int  ii = 1 ; ii != sigma_id_ranges_->size() ; ii++ ) 
@@ -62,13 +85,14 @@ cout << "GammaInfo::GammaInfo" <<  endl;
 
 }
 
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states_, int Bra_num, int Ket_num,
+GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, int Bra_num, int Ket_num,
                                 shared_ptr<const vector<string>> orig_ids, shared_ptr<const vector<bool>> orig_aops, 
                                 shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map_in, 
                                 shared_ptr<map<string, shared_ptr<map<string, AContribInfo >>>> G_to_A_map_in,
                                 double bk_factor_in ):
-                                target_states__(target_states_), Bra_num_(Bra_num), Ket_num_(Ket_num), 
+                                target_states_(target_states), Bra_num_(Bra_num), Ket_num_(Ket_num), 
                                 orig_ids_(orig_ids), orig_aops_(orig_aops), 
                                 G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in), bk_factor(bk_factor_in) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +208,7 @@ cout << "GammaGenerator::norm_order" << endl;
     cout << "     LIST OF GAMMAS FOLLOWING NORMAL ORDERING ";  cout << endl;
     cout << "-----------------------------------------------------" << endl;
     for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
-      cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, target_states__->name(Bra_num_), target_states__->name(Ket_num_) ) ;
+      cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, target_states_->name(Bra_num_), target_states_->name(Ket_num_) ) ;
       cout << "   ("<< gint->my_sign <<","<< gint->my_sign << ")       ";
       cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos), Bra_num_, Ket_num_ ) << endl;
     }
@@ -312,8 +336,8 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
   bool does_it_contribute = false;
   if ( gamma_vec->size() != 0 ) {
 
-    string Bra_name = target_states__->name(Bra_num_);
-    string Ket_name = target_states__->name(Ket_num_);
+    string Bra_name = target_states_->name(Bra_num_);
+    string Ket_name = target_states_->name(Ket_num_);
 
     int kk = 0;
     while ( kk != gamma_vec->size()){
@@ -394,7 +418,7 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
         }
       }
       
-      Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states__->civec_info(Bra_num_), target_states__->civec_info(Ket_num_), 
+      Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(Bra_num_), target_states_->civec_info(Ket_num_), 
                                                              orig_aops_, full_id_ranges, ids_pos, Gamma_map) );
       
       kk++;
@@ -405,7 +429,7 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
       cout << "     LIST OF GAMMAS FOLLOWING ALT ORDERING " << endl; 
       cout << "-----------------------------------------------------" << endl;
       for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
-        string Gname_tmp = WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, target_states__->name(Bra_num_), target_states__->name(Ket_num_) ) ;
+        string Gname_tmp = WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, target_states_->name(Bra_num_), target_states_->name(Ket_num_) ) ;
         cout <<Gname_tmp <<  "   ("<< gint->my_sign <<","<< gint->my_sign << ")       " ;
         cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos), Bra_num_, Ket_num_ ) << endl;
       }
@@ -701,5 +725,6 @@ vector<int> GammaGenerator::get_standardized_alt_order ( const vector<string>& r
   
   return standard_alt_order;
 };
+
 
 #endif
