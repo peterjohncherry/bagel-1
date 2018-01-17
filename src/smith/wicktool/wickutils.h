@@ -16,7 +16,7 @@
 #include<map>
 #include <iostream>
 #include <numeric>
- 
+#include <complex> 
 namespace WickUtils {  
 
   using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
