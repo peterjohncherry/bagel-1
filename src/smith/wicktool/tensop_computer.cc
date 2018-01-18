@@ -27,9 +27,11 @@ TensOp_Computer::TensOp_Computer<DataType>::TensOp_Computer( shared_ptr< map< st
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
-TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP(std::string A_contrib ){
+TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo& AInfo ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP : " <<  A_contrib  << endl;
+  cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP : " <<  AInfo.name_  << endl;
+
+  string A_contrib = AInfo.name_;
 
   if (ACompute_map->at(A_contrib)->size() == 0 )
     cout << "THIS COMPUTE LIST IS EMPTY" << endl;
@@ -65,45 +67,32 @@ TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP(std::string A_contrib 
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<Tensor_<DataType>>
-TensOp_Computer::TensOp_Computer<DataType>::get_block_Tensor(string Tname){
+shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_block_Tensor(string Tname){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "TensOp_Computer::TensOp_Computer::get_block_Tensor : " << Tname << endl;
-  
-   if(  Data_map->find(Tname) != Data_map->end())
-     return Data_map->at(Tname);
+ 
+   shared_ptr<Tensor_<DataType>> tens; 
+   
+   if(  Data_map->find(Tname) != Data_map->end()){
+     tens = Data_map->at(Tname);
 
-   shared_ptr<Tensor_<DataType>> fulltens;
-   if(  Data_map->find(Tname.substr(0,1)) != Data_map->end()){
-     fulltens = Data_map->at(Tname.substr(0,1)); // TODO change so this uses Tname
-   } else {  
-     throw std::runtime_error("cannot find data for tensor op " +  Tname.substr(0,1) ) ; 
+   } else {
+     shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map->at(Tname)->unc_id_ranges ) ;
+
+     if(  Data_map->find(Tname.substr(0,1)) != Data_map->end()){
+       cout << "initializing uncontracted tensor block " << Tname << " using data from parent tensor \"" << Tname.substr(0,1) << "\"" << endl;
+       tens = get_sub_tensor( Data_map->at(Tname.substr(0,1)), *id_block );
+
+     } else {  
+       cout << "new tensor block : " << Tname << " is being initialized to zero" << endl; 
+       tens = make_shared<Tensor_<DataType>>(*id_block);
+       tens->allocate();
+       tens->zero();
+     }
    }
 
-   shared_ptr<vector<string>> unc_ranges = CTP_map->at(Tname)->unc_id_ranges;  
-
-   shared_ptr<vector<IndexRange>> Bagel_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
-
-   shared_ptr<vector<int>> range_lengths = get_range_lengths( Bagel_id_ranges ) ;
-
-   shared_ptr<Tensor_<DataType>> block_tensor = make_shared<Tensor_<DataType>>(*Bagel_id_ranges);
-   block_tensor->allocate();
-   block_tensor->zero();
-
-   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(unc_ranges->size(),0);  
-   shared_ptr<vector<int>> mins      = make_shared<vector<int>>(unc_ranges->size(),0);  
-
-   do {
-
-     vector<Index> T_id_blocks =  *(get_rng_blocks( block_pos, *Bagel_id_ranges )); 
-
-     unique_ptr<DataType[]> T_block_data = fulltens->get_block(T_id_blocks);
-
-     block_tensor->put_block(T_block_data, T_id_blocks);
-
-   } while (fvec_cycle(block_pos, range_lengths, mins ));
-
-   return block_tensor;
+   cout << "leaving TensOp_Computer::TensOp_Computer::get_block_Tensor : " << Tname << endl;
+   return tens;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a tensor with ranges specified by unc_ranges, where all values are equal to XX  

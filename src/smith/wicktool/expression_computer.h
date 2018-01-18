@@ -43,7 +43,10 @@ class Expression_Computer {
     void Evaluate_Expression(std::string expression_name );
 
     void print_AContraction_list(std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>> ACompute_list, std::string A_Contrib_name );
+
     bool check_AContrib_factors(AContribInfo& AC_info );
+
+    void Known_TensOp_Initializer( std::shared_ptr<TensOp::TensOp<DataType>> TensOp_info  );
 
     struct compare_string_length {
       bool operator()(const std::string& first, const std::string& second) {

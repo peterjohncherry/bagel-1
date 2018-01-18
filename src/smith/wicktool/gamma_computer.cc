@@ -9,6 +9,7 @@ using namespace bagel::SMITH;
 using namespace Tensor_Arithmetic;
 using namespace Tensor_Arithmetic_Utils;
 using namespace WickUtils;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_ptr<GammaInfo>>>          Gamma_info_map_in,
                                                 shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    CIvec_data_map_in,
@@ -31,8 +32,6 @@ Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_
 
   Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
 
-  //tester();
-    
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

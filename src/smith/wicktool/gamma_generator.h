@@ -10,15 +10,18 @@ using namespace WickUtils;
 class AContribInfo { 
 
    public : 
+     std::string name_;
      std::vector<std::vector<int>> id_orders;
      std::vector<std::pair<double,double>> factors;
-     int Bra_num;
-     int Ket_num;
+     int Bra_num_;
+     int Ket_num_;
+     int total_uses_;
+     int remaining_uses_;
 
-     AContribInfo( std::vector<int> init_order_in , std::pair<double,double> factor_in, int Bra_num, int Ket_num ){
-                   id_orders.push_back(init_order_in);
-                   factors.push_back(factor_in); 
-     };
+     AContribInfo( std::string name,  std::vector<int> init_order_in , std::pair<double,double> factor_in, int Bra_num, int Ket_num ): 
+                   name_(name), id_orders(std::vector<std::vector<int>>(1,init_order_in)),
+                   factors(std::vector<std::pair<double,double>>(1,factor_in)),
+                   Bra_num_(Bra_num), Ket_num_(Ket_num),  total_uses_(1), remaining_uses_(1) {};
      ~AContribInfo(){};
 
      std::vector<int>   id_order(int qq) {return id_orders[qq]; }; 

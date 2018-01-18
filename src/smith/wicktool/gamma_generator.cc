@@ -392,7 +392,7 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
       vector<int> Aid_order_new = get_Aid_order ( *ids_pos ) ; 
       auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
       if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
-        AContribInfo AInfo( Aid_order_new, make_pair(my_sign,my_sign), Bra_num_, Ket_num_ );
+        AContribInfo AInfo( Aname_alt, Aid_order_new, make_pair(my_sign,my_sign), Bra_num_, Ket_num_ );
         G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
         cout << "adding " << Aname_alt << "contrib to " << Gname_alt << endl;
 
@@ -404,6 +404,8 @@ cout << "GammaGenerator::optimized_alt_order" << endl;
           if( Aid_order_new == AInfo.id_order(qq) ){
             AInfo.factors[qq].first  += my_sign;
             AInfo.factors[qq].second += my_sign; 
+            AInfo.remaining_uses_ += 1;
+            AInfo.total_uses_ += 1;
       //      if ( AInfo.factors[qq].first == 0 &&  AInfo.factors[qq].second == 0 ) {
       //        AInfo.factors.erase( AInfo.factors.begin()+qq ); 
       //        AInfo.id_orders.erase( AInfo.id_orders.begin()+qq ); 

@@ -57,7 +57,7 @@ class TensOp_Computer {
 
     /////////// Utility routines /////////////////////////
 
-    void Calculate_CTP(std::string A_contrib_name );
+    void Calculate_CTP( AContribInfo& A_contrib_name );
 
     std::shared_ptr<std::vector<IndexRange>>
     Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);

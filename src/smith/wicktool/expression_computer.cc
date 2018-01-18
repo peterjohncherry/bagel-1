@@ -78,7 +78,7 @@ cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << E
           continue;
       
 	print_AContraction_list( Expr->ACompute_map_->at(A_contrib_name), A_contrib_name );
-        TensOp_Machine->Calculate_CTP( A_contrib_name );
+        TensOp_Machine->Calculate_CTP( A_contrib );
 
         if ( Gamma_name != "ID" ) {
        
@@ -213,6 +213,34 @@ bool Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors(
   } 
   return skip;
 }
+
+
+  
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template < class DataType >
+void Expression_Computer::Expression_Computer<DataType>::Known_TensOp_Initializer( shared_ptr<TensOp::TensOp<DataType>> TensOp_info  ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << " Expression_Computer::Expression_Computer<DataType>::TensOp_Data_Initializer" << endl;
+  
+   shared_ptr<Tensor_<DataType>> TensOp_data;    
+   string opname = TensOp_info->name();
+
+   cout <<" retrieve the operator from Bagel and convert it to tensor format " << endl;
+   if ( opname == "H" ) {
+     // This must make use of dfdist etc, similar to moint.cc here. 
+
+     // get_op_in_Tensor_format( );
+     // Check the blocks for sparsity
+     // Feed information about sparsity bakc to 
+   } else {
+     
+       cout << " build one operator tensor format " << endl;
+
+   }
+
+   return;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Expression_Computer::Expression_Computer<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
