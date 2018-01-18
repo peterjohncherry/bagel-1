@@ -98,7 +98,6 @@ class TensOp {
 
      std::shared_ptr<const TensOp_General> Op_dense_;
 
-
    public:
      TensOp( std::string name, bool spinfree, std::shared_ptr<StatesInfo<DataType>> target_states ) : name_(name), spinfree_(spinfree), target_states_(target_states) {};
      TensOp( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,

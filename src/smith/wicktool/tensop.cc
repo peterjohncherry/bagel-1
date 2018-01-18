@@ -175,11 +175,12 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
   cout << "TensOp get_ctrs_tens_ranges" << endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp get_ctrs_tens_ranges" << endl;
-
+  cout << "TensOp::TensOp get_ctrs_tens_ranges" << endl;
+  cout << name_ << endl;
   int Bra_num_ = 0 ;
   int Ket_num_ = 0 ;
- 
+
+  cout << " X1" << endl;  
  //puts uncontracted ranges into map 
  shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
  for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
@@ -191,6 +192,7 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
    cout << "CTP->myname() = " << CTP->myname() << " is going into CTP_map" <<  endl;
    CTP_map->emplace(CTP->myname()+"_<"+to_string(Bra_num_)+"|"+to_string(Ket_num_)+">", CTP); //maybe should be addded in with ctr_idxs
  }
+  cout << " X2" << endl;  
  
   //puts_contracted ranges into map
   for ( int nctrs = 1 ; nctrs != (num_idxs()/2)+1 ; nctrs++ ){
@@ -205,6 +207,7 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
           }
         }
 
+        cout << " X3" << endl;  
         if (valid) {
           shared_ptr<vector<pair<int,int>>> ReIm_factors = make_shared<vector<pair<int,int>>>(1, rng_it->second->factors()); 
           shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
@@ -218,7 +221,8 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
       }
     }
   }
-  cout << "TensOp_Prep::get_ctrs_tens_ranges out" << endl;
+  cout << " X4 "; cout.flush(); cout <<" CTP_map->size() = "<< CTP_map->size() << endl;  
+  cout << "leaving TensOp::TensOp get_ctrs_tens_ranges" << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

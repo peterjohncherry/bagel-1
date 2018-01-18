@@ -672,6 +672,7 @@ string WickUtils::get_gamma_name( shared_ptr<const vector<string>> full_idx_rang
 cout << "WickUtils::get_gamma_name" << endl; 
 #endif 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "WickUtils::get_gamma_name" << endl; 
   string  name;
  
   if (idxs_pos->size() == 0 ) {

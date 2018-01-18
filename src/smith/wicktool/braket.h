@@ -21,8 +21,6 @@ class BraKet{
         //factor; this is specific to the expression to which this BraKet object belongs
         DataType factor_;
 
-        std::shared_ptr<StatesInfo<DataType>> target_states_;
-                
         BraKet( BraKet_Init<DataType>& braket_info,  
                 std::shared_ptr<std::map<std::string,std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
                 std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map,

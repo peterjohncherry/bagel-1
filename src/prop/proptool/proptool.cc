@@ -63,6 +63,8 @@ cout << "PropTool::PropTool::PropTool" << endl;
   if (ops_def_tree)
     get_new_ops_init( ops_def_tree ); 
 
+  cout << " built user defined ops " << endl;
+
   expression_map_ = sys_info_->expression_map;
   expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, expression_map_, range_conversion_map_, tensop_data_map_, 
                                                                                               gamma_data_map_, sigma_data_map_, civec_data_map_ );
@@ -165,7 +167,7 @@ void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree 
     for (auto& aop : *aops_ptree)
       aops.push_back(conv_to_bool(lexical_cast<int>(aop->data())));
 
-    string                             name = op_def_inp->get<string>( "name" );
+    string                             op_name = op_def_inp->get<string>( "name" );
     double                             factor = op_def_inp->get<double>( "factor", 1.0 );
     shared_ptr<vector<string>>         idxs_ptr = make_shared<vector<string>>( idxs );
     shared_ptr<vector<bool>>           aops_ptr = make_shared<vector<bool>>( aops );
@@ -176,7 +178,9 @@ void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree 
     vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> symmfuncs =  sys_info_->identity_only() ; // TODO define this by list of pairs of vectors
     vector<bool(*)(shared_ptr<vector<string>>)> constraints = { &System_Info<double>::System_Info::always_true };  // TODO define this by list of vectors 
     
-    sys_info_->T_map->emplace(name, sys_info_->Build_TensOp(name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj ));
+    cout << "user defined op name : " << op_name << endl;
+    shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp( op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj); 
+    sys_info_->T_map->emplace( op_name, new_op );
 
   }
 
@@ -325,7 +329,7 @@ void PropTool::PropTool::build_op_tensors( vector<string>& expression_list ) {
 
   // Creating tensors from existing matrices; seperate loop as must run through all states first to make proper use of symmetry
   for (string expression_name : expression_list ) {
-    for ( auto tensop_it : *(sys_info_->expression_map->at(expression_name)->T_map) ) {
+    for ( auto tensop_it : *(sys_info_->T_map) ) {
       std::vector< std::shared_ptr< const std::vector<std::string>>> unique_range_blocks = *(tensop_it.second->unique_range_blocks());
       for ( shared_ptr<const vector<string>> range_block : unique_range_blocks ) {
         shared_ptr<vector<SMITH::IndexRange>> range_block_bgl = convert_to_indexrange( range_block );

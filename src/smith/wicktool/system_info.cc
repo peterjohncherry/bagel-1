@@ -64,7 +64,9 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
   shared_ptr<TensOp::TensOp<DataType>>  New_Op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
                                                                                         tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, target_states_);
   // change to be state specific
-  // New_Op->get_ctrs_tens_ranges();
+  cout << "getting  ctr tens ranges for New_Op : " << op_name << endl;
+  New_Op->get_ctrs_tens_ranges();
+  cout << "got ctr tens ranges for New_Op : " << op_name << endl;
 
   return New_Op;
 }
@@ -102,16 +104,20 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
   // have double loop, outer for ket state, inner for brastate
   for ( BraKet_Init<DataType> BraKet_info : term_info_list ) {
 
-
     for (string op_name : BraKet_info.op_list ) { // TODO should loop  over states defined in term_info, 
-
-      if( T_map->find(op_name) == T_map->end() ) 
-        Initialize_Tensor_Op_Info( op_name );
-
-      //TODO do state specific definition; just builds new range_map, should not have any sparsity yet ...
       
-    }
-    
+      auto T_loc = T_map->find(op_name);
+      if( T_loc == T_map->end() ){ 
+        shared_ptr<TensOp::TensOp<DataType>> new_tens = Initialize_Tensor_Op_Info( op_name );
+        cout << "initialized info for " <<  op_name << endl;
+        T_map->emplace( op_name, new_tens );
+        cout << "put " << op_name << " into T_map"  << endl;
+        cout << "size of " <<  op_name << "'s CTP map : new_tens->CTP_map->size() = "; cout.flush(); cout <<  new_tens->CTP_map->size() << endl;
+        CTP_map->insert( new_tens->CTP_map->begin(), new_tens->CTP_map->end());
+        cout << "put CTPs for " << op_name << "into map" << endl;
+      //TODO do state specific definition; just builds new range_map, should not have any sparsity yet ...
+      }
+    } 
 
     if( MT_map->find( BraKet_info.multiop ) == MT_map->end() ){
 
@@ -120,6 +126,7 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
         SubOps[ii] = T_map->at(BraKet_info.op_list[ii]); 
 
       shared_ptr<MultiTensOp::MultiTensOp<DataType>> MultiOp = make_shared<MultiTensOp::MultiTensOp<DataType>>( BraKet_info.multiop, spinfree_, SubOps, target_states_ );
+      MultiOp->get_ctrs_tens_ranges();
       MT_map->emplace(BraKet_info.multiop, MultiOp );
     } 
    
@@ -142,7 +149,7 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
   }
   cout << "new_expression_name = " << expression_name << endl;
     
-  shared_ptr<Expression<DataType>> new_expression = make_shared<Expression<DataType>>( term_info_list, MT_map, CTP_map, CMTP_map, ACompute_map, Gamma_map ); 
+  shared_ptr<Expression<DataType>> new_expression = make_shared<Expression<DataType>>( term_info_list, target_states_, MT_map, CTP_map, CMTP_map, ACompute_map, Gamma_map ); 
 
   expression_map->emplace( expression_name, new_expression );
 

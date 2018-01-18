@@ -15,9 +15,6 @@ class System_Info {
 
       public:
 
-      System_Info(std::shared_ptr<StatesInfo<DataType>> target_states_, bool spinfree);
-      ~System_Info(){};
-
       std::vector<std::string> free;
       std::vector<std::string> not_core;
       std::vector<std::string> not_act;
@@ -26,13 +23,12 @@ class System_Info {
       std::vector<std::string> act;
       std::vector<std::string> virt;
 
-      std::vector<std::string> Op_list;
-
-      //only makes sense to specify a and b electrons if non-rel
       // key :    Name of BraKet
       // result : Vector of TensOps corresponding to BraKet
       std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> BraKet_map;
-  
+ 
+      // ket : expression name
+      // result : expresion object 
       std::shared_ptr< std::map <std::string, std::shared_ptr<Expression<DataType>>>> expression_map;
     
       // key :    Name of uncontracted part of TensorOp.
@@ -43,34 +39,37 @@ class System_Info {
       // result : Info for uncontracted part of MultiTensorOp info.
       std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map    ;      
 
-      // key :    Name of contracted part of TensorOp
+      // key :    Name of contracted part of TensorOp (CTP)
       // result : Info for contracted part of TensorOp info
-      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >> CTP_map    ;      
+      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >> CTP_map;      
 
-      // key :    Name of contracted part of multitensorop
+      // key :    Name of contracted part of multitensorop (CMTP)
       // result : Info for contracted part of multitensorop info
       std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map   ;  
 
-      // key : name of ATensor     
-      // result : intruction list for calculating that ATensor
+      // key : name of ATensor (also name of CTP)     
+      // result : contraction list list for calculating that ATensor
       std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map;
 
       // ket : name of Gamma
       // result : GammaInfo
       std::shared_ptr< std::map <std::string, std::shared_ptr<GammaInfo>>> Gamma_map;
 
+      /////CONSTRUCTOR and DESTRUCTOR/////
+      System_Info(std::shared_ptr<StatesInfo<DataType>> target_states_, bool spinfree);
+      ~System_Info(){};
 
-      void Initialize_Tensor_Op_Info( std::string OpName ) ;
+      std::shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( std::string op_name ) ;
 
       void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>> Tens_vec  );
       
       std::shared_ptr<TensOp::TensOp<DataType>> Build_TensOp( std::string op_name,
-                                                      std::shared_ptr<std::vector<std::string>> op_idxs,
-                                                      std::shared_ptr<std::vector<bool>> op_aops, 
-                                                      std::shared_ptr<std::vector<std::vector<std::string>>> op_idx_ranges,
-                                                      std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> Symmetry_Funcs,
-                                                      std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>)> Constraint_Funcs,
-                                                      DataType factor, std::string Tsymmetry, bool hconj ) ;
+                                                              std::shared_ptr<std::vector<std::string>> op_idxs,
+                                                              std::shared_ptr<std::vector<bool>> op_aops, 
+                                                              std::shared_ptr<std::vector<std::vector<std::string>>> op_idx_ranges,
+                                                              std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> Symmetry_Funcs,
+                                                              std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>)> Constraint_Funcs,
+                                                              DataType factor, std::string Tsymmetry, bool hconj ) ;
      
       void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
 

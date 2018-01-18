@@ -97,7 +97,8 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
 cout << "GammaGenerator::GammaGenerator" << endl; 
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+   cout << "Bra_num_ = " << Bra_num_ << endl;
+   cout << "Ket_num_ = " << Ket_num_ << endl;
   //needed to keep ordering of contractions consistent, should find better way of defining opname 
   auto opname = orig_ids_->at(0)[0];
   op_order = make_shared<map< char, int>>();
@@ -202,9 +203,14 @@ cout << "GammaGenerator::norm_order" << endl;
   if ( gamma_vec->size() > 0 ){
     does_it_contribute = true;
     cout << "-----------------------------------------------------" << endl;
-    cout << "     LIST OF GAMMAS FOLLOWING NORMAL ORDERING ";  cout << endl;
+    cout << "     LIST OF GAMMAS FOLLOWING NORMAL ORDERING ";  cout << "N = " << final_gamma_vec->size() << endl;
     cout << "-----------------------------------------------------" << endl;
     for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
+      cout <<  gint->full_id_ranges << endl;
+  print_vector(*orig_aops_, "orig_aops"); cout  <<  endl;
+  print_vector(*gint->ids_pos, "gint_ids_pos" ); cout << endl;
+  cout << " target_states_->name("<<Bra_num_<<") = "; cout.flush(); cout << target_states_->name(Bra_num_)  << endl;
+  cout << " target_states_->name("<<Ket_num_<<") = "; cout.flush(); cout << target_states_->name(Ket_num_) << endl;
       cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, target_states_->name(Bra_num_), target_states_->name(Ket_num_) ) ;
       cout << "   ("<< gint->my_sign <<","<< gint->my_sign << ")       ";
       cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos), Bra_num_, Ket_num_ ) << endl;
