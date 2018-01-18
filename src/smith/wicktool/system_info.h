@@ -73,9 +73,9 @@ class System_Info {
      
       void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
 
-      std::string Build_Expression( std::vector<BraKet_Init<DataType>>&  term_info_list  ); // TODO BraKet_Init is currently what BraKet_Info should be
+      std::string Build_Expression( std::vector<BraKet<DataType>>&  term_info_list  ); // TODO BraKet is currently what BraKet_Info should be
 
-      std::string Get_BraKet_name( BraKet_Init<DataType>& BraKet_info  ) ;
+      std::string Get_BraKet_name( BraKet<DataType>& BraKet_info  ) ;
 
       int nalpha(int state_num) { return target_states_->nalpha( state_num ); };
       int nbeta(int state_num)  { return target_states_->nbeta( state_num );  };

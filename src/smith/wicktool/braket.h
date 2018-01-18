@@ -10,24 +10,26 @@
 template<typename DataType> 
 class BraKet{
 
-      public:
-        // Operator, only sub ranges are relevant        
-        std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op_;
+     public :
+       const std::vector<std::string> op_list_;
+       const DataType factor_;
+       const int bra_num_;
+       const int ket_num_;
+       const std::string type_ ; // should be "ci_deriv" or "exprectation" 
+       const std::string multiop_name_;
 
-        // state numbers 
-        int bra_num_;
-        int ket_num_;       
- 
-        //factor; this is specific to the expression to which this BraKet object belongs
-        DataType factor_;
+       BraKet( std::pair< std::vector<std::string>, DataType > BraKet_info, int bra_num, int ket_num, std::string type_in ) :
+                  op_list_(BraKet_info.first), factor_(BraKet_info.second), bra_num_(bra_num), ket_num_(ket_num), type_(type_in),
+                  multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))) {};
+      ~BraKet(){};
 
-        BraKet( BraKet_Init<DataType>& braket_info,  
-                std::shared_ptr<std::map<std::string,std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
-                std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map,
-                std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> GammaMap,
-                std::shared_ptr<StatesInfo<DataType>> target_states ); 
+       std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op_;
+
+       void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
+                                                 std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map,
+                                                 std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> GammaMap,
+                                                 std::shared_ptr<StatesInfo<DataType>> target_states ); 
         
-        ~BraKet(){};
        
 };
 #endif

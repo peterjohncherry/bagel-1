@@ -7,7 +7,7 @@ using namespace std;
 //TODO GammaMap should be generated outside and not fed in here. It constains _no_ Expression specific information.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-Expression<DataType>::Expression( vector< BraKet_Init<DataType>>&  Term_list,
+Expression<DataType>::Expression( vector< BraKet<DataType>>&  Term_list,
                                   shared_ptr<StatesInfo<DataType>> target_states,
                                   shared_ptr<map< string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,      
                                   shared_ptr<map< string, shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,     
@@ -18,16 +18,14 @@ Expression<DataType>::Expression( vector< BraKet_Init<DataType>>&  Term_list,
                                   ACompute_map_(ACompute_map), GammaMap_(GammaMap) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression<DataType>::Expression (new constructor) " << endl; 
+
   G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, AContribInfo >>>>();
 
-  cout << "--------CTP_map--------" <<endl; for ( auto  it : *CTP_map )  { cout << it.first << endl;} cout <<  " ----------" << endl << endl;
-  cout << "--------CMTP_map--------" <<endl; for ( auto  it : *CMTP_map ) { cout << it.first << endl;} cout << "-----------" << endl << endl;
-
   // Will loop through terms and then generate compute list for each. I've split it up like this
-  // for  merging BraKet_Init with BraKet.
+  // for  merging BraKet with BraKet.
   GammaMap_ = GammaMap;
-  for ( BraKet_Init<DataType> bk_info : Term_list_ ) 
-    shared_ptr<BraKet<DataType>> braket = make_shared<BraKet<DataType>>( bk_info, MT_map_, G_to_A_map_, GammaMap_, target_states_ ); //TODO replace with init gammas func
+  for ( BraKet<DataType> braket : Term_list_ ) 
+    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, GammaMap_, target_states_ ); //TODO replace with init gammas func
   
   Get_CMTP_Compute_Terms();
 }
@@ -42,17 +40,13 @@ void Expression<DataType>::Get_CMTP_Compute_Terms(){
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto G2A_mapit = G_to_A_map_->begin(); G2A_mapit != G_to_A_map_->end(); G2A_mapit++) {
-    cout << " X1 " << endl;
     auto A_map = G2A_mapit->second;
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
-      cout << " CMTP_name =  "; cout.flush(); cout <<  A_map_it->first << endl;
       string CMTP_name  = A_map_it->first;     
-      cout << "X3" << endl;
       shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list; 
       if ( CMTP_map_->find(CMTP_name) == CMTP_map_->end())
         throw std::logic_error( CMTP_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
 
-      cout << "X3" << endl;
       auto ACompute_list_loc = ACompute_map_->find(CMTP_name);
       if ( ACompute_list_loc != ACompute_map_->end() ){
         cout << "Expression::Get_CMTP_Compute_Terms::already built compute list for " << CMTP_name << " during generation of earlier compute list" << endl;
@@ -114,7 +108,6 @@ void Expression<DataType>::necessary_tensor_blocks(){
       }
  
 //      shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = CMTP->CTP_vec;
-      
 
     }
     cout << "X" << endl;

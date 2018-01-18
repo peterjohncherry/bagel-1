@@ -10,19 +10,17 @@ using namespace WickUtils;
 //merging, symmetry checking and sparsity. As well as controlling the reordering 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-BraKet<DataType>::BraKet( BraKet_Init<DataType>& bk_info, 
-                          shared_ptr<map<string,shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
-                          shared_ptr<map<string, shared_ptr< map<string, AContribInfo >>>> G_to_A_map,
-                          shared_ptr<map<string, shared_ptr< GammaInfo >>> GammaMap,
-                          shared_ptr<StatesInfo<DataType>> target_states ) : 
-                          Total_Op_(MT_map->at(bk_info.multiop)),
-                          bra_num_(bk_info.bra_num_), ket_num_(bk_info.ket_num_), factor_(bk_info.factor) {  
+void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
+                                                       shared_ptr<map<string, shared_ptr< map<string, AContribInfo >>>> G_to_A_map,
+                                                       shared_ptr<map<string, shared_ptr< GammaInfo >>> GammaMap,
+                                                       shared_ptr<StatesInfo<DataType>> target_states ) {  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "BraKet::BraKet" << endl;
+  cout << "BraKet::generate_gamma_Atensor_contractions" << endl;
   //TODO fix this so it uses proper number of states; if statement in center should call Bra_num Ket_num appropriate Ops
   //     GammaGen should be initialized outside states loop, and wipe Gamma_Vec for each new range.
   //     Loop through dense ranges on the outside, then check sparsity on the inner when adding to GammaMap.
   
+  Total_Op_ = MT_map->at(multiop_name_);
   shared_ptr<vector<string>> idxs_buff  = make_shared<vector<string>>(*(Total_Op_->idxs()));
   shared_ptr<vector<bool>> aops_buff  = make_shared<vector<bool>>(*Total_Op_->aops());    
 

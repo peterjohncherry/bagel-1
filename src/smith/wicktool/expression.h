@@ -14,7 +14,7 @@ class Expression {
       public : 
         
         //List of terms, currently a list of BraKets...         
-        std::vector< BraKet_Init<DataType>> Term_list_;                                       
+        std::vector< BraKet<DataType>> Term_list_;                                       
 
         //information about target states of the system
         std::shared_ptr<StatesInfo<DataType>> target_states_;
@@ -47,7 +47,7 @@ class Expression {
         std::vector<std::shared_ptr<BraKet<DataType>>> braket_list_;
 
 
-        Expression( std::vector<BraKet_Init<DataType>>&  Term_list,
+        Expression( std::vector<BraKet<DataType>>&  Term_list,
                     std::shared_ptr<StatesInfo<DataType>> target_states,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,      
                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,     

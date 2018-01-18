@@ -93,7 +93,7 @@ cout <<  "System_Info::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-string System_Info<DataType>::System_Info::Build_Expression( vector<BraKet_Init<DataType>>& term_info_list  ) { 
+string System_Info<DataType>::System_Info::Build_Expression( vector<BraKet<DataType>>& term_info_list  ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 //TODO Argument should stay vector of term_info, but current term_info is really braket_info,
 //     change so each element of vec is term_info containing range of states.
@@ -103,9 +103,9 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
   
   // This is looping over states; op sparsity depends on states, should replace with term_info_map, and
   // have double loop, outer for ket state, inner for brastate
-  for ( BraKet_Init<DataType> BraKet_info : term_info_list ) {
+  for ( BraKet<DataType> BraKet_info : term_info_list ) {
 
-    for (string op_name : BraKet_info.op_list ) { // TODO should loop  over states defined in term_info, 
+    for (string op_name : BraKet_info.op_list_ ) { // TODO should loop  over states defined in term_info, 
       
       auto T_loc = T_map->find(op_name);
       if( T_loc == T_map->end() ){ 
@@ -120,17 +120,17 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
       }
     } 
 
-    if( MT_map->find( BraKet_info.multiop ) == MT_map->end() ){
+    if( MT_map->find( BraKet_info.multiop_name_ ) == MT_map->end() ){
 
-      vector<shared_ptr<TensOp::TensOp<DataType>>> SubOps(BraKet_info.op_list.size());
-      for (int ii = 0 ; ii != BraKet_info.op_list.size() ; ii++ )  
-        SubOps[ii] = T_map->at(BraKet_info.op_list[ii]); 
+      vector<shared_ptr<TensOp::TensOp<DataType>>> SubOps(BraKet_info.op_list_.size());
+      for (int ii = 0 ; ii != BraKet_info.op_list_.size() ; ii++ )  
+        SubOps[ii] = T_map->at(BraKet_info.op_list_[ii]); 
 
-      shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( BraKet_info.multiop, spinfree_, SubOps, target_states_ );
+      shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( BraKet_info.multiop_name_, spinfree_, SubOps, target_states_ );
       multiop->get_ctrs_tens_ranges();
       CTP_map->insert( multiop->CTP_map->begin(), multiop->CTP_map->end());
       CMTP_map->insert( multiop->CMTP_map->begin(), multiop->CMTP_map->end());
-      MT_map->emplace(BraKet_info.multiop, multiop );
+      MT_map->emplace(BraKet_info.multiop_name_, multiop );
     } 
    
     //TODO do state specific definition for MultiTens Op; just builds new range_map, should not have any sparsity yet ...
@@ -139,9 +139,9 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
     string BraKet_name =  Get_BraKet_name( BraKet_info  ); 
 
     if ( BraKet_map->find(BraKet_name) == BraKet_map->end() ) 
-      Set_BraKet_Ops( make_shared<vector<string>>(BraKet_info.op_list), BraKet_name ) ;
+      Set_BraKet_Ops( make_shared<vector<string>>(BraKet_info.op_list_), BraKet_name ) ;
 
-    BraKet_name_list->push_back( make_pair( BraKet_name, BraKet_info.factor ) );
+    BraKet_name_list->push_back( make_pair( BraKet_name, BraKet_info.factor_ ) );
     cout << "new BraKet_name = " << BraKet_name << endl;
   }
 
@@ -162,19 +162,19 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-string System_Info<DataType>::System_Info::Get_BraKet_name( BraKet_Init<DataType>& BraKet_info  ) { 
+string System_Info<DataType>::System_Info::Get_BraKet_name( BraKet<DataType>& BraKet_info  ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << " System_Info<DataType>::System_Info::Get_BraKet_name " << endl;
 
   string BraKet_name = "";
 
-  if ( BraKet_info.type == "ci_derivative" ) {
+  if ( BraKet_info.type_ == "ci_derivative" ) {
     BraKet_name += "c_{I}^{" + to_string(BraKet_info.bra_num_) + "} < "+to_string(BraKet_info.bra_num_)  + " | ";
-  } else if (BraKet_info.type == "expectation")  { 
+  } else if (BraKet_info.type_ == "expectation")  { 
     BraKet_name += "< "+ to_string(BraKet_info.bra_num_) +" | ";
   }
   
-  BraKet_name += BraKet_info.multiop;
+  BraKet_name += BraKet_info.multiop_name_;
    
   BraKet_name += " | " + to_string(BraKet_info.ket_num_) + " > " ;
   
