@@ -15,9 +15,9 @@ class AContribInfo {
      int Bra_num;
      int Ket_num;
 
-     AContribInfo(std::vector<int> init_order_in , std::pair<double,double> factor_in, int Bra_num, int Ket_num ){
-                  id_orders.push_back(init_order_in);
-                  factors.push_back(factor_in); 
+     AContribInfo( std::vector<int> init_order_in , std::pair<double,double> factor_in, int Bra_num, int Ket_num ){
+                   id_orders.push_back(init_order_in);
+                   factors.push_back(factor_in); 
      };
      ~AContribInfo(){};
 

@@ -61,14 +61,15 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
 
   //NOTE: change to use proper factor
   int tmpfac = 1;
-  shared_ptr<TensOp::TensOp<DataType>>  New_Op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
+  shared_ptr<TensOp::TensOp<DataType>> new_op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
                                                                                         tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, target_states_);
   // change to be state specific
   cout << "getting  ctr tens ranges for New_Op : " << op_name << endl;
-  New_Op->get_ctrs_tens_ranges();
-  cout << "got ctr tens ranges for New_Op : " << op_name << endl;
+  new_op->get_ctrs_tens_ranges();
+  CTP_map->insert( new_op->CTP_map->begin(), new_op->CTP_map->end());
+  cout << "got ctr tens ranges for new_op : " << op_name << endl;
 
-  return New_Op;
+  return new_op;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,12 +109,12 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
       
       auto T_loc = T_map->find(op_name);
       if( T_loc == T_map->end() ){ 
-        shared_ptr<TensOp::TensOp<DataType>> new_tens = Initialize_Tensor_Op_Info( op_name );
+        shared_ptr<TensOp::TensOp<DataType>> new_op = Initialize_Tensor_Op_Info( op_name );
         cout << "initialized info for " <<  op_name << endl;
-        T_map->emplace( op_name, new_tens );
+        T_map->emplace( op_name, new_op );
         cout << "put " << op_name << " into T_map"  << endl;
-        cout << "size of " <<  op_name << "'s CTP map : new_tens->CTP_map->size() = "; cout.flush(); cout <<  new_tens->CTP_map->size() << endl;
-        CTP_map->insert( new_tens->CTP_map->begin(), new_tens->CTP_map->end());
+        cout << "size of " <<  op_name << "'s CTP map : new_op->CTP_map->size() = "; cout.flush(); cout <<  new_op->CTP_map->size() << endl;
+        CTP_map->insert( new_op->CTP_map->begin(), new_op->CTP_map->end());
         cout << "put CTPs for " << op_name << "into map" << endl;
       //TODO do state specific definition; just builds new range_map, should not have any sparsity yet ...
       }
@@ -125,9 +126,11 @@ cout << "System_Info::System_Info::Build_Expression" << endl;
       for (int ii = 0 ; ii != BraKet_info.op_list.size() ; ii++ )  
         SubOps[ii] = T_map->at(BraKet_info.op_list[ii]); 
 
-      shared_ptr<MultiTensOp::MultiTensOp<DataType>> MultiOp = make_shared<MultiTensOp::MultiTensOp<DataType>>( BraKet_info.multiop, spinfree_, SubOps, target_states_ );
-      MultiOp->get_ctrs_tens_ranges();
-      MT_map->emplace(BraKet_info.multiop, MultiOp );
+      shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( BraKet_info.multiop, spinfree_, SubOps, target_states_ );
+      multiop->get_ctrs_tens_ranges();
+      CTP_map->insert( multiop->CTP_map->begin(), multiop->CTP_map->end());
+      CMTP_map->insert( multiop->CMTP_map->begin(), multiop->CMTP_map->end());
+      MT_map->emplace(BraKet_info.multiop, multiop );
     } 
    
     //TODO do state specific definition for MultiTens Op; just builds new range_map, should not have any sparsity yet ...
