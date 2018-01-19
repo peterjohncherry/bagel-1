@@ -21,6 +21,7 @@
 //
 
 #include <src/prop/proptool/proptool.h>
+#include <src/prop/proptool/moint_computer.h>
 
 using namespace std;
 using namespace bagel;
@@ -49,9 +50,13 @@ cout << "PropTool::PropTool::PropTool" << endl;
   ncore_    = idata->get<int>( "ncore" , ciwfn_->ncore());   cout << " ncore_   = " <<  ncore_  << endl;
   nvirt_    = idata->get<int>( "nvirt" , ref_->nvirt());     cout << " nvirt_   = " <<  nvirt_  << endl;
   nocc_     = nclosed_ + nact_; 
-  set_ao_range_info();
+  nfrozenvirt_ = idata->get<int>( "nfrozenvirt", 0 );
 
-  
+  // leave for now
+  block_diag_fock_ = false;
+  gaunt_    = false;
+  breit_    = false;
+  set_ao_range_info();
 
   //Getting info about target expression (this includes which states are relevant)
   shared_ptr<vector<Term_Init<double>>> expression_init = get_expression_init( idata->get_child("expression") ); 

@@ -95,9 +95,6 @@ class MOFock {
 };
 template<> void MOFock<double>::init();
 template<> void MOFock<std::complex<double>>::init();
-extern template class MOFock<double>;
-extern template class MOFock<std::complex<double>>;
-
 
 }
 }

@@ -42,7 +42,6 @@
 namespace bagel {
 namespace PropTool { 
 
-
   class PropTool {
  
     
@@ -57,10 +56,17 @@ namespace PropTool {
     int nact_; 
     int nvirt_; 
     int nocc_; 
+    int nfrozenvirt_;
+  
+    bool breit_;
+    bool gaunt_;
+    bool block_diag_fock_;
    
     size_t maxtile_;
     size_t cimaxtile_;
  
+    std::string method_;
+
     std::shared_ptr<System_Info<double>> sys_info_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> expression_map_;
     std::shared_ptr<SMITH::Expression_Computer::Expression_Computer<double>> expression_machine_;
@@ -119,6 +125,19 @@ namespace PropTool {
 
      //std::shared_ptr<std::vector<std::string>> identity( std::shared_ptr<std::vector<std::string>> invec ) { return invec; }
 
+     int nclosed(){ return nclosed_;}     
+     int nocc ()  { return nocc_;}     
+     int nact ()  { return nact_;}     
+     int ncore()  { return ncore_;}     
+     int nvirt()  { return nvirt_;}     
+     int nfrozenvirt(){ return nfrozenvirt_;}     
+     bool block_diag_fock() { return block_diag_fock_; }     
+ 
+     std::string method(){ return method_; }
+     std::shared_ptr<const Geometry> geom(){ return geom_;} ;
+     std::shared_ptr<const Hcore> hcore(){ return ref_->hcore();}
+     std::shared_ptr<const RDM<1>> rdm1_av(){ return  ref_->rdm1_av();}
+ 
 };
 };
 };
