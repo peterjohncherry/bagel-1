@@ -20,11 +20,7 @@ namespace bagel {
 
       using IndexRange = SMITH::IndexRange;
 
-      int nclosed_;
-      int nocc_;
-      int nact_;
       int ncore_;
-      int nvirt_;
       int nfrozenvirt_;
 
       bool block_diag_fock_;
@@ -37,19 +33,21 @@ namespace bagel {
       std::shared_ptr<const Reference> ref_;
 
     public:
-      MOInt_Init(std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref_ );
+      MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref_, 
+                  int ncore, int nfrozenvirt, bool block_diag_fock );
+
       ~MOInt_Init(){};
 
-      int nclosed()const{ return nclosed_;}
-      int nocc()const { return nocc_;}
-      int nact()const{ return nact_;}
-      int ncore()const{ return ncore_;}
-      int nvirt()const { return nvirt_;}
-      int nfrozenvirt()const{ return nfrozenvirt_;}
+      int ncore() const { return ncore_; }
+      int nclosed() const { return ref_->nclosed(); }
+      int nact() const { return ref_->nact(); }
+      int nocc() const { return ref_->nocc(); }
+      int nvirt() const { return ref_->nvirt() - nfrozenvirt_; }
+      int nfrozenvirt() const { return nfrozenvirt_; }
       
       bool block_diag_fock()const { return block_diag_fock_; }     
-      bool breit()const { return breit_; }     
-      bool gaunt()const { return gaunt_; }     
+      bool breit()const { assert(false); }     
+      bool gaunt()const { assert(false); }     
 
       std::string method()const{ return method_; }
 
@@ -64,6 +62,10 @@ namespace bagel {
 template<> std::shared_ptr<const Matrix> MOInt_Init<double>::coeff() const;
 template<> std::shared_ptr<const ZMatrix> MOInt_Init<std::complex<double>>::coeff() const;
 
+template<> bool MOInt_Init<double>::breit()const;
+template<> bool MOInt_Init<double>::gaunt()const ;
+template<> bool MOInt_Init<std::complex<double>>::breit()const ;
+template<> bool MOInt_Init<std::complex<double>>::gaunt()const ;
 //extern template class MOInt_Init<double>;
 //extern template class MOInt_Init<std::complex<double>>;
 

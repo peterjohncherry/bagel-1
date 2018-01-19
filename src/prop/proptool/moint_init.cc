@@ -6,8 +6,25 @@ using namespace std;
 using namespace bagel;
 
 template<typename DataType> 
-MOInt_Init<DataType>::MOInt_Init(std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref_ ) :
-                                 geom_(geom), ref_(ref) {} 
+MOInt_Init<DataType>::MOInt_Init(std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref_,
+                                 int ncore, int nfrozenvirt, bool block_diag_fock ):            
+                                 geom_(geom), ref_(ref), ncore_(ncore), nfrozenvirt_(nfrozenvirt),
+                                 block_diag_fock_(block_diag_fock) {}
+ // Need to do rel version
+
+template<>
+bool MOInt_Init<double>::breit() const {
+      throw std::logic_error("Checking if Breit enabled in non-rel; this should not happen" ); return false; };
+
+template<>
+bool MOInt_Init<double>::gaunt() const {
+      throw std::logic_error("Checking if Gaunt enabled in non-rel; this should not happen" ); return false; };
+
+template<>
+bool MOInt_Init<std::complex<double>>::breit() const {return gaunt_; }
+
+template<>
+bool MOInt_Init<std::complex<double>>::gaunt() const {return breit_; }
 
 template<>
 shared_ptr<const Matrix> MOInt_Init<double>::coeff() const {

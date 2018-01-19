@@ -4,15 +4,14 @@
 
 using namespace std;
 using namespace bagel; 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //note, this does not have the diagonal component
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_v2( vector<SMITH::IndexRange>& blocks ) { 
+shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_v2( const vector<SMITH::IndexRange>& blocks ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                                                K2ext<DataType> v2 =  K2ext<DataType>( info_, coeffs_, blocks );
-                                               shared_ptr<SMITH::Tensor_<DataType>> t = v2.tensor();
+                                               shared_ptr<Tensor> t = v2.tensor();
                                                return t;
                                            }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

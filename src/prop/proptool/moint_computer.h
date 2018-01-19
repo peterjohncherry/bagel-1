@@ -25,7 +25,7 @@ namespace bagel {
       using Tensor = typename std::conditional<std::is_same<DataType,double>::value,
                                                SMITH::Tensor_<double>,SMITH::Tensor_<std::complex<double>>>::type;
 
-      using IndexRange = SMITH::IndexRange;
+//      using IndexRange = class SMITH::IndexRange;
 
       std::shared_ptr<const MOInt_Init<DataType>> info_;
       std::shared_ptr<const MatType> coeffs_;
@@ -35,7 +35,7 @@ namespace bagel {
       ~MOInt_Computer(){};
 
       //note, this does not have the diagonal component
-      std::shared_ptr<SMITH::Tensor_<DataType>> get_v2( std::vector<SMITH::IndexRange>& blocks );
+      std::shared_ptr<SMITH::Tensor_<DataType>> get_v2( const std::vector<SMITH::IndexRange>& blocks );
       std::shared_ptr<SMITH::Tensor_<DataType>> get_v2( const std::vector<std::string>& blocks );
 
       //is the core fock minus diagonal component from above
