@@ -33,7 +33,7 @@ namespace bagel {
       std::shared_ptr<const Reference> ref_;
 
     public:
-      MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref_, 
+      MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref, 
                   int ncore, int nfrozenvirt, bool block_diag_fock );
 
       ~MOInt_Init(){};
@@ -46,28 +46,112 @@ namespace bagel {
       int nfrozenvirt() const { return nfrozenvirt_; }
       
       bool block_diag_fock()const { return block_diag_fock_; }     
-      bool breit()const { assert(false); }     
-      bool gaunt()const { assert(false); }     
+      bool breit()const ;//{ assert(false); }     
+      bool gaunt()const ;//{ assert(false); }     
 
       std::string method()const{ return method_; }
 
       std::shared_ptr<const Geometry> geom() const { return geom_;}
       std::shared_ptr<const RDM<1>> rdm1_av() const { return  ref_->rdm1_av();}
       std::shared_ptr<const Hcore> hcore() const { return ref_->hcore();}
-      std::shared_ptr<const MatType> coeff() const { assert(false);}
+      std::shared_ptr<const MatType> coeff() const;// { assert(false);}
       std::shared_ptr<const Reference> ref() const { return ref_ ; }
 
   };
 
-template<> std::shared_ptr<const Matrix> MOInt_Init<double>::coeff() const;
-template<> std::shared_ptr<const ZMatrix> MOInt_Init<std::complex<double>>::coeff() const;
+  template<> class MOInt_Init<double> {
+    private :
 
-template<> bool MOInt_Init<double>::breit()const;
-template<> bool MOInt_Init<double>::gaunt()const ;
-template<> bool MOInt_Init<std::complex<double>>::breit()const ;
-template<> bool MOInt_Init<std::complex<double>>::gaunt()const ;
-//extern template class MOInt_Init<double>;
-//extern template class MOInt_Init<std::complex<double>>;
+      int ncore_;
+      int nfrozenvirt_;
+
+      bool block_diag_fock_;
+      bool breit_;
+      bool gaunt_;
+
+      std::string method_;
+
+      std::shared_ptr<const Geometry> geom_;
+      std::shared_ptr<const Reference> ref_;
+
+    public:
+      MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref, 
+                  int ncore, int nfrozenvirt, bool block_diag_fock );
+
+      ~MOInt_Init(){};
+
+      int ncore() const { return ncore_; }
+      int nclosed() const { return ref_->nclosed(); }
+      int nact() const { return ref_->nact(); }
+      int nocc() const { return ref_->nocc(); }
+      int nvirt() const { return ref_->nvirt() - nfrozenvirt_; }
+      int nfrozenvirt() const { return nfrozenvirt_; }
+      
+      bool block_diag_fock()const { return block_diag_fock_; }     
+      bool breit() const { return false; }     
+      bool gaunt() const { return false; }     
+
+      std::string method()const{ return method_; }
+
+      std::shared_ptr<const Geometry> geom() const { return geom_;}
+      std::shared_ptr<const RDM<1>> rdm1_av() const; 
+      std::shared_ptr<const Hcore> hcore() const { return ref_->hcore();}
+      std::shared_ptr<const Matrix> coeff() const  ;
+      std::shared_ptr<const Reference> ref() const { return ref_ ; }
+
+  };
+
+
+  template<> class MOInt_Init<std::complex<double>> {
+    private :
+
+      int ncore_;
+      int nfrozenvirt_;
+
+      bool block_diag_fock_;
+      bool breit_;
+      bool gaunt_;
+
+      std::string method_;
+
+      std::shared_ptr<const Geometry> geom_;
+      std::shared_ptr<const RelReference> ref_;
+
+    public:
+      MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const RelReference> ref, 
+                  int ncore, int nfrozenvirt, bool block_diag_fock );
+
+      ~MOInt_Init(){};
+
+      int ncore() const { return ncore_; }
+      int nclosed() const { return ref_->nclosed(); }
+      int nact() const { return ref_->nact(); }
+      int nocc() const { return ref_->nocc(); }
+      int nvirt() const { return ref_->nvirt() - nfrozenvirt_; }
+      int nfrozenvirt() const { return nfrozenvirt_; }
+      
+      bool block_diag_fock()const { return block_diag_fock_; }     
+      bool breit()const { ref_->breit();}     
+      bool gaunt()const { ref_->gaunt();}     
+
+      std::string method()const{ return method_; }
+
+      std::shared_ptr<const Geometry> geom() const { return geom_;}
+      std::shared_ptr<const ZRDM<1>> rdm1_av() const;
+      std::shared_ptr<const Hcore> hcore() const { return ref_->hcore();}
+      std::shared_ptr<const ZMatrix> coeff() const;// { assert(false);}
+      std::shared_ptr<const RelReference> ref() const { return ref_ ; }
+
+  };
+
+
+//template<> std::shared_ptr<const Matrix> MOInt_Init<double>::coeff() const;
+//template<> std::shared_ptr<const ZMatrix> MOInt_Init<std::complex<double>>::coeff() const;
+
+//template<> bool MOInt_Init<double>::breit() const;
+//template<> bool MOInt_Init<double>::gaunt() const;
+//template<> bool MOInt_Init<std::complex<double>>::breit()const ;
+//template<> bool MOInt_Init<std::complex<double>>::gaunt()const ;
 
 };
 #endif

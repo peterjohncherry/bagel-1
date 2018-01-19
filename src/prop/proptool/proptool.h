@@ -38,13 +38,16 @@
 #include <src/smith/wicktool/expression_computer.h>
 #include <src/smith/wicktool/expression.h>
 #include <src/smith/wicktool/term.h>
+#include <src/prop/proptool/moint_init.h>
+#include <src/prop/proptool/moint.h>
+#include <src/prop/proptool/moint_computer.h>
+
 
 namespace bagel {
 namespace PropTool { 
 
   class PropTool {
  
-    
     std::shared_ptr<const PTree> idata_;
     std::shared_ptr<const Geometry> geom_;
     std::shared_ptr<const Reference> ref_;

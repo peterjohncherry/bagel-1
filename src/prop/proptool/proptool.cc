@@ -21,7 +21,6 @@
 //
 
 #include <src/prop/proptool/proptool.h>
-#include <src/prop/proptool/moint_computer.h>
 
 using namespace std;
 using namespace bagel;
@@ -57,6 +56,9 @@ cout << "PropTool::PropTool::PropTool" << endl;
   gaunt_    = false;
   breit_    = false;
   set_ao_range_info();
+
+
+  shared_ptr<MOInt_Init<double>> moint_init = make_shared<MOInt_Init<double>>( geom_, std::dynamic_pointer_cast<const Reference>(ref_), ncore_, nfrozenvirt_, block_diag_fock_ );
 
   //Getting info about target expression (this includes which states are relevant)
   shared_ptr<vector<Term_Init<double>>> expression_init = get_expression_init( idata->get_child("expression") ); 

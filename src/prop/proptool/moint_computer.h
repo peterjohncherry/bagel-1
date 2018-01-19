@@ -25,8 +25,7 @@ namespace bagel {
       using Tensor = typename std::conditional<std::is_same<DataType,double>::value,
                                                SMITH::Tensor_<double>,SMITH::Tensor_<std::complex<double>>>::type;
 
-//      using IndexRange = class SMITH::IndexRange;
-
+//    using IndexRange = class SMITH::IndexRange;
       std::shared_ptr<const MOInt_Init<DataType>> info_;
       std::shared_ptr<const MatType> coeffs_;
     public :
