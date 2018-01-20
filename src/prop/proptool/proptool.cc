@@ -60,12 +60,11 @@ cout << "PropTool::PropTool::PropTool" << endl;
   cout << "getting mo integrals " <<  endl; 
   shared_ptr<MOInt_Init<double>> moint_init = make_shared<MOInt_Init<double>>( geom_, std::dynamic_pointer_cast<const Reference>(ref_), ncore_, nfrozenvirt_, block_diag_fock_ );
   shared_ptr<MOInt_Computer<double>> moint_comp = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
-  
-  vector<string> test_ranges4 = {  "act", "act", "act","act" }; 
-  vector<string> test_ranges2 = {  "act", "act" }; 
+
+  vector<string> test_ranges4 = { "notcor", "notcor", "notvir", "notvir" }; 
+  vector<string> test_ranges2 = { "free", "free" }; 
   shared_ptr<SMITH::Tensor_<double>> h1_  =  moint_comp->get_h1( test_ranges2, true ) ;
   shared_ptr<SMITH::Tensor_<double>> v2_  =  moint_comp->get_v2( test_ranges4 ) ;
-  cout << "got mo integrals " <<  endl; 
   cout << "  v2_->norm() = " << v2_->norm() << endl; 
 
   //Getting info about target expression (this includes which states are relevant)
@@ -79,7 +78,6 @@ cout << "PropTool::PropTool::PropTool" << endl;
     get_new_ops_init( ops_def_tree ); 
 
   cout << " built user defined ops " << endl;
-
   expression_map_ = sys_info_->expression_map;
   expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, expression_map_, range_conversion_map_, tensop_data_map_, 
                                                                                               gamma_data_map_, sigma_data_map_, civec_data_map_ );

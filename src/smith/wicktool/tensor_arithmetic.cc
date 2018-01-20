@@ -1,6 +1,7 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
 #include <src/smith/wicktool/tensor_arithmetic.h>
+#include <src/util/f77.h>
 
 using namespace std;
 using namespace bagel;
@@ -22,14 +23,14 @@ cout << "Tensor_Arithemetic_Utils::sum_tensor_elems" << endl;
   shared_ptr<vector<int>> block_pos   =  make_shared<vector<int>>(range_maxs->size(),0);  
   shared_ptr<vector<int>> mins        =  make_shared<vector<int>>(range_maxs->size(),0);  
 
-  double sum_of_elems = (DataType)0.0;
+  DataType sum_of_elems = (DataType)0.0;
 
   do { 
 
      vector<Index> id_blocks = *(get_rng_blocks( block_pos, *id_ranges ));
-     unique_ptr<double[]> block = Tens_in->get_block( id_blocks );
+     unique_ptr<DataType[]> block = Tens_in->get_block( id_blocks );
      Tens_in->get_size(id_blocks);
-     double* bob = block.get();
+     DataType* bob = block.get();
      sum_of_elems += *bob++;
 
   } while (fvec_cycle_skipper( block_pos, range_maxs, mins ) ); 
@@ -110,7 +111,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__tensor_return( sha
  
   } 
 
-  unique_ptr<DataType[]> data_block( new double[1] ); 
+  unique_ptr<DataType[]> data_block( new DataType[1] ); 
   data_block[0] = Tens_trace;
 
   vector<Index> unit_index_block = { unit_range[0].range(0) }; 
@@ -204,7 +205,6 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_over_idxs( shared_ptr<Tensor
       //looping over the id positions within the block
       for ( int flattened_ctr_id = 0 ; flattened_ctr_id != ctr_block_size; flattened_ctr_id++ )
         blas::ax_plus_y_n(1.0, reordered_block.get() + (unc_block_size*flattened_ctr_id), unc_block_size, contracted_block.get() );
-
       }
        
     } while( fvec_cycle_skipper(ctr_block_pos, ctr_maxs, ctr_mins ));
@@ -242,7 +242,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_
 
   if ( ctrs_pos.size() == Tens_in->indexrange().size() ) {
 
-    double Tensor_trace = trace_tensor__number_return( Tens_in ) ;
+    DataType Tensor_trace = trace_tensor__number_return( Tens_in ) ;
     cout << "Tensor_trace = " << Tensor_trace << endl;
 
     Tens_out = trace_tensor__tensor_return( Tens_in ) ;
@@ -365,7 +365,7 @@ cout << "Tensor_Arithmetic::contract_vectors" <<endl;
       unique_ptr<DataType[]> T1_data_block = Tens1_in->get_block(T1_block); 
       unique_ptr<DataType[]> T2_data_block = Tens2_in->get_block(T2_block); 
 
-      dot_product_value += ddot_( T1_block[0].size(), T1_data_block.get(), 1, T2_data_block.get(), 1 ); 
+      dot_product_value += dot_product( T1_block[0].size(), T1_data_block.get(), T2_data_block.get() ); 
 
       cout << endl << "dot_product_value = " << dot_product_value <<  endl;
   }
@@ -443,8 +443,7 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
        DataType dblone =  1.0;
        int int_one = 1; 
        
-       dgemv_( "N", TensOut_block_size, ctr_block_size, dblone, TensIn_data_reord.get(), TensOut_block_size, VecIn_data.get(), 1, 
-                dblone, TensOut_data.get(), int_one );  
+       gemv( 'N', TensOut_block_size, ctr_block_size, TensIn_data_reord.get(), VecIn_data.get(), TensOut_data.get(), dblone, dblone ); 
        
        TensIn_new_rng_blocks = get_rng_blocks( block_pos, *TensIn_new_rngs); 
 
@@ -535,8 +534,7 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
       std::unique_ptr<DataType[]> T_out_data(new DataType[T1_unc_block_size*T2_unc_block_size]);
       std::fill_n(T_out_data.get(), T1_unc_block_size*T2_unc_block_size, 0.0);
 
-      dgemm_( "N", "N", T1_unc_block_size, T2_unc_block_size, ctr_block_size, 1.0, T1_data_new, T1_unc_block_size,
-              T2_data_new, ctr_block_size, 0.0, T_out_data, T1_unc_block_size );
+      gemm( 'N', 'N', T1_unc_block_size, T2_unc_block_size, ctr_block_size, T1_data_new.get(), T2_data_new.get(), T_out_data.get(), (DataType)1.0, (DataType)0.0 ) ;
 
       vector<Index> T_out_rng_block(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-1);
       T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin()+1, T2_new_rng_blocks->end());
@@ -638,8 +636,7 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;
       std::unique_ptr<DataType[]> T_out_data(new DataType[T1_unc_block_size*T2_unc_block_size]);
       std::fill_n(T_out_data.get(), T1_unc_block_size*T2_unc_block_size, 0.0);
 
-      dgemm_( "N", "N", T1_unc_block_size, T2_unc_block_size, ctr_block_size, 1.0, T1_data_new, T1_unc_block_size,
-              T2_data_new, ctr_block_size, 0.0, T_out_data, T1_unc_block_size );
+      gemm( 'N', 'N', T1_unc_block_size, T2_unc_block_size, ctr_block_size, T1_data_new.get(), T2_data_new.get(), T_out_data.get(), (DataType)1.0, (DataType)0.0  );
 
       vector<Index> T_out_rng_block(T1_new_rng_blocks->begin(), T1_new_rng_blocks->end()-num_ctrs);
       T_out_rng_block.insert(T_out_rng_block.end(), T2_new_rng_blocks->begin()+num_ctrs, T2_new_rng_blocks->end());
@@ -770,23 +767,15 @@ void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_reordered_range_block( 
      shared_ptr<vector<int>> block_pos_T2 = reorder_vector( *new_order, *block_pos_T1 );
      shared_ptr<vector<Index>> id_blocks_T2 = get_rng_blocks( block_pos_T2, id_ranges_T2 );
 
-     //print_vector( *block_pos_T1, "block_pos_T1" ); cout << endl;
-     //cout << " id_blocks_T1 sizes = [ " ;  for ( Index idb : *id_blocks_T1) { cout << idb.size()  << " " ; }  cout << "]" << endl;
-     //cout << " id_blocks_T2 sizes = [ " ;  for ( Index idb : *id_blocks_T2) { cout << idb.size()  << " " ; }  cout << "]" << endl;
-
      assert( T1->exists( *id_blocks_T1 ) );
      assert( T2->exists( *id_blocks_T2 ) );
 
      unique_ptr<DataType[]> reordered_data_block;
      {
-      // cout << " getting T1 block " << endl;
        unique_ptr<DataType[]> data_block = T1->get_block(*id_blocks_T1);
-       //cout << " got T1 block " << endl;
        reordered_data_block =  reorder_tensor_data( data_block.get(), new_order, id_blocks_T1 );
-       //cout << " reordered data block " << endl;
      }
      T2->put_block(reordered_data_block, *id_blocks_T2);
-     //cout << " put data block " << endl;
 
    } while (fvec_cycle_skipper(block_pos_T1, range_lengths, mins ));
 
@@ -799,7 +788,7 @@ void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_reordered_range_block( 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(shared_ptr<Tensor_<DataType>> Tens_in,  shared_ptr<vector<int>> new_order){
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( shared_ptr<Tensor_<DataType>> Tens_in, shared_ptr<vector<int>> new_order ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Tensor_Arithmetic::reorder_block_Tensor "; cout.flush();
 
@@ -931,7 +920,7 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
    shared_ptr<vector<int>> mins = make_shared<vector<int>>(T_id_ranges->size(),0);  
    shared_ptr<vector<int>> range_lengths = get_range_lengths( T_id_ranges ); 
 
-   double put_after_decimal_point  = pow(10 , block_pos->size());
+   DataType put_after_decimal_point  = pow(10 , block_pos->size());
    vector<double> power_10( block_pos->size() );
    for (int ii = 0  ; ii != power_10.size() ; ii++ ) 
      power_10[power_10.size()-1-ii] = pow(10, (double)ii );///put_after_decimal_point ;
@@ -979,7 +968,7 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
    shared_ptr<vector<int>> mins       = make_shared<vector<int>>(T_id_ranges->size(),0);  
    shared_ptr<vector<int>> range_maxs = get_range_lengths( T_id_ranges ); 
 
-   double put_after_decimal_point  = pow(10 , block_pos->size());
+   DataType put_after_decimal_point  = pow(10 , block_pos->size());
    vector<double> power_10( block_pos->size() );
    for (int ii = 0  ; ii != power_10.size() ; ii++ ) 
      power_10[ii] = pow(10, (double)(power_10.size()-1-ii) );
@@ -1128,12 +1117,12 @@ cout << "Tensor_Arithmetic::direct_tensor_product" <<endl;
         copy( T1_id_blocks->begin(), T1_id_blocks->end(), Tout_id_blocks.begin() );
         copy( T2_id_blocks->begin(), T2_id_blocks->end(), Tout_id_blocks.begin()+T1_id_blocks->size() );
     
-        double* T2_data_ptr = T2_data.get();
-        double* Tout_data_ptr = Tout_data.get();
+        DataType* T2_data_ptr = T2_data.get();
+        DataType* Tout_data_ptr = Tout_data.get();
     
         for ( int qq = 0; qq != T2_block_size ; qq++ ){
           copy_n( T1_data.get(), T1_block_size, Tout_data_ptr );
-          dscal_( T1_block_size, *T2_data_ptr, Tout_data_ptr, 1); 
+          scaler( T1_block_size, *T2_data_ptr, Tout_data_ptr ); 
           T2_data_ptr++;
           Tout_data_ptr += T1_block_size;
         }
@@ -1148,14 +1137,14 @@ cout << "Tensor_Arithmetic::direct_tensor_product" <<endl;
 
     Tens_out = Tens2->copy(); 
     vector<Index> id_block(1,Tens1->indexrange()[0].range(0));
-    unique_ptr<double[]> factor_ptr = Tens1->get_block( id_block ); 
+    unique_ptr<DataType[]> factor_ptr = Tens1->get_block( id_block ); 
     Tens_out->scale(factor_ptr[0]);
 
   } else if ( (Tens1->size_alloc() != 1 && Tens2->size_alloc() == 1) || (Tens1->size_alloc() == 1 && Tens2->size_alloc() == 1 )  ) {
 
     Tens_out = Tens1->copy(); 
     vector<Index> id_block(1,Tens2->indexrange()[0].range(0));
-    unique_ptr<double[]> factor_ptr = Tens2->get_block( id_block ); 
+    unique_ptr<DataType[]> factor_ptr = Tens2->get_block( id_block ); 
     Tens_out->scale(factor_ptr[0]);
 
   }   
@@ -1200,8 +1189,96 @@ cout << "Tensor_Arithmetic::get_tensor_element" ; cout.flush(); print_vector(id_
 ;
 }
 
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// alpha.[op1(A_ij).op2(B_jl)] + beta.[C_il] = C_il
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void Tensor_Arithmetic::Tensor_Arithmetic<double>::gemm( char op1, char op2, int size_i, int size_l, int size_j, 
+                                                         double* A_data, double* B_data, double* C_data, double alpha, double beta ){ 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic<double>::gemm_interface( shared_ptr<Tensor_<double>> Tens, vector<int>& id_pos)" << endl;
+  dgemm_( &op1, &op2, size_i, size_l, size_j, alpha, A_data, size_i, B_data, size_j, beta, C_data, size_i);  
+  return;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// alpha.[op1(A_ij).op2(B_jl)] + beta.[C_il] = C_il
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::gemm( char op1, char op2, int size_i, int size_l, int size_j, 
+                                                                       std::complex<double>* A_data, std::complex<double>* B_data,
+                                                                       std::complex<double>* C_data,
+                                                                       std::complex<double> alpha, std::complex<double> beta ){ 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic<std::complex<double>>::gemm_interface( shared_ptr<Tensor_<double>> Tens, vector<int>& id_pos)" << endl;
+  zgemm_( &op1, &op2, size_i, size_l, size_j, alpha, A_data, size_i,  B_data, size_j, beta, C_data, size_i);
+  return;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// alpha.[op1(A_ij)B_j] + beta.[C_il] = C_il
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void Tensor_Arithmetic::Tensor_Arithmetic<double>::gemv( char op1, int size_i, int size_j, double* A_data, double* B_data, double* C_data, double alpha, double beta ){ 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic<double>::gemv( shared_ptr<Tensor_<double>> Tens, vector<int>& id_pos)" << endl;
+  int stride = 1 ; 
+  int int_one = 1 ; 
+  dgemv_( &op1, size_i, size_j, alpha, A_data , size_i, B_data, stride, beta, C_data, int_one );  
+  return;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// alpha.[op1(A_ij)B_j] + beta.[C_il] = C_il
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::gemv( char op1, int size_i, int size_j, std::complex<double>* A_data,
+                                                                       std::complex<double>* B_data, std::complex<double>* C_data, 
+                                                                       std::complex<double> alpha, std::complex<double> beta ){ 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic<std::complex<double>>::gemv( shared_ptr<Tensor_<std::complex<double>>> Tens, vector<int>& id_pos)" << endl;
+  int stride = 1 ; 
+  int int_one = 1 ; 
+  zgemv_( &op1, size_i, size_j, alpha, A_data, size_i, B_data, stride, beta, C_data, int_one ); 
+  return;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, double T2_data_ptr, double* Tout_data_ptr){  
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, double* T2_data_ptr, double* Tout_data_ptr) " << endl;
+  dscal_( T1_block_size, T2_data_ptr, Tout_data_ptr, 1); 
+  return;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::scaler( int T1_block_size, std::complex<double> T2_data_ptr, std::complex<double>* Tout_data_ptr){  
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, complex<double>* T2_data_ptr, complex<double>* Tout_data_ptr) " << endl;
+  zscal_( T1_block_size, T2_data_ptr, Tout_data_ptr, 1); 
+  return;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+double
+Tensor_Arithmetic::Tensor_Arithmetic<double>::dot_product( size_t vec_size, double* v1, double* v2){  
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::dot_product " << endl;
+  return ddot_( vec_size, v1, 1, v2, 1 ); 
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+std::complex<double>
+Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::dot_product( size_t vec_size, std::complex<double>* v1, std::complex<double>* v2){  
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::dot_product " << endl;
+  return zdotc_( vec_size, v1, 1, v2, 1 ); 
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Tensor_Arithmetic::Tensor_Arithmetic<double>;
+template class Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
  
 #endif

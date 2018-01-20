@@ -62,17 +62,14 @@ namespace bagel {
   template<> class MOInt_Init<double> {
     private :
 
+      std::shared_ptr<const Geometry> geom_;
+      std::shared_ptr<const Reference> ref_;
+
       int ncore_;
       int nfrozenvirt_;
 
       bool block_diag_fock_;
-      bool breit_;
-      bool gaunt_;
-
       std::string method_;
-
-      std::shared_ptr<const Geometry> geom_;
-      std::shared_ptr<const Reference> ref_;
 
     public:
       MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref, 
@@ -104,6 +101,9 @@ namespace bagel {
   template<> class MOInt_Init<std::complex<double>> {
     private :
 
+      std::shared_ptr<const Geometry> geom_;
+      std::shared_ptr<const RelReference> ref_;
+
       int ncore_;
       int nfrozenvirt_;
 
@@ -112,9 +112,6 @@ namespace bagel {
       bool gaunt_;
 
       std::string method_;
-
-      std::shared_ptr<const Geometry> geom_;
-      std::shared_ptr<const RelReference> ref_;
 
     public:
       MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const RelReference> ref, 

@@ -112,8 +112,39 @@ class Tensor_Arithmetic {
      static std::shared_ptr<Tensor_<DataType>>
      get_test_Tensor_column_major( std::shared_ptr<std::vector<IndexRange>> T_id_ranges );
 
+     static void 
+     gemm( char op1, char op2, int size_i, int size_l, int size_j, DataType* A_data, DataType* B_data, DataType* C_data, DataType alpha, DataType beta ); 
+
+     static void
+     gemv( char op1, int size_i, int size_j, DataType* A_data, DataType* B_data, DataType* C_data, DataType alpha, DataType beta ); 
+ 
+     static void 
+     scaler(int T1_block_size, DataType T2_data_ptr, DataType* Tout_data_ptr);  
+
+     static DataType
+     dot_product( size_t vec_size, DataType* v1, DataType* v2); 
 }; 
  
+template<> void Tensor_Arithmetic<double>::gemm ( char op1, char op2, int size_i, int size_l, int size_j, 
+                                                  double* A_data, double* B_data, double* C_data, double alpha, double beta );
+
+template<> void Tensor_Arithmetic<std::complex<double>>::gemm( char op1, char op2, int size_i, int size_l, int size_j, 
+                                                          std::complex<double>* A_data, std::complex<double>* B_data, std::complex<double>* C_data,
+                                                          std::complex<double> alpha, std::complex<double> beta );
+
+template<> void Tensor_Arithmetic<double>::gemv( char op1, int size_i, int size_j, double* A_data, double* B_data, double* C_data, double alpha, double beta ); 
+
+template<> void Tensor_Arithmetic<std::complex<double>>::gemv( char op1, int size_i, int size_j,
+                                                               std::complex<double>* A_data, std::complex<double>* B_data, std::complex<double>* C_data, 
+                                                               std::complex<double> alpha, std::complex<double> beta );
+
+template<> void Tensor_Arithmetic<double>::scaler( int T1_block_size, double T2_data_ptr, double* Tout_data_ptr);  
+
+template<> void Tensor_Arithmetic<std::complex<double>>::scaler( int T1_block_size, std::complex<double> T2_data_ptr, std::complex<double>* Tout_data_ptr);  
+
+template<> double Tensor_Arithmetic<double>::dot_product( size_t vec_size, double* v1, double* v2);
+
+template<> std::complex<double> Tensor_Arithmetic<std::complex<double>>::dot_product( size_t vec_size, std::complex<double>* v1, std::complex<double>* v2); 
 }
 }
 }
