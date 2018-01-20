@@ -46,15 +46,15 @@ namespace bagel {
       int nfrozenvirt() const { return nfrozenvirt_; }
       
       bool block_diag_fock()const { return block_diag_fock_; }     
-      bool breit()const ;//{ assert(false); }     
-      bool gaunt()const ;//{ assert(false); }     
+      bool breit()const ;
+      bool gaunt()const ;
 
       std::string method()const{ return method_; }
 
       std::shared_ptr<const Geometry> geom() const { return geom_;}
       std::shared_ptr<const RDM<1>> rdm1_av() const { return  ref_->rdm1_av();}
       std::shared_ptr<const Hcore> hcore() const { return ref_->hcore();}
-      std::shared_ptr<const MatType> coeff() const;// { assert(false);}
+      std::shared_ptr<const MatType> coeff() const  {  return ref_->coeff();}
       std::shared_ptr<const Reference> ref() const { return ref_ ; }
 
   };
@@ -94,13 +94,12 @@ namespace bagel {
       std::string method()const{ return method_; }
 
       std::shared_ptr<const Geometry> geom() const { return geom_;}
-      std::shared_ptr<const RDM<1>> rdm1_av() const; 
+      std::shared_ptr<const RDM<1>> rdm1_av() const { return ref_->rdm1_av(); } 
       std::shared_ptr<const Hcore> hcore() const { return ref_->hcore();}
-      std::shared_ptr<const Matrix> coeff() const  ;
+      std::shared_ptr<const Matrix> coeff() const { return ref_->coeff(); }
       std::shared_ptr<const Reference> ref() const { return ref_ ; }
 
   };
-
 
   template<> class MOInt_Init<std::complex<double>> {
     private :
@@ -136,10 +135,11 @@ namespace bagel {
 
       std::string method()const{ return method_; }
 
+      std::shared_ptr<const ZRDM<1>> rdm1_av() const { return nullptr; } ; // weird, but this is how it is defined in smith_info
+      std::shared_ptr<const ZMatrix> coeff() const;
+
       std::shared_ptr<const Geometry> geom() const { return geom_;}
-      std::shared_ptr<const ZRDM<1>> rdm1_av() const;
       std::shared_ptr<const Hcore> hcore() const { return ref_->hcore();}
-      std::shared_ptr<const ZMatrix> coeff() const;// { assert(false);}
       std::shared_ptr<const RelReference> ref() const { return ref_ ; }
 
   };

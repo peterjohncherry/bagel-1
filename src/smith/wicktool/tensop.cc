@@ -205,7 +205,6 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
           }
         }
 
-        cout << " X3" << endl;  
         if (valid) {
           shared_ptr<vector<pair<int,int>>> ReIm_factors = make_shared<vector<pair<int,int>>>(1, rng_it->second->factors()); 
           shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
@@ -219,7 +218,6 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
       }
     }
   }
-  cout << " X4 "; cout.flush(); cout <<" CTP_map->size() = "<< CTP_map->size() << endl;  
   cout << "leaving TensOp::TensOp get_ctrs_tens_ranges" << endl;
   return;
 }

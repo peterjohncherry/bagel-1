@@ -28,9 +28,12 @@ namespace bagel {
 //    using IndexRange = class SMITH::IndexRange;
       std::shared_ptr<const MOInt_Init<DataType>> info_;
       std::shared_ptr<const MatType> coeffs_;
+      std::shared_ptr<std::map<std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
+
     public :
-      MOInt_Computer( std::shared_ptr<const MOInt_Init<DataType>> r, std::shared_ptr<const MatType> c):
-                      info_(r), coeffs_(c) {}
+      MOInt_Computer( std::shared_ptr<const MOInt_Init<DataType>> r,
+                      std::shared_ptr<std::map<std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map  ):
+                      info_(r), coeffs_(info_->coeff()), range_conversion_map_(range_conversion_map)  {}
       ~MOInt_Computer(){};
 
       //note, this does not have the diagonal component
@@ -38,8 +41,8 @@ namespace bagel {
       std::shared_ptr<SMITH::Tensor_<DataType>> get_v2( const std::vector<std::string>& blocks );
 
       //is the core fock minus diagonal component from above
-      std::shared_ptr<SMITH::Tensor_<DataType>> get_h1( const std::vector<std::string>& blocks );
-      std::shared_ptr<SMITH::Tensor_<DataType>> get_h1( const std::vector<SMITH::IndexRange>& blocks );
+      std::shared_ptr<SMITH::Tensor_<DataType>> get_h1( const std::vector<std::string>& blocks, bool store = false );
+      std::shared_ptr<SMITH::Tensor_<DataType>> get_h1( const std::vector<SMITH::IndexRange>& blocks, bool store = false );
   };
 }
 #endif

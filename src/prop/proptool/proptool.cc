@@ -57,8 +57,16 @@ cout << "PropTool::PropTool::PropTool" << endl;
   breit_    = false;
   set_ao_range_info();
 
-
+  cout << "getting mo integrals " <<  endl; 
   shared_ptr<MOInt_Init<double>> moint_init = make_shared<MOInt_Init<double>>( geom_, std::dynamic_pointer_cast<const Reference>(ref_), ncore_, nfrozenvirt_, block_diag_fock_ );
+  shared_ptr<MOInt_Computer<double>> moint_comp = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
+  
+  vector<string> test_ranges4 = {  "act", "act", "act","act" }; 
+  vector<string> test_ranges2 = {  "act", "act" }; 
+  shared_ptr<SMITH::Tensor_<double>> h1_  =  moint_comp->get_h1( test_ranges2, true ) ;
+  shared_ptr<SMITH::Tensor_<double>> v2_  =  moint_comp->get_v2( test_ranges4 ) ;
+  cout << "got mo integrals " <<  endl; 
+  cout << "  v2_->norm() = " << v2_->norm() << endl; 
 
   //Getting info about target expression (this includes which states are relevant)
   shared_ptr<vector<Term_Init<double>>> expression_init = get_expression_init( idata->get_child("expression") ); 
