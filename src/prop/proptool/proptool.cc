@@ -44,9 +44,17 @@ cout << "PropTool::PropTool::PropTool" << endl;
   //Initializing range sizes either from idate or reference wfn 
   maxtile_   = idata->get<int>("maxtile", 10);
   cimaxtile_ = idata->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
+
+  const bool frozen = idata->get<bool>("frozen", true);
+  ncore_ = idata->get<int>("ncore", (frozen ? ref_->geom()->num_count_ncore_only()/2 : 0));
+  if (ncore_)
+    cout << "    * freezing " << ncore_ << " orbital" << (ncore_^1 ? "s" : "") << endl;
+  nfrozenvirt_ = idata->get<int>("nfrozenvirt", 0);
+  if (nfrozenvirt_)
+    cout << "    * freezing " << nfrozenvirt_ << " orbital" << (nfrozenvirt_^1 ? "s" : "") << " (virtual)" << endl;
+
   nclosed_  = idata->get<int>( "nclosed" , ref_->nclosed()); cout << " nclosed_ = " <<  nclosed_  << endl;
   nact_     = idata->get<int>( "nact"  , ref_->nact());      cout << " nact_    = " <<  nact_  << endl;
-  ncore_    = idata->get<int>( "ncore" , ciwfn_->ncore());   cout << " ncore_   = " <<  ncore_  << endl;
   nvirt_    = idata->get<int>( "nvirt" , ref_->nvirt());     cout << " nvirt_   = " <<  nvirt_  << endl;
   nocc_     = nclosed_ + nact_; 
   nfrozenvirt_ = idata->get<int>( "nfrozenvirt", 0 );
@@ -63,9 +71,13 @@ cout << "PropTool::PropTool::PropTool" << endl;
 
   vector<string> test_ranges4 = { "notcor", "notcor", "notvir", "notvir" }; 
   vector<string> test_ranges2 = { "free", "free" }; 
+  {
+  shared_ptr<SMITH::Tensor_<double>> v2_  =  moint_comp->get_v2( test_ranges4 ) ;
+  cout << " old_coeffs  v2_->norm() = " << v2_->norm() << endl; 
+  }
   shared_ptr<SMITH::Tensor_<double>> h1_  =  moint_comp->get_h1( test_ranges2, true ) ;
   shared_ptr<SMITH::Tensor_<double>> v2_  =  moint_comp->get_v2( test_ranges4 ) ;
-  cout << "  v2_->norm() = " << v2_->norm() << endl; 
+  cout << " new_coeffs  v2_->norm() = " << v2_->norm() << endl; 
 
   //Getting info about target expression (this includes which states are relevant)
   shared_ptr<vector<Term_Init<double>>> expression_init = get_expression_init( idata->get_child("expression") ); 
