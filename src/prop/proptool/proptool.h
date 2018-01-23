@@ -47,7 +47,7 @@ namespace bagel {
 namespace PropTool { 
 
   class PropTool {
- 
+
     std::shared_ptr<const PTree> idata_;
     std::shared_ptr<const Geometry> geom_;
     std::shared_ptr<const Reference> ref_;
@@ -75,6 +75,9 @@ namespace PropTool {
     std::shared_ptr<SMITH::Expression_Computer::Expression_Computer<double>> expression_machine_;
     std::shared_ptr<std::map< std::string, double>> scalar_results_map_;
 
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Expression_Init<double>> >> expression_init_map_;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Equation_Init<double>> >> equation_init_map_;
+
     std::vector<int> target_states_;
     std::vector<int> all_states_;
     std::shared_ptr<StatesInfo<double>> targets_info_; 
@@ -87,10 +90,11 @@ namespace PropTool {
     void build_op_tensors( std::vector<std::string>& expression_list ) ;
     std::shared_ptr<std::vector<SMITH::IndexRange>> convert_to_indexrange( std::shared_ptr<const std::vector<std::string>> range_block_str ) ;
 
-    std::shared_ptr<std::vector< Term_Init<double> >> get_expression_init( std::shared_ptr<const PTree> expression_inp ); 
-    void get_equation_init( std::shared_ptr<const PTree> expression_init ); 
+    void get_expressions_init( std::shared_ptr<const PTree> expression_inp ); 
+    void get_equations_init( std::shared_ptr<const PTree> expression_init ); 
+
     void get_new_ops_init( std::shared_ptr<const PTree> ops_def_tree ) ;
-    void get_expression_variables( std::shared_ptr<const PTree> ops_def_tree ) ;
+    void get_expression_variables( std::shared_ptr<const PTree> expr_def_tree ) ;
 
     std::map< std::string , std::vector<int> > inp_range_map_;
     std::map< std::string , double > inp_factor_map_;

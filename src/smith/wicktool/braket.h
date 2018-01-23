@@ -1,21 +1,20 @@
-#ifndef __SRC_SMITH_BraKet_H
-#define __SRC_SMITH_BraKet_H
-  #include <src/smith/wicktool/term.h>
-  #include <src/smith/wicktool/wickutils.h>
-  #include <src/smith/wicktool/gamma_generator.h>
-  #include <src/smith/wicktool/tensop.h>
-  #include <src/smith/wicktool/spin_manager.h>
-  #include <src/smith/wicktool/states_info.h>
+#ifndef __SRC_SMITH_BRAKET_H
+#define __SRC_SMITH_BRAKET_H
+#include <src/smith/wicktool/wickutils.h>
+#include <src/smith/wicktool/gamma_generator.h>
+#include <src/smith/wicktool/tensop.h>
+#include <src/smith/wicktool/states_info.h>
 
 template<typename DataType> 
 class BraKet{
 
      public :
        const std::vector<std::string> op_list_;
+       const std::vector<std::pair<int,int>> op_states_;
        const DataType factor_;
        const int bra_num_;
        const int ket_num_;
-       const std::string type_ ; // should be "ci_deriv" or "exprectation" 
+       const std::string type_ ; // should be "ci_deriv" or "full" 
        const std::string multiop_name_;
 
        BraKet( std::pair< std::vector<std::string>, DataType > BraKet_info, int bra_num, int ket_num, std::string type_in ) :

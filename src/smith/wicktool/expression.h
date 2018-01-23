@@ -47,7 +47,7 @@ class Expression {
         std::vector<std::shared_ptr<BraKet<DataType>>> braket_list_;
 
 
-        Expression( std::vector<BraKet<DataType>>&  Term_list,
+        Expression( std::vector<BraKet<DataType>>&  braket_list,
                     std::shared_ptr<StatesInfo<DataType>> target_states,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,      
                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,     
