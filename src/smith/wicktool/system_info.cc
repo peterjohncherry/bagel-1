@@ -98,7 +98,7 @@ string System_Info<DataType>::System_Info::Build_Expression( vector<BraKet<DataT
 //TODO Argument should stay vector of term_info, but current term_info is really braket_info,
 //     change so each element of vec is term_info containing range of states.
 
-cout << "System_Info::System_Info::Build_Expression" << endl;                                                                                     
+  cout << "System_Info::System_Info::Build_Expression" << endl;                                                                                     
   shared_ptr< vector<pair<string, DataType>> > BraKet_name_list = make_shared<vector<pair< string, DataType >>>(0);
   
   // This is looping over states; op sparsity depends on states, should replace with term_info_map, and
@@ -170,7 +170,7 @@ string System_Info<DataType>::System_Info::Get_BraKet_name( BraKet<DataType>& Br
 
   if ( BraKet_info.type_ == "ci_derivative" ) {
     BraKet_name += "c_{I}^{" + to_string(BraKet_info.bra_num_) + "} < "+to_string(BraKet_info.bra_num_)  + " | ";
-  } else if (BraKet_info.type_ == "expectation")  { 
+  } else if (BraKet_info.type_ == "expectation" || BraKet_info.type_ == "full")  { 
     BraKet_name += "< "+ to_string(BraKet_info.bra_num_) +" | ";
   }
   

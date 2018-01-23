@@ -10,6 +10,8 @@ template <typename DataType>
       std::vector<std::vector<std::string>> op_names_;
       std::vector<std::vector<int>> bra_states_;
       std::vector<std::vector<int>> ket_states_;
+      std::string bra_index_;
+      std::string ket_index_;
       std::vector<DataType> factors_;
       std::vector<std::string> types_;
       std::vector<int> bra_states_merged_;
@@ -41,4 +43,23 @@ template <typename DataType>
                           return st_list;
                         }
 }; 
+
+
+template<typename DataType>
+class Equation_Init {
+
+      public : 
+
+        std::string target_variable_;
+        std::string target_ranges_;
+        std::string summed_ranges_;
+        std::string method_;
+        std::vector<std::string> expression_list_;
+        
+        Equation_Init( std::string target_variable, std::string target_ranges,  std::string summed_ranges,  std::string method, std::vector<std::string>& expression_list ) :
+                       target_variable_(target_variable), target_ranges_(target_ranges), summed_ranges_(summed_ranges), method_(method), 
+                       expression_list_(expression_list) {}; 
+        ~Equation_Init() {} ;
+ 
+};
 #endif

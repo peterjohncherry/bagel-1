@@ -79,8 +79,12 @@ cout << "PropTool::PropTool::PropTool" << endl;
   shared_ptr<SMITH::Tensor_<double>> v2_  =  moint_comp->get_v2( test_ranges4 ) ;
   cout << " new_coeffs  v2_->norm() = " << v2_->norm() << endl; 
 
+  // get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
+  get_equation_init( idata->get_child("equation") );
+
   //Getting info about target expression (this includes which states are relevant)
   shared_ptr<vector<Term_Init<double>>> expression_init = get_expression_init( idata->get_child("expression") ); 
+
   set_target_state_info();
   set_ci_range_info();
 
@@ -89,19 +93,29 @@ cout << "PropTool::PropTool::PropTool" << endl;
   if (ops_def_tree)
     get_new_ops_init( ops_def_tree ); 
 
+
   cout << " built user defined ops " << endl;
   expression_map_ = sys_info_->expression_map;
   expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, expression_map_, range_conversion_map_, tensop_data_map_, 
                                                                                               gamma_data_map_, sigma_data_map_, civec_data_map_ );
 
+
   cout << "expression_init->size()  = " << expression_init->size() << endl;
   for ( Term_Init<double> term_inp : *expression_init ) {
     shared_ptr<vector<string>> expr_list = build_expressions( term_inp );
-    cout << "expr_list = [ " ; cout.flush();
-    for ( string expr_name : *expr_list )
-      cout << expr_name << " " ; cout.flush();
+    cout << "-------- expr_list ------- " ; cout.flush();
+    for ( string expr_name : *expr_list ) {
+      cout << expr_name << " " ; cout.flush(); cout << endl;
+    }
     cout << "]" <<  endl;
   }
+
+
+
+  // Change expression to term; expression should be the equation.
+  // Have new function for doing linear solve.
+  // Within function build MultiTensor vec from expressions and T tensors.
+  //
 
 }
 
@@ -190,6 +204,15 @@ void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree 
     for (auto& aop : *aops_ptree)
       aops.push_back(conv_to_bool(lexical_cast<int>(aop->data())));
 
+    auto state_dep_ptree =  op_def_inp->get_child("state dependence"); 
+    vector<string> state_dep(0);
+      cout << "state_dep = [ "  ; cout.flush();
+    for (auto& sd : *state_dep_ptree) {
+      state_dep.push_back( lexical_cast<string>(sd->data()));
+      cout << state_dep.back() << " " ; cout.flush();
+    }
+    cout << "]" << endl;
+
     string                             op_name = op_def_inp->get<string>( "name" );
     double                             factor = op_def_inp->get<double>( "factor", 1.0 );
     shared_ptr<vector<string>>         idxs_ptr = make_shared<vector<string>>( idxs );
@@ -210,46 +233,92 @@ void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree 
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr< vector<Term_Init<double> > > PropTool::PropTool::get_expression_init( shared_ptr<const PTree> expression_inp ) {
+void PropTool::PropTool::get_equation_init( shared_ptr<const PTree> equation_inp ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "PropTool::PropTool::get_equation_init" << endl;
+
+  string name = equation_inp->get<string>( "name" );
+  string type = equation_inp->get<string>( "type" );
+  string target = equation_inp->get<string>( "target" );
+        
+  auto expression_list = equation_inp->get_child( "expressions" );
+  vector<string> expression_names(0);
+  for (auto& expression_info: *expression_list) {
+    string exp_name = expression_info->get<string>( "name" );
+    string exp_factor = expression_info->get<string>( "factor" );
+    
+    auto si_ptree = expression_info->get_child("summed indices"); 
+    vector<string> summed_indices(0);
+    for (auto& si : *si_ptree) {
+      summed_indices.push_back( lexical_cast<string>(si->data()));
+    }
+ 
+    auto ti_ptree = expression_info->get_child("target indices"); 
+    vector<string> target_indices(0);
+    for (auto& si : *si_ptree) {
+      target_indices.push_back( lexical_cast<string>(si->data()));
+    }
+
+    auto fi_ptree = expression_info->get_child("free indices"); 
+    vector<string> free_indices(0);
+    for (auto& fi : *fi_ptree) {
+      free_indices.push_back( lexical_cast<string>(fi->data()));
+    }
+
+  }
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr< vector<Term_Init<double> > > PropTool::PropTool::get_expression_init( shared_ptr<const PTree> expression_inp_list ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "PropTool::PropTool::get_expression_init" << endl;
 
-  vector<int> ground = {0};
+  vector< Term_Init<double>> expression_init;  // bad hack, change once term map introduced
 
-  vector< Term_Init<double>> expression_init; 
-  for ( auto& term_info_tree : *expression_inp ){
+  for ( auto& expression_inp : *expression_inp_list ) { 
   
-    std::vector<std::vector<std::string>> term_init_op_names;
-    std::vector<std::vector<int>> term_init_bra_states; 
-    std::vector<std::vector<int>> term_init_ket_states; 
-    std::vector<double> term_init_factors;
-    std::vector<std::string> term_init_types; 
-  
-    for ( auto& term_info : *term_info_tree ) {
-      auto op_list = term_info->get_child("ops"); 
-  
-      vector<string> op_names(0);  
-      for (auto& op_name : *op_list)
-        op_names.push_back(lexical_cast<string>(op_name->data()));
-      
-      vector<int> bra_states = inp_range_map_.at(term_info->get<string>("bra_states")); 
-      vector<int> ket_states = inp_range_map_.at(term_info->get<string>("ket_states")); 
- 
-      bool sum_bra = ( term_info->get<string>( "Sum_over_bra", "false" ) == "false" ) ? false : true ;
-      bool sum_ket = ( term_info->get<string>( "Sum_over_ket", "false" ) == "false" ) ? false : true ;
- 
-      term_init_op_names.push_back(op_names);
-      term_init_bra_states.push_back(bra_states);
-      term_init_ket_states.push_back(ket_states);
-      term_init_types.push_back(term_info->get<string>("type"));
-      term_init_factors.push_back(term_info->get<double>("factor"));
+    vector<int> ground = {0};
+    
+    string name = expression_inp->get<string>( "name" );
+    string exp_type = expression_inp->get<string>( "type", "full" );
+    
+    auto terms_inp = expression_inp->get_child("terms"); 
+    ////  vector< Term_Init<double>> expression_init;  // TODO uncomment once term_map is introduced 
+    for ( auto& term_info_tree : *terms_inp ){
+    
+      std::vector<std::vector<std::string>> term_init_op_names;
+      std::vector<std::vector<int>> term_init_bra_states; 
+      std::vector<std::vector<int>> term_init_ket_states; 
+      std::vector<double> term_init_factors;
+      std::vector<std::string> term_init_types; 
+    
+      for ( auto& term_info : *term_info_tree ) {
+        auto op_list = term_info->get_child("ops"); 
+    
+        vector<string> op_names(0);  
+        for (auto& op_name : *op_list)
+          op_names.push_back(lexical_cast<string>(op_name->data()));
+        
+        vector<int> bra_states = inp_range_map_.at(term_info->get<string>("bra")); 
+        vector<int> ket_states = inp_range_map_.at(term_info->get<string>("ket")); 
+   
+        term_init_op_names.push_back(op_names);
+        term_init_bra_states.push_back(bra_states);
+        term_init_ket_states.push_back(ket_states);
+        term_init_types.push_back(exp_type);
+        term_init_factors.push_back(term_info->get<double>("factor"));
+        // instead, fetch ranges from range maps using bra names and create state specific terms,
+        // give name to each terms and put into term map.
+        // This map is then looped through when reading equation, and the ranges specified there can create a term 
+        // vector, which is then used to construct the expressions for the target variable.
+      }
+    
+      Term_Init<double> new_term = Term_Init<double>(term_init_op_names, term_init_bra_states, term_init_ket_states, term_init_factors, term_init_types);
+      vector<vector<int>> tmp = { target_states_, new_term.all_states_ };
+      target_states_ = new_term.merge_states( tmp );
+    
+      expression_init.push_back(new_term);
     }
-
-    Term_Init<double> new_term = Term_Init<double>(term_init_op_names, term_init_bra_states, term_init_ket_states, term_init_factors, term_init_types);
-    vector<vector<int>> tmp = { target_states_, new_term.all_states_ };
-    target_states_ = new_term.merge_states( tmp );
-  
-    expression_init.push_back(new_term);
   }
   return make_shared<vector<Term_Init<double>>>(expression_init); 
 }
