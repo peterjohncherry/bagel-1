@@ -91,12 +91,10 @@ cout << "PropTool::PropTool::PropTool" << endl;
     get_new_ops_init( ops_def_tree ); 
 
   // get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
-  get_equations_init( idata->get_child("equation") );
+  get_equations_init( idata->get_child("equations") );
 
   //Getting info about target expression (this includes which states are relevant)
-  get_expressions_init( idata->get_child("expression") ); 
-
-
+  get_expressions_init( idata->get_child("expressions") ); 
 
   cout << " built user defined ops " << endl;
   expression_map_ = sys_info_->expression_map;
@@ -206,14 +204,14 @@ void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree 
     for (auto& aop : *aops_ptree)
       aops.push_back(conv_to_bool(lexical_cast<int>(aop->data())));
 
-    auto state_dep_ptree =  op_def_inp->get_child("state dependence"); 
-    vector<string> state_dep(0);
-      cout << "state_dep = [ "  ; cout.flush();
-    for (auto& sd : *state_dep_ptree) {
-      state_dep.push_back( lexical_cast<string>(sd->data()));
-      cout << state_dep.back() << " " ; cout.flush();
-    }
-    cout << "]" << endl;
+ //   auto state_dep_ptree =  op_def_inp->get_child("state dependence"); 
+//    vector<string> state_dep(0);
+//      cout << "state_dep = [ "  ; cout.flush();
+//   for (auto& sd : *state_dep_ptree) {
+//     state_dep.push_back( lexical_cast<string>(sd->data()));
+//      cout << state_dep.back() << " " ; cout.flush();
+//    }
+//    cout << "]" << endl;
 
     string                             op_name = op_def_inp->get<string>( "name" );
     double                             factor = op_def_inp->get<double>( "factor", 1.0 );
@@ -288,22 +286,14 @@ void PropTool::PropTool::get_expressions_init( shared_ptr<const PTree> expressio
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "PropTool::PropTool::get_expression_init" << endl;
 
-  cout << " X0" << endl;
   for ( auto& expression_inp : *expression_inp_list ) { 
 
-    vector<int> ground = {0};
-
-    cout << " X1" << endl;
     string name = expression_inp->get<string>( "name" );
-    cout << " X2" << endl;
     string exp_type = expression_inp->get<string>( "type", "full" );
-    cout << " X3" << endl;
 
     vector< shared_ptr<Term_Init<double>>> term_list;
-    cout << " X4" << endl;
     auto terms_inp = expression_inp->get_child("terms"); 
     for ( auto& term_info_tree : *terms_inp ){
-    cout << " X5" << endl;
 
       auto term_ops = make_shared<vector<vector<pair<string,vector<string>>>>>(0);
       vector<double> factors(0);
@@ -317,38 +307,26 @@ void PropTool::PropTool::get_expressions_init( shared_ptr<const PTree> expressio
         for (auto& op_def : *op_list){
           vector<string> op_state_idxs(0);
           string opname = op_def->get<string>("name");
-          for (auto& state_idx : *op_def->get_child("states") ){
-            cout << "pre new state " ; cout.flush() ; cout << lexical_cast<string>(state_idx->data()) << endl;
-            op_state_idxs.push_back(lexical_cast<string>(state_idx->data()));
-            cout << "post new state " ; cout.flush() ; cout << lexical_cast<string>(state_idx->data()) << endl;
-          }
-         cout << op_def->get<string>("name") << endl;
-//         cout << "state_idxs = ["; cout.flush(); for (auto elem : op_state_idxs ) { cout << elem << " " ;} cout << "] "; cout.flush();
 
-          auto test = make_pair(opname, op_state_idxs);
+          auto states_ptree =  op_def->get_child("states");
+          for (auto& state_idx : *states_ptree )
+            op_state_idxs.push_back(lexical_cast<string>(state_idx->data()));
+          
+          pair<string, vector<string>> test = make_pair(opname, op_state_idxs);
           op_specs.push_back(test);
-          cout << " X6f" << endl;
         }
-        cout << " X6g" << endl;
+
         term_ops->push_back(op_specs);
-        cout << " X6h" << endl;
         types.push_back(exp_type);
-        cout << " X6i" << endl;
         bra_indexes.push_back( term_info->get<string>("bra") );
-        cout << " X6j" << endl;
         ket_indexes.push_back( term_info->get<string>("ket") );
-        cout << " X6k" << endl;
         factors.push_back( term_info->get<double>("factor") );
-        cout << " X6l" << endl;
         // This map is then looped through when reading equation, and the ranges specified there can create a term 
         // vector, which is then used to construct the expressions for the target variable.
       }
-      cout << " X7" << endl;
       term_list.push_back(make_shared<Term_Init<double>>(term_ops, bra_indexes, ket_indexes, factors, types));
     }
-    cout << " X8" << endl;
     expression_init_map_->emplace(name, make_shared<Expression_Init<double>>(make_shared< vector<shared_ptr<Term_Init<double>>>>(term_list)));
-    cout << " X9" << endl;
   }
 
   return; 
