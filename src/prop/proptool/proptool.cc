@@ -38,6 +38,7 @@ cout << "PropTool::PropTool::PropTool" << endl;
 
   range_conversion_map_ = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
 
+  term_init_map_ = make_shared<map<string, shared_ptr<Term_Init<double>>>>();
   expression_init_map_ = make_shared<map<string, shared_ptr<Expression_Init<double>>>>();
   equation_init_map_ = make_shared<map<string, shared_ptr<Equation_Init<double>>>>();
 
@@ -86,36 +87,28 @@ cout << "PropTool::PropTool::PropTool" << endl;
   set_ci_range_info();
 
   sys_info_ = make_shared<System_Info<double>>( targets_info_, true );
+
+  cout << "initialized sys_info" << endl;
   shared_ptr< const PTree > ops_def_tree = idata->get_child_optional( "operators" ) ;
   if (ops_def_tree)
     get_new_ops_init( ops_def_tree ); 
 
-  // Get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
-  get_equations_init( idata->get_child( "equations" ) );
+  cout << "got ops_init" << endl;
 
   // Getting info about target expression (this includes which states are relevant)
-  get_expressions_init( idata->get_child( "expressions" ) ); 
+  get_terms_init( idata->get_child( "terms" ) ); 
+  cout << "got terms_init" << endl;
 
-  cout << " built user defined ops " << endl;
+  // Get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
+  get_equations_init( idata->get_child( "equations" ) );
+  cout << "got  equations_init" << endl;
+
   expression_map_ = sys_info_->expression_map;
   expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, expression_map_, range_conversion_map_, tensop_data_map_, 
                                                                                               gamma_data_map_, sigma_data_map_, civec_data_map_ );
 
-//  for ( Term_Init<double> term_inp : *expression_init ) {
-//    shared_ptr<vector<string>> expr_list = build_expressions( term_inp );
-//    cout << "-------- expr_list ------- " ; cout.flush();
-//    for ( string expr_name : *expr_list ) {
-//      cout << expr_name << " " ; cout.flush(); cout << endl;
-//    }
-//    cout << "]" <<  endl;
-//  }
+  cout << "built expression machine" << endl;
 
-
-
-  // Change expression to term; expression should be the equation.
-  // Have new function for doing linear solve.
-  // Within function build MultiTensor vec from expressions and T tensors.
-  //
 
 }
 
@@ -124,6 +117,7 @@ cout << "PropTool::PropTool::PropTool" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> variable_def_tree ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ cout << " PropTool::PropTool::get_expression_variables" << endl;
 
   auto range_info_tree =  variable_def_tree->get_child_optional("ranges"); // can be mo or state.. 
   for ( auto& range_info : *range_info_tree ) {
@@ -142,16 +136,42 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
 
   }
 
-  auto factor_info_tree =  variable_def_tree->get_child_optional("factors"); //
+  auto factor_info_tree = variable_def_tree->get_child_optional("factors"); //
   for ( auto& factor_info : *factor_info_tree ) {
    
     string factor_name = factor_info->get<string>( "name" ) ;
-    double factor_value = factor_info->get<double>( "value" ) ;
-    if ( inp_factor_map_.find(factor_name) != inp_factor_map_.end() )
-      throw runtime_error("Factor \"" + factor_name + "\" has been defined twice in input!!! ... aborting" ) ;
-     
-    inp_factor_map_.emplace(factor_name, factor_value ); 
+    bool factor_const = factor_info->get<bool>( "type" , true ) ;
+    int  num_indexes = factor_info->get<int>( "num indexes" , 0 ) ; // TODO fix so we can deal with more than one
+    
+    if (factor_const ) {   
+      if ( num_indexes == 0 ) { 
 
+        double factor_value = factor_info->get<double>( "value" ) ;
+
+        if ( inp_factor_map_.find(factor_name) != inp_factor_map_.end() )
+          throw runtime_error("Factor \"" + factor_name + "\" has been defined twice in input!!! ... aborting" ) ;
+
+        inp_factor_map_.emplace( factor_name, factor_value ); 
+
+      } if ( num_indexes == 1 ) { 
+
+        if ( inp_indexed_factor_map_.find(factor_name) != inp_indexed_factor_map_.end() )
+          throw runtime_error("Factor range \"" + factor_name + "\" has been defined twice in input!!! ... aborting" ) ;
+
+        auto factor_list_ptree =  factor_info->get_child("value"); 
+        shared_ptr<vector<double>> factor_list = make_shared<vector<double>>(0);
+        for (auto& factor_inp : *factor_list_ptree)
+          factor_list->push_back(lexical_cast<double>(factor_inp->data()));
+
+        inp_indexed_factor_map_.emplace( factor_name, factor_list ); 
+
+    }
+ 
+ 
+    } else {
+      cout << "need to sort internally defined variables this" << endl;
+    }
+        
   }
 
   cout << "USER DEFINED FACTORS " << endl;
@@ -172,6 +192,7 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "void PropTool::PropTool::get_new_ops_init" << endl; 
 
   //this shouldn't be necessary, but the conversion doesn't seem to work otherwise....
   auto conv_to_bool = []( int aop ) { return aop == 1 ? true : false ; };
@@ -204,17 +225,7 @@ void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree 
     for (auto& aop : *aops_ptree)
       aops.push_back(conv_to_bool(lexical_cast<int>(aop->data())));
 
-    int state_dep =  op_def_inp->get<int>("state_dependence");
-
- 
-//   auto state_dep_ptree =  op_def_inp->get_child("state dependence"); 
-//   vector<string> state_dep(0);
-//     cout << "state_dep = [ "  ; cout.flush();
-//   for (auto& sd : *state_dep_ptree) {
-//     state_dep.push_back( lexical_cast<string>(sd->data()));
-//      cout << state_dep.back() << " " ; cout.flush();
-//    }
-//    cout << "]" << endl;
+    int state_dep =  op_def_inp->get<int>("state dependence");
 
     string                             op_name = op_def_inp->get<string>( "name" );
     double                             factor = op_def_inp->get<double>( "factor", 1.0 );
@@ -241,95 +252,111 @@ void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_de
   cout << "PropTool::PropTool::get_equations_init" << endl;
 
   for ( auto& equation_inp : *equation_def_tree ){
-  
+ 
+    auto expression_list = make_shared<vector<pair<string, shared_ptr<Expression_Init<double>>>>>();
+
     string name = equation_inp->get<string>( "name" );
     string type = equation_inp->get<string>( "type" );
     string target = equation_inp->get<string>( "target" );
+    string factor = equation_inp->get<string>( "factor", "one" );
     
     map< string, shared_ptr<vector<string>>> target_indices_map;
     map< string, shared_ptr<vector<string>>> summed_indices_map;
     map< string, shared_ptr<vector<string>>> free_indices_map;
+
+    auto ti_ptree = equation_inp->get_child("target indexes"); // Must solve for all "target" with these indices
+    shared_ptr<vector<string>> target_indices = make_shared<vector<string>>(0);
+    for (auto& si : *ti_ptree) 
+      target_indices->push_back( lexical_cast<string>(si->data()));
+   
+    auto term_list = make_shared<vector<pair<string,shared_ptr<Term_Init<double>>>>>();
+    auto term_idrange_map_list = make_shared<vector<map<string,pair<bool,string>>>>();
+
+    auto expression_def = equation_inp->get_child( "expression" );
+    for (auto& term_info: *expression_def) {
     
-    auto expression_def = equation_inp->get_child( "expressions" );
-    shared_ptr<vector<pair<string,string>>> expression_list = make_shared<vector<pair<string,string>>>(0);
-    for (auto& expression_info: *expression_def) {
-    
-      string exp_name = expression_info->get<string>( "name" );
-      string exp_factor = expression_info->get<string>( "factor" );
-      expression_list->push_back(make_pair(exp_name, exp_factor));
-      {
-      auto ti_ptree = expression_info->get_child("target indices"); 
-      shared_ptr<vector<string>> target_indices = make_shared<vector<string>>(0);
-      for (auto& si : *ti_ptree) 
-        target_indices->push_back( lexical_cast<string>(si->data()));
-      target_indices_map.emplace(name, target_indices);
-      }{ 
-      auto si_ptree = expression_info->get_child("summed indices"); 
-      shared_ptr<vector<string>> summed_indices = make_shared<vector<string>>(0);
-      for (auto& si : *si_ptree) 
-        summed_indices->push_back( lexical_cast<string>(si->data()));
-      target_indices_map.emplace(name, summed_indices);
-      }{
-      auto fi_ptree = expression_info->get_child("free indices"); 
-      shared_ptr<vector<string>> free_indices = make_shared<vector<string>>(0);
-      for (auto& fi : *fi_ptree) 
-        free_indices->push_back( lexical_cast<string>(fi->data()));
-      free_indices_map.emplace(name, free_indices);
+      string term_name = term_info->get<string>( "term" );
+      string term_factor = term_info->get<string>( "factor" );
+      term_list->push_back(make_pair(term_factor, term_init_map_->at(term_name)));
+
+      map<string,  pair<bool,string>>  term_idrange_map;
+      auto indexes_ptree =  term_info->get_child("indexes"); 
+      for (auto& index_info : *indexes_ptree){
+        string id_name = index_info->get<string>("name"); 
+        string id_range = index_info->get<string>("range");
+         
+        bool   id_sum =  index_info->get<bool>("sum", false );
+        term_idrange_map.emplace( id_name, make_pair(id_sum, id_range));
       }
     
+      term_idrange_map_list->push_back( term_idrange_map );     
+     
     }
-    equation_init_map_->emplace( name , 
-    make_shared<Equation_Init<double>>( name, type, target, target_indices_map, summed_indices_map, free_indices_map, expression_list ) ); 
+    make_shared<Expression_Init<double>>( term_list, term_idrange_map_list ); 
+         
   }
 
   return ;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void PropTool::PropTool::get_expressions_init( shared_ptr<const PTree> expression_inp_list ) {
+void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "PropTool::PropTool::get_expression_init" << endl;
+  cout << "PropTool::PropTool::get_term_init" << endl;
+   
+  for ( auto& term_inp : *term_inp_list ) { 
 
-  for ( auto& expression_inp : *expression_inp_list ) { 
+    shared_ptr<map<string,int>> id_val_map = make_shared<map<string,int>>();
 
-    string name = expression_inp->get<string>( "name" );
-    string exp_type = expression_inp->get<string>( "type", "full" );
+    auto get_id_ptr = [&id_val_map]( string id ){ 
+       auto map_iter = id_val_map->find(id); 
+       int* id_ptr;
+       if ( map_iter == id_val_map->end() ){ 
+         int new_id_val = 0; 
+         id_val_map->emplace(id, new_id_val);
+         id_ptr = &(id_val_map->at(id)) ; 
+       } else { 
+         id_ptr = &(map_iter->second); 
+       }          
+       return id_ptr;
+    };
 
-    vector< shared_ptr<Term_Init<double>>> term_list;
-    auto terms_inp = expression_inp->get_child("terms"); 
-    for ( auto& term_info_tree : *terms_inp ){
+    string term_name = term_inp->get<string>( "name" );
+    string term_type = term_inp->get<string>( "type", "full" );
 
-      auto term_ops = make_shared<vector<vector<pair<string,vector<string>>>>>(0);
-      vector<double> factors(0);
-      vector<string> bra_indexes(0);
-      vector<string> ket_indexes(0);
-      vector<string> types(0); 
+    shared_ptr<vector<string>> braket_factors = make_shared<vector<string>>();
+    auto braket_list = make_shared<vector<BraKet_Init<double>>>(); 
+    auto brakets_list_inp = term_inp->get_child("brakets"); 
+    for ( auto& braket_inp : *brakets_list_inp ){
+      auto bk_ops = make_shared<vector<Op_Init>>();
 
-      for ( auto& term_info : *term_info_tree ) {
-        auto op_list = term_info->get_child("ops"); 
-        vector<pair<string,vector<string>>> op_specs(0);
-        for (auto& op_def : *op_list){
-          vector<string> op_state_idxs(0);
-          string opname = op_def->get<string>("name");
+      auto bk_ops_inp = braket_inp->get_child("ops"); 
+      for ( auto& op_def : *bk_ops_inp ){
+        string opname = op_def->get<string>("name");
+        vector<string> op_idxs(0);
+        vector<int*> op_idxs_ptrs(0);
 
-          auto states_ptree =  op_def->get_child("states");
-          for (auto& state_idx : *states_ptree )
-            op_state_idxs.push_back(lexical_cast<string>(state_idx->data()));
-          
-          pair<string, vector<string>> test = make_pair(opname, op_state_idxs);
-          op_specs.push_back(test);
+        auto ids_inp = op_def->get_child("ids");//note these are not orbital indexes
+        for (auto& idx : *ids_inp ) { 
+          op_idxs.push_back(lexical_cast<string>(idx->data()));
+          op_idxs_ptrs.push_back( get_id_ptr(op_idxs.back()) );            
         }
-
-        term_ops->push_back(op_specs);
-        types.push_back(exp_type);
-        bra_indexes.push_back( term_info->get<string>("bra") );
-        ket_indexes.push_back( term_info->get<string>("ket") );
-        factors.push_back( term_info->get<double>("factor") );
-        // This map is then looped through when reading equation, and the ranges specified there can create a term 
-        // vector, which is then used to construct the expressions for the target variable.
+ 
+        bk_ops->push_back(Op_Init( opname, op_idxs, op_idxs_ptrs ));
       }
-      term_list.push_back(make_shared<Term_Init<double>>(term_ops, bra_indexes, ket_indexes, factors, types));
+
+      string bra_index = braket_inp->get<string>("bra");
+      int* bra_index_ptr = get_id_ptr(bra_index);
+
+      string ket_index = braket_inp->get<string>("ket");
+      int* ket_index_ptr = get_id_ptr(ket_index);
+
+      braket_factors->push_back(braket_inp->get<string>("factor", "one"));
+            
+      braket_list->push_back( BraKet_Init<double>( bk_ops, bra_index, bra_index_ptr, ket_index, ket_index_ptr ));
     }
-    expression_init_map_->emplace(name, make_shared<Expression_Init<double>>(make_shared< vector<shared_ptr<Term_Init<double>>>>(term_list)));
+    auto new_term = make_shared<Term_Init<double>>( term_name, term_type, braket_list, braket_factors, id_val_map );  
+
+    term_init_map_->emplace( term_name, new_term );
   }
 
   return; 
@@ -339,16 +366,16 @@ void PropTool::PropTool::set_ao_range_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "PropTool::PropTool::set_ao_range_info" << endl;
 
-  closed_rng_  =  make_shared<SMITH::IndexRange>(SMITH::IndexRange(nclosed_-ncore_, maxtile_, 0, ncore_));
-  active_rng_  =  make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact_, min((size_t)10,maxtile_), closed_rng_->nblock(), ncore_ + closed_rng_->size()));
-  virtual_rng_ =  make_shared<SMITH::IndexRange>(SMITH::IndexRange(nvirt_, maxtile_, closed_rng_->nblock()+ active_rng_->nblock(), ncore_+closed_rng_->size()+active_rng_->size()));
+  closed_rng_  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nclosed_-ncore_, maxtile_, 0, ncore_));
+  active_rng_  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact_, min((size_t)10,maxtile_), closed_rng_->nblock(), ncore_ + closed_rng_->size()));
+  virtual_rng_ = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nvirt_, maxtile_, closed_rng_->nblock()+ active_rng_->nblock(), ncore_+closed_rng_->size()+active_rng_->size()));
   free_rng_    = make_shared<SMITH::IndexRange>(*closed_rng_);
   free_rng_->merge(*active_rng_);
   free_rng_->merge(*virtual_rng_);
 
-  not_closed_rng_  =  make_shared<SMITH::IndexRange>(*active_rng_); not_closed_rng_->merge(*virtual_rng_);
-  not_active_rng_  =  make_shared<SMITH::IndexRange>(*closed_rng_); not_active_rng_->merge(*virtual_rng_);
-  not_virtual_rng_ =  make_shared<SMITH::IndexRange>(*closed_rng_); not_virtual_rng_->merge(*active_rng_);
+  not_closed_rng_  = make_shared<SMITH::IndexRange>(*active_rng_); not_closed_rng_->merge(*virtual_rng_);
+  not_active_rng_  = make_shared<SMITH::IndexRange>(*closed_rng_); not_active_rng_->merge(*virtual_rng_);
+  not_virtual_rng_ = make_shared<SMITH::IndexRange>(*closed_rng_); not_virtual_rng_->merge(*active_rng_);
 
   range_conversion_map_->emplace("cor", closed_rng_); 
   range_conversion_map_->emplace("act", active_rng_);
@@ -361,7 +388,6 @@ cout << "PropTool::PropTool::set_ao_range_info" << endl;
   
   return;                    
 }
- 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::set_ci_range_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -396,33 +422,6 @@ cout << "PropTool::PropTool::set_target_info" << endl;
   return;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<string>> PropTool::PropTool::build_expressions( Term_Init<double>& term_inp ) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "PropTool::PropTool::build_expressions" << endl;
-
-  vector<string>  expression_list(0);
-  // Loops through states, and if states contributes to that term, add to term info for building expression
-  // restatement of Bra and Ket name is redundant, and redundancy means I've probably gone wrong somewhere....
-//  for ( int bra_num : term_inp.bra_states_merged_ ) {
-//    for ( int  ket_num : term_inp.ket_states_merged_ ) {
-//
-//      shared_ptr<vector<BraKet<double>>> term_info = make_shared<vector<BraKet<double>>>();
-//
-//      for ( int kk = 0; kk != term_inp.op_names_.size(); kk++ ){
-//
-//       if ( find(term_inp.bra_states_[kk].begin(), term_inp.bra_states_[kk].end(), bra_num) != term_inp.bra_states_[kk].end() ) {
-//
-//          if ( find(term_inp.ket_states_[kk].begin(), term_inp.ket_states_[kk].end(), ket_num) != term_inp.ket_states_[kk].end() ) {
-//            term_info->push_back(BraKet<double>( make_pair( term_inp.op_names_[kk], term_inp.factors_[kk] ), bra_num, ket_num, term_inp.types_[kk] ));
-//            expression_list.push_back( sys_info_->Build_Expression( *term_info ));
-//          }
-//        }
-//      }
-//    }
-//  }
-  return make_shared<vector<string>>(expression_list);
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::build_op_tensors( vector<string>& expression_list ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

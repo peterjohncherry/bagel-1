@@ -75,6 +75,7 @@ namespace PropTool {
     std::shared_ptr<SMITH::Expression_Computer::Expression_Computer<double>> expression_machine_;
     std::shared_ptr<std::map< std::string, double>> scalar_results_map_;
 
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Term_Init<double>> >> term_init_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Expression_Init<double>> >> expression_init_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Equation_Init<double>> >> equation_init_map_;
 
@@ -86,11 +87,10 @@ namespace PropTool {
     void set_ao_range_info();
     void set_ci_range_info();
 
-    std::shared_ptr<std::vector<std::string>> build_expressions( Term_Init<double>& term_inp );
     void build_op_tensors( std::vector<std::string>& expression_list ) ;
     std::shared_ptr<std::vector<SMITH::IndexRange>> convert_to_indexrange( std::shared_ptr<const std::vector<std::string>> range_block_str ) ;
 
-    void get_expressions_init( std::shared_ptr<const PTree> expression_inp ); 
+    void get_terms_init( std::shared_ptr<const PTree> expression_inp ); 
     void get_equations_init( std::shared_ptr<const PTree> expression_init ); 
 
     void get_new_ops_init( std::shared_ptr<const PTree> ops_def_tree ) ;
@@ -98,6 +98,7 @@ namespace PropTool {
 
     std::map< std::string , std::vector<int> > inp_range_map_;
     std::map< std::string , double > inp_factor_map_;
+    std::map< std::string , std::shared_ptr<std::vector<double>> > inp_indexed_factor_map_;
 
     public: 
 

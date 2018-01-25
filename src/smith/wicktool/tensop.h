@@ -116,7 +116,6 @@ class TensOp_base {
      int state_dep_; 
      std::shared_ptr<const Op_General_base> Op_dense_;
 
-
    public:
      TensOp_base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name), spinfree_(spinfree), Tsymm_(Tsymm), state_dep_(state_dep)  {};
      TensOp_base( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0)  {};
