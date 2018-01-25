@@ -47,7 +47,7 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
                                   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>), int, int > >& symmfuncs, 
                                   vector<bool(*)(shared_ptr<vector<string>>) >& constraints,
                                   string& Tsymm, shared_ptr<StatesInfo<DataType>> target_states ) :
-                                  name_(name), spinfree_(true), symmfuncs_(symmfuncs), constraints_(constraints), Tsymm_(Tsymm),
+                                  TensOp_base( name, true ),  symmfuncs_(symmfuncs), constraints_(constraints),
                                   target_states_(target_states)  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp" <<   endl;
@@ -226,7 +226,7 @@ template<typename DataType>
 MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree,
                                                  std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors,
                                                  shared_ptr<StatesInfo<DataType>> target_states ):
-                                                 TensOp::TensOp<DataType>( name, spinfree, target_states ),
+                                                 TensOp_base( name, spinfree ),
                                                  orig_tensors_(orig_tensors), num_tensors_(orig_tensors.size()) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "MultiTensOp::MultiTensOp<DataType>::MultiTensOp" << endl;
