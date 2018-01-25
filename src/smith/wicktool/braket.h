@@ -18,13 +18,14 @@ class BraKet{
        const std::string multiop_name_;
 
        BraKet( std::pair< std::vector<std::string>, DataType > BraKet_info, int bra_num, int ket_num, std::string type_in ) :
-                  op_list_(BraKet_info.first), factor_(BraKet_info.second), bra_num_(bra_num), ket_num_(ket_num), type_(type_in),
-                  multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))) {};
+               op_list_(BraKet_info.first), factor_(BraKet_info.second), bra_num_(bra_num), ket_num_(ket_num), type_(type_in),
+               multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))) {};
       ~BraKet(){};
 
        std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op_;
 
-       void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
+       void generate_gamma_Atensor_contractions( int bra_num, int ket_num, std::shared_ptr<std::map< std::string, std::vector<int>>> Op_state_ids, 
+                                                 std::shared_ptr<std::map<std::string,std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
                                                  std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map,
                                                  std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> GammaMap,
                                                  std::shared_ptr<StatesInfo<DataType>> target_states ); 

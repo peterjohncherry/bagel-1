@@ -24,8 +24,8 @@ Expression<DataType>::Expression( vector< BraKet<DataType>>&  Term_list,
   // Will loop through terms and then generate compute list for each. I've split it up like this
   // for  merging BraKet with BraKet.
   GammaMap_ = GammaMap;
-  for ( BraKet<DataType> braket : Term_list_ ) 
-    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, GammaMap_, target_states_ ); //TODO replace with init gammas func
+//  for ( BraKet<DataType> braket : Term_list_ ) 
+//    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, GammaMap_, target_states_ ); //TODO replace with init gammas func
   
   Get_CMTP_Compute_Terms();
 }

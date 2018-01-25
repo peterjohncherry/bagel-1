@@ -1,25 +1,3 @@
-// BAGEL - Brilliantly Advanced General Electronic Structure Library
-// Filename: pseudospin.cc
-// Copyright (C) 2015 Toru Shiozaki
-//
-// Maintainer: Shiozaki group
-//
-// This file is part of the BAGEL package.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-
 #include <src/prop/proptool/proptool.h>
 
 using namespace std;
@@ -31,6 +9,8 @@ PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geo
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "PropTool::PropTool::PropTool" << endl;
 
+
+  // sort out how to determine datatype!!
   sigma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
   civec_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
   gamma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
@@ -108,10 +88,7 @@ cout << "PropTool::PropTool::PropTool" << endl;
                                                                                               gamma_data_map_, sigma_data_map_, civec_data_map_ );
 
   cout << "built expression machine" << endl;
-
-
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets ranges and factors from the input which will be used in definition of terms
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -165,11 +142,10 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
 
         inp_indexed_factor_map_.emplace( factor_name, factor_list ); 
 
-    }
- 
+      }
  
     } else {
-      cout << "need to sort internally defined variables this" << endl;
+      cout << "need to sort internally defined variables this (most urgently the eigenvalues of the Fock operator)" << endl;
     }
         
   }
@@ -255,17 +231,12 @@ void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_de
  
     auto expression_list = make_shared<vector<pair<string, shared_ptr<Expression_Init<double>>>>>();
 
-    string name = equation_inp->get<string>( "name" );
-    string type = equation_inp->get<string>( "type" );
-    string target = equation_inp->get<string>( "target" );
-    string factor = equation_inp->get<string>( "factor", "one" );
-    
-    map< string, shared_ptr<vector<string>>> target_indices_map;
-    map< string, shared_ptr<vector<string>>> summed_indices_map;
-    map< string, shared_ptr<vector<string>>> free_indices_map;
+    string eqn_name = equation_inp->get<string>( "name" );
+    string eqn_type = equation_inp->get<string>( "type" );
+    string eqn_target = equation_inp->get<string>( "target" );
 
+    auto target_indices = make_shared<vector<string>>(0);
     auto ti_ptree = equation_inp->get_child("target indexes"); // Must solve for all "target" with these indices
-    shared_ptr<vector<string>> target_indices = make_shared<vector<string>>(0);
     for (auto& si : *ti_ptree) 
       target_indices->push_back( lexical_cast<string>(si->data()));
    
@@ -288,15 +259,13 @@ void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_de
         bool   id_sum =  index_info->get<bool>("sum", false );
         term_idrange_map.emplace( id_name, make_pair(id_sum, id_range));
       }
-    
       term_idrange_map_list->push_back( term_idrange_map );     
-     
     }
-    make_shared<Expression_Init<double>>( term_list, term_idrange_map_list ); 
-         
-  }
+    auto master_expression = make_shared<Expression_Init<double>>( term_list, term_idrange_map_list ); 
+    auto eqn = make_shared<Equation_Init<double>>(eqn_name, eqn_type, eqn_target, target_indices, master_expression );
 
-  return ;
+  }
+  return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list ) {

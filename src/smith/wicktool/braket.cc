@@ -10,10 +10,11 @@ using namespace WickUtils;
 //merging, symmetry checking and sparsity. As well as controlling the reordering 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
-                                                       shared_ptr<map<string, shared_ptr< map<string, AContribInfo >>>> G_to_A_map,
-                                                       shared_ptr<map<string, shared_ptr< GammaInfo >>> GammaMap,
-                                                       shared_ptr<StatesInfo<DataType>> target_states ) {  
+void BraKet<DataType>::generate_gamma_Atensor_contractions( int bra_num, int ket_num, shared_ptr<map<string,vector<int>>> Op_state_ids, 
+                                                            shared_ptr<map<string,shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
+                                                            shared_ptr<map<string, shared_ptr< map<string, AContribInfo >>>> G_to_A_map,
+                                                            shared_ptr<map<string, shared_ptr< GammaInfo >>> GammaMap,
+                                                            shared_ptr<StatesInfo<DataType>> target_states ) {  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::generate_gamma_Atensor_contractions" << endl;
   //TODO fix this so it uses proper number of states; if statement in center should call Bra_num Ket_num appropriate Ops

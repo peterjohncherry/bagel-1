@@ -132,14 +132,16 @@ class Expression_Init {
 };
 
 
+
 template<typename DataType>
-class Equation_Init {
+class Equation_Init  {
 
    public :
+
      std::string name_;
      std::string type_;
      std::string target_variable_;
-     std::map<std::string, std::shared_ptr<std::vector<std::string>>> target_indexes_; // Need a different expression for each one of these.
+     std::shared_ptr<std::vector<std::string>> target_indexes_;                // Need a different expression for each one of these.
      std::map<std::string, std::shared_ptr<std::vector<int>>> id_range_map_;   // Need a different expression for each onf of these.
      std::shared_ptr<Expression_Init<DataType>> master_expression_;
 
@@ -147,13 +149,13 @@ class Equation_Init {
      std::shared_ptr<std::vector<std::pair<std::string,std::shared_ptr<Expression_Init<DataType>>>>> expression_list_;
    
      Equation_Init( std::string name,  std::string type, std::string target_variable,
-                    std::map<std::string, std::shared_ptr<std::vector<std::string>>> target_indices,
+                    std::shared_ptr<std::vector<std::string>> target_indexes,
                     std::shared_ptr<Expression_Init<DataType>> master_expression ) :
-                    name_(name), type_(type),
-                    target_variable_(target_variable), target_indexes_(target_indices), master_expression_(master_expression) {};
+                    name_(name), type_(type), target_variable_(target_variable),
+                    target_indexes_(target_indexes), master_expression_(master_expression) {};
      ~Equation_Init(){};
 
 
-     }; 
+}; 
  
 #endif
