@@ -90,11 +90,11 @@ cout << "PropTool::PropTool::PropTool" << endl;
   if (ops_def_tree)
     get_new_ops_init( ops_def_tree ); 
 
-  // get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
-  get_equations_init( idata->get_child("equations") );
+  // Get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
+  get_equations_init( idata->get_child( "equations" ) );
 
-  //Getting info about target expression (this includes which states are relevant)
-  get_expressions_init( idata->get_child("expressions") ); 
+  // Getting info about target expression (this includes which states are relevant)
+  get_expressions_init( idata->get_child( "expressions" ) ); 
 
   cout << " built user defined ops " << endl;
   expression_map_ = sys_info_->expression_map;
@@ -204,9 +204,9 @@ void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree 
     for (auto& aop : *aops_ptree)
       aops.push_back(conv_to_bool(lexical_cast<int>(aop->data())));
 
- //   auto state_dep_ptree =  op_def_inp->get_child("state dependence"); 
-//    vector<string> state_dep(0);
-//      cout << "state_dep = [ "  ; cout.flush();
+//   auto state_dep_ptree =  op_def_inp->get_child("state dependence"); 
+//   vector<string> state_dep(0);
+//     cout << "state_dep = [ "  ; cout.flush();
 //   for (auto& sd : *state_dep_ptree) {
 //     state_dep.push_back( lexical_cast<string>(sd->data()));
 //      cout << state_dep.back() << " " ; cout.flush();
