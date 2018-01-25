@@ -69,7 +69,7 @@ class System_Info {
                                                               std::shared_ptr<std::vector<std::vector<std::string>>> op_idx_ranges,
                                                               std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> Symmetry_Funcs,
                                                               std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>)> Constraint_Funcs,
-                                                              DataType factor, std::string Tsymmetry, bool hconj ) ;
+                                                              DataType factor, std::string Tsymmetry, bool hconj, int state_dependence ) ;
      
       void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
 

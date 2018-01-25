@@ -204,6 +204,9 @@ void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree 
     for (auto& aop : *aops_ptree)
       aops.push_back(conv_to_bool(lexical_cast<int>(aop->data())));
 
+    int state_dep =  op_def_inp->get<int>("state_dependence");
+
+ 
 //   auto state_dep_ptree =  op_def_inp->get_child("state dependence"); 
 //   vector<string> state_dep(0);
 //     cout << "state_dep = [ "  ; cout.flush();
@@ -225,7 +228,7 @@ void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree 
     vector<bool(*)(shared_ptr<vector<string>>)> constraints = { &System_Info<double>::System_Info::always_true };  // TODO define this by list of vectors 
     
     cout << "user defined op name : " << op_name << endl;
-    shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp( op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj); 
+    shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp( op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep); 
     sys_info_->T_map->emplace( op_name, new_op );
 
   }

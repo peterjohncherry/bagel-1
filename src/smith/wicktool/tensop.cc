@@ -6,14 +6,14 @@ using namespace std;
 using namespace WickUtils;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-TensOp_General::TensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                                std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
-                                std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
-                                std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<const range_block_info >>> all_ranges) : 
-                                idxs_(idxs),  aops_(aops), plus_ops_(plus_ops), kill_ops_(kill_ops), idx_ranges_(idx_ranges), orig_factor_(factor), num_idxs_(idxs.size()),
-                                unique_range_blocks_(*unique_range_blocks),  all_ranges_(*all_ranges) {
+Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
+                 std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
+                 std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
+                 std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<const range_block_info >>> all_ranges) : 
+                 idxs_(idxs),  aops_(aops), plus_ops_(plus_ops), kill_ops_(kill_ops), idx_ranges_(idx_ranges), orig_factor_(factor), num_idxs_(idxs.size()),
+                 unique_range_blocks_(*unique_range_blocks),  all_ranges_(*all_ranges) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp_General::TensOp_General "<< endl;
+cout << "Op_General_base::Op_General_base constructor"<< endl;
            
   idxs_ptr_ =  make_shared<const vector<string>>(idxs_);
   aops_ptr_ =  make_shared<const vector<bool>>(aops_);
@@ -25,6 +25,21 @@ cout << "TensOp_General::TensOp_General "<< endl;
   unique_range_blocks_ptr_ = make_shared<const vector< shared_ptr< const vector<string>>>>(unique_range_blocks_);
 
   all_ranges_ptr_ =  make_shared<const map< const vector<string>, shared_ptr<const range_block_info >>>(all_ranges_);
+
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+TensOp_General::TensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
+                                std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
+                                std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
+                                std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<const range_block_info >>> all_ranges) : 
+                                Op_General_base( idxs, aops, plus_ops, kill_ops, idx_ranges, factor, unique_range_blocks, all_ranges) { 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "TensOp_General::TensOp_General "<< endl;
+
+   // Does there even need to be anything here? 
+   // Yes, but can leave it for now; must template general_ops and range_block_info; hermitian conjugation will mess things around,
+   // but want all the basic functions in base class. Presumably the one for returning factor, unique block and all_ranges will
+   // be virtual there, and only defined properly here... Will need range_block base as well I guess.
 
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,9 +61,8 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
                                   vector<bool>& aops, DataType orig_factor,
                                   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>), int, int > >& symmfuncs, 
                                   vector<bool(*)(shared_ptr<vector<string>>) >& constraints,
-                                  string& Tsymm, shared_ptr<StatesInfo<DataType>> target_states ) :
-                                  TensOp_base( name, true ),  symmfuncs_(symmfuncs), constraints_(constraints),
-                                  target_states_(target_states)  {
+                                  string& Tsymm, int state_dep ) :
+                                  TensOp_base( name, true ),  symmfuncs_(symmfuncs), constraints_(constraints)  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp" <<   endl;
           
@@ -224,8 +238,7 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree,
-                                                 std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors,
-                                                 shared_ptr<StatesInfo<DataType>> target_states ):
+                                                 std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors ):
                                                  TensOp_base( name, spinfree ),
                                                  orig_tensors_(orig_tensors), num_tensors_(orig_tensors.size()) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

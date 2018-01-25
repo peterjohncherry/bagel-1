@@ -53,16 +53,14 @@ System_Info<DataType>::System_Info::Build_TensOp( string op_name,
                                                   shared_ptr<vector<vector<string>>> op_idx_ranges,
                                                   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
                                                   vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
-                                                  DataType factor, 
-                                                  string Tsymmetry,
-                                                  bool hconj ) {
+                                                  DataType factor, string Tsymmetry, bool hconj,  int state_dep ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
 
   //NOTE: change to use proper factor
   int tmpfac = 1;
   shared_ptr<TensOp::TensOp<DataType>> new_op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
-                                                                                        tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, target_states_);
+                                                                                        tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, state_dep);
   // change to be state specific
   cout << "getting  ctr tens ranges for New_Op : " << op_name << endl;
   new_op->get_ctrs_tens_ranges();
@@ -126,7 +124,7 @@ string System_Info<DataType>::System_Info::Build_Expression( vector<BraKet<DataT
       for (int ii = 0 ; ii != BraKet_info.op_list_.size() ; ii++ )  
         SubOps[ii] = T_map->at(BraKet_info.op_list_[ii]); 
 
-      shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( BraKet_info.multiop_name_, spinfree_, SubOps, target_states_ );
+      shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( BraKet_info.multiop_name_, spinfree_, SubOps );
       multiop->get_ctrs_tens_ranges();
       CTP_map->insert( multiop->CTP_map->begin(), multiop->CTP_map->end());
       CMTP_map->insert( multiop->CMTP_map->begin(), multiop->CMTP_map->end());

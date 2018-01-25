@@ -19,6 +19,8 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
   string                             time_symm;
   vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> symmfuncs;
   vector<bool(*)(shared_ptr<vector<string>>)>  constraints;
+  int state_dep;
+
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
@@ -29,6 +31,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    time_symm = "none";
    symmfuncs = identity_only();
    constraints = {  &System_Info<double>::System_Info::always_true };
+   state_dep = 0;    
 
   } else if ( op_name == "h" ) {  /* ---- h Tensor ( 1 electron Hamiltonian ) ----  */
 
@@ -39,6 +42,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    time_symm = "none";
    symmfuncs = set_1el_symmfuncs();
    constraints = {  &System_Info<double>::System_Info::always_true };
+   state_dep = 0;    
      
   } else if ( op_name == "L" ) {  /* ---- L Tensor ----  */
 
@@ -49,6 +53,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = { &System_Info<double>::System_Info::NotAllAct };
+    state_dep = 2;    
     
       
   } else if ( op_name == "M" ) {  /* ---- M Tensor ----  */
@@ -60,6 +65,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = { &System_Info<double>::System_Info::NotAllAct };
+    state_dep = 2;    
  
   } else if ( op_name == "N" ) {  /* ---- N Tensor ----  */
 
@@ -70,6 +76,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = { &System_Info<double>::System_Info::NotAllAct };
+    state_dep = 2;    
     
   } else if ( op_name == "T" ) {  /* ---- T Tensor ----  */
 
@@ -80,6 +87,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     time_symm = "none";
     symmfuncs = set_2el_symmfuncs();
     constraints = {  &System_Info<double>::System_Info::NotAllAct };
+    state_dep = 2;    
 
   } else if ( op_name == "X" ) { 
 
@@ -90,6 +98,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     time_symm = "none";
     symmfuncs = set_2el_symmfuncs();
     constraints = { &System_Info<double>::System_Info::NotAllAct };
+    state_dep = 2;    
 
    } else if ( op_name == "Z" ) { /* 2el test op */
 
@@ -100,6 +109,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = {  &System_Info<double>::System_Info::always_true };
+    state_dep = 2;    
 
   } else { 
     
@@ -107,7 +117,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   }
 
-  shared_ptr<TensOp::TensOp<DataType>> new_tens = Build_TensOp( op_name, idxs, aops, idx_ranges, symmfuncs, constraints, factor, time_symm, false ) ;
+  shared_ptr<TensOp::TensOp<DataType>> new_tens = Build_TensOp( op_name, idxs, aops, idx_ranges, symmfuncs, constraints, factor, time_symm, false, state_dep ) ;
   new_tens->get_ctrs_tens_ranges();
 
   return new_tens;
