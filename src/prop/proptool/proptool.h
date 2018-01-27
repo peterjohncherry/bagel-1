@@ -15,6 +15,7 @@
 #include <src/prop/proptool/moint_init.h>
 #include <src/prop/proptool/moint.h>
 #include <src/prop/proptool/moint_computer.h>
+#include <src/prop/proptool/equation.h>
 
 
 namespace bagel {
@@ -71,9 +72,9 @@ namespace PropTool {
     void get_new_ops_init( std::shared_ptr<const PTree> ops_def_tree ) ;
     void get_expression_variables( std::shared_ptr<const PTree> expr_def_tree ) ;
 
-    std::map< std::string , std::vector<int> > inp_range_map_;
-    std::map< std::string , double > inp_factor_map_;
-    std::map< std::string , std::shared_ptr<std::vector<double>> > inp_indexed_factor_map_;
+    std::shared_ptr<std::map< std::string , double >> inp_factor_map_;
+    std::shared_ptr<std::map< std::string , std::shared_ptr<std::vector<double>> >> inp_indexed_factor_map_;
+    std::shared_ptr<std::map< std::string , std::shared_ptr<std::vector<int>> >> inp_range_map_;
 
     public: 
 

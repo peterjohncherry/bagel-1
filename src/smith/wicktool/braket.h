@@ -10,15 +10,17 @@ class BraKet{
 
      public :
        const std::vector<std::string> op_list_;
-       const std::vector<std::pair<int,int>> op_states_;
+       const std::shared_ptr<std::vector<std::vector<int>>> op_state_ids_;
        const DataType factor_;
        const int bra_num_;
        const int ket_num_;
        const std::string type_ ; // should be "ci_deriv" or "full" 
        const std::string multiop_name_;
 
-       BraKet( std::pair< std::vector<std::string>, DataType > BraKet_info, int bra_num, int ket_num, std::string type_in ) :
-               op_list_(BraKet_info.first), factor_(BraKet_info.second), bra_num_(bra_num), ket_num_(ket_num), type_(type_in),
+       BraKet( std::pair< std::vector<std::string>, DataType > BraKet_info, int bra_num, int ket_num, 
+               std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type) :
+               op_list_(BraKet_info.first), factor_(BraKet_info.second), bra_num_(bra_num), ket_num_(ket_num),
+               op_state_ids_(op_state_ids), type_(type),
                multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))) {};
       ~BraKet(){};
 

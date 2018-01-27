@@ -16,6 +16,10 @@ cout << "PropTool::PropTool::PropTool" << endl;
   gamma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
   tensop_data_map_ = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
 
+  inp_factor_map_ = make_shared<map<string, double>>();
+  inp_indexed_factor_map_ = make_shared<map<string, shared_ptr<vector<double>>>>(); // TODO sort this
+  inp_range_map_ = make_shared<map<string, shared_ptr<vector<int>>>>();
+
   range_conversion_map_ = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
 
   term_init_map_ = make_shared<map<string, shared_ptr<Term_Init>>>();
@@ -96,20 +100,25 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  cout << " PropTool::PropTool::get_expression_variables" << endl;
 
+  //TODO don't do this...........
+  inp_factor_map_->emplace("one", 1.0 ); 
+  inp_factor_map_->emplace("1.0", 1.0 ); 
+  inp_range_map_->emplace("none", make_shared<vector<int>>(0) ); 
+
   auto range_info_tree =  variable_def_tree->get_child_optional("ranges"); // can be mo or state.. 
   for ( auto& range_info : *range_info_tree ) {
    
     string range_name = range_info->get<string>( "name" ) ;
     auto range_vec_inp = range_info->get_child( "range_vec" ) ;
-    vector<int> range_vec(0);
+    shared_ptr<vector<int>> range_vec = make_shared<vector<int>>(0);
    
     for (auto& id : *range_vec_inp) 
-      range_vec.push_back(lexical_cast<int>( id->data() ) );
+      range_vec->push_back(lexical_cast<int>( id->data() ) );
    
-    if ( inp_range_map_.find(range_name) != inp_range_map_.end() )
+    if ( inp_range_map_->find(range_name) != inp_range_map_->end() )
       throw runtime_error("Range \"" + range_name + "\" has been defined twice in input!!! ... aborting" ) ;
      
-    inp_range_map_.emplace(range_name, range_vec); 
+    inp_range_map_->emplace(range_name, range_vec); 
 
   }
 
@@ -125,14 +134,14 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
 
         double factor_value = factor_info->get<double>( "value" ) ;
 
-        if ( inp_factor_map_.find(factor_name) != inp_factor_map_.end() )
+        if ( inp_factor_map_->find(factor_name) != inp_factor_map_->end() )
           throw runtime_error("Factor \"" + factor_name + "\" has been defined twice in input!!! ... aborting" ) ;
 
-        inp_factor_map_.emplace( factor_name, factor_value ); 
+        inp_factor_map_->emplace( factor_name, factor_value ); 
 
       } if ( num_indexes == 1 ) { 
 
-        if ( inp_indexed_factor_map_.find(factor_name) != inp_indexed_factor_map_.end() )
+        if ( inp_indexed_factor_map_->find(factor_name) != inp_indexed_factor_map_->end() )
           throw runtime_error("Factor range \"" + factor_name + "\" has been defined twice in input!!! ... aborting" ) ;
 
         auto factor_list_ptree =  factor_info->get_child("value"); 
@@ -140,7 +149,7 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
         for (auto& factor_inp : *factor_list_ptree)
           factor_list->push_back(lexical_cast<double>(factor_inp->data()));
 
-        inp_indexed_factor_map_.emplace( factor_name, factor_list ); 
+        inp_indexed_factor_map_->emplace( factor_name, factor_list ); 
 
       }
  
@@ -151,13 +160,13 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
   }
 
   cout << "USER DEFINED FACTORS " << endl;
-  for ( auto elem : inp_factor_map_ ) 
+  for ( auto elem : *inp_factor_map_ ) 
     cout << elem.first << " = " << elem.second << endl; 
 
   cout << "USER DEFINED RANGES " << endl;
-  for ( auto elem : inp_range_map_ ) {
+  for ( auto elem : *inp_range_map_ ) {
     cout << elem.first << " = [ " ;
-    for (int orb_num :  elem.second ) {
+    for (int orb_num :  *elem.second ) {
       cout << orb_num << " " ; cout.flush();
     }
     cout << "]" << endl;
@@ -256,7 +265,7 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
     target_indices->push_back( lexical_cast<string>(si->data()));
   
   auto term_list = make_shared<vector<pair<string,shared_ptr<Term_Init>>>>();
-  auto term_idrange_map_list = make_shared<vector<map<string,pair<bool,string>>>>();
+  auto term_idrange_map_list = make_shared<vector<shared_ptr<map<string,pair<bool,string>>>>>();
 
   auto expression_def = equation_inp->get_child( "expression" );
   for (auto& term_info: *expression_def) {
@@ -265,19 +274,23 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
     string term_factor = term_info->get<string>( "factor" );
     term_list->push_back(make_pair(term_factor, term_init_map_->at(term_name)));
 
-    map<string,  pair<bool,string>>  term_idrange_map;
+    auto term_idrange_map = make_shared<map<string, pair<bool,string>>>();
     auto indexes_ptree =  term_info->get_child("indexes"); 
     for (auto& index_info : *indexes_ptree){
       string id_name = index_info->get<string>("name"); 
       string id_range = index_info->get<string>("range");
        
       bool   id_sum =  index_info->get<bool>("sum", false );
-      term_idrange_map.emplace( id_name, make_pair(id_sum, id_range));
+      term_idrange_map->emplace( id_name, make_pair(id_sum, id_range));
     }
+    term_idrange_map->emplace( "none" , make_pair( false, "none" ) ); // TODO sort a better way of dealing with this case 
     term_idrange_map_list->push_back( term_idrange_map );     
+    
   }
   auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
-  auto eqn = make_shared<Equation_Init_LinearRM<double>>( eqn_name,  "LinearRM", master_expression, eqn_target, target_indices );
+  auto eqn = make_shared<Equation_Init_LinearRM<double>>( eqn_name,  "LinearRM", master_expression, inp_range_map_, eqn_target, target_indices,
+                                                          inp_factor_map_ );
+  eqn->initialize_expression();
 
   return;
 }
@@ -324,7 +337,7 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
           op_idxs_ptrs.push_back( get_id_ptr(op_idxs.back()) );            
         }
  
-        bk_ops->push_back(Op_Init( opname, op_idxs, op_idxs_ptrs ));
+        bk_ops->push_back(Op_Init( opname, op_idxs, make_shared<vector<int*>>(op_idxs_ptrs) ));
       }
 
       string bra_index = braket_inp->get<string>("bra");

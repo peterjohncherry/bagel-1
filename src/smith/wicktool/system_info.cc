@@ -93,8 +93,6 @@ cout <<  "System_Info::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op
 template<class DataType>
 string System_Info<DataType>::System_Info::Build_Expression( vector<BraKet<DataType>>& term_info_list  ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-//TODO Argument should stay vector of term_info, but current term_info is really braket_info,
-//     change so each element of vec is term_info containing range of states.
 
   cout << "System_Info::System_Info::Build_Expression" << endl;                                                                                     
   shared_ptr< vector<pair<string, DataType>> > BraKet_name_list = make_shared<vector<pair< string, DataType >>>(0);
@@ -108,12 +106,8 @@ string System_Info<DataType>::System_Info::Build_Expression( vector<BraKet<DataT
       auto T_loc = T_map->find(op_name);
       if( T_loc == T_map->end() ){ 
         shared_ptr<TensOp::TensOp<DataType>> new_op = Initialize_Tensor_Op_Info( op_name );
-        cout << "initialized info for " <<  op_name << endl;
         T_map->emplace( op_name, new_op );
-        cout << "put " << op_name << " into T_map"  << endl;
-        cout << "size of " <<  op_name << "'s CTP map : new_op->CTP_map->size() = "; cout.flush(); cout <<  new_op->CTP_map->size() << endl;
         CTP_map->insert( new_op->CTP_map->begin(), new_op->CTP_map->end());
-        cout << "put CTPs for " << op_name << "into map" << endl;
       //TODO do state specific definition; just builds new range_map, should not have any sparsity yet ...
       }
     } 
