@@ -45,7 +45,6 @@ class Op_Init {
 }; 
 
 
-template <typename DataType> 
 class BraKet_Init { 
 
   public :
@@ -78,20 +77,19 @@ class BraKet_Init {
 
 
 
-template <typename DataType> 
 class Term_Init { 
 
   public :
     std::string name_;
     std::string type_;
-    std::shared_ptr<std::vector<BraKet_Init<DataType>>> braket_list_;
+    std::shared_ptr<std::vector<BraKet_Init>> braket_list_;
     std::shared_ptr<std::vector<std::string>> braket_factors_;
     std::shared_ptr<std::map<std::string, int>> index_val_map_;  
    
     std::string alg_name_;
 
     Term_Init( std::string name, std::string type,
-               std::shared_ptr<std::vector<BraKet_Init<DataType>>> braket_list,
+               std::shared_ptr<std::vector<BraKet_Init>> braket_list,
                std::shared_ptr<std::vector<std::string>> braket_factors,
                std::shared_ptr<std::map<std::string, int>> index_val_map) :  
                name_(name), type_(type), braket_list_(braket_list), braket_factors_(braket_factors),
@@ -109,19 +107,18 @@ class Term_Init {
 }; 
 
 
-template<typename DataType>
 class Expression_Init {
 
   public : 
-    std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<Term_Init<DataType>>>>> term_list_;
+    std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<Term_Init>>>> term_list_;
     std::shared_ptr<std::vector<std::map<std::string,std::pair<bool,std::string>>>> term_range_maps_;
    
     std::string name_; 
 
-    Expression_Init( std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<Term_Init<DataType>>>>> term_list,
+    Expression_Init( std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<Term_Init>>>> term_list,
                      std::shared_ptr<std::vector<std::map<std::string,std::pair<bool,std::string>>>> term_range_maps ): 
                      term_list_(term_list), term_range_maps_(term_range_maps) {
-                       for ( std::pair<std::string, std::shared_ptr<Term_Init<DataType>>> term : *term_list_ ) 
+                       for ( std::pair<std::string, std::shared_ptr<Term_Init>> term : *term_list_ ) 
                          name_ += "(" +term.first +")."+ term.second->name_+ "+"; 
                        name_.pop_back();
                        std::cout << "Expression name " << std::endl;
@@ -132,30 +129,78 @@ class Expression_Init {
 };
 
 
-
-template<typename DataType>
-class Equation_Init  {
+class Equation_Init_Base {
 
    public :
 
      std::string name_;
      std::string type_;
-     std::string target_variable_;
-     std::shared_ptr<std::vector<std::string>> target_indexes_;                // Need a different expression for each one of these.
      std::map<std::string, std::shared_ptr<std::vector<int>>> id_range_map_;   // Need a different expression for each onf of these.
-     std::shared_ptr<Expression_Init<DataType>> master_expression_;
+     std::shared_ptr<Expression_Init> master_expression_;
 
+     Equation_Init_Base( std::string name,  std::string type, 
+                    std::shared_ptr<Expression_Init> master_expression ) :
+                    name_(name), type_(type),  master_expression_(master_expression) {};
+     ~Equation_Init_Base(){};
 
-     std::shared_ptr<std::vector<std::pair<std::string,std::shared_ptr<Expression_Init<DataType>>>>> expression_list_;
-   
-     Equation_Init( std::string name,  std::string type, std::string target_variable,
-                    std::shared_ptr<std::vector<std::string>> target_indexes,
-                    std::shared_ptr<Expression_Init<DataType>> master_expression ) :
-                    name_(name), type_(type), target_variable_(target_variable),
-                    target_indexes_(target_indexes), master_expression_(master_expression) {};
-     ~Equation_Init(){};
-
+     virtual void build() = 0;
 
 }; 
  
+
+// 
+// Generates an Equation object to evaluate all f_ij 
+// f is the master expression
+// i and j range over all values specified by target indexes
+template<typename DataType>
+class Equation_Init_Value : public Equation_Init_Base {
+
+   public :
+   
+     DataType factor_;
+     std::shared_ptr<std::vector<std::string>> target_indexes_;                // Need a different expression for each one of these.
+
+     Equation_Init_Value( std::string name,  std::string type, std::shared_ptr<Expression_Init> master_expression, 
+                          std::shared_ptr<std::vector<std::string>> target_indexes ) :
+                          Equation_Init_Base ( name, type, master_expression ),
+                          target_indexes_(target_indexes) {}; 
+
+    ~Equation_Init_Value(){};
+
+     void set_factor( DataType f ) { factor_ = f; return; } 
+     void build() { std::cout << "Not connected to equation yet" << std::endl;} ; 
+
+
+}; 
+
+
+// Will solve f[T_{ij}] = 0  for T_{ij}
+// f is the master_expression.
+// T is the target variable. 
+// i and j range over all values specified by target indexes
+template<typename DataType>
+class Equation_Init_LinearRM : public Equation_Init_Base {
+
+   public :
+
+     DataType factor_;
+
+     std::string target_variable_;
+     std::shared_ptr<std::vector<std::string>> target_indexes_;                // Need a different expression for each one of these.
+   
+     Equation_Init_LinearRM( std::string name,  std::string type, std::shared_ptr<Expression_Init> master_expression,
+                             std::string target_variable, std::shared_ptr<std::vector<std::string>> target_indexes ) :
+                             Equation_Init_Base ( name, type, master_expression ),
+                             target_variable_(target_variable), target_indexes_(target_indexes) {}; 
+
+    ~Equation_Init_LinearRM(){};
+
+     void set_factor( DataType f ) { factor_ = f; return; } 
+     void build() { std::cout << "Not connected to equation yet" << std::endl;} ; 
+
+
+}; 
+
+template class Equation_Init_LinearRM<double> ; 
+
 #endif

@@ -18,9 +18,9 @@ cout << "PropTool::PropTool::PropTool" << endl;
 
   range_conversion_map_ = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
 
-  term_init_map_ = make_shared<map<string, shared_ptr<Term_Init<double>>>>();
-  expression_init_map_ = make_shared<map<string, shared_ptr<Expression_Init<double>>>>();
-  equation_init_map_ = make_shared<map<string, shared_ptr<Equation_Init<double>>>>();
+  term_init_map_ = make_shared<map<string, shared_ptr<Term_Init>>>();
+  expression_init_map_ = make_shared<map<string, shared_ptr<Expression_Init>>>();
+  equation_init_map_ = make_shared<map<string, shared_ptr<Equation_Init_Base>>>();
 
   // get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
   get_expression_variables( idata->get_child("variables") );
@@ -229,42 +229,56 @@ void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_de
 
   for ( auto& equation_inp : *equation_def_tree ){
  
-    auto expression_list = make_shared<vector<pair<string, shared_ptr<Expression_Init<double>>>>>();
-
-    string eqn_name = equation_inp->get<string>( "name" );
     string eqn_type = equation_inp->get<string>( "type" );
-    string eqn_target = equation_inp->get<string>( "target" );
 
-    auto target_indices = make_shared<vector<string>>(0);
-    auto ti_ptree = equation_inp->get_child("target indexes"); // Must solve for all "target" with these indices
-    for (auto& si : *ti_ptree) 
-      target_indices->push_back( lexical_cast<string>(si->data()));
-   
-    auto term_list = make_shared<vector<pair<string,shared_ptr<Term_Init<double>>>>>();
-    auto term_idrange_map_list = make_shared<vector<map<string,pair<bool,string>>>>();
+    if ( eqn_type == "LinearRM" ) { 
+      get_equation_init_LinearRM( equation_inp ) ;
 
-    auto expression_def = equation_inp->get_child( "expression" );
-    for (auto& term_info: *expression_def) {
-    
-      string term_name = term_info->get<string>( "term" );
-      string term_factor = term_info->get<string>( "factor" );
-      term_list->push_back(make_pair(term_factor, term_init_map_->at(term_name)));
+    } else {
+      cout << "this equation type not implemented" << endl; 
 
-      map<string,  pair<bool,string>>  term_idrange_map;
-      auto indexes_ptree =  term_info->get_child("indexes"); 
-      for (auto& index_info : *indexes_ptree){
-        string id_name = index_info->get<string>("name"); 
-        string id_range = index_info->get<string>("range");
-         
-        bool   id_sum =  index_info->get<bool>("sum", false );
-        term_idrange_map.emplace( id_name, make_pair(id_sum, id_range));
-      }
-      term_idrange_map_list->push_back( term_idrange_map );     
     }
-    auto master_expression = make_shared<Expression_Init<double>>( term_list, term_idrange_map_list ); 
-    auto eqn = make_shared<Equation_Init<double>>(eqn_name, eqn_type, eqn_target, target_indices, master_expression );
-
   }
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::get_equation_init_LinearRM( shared_ptr<const PTree> equation_inp ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
+
+  string eqn_name = equation_inp->get<string>( "name" );
+  string eqn_target = equation_inp->get<string>( "target" );
+
+  auto target_indices = make_shared<vector<string>>(0);
+  auto ti_ptree = equation_inp->get_child("target indexes"); // Must solve for all "target" with these indices
+  for (auto& si : *ti_ptree) 
+    target_indices->push_back( lexical_cast<string>(si->data()));
+  
+  auto term_list = make_shared<vector<pair<string,shared_ptr<Term_Init>>>>();
+  auto term_idrange_map_list = make_shared<vector<map<string,pair<bool,string>>>>();
+
+  auto expression_def = equation_inp->get_child( "expression" );
+  for (auto& term_info: *expression_def) {
+  
+    string term_name = term_info->get<string>( "term" );
+    string term_factor = term_info->get<string>( "factor" );
+    term_list->push_back(make_pair(term_factor, term_init_map_->at(term_name)));
+
+    map<string,  pair<bool,string>>  term_idrange_map;
+    auto indexes_ptree =  term_info->get_child("indexes"); 
+    for (auto& index_info : *indexes_ptree){
+      string id_name = index_info->get<string>("name"); 
+      string id_range = index_info->get<string>("range");
+       
+      bool   id_sum =  index_info->get<bool>("sum", false );
+      term_idrange_map.emplace( id_name, make_pair(id_sum, id_range));
+    }
+    term_idrange_map_list->push_back( term_idrange_map );     
+  }
+  auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
+  auto eqn = make_shared<Equation_Init_LinearRM<double>>( eqn_name,  "LinearRM", master_expression, eqn_target, target_indices );
+
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -293,7 +307,7 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
     string term_type = term_inp->get<string>( "type", "full" );
 
     shared_ptr<vector<string>> braket_factors = make_shared<vector<string>>();
-    auto braket_list = make_shared<vector<BraKet_Init<double>>>(); 
+    auto braket_list = make_shared<vector<BraKet_Init>>(); 
     auto brakets_list_inp = term_inp->get_child("brakets"); 
     for ( auto& braket_inp : *brakets_list_inp ){
       auto bk_ops = make_shared<vector<Op_Init>>();
@@ -321,9 +335,9 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
 
       braket_factors->push_back(braket_inp->get<string>("factor", "one"));
             
-      braket_list->push_back( BraKet_Init<double>( bk_ops, bra_index, bra_index_ptr, ket_index, ket_index_ptr ));
+      braket_list->push_back( BraKet_Init( bk_ops, bra_index, bra_index_ptr, ket_index, ket_index_ptr ));
     }
-    auto new_term = make_shared<Term_Init<double>>( term_name, term_type, braket_list, braket_factors, id_val_map );  
+    auto new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map );  
 
     term_init_map_->emplace( term_name, new_term );
   }

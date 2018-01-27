@@ -1,29 +1,3 @@
-//
-// BAGEL - Brilliantly Advanced General Electronic Structure Library
-// Filename: force.cc
-// Copyright (C) 2015 Toru Shiozaki
-//
-// Author: Toru Shiozaki <shiozaki@northwestern.edu>
-// This File : Peter John Cherry <peter.cherry@northwestern.edu>
-// Maintainer: Shiozaki group
-//
-// This file is part of the BAGEL package.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-//
-
 #ifndef __SRC_PROPTOOL
 #define __SRC_PROPTOOL
 
@@ -75,9 +49,9 @@ namespace PropTool {
     std::shared_ptr<SMITH::Expression_Computer::Expression_Computer<double>> expression_machine_;
     std::shared_ptr<std::map< std::string, double>> scalar_results_map_;
 
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Term_Init<double>> >> term_init_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Expression_Init<double>> >> expression_init_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Equation_Init<double>> >> equation_init_map_;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Term_Init> >> term_init_map_;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Expression_Init> >> expression_init_map_;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Equation_Init_Base> >> equation_init_map_;
 
     std::vector<int> target_states_;
     std::vector<int> all_states_;
@@ -92,6 +66,7 @@ namespace PropTool {
 
     void get_terms_init( std::shared_ptr<const PTree> expression_inp ); 
     void get_equations_init( std::shared_ptr<const PTree> expression_init ); 
+    void get_equation_init_LinearRM( std::shared_ptr<const PTree> equation_inp );
 
     void get_new_ops_init( std::shared_ptr<const PTree> ops_def_tree ) ;
     void get_expression_variables( std::shared_ptr<const PTree> expr_def_tree ) ;
