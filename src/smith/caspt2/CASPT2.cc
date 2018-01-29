@@ -31,9 +31,8 @@
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
-#include <src/smith/caspt2/CASPT2_ALT.h>
-#include <src/smith/wicktool/tensop_computer.h>
-#include <src/smith/wicktool/expression.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
+#include <src/prop/proptool/algebraic_manipulator/expression.h>
 
 using namespace std;
 using namespace bagel;

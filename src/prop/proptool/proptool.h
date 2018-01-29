@@ -8,14 +8,14 @@
 #include <src/smith/indexrange.h>
 #include <src/smith/tensor.h>
 #include <src/smith/multitensor.h>
-#include <src/smith/wicktool/system_info.h>
-#include <src/smith/wicktool/expression_computer.h>
-#include <src/smith/wicktool/expression.h>
-#include <src/smith/wicktool/term.h>
-#include <src/prop/proptool/moint_init.h>
-#include <src/prop/proptool/moint.h>
-#include <src/prop/proptool/moint_computer.h>
-#include <src/prop/proptool/equation.h>
+#include <src/prop/proptool/algebraic_manipulator/system_info.h>
+#include <src/prop/proptool/algebraic_manipulator/expression.h>
+#include <src/prop/proptool/task_translation/expression_computer.h>
+#include <src/prop/proptool/integrals/moint.h>
+#include <src/prop/proptool/integrals/moint_computer.h>
+#include <src/prop/proptool/integrals/moint_init.h>
+#include <src/prop/proptool/initialization/op_bk_term_expr_init.h>
+#include <src/prop/proptool/initialization/equation_init.h>
 
 
 namespace bagel {

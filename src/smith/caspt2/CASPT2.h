@@ -42,14 +42,12 @@ namespace SMITH {
 
 namespace SPCASPT2 { class SPCASPT2; }
 namespace MSCASPT2 { class MSCASPT2; }
-namespace CASPT2_ALT { class CASPT2_ALT; }
 
 namespace CASPT2{
 
 class CASPT2 : public SpinFreeMethod<double> {
   friend class SPCASPT2::SPCASPT2;
   friend class MSCASPT2::MSCASPT2;
-  friend class CASPT2_ALT::CASPT2_ALT;
   protected:
     
     // these are tensors that are used internally

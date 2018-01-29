@@ -30,7 +30,6 @@
 #include <src/smith/mrci/MRCI.h>
 #include <src/smith/relmrci/RelMRCI.h>
 #include <src/smith/caspt2/CASPT2.h>
-#include <src/smith/caspt2/CASPT2_ALT.h>
 #include <src/smith/caspt2/SPCASPT2.h>
 #include <src/smith/relcaspt2/RelCASPT2.h>
 #include <src/smith/casa/CASA.h>
@@ -68,8 +67,6 @@ Smith::Smith(const shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, 
 void Smith::compute() {
 #ifdef COMPILE_SMITH
   algo_->solve();
-  CASPT2_ALT::CASPT2_ALT tester(*(dynamic_pointer_cast<CASPT2::CASPT2>(algo_)));
-  tester.solve();
 #else
   throw logic_error("You must enable SMITH during compilation for this method to be available.");
 #endif
