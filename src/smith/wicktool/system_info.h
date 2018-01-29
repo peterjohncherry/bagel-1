@@ -4,6 +4,7 @@
  #include <src/smith/tensor.h>
  #include <src/smith/wicktool/term.h>
  #include <src/smith/wicktool/states_info.h>
+ #include <src/smith/wicktool/equation.h>
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
@@ -26,10 +27,14 @@ class System_Info {
       // key :    Name of BraKet
       // result : Vector of TensOps corresponding to BraKet
       std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> BraKet_map;
- 
-      // ket : expression name
-      // result : expresion object 
+      
+      // key : equation_name 
+      // result : equation object 
       std::shared_ptr< std::map <std::string, std::shared_ptr<Expression<DataType>>>> expression_map;
+
+      // key : expression name
+      // result : expresion object 
+      std::shared_ptr< std::map <std::string, std::shared_ptr<Equation_Base<DataType>>>> equation_map;
     
       // key :    Name of uncontracted part of TensorOp.
       // result : Info for uncontracted part of TensorOp info.

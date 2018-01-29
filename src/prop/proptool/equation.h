@@ -14,10 +14,10 @@ class Equation_Init_Base {
      std::shared_ptr<Expression_Init> master_expression_;
 
      Equation_Init_Base( std::string name, std::string type, 
-                    std::shared_ptr<Expression_Init> master_expression,
-                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<int>>>> range_map ) :
-                    name_(name), type_(type),  master_expression_(master_expression),
-                    range_map_(range_map) {};
+                         std::shared_ptr<Expression_Init> master_expression,
+                         std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<int>>>> range_map ) :
+                         name_(name), type_(type),  master_expression_(master_expression),
+                         range_map_(range_map) {};
 
      ~Equation_Init_Base(){};
 

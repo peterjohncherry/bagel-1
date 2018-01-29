@@ -108,6 +108,7 @@ class BraKet_Init {
 
    int bra_index(){ return *bra_index_ptr_; }
    int ket_index(){ return *ket_index_ptr_; }
+   
 
 }; 
 

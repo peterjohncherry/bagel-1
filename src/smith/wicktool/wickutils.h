@@ -109,6 +109,17 @@ namespace WickUtils {
     return;
   }
 
+  //TODO you need type name here, but why ? Find out, it could be a problem.
+  template<typename DataType>
+  std::shared_ptr<std::vector<DataType>> dereference_vector(std::vector<DataType*>& invec){
+    std::shared_ptr<std::vector<DataType>> dereffed_vec = std::make_shared<std::vector<DataType>>(invec.size());
+    typename std::vector<DataType>::iterator dv_iter; 
+    for ( typename std::vector<DataType*>::iterator iv_iter = invec.begin() ; iv_iter!= invec.end(); iv_iter++ ) 
+      *dv_iter++ = **iv_iter;  
+    return dereffed_vec;
+  }
+
+
 }
 
 #endif
