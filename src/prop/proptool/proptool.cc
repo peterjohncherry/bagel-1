@@ -147,7 +147,7 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
         auto factor_list_ptree =  factor_info->get_child("value"); 
         shared_ptr<vector<double>> factor_list = make_shared<vector<double>>(0);
         for (auto& factor_inp : *factor_list_ptree)
-          factor_list->push_back(lexical_cast<double>(factor_inp->data()));
+          factor_list->push_back( lexical_cast<double>( factor_inp->data() ) );
 
         inp_indexed_factor_map_->emplace( factor_name, factor_list ); 
 
@@ -299,21 +299,25 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "PropTool::PropTool::get_term_init" << endl;
    
+  int zero = 0;
   for ( auto& term_inp : *term_inp_list ) { 
 
     shared_ptr<map<string,int>> id_val_map = make_shared<map<string,int>>();
 
-    auto get_id_ptr = [&id_val_map]( string id ){ 
-       auto map_iter = id_val_map->find(id); 
-       int* id_ptr;
-       if ( map_iter == id_val_map->end() ){ 
-         int new_id_val = 0; 
-         id_val_map->emplace(id, new_id_val);
-         id_ptr = &(id_val_map->at(id)) ; 
-       } else { 
-         id_ptr = &(map_iter->second); 
-       }          
-       return id_ptr;
+    auto get_id_ptr = [&id_val_map, &zero ]( string id ){ 
+         id_val_map->emplace(id, zero);
+         return &(id_val_map->at(id)); 
+         
+//       auto map_iter = id_val_map->find(id); 
+//       int* id_ptr;
+//       if ( map_iter == id_val_map->end() ){ 
+//         int new_id_val = 0; 
+//         id_val_map->emplace(id, new_id_val);
+//         id_ptr = &(id_val_map->at(id)) ; 
+//       } else { 
+//         id_ptr = &(map_iter->second); 
+//       }          
+//       return id_ptr;
     };
 
     string term_name = term_inp->get<string>( "name" );
@@ -329,15 +333,17 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
       for ( auto& op_def : *bk_ops_inp ){
         string opname = op_def->get<string>("name");
         vector<string> op_idxs(0);
-        vector<int*> op_idxs_ptrs(0);
+        shared_ptr<vector<int*>> op_idxs_ptrs= make_shared<vector<int*>>(0);
 
         auto ids_inp = op_def->get_child("ids");//note these are not orbital indexes
         for (auto& idx : *ids_inp ) { 
           op_idxs.push_back(lexical_cast<string>(idx->data()));
-          op_idxs_ptrs.push_back( get_id_ptr(op_idxs.back()) );            
+          id_val_map->emplace(op_idxs.back(), zero); 
+          op_idxs_ptrs->push_back( &( id_val_map->at(op_idxs.back()) ) ); 
+//          op_idxs_ptrs->push_back( get_id_ptr(op_idxs.back()) );            
         }
  
-        bk_ops->push_back(Op_Init( opname, op_idxs, make_shared<vector<int*>>(op_idxs_ptrs) ));
+        bk_ops->push_back(Op_Init( opname, op_idxs, op_idxs_ptrs ));
       }
 
       string bra_index = braket_inp->get<string>("bra");

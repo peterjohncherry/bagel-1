@@ -13,13 +13,19 @@ class Op_Init {
   public :
     std::string name_;
     std::string alg_name_;
-  
+    int state_dep_ = 0;
+     
     Op_Init(std::string base_name, std::vector<std::string>& idxs, std::shared_ptr<std::vector<int*>> idx_ptrs ) :
             name_(base_name), idxs_(idxs), idx_ptrs_(idx_ptrs), alg_name_(base_name) {
-              alg_name_ += "_{";
-              for (std::string idx : idxs_ ) 
-                alg_name_ += idx;
-              alg_name_ += "}";
+              if (idxs.front() != "none" ) { 
+                alg_name_ += "_{";
+                for (std::string idx : idxs_ ) 
+                  alg_name_ += idx;
+                alg_name_ += "}";
+                state_dep_ = idxs_.size(); 
+              } else { 
+                state_dep_ = 0; 
+              }
             };
 
    ~Op_Init(){};
@@ -37,17 +43,18 @@ class Op_Init {
 
      std::shared_ptr<std::vector<int>> get_idxs() { 
        std::shared_ptr<std::vector<int>> state_idxs_list = std::make_shared<std::vector<int>>(idxs_.size());
-       for ( int ii = 0 ; ii != state_idxs_list->size(); ii++ )
+       if (idxs_.front() != "none" ) {
+         for ( int ii = 0 ; ii != state_idxs_list->size(); ii++ )
          state_idxs_list->at(ii) = *(idx_ptrs_->at(ii));
+       }  
        return state_idxs_list;
      }
 
      void get_op_idxs(std::vector<int>& state_idxs_list ) { // to avoid incredible number of shared_ptrs 
-       std::cout << "get_op_idxs" << std::endl;
-       for ( int ii = 0 ; ii != state_idxs_list.size(); ii++ ) {
-         state_idxs_list[ii] = *(idx_ptrs_->at(ii));
-         std::cout << state_idxs_list[ii] << " " ; 
-       } std::cout << std::endl;
+       if (idxs_.front() != "none" ) {
+         for ( int ii = 0 ; ii != state_idxs_list.size(); ii++ ) 
+           state_idxs_list[ii] = *(idx_ptrs_->at(ii));
+       }  
        return;
      }
 
