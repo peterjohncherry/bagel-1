@@ -18,10 +18,12 @@ class range_block_info {
     const std::shared_ptr<const std::vector<std::string>> unique_block_;
     const std::shared_ptr<const std::vector<std::string>> orig_idxs_;
     const std::shared_ptr<const std::vector<std::string>> transformed_idxs_;
-
                       
-  public :
     std::set<std::vector<int>> sparsity_ ;
+
+  public :
+
+    const int num_idxs_;
 
     range_block_info( bool is_unique,
                       bool survives,
@@ -32,33 +34,36 @@ class range_block_info {
                       std::shared_ptr<const std::vector<std::string>> transformed_idxs) : 
                       is_unique_(is_unique), survives_(survives),factors_(factors),
                       orig_block_(orig_block), unique_block_(unique_block),
-                      orig_idxs_(orig_idxs), transformed_idxs_(transformed_idxs){};
+                      orig_idxs_(orig_idxs), transformed_idxs_(transformed_idxs),
+                      num_idxs_(orig_block_->size()) {};
+
     ~range_block_info(){};
     
-    bool is_unique() const { return is_unique_ ; } //get<0>
+    bool is_unique() const { return is_unique_ ; } 
     bool survives() const { return survives_ ; }
     
-    std::pair<double,double> factors() const { return factors_; } // get<3>
+    std::pair<double,double> factors() const { return factors_; } 
     double Re_factor() const { return factors_.first; } 
     double Im_factor() const { return factors_.second; } 
     
-    std::shared_ptr<const std::vector<std::string>> orig_idxs() const      { return orig_idxs_;      } 
-    std::shared_ptr<const std::vector<std::string>> orig_block() const      { return orig_block_;      }// key 
-    std::shared_ptr<const std::vector<std::string>> unique_block() const    { return unique_block_;    }// get<1>
-    std::shared_ptr<const std::vector<std::string>> transformed_idxs() const { return transformed_idxs_;}// get<2>
+    std::shared_ptr<const std::vector<std::string>> orig_block() const { return orig_block_; }
+    std::shared_ptr<const std::vector<std::string>> unique_block() const { return unique_block_; }
+    std::shared_ptr<const std::vector<std::string>> orig_idxs()const { return orig_idxs_; }
+    std::shared_ptr<const std::vector<std::string>> transformed_idxs() const { return transformed_idxs_; }
     
-    void add_sparse( std::vector<int>& state_idxs ) { sparsity_.emplace(state_idxs); return;  } // defines this range block as being sparse for input states 
+    void add_sparse( std::vector<int>& state_idxs ) { sparsity_.emplace(state_idxs); return; } // defines this range block as being sparse for input states 
+
+    int num_idxs() const { return num_idxs_; } 
 
     virtual bool is_sparse( std::vector<int>& state_idxs ) { return ( sparsity_.find(state_idxs) != sparsity_.end() ); }  // returns true if this block is sparse for input states
 
-    virtual int num_idxs() { return orig_idxs_->size(); } 
 
 };
 
 //This is an absurd hack....
 class srbi_helper { 
 
-  private : 
+  public :
     bool unique_;
     bool survives_;
     std::pair<double,double> factors_; 
@@ -70,13 +75,13 @@ class srbi_helper {
     std::shared_ptr<const std::vector<std::string>> orig_idxs_;
     std::shared_ptr<const std::vector<std::string>> transformed_idxs_;
 
-  public :
                               
     srbi_helper( std::shared_ptr<std::vector<std::shared_ptr<range_block_info>>> range_blocks ) :
                             range_blocks_(range_blocks), factors_(std::make_pair(1.0,1.0)) {
 
       num_idxs_ = 0;
-      for ( auto rb : *range_blocks ) { num_idxs_ += rb->num_idxs(); } 
+      for ( std::vector<std::shared_ptr<range_block_info>>::iterator rb_iter =  range_blocks_->begin(); rb_iter != range_blocks_->end();  rb_iter++ ){
+        num_idxs_  += (*rb_iter)->num_idxs(); } 
 
       std::vector<std::string> orig_idxs(num_idxs_);              std::vector<std::string>::iterator oi_it = orig_idxs.begin();  
       std::vector<std::string> orig_block(num_idxs_);             std::vector<std::string>::iterator ob_it = orig_block.begin();
@@ -103,38 +108,14 @@ class srbi_helper {
  
       }
 
-      auto orig_block_       = std::make_shared<const std::vector<std::string>>(orig_idxs);         
-      auto unique_block_     = std::make_shared<const std::vector<std::string>>(orig_block);        
-      auto orig_idxs_        = std::make_shared<const std::vector<std::string>>(unique_block);      
+      auto orig_idxs_       = std::make_shared<const std::vector<std::string>>(orig_idxs);         
+      auto orig_block_     = std::make_shared<const std::vector<std::string>>(orig_block);        
+      auto unique_block_        = std::make_shared<const std::vector<std::string>>(unique_block);      
       auto transformed_idxs_ = std::make_shared<const std::vector<std::string>>(transformed_idxs);  
 
     }
  
    ~srbi_helper(){};
-
-    bool is_unique() const {  return unique_ ; }
-    bool survives() const { return survives_ ; }
-  
-    std::pair<double,double> factors() const { return factors_; } 
-    double Re_factor() const { return factors_.first; } 
-    double Im_factor() const { return factors_.second; } 
-  
-    std::shared_ptr<const std::vector<std::string>> orig_idxs() const      { return orig_idxs_;      } 
-    std::shared_ptr<const std::vector<std::string>> orig_block() const      { return orig_block_;      }// key 
-    std::shared_ptr<const std::vector<std::string>> unique_block() const    { return unique_block_;    }// get<1>
-    std::shared_ptr<const std::vector<std::string>> transformed_idxs() const { return transformed_idxs_;}// get<2>
-
-    int num_idxs() { return num_idxs_ ; } 
-
-    bool is_sparse( std::vector<std::vector<int>>& state_idxs ) { 
-      std::vector<std::shared_ptr<range_block_info>>::iterator rb_iter =  range_blocks_->begin();
-      for ( std::vector<std::vector<int>>::iterator si_iter = state_idxs.begin(); si_iter != state_idxs.end(); si_iter++ ){
-         if ( (*rb_iter)->is_sparse(*si_iter) ) 
-           return true;      
-         rb_iter++;
-      }
-      return false; 
-    }
 
 };
 
@@ -143,14 +124,14 @@ class split_range_block_info : public  range_block_info {
   private : 
     srbi_helper tmp;
     std::shared_ptr<std::vector<std::shared_ptr<range_block_info>>> range_blocks_;
-
-    int num_idxs_;
   public :
+
+     const int num_idxs_;
                               
     split_range_block_info( std::shared_ptr<std::vector<std::shared_ptr<range_block_info>>> range_blocks ) :
-                      range_blocks_(range_blocks), tmp(srbi_helper(range_blocks_)), num_idxs_(tmp.num_idxs()),  
-                      range_block_info( tmp.is_unique(), tmp.survives(), tmp.factors(), tmp.orig_block(),
-                                        tmp.unique_block(), tmp.orig_idxs(), tmp.transformed_idxs() ) {}  
+                      range_blocks_(range_blocks), tmp(srbi_helper(range_blocks_)), num_idxs_(tmp.num_idxs_),  
+                      range_block_info( tmp.unique_, tmp.survives_, tmp.factors_, tmp.orig_block_,
+                                        tmp.unique_block_, tmp.orig_idxs_, tmp.transformed_idxs_ ) {}  
 
  
    ~split_range_block_info(){};

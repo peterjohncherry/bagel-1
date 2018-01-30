@@ -23,12 +23,21 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( int bra_num, int ket
   Total_Op_ = MT_map->at(multiop_name_);
   shared_ptr<vector<string>> idxs_buff  = make_shared<vector<string>>(*(Total_Op_->idxs()));
   shared_ptr<vector<bool>> aops_buff  = make_shared<vector<bool>>(*Total_Op_->aops());    
+   
+  vector<vector<int>> op_state_idxs_vec( op_list_.size() );  
+  vector<vector<int>>::iterator osiv_it = op_state_idxs_vec.begin();
+  for ( auto  opname : op_list_ ) 
+    *osiv_it++ =  Op_state_ids->at(opname);     
 
-  for ( auto range_map_it = Total_Op_->all_ranges()->begin(); range_map_it !=Total_Op_->all_ranges()->end(); range_map_it++ ){
+  for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
     
-    print_vector( *(range_map_it->second->unique_block()), " ranges into gamma? " );  if ( !range_map_it->second->survives() ) {  cout << " ... no " << endl; } 
-
-    if ( range_map_it->second->survives() ) {  cout << " ... yes " << endl; 
+    print_vector( *(range_map_it->second->unique_block()), " ranges into gamma? " ); 
+    if ( !range_map_it->second->survives() ) {
+        cout << " ... no ; needs to be contracted with something else. " << endl;  
+    } else if ( range_map_it->second->is_sparse(op_state_idxs_vec) ){  
+      cout << " ... no ; this block is sparse ." << endl;  
+    } else { 
+      cout << " ... yes " << endl; 
       shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, GammaMap, G_to_A_map, factor_ ); 
       GGen->add_gamma( range_map_it->second );
       GGen->norm_order();

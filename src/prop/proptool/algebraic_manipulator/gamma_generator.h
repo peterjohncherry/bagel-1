@@ -145,7 +145,7 @@ class GammaGenerator{
                     double bk_factor );
     ~GammaGenerator(){};
 
-    void add_gamma(std::shared_ptr<const range_block_info> block_info );
+    void add_gamma(std::shared_ptr<range_block_info> block_info );
     
     bool norm_order();
     
