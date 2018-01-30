@@ -3,7 +3,6 @@
 
 #include <tuple>
 #include <src/prop/proptool/algebraic_manipulator/expression.h>
-#include <src/smith/smith_info.h>
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
 #include <src/util/f77.h>

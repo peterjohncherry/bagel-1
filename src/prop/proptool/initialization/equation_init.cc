@@ -36,7 +36,6 @@ void Equation_Init_Value<DataType>::initialize_expression() {
     vector<BraKet<DataType>> braket_list; 
     do {
       int kk = 0 ;
-      print_vector( *fvec, "fvec" ); cout << endl;
       vector<int>::iterator fvec_it = fvec->begin();
       for ( auto tiv_it = term_idx_val_map->begin() ; tiv_it != term_idx_val_map->end(); tiv_it++ ) {
          if (tiv_it->first == "none" ) { continue ; }
@@ -46,25 +45,16 @@ void Equation_Init_Value<DataType>::initialize_expression() {
 
       vector<string>::iterator bk_factors_it = term_init->braket_factors_->begin();
       for ( BraKet_Init bk_info : *(term_init->braket_list_) ) {
-        cout << "<" << bk_info.bra_index() << "|" ;
         vector<string> bk_op_list(bk_info.op_list_->size());
         auto op_state_ids = make_shared<vector<vector<int>>>(bk_info.op_list_->size());
         for ( int jj = 0 ; jj != bk_info.op_list_->size() ; jj++ ){
-          cout << bk_info.op_list_->at(jj).name_;
           bk_op_list[jj] = bk_info.op_list_->at(jj).name_;
           if ( bk_info.op_list_->at(jj).state_dep_ > 0 ){
             op_state_ids->at(jj) =  vector<int>(bk_info.op_list_->at(jj).state_dep_);
             bk_info.op_list_->at(jj).get_op_idxs( op_state_ids->at(jj) ) ;
-            cout <<   "_{";
-            for ( int op_id : op_state_ids->at(jj) )
-              cout << op_id;
-            cout << "}";
           }
-          cout << " " ; cout.flush();
-
         }
 
-        cout << "|" << bk_info.ket_index() << ">" << endl; 
         braket_list.push_back(BraKet<DataType>( bk_op_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
      } 
  
@@ -120,7 +110,6 @@ void Equation_Init_LinearRM<DataType>::initialize_expression() {
     vector<BraKet<DataType>> braket_list; 
     do {
       int kk = 0 ;
-      print_vector( *fvec, "fvec" ); cout << endl;
       vector<int>::iterator fvec_it = fvec->begin();
       for ( auto tiv_it = term_idx_val_map->begin() ; tiv_it != term_idx_val_map->end(); tiv_it++ ) {
          if (tiv_it->first == "none" ) { continue ; }
@@ -130,27 +119,20 @@ void Equation_Init_LinearRM<DataType>::initialize_expression() {
 
       vector<string>::iterator bk_factors_it = term_init->braket_factors_->begin();
       for ( BraKet_Init bk_info : *(term_init->braket_list_) ) {
-        cout << "<" << bk_info.bra_index() << "|" ;
         vector<string> bk_op_list(bk_info.op_list_->size());
         auto op_state_ids = make_shared<vector<vector<int>>>(bk_info.op_list_->size());
         for ( int jj = 0 ; jj != bk_info.op_list_->size() ; jj++ ){
-          cout << bk_info.op_list_->at(jj).name_;
           bk_op_list[jj] = bk_info.op_list_->at(jj).name_;
           if ( bk_info.op_list_->at(jj).state_dep_ > 0 ){
             op_state_ids->at(jj) =  vector<int>(bk_info.op_list_->at(jj).state_dep_);
             bk_info.op_list_->at(jj).get_op_idxs( op_state_ids->at(jj) ) ;
-            cout <<   "_{";
-            for ( int op_id : op_state_ids->at(jj) )
-              cout << op_id;
-            cout << "}";
           }
-          cout << " " ; cout.flush();
-
         }
-
-        cout << "|" << bk_info.ket_index() << ">" << endl; 
-        braket_list.push_back(BraKet<DataType>( bk_op_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
-     } 
+        
+        BraKet<DataType>  new_bk( bk_op_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ );
+        cout <<  new_bk.bk_name() << endl;
+        braket_list.push_back( new_bk );
+      } 
  
     } while(fvec_cycle_skipper( fvec, maxs, mins )) ;
 

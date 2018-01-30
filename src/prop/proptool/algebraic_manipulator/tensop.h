@@ -43,8 +43,8 @@ class Op_General_base {
        
         int num_idxs() const { return num_idxs_; }
        
-        std::pair<double,double> factor() const { return orig_factor_; };
-       
+	std::pair<double,double> factor() const { return orig_factor_; };
+
         std::shared_ptr<const std::vector<std::string>> idxs() const { return idxs_ptr_;}
         std::string idxs(int ii ) const { return idxs_ptr_->at(ii);}
        
@@ -129,26 +129,26 @@ class TensOp_base {
 
      std::pair<double,double> factor(){ return Op_dense_->factor(); };
 
-     std::shared_ptr<const std::vector<std::string>> idxs(){ return Op_dense_->idxs();}
+     std::shared_ptr< const std::vector<std::string>> idxs(){ return Op_dense_->idxs();}
      std::string idxs(int ii ){ return Op_dense_->idxs(ii);}
 
-     std::shared_ptr<const std::vector<bool>> aops(){ return Op_dense_->aops();}
+     std::shared_ptr< const std::vector<bool>> aops(){ return Op_dense_->aops();}
      bool aops(int ii){ return Op_dense_->aops(ii);}
 
-     std::shared_ptr<const std::vector<std::vector<std::string>>> idx_ranges(){ return Op_dense_->idx_ranges();}
+     std::shared_ptr< const std::vector<std::vector<std::string>>> idx_ranges(){ return Op_dense_->idx_ranges();}
      std::vector<std::string> idx_ranges(int ii){ return Op_dense_->idx_ranges(ii);}
 
-     std::shared_ptr<const std::vector<int>> plus_ops(){ return Op_dense_->plus_ops();}
+     std::shared_ptr< const std::vector<int>> plus_ops(){ return Op_dense_->plus_ops();}
      int plus_ops(int ii){ return Op_dense_->plus_ops(ii);}
 
-     std::shared_ptr<const std::vector<int>> kill_ops(){ return Op_dense_->kill_ops();}
+     std::shared_ptr< const std::vector<int>> kill_ops(){ return Op_dense_->kill_ops();}
      int kill_ops(int ii){ return Op_dense_->kill_ops(ii);}
 
-     std::shared_ptr<const std::vector< std::shared_ptr< const std::vector<std::string>>>> unique_range_blocks() const { return Op_dense_->unique_range_blocks(); }
+     std::shared_ptr< const std::vector< std::shared_ptr< const std::vector<std::string>>>> unique_range_blocks() const { return Op_dense_->unique_range_blocks(); }
      std::shared_ptr< const std::vector<std::string>> unique_range_blocks(int ii) const { return Op_dense_->unique_range_blocks(ii); }
      
-     std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<const range_block_info > > > all_ranges() const  { return Op_dense_->all_ranges(); }
-     std::shared_ptr<const range_block_info > all_ranges(const std::vector<std::string> range_block ) const  { return Op_dense_->all_ranges(range_block); }
+     std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<const range_block_info > > > all_ranges() const  { return Op_dense_->all_ranges(); }
+     std::shared_ptr< const range_block_info > all_ranges(const std::vector<std::string> range_block ) const  { return Op_dense_->all_ranges(range_block); }
 
 //     virtual std::shared_ptr<const range_block_info > sparsed_ranges(const std::vector<int> range_block ) const  = 0 ; 
 
@@ -163,8 +163,6 @@ class TensOp : public TensOp_base {
      std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) > constraints_;
 
      bool satisfies_constraints( std::vector<std::string>& ranges );
-
-//     std::shared_ptr<const TensOp_General> Op_dense_;
 
 //   protected : 
 //     std::map< std::vector<int>, std::vector<std::shared_ptr<const std::vector<std::string> > >  > state_sparsity_map_; 

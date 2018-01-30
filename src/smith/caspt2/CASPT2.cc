@@ -32,7 +32,6 @@
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
-#include <src/prop/proptool/algebraic_manipulator/expression.h>
 
 using namespace std;
 using namespace bagel;
