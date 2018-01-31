@@ -14,7 +14,7 @@ class Expression {
         std::vector< BraKet<DataType>> Term_list_;                                       
 
         //information about target states of the system
-        std::shared_ptr<StatesInfo<DataType>> target_states_;
+        std::shared_ptr<StatesInfo<DataType>> states_info_;
 
         // key : name of multitensor info
         // result : the info
@@ -45,7 +45,7 @@ class Expression {
 
 
         Expression( std::vector<BraKet<DataType>>&  braket_list,
-                    std::shared_ptr<StatesInfo<DataType>> target_states,
+                    std::shared_ptr<StatesInfo<DataType>> states_info,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,      
                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,     
                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,    
@@ -53,7 +53,7 @@ class Expression {
                     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >                         GammaMap );    
         ~Expression(){};
         
-        void Get_CMTP_Compute_Terms();
+        void get_gamma_Atensor_contraction_list();
         
         void necessary_tensor_blocks();
 };

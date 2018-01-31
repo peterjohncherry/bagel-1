@@ -26,7 +26,15 @@ class System_Info {
       // key :    Name of BraKet
       // result : Vector of TensOps corresponding to BraKet
       std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> BraKet_map;
-      
+         
+      // key :    Name of Term
+      // result : Vector of BraKets corresponding to Term
+      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_;
+
+      // key :    Name of Expression
+      // result : Vector of Terms corresponding to Expression
+      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_;
+
       // key : equation_name 
       // result : equation object 
       std::shared_ptr< std::map <std::string, std::shared_ptr<Expression<DataType>>>> expression_map;

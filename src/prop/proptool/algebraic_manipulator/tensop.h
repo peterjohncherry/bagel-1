@@ -75,8 +75,8 @@ class Op_General_base {
         std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info>>> all_ranges() const  {return  all_ranges_; }
         std::shared_ptr<range_block_info> all_ranges(const std::vector<std::string> range_block ) const  { return all_ranges_->at(range_block) ; }
 
-        std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info>>> split_ranges()const { return split_ranges_; }
-        std::shared_ptr<split_range_block_info> split_ranges(const std::vector<std::string> range_block )const { return split_ranges_->at(range_block) ; }
+        virtual std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info>>> split_ranges()const { return split_ranges_; }
+        virtual std::shared_ptr<split_range_block_info> split_ranges(const std::vector<std::string> range_block )const { return split_ranges_->at(range_block) ; }
 
         virtual std::shared_ptr<const std::vector<int>> cmlsizevec() const  = 0 ;
         virtual int cmlsizevec(int ii) const  = 0 ;
@@ -99,23 +99,16 @@ class TensOp_General : public Op_General_base {
  
    ~TensOp_General(){};
 
+    std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info > > > split_ranges() const{
+      throw std::logic_error("1 Should not be trying to access split range map from merged TensOp_General, probably error in range looping! Aborting! " ) ; 
+    return split_ranges_; } 
+
+    std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block )const {
+      throw std::logic_error("2 Should not be trying to access split range map from merged TensOp_General, probably error in range looping! Aborting! " ) ; 
+    return split_ranges_->at(range_block); } 
+
     std::shared_ptr<const std::vector<int>> cmlsizevec() const  { std::cout << "WARNING!! this is a single tensor.." << std::endl; return std::make_shared<std::vector<int>>(0,0); } ;
     int cmlsizevec(int ii )const { if ( ii > 0 ) throw std::logic_error( "this is a single tensor...., something wrong in TensOp") ; return 0;}
-
-
-//    std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info>>> all_ranges() const  {return  all_ranges_; }
-//    std::shared_ptr<range_block_info> all_ranges(const std::vector<std::string> range_block ) const  { return all_ranges_->at(range_block) ; }
-
-//    std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info>>> split_ranges() const {
-//      throw std::logic_error( "should not be split ranges from a single tensor!! Aborting" ) ;
-//      std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info>>> dummy; 
-//      return dummy; }
-
-//    std::shared_ptr<split_range_block_info> split_ranges(const std::vector<std::string> range_block ) const { 
-//      throw std::logic_error( "should not be using split_range_map from a single tensor!! Aborting" ) ;
-//       std::shared_ptr<split_range_block_info> dummy; 
-//      return dummy; }
-
 
 };
 
@@ -125,21 +118,17 @@ class MultiTensOp_General : public  TensOp_General {
     
     const std::vector<int> cmlsizevec_;
     std::shared_ptr<const std::vector<int>> cmlsizevec_ptr_;
-    std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr<split_range_block_info>>> split_ranges_;
+
     public : 
-    MultiTensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                         std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor, std::vector<int>& cmlsizevec, 
-                         std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
-                         std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr<split_range_block_info>>> all_ranges );
+      MultiTensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
+                           std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor, std::vector<int>& cmlsizevec, 
+                           std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
+                           std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr<split_range_block_info>>> all_ranges );
     ~MultiTensOp_General(){};
 
      std::shared_ptr<const std::vector<int>> cmlsizevec() const { return cmlsizevec_ptr_;}
      int cmlsizevec(int ii )const { return cmlsizevec_[ii];}
 
-//     std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info>>> all_ranges() const  {
-//       return  std::dynamic_cast<std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info>>>>(split_ranges_); }
-//     std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info>>> split_ranges() const  {return  split_ranges_; }
-//     std::shared_ptr<split_range_block_info> split_ranges(const std::vector<std::string> range_block ) const  { return  split_ranges_->at(range_block) ; }
 };
 
 
@@ -222,26 +211,16 @@ class TensOp : public TensOp_base {
                                   std::shared_ptr<std::vector< std::shared_ptr< const std::vector<std::string> >>> >
      generate_ranges( std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges, std::vector<bool>& aops );
   
-     virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info > > > all_ranges() const  { return Op_dense_->all_ranges(); }
-     virtual std::shared_ptr< range_block_info > all_ranges(const std::vector<std::string> range_block ) const  { return Op_dense_->all_ranges(range_block); }
+     std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info > > > all_ranges() const  { return Op_dense_->all_ranges(); }
+     std::shared_ptr< range_block_info > all_ranges(const std::vector<std::string> range_block ) const  { return Op_dense_->all_ranges(range_block); }
 
-     virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info > > > split_ranges() const{
+     std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info > > > split_ranges() const{
        throw std::logic_error("1 Should not be trying to access split range map from merged TensOp, probably error in range looping! Aborting! " ) ; 
      return Op_dense_->split_ranges(); } 
 
-     virtual std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block )const {
+     std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block )const {
        throw std::logic_error("2 Should not be trying to access split range map from merged TensOp, probably error in range looping! Aborting! " ) ; 
      return Op_dense_->split_ranges(range_block); } 
-//     std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info > > > split_ranges() const  { 
-//       throw std::logic_error("1 Should not be trying to access split range map from merged TensOp, probably error in range looping! Aborting! " ) ; 
-//       return Op_dense_->split_ranges();
-//     }
-
-//     std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block ) const  {
-//       throw std::logic_error("2 Should not be trying to access split range map from merged TensOp, probably error in range looping! Aborting! " ) ; 
-//       return Op_dense_->split_ranges(range_block);
-//     }
-//     std::shared_ptr<range_block_info > sparsed_ranges(const std::vector<int> range_block ) ; 
 
 };
 }
@@ -270,15 +249,19 @@ class MultiTensOp : public TensOp_base {
  
     void get_ctrs_tens_ranges(); 
   
-    std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info > > > all_ranges() const  { return Op_dense_->all_ranges(); }
-    std::shared_ptr< range_block_info > all_ranges(const std::vector<std::string> range_block ) const  { return Op_dense_->all_ranges(range_block); }
+    std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info > > > all_ranges() const  {
+      return std::dynamic_pointer_cast<const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info > > >(Op_dense_->all_ranges());
+    }
+
+    std::shared_ptr< range_block_info > all_ranges(const std::vector<std::string> range_block ) const  { 
+      return std::dynamic_pointer_cast<range_block_info>(Op_dense_->split_ranges(range_block));
+    }
 
     std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info > > > split_ranges() const{return Op_dense_->split_ranges(); } 
     std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block )const { return Op_dense_->split_ranges(range_block); } 
 
     void enter_into_CMTP_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges );
 
-  //  std::shared_ptr<range_block_info > sparsed_ranges(const std::vector<int> range_block ) ; 
 };
 }
 #endif

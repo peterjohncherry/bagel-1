@@ -252,6 +252,51 @@ void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_de
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::get_equation_init_Value( shared_ptr<const PTree> equation_inp ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << " PropTool::PropTool::get_linear_equation_init_Value" << endl;
+
+  string eqn_name = equation_inp->get<string>( "name" );
+
+  // if target indices is not specified just get a different value for every combination of non-summed indexes
+  auto target_indices = make_shared<vector<string>>(0);
+  auto ti_ptree = equation_inp->get_child_optional("target indexes"); // Must solve for all "target" with these indices
+  if (ti_ptree)
+    for (auto& si : *ti_ptree) 
+      target_indices->push_back( lexical_cast<string>(si->data()));
+
+  auto term_list = make_shared<vector<pair<string,shared_ptr<Term_Init>>>>();
+  auto term_idrange_map_list = make_shared<vector<shared_ptr<map<string,pair<bool,string>>>>>();
+
+  auto expression_def = equation_inp->get_child( "expression" );
+  for (auto& term_info: *expression_def) {
+  
+    string term_name = term_info->get<string>( "term" );
+    string term_factor = term_info->get<string>( "factor" );
+    term_list->push_back(make_pair(term_factor, term_init_map_->at(term_name)));
+
+    auto term_idrange_map = make_shared<map<string, pair<bool,string>>>();
+    auto indexes_ptree =  term_info->get_child("indexes"); 
+    for (auto& index_info : *indexes_ptree){
+      string id_name = index_info->get<string>("name"); 
+      string id_range = index_info->get<string>("range");
+       
+      bool   id_sum =  index_info->get<bool>("sum", false );
+      term_idrange_map->emplace( id_name, make_pair(id_sum, id_range));
+    }
+
+    term_idrange_map->emplace( "none" , make_pair( false, "none" ) ); // TODO sort a better way of dealing with this case 
+    term_idrange_map_list->push_back( term_idrange_map );     
+    
+  }
+  auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
+  auto eqn_init = make_shared<Equation_Init_Value<double>>( eqn_name, "Value", master_expression, inp_range_map_, target_indices, inp_factor_map_ );
+  eqn_init->initialize_expressions();
+
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_equation_init_LinearRM( shared_ptr<const PTree> equation_inp ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
@@ -288,9 +333,9 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
     
   }
   auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
-  auto eqn = make_shared<Equation_Init_LinearRM<double>>( eqn_name,  "LinearRM", master_expression, inp_range_map_, eqn_target, target_indices,
-                                                          inp_factor_map_ );
-  eqn->initialize_expression();
+  auto eqn_init = make_shared<Equation_Init_LinearRM<double>>( eqn_name, "LinearRM", master_expression, inp_range_map_, eqn_target, target_indices,
+                                                               inp_factor_map_ );
+  eqn_init->initialize_expressions();
 
   return;
 }

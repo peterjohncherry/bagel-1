@@ -55,7 +55,9 @@ class range_block_info {
 
     int num_idxs() const { return num_idxs_; } 
 
-    virtual bool is_sparse( std::vector<int>& state_idxs ) { return ( sparsity_.find(state_idxs) != sparsity_.end() ); }  // returns true if this block is sparse for input states
+    // returns true if this block is sparse for input states
+    virtual bool is_sparse( std::vector<int>& state_idxs ) { return ( sparsity_.find(state_idxs) != sparsity_.end() ); } 
+    virtual bool is_sparse( const std::vector<int>& state_idxs ) { return ( sparsity_.find(state_idxs) != sparsity_.end() ); }  
 
 
 };
@@ -141,6 +143,26 @@ class split_range_block_info : public  range_block_info {
     bool is_sparse( std::vector<std::vector<int>>& state_idxs ) { 
       std::vector<std::shared_ptr<range_block_info>>::iterator rb_iter =  range_blocks_->begin();
       for ( std::vector<std::vector<int>>::iterator si_iter = state_idxs.begin(); si_iter != state_idxs.end(); si_iter++ ){
+         if ( (*rb_iter)->is_sparse(*si_iter) ) 
+           return true;      
+         rb_iter++;
+      }
+      return false; 
+    }
+
+    bool is_sparse( const std::vector<std::vector<int>>& state_idxs ) { 
+      std::vector<std::shared_ptr<range_block_info>>::iterator rb_iter =  range_blocks_->begin();
+      for ( std::vector<std::vector<int>>::const_iterator si_iter = state_idxs.begin(); si_iter != state_idxs.end(); si_iter++ ){
+         if ( (*rb_iter)->is_sparse(*si_iter) ) 
+           return true;      
+         rb_iter++;
+      }
+      return false; 
+    }
+
+    bool is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs ) { 
+      std::vector<std::shared_ptr<range_block_info>>::iterator rb_iter =  range_blocks_->begin();
+      for ( std::vector<std::vector<int>>::const_iterator si_iter = state_idxs->begin(); si_iter != state_idxs->end(); si_iter++ ){
          if ( (*rb_iter)->is_sparse(*si_iter) ) 
            return true;      
          rb_iter++;

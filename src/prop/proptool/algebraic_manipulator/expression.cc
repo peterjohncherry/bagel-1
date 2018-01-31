@@ -7,35 +7,34 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 Expression<DataType>::Expression( vector< BraKet<DataType>>&  Term_list,
-                                  shared_ptr<StatesInfo<DataType>> target_states,
+                                  shared_ptr<StatesInfo<DataType>> states_info,
                                   shared_ptr<map< string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,      
                                   shared_ptr<map< string, shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,     
                                   shared_ptr<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,    
                                   shared_ptr<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>     ACompute_map,
                                   shared_ptr<map< string, shared_ptr<GammaInfo> > >                         GammaMap ):    
-                                  Term_list_(Term_list), target_states_(target_states), MT_map_(MT_map), CTP_map_(CTP_map), CMTP_map_(CMTP_map),
+                                  Term_list_(Term_list), states_info_(states_info), MT_map_(MT_map), CTP_map_(CTP_map), CMTP_map_(CMTP_map),
                                   ACompute_map_(ACompute_map), GammaMap_(GammaMap) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression<DataType>::Expression (new constructor) " << endl; 
 
+  //Note that this G_to_A_map_ is expression specific
   G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, AContribInfo >>>>();
 
-  // Will loop through terms and then generate compute list for each. I've split it up like this
-  // for  merging BraKet with BraKet.
-  GammaMap_ = GammaMap;
-//  for ( BraKet<DataType> braket : Term_list_ ) 
-//    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, GammaMap_, target_states_ ); //TODO replace with init gammas func
-  
-  Get_CMTP_Compute_Terms();
+  // Will loop through terms and then generate mathematical task map. It's split into 
+  // two functions as this will gives more control over merging together of different BraKets G_to_A_maps.
+  for ( BraKet<DataType>& braket : Term_list_ ) 
+     braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, GammaMap_, states_info_ );         
+  get_gamma_Atensor_contraction_list();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adds terms associated with each gamma (as determined by BraKet) into the map
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Expression<DataType>::Get_CMTP_Compute_Terms(){
+void Expression<DataType>::get_gamma_Atensor_contraction_list(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression::Get_CMTP_Compute_Terms" << endl;  
+  cout << "Expression::get_gamma_Atensor_contraction_list" << endl;  
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto G2A_mapit = G_to_A_map_->begin(); G2A_mapit != G_to_A_map_->end(); G2A_mapit++) {
@@ -48,7 +47,7 @@ void Expression<DataType>::Get_CMTP_Compute_Terms(){
 
       auto ACompute_list_loc = ACompute_map_->find(CMTP_name);
       if ( ACompute_list_loc != ACompute_map_->end() ){
-        cout << "Expression::Get_CMTP_Compute_Terms::already built compute list for " << CMTP_name << " during generation of earlier compute list" << endl;
+        cout << "Expression::get_gamma_Atensor_contraction_list::already built compute list for " << CMTP_name << " during generation of earlier compute list" << endl;
         cout << CMTP_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(CMTP_name)->size() << "  --- Still in if " << endl;
         continue;
       } else {  

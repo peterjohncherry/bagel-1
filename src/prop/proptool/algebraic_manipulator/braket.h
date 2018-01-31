@@ -45,8 +45,7 @@ class BraKet{
 
        std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op_;
 
-       void generate_gamma_Atensor_contractions( int bra_num, int ket_num, std::shared_ptr<std::map< std::string, std::vector<int>>> Op_state_ids, 
-                                                 std::shared_ptr<std::map<std::string,std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
+       void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
                                                  std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map,
                                                  std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> GammaMap,
                                                  std::shared_ptr<StatesInfo<DataType>> target_states );         

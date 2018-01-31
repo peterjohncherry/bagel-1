@@ -3,7 +3,7 @@
 
 #include <src/global.h>
 #include <src/prop/proptool/initialization/op_bk_term_expr_init.h>
-
+#include <src/prop/proptool/algebraic_manipulator/system_info.h>
 class Equation_Init_Base {
 
    public :
@@ -22,7 +22,7 @@ class Equation_Init_Base {
      ~Equation_Init_Base(){};
 
 
-     virtual void initialize_expression() = 0;
+     virtual void initialize_expressions() = 0;
      virtual void build() = 0;
 
 }; 
@@ -38,17 +38,24 @@ class Equation_Init_Value : public Equation_Init_Base {
      DataType factor_;
      std::shared_ptr<std::vector<std::string>> target_indexes_;                // Need a different expression for each one of these.
      std::shared_ptr<std::map< std::string, DataType >> factor_map_; 
+     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_;
+     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_map_;
 
      Equation_Init_Value( std::string name,  std::string type, std::shared_ptr<Expression_Init> master_expression, 
                           std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<int>> >> range_map,
                           std::shared_ptr<std::vector<std::string>> target_indexes, 
                           std::shared_ptr<std::map< std::string, DataType >> factor_map ) :
                           Equation_Init_Base ( name, type, master_expression, range_map ),
-                          target_indexes_(target_indexes), factor_map_(factor_map)  {}; 
+                          target_indexes_(target_indexes), factor_map_(factor_map)  {
+
+                          expression_term_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>>();
+                          term_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>();
+
+}; 
 
     ~Equation_Init_Value(){};
 
-     void initialize_expression(); 
+     void initialize_expressions(); 
      void build() { std::cout << "Not connected to equation yet" << std::endl;} ; 
 
 
@@ -66,6 +73,8 @@ class Equation_Init_LinearRM : public Equation_Init_Base {
      std::string target_variable_;
      std::shared_ptr<std::vector<std::string>> target_indexes_;                // Need a different expression for each one of these.
      std::shared_ptr<std::map< std::string, DataType >> factor_map_; 
+     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_;
+     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_map_;
 
    
      Equation_Init_LinearRM( std::string name,  std::string type, std::shared_ptr<Expression_Init> master_expression,
@@ -74,11 +83,16 @@ class Equation_Init_LinearRM : public Equation_Init_Base {
                              std::shared_ptr<std::map< std::string, DataType >> factor_map ) :
                              Equation_Init_Base ( name, type, master_expression, range_map ),
                              target_variable_(target_variable), target_indexes_(target_indexes),
-                             factor_map_(factor_map)  {}; 
+                             factor_map_(factor_map)  {
+
+                             expression_term_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>>();
+                             term_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>();
+
+}; 
 
     ~Equation_Init_LinearRM(){};
 
-     void initialize_expression(); 
+     void initialize_expressions(); 
      void build() { std::cout << "Not connected to equation yet" << std::endl;} ; 
 
 }; 

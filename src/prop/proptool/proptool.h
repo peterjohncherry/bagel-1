@@ -68,6 +68,7 @@ namespace PropTool {
     void get_terms_init( std::shared_ptr<const PTree> expression_inp ); 
     void get_equations_init( std::shared_ptr<const PTree> expression_init ); 
     void get_equation_init_LinearRM( std::shared_ptr<const PTree> equation_inp );
+    void get_equation_init_Value( std::shared_ptr<const PTree> equation_inp );
 
     void get_new_ops_init( std::shared_ptr<const PTree> ops_def_tree ) ;
     void get_expression_variables( std::shared_ptr<const PTree> expr_def_tree ) ;
