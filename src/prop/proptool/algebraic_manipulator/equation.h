@@ -42,9 +42,9 @@ class Equation_Value : public Equation_Base<DataType> {
      using Equation_Base<DataType>::expression_term_map_;
 
      Equation_Value( std::string name, std::string type, 
-                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
-                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map )
-                    : Equation_Base<DataType>( name, type, term_braket_map, expression_term_map  ) {}  
+                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
+                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map )
+                     : Equation_Base<DataType>( name, type, term_braket_map, expression_term_map  ) {}  
 
     ~Equation_Value(){};
 

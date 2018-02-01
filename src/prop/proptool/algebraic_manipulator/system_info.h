@@ -73,6 +73,8 @@ class System_Info {
 
       std::shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( std::string op_name ) ;
 
+      void construct_equation_task_list( std::string equation_name );
+
       void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>> Tens_vec  );
       
       std::shared_ptr<TensOp::TensOp<DataType>> Build_TensOp( std::string op_name,

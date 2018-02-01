@@ -51,6 +51,21 @@ System_Info<DataType>::System_Info::System_Info( shared_ptr<StatesInfo<DataType>
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
+void
+System_Info<DataType>::System_Info::construct_equation_task_list( string equation_name ) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "System_Info<DataType>::System_Info::construct_equation_task_list : " << equation_name << endl;
+
+  shared_ptr<Equation_Base<DataType>> eqn = equation_map_->at( equation_name); 
+  if ( eqn->type_ == "Value" ) 
+    for ( auto& expression_info : *eqn->expression_term_map_ ) 
+      Build_Expression ( expression_info.first );
+
+
+  return;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
 shared_ptr<TensOp::TensOp<DataType>>
 System_Info<DataType>::System_Info::Build_TensOp( string op_name,
                                                   shared_ptr<vector<string>> op_idxs,
@@ -97,16 +112,21 @@ cout <<  "System_Info::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op
 template<class DataType>
 string System_Info<DataType>::System_Info::Build_Expression( string expression_name  ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "System_Info::System_Info::Build_Expression (string expression_name )" << endl;
+  cout << "System_Info::System_Info::Build_Expression : " << expression_name << endl;
  
   shared_ptr<vector<pair<double, string>>> term_name_list = expression_term_map_->at(expression_name);
+  cout << "term_name_list->at(0).second = " << term_name_list->at(0).second << endl;
   shared_ptr<vector<BraKet<DataType>>> bk_list = term_braket_map_->at( term_name_list->at(0).second ); //term_info.second);
+  cout << "got " << endl;
+
   for ( int ii = 1; ii != term_name_list->size(); ii++ ){
+    cout << "ii = " << ii << endl;
     shared_ptr<vector<BraKet<DataType>>> term_bk_list = term_braket_map_->at( term_name_list->at(ii).second ); //term_info.second);
     for ( BraKet<DataType> bk :  *term_bk_list ) 
       bk_list->push_back(bk);
  //   bk_list->insert( bk_list->end(), term_bk_list->begin(), term_bk_list->end()); // TODO Why doesn't this work? 
   }
+  cout << " build the expression " << endl;
   string expression_name_gen =  Build_Expression( bk_list );
   assert(expression_name_gen == expression_name );
 
@@ -183,6 +203,9 @@ System_Info<DataType>::System_Info::create_equation( std::string name, std::stri
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "System_Info<DataType>::System_Info::create_equation " << endl; 
 
+  term_braket_map_->insert(term_braket_map->begin(), term_braket_map->end()) ;
+  expression_term_map_->insert(expression_term_map->begin(), expression_term_map->end()) ;
+  
   shared_ptr<Equation_Base<DataType>>  new_eqn;
   if ( type == "Value" ) { 
     cout << "Value1" << endl;

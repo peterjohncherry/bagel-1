@@ -80,7 +80,7 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
            state_ids_name+= elem.first + "," ; 
       state_ids_name += "]";
 
-      if (state_ids_name.back() != ',' ) {
+      if (state_ids_name.back() == ',' ) {
         state_ids_name.back() = ']';
       } else {
         state_ids_name += "]";
@@ -96,8 +96,6 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
       } else {
         state_ids_name += "]";
       }
-
-      //cout <<" state_ids_name  = "<< state_ids_name << endl; 
 
       shared_ptr<vector<pair<DataType, string>>> expression_term_list; 
       string expression_name = master_expression_->name_ + state_ids_name;
@@ -232,9 +230,7 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
   return;
 
 }
-
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Equation_Init_Value<double>;
 template class Equation_Init_LinearRM<double> ; 
-
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

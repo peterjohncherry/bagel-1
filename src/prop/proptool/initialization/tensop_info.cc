@@ -42,7 +42,20 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    symmfuncs = set_1el_symmfuncs();
    constraints = {  &System_Info<double>::System_Info::always_true };
    state_dep = 0;
+ 
+  } else if ( op_name == "f" ) {  /* ---- state averaged fock operator ----  */
+
+   factor = (DataType) (1.0);
+   idxs = make_shared<vector<string>>(vector<string> {"f0", "f1"});
+   aops = make_shared<vector<bool>>(vector<bool>  {true, false});
+   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free });
+   time_symm = "none";
+   symmfuncs = set_1el_symmfuncs();
+   constraints = {  &System_Info<double>::System_Info::always_true };
+   state_dep = 0;
      
+    
+
   } else if ( op_name == "L" ) {  /* ---- L Tensor ----  */
 
     factor = (DataType) (1.0);

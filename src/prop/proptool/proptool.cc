@@ -7,8 +7,7 @@ using namespace bagel;
 PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, shared_ptr<const Reference> r): 
                    idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "PropTool::PropTool::PropTool" << endl;
-
+  cout << "PropTool::PropTool::PropTool" << endl;
 
   // sort out how to determine datatype!!
   sigma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
@@ -26,32 +25,67 @@ cout << "PropTool::PropTool::PropTool" << endl;
   expression_init_map_ = make_shared<map<string, shared_ptr<Expression_Init>>>();
   equation_init_map_ = make_shared<map<string, shared_ptr<Equation_Init_Base>>>();
 
-  // get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
-  get_expression_variables( idata->get_child("variables") );
+  read_input_and_initialize(); 
 
-  //Initializing range sizes either from idate or reference wfn 
-  maxtile_   = idata->get<int>("maxtile", 10);
-  cimaxtile_ = idata->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
+  // eqn_dependence = "share" :  equations can be done in any order and share information
+  // eqn_dependence = "sequential" :  equations must be done in the order they appear in the input and share information
+  // eqn_dependence = "noshare" :  equations can be done in any order, but do not share information
+  build_algebraic_task_lists( idata_->get<string>("equation interdependence", "share" ) ) ;
 
-  const bool frozen = idata->get<bool>("frozen", true);
-  ncore_ = idata->get<int>("ncore", (frozen ? ref_->geom()->num_count_ncore_only()/2 : 0));
-  if (ncore_)
-    cout << "    * freezing " << ncore_ << " orbital" << (ncore_^1 ? "s" : "") << endl;
-  nfrozenvirt_ = idata->get<int>("nfrozenvirt", 0);
-  if (nfrozenvirt_)
-    cout << "    * freezing " << nfrozenvirt_ << " orbital" << (nfrozenvirt_^1 ? "s" : "") << " (virtual)" << endl;
+}
 
-  nclosed_  = idata->get<int>( "nclosed" , ref_->nclosed()); cout << " nclosed_ = " <<  nclosed_  << endl;
-  nact_     = idata->get<int>( "nact"  , ref_->nact());      cout << " nact_    = " <<  nact_  << endl;
-  nvirt_    = idata->get<int>( "nvirt" , ref_->nvirt());     cout << " nvirt_   = " <<  nvirt_  << endl;
-  nocc_     = nclosed_ + nact_; 
-  nfrozenvirt_ = idata->get<int>( "nfrozenvirt", 0 );
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::build_algebraic_task_lists( string  eqn_interdependence ){  
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ cout << "PropTool::PropTool::build_algebraic_task_lists()" << endl; 
+ 
+ if ( eqn_interdependence == "share"  ) { 
+   for ( string& equation_name : equation_execution_list_ ) 
+      sys_info_->construct_equation_task_list( equation_name ) ; 
+ } else { 
+    throw logic_error( "form of equation interdependence \"" + eqn_interdependence +"\" not implemented yet" ) ; 
+ } 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::read_input_and_initialize(){  
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // leave for now
-  block_diag_fock_ = false;
-  gaunt_    = false;
-  breit_    = false;
-  set_ao_range_info();
+  // gets information about the wavefunction from the refence
+  get_wavefunction_info();
+
+  // Get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
+  get_expression_variables( idata_->get_child("variables") );
+ 
+  calculate_mo_integrals();
+
+  sys_info_ = make_shared<System_Info<double>>( targets_info_, true );
+
+  cout << "initialized sys_info" << endl;
+  shared_ptr< const PTree > ops_def_tree = idata_->get_child_optional( "operators" ) ;
+  if (ops_def_tree)
+    get_new_ops_init( ops_def_tree ); 
+
+  cout << "got ops_init" << endl;
+
+  // Getting info about target expression (this includes which states are relevant)
+  get_terms_init( idata_->get_child( "terms" ) ); 
+  cout << "got terms_init" << endl;
+
+  get_equations_init( idata_->get_child( "equations" ) );
+  cout << "got  equations_init" << endl;
+
+  expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, sys_info_->expression_map, range_conversion_map_, tensop_data_map_, 
+                                                                                              gamma_data_map_, sigma_data_map_, civec_data_map_ );
+
+  cout << "built expression machine" << endl;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Gets ranges and factors from the input which will be used in definition of terms
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::calculate_mo_integrals() {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "PropTool::PropTool::calculate_mo_integrals()" << endl;
 
   cout << "getting mo integrals " <<  endl; 
   shared_ptr<MOInt_Init<double>> moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_, nfrozenvirt_, block_diag_fock_ );
@@ -59,40 +93,52 @@ cout << "PropTool::PropTool::PropTool" << endl;
 
   vector<string> test_ranges4 = { "notcor", "notcor", "notvir", "notvir" }; 
   vector<string> test_ranges2 = { "free", "free" }; 
-  {
-  shared_ptr<SMITH::Tensor_<double>> v2_  =  moint_comp->get_v2( test_ranges4 ) ;
-  cout << " old_coeffs  v2_->norm() = " << v2_->norm() << endl; 
-  }
   shared_ptr<SMITH::Tensor_<double>> h1_  =  moint_comp->get_h1( test_ranges2, true ) ;
   shared_ptr<SMITH::Tensor_<double>> v2_  =  moint_comp->get_v2( test_ranges4 ) ;
   cout << " new_coeffs  v2_->norm() = " << v2_->norm() << endl; 
 
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Gets ranges and factors from the input which will be used in definition of terms
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::get_wavefunction_info() {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
+
+  //Initializing range sizes either from idate or reference wfn 
+  maxtile_   = idata_->get<int>("maxtile", 10);
+  cimaxtile_ = idata_->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
+
+  const bool frozen = idata_->get<bool>("frozen", true);
+  ncore_ = idata_->get<int>("ncore", (frozen ? ref_->geom()->num_count_ncore_only()/2 : 0));
+  if (ncore_)
+    cout << "    * freezing " << ncore_ << " orbital" << (ncore_^1 ? "s" : "") << endl;
+  nfrozenvirt_ = idata_->get<int>("nfrozenvirt", 0);
+  if (nfrozenvirt_)
+    cout << "    * freezing " << nfrozenvirt_ << " orbital" << (nfrozenvirt_^1 ? "s" : "") << " (virtual)" << endl;
+
+  nclosed_  = idata_->get<int>( "nclosed" , ref_->nclosed()); cout << " nclosed_ = " <<  nclosed_  << endl;
+  nact_     = idata_->get<int>( "nact"  , ref_->nact());      cout << " nact_    = " <<  nact_  << endl;
+  nvirt_    = idata_->get<int>( "nvirt" , ref_->nvirt());     cout << " nvirt_   = " <<  nvirt_  << endl;
+  nocc_     = nclosed_ + nact_; 
+  nfrozenvirt_ = idata_->get<int>( "nfrozenvirt", 0 );
+
+  // leave for now
+  block_diag_fock_ = false;
+  gaunt_    = false;
+  breit_    = false;
+
+  set_ao_range_info();
+
+  //creates the ci_info from the reference wavefunction
   set_target_state_info();
   set_ci_range_info();
+ 
 
-  sys_info_ = make_shared<System_Info<double>>( targets_info_, true );
-
-  cout << "initialized sys_info" << endl;
-  shared_ptr< const PTree > ops_def_tree = idata->get_child_optional( "operators" ) ;
-  if (ops_def_tree)
-    get_new_ops_init( ops_def_tree ); 
-
-  cout << "got ops_init" << endl;
-
-  // Getting info about target expression (this includes which states are relevant)
-  get_terms_init( idata->get_child( "terms" ) ); 
-  cout << "got terms_init" << endl;
-
-  // Get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
-  get_equations_init( idata->get_child( "equations" ) );
-  cout << "got  equations_init" << endl;
-
-  expression_map_ = sys_info_->expression_map;
-  expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, expression_map_, range_conversion_map_, tensop_data_map_, 
-                                                                                              gamma_data_map_, sigma_data_map_, civec_data_map_ );
-
-  cout << "built expression machine" << endl;
+  return;
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets ranges and factors from the input which will be used in definition of terms
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -295,8 +341,12 @@ cout << " PropTool::PropTool::get_linear_equation_init_Value" << endl;
   auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
   auto eqn_init = make_shared<Equation_Init_Value<double>>( eqn_name, "Value", master_expression, inp_range_map_, target_indices, inp_factor_map_ );
   eqn_init->initialize_expressions();
+
+  
  
   sys_info_->create_equation( eqn_name, "Value", eqn_init->term_braket_map_ , eqn_init->expression_term_map_ );
+
+  equation_execution_list_.push_back(eqn_name); 
 
   return;
 }
@@ -357,17 +407,6 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
     auto get_id_ptr = [&id_val_map, &zero ]( string id ){ 
          id_val_map->emplace(id, zero);
          return &(id_val_map->at(id)); 
-         
-//       auto map_iter = id_val_map->find(id); 
-//       int* id_ptr;
-//       if ( map_iter == id_val_map->end() ){ 
-//         int new_id_val = 0; 
-//         id_val_map->emplace(id, new_id_val);
-//         id_ptr = &(id_val_map->at(id)) ; 
-//       } else { 
-//         id_ptr = &(map_iter->second); 
-//       }          
-//       return id_ptr;
     };
 
     string term_name = term_inp->get<string>( "name" );
@@ -390,7 +429,6 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
           op_idxs.push_back(lexical_cast<string>(idx->data()));
           id_val_map->emplace(op_idxs.back(), zero); 
           op_idxs_ptrs->push_back( &( id_val_map->at(op_idxs.back()) ) ); 
-//          op_idxs_ptrs->push_back( get_id_ptr(op_idxs.back()) );            
         }
  
         bk_ops->push_back(Op_Init( opname, op_idxs, op_idxs_ptrs ));
@@ -450,7 +488,7 @@ cout << "PropTool::PropTool::set_ci_range_info" << endl;
 
     cout << " ii = " << ii << endl; 
     range_conversion_map_->emplace( get_civec_name( ii , civectors_->data(ii)->det()->norb(), civectors_->data(ii)->det()->nelea(), civectors_->data(ii)->det()->neleb()),
-                                                   make_shared<SMITH::IndexRange>(civectors_->data(ii)->det()->size(), cimaxtile_ ));  
+                                                    make_shared<SMITH::IndexRange>(civectors_->data(ii)->det()->size(), cimaxtile_ ));  
     
     shared_ptr<SMITH::IndexRange>  ci_index_ranges =  make_shared<SMITH::IndexRange>(civectors_->data(ii)->det()->size(), cimaxtile_ );
     cout << "cirngs = [ ";  for (auto irng : ci_index_ranges->range()) { cout << irng.size()  << " "; }; cout << "] " << endl;

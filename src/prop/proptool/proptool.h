@@ -62,6 +62,10 @@ namespace PropTool {
     void set_ao_range_info();
     void set_ci_range_info();
 
+    void read_input_and_initialize(); 
+    void get_wavefunction_info();
+    void calculate_mo_integrals();
+
     void build_op_tensors( std::vector<std::string>& expression_list ) ;
     std::shared_ptr<std::vector<SMITH::IndexRange>> convert_to_indexrange( std::shared_ptr<const std::vector<std::string>> range_block_str ) ;
 
@@ -73,9 +77,13 @@ namespace PropTool {
     void get_new_ops_init( std::shared_ptr<const PTree> ops_def_tree ) ;
     void get_expression_variables( std::shared_ptr<const PTree> expr_def_tree ) ;
 
+    void build_algebraic_task_lists( std::string  eqn_interdependence );
+ 
     std::shared_ptr<std::map< std::string , double >> inp_factor_map_;
     std::shared_ptr<std::map< std::string , std::shared_ptr<std::vector<double>> >> inp_indexed_factor_map_;
     std::shared_ptr<std::map< std::string , std::shared_ptr<std::vector<int>> >> inp_range_map_;
+
+    std::vector<std::string> equation_execution_list_;
 
     public: 
 
