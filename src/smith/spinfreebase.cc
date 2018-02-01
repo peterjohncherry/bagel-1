@@ -46,6 +46,11 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
 
   const int ncore2 = info_->ncore()*(is_same<DataType,double>::value ? 1 : 2);
 
+  cout << "info_->ncore() = " << info_->ncore() << endl;
+  cout << "info_->nact() = " << info_->nact() << endl;
+  cout << "info_->nclosed() = " << info_->nclosed() << endl;
+  cout << "info_->nvirt() = " << info_->nvirt() << endl;
+
   closed_ = IndexRange(info_->nclosed()-info_->ncore(), max, 0, info_->ncore());
   if (is_same<DataType,complex<double>>::value)
     closed_.merge(IndexRange(info_->nclosed()-info_->ncore(), max, closed_.nblock(), ncore2+closed_.size(), info_->ncore()));
@@ -86,14 +91,19 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
       occ = all_;
       virt = all_;
     }
-    K2ext<DataType> v2k(info_, coeff_, {occ, virt, occ, virt});
+    cout << " occ.size() = " <<  occ.size() << endl;
+    cout << " virt.size() = " <<  virt.size() << endl;
+    K2ext<DataType> v2k(info_, coeff_, {occ, virt, occ, virt}); // how does this work; moint says it can only handle 2 externals? 
     v2_ = v2k.tensor();
+    cout << "in spinfreebase v2_->norm()->size_alloc()  = " <<  v2_->size_alloc() << endl;
+    cout << "in spinfreebase v2_->norm()  = " <<  v2_->norm() << endl;
   }
+
   ////////////////////// temp H_2el tensor for testing//////////////////////////////////////////
-  {
-    K2ext<DataType> v2k(info_, coeff_, {all_, all_, all_, all_});
-    H_2el_ = v2k.tensor();
-  }
+//  {
+//    K2ext<DataType> v2k(info_, coeff_, {all_, all_, all_, all_});
+//    H_2el_ = v2k.tensor();
+//  }
   //////////////////////////////////////////////////////////////////////////////////////////////
 
   timer.tick_print("MO integral evaluation");

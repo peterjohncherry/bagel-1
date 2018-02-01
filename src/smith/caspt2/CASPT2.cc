@@ -31,9 +31,7 @@
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
-#include <src/smith/caspt2/CASPT2_ALT.h>
-#include <src/smith/wicktool/tensop_computer.h>
-#include <src/smith/wicktool/expression.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 
 using namespace std;
 using namespace bagel;
@@ -83,9 +81,10 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   for (int i = 0; i != nstates_; ++i) {
     sall_.push_back(cas.sall_[i]->copy());
   }
-//  h1_ = cas.h1_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 0.0  );
-//  f1_ = cas.f1_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 0.0  );
-//  v2_ = cas.v2_;        Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );  
+  h1_ = cas.h1_;   //     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 0.0  );
+  f1_ = cas.f1_;   //     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 0.0  );
+  v2_ = cas.v2_;   //     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );  
+  cout << "CASPT2 init v2_->norm() = " << v2_->norm() << endl; 
   H_2el_ =  cas.H_2el_; 
 
   rdm0all_ = cas.rdm0all_;

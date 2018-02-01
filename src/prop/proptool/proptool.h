@@ -1,29 +1,3 @@
-//
-// BAGEL - Brilliantly Advanced General Electronic Structure Library
-// Filename: force.cc
-// Copyright (C) 2015 Toru Shiozaki
-//
-// Author: Toru Shiozaki <shiozaki@northwestern.edu>
-// This File : Peter John Cherry <peter.cherry@northwestern.edu>
-// Maintainer: Shiozaki group
-//
-// This file is part of the BAGEL package.
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
-//
-
 #ifndef __SRC_PROPTOOL
 #define __SRC_PROPTOOL
 
@@ -34,55 +8,21 @@
 #include <src/smith/indexrange.h>
 #include <src/smith/tensor.h>
 #include <src/smith/multitensor.h>
-#include <src/smith/wicktool/system_info.h>
-#include <src/smith/wicktool/expression_computer.h>
-#include <src/smith/wicktool/expression.h>
+#include <src/prop/proptool/algebraic_manipulator/system_info.h>
+#include <src/prop/proptool/algebraic_manipulator/expression.h>
+#include <src/prop/proptool/task_translation/expression_computer.h>
+#include <src/prop/proptool/integrals/moint.h>
+#include <src/prop/proptool/integrals/moint_computer.h>
+#include <src/prop/proptool/integrals/moint_init.h>
+#include <src/prop/proptool/initialization/op_bk_term_expr_init.h>
+#include <src/prop/proptool/initialization/equation_init.h>
+
 
 namespace bagel {
 namespace PropTool { 
 
-
   class PropTool {
- 
-  template <typename DataType> 
-    class Term_Init { 
-    
-      public :
-        std::vector<std::vector<std::string>> op_names_;
-        std::vector<std::vector<int>> bra_states_;
-        std::vector<std::vector<int>> ket_states_;
-        std::vector<DataType> factors_;
-        std::vector<std::string> types_;
-        std::vector<int> bra_states_merged_;
-        std::vector<int> ket_states_merged_;
-        std::vector<int> all_states_;
-    
-        Term_Init( std::vector<std::vector<std::string>>& op_names, std::vector<std::vector<int>>& bra_states, std::vector<std::vector<int>>& ket_states,
-                   std::vector<DataType>& factors, std::vector<std::string> types) :
-                   op_names_(op_names), bra_states_(bra_states), ket_states_(ket_states), factors_(factors), types_(types) {
-    
-                    bra_states_merged_ = merge_states(bra_states_);
-                    ket_states_merged_ = merge_states(ket_states_);
-    
-                    std::vector<std::vector<int>> tmp  = { bra_states_merged_, ket_states_merged_ };
-                    all_states_ = merge_states(tmp);
-    
-                  }
-    
-        std::vector<int> merge_states( std::vector<std::vector<int>>& all_st_lists )  { //gross, but it's only ever short
-                            std::vector<int> st_list = all_st_lists[0];
-                            for ( int ii = 1 ; ii!= all_st_lists.size(); ii++ ){
-                              std::vector<int> tmp(st_list.size() + all_st_lists[ii].size());
-                              std::copy(st_list.begin(), st_list.end(), tmp.begin() );
-                              std::copy(all_st_lists[ii].begin(), all_st_lists[ii].end(), tmp.begin()+st_list.size() );
-                              std::sort(tmp.begin(), tmp.end()); 
-                              std::vector<int>::iterator it = std::unique(tmp.begin(), tmp.end()); 
-                              st_list = std::vector<int>( tmp.begin(), it );
-                            }
-                            return st_list;
-                          }
-    }; 
-    
+
     std::shared_ptr<const PTree> idata_;
     std::shared_ptr<const Geometry> geom_;
     std::shared_ptr<const Reference> ref_;
@@ -94,14 +34,25 @@ namespace PropTool {
     int nact_; 
     int nvirt_; 
     int nocc_; 
+    int nfrozenvirt_;
+  
+    bool breit_;
+    bool gaunt_;
+    bool block_diag_fock_;
    
     size_t maxtile_;
     size_t cimaxtile_;
  
+    std::string method_;
+
     std::shared_ptr<System_Info<double>> sys_info_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> expression_map_;
     std::shared_ptr<SMITH::Expression_Computer::Expression_Computer<double>> expression_machine_;
     std::shared_ptr<std::map< std::string, double>> scalar_results_map_;
+
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Term_Init> >> term_init_map_;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Expression_Init> >> expression_init_map_;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<Equation_Init_Base> >> equation_init_map_;
 
     std::vector<int> target_states_;
     std::vector<int> all_states_;
@@ -111,12 +62,28 @@ namespace PropTool {
     void set_ao_range_info();
     void set_ci_range_info();
 
-    std::shared_ptr<std::vector<std::string>> build_expressions( Term_Init<double>& term_inp );
+    void read_input_and_initialize(); 
+    void get_wavefunction_info();
+    void calculate_mo_integrals();
+
     void build_op_tensors( std::vector<std::string>& expression_list ) ;
     std::shared_ptr<std::vector<SMITH::IndexRange>> convert_to_indexrange( std::shared_ptr<const std::vector<std::string>> range_block_str ) ;
 
-    std::shared_ptr<std::vector< Term_Init<double> >> get_expression_init( std::shared_ptr<const PTree> expression_inp ); 
+    void get_terms_init( std::shared_ptr<const PTree> expression_inp ); 
+    void get_equations_init( std::shared_ptr<const PTree> expression_init ); 
+    void get_equation_init_LinearRM( std::shared_ptr<const PTree> equation_inp );
+    void get_equation_init_Value( std::shared_ptr<const PTree> equation_inp );
+
     void get_new_ops_init( std::shared_ptr<const PTree> ops_def_tree ) ;
+    void get_expression_variables( std::shared_ptr<const PTree> expr_def_tree ) ;
+
+    void build_algebraic_task_lists( std::string  eqn_interdependence );
+ 
+    std::shared_ptr<std::map< std::string , double >> inp_factor_map_;
+    std::shared_ptr<std::map< std::string , std::shared_ptr<std::vector<double>> >> inp_indexed_factor_map_;
+    std::shared_ptr<std::map< std::string , std::shared_ptr<std::vector<int>> >> inp_range_map_;
+
+    std::vector<std::string> equation_execution_list_;
 
     public: 
 
@@ -152,6 +119,19 @@ namespace PropTool {
 
      //std::shared_ptr<std::vector<std::string>> identity( std::shared_ptr<std::vector<std::string>> invec ) { return invec; }
 
+     int nclosed(){ return nclosed_;}     
+     int nocc ()  { return nocc_;}     
+     int nact ()  { return nact_;}     
+     int ncore()  { return ncore_;}     
+     int nvirt()  { return nvirt_;}     
+     int nfrozenvirt(){ return nfrozenvirt_;}     
+     bool block_diag_fock() { return block_diag_fock_; }     
+ 
+     std::string method(){ return method_; }
+     std::shared_ptr<const Geometry> geom(){ return geom_;} ;
+     std::shared_ptr<const Hcore> hcore(){ return ref_->hcore();}
+     std::shared_ptr<const RDM<1>> rdm1_av(){ return  ref_->rdm1_av();}
+ 
 };
 };
 };

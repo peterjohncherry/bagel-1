@@ -24,7 +24,6 @@ caspt2/MSCASPT2_gen11.cc caspt2/MSCASPT2_gen12.cc \
 caspt2/MSCASPT2_tasks1.cc caspt2/MSCASPT2_tasks2.cc caspt2/MSCASPT2_tasks3.cc caspt2/MSCASPT2_tasks4.cc caspt2/MSCASPT2_tasks5.cc \
 caspt2/MSCASPT2_tasks6.cc caspt2/MSCASPT2_tasks7.cc caspt2/MSCASPT2_tasks8.cc caspt2/MSCASPT2_tasks9.cc caspt2/MSCASPT2_tasks10.cc \
 caspt2/MSCASPT2_tasks11.cc caspt2/MSCASPT2_tasks12.cc \
-caspt2/CASPT2_ALT.cc \
 \
 caspt2/MSCASPT2_contract.cc caspt2/MSCASPT2_contract_tasks.cc caspt2/MSCASPT2_contract_gen.cc \
 mrci/MRCI.cc mrci/MRCI_gamma.cc mrci/MRCI_sourceq.cc mrci/MRCI_normq.cc \
@@ -44,11 +43,6 @@ relcaspt2/RelCASPT2_gen1.cc relcaspt2/RelCASPT2_gen2.cc relcaspt2/RelCASPT2_gen3
 relcaspt2/RelCASPT2_gen6.cc \
 relcaspt2/RelCASPT2_tasks1.cc relcaspt2/RelCASPT2_tasks2.cc relcaspt2/RelCASPT2_tasks3.cc relcaspt2/RelCASPT2_tasks4.cc relcaspt2/RelCASPT2_tasks5.cc \
 relcaspt2/RelCASPT2_tasks6.cc \
-\
-wicktool/expression.cc wicktool/ctrtensop.cc wicktool/tensop.cc wicktool/wickutils.cc  wicktool/braket.cc \
-wicktool/tensop_computer.cc wicktool/gamma_generator.cc wicktool/spin_manager.cc wicktool/tensor_sorter.cc \
-wicktool/system_info.cc wicktool/symmetry_operations.cc wicktool/tensor_arithmetic.cc wicktool/tensor_arithmetic_utils.cc \
-wicktool/gamma_computer.cc wicktool/b_gamma_computer.cc wicktool/tensop_info.cc wicktool/expression_computer.cc \
 \
 casa/CASA.cc casa/CASA_gamma.cc casa/CASA_residualq.cc casa/CASA_sourceq.cc \
 casa/CASA_gen1.cc casa/CASA_gen2.cc casa/CASA_gen3.cc casa/CASA_gen4.cc casa/CASA_gen5.cc casa/CASA_gen6.cc \
