@@ -336,19 +336,22 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
   // This is why you had the ugly thing before; it was much faster than this stupid thing with all it's checking.
   // Maybe add some comments in future so you can understand things...
   if ( num_tensors_ > 1 ) { 
-
+    cout << "X1" << endl;
     shared_ptr<vector<int>> forvec = make_shared<vector<int>>(num_tensors_, 0 ); 
     shared_ptr<vector<int>> old_forvec = make_shared<vector<int>>(*forvec);
 
     shared_ptr<vector<int>> mins   = make_shared<vector<int>>(num_tensors_, 0 );  
     shared_ptr<vector<int>> maxs   = make_shared<vector<int>>(num_tensors_, 0 );  
+    cout << "X2" << endl;
     for ( int ii = 0 ; ii != orig_tensors_.size() ; ii++ ){ 
       maxs->at(ii) = orig_tensors_[ii]->all_ranges()->size()-1;
       rng_maps[ii] = orig_tensors_[ii]->all_ranges()->begin() ; 
     }
+    cout << "X3" << endl;
 
     do {
 
+      print_vector(*forvec, "forvec"); cout << endl;
       for ( int ii = 0 ; ii != forvec->size() ; ii++ ) {
         if ( old_forvec->at(ii) != forvec->at(ii) ) {
           if ( forvec->at(ii) == 0 ) {
@@ -359,15 +362,17 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
         }
       }
       old_forvec = make_shared<vector<int>>(*forvec);
-
-      auto split_block = make_shared< vector <shared_ptr<range_block_info >>>(num_tensors_);
-      auto split_block_iter = split_block->begin();
-      for (int jj = 0 ; jj != num_tensors_ ; jj++)
+      shared_ptr< vector <shared_ptr<range_block_info >>> split_block = make_shared< vector <shared_ptr<range_block_info >>>(num_tensors_);
+      vector<shared_ptr<range_block_info>>::iterator split_block_iter = split_block->begin();
+      for (int jj = 0 ; jj != num_tensors_ ; jj++) 
         *split_block_iter++ = rng_maps[jj]->second;
-      
-
+       
       //TODO Must obtain from constraint functions 
-      shared_ptr<split_range_block_info> srbi = make_shared<split_range_block_info>( split_block );
+      shared_ptr<split_range_block_info> srbi;
+      {
+      srbi_helper helper(split_block);
+      srbi = make_shared<split_range_block_info>( helper );
+      }
       all_ranges.emplace( *(srbi->orig_block()), srbi ) ;
  
     } while( fvec_cycle_skipper( forvec, maxs, mins ) );
@@ -377,9 +382,9 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
   } else { 
 
      //TODO  add constructor so can just have single tensor, need not be vector
-    shared_ptr<vector<shared_ptr<split_range_block_info>>> srbi; 
     for ( auto elem : *(orig_tensors_[0]->all_ranges()) )  {
-      shared_ptr<split_range_block_info> srbi = make_shared<split_range_block_info>( make_shared<vector<shared_ptr<range_block_info >>>(1, elem.second) );
+      srbi_helper helper( make_shared<vector<shared_ptr<range_block_info >>>(1, elem.second));
+      shared_ptr<split_range_block_info> srbi = make_shared<split_range_block_info>(helper);
       all_ranges.emplace( *(srbi->orig_block()), srbi ) ;
     }
   }
