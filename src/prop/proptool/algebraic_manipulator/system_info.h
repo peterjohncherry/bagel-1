@@ -25,7 +25,7 @@ class System_Info {
 
       // key :    Name of BraKet
       // result : Vector of TensOps corresponding to BraKet
-      std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> BraKet_map;
+      std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> braket_map_;
          
       // key :    Name of Term
       // result : Vector of BraKets corresponding to Term
@@ -41,7 +41,7 @@ class System_Info {
 
       // key : expression name
       // result : expresion object 
-      std::shared_ptr< std::map <std::string, std::shared_ptr<Equation_Base<DataType>>>> equation_map;
+      std::shared_ptr< std::map <std::string, std::shared_ptr<Equation_Base<DataType>>>> equation_map_;
     
       // key :    Name of uncontracted part of TensorOp.
       // result : Info for uncontracted part of TensorOp info.
@@ -85,7 +85,12 @@ class System_Info {
      
       void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
 
-      std::string Build_Expression( std::vector<BraKet<DataType>>&  term_info_list  ); 
+      std::string Build_Expression( std::shared_ptr<std::vector<BraKet<DataType>>>  term_info_list  ); 
+      std::string Build_Expression( std::string expression_name  ); 
+    
+      void create_equation( std::string name, std::string type, 
+                            std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
+                            std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map );
 
       std::string Get_BraKet_name( BraKet<DataType>& BraKet_info  ) ;
 

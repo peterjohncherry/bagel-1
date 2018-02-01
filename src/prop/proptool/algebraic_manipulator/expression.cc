@@ -6,25 +6,25 @@ using namespace std;
 //TODO GammaMap should be generated outside and not fed in here. It constains _no_ Expression specific information.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-Expression<DataType>::Expression( vector< BraKet<DataType>>&  Term_list,
+Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_list,
                                   shared_ptr<StatesInfo<DataType>> states_info,
-                                  shared_ptr<map< string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,      
-                                  shared_ptr<map< string, shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,     
-                                  shared_ptr<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,    
+                                  shared_ptr<map< string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,
+                                  shared_ptr<map< string, shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,
+                                  shared_ptr<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,
                                   shared_ptr<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>     ACompute_map,
-                                  shared_ptr<map< string, shared_ptr<GammaInfo> > >                         GammaMap ):    
-                                  Term_list_(Term_list), states_info_(states_info), MT_map_(MT_map), CTP_map_(CTP_map), CMTP_map_(CMTP_map),
+                                  shared_ptr<map< string, shared_ptr<GammaInfo> > >                         GammaMap ):
+                                  braket_list_(braket_list), states_info_(states_info), MT_map_(MT_map), CTP_map_(CTP_map), CMTP_map_(CMTP_map),
                                   ACompute_map_(ACompute_map), GammaMap_(GammaMap) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression<DataType>::Expression (new constructor) " << endl; 
+  cout << "Expression<DataType>::Expression (new constructor) " << endl;
 
   //Note that this G_to_A_map_ is expression specific
   G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, AContribInfo >>>>();
 
-  // Will loop through terms and then generate mathematical task map. It's split into 
+  // Will loop through terms and then generate mathematical task map. It's split into
   // two functions as this will gives more control over merging together of different BraKets G_to_A_maps.
-  for ( BraKet<DataType>& braket : Term_list_ ) 
-     braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, GammaMap_, states_info_ );         
+  for ( BraKet<DataType>& braket : *braket_list_ )
+     braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, GammaMap_, states_info_ );
   get_gamma_Atensor_contraction_list();
 }
 
@@ -34,14 +34,14 @@ Expression<DataType>::Expression( vector< BraKet<DataType>>&  Term_list,
 template<class DataType>
 void Expression<DataType>::get_gamma_Atensor_contraction_list(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression::get_gamma_Atensor_contraction_list" << endl;  
+  cout << "Expression::get_gamma_Atensor_contraction_list" << endl;
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto G2A_mapit = G_to_A_map_->begin(); G2A_mapit != G_to_A_map_->end(); G2A_mapit++) {
     auto A_map = G2A_mapit->second;
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
-      string CMTP_name  = A_map_it->first;     
-      shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list; 
+      string CMTP_name  = A_map_it->first;
+      shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list;
       if ( CMTP_map_->find(CMTP_name) == CMTP_map_->end())
         throw std::logic_error( CMTP_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
 
@@ -50,11 +50,11 @@ void Expression<DataType>::get_gamma_Atensor_contraction_list(){
         cout << "Expression::get_gamma_Atensor_contraction_list::already built compute list for " << CMTP_name << " during generation of earlier compute list" << endl;
         cout << CMTP_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(CMTP_name)->size() << "  --- Still in if " << endl;
         continue;
-      } else {  
+      } else {
         ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
         CMTP_map_->at(CMTP_name)->FullContract(CTP_map_, ACompute_list, ACompute_map_);
         ACompute_map_->emplace(CMTP_name, ACompute_list);
-        CMTP_map_->at(CMTP_name)->got_compute_list = true; 
+        CMTP_map_->at(CMTP_name)->got_compute_list = true;
       }
       cout << CMTP_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(CMTP_name)->size() << endl;
     }
@@ -70,7 +70,7 @@ void Expression<DataType>::get_gamma_Atensor_contraction_list(){
 template<class DataType>
 void Expression<DataType>::necessary_tensor_blocks(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression::necessary_tensor_blocks" << endl;  
+  cout << "Expression::necessary_tensor_blocks" << endl;
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto G2A_mapit = G_to_A_map_->begin(); G2A_mapit != G_to_A_map_->end(); G2A_mapit++) {
@@ -83,16 +83,16 @@ void Expression<DataType>::necessary_tensor_blocks(){
         throw std::logic_error( CMTP_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
 
       //awkward, but this will avoid issues where members of CTP_vec are formed from multiple tensors
-      shared_ptr<CtrMultiTensorPart<DataType>> CMTP = CMTP_loc->second;     
+      shared_ptr<CtrMultiTensorPart<DataType>> CMTP = CMTP_loc->second;
       shared_ptr<vector<string>> ranges = CMTP->full_id_ranges;
       shared_ptr<vector<string>> idxs = CMTP->full_idxs;
       int t_num = 0;
       int op_size = 1;
       char op_name = idxs->at(0)[0];
       for ( int ii = 1 ; ii != idxs->size() ; ii++ ) {
-        if ( op_name == idxs->at(ii)[0] ){ 
-          op_size+=1; 
-        } else { 
+        if ( op_name == idxs->at(ii)[0] ){
+          op_size+=1;
+        } else {
           vector<string> ctp_idxs(op_size);
           vector<string> ctp_ranges(op_size);
           int pos = 0;
@@ -100,8 +100,8 @@ void Expression<DataType>::necessary_tensor_blocks(){
             ctp_idxs[pos] = idxs->at(pos);
             ctp_ranges[pos] = ranges->at(pos);
           }
-          op_name = idxs->at(ii)[0]; 
-          op_size = 1; 
+          op_name = idxs->at(ii)[0];
+          op_size = 1;
         }
       }
  
@@ -117,4 +117,3 @@ void Expression<DataType>::necessary_tensor_blocks(){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Expression<double>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-

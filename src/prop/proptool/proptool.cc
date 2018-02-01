@@ -243,7 +243,10 @@ void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_de
     if ( eqn_type == "LinearRM" ) { 
       get_equation_init_LinearRM( equation_inp ) ;
 
-    } else {
+    } else if ( eqn_type == "Value" ) { 
+      get_equation_init_Value( equation_inp ) ;
+    
+    } else { 
       cout << "this equation type not implemented" << endl; 
 
     }
@@ -292,6 +295,8 @@ cout << " PropTool::PropTool::get_linear_equation_init_Value" << endl;
   auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
   auto eqn_init = make_shared<Equation_Init_Value<double>>( eqn_name, "Value", master_expression, inp_range_map_, target_indices, inp_factor_map_ );
   eqn_init->initialize_expressions();
+ 
+  sys_info_->create_equation( eqn_name, "Value", eqn_init->term_braket_map_ , eqn_init->expression_term_map_ );
 
   return;
 }

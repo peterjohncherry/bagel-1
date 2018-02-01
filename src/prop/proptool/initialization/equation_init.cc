@@ -7,7 +7,9 @@ template<typename DataType>
 void Equation_Init_Value<DataType>::initialize_expressions() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Init_Value<DataType>::initialize_expressions()" << endl;
-   
+
+  //TODO The looping through the terms should be on the inside, and the summation on the outside,
+  //     but switching these loops round is headache, and I doubt it is significant speed wise  
   for ( int ii = 0 ; ii != master_expression_->term_list_->size(); ii++  ){
    
     //get factors and initialize range map
@@ -34,7 +36,6 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
     for ( auto elem : *term_idx_val_map )
       *maxs_it++ = term_range_map.at(elem.first)->size()-1;
 
-
     {
     int qq = 0 ;
     for ( auto elem : *term_idrange_map ) {
@@ -60,10 +61,32 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
         }
       }
       copy_n(mins->begin(), mins->size(), fvec->begin());
+
+     
+      string state_ids_name = " summed:[";
+      for ( auto& elem : *term_idrange_map ) 
+         if (elem.second.first)
+           state_ids_name+= elem.second.second + "," ; 
+      state_ids_name += "]";
       
-      shared_ptr<vector<pair<DataType, string>>> expression_term_list = make_shared<vector<pair<DataType, string>>>();
-      string expression_name = "";
-      vector<BraKet<DataType>> braket_list;
+      state_ids_name += " fixed:[";
+      for ( auto& elem : *term_idrange_map ) 
+         if (!elem.second.first)
+           state_ids_name+= elem.second.second + "," ; 
+      state_ids_name += "]";
+
+      shared_ptr<vector<pair<DataType, string>>> expression_term_list; 
+      string expression_name = master_expression_->name_ + state_ids_name;
+      auto etm_loc = expression_term_map_->find( expression_name );
+      if ( etm_loc == expression_term_map_->end() ) {
+        expression_term_list = make_shared<vector<pair<DataType, string>>>();
+        expression_term_map_->emplace( expression_name, expression_term_list );
+
+      } else { 
+        expression_term_list = etm_loc->second;
+      } 
+
+      vector<BraKet<DataType>> braket_list;;
       do {
         int kk = 0 ;
         vector<int>::iterator fvec_it = fvec->begin();
@@ -84,44 +107,21 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
               bk_info.op_list_->at(jj).get_op_idxs( op_state_ids->at(jj) );
             }
           }
-      
        
           braket_list.push_back(BraKet<DataType>( bk_op_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
        } 
-       
-       string term_name;
-       for ( BraKet<DataType>& bk : braket_list ) 
-          term_name  += bk.bk_name();
-       
-       term_name += " summed:[";
-       for ( auto& elem : *term_idrange_map ) 
-          if (elem.second.first)
-            term_name+= elem.second.second + "," ; 
-       term_name += "]";
-       
-       term_name += " fixed:[";
-       for ( auto& elem : *term_idrange_map ) 
-          if (!elem.second.first)
-            term_name+= elem.second.second + "," ; 
-       term_name += "]";
-
-       term_map_->emplace( term_name, make_shared<vector<BraKet<DataType>>>(braket_list) ); 
-       expression_term_list->push_back(make_pair(1.0 , term_name));
-       expression_name += "{ " +term_name + " }";
 
      } while( fvec_cycle_skipper( fvec, maxs, mins ) );
+  
+     string term_name;
+     for ( BraKet<DataType>& bk : braket_list ) 
+       term_name  += bk.bk_name();
+     term_name += state_ids_name;
 
-     expression_term_map_->emplace( expression_name, expression_term_list );  
+     term_braket_map_->emplace( term_name, make_shared<vector<BraKet<DataType>>>(braket_list) ); 
+     expression_term_list->push_back(make_pair(1.0 , term_name));
 
     }while( fvec_cycle_skipper( fvec_summer, maxs_summer, mins_summer ) );
-
-    // loop through vectors in range map, to change what is in id val map
-    //
-    // on each loop, go through braket_list in term init, and get the op indexes and bra and ket indexes
-    //
-    // use these outputs to initialize the BraKet list, which can then be fed into Expression. 
-    //
-    // emplace this expression into the map.
 
   }
   return;
@@ -183,8 +183,6 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
             bk_info.op_list_->at(jj).get_op_idxs( op_state_ids->at(jj) ) ;
           }
         }
-        
-        
         
         BraKet<DataType>  new_bk( bk_op_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ );
         cout <<  new_bk.bk_name() << endl;

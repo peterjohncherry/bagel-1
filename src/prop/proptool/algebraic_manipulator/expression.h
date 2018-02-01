@@ -8,10 +8,10 @@
 template<typename DataType>
 class Expression {
 
-      public : 
+      public :
         
-        //List of terms, currently a list of BraKets...         
-        std::vector< BraKet<DataType>> Term_list_;                                       
+        //List of terms, currently a list of BraKets...
+        std::shared_ptr<std::vector< BraKet<DataType>>> braket_list_;
 
         //information about target states of the system
         std::shared_ptr<StatesInfo<DataType>> states_info_;
@@ -29,10 +29,10 @@ class Expression {
         std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map_;
         
         // key:  Name of a contracted tensor or contracted combintation fo tensors
-        // result : List of operations which need to be performed to obtain it 
+        // result : List of operations which need to be performed to obtain it
         std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map_;
         
-        // key : name of gammas 
+        // key : name of gammas
         // result : gamma_info, also contains sigma info,  includes lists of gammas which must be calculated first.
         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo> > > GammaMap_;
         
@@ -40,17 +40,13 @@ class Expression {
         // result :  name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors.
         std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo > >>> G_to_A_map_; //TODO should be private
         
-        // Vector of BraKet terms which comprise the expression
-        std::vector<std::shared_ptr<BraKet<DataType>>> braket_list_;
-
-
-        Expression( std::vector<BraKet<DataType>>&  braket_list,
+        Expression( std::shared_ptr<std::vector<BraKet<DataType>>> braket_list,
                     std::shared_ptr<StatesInfo<DataType>> states_info,
-                    std::shared_ptr<std::map< std::string, std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,      
-                    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,     
-                    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,    
-                    std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>>     ACompute_map,
-                    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >                         GammaMap );    
+                    std::shared_ptr<std::map< std::string, std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,
+                    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,
+                    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,
+                    std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
+                    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >                         GammaMap );
         ~Expression(){};
         
         void get_gamma_Atensor_contraction_list();

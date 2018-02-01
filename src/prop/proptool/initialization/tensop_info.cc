@@ -4,7 +4,7 @@
 using namespace std;
 
 /////////////////////////////////////////////////////////////////////////////////
-//Build the operators here. 
+//Build the operators here.
 /////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string op_name ) {
@@ -25,92 +25,92 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
    factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"H0", "H1", "H2", "H3"});
-   aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false});//TODO check this ordering is correct 
-   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free,free,free }); 
+   aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false});//TODO check this ordering is correct
+   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free,free,free });
    time_symm = "none";
    symmfuncs = identity_only();
    constraints = {  &System_Info<double>::System_Info::always_true };
-   state_dep = 0;    
+   state_dep = 0;
 
   } else if ( op_name == "h" ) {  /* ---- h Tensor ( 1 electron Hamiltonian ) ----  */
 
    factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"h0", "h1"});
-   aops = make_shared<vector<bool>>(vector<bool>  {true, false}); 
-   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free }); 
+   aops = make_shared<vector<bool>>(vector<bool>  {true, false});
+   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free });
    time_symm = "none";
    symmfuncs = set_1el_symmfuncs();
    constraints = {  &System_Info<double>::System_Info::always_true };
-   state_dep = 0;    
+   state_dep = 0;
      
   } else if ( op_name == "L" ) {  /* ---- L Tensor ----  */
 
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string> {"L0", "L1", "L2", "L3"});
-    aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true }); 
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, not_virt }); 
+    aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true });
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, not_virt });
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = { &System_Info<double>::System_Info::NotAllAct };
-    state_dep = 2;    
+    state_dep = 2;
     
       
   } else if ( op_name == "M" ) {  /* ---- M Tensor ----  */
 
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string> {"M0", "M1", "M2", "M3"});
-    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false }); 
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, core, core }); 
+    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false });
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, core, core });
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = { &System_Info<double>::System_Info::NotAllAct };
-    state_dep = 2;    
+    state_dep = 2;
  
   } else if ( op_name == "N" ) {  /* ---- N Tensor ----  */
 
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string> {"N0", "N1", "N2", "N3"});
-    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false }); 
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, core }); 
+    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false });
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, core });
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = { &System_Info<double>::System_Info::NotAllAct };
-    state_dep = 2;    
+    state_dep = 2;
     
   } else if ( op_name == "T" ) {  /* ---- T Tensor ----  */
 
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
-    aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} ); 
-    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, not_virt });   
+    aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} );
+    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, not_virt });
     time_symm = "none";
     symmfuncs = set_2el_symmfuncs();
     constraints = {  &System_Info<double>::System_Info::NotAllAct };
-    state_dep = 2;    
+    state_dep = 2;
 
-  } else if ( op_name == "X" ) { 
+  } else if ( op_name == "X" ) {
 
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>( vector<string> {"X0", "X1", "X2", "X3"} );
-    aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } ); 
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, act } ); 
+    aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, act } );
     time_symm = "none";
     symmfuncs = set_2el_symmfuncs();
     constraints = { &System_Info<double>::System_Info::NotAllAct };
-    state_dep = 2;    
+    state_dep = 2;
 
    } else if ( op_name == "Z" ) { /* 2el test op */
 
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>( vector<string> { "Z0", "Z1", "Z2", "Z3" } );
-    aops = make_shared<vector<bool>>( vector<bool>  { true, true, false, false } ); 
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, core } ); 
+    aops = make_shared<vector<bool>>( vector<bool>  { true, true, false, false } );
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, core } );
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = {  &System_Info<double>::System_Info::always_true };
-    state_dep = 2;    
+    state_dep = 2;
 
-  } else { 
+  } else {
     
     throw runtime_error("Do not have in-built definition for operator \"" + op_name + "\", aborting !!!" ) ;
 

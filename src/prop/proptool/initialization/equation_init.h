@@ -4,6 +4,18 @@
 #include <src/global.h>
 #include <src/prop/proptool/initialization/op_bk_term_expr_init.h>
 #include <src/prop/proptool/algebraic_manipulator/system_info.h>
+
+// Equation_Init constructs the expressions necessary for evaluation of the equation
+// specified in the user input.
+// The "master expression" is the expression with variables for indexes.
+// This is used to generate a set of expressions for which the numbers are specified.
+// These expressions are defined in by a list of terms, which are themselves a list of
+// brakets. 
+// The State_numbers in the BraKets are not variables, but numbers, which are determined
+// by looping through the vectors in the range map (the loop structure is determined from
+// the summations specified in the input). 
+// The Terms and BraKets are defined seperately and kept, as the same BraKets may 
+// appear in different expressions, and so can be reused.
 class Equation_Init_Base {
 
    public :
@@ -39,7 +51,7 @@ class Equation_Init_Value : public Equation_Init_Base {
      std::shared_ptr<std::vector<std::string>> target_indexes_;                // Need a different expression for each one of these.
      std::shared_ptr<std::map< std::string, DataType >> factor_map_; 
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_;
-     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_map_;
+     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_;
 
      Equation_Init_Value( std::string name,  std::string type, std::shared_ptr<Expression_Init> master_expression, 
                           std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<int>> >> range_map,
@@ -49,7 +61,7 @@ class Equation_Init_Value : public Equation_Init_Base {
                           target_indexes_(target_indexes), factor_map_(factor_map)  {
 
                           expression_term_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>>();
-                          term_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>();
+                          term_braket_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>();
 
 }; 
 
@@ -74,7 +86,7 @@ class Equation_Init_LinearRM : public Equation_Init_Base {
      std::shared_ptr<std::vector<std::string>> target_indexes_;                // Need a different expression for each one of these.
      std::shared_ptr<std::map< std::string, DataType >> factor_map_; 
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_;
-     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_map_;
+     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_;
 
    
      Equation_Init_LinearRM( std::string name,  std::string type, std::shared_ptr<Expression_Init> master_expression,
@@ -86,7 +98,7 @@ class Equation_Init_LinearRM : public Equation_Init_Base {
                              factor_map_(factor_map)  {
 
                              expression_term_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>>();
-                             term_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>();
+                             term_braket_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>();
 
 }; 
 
