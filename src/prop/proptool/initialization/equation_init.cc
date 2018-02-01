@@ -8,10 +8,21 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Init_Value<DataType>::initialize_expressions()" << endl;
 
+  cout << "range_map_ = " << endl;
+  for (auto& elem : *range_map_ ) { 
+    cout << "{ " <<  elem.first  << ", [ ";  cout.flush(); 
+    for ( int xx : *elem.second ) 
+    cout << xx << " "; cout.flush();
+    cout << "] } "<< endl;
+  }
+  cout << endl;
+  
   //TODO The looping through the terms should be on the inside, and the summation on the outside,
   //     but switching these loops round is headache, and I doubt it is significant speed wise  
   for ( int ii = 0 ; ii != master_expression_->term_list_->size(); ii++  ){
-   
+    cout << "master_expression_->term_list_->at("<<ii<<").second->name_ "; cout.flush(); 
+    cout << master_expression_->term_list_->at(ii).second->name_ << endl;  
+
     //get factors and initialize range map
     DataType term_factor = factor_map_->at(master_expression_->term_list_->at(ii).first);
     shared_ptr< Term_Init > term_init = master_expression_->term_list_->at(ii).second;
@@ -19,30 +30,31 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
     shared_ptr<map< string, int>> term_idx_val_map = term_init->idx_val_map_;
 
     //build stuff for forvec loop in advance to simplify initialization
-    shared_ptr<vector<int>> fvec = make_shared<vector<int>>(term_idrange_map->size(), 0) ;
-    shared_ptr<vector<int>> mins = make_shared<vector<int>>(term_idrange_map->size(), 0) ;
-    shared_ptr<vector<int>> maxs = make_shared<vector<int>>(term_idrange_map->size(), 0) ;
+    shared_ptr<vector<int>> fvec = make_shared<vector<int>>(term_idx_val_map->size(), 0) ;
+    shared_ptr<vector<int>> mins = make_shared<vector<int>>(term_idx_val_map->size(), 0) ;
+    shared_ptr<vector<int>> maxs = make_shared<vector<int>>(term_idx_val_map->size(), 0) ;
  
     //for summations.
     shared_ptr<vector<int>> fvec_summer = make_shared<vector<int>>(*fvec);
     shared_ptr<vector<int>> mins_summer = make_shared<vector<int>>(*mins);
     shared_ptr<vector<int>> maxs_summer = make_shared<vector<int>>(*maxs) ;
  
+    //build stuff for forvec loop in advance to simplify initialization
+    // NOTE : because ordering of term_init->idx_val_map is not necessarily same as term_idrange_map; latter can have more entries
     map<string, shared_ptr<vector<int>>> term_range_map;
+    vector<int>::iterator maxs_it = maxs->begin();
+    for ( auto elem : *term_idx_val_map ){
+      shared_ptr<vector<int>> range = range_map_->at(term_idrange_map->at(elem.first).second);
+      term_range_map.emplace( elem.first, range );
+      *maxs_it++ = (( range->size()-1 > 0 ) ? range->size()-1 : 0 );
+    }
 
     vector<bool> summed_indexes(term_idrange_map->size(), false);
-    // NOTE : because ordering of term_init->idx_val_map is not necessarily same as term_idrange_map;
-    vector<int>::iterator maxs_it = maxs->begin();
-    for ( auto elem : *term_idx_val_map )
-      *maxs_it++ = term_range_map.at(elem.first)->size()-1;
-
     {
     int qq = 0 ;
-    for ( auto elem : *term_idrange_map ) {
-      shared_ptr<vector<int>> range = range_map_->at(elem.second.second);
-      term_range_map.emplace( elem.first, range );
+    for ( auto& elem : *term_idrange_map ) {
       
-      if ( elem.second.first ){ 
+      if ( !elem.second.first ){ 
         maxs_summer->at(qq) = maxs->at(qq);
         summed_indexes[qq] = true;
       }
@@ -61,19 +73,31 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
         }
       }
       copy_n(mins->begin(), mins->size(), fvec->begin());
-
-     
+ 
       string state_ids_name = " summed:[";
       for ( auto& elem : *term_idrange_map ) 
-         if (elem.second.first)
-           state_ids_name+= elem.second.second + "," ; 
+         if (elem.second.first )
+           state_ids_name+= elem.first + "," ; 
       state_ids_name += "]";
-      
+
+      if (state_ids_name.back() != ',' ) {
+        state_ids_name.back() = ']';
+      } else {
+        state_ids_name += "]";
+      }
+  
       state_ids_name += " fixed:[";
       for ( auto& elem : *term_idrange_map ) 
-         if (!elem.second.first)
-           state_ids_name+= elem.second.second + "," ; 
-      state_ids_name += "]";
+         if (!elem.second.first && elem.first != "none" )
+           state_ids_name+= elem.first + "," ; 
+      
+      if (state_ids_name.back() == ',' ) {
+        state_ids_name.back() = ']';
+      } else {
+        state_ids_name += "]";
+      }
+
+      //cout <<" state_ids_name  = "<< state_ids_name << endl; 
 
       shared_ptr<vector<pair<DataType, string>>> expression_term_list; 
       string expression_name = master_expression_->name_ + state_ids_name;
@@ -109,17 +133,22 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
           }
        
           braket_list.push_back(BraKet<DataType>( bk_op_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
-       } 
+        } 
 
-     } while( fvec_cycle_skipper( fvec, maxs, mins ) );
+      } while( fvec_cycle_skipper( fvec, maxs, mins ) );
   
-     string term_name;
-     for ( BraKet<DataType>& bk : braket_list ) 
-       term_name  += bk.bk_name();
-     term_name += state_ids_name;
-
-     term_braket_map_->emplace( term_name, make_shared<vector<BraKet<DataType>>>(braket_list) ); 
-     expression_term_list->push_back(make_pair(1.0 , term_name));
+      string term_name;
+      int need_new_line = 0; 
+      for ( BraKet<DataType>& bk : braket_list )   
+        term_name  += " " + bk.bk_name() + " +" ;
+      
+      term_name.back()= ' ';
+      term_name += state_ids_name;
+      cout << endl;
+      cout << master_expression_->term_list_->at(ii).second->alg_name_ << endl;
+      cout << "term_name = " << term_name << endl;
+      term_braket_map_->emplace( term_name, make_shared<vector<BraKet<DataType>>>(braket_list) ); 
+      expression_term_list->push_back(make_pair(1.0 , term_name));
 
     }while( fvec_cycle_skipper( fvec_summer, maxs_summer, mins_summer ) );
 

@@ -172,6 +172,9 @@ class Expression_Init {
 
   public :
     std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<Term_Init>>>> term_list_;
+
+    //key :: index name
+    //result :: pair ( true_if_we_sum_over_this_index ,  name_of_index_range ) 
     std::shared_ptr<std::vector<std::shared_ptr<std::map<std::string,std::pair<bool,std::string>>>>> term_range_maps_;
    
     std::string name_;

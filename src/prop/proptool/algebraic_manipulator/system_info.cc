@@ -18,6 +18,8 @@ System_Info<DataType>::System_Info::System_Info( shared_ptr<StatesInfo<DataType>
 
   expression_term_map_ = make_shared<map<string, shared_ptr<vector<pair<DataType, string>>>>>();
   expression_map       = make_shared< map <string, shared_ptr<Expression<DataType>>>>();
+  
+  equation_map_       = make_shared< map <string, shared_ptr<Equation_Base<DataType>>>>();
 
   T_map          = make_shared< map <string, shared_ptr<TensOp::TensOp<DataType>>>>();
   MT_map         = make_shared< map <string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>();
@@ -183,13 +185,17 @@ System_Info<DataType>::System_Info::create_equation( std::string name, std::stri
 
   shared_ptr<Equation_Base<DataType>>  new_eqn;
   if ( type == "Value" ) { 
+    cout << "Value1" << endl;
     shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, term_braket_map, expression_term_map );
+    cout << "Value2" << endl;
     new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
+    cout << "Value3" << endl;
+    equation_map_->emplace( name, new_eqn); 
+    cout << "Value4" << endl;
   } else { 
     throw logic_error( "equation type \""+ type + "\" not implemented yet! Aborting!"); 
   }
 
-  equation_map_->emplace( name, new_eqn); 
   return;
 
 }

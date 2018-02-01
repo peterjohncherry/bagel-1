@@ -103,7 +103,7 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
   //TODO don't do this...........
   inp_factor_map_->emplace("one", 1.0 ); 
   inp_factor_map_->emplace("1.0", 1.0 ); 
-  inp_range_map_->emplace("none", make_shared<vector<int>>(0) ); 
+  inp_range_map_->emplace("none", make_shared<vector<int>>(1, -1) ); 
 
   auto range_info_tree =  variable_def_tree->get_child_optional("ranges"); // can be mo or state.. 
   for ( auto& range_info : *range_info_tree ) {
