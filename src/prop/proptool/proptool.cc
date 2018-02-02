@@ -50,12 +50,13 @@ void PropTool::PropTool::build_algebraic_task_lists( string  eqn_interdependence
 void PropTool::PropTool::read_input_and_initialize(){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  // gets information about the wavefunction from the refence
-  get_wavefunction_info();
 
   // Get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
   get_expression_variables( idata_->get_child("variables") );
  
+  // gets information about the wavefunction from the refence
+  get_wavefunction_info();
+
   calculate_mo_integrals();
 
   sys_info_ = make_shared<System_Info<double>>( targets_info_, true );
@@ -124,6 +125,11 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   nocc_     = nclosed_ + nact_; 
   nfrozenvirt_ = idata_->get<int>( "nfrozenvirt", 0 );
 
+  // TODO : should be determined from summation ranges in expression
+  nstates_ = idata_->get<int>( "nstates" , ciwfn_->nstates() );
+  target_states_ = vector<int>(nstates_); 
+  std::iota(target_states_.begin(), target_states_.end(), 0 ); 
+     
   // leave for now
   block_diag_fock_ = false;
   gaunt_    = false;
@@ -482,6 +488,8 @@ cout << "PropTool::PropTool::set_ao_range_info" << endl;
 void PropTool::PropTool::set_ci_range_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "PropTool::PropTool::set_ci_range_info" << endl;
+
+  
 
   cout << " set ci ranges " << endl;
   for ( int ii : target_states_ ) {

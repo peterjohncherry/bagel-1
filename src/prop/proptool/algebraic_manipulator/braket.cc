@@ -14,7 +14,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
                                                             shared_ptr<map<string, shared_ptr< GammaInfo >>> GammaMap,
                                                             shared_ptr<StatesInfo<DataType>> target_states ) {  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "BraKet::generate_gamma_Atensor_contractions" << endl;
+  cout << "BraKet::generate_gamma_Atensor_contractions : " << bk_name_ << endl; 
   //TODO fix this so it uses proper number of states; if statement in center should call Bra_num Ket_num appropriate Ops
   //     GammaGen should be initialized outside states loop, and wipe Gamma_Vec for each new range.
   //     Loop through dense ranges on the outside, then check sparsity on the inner when adding to GammaMap.

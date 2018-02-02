@@ -112,7 +112,7 @@ class TensOp_General : public Op_General_base {
 
 };
 
-class MultiTensOp_General : public  TensOp_General {
+class MultiTensOp_General : public  Op_General_base {
 
     private:
     
@@ -215,11 +215,11 @@ class TensOp : public TensOp_base {
      std::shared_ptr< range_block_info > all_ranges(const std::vector<std::string> range_block ) const  { return Op_dense_->all_ranges(range_block); }
 
      std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info > > > split_ranges() const{
-       throw std::logic_error("1 Should not be trying to access split range map from merged TensOp, probably error in range looping! Aborting! " ) ; 
+       throw std::logic_error("1 TensOp Should not be trying to access split range map from merged TensOp, probably error in range looping! Aborting! " ) ; 
      return Op_dense_->split_ranges(); } 
 
      std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block )const {
-       throw std::logic_error("2 Should not be trying to access split range map from merged TensOp, probably error in range looping! Aborting! " ) ; 
+       throw std::logic_error("2 TensOp Should not be trying to access split range map from merged TensOp, probably error in range looping! Aborting! " ) ; 
      return Op_dense_->split_ranges(range_block); } 
 
 };

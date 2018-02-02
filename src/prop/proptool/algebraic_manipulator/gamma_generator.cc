@@ -208,7 +208,7 @@ cout << "GammaGenerator::norm_order" << endl;
       cout <<  gint->full_id_ranges << endl;
   print_vector(*orig_aops_, "orig_aops"); cout  <<  endl;
   print_vector(*gint->ids_pos, "gint_ids_pos" ); cout << endl;
-  cout << " target_states_->name("<<Bra_num_<<") = "; cout.flush(); cout << target_states_->name(Bra_num_)  << endl;
+  cout << " target_states_->name("<<Bra_num_<<") = "; cout.flush(); cout << target_states_->name(Bra_num_) << endl;
   cout << " target_states_->name("<<Ket_num_<<") = "; cout.flush(); cout << target_states_->name(Ket_num_) << endl;
       cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, target_states_->name(Bra_num_), target_states_->name(Ket_num_) ) ;
       cout << "   ("<< gint->my_sign <<","<< gint->my_sign << ")       ";

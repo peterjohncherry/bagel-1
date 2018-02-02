@@ -128,7 +128,8 @@ string System_Info<DataType>::System_Info::Build_Expression( string expression_n
   }
   cout << " build the expression " << endl;
   string expression_name_gen =  Build_Expression( bk_list );
-  assert(expression_name_gen == expression_name );
+  cout << "   assert( " <<  expression_name_gen << " =?= " << expression_name  << " );" << endl;
+//  assert(expression_name_gen == expression_name );
 
   return expression_name;
 }
@@ -167,8 +168,6 @@ string System_Info<DataType>::System_Info::Build_Expression( shared_ptr<vector<B
       MT_map->emplace(BraKet_info.multiop_name_, multiop );
     } 
    
-    //TODO do state specific definition for MultiTens Op; just builds new range_map, should not have any sparsity yet ...
-      
     //TODO requires state specific looping to get name
     string BraKet_name =  Get_BraKet_name( BraKet_info  ); 
 
@@ -176,7 +175,6 @@ string System_Info<DataType>::System_Info::Build_Expression( shared_ptr<vector<B
       Set_BraKet_Ops( make_shared<vector<string>>(BraKet_info.op_list_), BraKet_name ) ;
 
     BraKet_name_list->push_back( make_pair( BraKet_name, BraKet_info.factor_ ) );
-    cout << "new BraKet_name = " << BraKet_name << endl;
   }
 
   string expression_name = "";
@@ -185,7 +183,12 @@ string System_Info<DataType>::System_Info::Build_Expression( shared_ptr<vector<B
       expression_name += "+ (" + to_string(name_fac_pair.second) + ")" + name_fac_pair.first;
   }
   cout << "new_expression_name = " << expression_name << endl;
-    
+  
+  cout << "List of things in CMTP_map " << endl;
+  for ( auto& elem : *CMTP_map ) 
+    cout << elem.first << endl;   
+
+ 
   shared_ptr<Expression<DataType>> new_expression = make_shared<Expression<DataType>>( expr_bk_list, target_states_, MT_map, CTP_map, CMTP_map, ACompute_map, Gamma_map ); 
 
   expression_map->emplace( expression_name, new_expression );
@@ -226,7 +229,7 @@ System_Info<DataType>::System_Info::create_equation( std::string name, std::stri
 template<class DataType>
 string System_Info<DataType>::System_Info::Get_BraKet_name( BraKet<DataType>& BraKet_info  ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << " System_Info<DataType>::System_Info::Get_BraKet_name " << endl;
+  cout << " System_Info<DataType>::System_Info::Get_BraKet_name "; cout.flush();
 
   string BraKet_name = "";
 
@@ -239,7 +242,8 @@ string System_Info<DataType>::System_Info::Get_BraKet_name( BraKet<DataType>& Br
   BraKet_name += BraKet_info.multiop_name_;
    
   BraKet_name += " | " + to_string(BraKet_info.ket_num_) + " > " ;
-  
+ 
+  cout << " : " << BraKet_name << endl; 
   return BraKet_name;  
 }
 

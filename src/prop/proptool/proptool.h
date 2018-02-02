@@ -42,6 +42,8 @@ namespace PropTool {
    
     size_t maxtile_;
     size_t cimaxtile_;
+
+    int nstates_;
  
     std::string method_;
 
