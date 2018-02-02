@@ -5,8 +5,8 @@
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
-using namespace bagel::SMITH::Tensor_Sorter;
-using namespace bagel::SMITH::Tensor_Arithmetic_Utils; 
+using namespace bagel::Tensor_Sorter;
+using namespace bagel::Tensor_Arithmetic_Utils; 
 using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Specialized routine for summing over the whole tensor, should not be needed by handy for now

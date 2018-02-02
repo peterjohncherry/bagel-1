@@ -27,13 +27,25 @@ PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geo
 
   read_input_and_initialize(); 
 
-  // eqn_dependence = "share" :  equations can be done in any order and share information
-  // eqn_dependence = "sequential" :  equations must be done in the order they appear in the input and share information
-  // eqn_dependence = "noshare" :  equations can be done in any order, but do not share information
   build_algebraic_task_lists( idata_->get<string>("equation interdependence", "share" ) ) ;
 
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::define_necessary_tensor_blocks(){  
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "PropTool::PropTool::define_necessary_tensor_blocks()" << endl; 
+
+//  expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, sys_info_->expression_map, range_conversion_map_, tensop_data_map_, 
+//                                                                                              gamma_data_map_, sigma_data_map_, civec_data_map_ );
+  cout << "built expression machine" << endl;
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// eqn_dependence = "share" :  equations can be done in any order and share information
+// eqn_dependence = "sequential" :  equations must be done in the order they appear in the input and share information
+// eqn_dependence = "noshare" :  equations can be done in any order, but do not share information
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::build_algebraic_task_lists( string  eqn_interdependence ){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +61,7 @@ void PropTool::PropTool::build_algebraic_task_lists( string  eqn_interdependence
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::read_input_and_initialize(){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+cout << "void PropTool::PropTool::read_input_and_initialize()" << endl; 
 
   // Get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
   get_expression_variables( idata_->get_child("variables") );
@@ -73,12 +85,8 @@ void PropTool::PropTool::read_input_and_initialize(){
   cout << "got terms_init" << endl;
 
   get_equations_init( idata_->get_child( "equations" ) );
-  cout << "got  equations_init" << endl;
+  cout << "got equations_init" << endl;
 
-  expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, sys_info_->expression_map, range_conversion_map_, tensop_data_map_, 
-                                                                                              gamma_data_map_, sigma_data_map_, civec_data_map_ );
-
-  cout << "built expression machine" << endl;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -347,8 +355,6 @@ cout << " PropTool::PropTool::get_linear_equation_init_Value" << endl;
   auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
   auto eqn_init = make_shared<Equation_Init_Value<double>>( eqn_name, "Value", master_expression, inp_range_map_, target_indices, inp_factor_map_ );
   eqn_init->initialize_expressions();
-
-  
  
   sys_info_->create_equation( eqn_name, "Value", eqn_init->term_braket_map_ , eqn_init->expression_term_map_ );
 

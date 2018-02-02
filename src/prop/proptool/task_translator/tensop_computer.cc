@@ -1,12 +1,12 @@
 #include <bagel_config.h>
-#include <src/prop/proptool/task_translation/tensop_computer.h>
+#include <src/prop/proptool/task_translator/tensop_computer.h>
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
-using namespace bagel::SMITH::Tensor_Sorter;
-using namespace bagel::SMITH::Tensor_Arithmetic; 
-using namespace bagel::SMITH::Tensor_Arithmetic_Utils; 
-
+using namespace bagel::Tensor_Sorter;
+using namespace bagel::Tensor_Arithmetic; 
+using namespace bagel::Tensor_Arithmetic_Utils; 
+using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 TensOp_Computer::TensOp_Computer<DataType>::TensOp_Computer( shared_ptr< map< string, shared_ptr<vector<shared_ptr<CtrOp_base>>>>> ACompute_map_in,

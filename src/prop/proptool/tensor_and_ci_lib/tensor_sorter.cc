@@ -3,7 +3,7 @@
 
 using namespace std;
 using namespace bagel;
-using namespace bagel::SMITH;
+//using namespace bagel::SMITH;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 std::string Tensor_Sorter::Tensor_Sorter<DataType>::get_comb_str(shared_ptr<vector<size_t>> invec){

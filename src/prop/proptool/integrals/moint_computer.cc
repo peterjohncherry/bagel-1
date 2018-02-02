@@ -5,7 +5,7 @@
 
 using namespace std;
 using namespace bagel; 
-using namespace bagel::SMITH::Tensor_Arithmetic; 
+using namespace bagel::Tensor_Arithmetic; 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //note, this does not have the diagonal component
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -20,8 +20,8 @@ cout << "MOInt_Computer<DataType>::get_v2" << endl;
 
   // again for flipping indexes
   shared_ptr<vector<int>> alt_to_norm_order =  make_shared<vector<int>>( vector<int>  { 3, 1, 2, 0 }) ;
-  auto Tensor_Calc = make_shared<Tensor_Arithmetic<DataType>>();
-  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
+  auto Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
+  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
 
   return v2.tensor(); //  v2_tens;
 }

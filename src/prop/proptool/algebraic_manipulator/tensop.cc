@@ -460,9 +460,8 @@ void MultiTensOp::MultiTensOp<DataType>::enter_into_CMTP_map(pint_vec ctr_pos_li
 cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 #endif 
 ////////////////////////////////////////////////////////////////////////////////////////
-cout << "MultiTensOp::enter_into_CMTP_map" << endl;
-
 //cout << "MultiTensOp::enter_into_CMTP_map" << endl;
+
   shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart<DataType>> >> (num_tensors_); 
   vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
   vector<vector<pair<int,int>>> sameT_ctrs_pos( num_tensors_,  pint_vec(0));
@@ -510,7 +509,7 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 
   //TODO silly hack way of dealing with states find a better way
   shared_ptr<CtrMultiTensorPart<DataType>> CMTP = make_shared<CtrMultiTensorPart<DataType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos) ); 
-  cout << CMTP->myname() << " is going into the map " << endl;
+  //cout << CMTP->myname() << " is going into the map " << endl;
   CMTP_map->emplace(CMTP->myname(), CMTP);
   CTP_map->emplace(CMTP->myname(), CMTP);
 

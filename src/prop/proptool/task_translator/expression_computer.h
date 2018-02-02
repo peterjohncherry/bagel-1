@@ -1,14 +1,14 @@
-#ifndef __SRC_PROP_PROPTOOL_EXPRESSION_COMPUTER_H
-#define __SRC_PROP_PROPTOOL_EXPRESSION_COMPUTER_H
+#ifndef __SRC_PROP_PROPTOOL_TASKTRANSLATOR_EXPRESSIONCOMPUTER_H
+#define __SRC_PROP_PROPTOOL_TASKTRANSLATOR_EXPRESSIONCOMPUTER_H
 
-#include <src/prop/proptool/algebraic_manipulator/system_info.h>
-#include <src/prop/proptool/task_translation/tensop_computer.h>
+#include <src/smith/tensor.h>
+#include <src/smith/indexrange.h>
+#include <src/prop/proptool/algebraic_manipulator/expression.h>
+#include <src/prop/proptool/task_translator/tensop_computer.h>
 #include <src/prop/proptool/tensor_and_ci_lib/b_gamma_computer.h>
 #include <src/prop/proptool/tensor_and_ci_lib/gamma_computer.h>
 
 namespace bagel {
-namespace SMITH { 
-
 
 namespace Expression_Computer{
 
@@ -20,11 +20,11 @@ class Expression_Computer {
     std::shared_ptr<const Dvec> civectors; 
     std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> Expression_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> Gamma_info_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> TensOp_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> TensOp_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> Gamma_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> Sigma_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> CIvec_data_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map;
 
     std::shared_ptr<std::map< std::string, double>> scalar_results_map;
     std::shared_ptr<Gamma_Computer::Gamma_Computer> Gamma_Machine;
@@ -33,11 +33,11 @@ class Expression_Computer {
 
     Expression_Computer( std::shared_ptr<const Dvec > civectors, 
                          std::shared_ptr<std::map< std::string , std::shared_ptr<Expression<double>>>> Expression_map, 
-                         std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map,
-                         std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> TensOp_data_map,
-                         std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map,
-                         std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map,
-                         std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map );
+                         std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map,
+                         std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> TensOp_data_map,
+                         std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> Gamma_data_map,
+                         std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> Sigma_data_map,
+                         std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> CIvec_data_map );
     ~Expression_Computer() {};
     
     void Evaluate_Expression(std::string expression_name );
@@ -58,7 +58,6 @@ class Expression_Computer {
 };
 }//end Expression_Computer namespace
 
-}//end SMITH namespace 
 }//end bagel namespace
 #endif
 

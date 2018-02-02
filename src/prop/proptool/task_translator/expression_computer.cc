@@ -1,5 +1,5 @@
 #include <bagel_config.h>
-#include <src/prop/proptool/task_translation/expression_computer.h>
+#include <src/prop/proptool/task_translator/expression_computer.h>
 
 using namespace std;
 using namespace bagel;

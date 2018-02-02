@@ -3,7 +3,6 @@
 
 using namespace std;
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Note, spinfree should tell us not just if the wavefunction is free, but whether or 
 //not the perturbation being applied is spin independent
@@ -211,13 +210,9 @@ System_Info<DataType>::System_Info::create_equation( std::string name, std::stri
   
   shared_ptr<Equation_Base<DataType>>  new_eqn;
   if ( type == "Value" ) { 
-    cout << "Value1" << endl;
     shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, term_braket_map, expression_term_map );
-    cout << "Value2" << endl;
     new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
-    cout << "Value3" << endl;
     equation_map_->emplace( name, new_eqn); 
-    cout << "Value4" << endl;
   } else { 
     throw logic_error( "equation type \""+ type + "\" not implemented yet! Aborting!"); 
   }

@@ -1,11 +1,8 @@
-#ifndef __SRC_PROP_PROPTOOL_wICKTOOL_EQUATION_H
-#define __SRC_PROP_PROPTOOL_WICKTOOL_EQUATION_H
+#ifndef __SRC_PROP_PROPTOOL_EQUATION_H
+#define __SRC_PROP_PROPTOOL_EQUATION_H
 #include <src/prop/proptool/proputils.h>
 #include <src/prop/proptool/algebraic_manipulator/expression.h>
 #include <src/prop/proptool/algebraic_manipulator/braket.h>
-#include <src/prop/proptool/algebraic_manipulator/tensop.h>
-#include <src/prop/proptool/algebraic_manipulator/states_info.h>
-#include <src/smith/tensor.h>
 
 template<typename DataType>
 class Equation_Base {
@@ -52,4 +49,3 @@ class Equation_Value : public Equation_Base<DataType> {
 
 }; 
 #endif
-

@@ -187,11 +187,13 @@ cout << "GammaGenerator::norm_order" << endl;
       }                                                           
     }
     
-    if (!gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
-       cout << " These indexes won't survive : [ ";  for ( int pos : *ids_pos ) {cout <<  full_id_ranges->at(pos) << " " ;} cout << "]" << endl;
-       Contract_remaining_indexes(kk);
-    } else {
-       cout << " These indexes will survive : [ ";  for ( int pos : *ids_pos ) {cout <<  full_id_ranges->at(pos) << " " ;} cout << "]" << endl;
+//    if (!gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
+//       cout << " These indexes won't survive : [ ";  for ( int pos : *ids_pos ) {cout <<  full_id_ranges->at(pos) << " " ;} cout << "]" << endl;
+//       Contract_remaining_indexes(kk);
+//    } else {
+    //TODO Check this!! (removal contract_remaining_indexes). This makes sense, but seems wrong somehow.  
+    if (gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
+      cout << " These indexes will survive : [ ";  for ( int pos : *ids_pos ) {cout <<  full_id_ranges->at(pos) << " " ;} cout << "]" << endl;
       final_gamma_vec->push_back(gamma_vec->at(kk));
     } 
     kk++;                                                         

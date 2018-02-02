@@ -95,7 +95,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} );
-    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, not_virt });
+    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
     time_symm = "none";
     symmfuncs = set_2el_symmfuncs();
     constraints = {  &System_Info<double>::System_Info::NotAllAct };
@@ -106,7 +106,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>( vector<string> {"X0", "X1", "X2", "X3"} );
     aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, not_virt } );
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt } );
     time_symm = "none";
     symmfuncs = set_2el_symmfuncs();
     constraints = { &System_Info<double>::System_Info::NotAllAct };
