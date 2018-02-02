@@ -18,8 +18,8 @@ B_Gamma_Computer::B_Gamma_Computer::TensOp_Data_Init( std::shared_ptr<const Dvec
   cc_     = cc_in;
   
   Gamma_info_map = Gamma_info_map_in;
-  Gamma_data_map = Gamma_data_map_in;
-  Sigma_data_map = Sigma_data_map_in;
+  gamma_data_map_ = gamma_data_map;
+  sigma_data_map_ = sigma_data_map;
   CIvec_data_map = CIvec_data_map_in;
 
   range_conversion_map = range_conversion_map_in;
@@ -50,7 +50,7 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
   shared_ptr<Tensor_<double>> Tens_sigma = make_shared<Tensor_<double>>( *sigma_ranges ); 
   Tens_sigma->allocate();
   Tens_sigma->zero();
-  Sigma_data_map->emplace( sigma_name, Tens_sigma ); 
+  sigma_data_map_->emplace( sigma_name, Tens_sigma ); 
 
   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( *sigma_ranges ) ;
 
@@ -111,7 +111,7 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
   shared_ptr<Tensor_<double>> Tens_gammaN = make_shared<Tensor_<double>>( *gammaN_ranges ); 
   Tens_gammaN->allocate();
   Tens_gammaN->zero();
-  Gamma_data_map->emplace( gammaN_name, Tens_gammaN ); 
+  gamma_data_map_->emplace( gammaN_name, Tens_gammaN ); 
 
   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( *gammaN_ranges ) ;
 
@@ -204,8 +204,8 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
  
   convert_civec_to_tensor( Bra_name );
 
-  shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( Sigma_data_map->at( sigma2_name ), CIvec_data_map->at( Bra_name ), 0 );
-  Gamma_data_map->emplace( gamma2_info->name(), Tens_gamma2 ); 
+  shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( sigma_data_map_->at( sigma2_name ), CIvec_data_map->at( Bra_name ), 0 );
+  gamma_data_map_->emplace( gamma2_info->name(), Tens_gamma2 ); 
 
   cout << "leaving B_Gamma_Computer::B_Gamma_Computer::get_gamma2_from_sigma2 " <<endl;
   return; 

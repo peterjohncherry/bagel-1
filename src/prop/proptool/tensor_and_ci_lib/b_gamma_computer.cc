@@ -8,40 +8,52 @@ using namespace bagel::SMITH;
 using namespace Tensor_Arithmetic;
 using namespace Tensor_Arithmetic_Utils;
 using namespace WickUtils;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//TODO this versin is non-relativistic, must switch back to relativistic version with tensors at some point
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+B_Gamma_Computer::B_Gamma_Computer<DataType>::B_Gamma_Computer( std::shared_ptr<const Dvec > civectors ) : cc_(civectors){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::B_Gamma_Computer" << endl;
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-B_Gamma_Computer::B_Gamma_Computer::B_Gamma_Computer( std::shared_ptr<const Dvec > cc_in, 
-                                                      std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
-                                                      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> Gamma_info_map_in,
-                                                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Gamma_data_map_in ,
-                                                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> Sigma_data_map_in ,
-                                                      std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<double>>>> CIvec_data_map_in ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "B_Gamma_Computer::B_Gamma_Computer::B_Gamma_Computer" << endl;
-  cc_     = cc_in;
-  
-  Gamma_info_map = Gamma_info_map_in;
-  Gamma_data_map = Gamma_data_map_in;
-  Sigma_data_map = Sigma_data_map_in;
-  CIvec_data_map = CIvec_data_map_in;
-
-  range_conversion_map = range_conversion_map_in;
-
-  Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
-
+  Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
   dvec_sigma_map = make_shared<std::map< std::string, std::shared_ptr<Dvec>>>();
   det_old_map    = make_shared<std::map< std::string, std::shared_ptr<Determinants>>>();
   cvec_old_map   = make_shared<std::map< std::string, std::shared_ptr<Civec>>>();
 }  
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Temporary function; ideally B_Gamma_Computer should be constructed inside System_Computer, but the dependence on the Dvecs is preventing this
+// So for the time being construct B_gamma_computer with the old maps in proptool, feed this to system computer, and then alter the Gamma_info_map
+// as appropriate. 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void
+B_Gamma_Computer::B_Gamma_Computer<DataType>::set_maps( std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
+                                              std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> Gamma_info_map_in,
+                                              std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> gamma_data_map,
+                                              std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> sigma_data_map,  
+                                              std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> civec_data_map ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << " B_Gamma_Computer::B_Gamma_Computer<DataType>::Set_maps" << endl;
 
+  range_conversion_map = range_conversion_map_in;
+  Gamma_info_map = Gamma_info_map_in;
+  gamma_data_map_ = gamma_data_map;
+  sigma_data_map_ = sigma_data_map;
+  civec_data_map_ = civec_data_map;
+ 
+  return;
+
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets the gammas in tensor format. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::get_gamma( string gamma_name ) {
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gamma( string gamma_name ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::get_gamma :  " <<  gamma_name << endl;
 
-  if ( Gamma_data_map->find( gamma_name ) == Gamma_data_map->end()) {
+  if ( gamma_data_map_->find( gamma_name ) == gamma_data_map_->end()) {
 
     shared_ptr<GammaInfo> gamma_info = Gamma_info_map->at(gamma_name);
 
@@ -71,7 +83,8 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gamma( string gamma_name ) {
 // Assumes that cimaxblock is _larger_ than the length of the civec. 
 // With cimaxblock = 10,000 this is OK up to (8,8), so big enough for lanthanides
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_ptr<GammaInfo> gamma_info ){
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::convert_Dvec_sigma_to_tensor( shared_ptr<GammaInfo> gamma_info ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::Convert_to_sigma_dvec_tensor :" << gamma_info->sigma_name() <<  endl;
 
@@ -82,10 +95,10 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
   shared_ptr<vector<IndexRange>> sigma_ranges = Get_Bagel_IndexRanges( gamma_info->sigma_id_ranges() ); 
   print_vector( *(gamma_info->sigma_id_ranges()) , "sigma_id_ranges") ;  cout << endl;
 
-  shared_ptr<Tensor_<double>> Tens_sigma = make_shared<Tensor_<double>>( *sigma_ranges ); 
+  shared_ptr<Tensor_<DataType>> Tens_sigma = make_shared<Tensor_<DataType>>( *sigma_ranges ); 
   Tens_sigma->allocate();
   Tens_sigma->zero();
-  Sigma_data_map->emplace( sigma_name, Tens_sigma ); 
+  sigma_data_map_->emplace( sigma_name, Tens_sigma ); 
 
   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( *sigma_ranges ) ;
 
@@ -110,8 +123,8 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
       block_size *= sigma_id_blocks[ii].size(); 
     }    
 
-    unique_ptr<double[]> sigma_block( new double[block_size] );
-    double* sigma_block_ptr = sigma_block.get();
+    unique_ptr<DataType[]> sigma_block( new DataType[block_size] );
+    DataType* sigma_block_ptr = sigma_block.get();
 
     int ci_block_size = sigma_id_blocks[0].size();
     for (int ii = 0; ii != block_size/ci_block_size ; ii++ ) { 
@@ -127,7 +140,8 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<GammaInfo> gammaN_info ){
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gammaN_from_sigmaN( shared_ptr<GammaInfo> gammaN_info ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::get_gammaN_from_sigmaN : " << gammaN_info->name() <<  endl;
   
@@ -143,10 +157,10 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
   int order = gammaN_info->order();
 
   shared_ptr<vector<IndexRange>> gammaN_ranges = Get_Bagel_IndexRanges( gammaN_info->id_ranges() ); 
-  shared_ptr<Tensor_<double>> Tens_gammaN = make_shared<Tensor_<double>>( *gammaN_ranges ); 
+  shared_ptr<Tensor_<DataType>> Tens_gammaN = make_shared<Tensor_<DataType>>( *gammaN_ranges ); 
   Tens_gammaN->allocate();
   Tens_gammaN->zero();
-  Gamma_data_map->emplace( gammaN_name, Tens_gammaN ); 
+  gamma_data_map_->emplace( gammaN_name, Tens_gammaN ); 
 
   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( *gammaN_ranges ) ;
 
@@ -169,8 +183,8 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
       block_size *= gammaN_id_blocks[ii].size(); 
     }    
 
-    unique_ptr<double[]> gammaN_block( new double[block_size] );
-    double* gammaN_block_ptr = gammaN_block.get();
+    unique_ptr<DataType[]> gammaN_block( new DataType[block_size] );
+    DataType* gammaN_block_ptr = gammaN_block.get();
 
     for (int ii = orb_pos; ii != orb_pos+block_size; ii++ )  
       *gammaN_block_ptr++ = ddot_( Bra_det->size(),sigmaN->data(ii)->data(), 1, Bra->data(), 1); 
@@ -187,7 +201,8 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
 // This assumes all orbitals have the same size of range, OK for alpha beta spins, not OK 
 //if different active spaces.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::compute_sigmaN( shared_ptr<GammaInfo> gammaN_info )  {
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigmaN( shared_ptr<GammaInfo> gammaN_info )  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::compute_sigmaN : " << gammaN_info->sigma_name() ;
 
@@ -230,7 +245,8 @@ void B_Gamma_Computer::B_Gamma_Computer::compute_sigmaN( shared_ptr<GammaInfo> g
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::get_gamma2_from_sigma2( shared_ptr<GammaInfo> gamma2_info ){
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gamma2_from_sigma2( shared_ptr<GammaInfo> gamma2_info ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl; 
 
@@ -239,15 +255,16 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
  
   convert_civec_to_tensor( Bra_name );
 
-  shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( Sigma_data_map->at( sigma2_name ), CIvec_data_map->at( Bra_name ), 0 );
-  Gamma_data_map->emplace( gamma2_info->name(), Tens_gamma2 ); 
+  shared_ptr<Tensor_<DataType>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( sigma_data_map_->at( sigma2_name ), civec_data_map_->at( Bra_name ), 0 );
+  gamma_data_map_->emplace( gamma2_info->name(), Tens_gamma2 ); 
 
-  cout << "leaving B_Gamma_Computer::B_Gamma_Computer::get_gamma2_from_sigma2 " <<endl;
+  cout << "leaving B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gamma2_from_sigma2 " <<endl;
   return; 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::compute_sigma2( shared_ptr<GammaInfo> gamma2_info )  {
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<GammaInfo> gamma2_info )  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
 
@@ -277,24 +294,26 @@ void B_Gamma_Computer::B_Gamma_Computer::compute_sigma2( shared_ptr<GammaInfo> g
 }
   
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::sigma_2a1(double* cvec_ptr, double* sigma_ptr, shared_ptr<Determinants> dets  )  {
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1(DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<Determinants> dets  )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                               
   //cout << "sigma_2a1" << endl;                                                                                          
   const int lb = dets->lenb();                                                                                            
   const int ij = dets->norb()*dets->norb();                                                                               
                                                                                                                           
   for (int ip = 0; ip != ij; ++ip) {                                                                                      
-    double* target_base = sigma_ptr+dets->size()*ip;                                                                              
+    DataType* target_base = sigma_ptr+dets->size()*ip;                                                                              
     for (auto& iter : dets->phia(ip)) {                                                                                   
-      const double sign = static_cast<double>(iter.sign);                                                                 
-      double* const target_array = target_base + iter.source*lb;                                                          
+      const DataType sign = static_cast<DataType>(iter.sign);                                                                 
+      DataType* const target_array = target_base + iter.source*lb;                                                          
       blas::ax_plus_y_n(sign, cvec_ptr + iter.target*lb, lb, target_array);                                               
     }                                                                                                                     
   }                                                                                                                       
 }                                                                                                                         
                                                                                                                           
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                             
-void B_Gamma_Computer::B_Gamma_Computer::sigma_2a2( double* cvec_ptr, double* sigma_ptr, shared_ptr<Determinants> dets) { 
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a2( DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<Determinants> dets) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                             
 //  cout << "sigma_2a2" << endl;
   const int la = dets->lena();
@@ -302,13 +321,13 @@ void B_Gamma_Computer::B_Gamma_Computer::sigma_2a2( double* cvec_ptr, double* si
   const int ij = dets->norb()*dets->norb();
 
   for (int i = 0; i < la; ++i) {
-    double* source_array0 = cvec_ptr+i*lb;
+    DataType* source_array0 = cvec_ptr+i*lb;
 
     for (int ip = 0; ip != ij; ++ip) {
-      double* target_array0 = sigma_ptr + (ip * dets->size()) + i*lb;
+      DataType* target_array0 = sigma_ptr + (ip * dets->size()) + i*lb;
 
       for (auto& iter : dets->phib(ip)) {
-        const double sign = static_cast<double>(iter.sign);
+        const DataType sign = static_cast<DataType>(iter.sign);
         target_array0[iter.source] += sign * source_array0[iter.target];
       }
     }
@@ -317,7 +336,8 @@ void B_Gamma_Computer::B_Gamma_Computer::sigma_2a2( double* cvec_ptr, double* si
  
                                                                                                                                                     
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::get_wfn_data( shared_ptr<CIVecInfo<double>>  cvec_info ){
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_wfn_data( shared_ptr<CIVecInfo<DataType>>  cvec_info ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   string cvec_name = cvec_info->name();
@@ -334,16 +354,17 @@ void B_Gamma_Computer::B_Gamma_Computer::get_wfn_data( shared_ptr<CIVecInfo<doub
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::convert_civec_to_tensor( string civec_name )  {
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::convert_civec_to_tensor( string civec_name )  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::convert_civec_to_tensor" << endl;
 
-  if ( CIvec_data_map->find(civec_name) == CIvec_data_map->end()){
+  if ( civec_data_map_->find(civec_name) == civec_data_map_->end()){
  
     vector<IndexRange> civec_idxrng(1, *(range_conversion_map->at(civec_name)) );  
     
     cout <<" civec_name = " << civec_name << endl;
-    shared_ptr<Tensor_<double>> civec_tensor = make_shared<Tensor_<double>>( civec_idxrng );
+    shared_ptr<Tensor_<DataType>> civec_tensor = make_shared<Tensor_<DataType>>( civec_idxrng );
     civec_tensor->allocate();
     civec_tensor->zero();
     
@@ -352,7 +373,7 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_civec_to_tensor( string civec_n
     
     for ( Index idx_block : civec_idxrng[0].range() ){
 
-       unique_ptr<double[]> civec_block(new double[idx_block.size()]);
+       unique_ptr<DataType[]> civec_block(new DataType[idx_block.size()]);
        std::fill_n(civec_block.get(), idx_block.size(), 0.0);
        copy_n( civector->data() + idx_position, idx_block.size(), civec_block.get());
     
@@ -361,7 +382,7 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_civec_to_tensor( string civec_n
 
     }
     
-    CIvec_data_map->emplace( civec_name, civec_tensor); 
+    civec_data_map_->emplace( civec_name, civec_tensor); 
 
   }
   return;
@@ -369,7 +390,8 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_civec_to_tensor( string civec_n
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<IndexRange>> B_Gamma_Computer::B_Gamma_Computer::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
+template<typename DataType>
+shared_ptr<vector<IndexRange>> B_Gamma_Computer::B_Gamma_Computer<DataType>::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "B_Gamma_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str, "ranges_str" ) ; cout << endl;
 
@@ -380,51 +402,6 @@ cout << "B_Gamma_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_st
   return ranges_Bagel;
 }
 
-
-
-//  if (order == 4) { 
-//  int n1 = Dvec_sigma->det()->norb();
-//  int n2 = n1*n1;
-//  int n3 = n1*n2;
-//  int cisize = Dvec_sigma->det()->size();
-// 
-// 
-//  cout << endl << endl;
-//  cout << " Sigma4 test dvec " << endl;
-//  for ( int xx =0 ; xx!= cisize; xx++ ) {
-//    cout << xx << " : ";
-//    for ( int qq = 0 ; qq != n1; qq++){
-//      for ( int rr = 0 ; rr != n1; rr++){
-//        for ( int ss = 0 ; ss != n1; ss++){
-//          for ( int tt = 0 ; tt != n1; tt++){
-//            cout << *( Dvec_sigma->data(qq*n3 + rr*n2 + ss*n1 + tt )->data()+xx) << " " ;  
-//          }
-//        }
-//      }
-//    }
-//    cout << endl;
-//  }
-//  cout << endl << endl;
-//  cout << "sigma4_ in Tensor column format" << endl;
-//  for ( int xx =0 ; xx!= cisize; xx++ ) {
-//    cout << xx << " : ";
-//    for ( int qq = 0 ; qq != n1; qq++){
-//      for ( int rr = 0 ; rr != n1; rr++){
-//        for ( int ss = 0 ; ss != n1; ss++){
-//          for ( int tt = 0 ; tt != n1; tt++){
-//            cout << sigma_block[ (qq*n3 + rr*n2 + ss*n1 + tt)*cisize + xx ] << " " ;
-//          }
-//        }
-//      }
-//    }
-//    cout << endl;
-//  }
-//  cout << endl << endl;
-//
-//  Print_Tensor( Tens_gamma2, "Tens_gamma2 from contraction of sigma2 with CI vec" ) ; cout << endl << endl;
-//  shared_ptr<Tensor_<double>> Tens_gamma4 = Tensor_Calc->contract_different_tensors( Tens_sigma2, Tens_sigma2, make_pair(0,0) );
-//  Print_Tensor( Tens_gamma4, "Tens_gamma4 from contraction of sigma2 with sigma2 no reord") ; cout << endl << endl;
-//  shared_ptr<vector<int>> new_order_1023 = make_shared<vector<int>>( vector<int> { 1, 0, 2, 3 } ); 
-//  shared_ptr<Tensor_<double>> Tens_gamma4_reord = Tensor_Calc->reorder_block_Tensor(  Tens_gamma4, new_order_1023 );
-//  Print_Tensor( Tens_gamma4_reord, "Tens_gamma4 from contraction of sigma2 with sigma2 reord") ; cout << endl << endl;
-//  }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template class B_Gamma_Computer::B_Gamma_Computer<double>;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

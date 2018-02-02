@@ -3,7 +3,7 @@
 
 using namespace std;
 
-//TODO GammaMap should be generated outside and not fed in here. It constains _no_ Expression specific information.
+//TODO gamma_info_map should be generated outside and not fed in here. It constains _no_ Expression specific information.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_list,
@@ -12,9 +12,9 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
                                   shared_ptr<map< string, shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,
                                   shared_ptr<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,
                                   shared_ptr<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>     ACompute_map,
-                                  shared_ptr<map< string, shared_ptr<GammaInfo> > >                         GammaMap ):
+                                  shared_ptr<map< string, shared_ptr<GammaInfo> > >                         gamma_info_map ):
                                   braket_list_(braket_list), states_info_(states_info), MT_map_(MT_map), CTP_map_(CTP_map), CMTP_map_(CMTP_map),
-                                  ACompute_map_(ACompute_map), GammaMap_(GammaMap) {
+                                  ACompute_map_(ACompute_map), gamma_info_map_(gamma_info_map) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression<DataType>::Expression (new constructor) " << endl;
 
@@ -24,7 +24,7 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
   // Will loop through terms and then generate mathematical task map. It's split into
   // two functions as this will gives more control over merging together of different BraKets G_to_A_maps.
   for ( BraKet<DataType>& braket : *braket_list_ )
-     braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, GammaMap_, states_info_ );
+     braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_ );
   get_gamma_Atensor_contraction_list();
 }
 
@@ -104,13 +104,11 @@ void Expression<DataType>::necessary_tensor_blocks(){
           op_size = 1;
         }
       }
- 
-//      shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = CMTP->CTP_vec;
 
+//      shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = CMTP->CTP_vec;
     }
-    cout << "X" << endl;
   }
-  cout << "leaving Get_CMTP_compute_Terms" << endl;
+  cout << "leaving Expression::necessary_tensor_blocks" << endl;
   return;
 }
 

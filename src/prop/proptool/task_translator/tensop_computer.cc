@@ -11,18 +11,13 @@ using namespace WickUtils;
 template<class DataType>
 TensOp_Computer::TensOp_Computer<DataType>::TensOp_Computer( shared_ptr< map< string, shared_ptr<vector<shared_ptr<CtrOp_base>>>>> ACompute_map_in,
                                                              shared_ptr< map< string, shared_ptr<CtrTensorPart<DataType>>>> CTP_map_in,
-                                                             shared_ptr< map< string, shared_ptr<IndexRange>>> range_conversion_map_in,
-                                                             shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>> Data_map_in ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp_Computer::TensOp_Computer::TensOp_Computer" << endl;
+                                                             shared_ptr< map< string, shared_ptr<IndexRange>>> range_conversion_map,
+                                                             shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>> Data_map_in ):
+                                                             ACompute_map(ACompute_map_in), CTP_map(CTP_map_in), Data_map(Data_map_in),
+                                                             range_conversion_map_(range_conversion_map), 
+                                                             Tensor_Calc(make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>()){}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  ACompute_map = ACompute_map_in;
-  CTP_map      = CTP_map_in;
-  Data_map     = Data_map_in;
-  range_conversion_map = range_conversion_map_in;
-
-  Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
@@ -262,7 +257,7 @@ cout << "Get_Bagel_const_IndexRanges 1arg" << endl;
 
   shared_ptr<vector<shared_ptr<const IndexRange>>> ranges_Bagel = make_shared<vector<shared_ptr<const IndexRange>>>(0);
   for ( auto rng : *ranges_str) 
-    ranges_Bagel->push_back(make_shared<const IndexRange>(*range_conversion_map->at(rng)));
+    ranges_Bagel->push_back(make_shared<const IndexRange>(*range_conversion_map_->at(rng)));
 
   return ranges_Bagel;
 }
@@ -277,7 +272,7 @@ cout <<  "  "; cout.flush();  print_vector(*unc_pos, "unc_pos" ) ; cout << endl;
 
   vector<shared_ptr<const IndexRange>>  ranges_Bagel(unc_pos->size());
   for ( int ii = 0 ; ii != unc_pos->size() ; ii++) 
-    ranges_Bagel[ii]=(make_shared<const IndexRange>(*range_conversion_map->at(ranges_str->at(unc_pos->at(ii)))));
+    ranges_Bagel[ii]=(make_shared<const IndexRange>(*range_conversion_map_->at(ranges_str->at(unc_pos->at(ii)))));
 
   return make_shared<vector<shared_ptr<const IndexRange>>>(ranges_Bagel);
 }
@@ -291,7 +286,7 @@ cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str
 
   shared_ptr<vector<IndexRange>> ranges_Bagel = make_shared<vector<IndexRange>>(ranges_str->size());
   for ( int ii = 0 ; ii != ranges_str->size(); ii++)
-    ranges_Bagel->at(ii) = *range_conversion_map->at(ranges_str->at(ii));
+    ranges_Bagel->at(ii) = *range_conversion_map_->at(ranges_str->at(ii));
 
   return ranges_Bagel;
 }

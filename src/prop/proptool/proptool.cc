@@ -10,11 +10,6 @@ PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geo
   cout << "PropTool::PropTool::PropTool" << endl;
 
   // sort out how to determine datatype!!
-  sigma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
-  civec_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
-  gamma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
-  tensop_data_map_ = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
-
   inp_factor_map_ = make_shared<map<string, double>>();
   inp_indexed_factor_map_ = make_shared<map<string, shared_ptr<vector<double>>>>(); // TODO sort this
   inp_range_map_ = make_shared<map<string, shared_ptr<vector<int>>>>();
@@ -69,9 +64,18 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
   // gets information about the wavefunction from the refence
   get_wavefunction_info();
 
-  calculate_mo_integrals();
-
+  // build system information object ( for algebraic task list construction)
   sys_info_ = make_shared<System_Info<double>>( targets_info_, true );
+
+  // build system computer (for computational task list construction/execution)
+  auto moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_,
+                                                     nfrozenvirt_, block_diag_fock_ );
+  auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
+
+  //TODO should build gamma_computer inside system_computer, like this due to DVec class dependence of B_Gamma_Computer 
+  auto gamma_computer = make_shared<B_Gamma_Computer::B_Gamma_Computer<double>>(civectors_); 
+
+  auto system_computer_ = make_shared<System_Computer::System_Computer<double>>(sys_info_, moint_computer, range_conversion_map_, gamma_computer );
 
   cout << "initialized sys_info" << endl;
   shared_ptr< const PTree > ops_def_tree = idata_->get_child_optional( "operators" ) ;
@@ -89,25 +93,6 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
 
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Gets ranges and factors from the input which will be used in definition of terms
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void PropTool::PropTool::calculate_mo_integrals() {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "PropTool::PropTool::calculate_mo_integrals()" << endl;
-
-  cout << "getting mo integrals " <<  endl; 
-  shared_ptr<MOInt_Init<double>> moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_, nfrozenvirt_, block_diag_fock_ );
-  shared_ptr<MOInt_Computer<double>> moint_comp = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
-
-  vector<string> test_ranges4 = { "notcor", "notcor", "notvir", "notvir" }; 
-  vector<string> test_ranges2 = { "free", "free" }; 
-  shared_ptr<SMITH::Tensor_<double>> h1_  =  moint_comp->get_h1( test_ranges2, true ) ;
-  shared_ptr<SMITH::Tensor_<double>> v2_  =  moint_comp->get_v2( test_ranges4 ) ;
-  cout << " new_coeffs  v2_->norm() = " << v2_->norm() << endl; 
-
-  return;
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets ranges and factors from the input which will be used in definition of terms
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -148,7 +133,6 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   //creates the ci_info from the reference wavefunction
   set_target_state_info();
   set_ci_range_info();
- 
 
   return;
 }

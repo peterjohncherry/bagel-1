@@ -142,6 +142,8 @@ class TensOp_base {
      std::shared_ptr<const Op_General_base> Op_dense_;
 
    public:
+
+ 
      TensOp_base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name), spinfree_(spinfree), Tsymm_(Tsymm), state_dep_(state_dep)  {};
      TensOp_base( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0)  {};
      ~TensOp_base(){};
@@ -169,6 +171,7 @@ class TensOp_base {
      std::shared_ptr< const std::vector<int>> kill_ops(){ return Op_dense_->kill_ops();}
      int kill_ops(int ii){ return Op_dense_->kill_ops(ii);}
 
+
      std::shared_ptr< const std::vector< std::shared_ptr< const std::vector<std::string>>>> unique_range_blocks() const { return Op_dense_->unique_range_blocks(); }
      std::shared_ptr< const std::vector<std::string>> unique_range_blocks(int ii) const { return Op_dense_->unique_range_blocks(ii); }
      
@@ -180,7 +183,6 @@ class TensOp_base {
 //     virtual std::shared_ptr<range_block_info > sparsed_ranges(const std::vector<int> range_block ) const  = 0 ; 
 
 };
-
 
 namespace TensOp {
 template<typename DataType>
@@ -195,13 +197,14 @@ class TensOp : public TensOp_base {
 //     std::map< std::vector<int>, std::vector<std::shared_ptr<const std::vector<std::string> > >  > state_sparsity_map_; 
 
    public:
+     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> > > CTP_map_;
+
      TensOp( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
              std::vector<bool>& aops, DataType orig_factor,
              std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > >& symmfuncs, 
              std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) >& constraints,
              std::string& Tsymm, int state_dep);
      ~TensOp(){};
-     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> > > CTP_map ;
 
      void get_ctrs_tens_ranges() ;
 
@@ -222,6 +225,7 @@ class TensOp : public TensOp_base {
        throw std::logic_error("2 TensOp Should not be trying to access split range map from merged TensOp, probably error in range looping! Aborting! " ) ; 
      return Op_dense_->split_ranges(range_block); } 
 
+    std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >> CTP_map() { return CTP_map_; } 
 };
 }
 
@@ -232,8 +236,10 @@ class MultiTensOp : public TensOp_base {
    public :
      std::vector<std::shared_ptr<TensOp::TensOp<DataType>>> orig_tensors_; 
 
-     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map;
-     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> > > CTP_map ;
+     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> > > CTP_map_;
+
+     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map_;
+
      int num_tensors_;
      
      DataType orig_factor_;
@@ -262,6 +268,8 @@ class MultiTensOp : public TensOp_base {
 
     void enter_into_CMTP_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges );
 
+    std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >> CTP_map() { return CTP_map_; } 
+    std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map() { return CMTP_map_; } 
 };
 }
 #endif

@@ -12,8 +12,8 @@ using namespace WickUtils;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_ptr<GammaInfo>>>          Gamma_info_map_in,
                                                 shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    CIvec_data_map_in,
-                                                shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    Sigma_data_map_in,
-                                                shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    Gamma_data_map_in,
+                                                shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    sigma_data_map,
+                                                shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    gamma_data_map,
                                                 shared_ptr< map< string, shared_ptr<const Determinants>>> Determinants_map_in,
 						shared_ptr< map< string, shared_ptr<IndexRange>>>         range_conversion_map_in ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,8 +22,8 @@ Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_
 
   Gamma_info_map       = Gamma_info_map_in;       cout << "set Gamma_info_map            "<< endl; 
   CIvec_data_map       = CIvec_data_map_in;       cout << "set CIvec_data_map      "<< endl;  
-  Sigma_data_map       = Sigma_data_map_in;       cout << "set Sigma_data_map      "<< endl;  
-  Gamma_data_map       = Gamma_data_map_in;       cout << "set Gamma_data_map      "<< endl;  
+  sigma_data_map_       = sigma_data_map;       cout << "set sigma_data_map_      "<< endl;  
+  gamma_data_map_       = gamma_data_map;       cout << "set gamma_data_map_      "<< endl;  
   Determinants_map     = Determinants_map_in;     cout << "set Determinants_map    "<< endl; 
   range_conversion_map = range_conversion_map_in; cout << "set range_conversion_map"<< endl; 
 
@@ -44,7 +44,7 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
  
     cout << "nothing todo for ID" << endl;
  
-  } else if( Gamma_data_map->find(gamma_name) != Gamma_data_map->end()){ 
+  } else if( gamma_data_map_->find(gamma_name) != gamma_data_map_->end()){ 
 
     cout << "already have data for " << gamma_name << endl;  
 
@@ -71,18 +71,18 @@ void Gamma_Computer::Gamma_Computer::build_gamma2_tensor( shared_ptr<GammaInfo> 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Gamma_Computer::build_gamma2_tensor : " << gamma2_info->name() << endl;
   
-   auto sigma2_loc = Sigma_data_map->find(gamma2_info->sigma_name());
+   auto sigma2_loc = sigma_data_map_->find(gamma2_info->sigma_name());
    
-   if (sigma2_loc == Sigma_data_map->end()){ 
+   if (sigma2_loc == sigma_data_map_->end()){ 
      
      build_sigma2_tensor(gamma2_info);
    }
 
    shared_ptr<Tensor_<double>> gamma2 =
-   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at(gamma2_info->sigma_name()),
+   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( sigma_data_map_->at(gamma2_info->sigma_name()),
                                                                               CIvec_data_map->at(gamma2_info->Bra_name()), 0 );
 
-   Gamma_data_map->emplace(gamma2_info->name(), gamma2); 
+   gamma_data_map_->emplace(gamma2_info->name(), gamma2); 
   
    return;
 }
@@ -106,7 +106,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor( shared_ptr<GammaInfo> 
   shared_ptr<Tensor_<double>> sigma2 = make_shared<Tensor_<double>>( *ranges );
   sigma2->allocate();
   sigma2->zero();
-  Sigma_data_map->emplace( sigma2_name, sigma2 );
+  sigma_data_map_->emplace( sigma2_name, sigma2 );
 
   shared_ptr<vector<int>> mins          = make_shared<vector<int>>( 3, 0 );  
   shared_ptr<vector<int>> block_pos     = make_shared<vector<int>>( 3, 0 );  
@@ -166,10 +166,10 @@ void Gamma_Computer::Gamma_Computer::build_gammaN_tensor(shared_ptr<GammaInfo> g
    build_sigmaN_tensor(gammaN_info);
    
    shared_ptr<Tensor_<double>> gammaN =
-   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( Sigma_data_map->at(gammaN_info->sigma_name()),
+   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( sigma_data_map_->at(gammaN_info->sigma_name()),
                                                                               CIvec_data_map->at(gammaN_info->Bra_name()), 0 );
  
-   Gamma_data_map->emplace(gammaN_info->name(), gammaN); 
+   gamma_data_map_->emplace(gammaN_info->name(), gammaN); 
    
    return;
 
@@ -192,9 +192,9 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor( shared_ptr<GammaInfo> 
   shared_ptr<Tensor_<double>> sigmaN = make_shared<Tensor_<double>>( *ranges_sn );
   sigmaN->allocate();
   sigmaN->zero();
-  Sigma_data_map->emplace( sigmaN_name , sigmaN );
+  sigma_data_map_->emplace( sigmaN_name , sigmaN );
 
-  shared_ptr<Tensor_<double>> prev_sigma = Sigma_data_map->at( prev_sigma_name );
+  shared_ptr<Tensor_<double>> prev_sigma = sigma_data_map_->at( prev_sigma_name );
   shared_ptr<GammaInfo>       prev_gamma_info = Gamma_info_map->at( gammaN_info->prev_gamma_name() );
 
   shared_ptr<vector<IndexRange>>  ranges_ps = Get_Bagel_IndexRanges( prev_gamma_info->sigma_id_ranges() ) ;
@@ -244,8 +244,8 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
 
   if ( Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info()->name()  == Gamma_info_map->at(prev_sigma_name.substr(2))->Ket_info()->name() ){//fix for rel case
    
-    shared_ptr<Tensor_<double>> sigmaN      = Sigma_data_map->at(sigmaN_name);
-    shared_ptr<Tensor_<double>> prev_sigma  = Sigma_data_map->at(prev_sigma_name);
+    shared_ptr<Tensor_<double>> sigmaN      = sigma_data_map_->at(sigmaN_name);
+    shared_ptr<Tensor_<double>> prev_sigma  = sigma_data_map_->at(prev_sigma_name);
 
     unique_ptr<double[]> prev_sigma_block = prev_sigma->get_block( id_blocks_ps );
 
@@ -380,19 +380,19 @@ bool Gamma_Computer::Gamma_Computer::gamma_2idx_contract_test( string gamma_name
    bool passed = true;
 
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl;
-   Print_Tensor(Gamma_data_map->at(gamma_name), gamma_name);
+   Print_Tensor(gamma_data_map_->at(gamma_name), gamma_name);
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl;
-   cout << "Gamma_data_map->at("<<gamma_name<<")->norm() = "<< Gamma_data_map->at(gamma_name)->norm() <<  endl;  
-   cout << "Gamma_data_map->at("<<gamma_name<<")->rms()  = "<< Gamma_data_map->at(gamma_name)->rms() <<  endl; 
+   cout << "gamma_data_map_->at("<<gamma_name<<")->norm() = "<< gamma_data_map_->at(gamma_name)->norm() <<  endl;  
+   cout << "gamma_data_map_->at("<<gamma_name<<")->rms()  = "<< gamma_data_map_->at(gamma_name)->rms() <<  endl; 
 
-   shared_ptr<Tensor_<double>> gamma_2idx_trace  =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Gamma_data_map->at(gamma_name),  make_pair(0,1) );
+   shared_ptr<Tensor_<double>> gamma_2idx_trace  =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( gamma_data_map_->at(gamma_name),  make_pair(0,1) );
    cout << "------------------------------------------------------------------------------------------------------" << endl; 
    cout << "gamma_2idx_trace->rms() = "<< gamma_2idx_trace->rms() << endl;
    cout << "------------------------------------------------------------------------------------------------------" << endl; 
 
    shared_ptr<vector<int>>     new_order = make_shared<vector<int>>(vector<int> { 1, 0} ); 
 
-   shared_ptr<Tensor_<double>> gamma_2idx_orig_order = make_shared<Tensor_<double>>( *(Gamma_data_map->at(gamma_name)) );
+   shared_ptr<Tensor_<double>> gamma_2idx_orig_order = make_shared<Tensor_<double>>( *(gamma_data_map_->at(gamma_name)) );
    shared_ptr<Tensor_<double>> gamma_2idx_transposed = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( gamma_2idx_orig_order, new_order);
 
    gamma_2idx_transposed->ax_plus_y(-1, gamma_2idx_orig_order) ;
@@ -411,12 +411,12 @@ bool Gamma_Computer::Gamma_Computer::gamma_4idx_contract_test( string gamma_name
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
-   Print_Tensor(Gamma_data_map->at(gamma_name));
+   Print_Tensor(gamma_data_map_->at(gamma_name));
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
-   cout << "Gamma_data_map->at("<<gamma_name<<")->norm() = "<< Gamma_data_map->at(gamma_name)->norm() <<  endl;  
-   cout << "Gamma_data_map->at("<<gamma_name<<")->rms()  = "<< Gamma_data_map->at(gamma_name)->rms() <<  endl; 
+   cout << "gamma_data_map_->at("<<gamma_name<<")->norm() = "<< gamma_data_map_->at(gamma_name)->norm() <<  endl;  
+   cout << "gamma_data_map_->at("<<gamma_name<<")->rms()  = "<< gamma_data_map_->at(gamma_name)->rms() <<  endl; 
 
-   shared_ptr<Tensor_<double>> gamma_2idx_from_4idx_A  =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Gamma_data_map->at(gamma_name),  make_pair(2,3) );
+   shared_ptr<Tensor_<double>> gamma_2idx_from_4idx_A  =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( gamma_data_map_->at(gamma_name),  make_pair(2,3) );
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
    Print_Tensor(gamma_2idx_from_4idx_A, "gamma_2idx_from_4idx" ); 
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
@@ -425,7 +425,7 @@ bool Gamma_Computer::Gamma_Computer::gamma_4idx_contract_test( string gamma_name
    cout << "------------------------------------------------------------------------------------------------------" << endl; 
 
    vector<int> ctrs_pos = {0,1,2,3};
-   shared_ptr<Tensor_<double>> gamma_2idx_from_4idx_B = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( Gamma_data_map->at(gamma_name),  make_pair(0,1) );
+   shared_ptr<Tensor_<double>> gamma_2idx_from_4idx_B = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( gamma_data_map_->at(gamma_name),  make_pair(0,1) );
    cout << " gamma_2idx_from_4idx_B->norm() = " << gamma_2idx_from_4idx_B->norm()  << endl; 
    cout << " gamma_2idx_from_4idx_B->rms()  = " << gamma_2idx_from_4idx_B->rms()  << endl; 
 

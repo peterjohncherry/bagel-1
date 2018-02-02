@@ -9,7 +9,7 @@ template<class DataType>
 class System_Info {
       private :
         bool spinfree_ = false;
-        std::shared_ptr<StatesInfo<DataType>> target_states_;
+        std::shared_ptr<StatesInfo<DataType>> states_info_;
 
       public:
 
@@ -66,10 +66,9 @@ class System_Info {
       std::shared_ptr< std::map <std::string, std::shared_ptr<GammaInfo>>> Gamma_map;
 
       /////CONSTRUCTOR and DESTRUCTOR/////
-      System_Info(std::shared_ptr<StatesInfo<DataType>> target_states_, bool spinfree);
+      System_Info(std::shared_ptr<StatesInfo<DataType>> states_info, bool spinfree);
       ~System_Info(){};
 
-      std::shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( std::string op_name ) ;
 
       void construct_equation_task_list( std::string equation_name );
 
@@ -92,12 +91,14 @@ class System_Info {
                             std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
                             std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map );
 
-      std::string Get_BraKet_name( BraKet<DataType>& BraKet_info  ) ;
+      int nalpha(int state_num) { return states_info_->nalpha( state_num ); };
+      int nbeta(int state_num)  { return states_info_->nbeta( state_num );  };
+      int nact(int state_num)   { return states_info_->nact( state_num );   };
+      bool spinfree() {return spinfree_;}
 
-      int nalpha(int state_num) { return target_states_->nalpha( state_num ); };
-      int nbeta(int state_num)  { return target_states_->nbeta( state_num );  };
-      int nact(int state_num)   { return target_states_->nact( state_num );   };
-      bool spinfree(){return spinfree_;}
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // TODO Should be moved out into its own class, or perhaps just a namespace
+      std::shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( std::string op_name ) ;
 
       static std::string flip(std::string idx);
       static std::shared_ptr<std::vector<std::string>> ijkl_to_klij(std::shared_ptr<std::vector<std::string>> invec) ;
@@ -116,6 +117,7 @@ class System_Info {
       std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_2el_symmfuncs();
       std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> set_1el_symmfuncs();
       std::vector<std::tuple<std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> identity_only();
+      /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
       struct compare_string_length {
         bool operator()(const std::string& first, const std::string& second) {

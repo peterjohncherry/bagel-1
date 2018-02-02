@@ -22,8 +22,8 @@ class Gamma_Computer {
     public: 
       Gamma_Computer( std::shared_ptr< std::map< std::string, std::shared_ptr<GammaInfo>>>          Gamma_info_map,
                       std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>>    CIvec_data_map,
-                      std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>>    Sigma_data_map,
-                      std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>>    Gamma_data_map,
+                      std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>>    sigma_data_map_,
+                      std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>>    gamma_data_map_,
                       std::shared_ptr< std::map< std::string, std::shared_ptr<const Determinants>>> Determinants_map,
                       std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::IndexRange>>>         range_conversion_map ); 
       ~Gamma_Computer(){};
@@ -39,8 +39,8 @@ class Gamma_Computer {
       std::shared_ptr<SMITH::IndexRange> closed_ ;
       
       std::shared_ptr<const Dvec> cc_; 
-      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> Gamma_data_map;
-      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> Sigma_data_map;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> gamma_data_map_;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> sigma_data_map_;
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> CIvec_data_map;
 
       std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> Gamma_info_map;

@@ -1,27 +1,54 @@
 #ifndef __SRC_PROP_PROPTOOL_EQUATION_H
 #define __SRC_PROP_PROPTOOL_EQUATION_H
 #include <src/prop/proptool/proputils.h>
+#include <src/prop/proptool/algebraic_manipulator/states_info.h>  
 #include <src/prop/proptool/algebraic_manipulator/expression.h>
 #include <src/prop/proptool/algebraic_manipulator/braket.h>
 
 template<typename DataType>
 class Equation_Base {
 
-   public :
-
+   protected :
      std::string name_;
      std::string type_;
+     std::shared_ptr<StatesInfo<DataType>> states_info_;
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map_;
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_;
 
-     Equation_Base( std::string name, std::string type, 
+
+     std::shared_ptr< std::map <std::string, std::shared_ptr< Expression<DataType>>>> expression_map_;
+
+     // Maps are not defined in constructor so that equations can be independent,  needed for building of expression_map_
+     std::shared_ptr< std::map <std::string, std::shared_ptr< GammaInfo >>> gamma_info_map_;
+     std::shared_ptr< std::map <std::string, std::shared_ptr< BraKet<DataType>>>> braket_map_;
+     std::shared_ptr< std::map <std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map_;
+
+     std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType>>>> T_map_;      
+     std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map_;      
+
+     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType>>>> CTP_map_;      
+     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map_;  
+
+   public :
+     Equation_Base( std::string name, std::string type, std::shared_ptr<StatesInfo<DataType>> states_info, 
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map )
-                    : name_(name), type_(type), term_braket_map_(term_braket_map), expression_term_map_(expression_term_map){} 
+                    : name_(name), type_(type), states_info_(states_info), term_braket_map_(term_braket_map),
+                      expression_term_map_(expression_term_map) {} 
 
     ~Equation_Base(){};
 
-     virtual void generate_expressions() = 0; 
+     virtual void generate_all_expressions() = 0; 
+
+     std::shared_ptr< std::map <std::string, std::shared_ptr< GammaInfo >>> gamma_info_map() { return gamma_info_map_; }
+
+     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType>>>> CTP_map() { return CTP_map_; }      
+     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map() { return CMTP_map_; }  
+     std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map() { return MT_map_    ; }      
+     std::shared_ptr< std::map <std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>>  ACompute_map() { return ACompute_map_; }
+
+     std::string name() { return name_ ; }; 
+     std::string type() { return type_ ; }; 
 
 }; 
  
@@ -31,21 +58,36 @@ class Equation_Base {
 template<typename DataType>
 class Equation_Value : public Equation_Base<DataType> {
 
-   public :
-
      using Equation_Base<DataType>::name_;
      using Equation_Base<DataType>::type_;
+     using Equation_Base<DataType>::states_info_;
      using Equation_Base<DataType>::term_braket_map_;
      using Equation_Base<DataType>::expression_term_map_;
 
-     Equation_Value( std::string name, std::string type, 
+     using Equation_Base<DataType>::expression_map_;
+
+     using Equation_Base<DataType>::gamma_info_map_;
+     using Equation_Base<DataType>::braket_map_;
+     using Equation_Base<DataType>::ACompute_map_;
+
+     using Equation_Base<DataType>::T_map_ ;      
+     using Equation_Base<DataType>::MT_map_ ;      
+
+     using Equation_Base<DataType>::CTP_map_;      
+     using Equation_Base<DataType>::CMTP_map_;  
+
+   public :
+
+     Equation_Value( std::string name, std::string type, std::shared_ptr<StatesInfo<DataType>> states_info, 
                      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
                      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map )
-                     : Equation_Base<DataType>( name, type, term_braket_map, expression_term_map  ) {}  
+                     : Equation_Base<DataType>( name, type, states_info, term_braket_map, expression_term_map  ) {}  
 
     ~Equation_Value(){};
 
-     void generate_expressions();
+     void generate_all_expressions(); 
+     std::string build_expression( std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list );
 
+     std::shared_ptr<Expression<DataType>> generate_expression (std::string expression_name ) ;
 }; 
 #endif

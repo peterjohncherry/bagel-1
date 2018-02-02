@@ -8,7 +8,8 @@ template<typename DataType>
 class Expression {
 
       public :
-        
+        std::string name_;   
+ 
         //List of terms, currently a list of BraKets...
         std::shared_ptr<std::vector< BraKet<DataType>>> braket_list_;
 
@@ -33,7 +34,7 @@ class Expression {
         
         // key : name of gammas
         // result : gamma_info, also contains sigma info,  includes lists of gammas which must be calculated first.
-        std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo> > > GammaMap_;
+        std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo> > > gamma_info_map_;
         
         // key: name of gamma (or sigma)
         // result :  name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors.
@@ -45,7 +46,7 @@ class Expression {
                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
-                    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >                         GammaMap );
+                    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >                         gamma_info_map );
         ~Expression(){};
         
         void get_gamma_Atensor_contraction_list();
