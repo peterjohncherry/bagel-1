@@ -1,5 +1,30 @@
 #include <src/prop/proptool/algebraic_manipulator/equation.h>
 
+
+using namespace std;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string, std::shared_ptr< Expression<DataType>>>> expression_map,
+                                         shared_ptr< map <string, shared_ptr< GammaInfo >>> gamma_info_map,
+                                         shared_ptr< map <string, shared_ptr< vector<shared_ptr<CtrOp_base>>>>> ACompute_map,
+                                         shared_ptr< map< string, shared_ptr< TensOp::TensOp<DataType>>>> T_map,
+                                         shared_ptr< map< string, shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map,
+                                         shared_ptr< map< string, shared_ptr< CtrTensorPart<DataType>>>> CTP_map,     
+                                         shared_ptr< map< string, shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "void Equation_Value<DataType>::set_maps" << endl;
+
+  expression_map_ = make_shared<map<string, shared_ptr<Expression<DataType>>>>();
+  gamma_info_map_ = gamma_info_map;
+  ACompute_map_   = ACompute_map;
+  T_map_          = T_map;
+  MT_map_         = MT_map;
+  CTP_map_        = CTP_map;   
+  CMTP_map_       = CMTP_map;
+
+  cout << "leaving void Equation_Value<DataType>::set_maps" << endl;
+  return;
+}
 //////////////////////////////////////////////////////////////////////////
 using namespace std;
 template<typename DataType>
@@ -7,16 +32,22 @@ void Equation_Value<DataType>::generate_all_expressions() {
 //////////////////////////////////////////////////////////////////////////
 cout << " void Equation_Value<DataType>::generate_all_expressions() " << endl;  
   
-  for ( auto& expr_info : *expression_term_map_ ) 
-    if ( expression_map_->find( expr_info.first ) != expression_map_->end() ) 
-      generate_expression( expr_info.first ) ;
+  
+  for ( auto& expr_info : *expression_term_map_ ){ 
+    cout <<"expr_info.first = " << expr_info.first << endl;
+    if ( expression_map_->find( expr_info.first ) == expression_map_->end() ){ 
+      cout << "into generate_expression" << endl;
+      shared_ptr<Expression<DataType>> new_expression = build_expression( expr_info.first ); 
+      expression_map_->emplace( new_expression->name(),  new_expression );
+    }
+  }
 
   return;
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<Expression<DataType>> Equation_Value<DataType>::generate_expression( string expression_name ) {
+shared_ptr<Expression<DataType>> Equation_Value<DataType>::build_expression( string expression_name ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Value<DataType>::Build_Expression : " << expression_name << endl;
  
@@ -32,21 +63,16 @@ shared_ptr<Expression<DataType>> Equation_Value<DataType>::generate_expression( 
       bk_list->push_back(bk);
  //   bk_list->insert( bk_list->end(), term_bk_list->begin(), term_bk_list->end()); // TODO Why doesn't this work? 
   }
-  cout << " build the expression " << endl;
-  shared_ptr<Expression<DataType>> new_expression ; 
-//  string expression_name_gen =  Build_Expression( bk_list );
-//  cout << "   assert( " <<  expression_name_gen << " =?= " << expression_name  << " );" << endl;
-//  assert(expression_name_gen == expression_name );
 
-  return new_expression;
+  return build_expression( bk_list );
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-string Equation_Value<DataType>::build_expression( shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {
+shared_ptr<Expression<DataType>> Equation_Value<DataType>::build_expression( shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Value<DataType>::Build_Expression" << endl;
   shared_ptr< vector<pair<string, DataType>> > braKet_name_list = make_shared<vector<pair< string, DataType >>>(0);
-
 
   // This is looping over states; op sparsity depends on states, should replace with term_info_map, and
   // have double loop, outer for ket state, inner for brastate
@@ -56,10 +82,9 @@ string Equation_Value<DataType>::build_expression( shared_ptr<vector<BraKet<Data
       
       auto T_loc = T_map_->find(op_name);
       if( T_loc == T_map_->end() ){ 
-        shared_ptr<TensOp::TensOp<DataType>> new_op;// = System_Info<DataType>::Initialize_Tensor_Op_Info( op_name );
-        T_map_->emplace( op_name, new_op );
+        shared_ptr<TensOp::TensOp<DataType>> new_op = TensOp_Info_Init::Initialize_Tensor_Op_Info<DataType>( op_name );
         CTP_map_->insert( new_op->CTP_map_->begin(), new_op->CTP_map_->end());
-      //TODO do state specific definition; just builds new range_map, should not have any sparsity yet ...
+        T_map_->emplace( op_name, new_op );
       }
     } 
 
@@ -75,30 +100,15 @@ string Equation_Value<DataType>::build_expression( shared_ptr<vector<BraKet<Data
       CMTP_map_->insert( multiop->CMTP_map()->begin(), multiop->CMTP_map()->end());
       MT_map_->emplace(braket_info.multiop_name_, multiop );
     } 
-   
-   // if ( braket_map_->find(braket_info.name()) == braket_map_->end() ) 
-      //Set_BraKet_Ops( make_shared<vector<string>>(braket_info.op_list_), braket_info.name() ) ;
-     
 
     braKet_name_list->push_back( make_pair( braket_info.name(), braket_info.factor_ ) );
   }
-
-  string expression_name = "";
-  for ( pair<string, DataType> name_fac_pair : *braKet_name_list ) {
-    if (name_fac_pair.second != 0.0 ) 
-      expression_name += "+ (" + to_string(name_fac_pair.second) + ")" + name_fac_pair.first;
-  }
-  cout << "new_expression_name = " << expression_name << endl;
   
   cout << "List of things in CMTP_map_ " << endl;
   for ( auto& elem : *CMTP_map_ ) 
     cout << elem.first << endl;   
 
-  shared_ptr<Expression<DataType>> new_expression = make_shared<Expression<DataType>>( expr_bk_list, states_info_, MT_map_, CTP_map_, CMTP_map_, ACompute_map_, gamma_info_map_ ); 
-
-  expression_map_->emplace( expression_name, new_expression );
-
-  return expression_name;
+  return  make_shared<Expression<DataType>>( expr_bk_list, states_info_, MT_map_, CTP_map_, CMTP_map_, ACompute_map_, gamma_info_map_ );
 
 }
 

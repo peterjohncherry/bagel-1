@@ -21,10 +21,18 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
   //Note that this G_to_A_map_ is expression specific
   G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, AContribInfo >>>>();
 
+  name_ = "";
+  for ( BraKet<DataType>& bk : *braket_list_ ) {
+    if (bk.factor() != 0.0 )
+      name_ += "(" + to_string(bk.factor()) + ")" + bk.name() + " + ";
+  }
+  name_.pop_back();
+  name_.pop_back();
+
   // Will loop through terms and then generate mathematical task map. It's split into
   // two functions as this will gives more control over merging together of different BraKets G_to_A_maps.
   for ( BraKet<DataType>& braket : *braket_list_ )
-     braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_ );
+    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_ );
   get_gamma_Atensor_contraction_list();
 }
 

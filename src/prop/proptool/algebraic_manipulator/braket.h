@@ -19,6 +19,8 @@ class BraKet{
        const std::string type_ ; // should be "ci_deriv" or "full" 
        const std::string multiop_name_;
 
+       std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op_;
+
        BraKet( std::vector<std::string>& op_list, DataType factor, int bra_num, int ket_num, 
                std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type) :
                op_list_(op_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
@@ -42,11 +44,12 @@ class BraKet{
                  name_ += " |"+ std::to_string(ket_num) + ">";
                   
                }; 
-       std::string bk_name() { return name_ ; } 
-       std::string name() { return name_ ; } 
       ~BraKet(){};
 
-       std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op_;
+
+       std::string bk_name() { return name_ ; } 
+       std::string name() { return name_ ; } 
+       DataType factor() const { return factor_ ; } 
 
        void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
                                                  std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map,

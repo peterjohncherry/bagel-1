@@ -1,14 +1,19 @@
+#ifndef __SRC_PROPTOOL_TENSOP_INFO_INIT
+#define __SRC_PROPTOOL_TENSOP_INFO_INIT
+#include <src/global.h>
 #include <bagel_config.h>
-#include <src/prop/proptool/algebraic_manipulator/system_info.h>
 #include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
+#include <src/prop/proptool/algebraic_manipulator/tensop.h>
+
 using namespace std;
 using namespace Symmetry_Operations;
+namespace  TensOp_Info_Init {
 
 /////////////////////////////////////////////////////////////////////////////////
 //Build the operators here.
 /////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info( string op_name ) {
+shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( string op_name ) {
 /////////////////////////////////////////////////////////////////////////////////
 cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info" << endl;
 
@@ -144,6 +149,5 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   return new_tens;
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template class System_Info<double>;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
+}
+#endif

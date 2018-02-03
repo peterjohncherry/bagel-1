@@ -112,8 +112,8 @@ cout <<  "System_Info::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op
 template<class DataType>
 void
 System_Info<DataType>::create_equation( std::string name, std::string type, 
-                                                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
-                                                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map ){ 
+                                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
+                                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "System_Info<DataType>::System_Info::create_equation " << endl; 
 
@@ -124,6 +124,7 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
   if ( type == "Value" ) { 
     shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map );
     new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map, MT_map, CTP_map, CMTP_map );
     equation_map_->emplace( name, new_eqn); 
 
   } else { 

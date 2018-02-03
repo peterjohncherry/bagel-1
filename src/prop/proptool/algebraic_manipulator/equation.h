@@ -4,6 +4,7 @@
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>  
 #include <src/prop/proptool/algebraic_manipulator/expression.h>
 #include <src/prop/proptool/algebraic_manipulator/braket.h>
+#include <src/prop/proptool/initialization/tensop_info.h>  
 
 template<typename DataType>
 class Equation_Base {
@@ -34,11 +35,22 @@ class Equation_Base {
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map )
                     : name_(name), type_(type), states_info_(states_info), term_braket_map_(term_braket_map),
-                      expression_term_map_(expression_term_map) {} 
+                      expression_term_map_(expression_term_map) {}
 
     ~Equation_Base(){};
 
-     virtual void generate_all_expressions() = 0; 
+     void set_maps( std::shared_ptr< std::map <std::string, std::shared_ptr< Expression<DataType>>>> expression_map,
+                    std::shared_ptr< std::map<std::string, std::shared_ptr< GammaInfo >>> gamma_info_map,
+                    std::shared_ptr< std::map<std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map,
+                    std::shared_ptr< std::map<std::string, std::shared_ptr< TensOp::TensOp<DataType>>>> T_map,
+                    std::shared_ptr< std::map<std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map,
+                    std::shared_ptr< std::map<std::string, std::shared_ptr< CtrTensorPart<DataType>>>> CTP_map,     
+                    std::shared_ptr< std::map<std::string, std::shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map);
+
+
+     virtual void generate_all_expressions(){ throw std::logic_error( "trying to generate_equations from the Equation_Base type!! Aborting"); }  
+     virtual std::shared_ptr<Expression<DataType>> build_expression( std::string expression_name ) = 0; 
+     virtual std::shared_ptr<Expression<DataType>> build_expression( std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list ) = 0;
 
      std::shared_ptr< std::map <std::string, std::shared_ptr< GammaInfo >>> gamma_info_map() { return gamma_info_map_; }
 
@@ -86,8 +98,7 @@ class Equation_Value : public Equation_Base<DataType> {
     ~Equation_Value(){};
 
      void generate_all_expressions(); 
-     std::string build_expression( std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list );
-
-     std::shared_ptr<Expression<DataType>> generate_expression (std::string expression_name ) ;
+     std::shared_ptr<Expression<DataType>> build_expression (std::string expression_name ) ;
+     std::shared_ptr<Expression<DataType>> build_expression( std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list );
 }; 
 #endif

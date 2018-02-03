@@ -9,7 +9,7 @@ class Expression {
 
       public :
         std::string name_;   
- 
+
         //List of terms, currently a list of BraKets...
         std::shared_ptr<std::vector< BraKet<DataType>>> braket_list_;
 
@@ -52,5 +52,7 @@ class Expression {
         void get_gamma_Atensor_contraction_list();
         
         void necessary_tensor_blocks();
+   
+        std::string name() {return name_; }
 };
 #endif

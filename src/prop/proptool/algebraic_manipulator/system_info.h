@@ -93,10 +93,6 @@ class System_Info {
         int nact(int state_num)   { return states_info_->nact( state_num );   };
         bool spinfree() {return spinfree_;}
         
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // TODO Should be moved out into its own class, or perhaps just a namespace
-        static std::shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( std::string op_name ) ;
-        
         struct compare_string_length {
           bool operator()(const std::string& first, const std::string& second) {
               return first.size() > second.size();
