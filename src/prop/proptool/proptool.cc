@@ -1,7 +1,9 @@
 #include <src/prop/proptool/proptool.h>
+#include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
 
 using namespace std;
 using namespace bagel;
+using namespace Symmetry_Operations;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, shared_ptr<const Reference> r): 
@@ -264,8 +266,8 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
     string                             TimeSymm = op_def_inp->get<string>( "TimeSymm", "none" );
     bool                               hconj = conv_to_bool(op_def_inp->get<int>( "HermConj", false ));
       
-    vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> symmfuncs =  sys_info_->identity_only() ; // TODO define this by list of pairs of vectors
-    vector<bool(*)(shared_ptr<vector<string>>)> constraints = { &System_Info<double>::System_Info::always_true };  // TODO define this by list of vectors 
+    vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> symmfuncs =  Symmetry_Operations::identity_only() ; // TODO define this by list of pairs of vectors
+    vector<bool(*)(shared_ptr<vector<string>>)> constraints = { &Symmetry_Operations::always_true };  // TODO define this by list of vectors 
     
     cout << "user defined op name : " << op_name << endl;
     shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp( op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep); 
