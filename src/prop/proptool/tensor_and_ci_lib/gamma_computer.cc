@@ -1,6 +1,6 @@
 #include <bagel_config.h>
-#include <src/prop/proptool/tensor_and_ci_lib/gamma_computer.h>
 #include <src/prop/proptool/proputils.h>
+#include <src/prop/proptool/tensor_and_ci_lib/gamma_computer.h>
 
 using namespace std;
 using namespace bagel;

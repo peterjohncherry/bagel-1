@@ -13,16 +13,17 @@ template < typename DataType >
 Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>>   gamma_computer,
                                                                          shared_ptr<map< string, shared_ptr<Expression<DataType>>>> expression_map,
                                                                          shared_ptr<map< string, shared_ptr<IndexRange>>>           range_conversion_map,
-                                                                         shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    tensop_data_map ):
-  gamma_computer_(gamma_computer), expression_map_(expression_map), range_conversion_map_(range_conversion_map), tensop_data_map_(tensop_data_map), 
-  scalar_results_map(make_shared<map< string, DataType >>()) {}  
+                                                                         shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    tensop_data_map       ):
+  gamma_computer_(gamma_computer), expression_map_(expression_map), range_conversion_map_(range_conversion_map), tensop_data_map_(tensop_data_map) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+  scalar_results_map = make_shared<map< string, DataType >>(); 
+}  
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename DataType >
-void Expression_Computer::Expression_Computer<DataType>::Evaluate_Expression( string expression_name ) { 
+void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( string expression_name ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout <<  "Expression_Computer::Expression_Computer::Evaluate_Expression : " << expression_name <<  endl;
+  cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : " << expression_name <<  endl;
 
   bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
   if ( !new_result )  
@@ -120,18 +121,22 @@ void Expression_Computer::Expression_Computer<DataType>::Evaluate_Expression( st
      
       if ( gamma_name != "ID" ) {
 
+  cout << "A13" << endl;
         gamma_computer_->get_gamma( gamma_name );
  
         DataType tmp_result = A_combined_data->dot_product( gamma_computer_->gamma_data_map()->at(gamma_name) );
         g_result_map.emplace(gamma_name, tmp_result) ;
         result += tmp_result;
 
+  cout << "A14" << endl;
       } else {
 
+  cout << "A15" << endl;
         DataType tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_tensor_elems( A_combined_data ) ; cout << "tmp_result = " << tmp_result << endl;
         g_result_map.emplace(gamma_name, tmp_result) ;
         result += tmp_result ; 
 
+  cout << "A16" << endl;
       }
     }
   }

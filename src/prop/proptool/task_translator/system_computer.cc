@@ -20,6 +20,12 @@ System_Computer::System_Computer<DataType>::System_Computer(
   civec_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
   gamma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
   tensop_data_map_ = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
+  gamma_data_map_ = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
+
+  b_gamma_computer_->set_maps( range_conversion_map_, system_info_->Gamma_map, gamma_data_map_,
+                               sigma_data_map_, civec_data_map_ );
+
+  calculate_mo_integrals();
 
  cout << "should either set or initialize maps here " << endl;
 }
@@ -29,8 +35,29 @@ void System_Computer::System_Computer<DataType>::build_equation_computer(std::st
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << " void System_Computer::System_Computer<DataType>::build_equation_computer" << endl; 
 
+  shared_ptr<Equation_Base<DataType>> equation_basic = system_info_->equation_map_->at(equation_name); 
+
+  if ( equation_basic->type()  ==  "Value" ) { 
+    //shared_ptr<Equation_Value<DataType>> equation_val = dynamic_pointer_cast<Equation_Value<DataType>>(equation_basic); 
+    shared_ptr<Equation_Computer_Value<DataType>> equation_computer = make_shared<Equation_Computer_Value<DataType>>( equation_basic, range_conversion_map_ ); 
+    equation_computer->set_computers( b_gamma_computer_ ) ;
+    equation_computer->set_maps( gamma_data_map_, tensop_data_map_ );
+    equation_computer->build_expression_computer();
+    equation_computer->solve_equation(); 
+  }
+//  dynamic_pointer_cast<Equation_Base<DataType>>(equation(make_shared<Equation_Computer_Value<DataType>>( equation, range_conversion_map_ ))); 
+//    equation_computer = dynamic_pointer_cast<Equation_Computer_Base<DataType>>(make_shared<Equation_Computer_Value<DataType>>( equation, range_conversion_map_ )); 
+   
+//  } else if ( equation->type()  ==  "LinearRM" ) { 
+ //   equation_computer = dynamic_pointer_cast<Equation_Computer_Base<DataType>>(make_shared<Equation_Computer_LinearRM<DataType>>( equation, range_conversion_map_ )); 
+
+//  } else {  
+//    throw std::logic_error( "this type of equation has not been implemented yet! Aborting!!" );  
+//  }
+
   return;
 } 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void System_Computer::System_Computer<DataType>::build_expression_computer( std::string expression_name ){
@@ -59,10 +86,13 @@ void System_Computer::System_Computer<DataType>::calculate_mo_integrals() {
   cout << "getting mo integrals " <<  endl; 
   vector<string> test_ranges4 = { "notcor", "notcor", "notvir", "notvir" }; 
   vector<string> test_ranges2 = { "free", "free" }; 
-  shared_ptr<SMITH::Tensor_<double>> h1_  =  moint_computer_->get_h1( test_ranges2, true ) ;
-  shared_ptr<SMITH::Tensor_<double>> v2_  =  moint_computer_->get_v2( test_ranges4 ) ;
-  cout << " new_coeffs  v2_->norm() = " << v2_->norm() << endl; 
+  h1_  =  moint_computer_->get_h1( test_ranges2, true ) ;
+  v2_  =  moint_computer_->get_v2( test_ranges4 ) ;
+  cout << " new_coeffs  v2->norm() = " << v2_->norm() << endl; 
 
+  tensop_data_map_->emplace( "H" , v2_ );  
+  tensop_data_map_->emplace( "f" , h1_ );  
+   
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////

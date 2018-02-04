@@ -12,10 +12,10 @@ class Equation_Base {
    protected :
      std::string name_;
      std::string type_;
+
      std::shared_ptr<StatesInfo<DataType>> states_info_;
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map_;
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_;
-
 
      std::shared_ptr< std::map <std::string, std::shared_ptr< Expression<DataType>>>> expression_map_;
 
@@ -48,9 +48,10 @@ class Equation_Base {
                     std::shared_ptr< std::map<std::string, std::shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map);
 
 
-     virtual void generate_all_expressions(){ throw std::logic_error( "trying to generate_equations from the Equation_Base type!! Aborting"); }  
-     virtual std::shared_ptr<Expression<DataType>> build_expression( std::string expression_name ) = 0; 
-     virtual std::shared_ptr<Expression<DataType>> build_expression( std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list ) = 0;
+     void generate_all_expressions();  
+
+     std::shared_ptr<Expression<DataType>> build_expression (std::string expression_name ) ;
+     std::shared_ptr<Expression<DataType>> build_expression( std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list );
 
      std::shared_ptr< std::map <std::string, std::shared_ptr< GammaInfo >>> gamma_info_map() { return gamma_info_map_; }
 
@@ -58,6 +59,7 @@ class Equation_Base {
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map() { return CMTP_map_; }  
      std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map() { return MT_map_    ; }      
      std::shared_ptr< std::map <std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>>  ACompute_map() { return ACompute_map_; }
+     std::shared_ptr< std::map <std::string, std::shared_ptr< Expression<DataType>>>> expression_map() const { return expression_map_; }
 
      std::string name() { return name_ ; }; 
      std::string type() { return type_ ; }; 
@@ -98,7 +100,42 @@ class Equation_Value : public Equation_Base<DataType> {
     ~Equation_Value(){};
 
      void generate_all_expressions(); 
-     std::shared_ptr<Expression<DataType>> build_expression (std::string expression_name ) ;
-     std::shared_ptr<Expression<DataType>> build_expression( std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list );
 }; 
+ 
+// Generates an Equation object to evaluate all f_ij 
+// f is the master expression
+// i and j range over all values specified by target indexes
+template<typename DataType>
+class Equation_LinearRM : public Equation_Base<DataType> {
+
+     using Equation_Base<DataType>::name_;
+     using Equation_Base<DataType>::type_;
+     using Equation_Base<DataType>::states_info_;
+     using Equation_Base<DataType>::term_braket_map_;
+     using Equation_Base<DataType>::expression_term_map_;
+
+     using Equation_Base<DataType>::expression_map_;
+
+     using Equation_Base<DataType>::gamma_info_map_;
+     using Equation_Base<DataType>::braket_map_;
+     using Equation_Base<DataType>::ACompute_map_;
+
+     using Equation_Base<DataType>::T_map_ ;      
+     using Equation_Base<DataType>::MT_map_ ;      
+
+     using Equation_Base<DataType>::CTP_map_;      
+     using Equation_Base<DataType>::CMTP_map_;  
+
+   public :
+
+     Equation_LinearRM( std::string name, std::string type, std::shared_ptr<StatesInfo<DataType>> states_info, 
+                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
+                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map )
+                     : Equation_Base<DataType>( name, type, states_info, term_braket_map, expression_term_map  ) {}  
+
+    ~Equation_LinearRM(){};
+
+     void generate_all_expressions() { throw std::logic_error( "LinearRM equation not implemented");  } ; 
+}; 
+
 #endif

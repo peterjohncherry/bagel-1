@@ -6,10 +6,10 @@
 #include <src/ci/fci/civec.h>
 #include <src/ci/fci/dvec.h>
 #include <src/util/f77.h>
-#include <src/prop/proptool/algebraic_manipulator/expression.h> 
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_sorter.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
-#include <src/prop/proptool/algebraic_manipulator/states_info.h>
+//#include <src/prop/proptool/algebraic_manipulator/states_info.h>
+#include <src/prop/proptool/algebraic_manipulator/gamma_generator.h>
 
 namespace bagel {
 

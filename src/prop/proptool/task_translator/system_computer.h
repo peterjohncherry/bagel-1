@@ -1,13 +1,13 @@
 #ifndef __SRC_PROP_PROPTOOL_TASKTRANSLATOR_SYSTEMCOMPUTER_H
 #define __SRC_PROP_PROPTOOL_TASKTRANSLATOR_SYSTEMCOMPUTER_H
 
-#include <src/prop/proptool/proputils.h> 
+#include <src/smith/tensor.h>
 #include <src/smith/multitensor.h>
 #include <src/smith/indexrange.h>
+#include <src/prop/proptool/proputils.h> 
 #include <src/prop/proptool/integrals/moint_computer.h>
-#include <src/prop/proptool/algebraic_manipulator/system_info.h>
 #include <src/prop/proptool/task_translator/equation_computer.h>
-#include <src/prop/proptool/tensor_and_ci_lib/b_gamma_computer.h>
+#include <src/prop/proptool/algebraic_manipulator/system_info.h>
 
 namespace bagel {
 namespace  System_Computer { 
@@ -21,6 +21,7 @@ class System_Computer {
     std::shared_ptr<SMITH::Tensor_<double>> H_1el_all;
     std::shared_ptr<SMITH::Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
     std::shared_ptr<SMITH::Tensor_<double>> v2_; 
+    std::shared_ptr<SMITH::Tensor_<double>> h1_; 
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> civec_data_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> sigma_data_map_;

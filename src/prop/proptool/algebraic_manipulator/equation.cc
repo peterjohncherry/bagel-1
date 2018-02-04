@@ -14,7 +14,7 @@ void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "void Equation_Value<DataType>::set_maps" << endl;
 
-  expression_map_ = make_shared<map<string, shared_ptr<Expression<DataType>>>>();
+  expression_map_ = expression_map;
   gamma_info_map_ = gamma_info_map;
   ACompute_map_   = ACompute_map;
   T_map_          = T_map;
@@ -28,7 +28,7 @@ void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string,
 //////////////////////////////////////////////////////////////////////////
 using namespace std;
 template<typename DataType>
-void Equation_Value<DataType>::generate_all_expressions() {  
+void Equation_Base<DataType>::generate_all_expressions() {  
 //////////////////////////////////////////////////////////////////////////
 cout << " void Equation_Value<DataType>::generate_all_expressions() " << endl;  
   
@@ -36,9 +36,7 @@ cout << " void Equation_Value<DataType>::generate_all_expressions() " << endl;
   for ( auto& expr_info : *expression_term_map_ ){ 
     cout <<"expr_info.first = " << expr_info.first << endl;
     if ( expression_map_->find( expr_info.first ) == expression_map_->end() ){ 
-      cout << "into generate_expression" << endl;
-      shared_ptr<Expression<DataType>> new_expression = build_expression( expr_info.first ); 
-      expression_map_->emplace( new_expression->name(),  new_expression );
+      expression_map_->emplace( expr_info.first, build_expression( expr_info.first ) );
     }
   }
 
@@ -47,7 +45,7 @@ cout << " void Equation_Value<DataType>::generate_all_expressions() " << endl;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<Expression<DataType>> Equation_Value<DataType>::build_expression( string expression_name ) {
+shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( string expression_name ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Value<DataType>::Build_Expression : " << expression_name << endl;
  
@@ -69,7 +67,7 @@ shared_ptr<Expression<DataType>> Equation_Value<DataType>::build_expression( str
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<Expression<DataType>> Equation_Value<DataType>::build_expression( shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {
+shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Value<DataType>::Build_Expression" << endl;
   shared_ptr< vector<pair<string, DataType>> > braKet_name_list = make_shared<vector<pair< string, DataType >>>(0);

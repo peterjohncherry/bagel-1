@@ -31,7 +31,7 @@ class Expression_Computer {
                          std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map );
     ~Expression_Computer() {};
     
-    void Evaluate_Expression(std::string expression_name );
+    void evaluate_expression(std::string expression_name );
 
     void print_AContraction_list(std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>> ACompute_list, std::string A_Contrib_name );
 

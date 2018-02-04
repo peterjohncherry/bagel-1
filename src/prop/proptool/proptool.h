@@ -71,6 +71,7 @@ namespace PropTool {
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> tensop_data_map_;
  
     std::shared_ptr<System_Info<double>> sys_info_;
+    std::shared_ptr<System_Computer::System_Computer<double>> system_computer_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> expression_map_;
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<Term_Init> >> term_init_map_;
@@ -116,6 +117,7 @@ namespace PropTool {
       ~PropTool(){};
     
      void compute() { std::cout << " not connected to anything yet" << std::endl;}; 
+     void execute_compute_lists(); 
      int nclosed(){ return nclosed_;}     
      int nocc ()  { return nocc_;}     
      int nact ()  { return nact_;}     

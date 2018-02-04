@@ -26,8 +26,20 @@ PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geo
 
   build_algebraic_task_lists( idata_->get<string>("equation interdependence", "share" ) ) ;
 
-}
+  execute_compute_lists();  
 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::execute_compute_lists(){  
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ cout << "PropTool::PropTool::execute_compute_lists()" << endl; 
+ 
+   for ( string& equation_name : equation_execution_list_ ) 
+      system_computer_->build_equation_computer( equation_name );
+  
+  return;
+
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::define_necessary_tensor_blocks(){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -77,7 +89,7 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
   //TODO should build gamma_computer inside system_computer, like this due to DVec class dependence of B_Gamma_Computer 
   auto gamma_computer = make_shared<B_Gamma_Computer::B_Gamma_Computer<double>>(civectors_); 
 
-  auto system_computer_ = make_shared<System_Computer::System_Computer<double>>(sys_info_, moint_computer, range_conversion_map_, gamma_computer );
+  system_computer_ = make_shared<System_Computer::System_Computer<double>>(sys_info_, moint_computer, range_conversion_map_, gamma_computer );
 
   cout << "initialized sys_info" << endl;
   shared_ptr< const PTree > ops_def_tree = idata_->get_child_optional( "operators" ) ;
