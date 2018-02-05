@@ -242,7 +242,8 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
   cout << "Gamma_Computer::build_sigmaN_block" << endl;
   cout << "    sigmaN_name = " << sigmaN_name << "    prev_sigma_name = " << prev_sigma_name << endl;
 
-  if ( Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info()->name()  == Gamma_info_map->at(prev_sigma_name.substr(2))->Ket_info()->name() ){//fix for rel case
+  //if ( Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info()->name()  == Gamma_info_map->at(prev_sigma_name.substr(2))->Ket_info()->name() ){//fix for rel case
+  if ( Gamma_info_map->at(sigmaN_name.substr(2))->Bra_nalpha()  == Gamma_info_map->at(prev_sigma_name.substr(2))->Ket_nalpha() ){//fix for rel case
    
     shared_ptr<Tensor_<double>> sigmaN      = sigma_data_map_->at(sigmaN_name);
     shared_ptr<Tensor_<double>> prev_sigma  = sigma_data_map_->at(prev_sigma_name);
@@ -277,7 +278,7 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
 
   } else {
 
-    cout << "spin flips not implemented yet " <<endl;
+    throw logic_error("spin flipping sigmas not implemented yet!! Aborting!!");
 
   }
   return;

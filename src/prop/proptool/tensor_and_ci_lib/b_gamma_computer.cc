@@ -110,25 +110,31 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::convert_Dvec_sigma_to_tensor(
   for ( int ii = 0 ; ii != order ; ii++ ) 
     orb_id_strides[ii] = (int)pow( Dvec_sigma->det()->norb(), ii );
 
+
   auto boffset = [&block_offsets, &block_pos]( int pos ){ return block_offsets->at(pos).at(block_pos->at(pos)); }; 
   do {
       
     print_vector( *block_pos, "block_pos" ) ; cout << endl; cout <<" order = " <<  order << endl;
 
     vector<Index> sigma_id_blocks = *(get_rng_blocks( block_pos, *sigma_ranges ));
-    int block_size = 1 ;
+    int block_size = sigma_id_blocks[0].size();
     int orb_pos = 0;
-    for ( int  ii = 0 ; ii != order+1; ii++ ){
-      orb_pos += boffset(ii)*orb_id_strides[ii]; 
+    //TODO check: starts at one because ci_index is the first index, although do not understand  how this was working before
+    //            CHECK THIS; it's a change made upon returning to this section of the code after work elsewhere.
+    for ( int  ii = 1 ; ii != order+1; ii++ ){
+      orb_pos += boffset(ii)*orb_id_strides[ii-1]; 
       block_size *= sigma_id_blocks[ii].size(); 
     }    
-
     unique_ptr<DataType[]> sigma_block( new DataType[block_size] );
     DataType* sigma_block_ptr = sigma_block.get();
 
     int ci_block_size = sigma_id_blocks[0].size();
-    for (int ii = 0; ii != block_size/ci_block_size ; ii++ ) { 
-      std::copy( Dvec_sigma->data(orb_pos)->data()+boffset(order), Dvec_sigma->data(orb_pos)->data()+boffset(order)+ci_block_size, sigma_block_ptr );   
+    int sblock_pos = 0; 
+  
+    //TODO almost certain boffset(order) is wrong, should be block_offset(0), needs to be offset of ci index 
+    int num_orb_idxs_in_this_block = block_size/ci_block_size;
+    for (int ii = 0; ii != num_orb_idxs_in_this_block; ii++ ) { 
+      std::copy( Dvec_sigma->data(orb_pos)->data()+boffset(0), Dvec_sigma->data(orb_pos)->data()+boffset(0)+ci_block_size, sigma_block_ptr );   
       sigma_block_ptr+=ci_block_size;
       orb_pos++;
     }
@@ -209,7 +215,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigmaN( shared_ptr<Ga
   string Bra_name = gammaN_info->Bra_name();     
   string Ket_name = gammaN_info->Prev_Bra_name();
 
-  if ( Bra_name == Ket_name ) { 
+  if ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha() ){ 
 
     get_wfn_data( gammaN_info->prev_Bra_info() );
     shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name );  
@@ -239,7 +245,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigmaN( shared_ptr<Ga
 
   } else {
   
-    cout << "spin flip sigmas not implemented yet " << endl;  
+    throw logic_error( "spin flipping sigmas not implemented yet! Aborting!! ");  
   
   }
   return;
@@ -273,7 +279,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<Ga
 
   get_wfn_data( gamma2_info->Ket_info() );
 
-  if ( Bra_name == Ket_name ) { 
+  if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha() ) { 
 
     shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name ); 
     shared_ptr<Civec>        Ket = cvec_old_map->at( Ket_name );
@@ -282,12 +288,13 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<Ga
     
     sigma_2a1( Ket->data(), sigma2->data(0)->data(), Ket_det );
     sigma_2a2( Ket->data(), sigma2->data(0)->data(), Ket_det );
-    
+     
     dvec_sigma_map->emplace( gamma2_info->sigma_name(), sigma2 );
 
+    
   } else {
 
-    cout << "spin transitions sigmas not implemented yet " << endl;  
+    throw logic_error( "spin flipping sigmas not implemented yet! Aborting !!  ");  
 
   }
   return;
@@ -297,7 +304,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<Ga
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1(DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<Determinants> dets  )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                               
-  //cout << "sigma_2a1" << endl;                                                                                          
+  cout << "sigma_2a1" << endl;                                                                                          
   const int lb = dets->lenb();                                                                                            
   const int ij = dets->norb()*dets->norb();                                                                               
                                                                                                                           
@@ -315,7 +322,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1(DataType* cvec_ptr,
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a2( DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<Determinants> dets) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                             
-//  cout << "sigma_2a2" << endl;
+  cout << "sigma_2a2" << endl;
   const int la = dets->lena();
   const int lb = dets->lenb();
   const int ij = dets->norb()*dets->norb();

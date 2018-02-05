@@ -83,6 +83,14 @@ class GammaInfo {
      std::shared_ptr<CIVecInfo<double>> prev_Bra_info(){ return prev_Bra_info_; };
      std::shared_ptr<CIVecInfo<double>> Ket_info() { return Ket_info_; };
 
+     int Bra_nalpha() const {return  Bra_info_->nalpha(); };
+     int prev_Bra_nalpha() const { return prev_Bra_info_->nalpha(); };
+     int Ket_nalpha() const { return Ket_info_->nalpha(); };
+     
+     int Bra_nbeta() const {return  Bra_info_->nbeta(); };
+     int prev_Bra_nbeta() const { return prev_Bra_info_->nbeta(); };
+     int Ket_nbeta() const { return Ket_info_->nbeta(); };
+
 };
 
 class GammaIntermediate {
