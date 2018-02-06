@@ -55,6 +55,7 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
     auto A_contrib_loc = Expr->G_to_A_map_->find( gamma_name );
     if ( (A_contrib_loc != Expr->G_to_A_map_->end()) &&  (A_contrib_loc->second->size() != 0) ) {
   
+
       for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
       
         string  A_contrib_name = A_contrib_map_elem.first;    
@@ -67,16 +68,20 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
         TensOp_Machine->Calculate_CTP( A_contrib );
 
         if ( gamma_name != "ID" ) {
-       
+          cout << "XXXX1" << endl; 
           if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) { cout << A_contrib_name << " found in map" << endl;
 
             for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
               shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib.id_order(qq)) );
               A_combined_data->ax_plus_y( (DataType)(A_contrib.factor(qq).first), A_contrib_reordered );
+	      cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
+	      cout <<  A_contrib.factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
+              cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
             }
 
          } else { cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO is a way to avoid this, implement it
             
+          cout << "XXXX2" << endl; 
            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
 
               shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = Expr->CMTP_map_->at(A_contrib_name)->CTP_vec ;
@@ -90,11 +95,15 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
               shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib.id_order(qq)) );
               A_combined_data->ax_plus_y( (DataType)(A_contrib.factor(qq).first), A_contrib_reordered );
 
+              cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
+	      cout <<  A_contrib.factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
+              cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
             }
           }
 
         } else {
   
+          cout << "XXXX3" << endl; 
           if ( tensop_data_map_->find(A_contrib_name) == tensop_data_map_->end() ) {cout << A_contrib_name <<  " not yet in map, must form from direct product" << endl;
 
             shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = Expr->CMTP_map_->at(A_contrib_name)->CTP_vec ;
@@ -103,14 +112,22 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
               sub_tensor_names[rr] = CTP_vec->at(rr)->myname();
             
             shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
-            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++)
+            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
               A_combined_data->ax_plus_y( (DataType)(A_contrib.factor(qq).first), A_contrib_data );
+              cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
+              cout <<  A_contrib.factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
+	      cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
 
+             }
           } else {
 
-            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++)
+          cout << "XXXX4" << endl; 
+            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
+              cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
+              cout <<  A_contrib.factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
               A_combined_data->ax_plus_y( (DataType)(A_contrib.factor(qq).first), tensop_data_map_->at(A_contrib_name) );
-
+	      cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
+            }
           }
 
         }
@@ -121,22 +138,24 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
      
       if ( gamma_name != "ID" ) {
 
-  cout << "A13" << endl;
+        cout << "A13" << endl;
         gamma_computer_->get_gamma( gamma_name );
+        cout << "gamma_computer_->gamma_data_map()->at(gamma_name)->norm() = " <<  gamma_computer_->gamma_data_map()->at(gamma_name)->norm() << endl;
+        cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
  
         DataType tmp_result = A_combined_data->dot_product( gamma_computer_->gamma_data_map()->at(gamma_name) );
         g_result_map.emplace(gamma_name, tmp_result) ;
         result += tmp_result;
 
-  cout << "A14" << endl;
+        cout << "A14" << endl;
       } else {
 
-  cout << "A15" << endl;
+        cout << "A15" << endl;
         DataType tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_tensor_elems( A_combined_data ) ; cout << "tmp_result = " << tmp_result << endl;
         g_result_map.emplace(gamma_name, tmp_result) ;
         result += tmp_result ; 
 
-  cout << "A16" << endl;
+        cout << "A16" << endl;
       }
     }
   }
@@ -215,6 +234,7 @@ void Expression_Computer::Expression_Computer<DataType>::set_gamma_maps( string 
   gamma_computer_->set_maps(range_conversion_map_, expression_map_->at(expression_name)->gamma_info_map_, gamma_data_map, sigma_data_map, civec_data_map );
   return;
 } 
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Expression_Computer::Expression_Computer<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

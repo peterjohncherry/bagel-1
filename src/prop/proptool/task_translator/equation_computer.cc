@@ -22,6 +22,7 @@ void Equation_Computer_Base<DataType>::set_maps( std::shared_ptr<std::map< std::
  
   gamma_data_map_ = gamma_data_map;
   tensop_data_map_ = tensop_data_map;
+
   return; 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,6 +34,7 @@ void Equation_Computer_Base<DataType>::build_expression_computer(){
   cout << "equation_->expression_map()->size() = "<< equation_->expression_map()->size() << endl; 
   expression_computer_ =
   make_shared<Expression_Computer::Expression_Computer<DataType>>( gamma_computer_, equation_->expression_map(), range_conversion_map_, tensop_data_map_ );
+
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,6 +42,7 @@ template<typename DataType>
 void Equation_Computer_Value<DataType>::solve_equation(){ /*not really solving anything here*/ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Computer_Value<DataType>::solve_equation() " << endl;
+
   for ( auto& expr_map_elem : *equation_->expression_map() )
     expression_computer_->evaluate_expression( expr_map_elem.first ) ; 
 

@@ -304,7 +304,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<Ga
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1(DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<Determinants> dets  )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                               
-  cout << "sigma_2a1" << endl;                                                                                          
+  cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1" << endl;                                                                                          
   const int lb = dets->lenb();                                                                                            
   const int ij = dets->norb()*dets->norb();                                                                               
                                                                                                                           
@@ -322,7 +322,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1(DataType* cvec_ptr,
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a2( DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<Determinants> dets) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                             
-  cout << "sigma_2a2" << endl;
+ // cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a2" << endl;
   const int la = dets->lena();
   const int lb = dets->lenb();
   const int ij = dets->norb()*dets->norb();

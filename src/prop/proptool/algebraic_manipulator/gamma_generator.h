@@ -27,6 +27,18 @@ class AContribInfo {
      std::vector<int>   id_order(int qq) {return id_orders[qq]; }; 
      std::pair<double,double> factor(int qq) {return factors[qq]; }; 
 
+     std::string name() {return name_ ;}
+     int bra_num() const { return Bra_num_ ; }
+     int ket_num() const { return Ket_num_ ; }
+
+     int total_uses() const { return total_uses_ ; }
+     int remaining_uses() const { return remaining_uses_ ; }
+
+     void increase_total_uses() { total_uses_+=1; }  
+     void increase_remaining_uses() { remaining_uses_+=1; }  
+     void decrease_total_uses() { total_uses_-=1; }  
+     void decrease_remaining_uses() { remaining_uses_-=1; }  
+
 };
 
 class GammaInfo {

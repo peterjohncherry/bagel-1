@@ -32,7 +32,6 @@ void Equation_Base<DataType>::generate_all_expressions() {
 //////////////////////////////////////////////////////////////////////////
 cout << " void Equation_Value<DataType>::generate_all_expressions() " << endl;  
   
-  
   for ( auto& expr_info : *expression_term_map_ ){ 
     cout <<"expr_info.first = " << expr_info.first << endl;
     if ( expression_map_->find( expr_info.first ) == expression_map_->end() ){ 

@@ -146,8 +146,6 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
 
   return;
 }
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This assumes all orbitals have the same size of range, OK for alpha beta spins, not OK 
 //if different active spaces.

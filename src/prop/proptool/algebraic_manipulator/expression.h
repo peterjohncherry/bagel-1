@@ -54,5 +54,14 @@ class Expression {
         void necessary_tensor_blocks();
    
         std::string name() {return name_; }
+        std::shared_ptr<std::vector< BraKet<DataType>>> braket_list(){ return  braket_list_;}
+        std::shared_ptr<StatesInfo<DataType>> states_info(){ return  states_info_;}
+        std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map(){ return  MT_map_;}
+        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >> CTP_map(){ return  CTP_map_;}
+        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map(){ return  CMTP_map_;}
+        std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map(){ return  ACompute_map_;}
+        std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo> > > gamma_info_map(){ return  gamma_info_map_;}
+        std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo > >>> G_to_A_map(){ return  G_to_A_map_;} //TODO should be private
+
 };
 #endif

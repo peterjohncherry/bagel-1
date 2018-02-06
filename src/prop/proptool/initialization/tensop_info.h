@@ -67,8 +67,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    symmfuncs = set_1el_symmfuncs();
    constraints = {  &Symmetry_Operations::always_true };
    state_dep = 0;
-     
-    
 
   } else if ( op_name == "L" ) {  /* ---- L Tensor ----  */
 

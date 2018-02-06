@@ -950,8 +950,8 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Returns a tensor with element with distinct elements, all blcoks have similarly generated elems though
-//C ordering (row major)
+//Returns a tensor with element with distinct elements, all blocks have similarly generated elems though
+//fortran ordering (column major)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_Tensor_column_major(shared_ptr<vector<IndexRange>> T_id_ranges ){
@@ -1012,8 +1012,6 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
 
    return Tens;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
