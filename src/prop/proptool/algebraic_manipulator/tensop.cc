@@ -27,7 +27,6 @@ cout << "Op_General_base::Op_General_base constructor"<< endl;
   split_ranges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info> >>();
 
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
                                   std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
@@ -50,7 +49,6 @@ cout << "Op_General_base::Op_General_base constructor"<< endl;
   all_ranges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info> >>() ; 
 
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TensOp_General::TensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
                                 std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
@@ -376,7 +374,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
  
     } while( fvec_cycle_skipper( forvec, maxs, mins ) );
   
-    all_ranges_tmp_ptr =  make_shared< const map < const vector<string> , shared_ptr<split_range_block_info > > >( all_ranges );
 
   } else { 
 
@@ -387,6 +384,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
       all_ranges.emplace( *(srbi->orig_block()), srbi ) ;
     }
   }
+  all_ranges_tmp_ptr =  make_shared< const map < const vector<string> , shared_ptr<split_range_block_info > > >( all_ranges );
   cout << "leaving MultiTensOp::generate_ranges()" << endl;
 
   return all_ranges_tmp_ptr ;
@@ -504,6 +502,7 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
       CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec ); 
     }
     CTP_map_->emplace(CTP_vec->at(ii)->name, CTP_vec->at(ii)); 
+
   }
   
 

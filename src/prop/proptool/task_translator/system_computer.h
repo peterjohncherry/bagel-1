@@ -41,8 +41,7 @@ class System_Computer {
 
     void get_necessary_tensor_blocks( std::shared_ptr<Expression<DataType>> expression );
     void get_tensor_block( std::string tensor_block_name, std::shared_ptr<std::vector<std::string>> idx_ranges ) ;
-    void build_equation_computer(std::string equation_name ); 
-    void build_expression_computer( std::string expression_name ) ;
+    void build_equation_computer(std::string equation_name );
     void build_tensop( std::string tensop_name ) ;
     void calculate_mo_integrals();
 

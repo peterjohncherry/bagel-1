@@ -34,11 +34,10 @@ void PropTool::PropTool::execute_compute_lists(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  cout << "PropTool::PropTool::execute_compute_lists()" << endl; 
  
-   for ( string& equation_name : equation_execution_list_ ) 
-      system_computer_->build_equation_computer( equation_name );
+ for ( string& equation_name : equation_execution_list_ ) 
+   system_computer_->build_equation_computer( equation_name );
   
-  return;
-
+ return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::define_necessary_tensor_blocks(){  
@@ -58,14 +57,15 @@ void PropTool::PropTool::define_necessary_tensor_blocks(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::build_algebraic_task_lists( string  eqn_interdependence ){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "PropTool::PropTool::build_algebraic_task_lists()" << endl; 
+  cout << "PropTool::PropTool::build_algebraic_task_lists()" << endl; 
  
- if ( eqn_interdependence == "share"  ) { 
-   for ( string& equation_name : equation_execution_list_ ) 
-      sys_info_->construct_equation_task_list( equation_name ) ; 
- } else { 
-    throw logic_error( "form of equation interdependence \"" + eqn_interdependence +"\" not implemented yet" ) ; 
- } 
+  if ( eqn_interdependence == "share"  ) { 
+    for ( string& equation_name : equation_execution_list_ ) 
+       sys_info_->construct_equation_task_list( equation_name ) ; 
+  } else { 
+     throw logic_error( "form of equation interdependence \"" + eqn_interdependence +"\" not implemented yet" ) ; 
+  } 
+  return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::read_input_and_initialize(){  
@@ -105,6 +105,7 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
   get_equations_init( idata_->get_child( "equations" ) );
   cout << "got equations_init" << endl;
 
+  return;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -78,7 +78,6 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
       for ( auto& elem : *term_idrange_map ) 
          if (elem.second.first )
            state_ids_name+= elem.first + "," ; 
-      state_ids_name += "]";
 
       if (state_ids_name.back() == ',' ) {
         state_ids_name.back() = ']';
@@ -108,7 +107,7 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
         expression_term_list = etm_loc->second;
       } 
 
-      vector<BraKet<DataType>> braket_list;;
+      vector<BraKet<DataType>> braket_list;
       do {
         int kk = 0 ;
         vector<int>::iterator fvec_it = fvec->begin();
@@ -146,9 +145,11 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
       cout << master_expression_->term_list_->at(ii).second->alg_name_ << endl;
       cout << "term_name = " << term_name << endl;
       term_braket_map_->emplace( term_name, make_shared<vector<BraKet<DataType>>>(braket_list) ); 
-      expression_term_list->push_back(make_pair(1.0 , term_name));
+      expression_term_list->push_back( make_pair( (DataType)1.0 , term_name) );
 
-    }while( fvec_cycle_skipper( fvec_summer, maxs_summer, mins_summer ) );
+      expression_term_map_->emplace( term_name , make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );
+
+    } while( fvec_cycle_skipper( fvec_summer, maxs_summer, mins_summer ) );
 
   }
   return;

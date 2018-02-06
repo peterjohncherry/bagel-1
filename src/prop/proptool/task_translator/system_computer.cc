@@ -38,11 +38,11 @@ void System_Computer::System_Computer<DataType>::build_equation_computer(std::st
 
   shared_ptr<Equation_Base<DataType>> equation_basic = system_info_->equation_map_->at(equation_name);
 
+  //TODO Skipping for now
   // TODO Should only set the tensors on an expression by expression basis
   // Currently gets all necessary tensor blocks at once...
-  for ( auto& expr_map_loc : *equation_basic->expression_map() )
-    get_necessary_tensor_blocks(expr_map_loc.second);
-
+  //  for ( auto& expr_map_loc : *equation_basic->expression_map() )
+  //  get_necessary_tensor_blocks(expr_map_loc.second);
 
   if ( equation_basic->type()  ==  "Value" ) {
     //shared_ptr<Equation_Value<DataType>> equation_val = dynamic_pointer_cast<Equation_Value<DataType>>(equation_basic);
@@ -80,22 +80,6 @@ void System_Computer::System_Computer<DataType>::get_necessary_tensor_blocks( sh
   }
   return;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-void System_Computer::System_Computer<DataType>::build_expression_computer( std::string expression_name ){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << " void System_Computer::System_Computer<DataType>::build_expression_computer" << endl;
-
-  return;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-void System_Computer::System_Computer<DataType>::build_tensop( std::string tensop_name ){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << " void System_Computer::System_Computer<DataType>::build_tensop" << endl;
-
-  return;
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets ranges and factors from the input which will be used in definition of terms
@@ -105,15 +89,18 @@ void System_Computer::System_Computer<DataType>::get_tensor_block( string tensor
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "System_Computer::System_Computer::get_tensor_block" << endl;
 
+  shared_ptr<vector<SMITH::IndexRange>> smith_idx_ranges = make_shared<vector<SMITH::IndexRange>>(idx_ranges->size());
+  vector<SMITH::IndexRange>::iterator sir_it = smith_idx_ranges->begin();
+  for ( string& range_name :  *idx_ranges )
+    *sir_it++ = *(range_conversion_map_->at(range_name));
+ 
   if (tensor_block_name[0] == 'H' ) {
-    tensop_data_map_->emplace( tensor_block_name, moint_computer_->get_v2( *idx_ranges ) );
+  //  tensop_data_map_->emplace( tensor_block_name, moint_computer_->get_v2( *idx_ranges ) );
+
+  shared_ptr<SMITH::Tensor_<double>> H_block = Tensor_Arithmetic_Utils::get_sub_tensor( tensop_data_map_->at("H") , *smith_idx_ranges ) ;
 
   } else {
-    shared_ptr<vector<SMITH::IndexRange>> smith_idx_ranges = make_shared<vector<SMITH::IndexRange>>(idx_ranges->size());
-    vector<SMITH::IndexRange>::iterator sir_it = smith_idx_ranges->begin();
-    for ( string& range_name :  *idx_ranges )
-      *sir_it++ = *(range_conversion_map_->at(range_name));
-    
+   
     DataType one = (DataType)(1.0); //TODO find a better way;
     tensop_data_map_->emplace( "T" , Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor( smith_idx_ranges, one ) );
   }
@@ -128,18 +115,25 @@ void System_Computer::System_Computer<DataType>::calculate_mo_integrals() {
   cout << "System_Computer::System_Computer::calculate_mo_integrals()" << endl;
 
   cout << "getting mo integrals " <<  endl;
-  vector<string> test_ranges4 = { "notcor", "notcor", "notvir", "notvir" };
+  vector<string> free4 = { "free", "free", "free", "free" };
   vector<string> act4 = { "act", "act", "act", "act" };
   vector<string> free2 = { "free", "free" };
 
   h1_  =  moint_computer_->get_h1( free2, true ) ;
-  v2_  =  moint_computer_->get_v2( act4 ) ;
+  v2_  =  moint_computer_->get_v2( free4 ) ;
   cout << " new_coeffs  v2->norm() = " << v2_->norm() << endl;
 
   tensop_data_map_->emplace( "H" , v2_ );
   tensop_data_map_->emplace( "f" , h1_ );
 
-  tensop_data_map_->emplace( "T" , moint_computer_->get_test_tensor( test_ranges4 ) );
+  tensop_data_map_->emplace( "T" , moint_computer_->get_test_tensor( free4 ) );
+  //tensop_data_map_->emplace( "X" , moint_computer_->get_test_tensor( free4 ) );
+  DataType one = (DataType)(1.0); //TODO find a better way;
+  SMITH::IndexRange fs = *(range_conversion_map_->at("free"));
+  shared_ptr<vector<SMITH::IndexRange>> fs4 = make_shared<vector<SMITH::IndexRange>>(vector<SMITH::IndexRange> { fs, fs, fs, fs } );   
+  tensop_data_map_->emplace( "X" , Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor( fs4, one ) );
+
+  cout <<"X->norm() = " << tensop_data_map_->at("X")->norm() << endl; 
 
   return;
 }

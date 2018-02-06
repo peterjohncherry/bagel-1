@@ -66,10 +66,20 @@ namespace Tensor_Arithmetic_Utils {
 
      void check_contracted_indexes( std::vector<SMITH::IndexRange>&  idx_block, std::vector<int>& contracted_index_positions );
 
+     template<typename DataType> 
+     std::shared_ptr<SMITH::Tensor_<DataType>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in,  std::vector<SMITH::IndexRange>& range_names );
+
+     template<> 
      std::shared_ptr<SMITH::Tensor_<double>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<double>> Tens_in,  std::vector<SMITH::IndexRange>& range_names );
 
+
+     template<typename DataType> 
+     std::shared_ptr<SMITH::Tensor_<DataType>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in,  std::vector<std::string>& range_names,
+                                                      std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::IndexRange> >> range_conversion_map );
+     template<>
      std::shared_ptr<SMITH::Tensor_<double>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<double>> Tens_in,  std::vector<std::string>& range_names,
                                                       std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::IndexRange> >> range_conversion_map );
+
 
      //messy, but I can't see a better way
      template<class vtype>

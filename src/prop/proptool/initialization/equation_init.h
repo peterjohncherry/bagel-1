@@ -62,7 +62,7 @@ class Equation_Init_Value : public Equation_Init_Base {
                           expression_term_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>>();
                           term_braket_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>();
 
-}; 
+                          }; 
 
     ~Equation_Init_Value(){};
 

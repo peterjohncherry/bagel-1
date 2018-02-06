@@ -272,7 +272,7 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<GammaInfo> gamma2_info )  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
+//  cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
 
   string Bra_name = gamma2_info->Bra_name();
   string Ket_name = gamma2_info->Ket_name();
@@ -290,7 +290,6 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<Ga
     sigma_2a2( Ket->data(), sigma2->data(0)->data(), Ket_det );
      
     dvec_sigma_map->emplace( gamma2_info->sigma_name(), sigma2 );
-
     
   } else {
 
@@ -304,7 +303,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<Ga
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1(DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<Determinants> dets  )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                               
-  cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1" << endl;                                                                                          
+ // cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1" << endl;                                                                                          
   const int lb = dets->lenb();                                                                                            
   const int ij = dets->norb()*dets->norb();                                                                               
                                                                                                                           

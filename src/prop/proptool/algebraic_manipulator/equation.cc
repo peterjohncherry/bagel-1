@@ -34,9 +34,8 @@ cout << " void Equation_Value<DataType>::generate_all_expressions() " << endl;
   
   for ( auto& expr_info : *expression_term_map_ ){ 
     cout <<"expr_info.first = " << expr_info.first << endl;
-    if ( expression_map_->find( expr_info.first ) == expression_map_->end() ){ 
+    if ( expression_map_->find( expr_info.first ) == expression_map_->end() )
       expression_map_->emplace( expr_info.first, build_expression( expr_info.first ) );
-    }
   }
 
   return;
@@ -51,10 +50,8 @@ shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( stri
   shared_ptr<vector<pair<double, string>>> term_name_list = expression_term_map_->at(expression_name);
   cout << "term_name_list->at(0).second = " << term_name_list->at(0).second << endl;
   shared_ptr<vector<BraKet<DataType>>> bk_list = term_braket_map_->at( term_name_list->at(0).second ); //term_info.second);
-  cout << "got " << endl;
 
   for ( int ii = 1; ii != term_name_list->size(); ii++ ){
-    cout << "ii = " << ii << endl;
     shared_ptr<vector<BraKet<DataType>>> term_bk_list = term_braket_map_->at( term_name_list->at(ii).second ); //term_info.second);
     for ( BraKet<DataType> bk :  *term_bk_list ) 
       bk_list->push_back(bk);
