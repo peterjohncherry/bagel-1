@@ -75,7 +75,7 @@ void System_Computer::System_Computer<DataType>::get_necessary_tensor_blocks( sh
       auto& A_contrib  = A_contrib_list.second; 
       for ( auto& CTP : *( expression->CMTP_map()->at(A_contrib.name())->get_CTP_vec() ) )
         if ( tensop_data_map_->find(CTP->myname() ) == tensop_data_map_->end() )
-          get_tensor_block( CTP->myname(), CTP->full_id_ranges );
+          get_tensor_block( CTP->myname(), CTP->full_id_ranges() );
     }
   }
   return;

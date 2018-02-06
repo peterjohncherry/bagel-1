@@ -74,11 +74,11 @@ shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_bl
      tens = Data_map->at(Tname);
 
    } else {
-     shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map->at(Tname)->unc_id_ranges ) ;
+     shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map->at(Tname)->unc_id_ranges() ) ;
 
      if(  Data_map->find(Tname.substr(0,1)) != Data_map->end()){
        cout << "initializing uncontracted tensor block " << Tname << " using data from parent tensor \"" << Tname.substr(0,1) << "\"" << endl;
-       print_vector( *(CTP_map->at(Tname)->unc_id_ranges) , "unc_id_ranges" ) ; cout <<endl;  
+       print_vector( *(CTP_map->at(Tname)->unc_id_ranges()) , "unc_id_ranges" ) ; cout <<endl;  
        tens = get_sub_tensor( Data_map->at(Tname.substr(0,1)), *id_block );
 
      } else if ( Tname[0] == 'X' || Tname[0] == 'T' ) {  
@@ -209,8 +209,8 @@ TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,
  cout << "TensOp_Computer::TensOp_Computer::relativize_ctr_positions" << endl;
    pair<int,int> rel_ctr;
 
-   int T1_orig_size = CTP1->full_id_ranges->size(); 
-   int T2_orig_size = CTP2->full_id_ranges->size(); 
+   int T1_orig_size = CTP1->full_id_ranges()->size(); 
+   int T2_orig_size = CTP2->full_id_ranges()->size(); 
 
    if (ctr_todo.first >= T1_orig_size ){ 
      rel_ctr = make_pair(ctr_todo.second, ctr_todo.first-T2_orig_size);
@@ -218,14 +218,14 @@ TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,
      rel_ctr = make_pair(ctr_todo.first, ctr_todo.second-T1_orig_size);
    }
 
-  for ( int ii = 0 ; ii != CTP1->unc_pos->size() ; ii++ )
-     if ( CTP1->unc_pos->at(ii) == rel_ctr.first){
+  for ( int ii = 0 ; ii != CTP1->unc_pos()->size() ; ii++ )
+     if ( CTP1->unc_pos(ii) == rel_ctr.first){
        rel_ctr.first = ii;
        break;
      }
 
-  for ( int ii = 0 ; ii != CTP2->unc_pos->size() ; ii++ )
-     if (CTP2->unc_pos->at(ii) == rel_ctr.second){ 
+  for ( int ii = 0 ; ii != CTP2->unc_pos()->size() ; ii++ )
+     if (CTP2->unc_pos(ii) == rel_ctr.second){ 
        rel_ctr.second = ii;
        break;
      }

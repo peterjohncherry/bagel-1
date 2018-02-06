@@ -62,7 +62,7 @@ void Expression<DataType>::get_gamma_Atensor_contraction_list(){
         ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
         CMTP_map_->at(CMTP_name)->FullContract(CTP_map_, ACompute_list, ACompute_map_);
         ACompute_map_->emplace(CMTP_name, ACompute_list);
-        CMTP_map_->at(CMTP_name)->got_compute_list = true;
+        CMTP_map_->at(CMTP_name)->got_compute_list( true );
       }
       cout << CMTP_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(CMTP_name)->size() << endl;
     }
@@ -92,8 +92,8 @@ void Expression<DataType>::necessary_tensor_blocks(){
 
       //awkward, but this will avoid issues where members of CTP_vec are formed from multiple tensors
       shared_ptr<CtrMultiTensorPart<DataType>> CMTP = CMTP_loc->second;
-      shared_ptr<vector<string>> ranges = CMTP->full_id_ranges;
-      shared_ptr<vector<string>> idxs = CMTP->full_idxs;
+      shared_ptr<vector<string>> ranges = CMTP->full_id_ranges();
+      shared_ptr<vector<string>> idxs = CMTP->full_idxs();
       int t_num = 0;
       int op_size = 1;
       char op_name = idxs->at(0)[0];
