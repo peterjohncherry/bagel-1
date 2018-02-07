@@ -226,8 +226,7 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
   cout << "TensOp get_ctrs_tens_ranges" << endl;
 #endif 
 //////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp get_ctrs_tens_ranges" << endl;
-  cout << name_ << endl;
+  cout << "TensOp::TensOp<DataType> get_ctrs_tens_ranges" /* << name_*/ << endl;
 
  //puts uncontracted ranges into map 
  shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
@@ -267,7 +266,6 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
       }
     }
   }
-  cout << "leaving TensOp::TensOp get_ctrs_tens_ranges" << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -385,7 +383,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
     }
   }
   all_ranges_tmp_ptr =  make_shared< const map < const vector<string> , shared_ptr<split_range_block_info > > >( all_ranges );
-  cout << "leaving MultiTensOp::generate_ranges()" << endl;
 
   return all_ranges_tmp_ptr ;
   

@@ -51,6 +51,9 @@ class Equation_Init_Value : public Equation_Init_Base {
      std::shared_ptr<std::map< std::string, DataType >> factor_map_; 
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_;
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_;
+     std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
+                               std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_by_states_;
+                                                         
 
      Equation_Init_Value( std::string name,  std::string type, std::shared_ptr<Expression_Init> master_expression, 
                           std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<int>> >> range_map,
@@ -60,6 +63,10 @@ class Equation_Init_Value : public Equation_Init_Base {
                           target_indexes_(target_indexes), factor_map_(factor_map)  {
 
                           expression_term_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>>();
+
+                          expression_term_map_by_states_ = std::make_shared<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
+                                                                                      std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>>();
+                                                         
                           term_braket_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>();
 
                           }; 

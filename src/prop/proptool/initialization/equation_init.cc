@@ -42,23 +42,28 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
     //build stuff for forvec loop in advance to simplify initialization
     // NOTE : because ordering of term_init->idx_val_map is not necessarily same as term_idrange_map; latter can have more entries
     map<string, shared_ptr<vector<int>>> term_range_map;
+    vector<string> idx_ordered_names(term_idrange_map->size()); 
     vector<int>::iterator maxs_it = maxs->begin();
+    vector<string>::iterator ion_it = idx_ordered_names.begin();
     for ( auto elem : *term_idx_val_map ){
       shared_ptr<vector<int>> range = range_map_->at(term_idrange_map->at(elem.first).second);
       term_range_map.emplace( elem.first, range );
       *maxs_it++ = (( range->size()-1 > 0 ) ? range->size()-1 : 0 );
+      *ion_it++ = elem.first;
     }
 
     vector<bool> summed_indexes(term_idrange_map->size(), false);
     {
     int qq = 0 ;
     for ( auto& elem : *term_idrange_map ) {
-      
-      if ( !elem.second.first ){ 
-        maxs_summer->at(qq) = maxs->at(qq);
-        summed_indexes[qq] = true;
+      if ( term_idx_val_map->find(elem.first) != term_idx_val_map->end() ) { // TODO neaten this up 
+        cout <<  elem.first << " --> (" << elem.second.first << ", " << elem.second.second <<  " ) " << endl;
+        if ( !elem.second.first ){ 
+          maxs_summer->at(qq) = maxs->at(qq);
+          summed_indexes[qq] = true;
+        }
+        qq++;
       }
-      qq++;
     }
     }
 
@@ -67,43 +72,37 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
       // the resulting braket_list will be contain terms when all indexes but these "frozen" ones 
       // have been summed over. 
       for ( int rr = 0 ; rr != fvec->size() ;rr++ ) {
-        if ( summed_indexes[rr]) {
+        if ( summed_indexes[rr] ) {
           mins->at(rr) = fvec_summer->at(rr);
           maxs->at(rr) = fvec_summer->at(rr);
         }
       }
       copy_n(mins->begin(), mins->size(), fvec->begin());
- 
-      string state_ids_name = " summed:[";
-      for ( auto& elem : *term_idrange_map ) 
-         if (elem.second.first )
-           state_ids_name+= elem.first + "," ; 
 
+      shared_ptr<map<string, int>> summed_map = make_shared<map<string,int>>();
+      string state_ids_name = "summed : [ " ;
+      for ( auto& elem : *term_idrange_map )
+        if (elem.second.first )
+          state_ids_name+=  " " + elem.first + ","; 
+        
+      
       if (state_ids_name.back() == ',' ) {
-        state_ids_name.back() = ']';
+        state_ids_name.back() = ' ';
+        state_ids_name += "]";
       } else {
         state_ids_name += "]";
       }
   
-      state_ids_name += " fixed:[";
-      for ( auto& elem : *term_idrange_map ) 
-         if (!elem.second.first && elem.first != "none" )
-           state_ids_name+= elem.first + "," ; 
-      
-      if (state_ids_name.back() == ',' ) {
-        state_ids_name.back() = ']';
-      } else {
-        state_ids_name += "]";
-      }
-
       shared_ptr<vector<pair<DataType, string>>> expression_term_list; 
       string expression_name = master_expression_->name_ + state_ids_name;
+      cout << "expression_name = " << expression_name << endl;
       auto etm_loc = expression_term_map_->find( expression_name );
       if ( etm_loc == expression_term_map_->end() ) {
         expression_term_list = make_shared<vector<pair<DataType, string>>>();
         expression_term_map_->emplace( expression_name, expression_term_list );
 
       } else { 
+        
         expression_term_list = etm_loc->second;
       } 
 
@@ -133,7 +132,22 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
         } 
 
       } while( fvec_cycle_skipper( fvec, maxs, mins ) );
-  
+       
+      vector<pair<string,int>> fixed_id_vals; 
+      state_ids_name += " fixed:[";
+      for ( int rr = 0 ; rr != fvec->size() ;rr++ ) {
+        if ( summed_indexes[rr] && idx_ordered_names[rr] != "none" ){ 
+	   state_ids_name += "( " + idx_ordered_names[rr] + " : " + to_string(term_idx_val_map->at(idx_ordered_names[rr])) +" ),"; 
+           fixed_id_vals.push_back(make_pair(idx_ordered_names[rr], term_idx_val_map->at(idx_ordered_names[rr]) ));
+        }
+      }
+      if (state_ids_name.back() == ',' ) {
+        state_ids_name.back() = ' ';
+        state_ids_name += ']';
+      } else {
+        state_ids_name += "]";
+      }
+ 
       string term_name;
       int need_new_line = 0; 
       for ( BraKet<DataType>& bk : braket_list )   
@@ -142,12 +156,15 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
       term_name.back()= ' ';
       term_name += state_ids_name;
       cout << endl;
-      cout << master_expression_->term_list_->at(ii).second->alg_name_ << endl;
       cout << "term_name = " << term_name << endl;
       term_braket_map_->emplace( term_name, make_shared<vector<BraKet<DataType>>>(braket_list) ); 
       expression_term_list->push_back( make_pair( (DataType)1.0 , term_name) );
-
+       
       expression_term_map_->emplace( term_name , make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );
+
+      string term_alg_name = master_expression_->term_list_->at(ii).second->alg_name_;;
+       
+      expression_term_map_by_states_->emplace( make_pair(term_alg_name, fixed_id_vals), make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );
 
     } while( fvec_cycle_skipper( fvec_summer, maxs_summer, mins_summer ) );
 

@@ -98,10 +98,6 @@ shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( shar
     braKet_name_list->push_back( make_pair( braket_info.name(), braket_info.factor_ ) );
   }
   
-  cout << "List of things in CMTP_map_ " << endl;
-  for ( auto& elem : *CMTP_map_ ) 
-    cout << elem.first << endl;   
-
   return  make_shared<Expression<DataType>>( expr_bk_list, states_info_, MT_map_, CTP_map_, CMTP_map_, ACompute_map_, gamma_info_map_ );
 
 }

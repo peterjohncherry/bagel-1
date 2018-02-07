@@ -51,6 +51,7 @@ cout << "MOInt_Computer<DataType>::get_v2 string ver" << endl;
   // again for flipping indexes
   shared_ptr<vector<int>> alt_to_norm_order =  make_shared<vector<int>>( vector<int>  { 3, 1, 2, 0 } );
   shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
+  cout << "X" << endl;
   //return v2.tensor();// v2_tens; 
   return  v2_tens; 
 }

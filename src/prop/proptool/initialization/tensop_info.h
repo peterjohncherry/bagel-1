@@ -40,7 +40,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"H0", "H1", "H2", "H3"});
    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false});//TODO check this ordering is correct
-   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
+   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free });
    time_symm = "none";
    symmfuncs = identity_only();
    constraints = {  &Symmetry_Operations::always_true };
@@ -53,7 +53,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    aops = make_shared<vector<bool>>(vector<bool>  {true, false});
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free });
    time_symm = "none";
-   symmfuncs = set_1el_symmfuncs();
+   symmfuncs = identity_only(); //set_1el_symmfuncs();
    constraints = {  &Symmetry_Operations::always_true };
    state_dep = 0;
  
@@ -116,9 +116,21 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
   } else if ( op_name == "X" ) {
 
     factor = (DataType) (1.0);
-    idxs = make_shared<vector<string>>( vector<string> {"X0", "X1", "X2", "X3"} );
+    idxs = make_shared<vector<string>>( vector<string> {"X3", "X2", "X1", "X0"} );
     aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt } );
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, act } );
+    time_symm = "none";
+    symmfuncs = identity_only();
+   //constraints = {  &Symmetry_Operations::always_true };
+    constraints = { &Symmetry_Operations::NotAllAct };
+    state_dep = 2;
+
+  } else if ( op_name == "x" ) {
+
+    factor = (DataType) (1.0);
+    idxs = make_shared<vector<string>>( vector<string> {"X0", "X1"} );
+    aops = make_shared<vector<bool>>( vector<bool> { false, true } );
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act } );
     time_symm = "none";
     symmfuncs = identity_only();
    //constraints = {  &Symmetry_Operations::always_true };

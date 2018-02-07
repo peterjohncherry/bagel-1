@@ -151,6 +151,7 @@ cout << "GammaGenerator::norm_order" << endl;
  
   bool does_it_contribute = false;
 
+  final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
   while ( kk != gamma_vec->size()){                                               
     shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 
     shared_ptr<const vector<string>>    full_id_ranges = gamma_vec->at(kk)->full_id_ranges;                  
@@ -187,12 +188,12 @@ cout << "GammaGenerator::norm_order" << endl;
       }                                                           
     }
     
+    //TODO Check this!! (removal contract_remaining_indexes). This makes sense, but seems wrong somehow.  
+    if (gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
 //    if (!gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
 //       cout << " These indexes won't survive : [ ";  for ( int pos : *ids_pos ) {cout <<  full_id_ranges->at(pos) << " " ;} cout << "]" << endl;
 //       Contract_remaining_indexes(kk);
-//    } else {
-    //TODO Check this!! (removal contract_remaining_indexes). This makes sense, but seems wrong somehow.  
-    if (gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
+//    }  else if (gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
       cout << " These indexes will survive : [ ";  for ( int pos : *ids_pos ) {cout <<  full_id_ranges->at(pos) << " " ;} cout << "]" << endl;
       final_gamma_vec->push_back(gamma_vec->at(kk));
     } 
@@ -201,17 +202,17 @@ cout << "GammaGenerator::norm_order" << endl;
 
   gamma_vec = final_gamma_vec;
 
-  if ( gamma_vec->size() > 0 ){
+  if ( final_gamma_vec->size() > 0 ){
     does_it_contribute = true;
     cout << "-----------------------------------------------------" << endl;
     cout << "     LIST OF GAMMAS FOLLOWING NORMAL ORDERING ";  cout << "N = " << final_gamma_vec->size() << endl;
     cout << "-----------------------------------------------------" << endl;
     for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
       cout <<  gint->full_id_ranges << endl;
-  print_vector(*orig_aops_, "orig_aops"); cout  <<  endl;
-  print_vector(*gint->ids_pos, "gint_ids_pos" ); cout << endl;
-  cout << " target_states_->name("<<Bra_num_<<") = "; cout.flush(); cout << target_states_->name(Bra_num_) << endl;
-  cout << " target_states_->name("<<Ket_num_<<") = "; cout.flush(); cout << target_states_->name(Ket_num_) << endl;
+      print_vector(*orig_aops_, "orig_aops"); cout  <<  endl;
+      print_vector(*gint->ids_pos, "gint_ids_pos" ); cout << endl;
+      cout << " target_states_->name("<<Bra_num_<<") = "; cout.flush(); cout << target_states_->name(Bra_num_) << endl;
+      cout << " target_states_->name("<<Ket_num_<<") = "; cout.flush(); cout << target_states_->name(Ket_num_) << endl;
       cout <<  WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, target_states_->name(Bra_num_), target_states_->name(Ket_num_) ) ;
       cout << "   ("<< gint->my_sign <<","<< gint->my_sign << ")       ";
       cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos) ) << endl;

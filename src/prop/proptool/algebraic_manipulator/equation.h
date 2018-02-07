@@ -30,6 +30,8 @@ class Equation_Base {
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType>>>> CTP_map_;      
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map_;  
 
+//     std::shared_ptr<std::vector<std::<std::tuple<std::pair<std::string,int>>>>> term_val_list_;
+
    public :
      Equation_Base( std::string name, std::string type, std::shared_ptr<StatesInfo<DataType>> states_info, 
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
@@ -89,6 +91,7 @@ class Equation_Value : public Equation_Base<DataType> {
 
      using Equation_Base<DataType>::CTP_map_;      
      using Equation_Base<DataType>::CMTP_map_;  
+
 
    public :
 
