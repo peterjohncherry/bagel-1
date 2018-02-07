@@ -81,6 +81,8 @@ shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_bl
        print_vector( *(CTP_map->at(Tname)->unc_id_ranges()) , "unc_id_ranges" ) ; cout <<endl;  
        tens = get_sub_tensor( Data_map->at(Tname.substr(0,1)), *id_block );
 
+       cout << Tname<< "->norm() = " << tens->norm() << endl; 
+ 
      } else if ( Tname[0] == 'X' || Tname[0] == 'T' ) {  
        cout << "new tensor block : " << Tname << " is being initialized to 1.0,  for exciations" << endl; 
        tens = make_shared<Tensor_<DataType>>(*id_block);

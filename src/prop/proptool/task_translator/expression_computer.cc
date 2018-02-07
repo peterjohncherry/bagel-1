@@ -81,7 +81,6 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
 
          } else { cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO is a way to avoid this, implement it
             
-          cout << "XXXX2" << endl; 
            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
 
               shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = Expr->CMTP_map_->at(A_contrib_name)->CTP_vec ;

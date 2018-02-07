@@ -261,6 +261,7 @@ void CASPT2::CASPT2::solve() {
     shared_ptr<vector<IndexRange>> t2_id_ranges_ptr =  make_shared<vector<IndexRange>>(t2_id_ranges);  
     shared_ptr<Tensor_<double>> t2_one = t2all_[0]->at(0)->clone();
     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one, 1.0);
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_, 1.0);
     shared_ptr<MultiTensor> sist = make_shared<MultiTensor>(1);
   
     cout << " v2_->norm() = " << v2_->norm() << endl;

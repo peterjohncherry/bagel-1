@@ -40,7 +40,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"H0", "H1", "H2", "H3"});
    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false});//TODO check this ordering is correct
-   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free,free,free });
+   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
    time_symm = "none";
    symmfuncs = identity_only();
    constraints = {  &Symmetry_Operations::always_true };
@@ -109,7 +109,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} );
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
     time_symm = "none";
-    symmfuncs = set_2el_symmfuncs();
+    symmfuncs = identity_only();
     constraints = {  &Symmetry_Operations::NotAllAct };
     state_dep = 2;
 
@@ -120,7 +120,8 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt } );
     time_symm = "none";
-    symmfuncs = set_2el_symmfuncs();
+    symmfuncs = identity_only();
+   //constraints = {  &Symmetry_Operations::always_true };
     constraints = { &Symmetry_Operations::NotAllAct };
     state_dep = 2;
 

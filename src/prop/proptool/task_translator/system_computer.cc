@@ -126,11 +126,17 @@ void System_Computer::System_Computer<DataType>::calculate_mo_integrals() {
   tensop_data_map_->emplace( "H" , v2_ );
   tensop_data_map_->emplace( "f" , h1_ );
 
-  tensop_data_map_->emplace( "T" , moint_computer_->get_test_tensor( free4 ) );
+//  tensop_data_map_->emplace( "T" , moint_computer_->get_test_tensor( free4 ) );
   //tensop_data_map_->emplace( "X" , moint_computer_->get_test_tensor( free4 ) );
   DataType one = (DataType)(1.0); //TODO find a better way;
   SMITH::IndexRange fs = *(range_conversion_map_->at("free"));
-  shared_ptr<vector<SMITH::IndexRange>> fs4 = make_shared<vector<SMITH::IndexRange>>(vector<SMITH::IndexRange> { fs, fs, fs, fs } );   
+  SMITH::IndexRange nvs = *(range_conversion_map_->at("cor"));
+  nvs.merge(*(range_conversion_map_->at("act")));
+
+  SMITH::IndexRange ncs = *(range_conversion_map_->at("act"));
+  ncs.merge(*(range_conversion_map_->at("virt")));
+
+  shared_ptr<vector<SMITH::IndexRange>> fs4 = make_shared<vector<SMITH::IndexRange>>(vector<SMITH::IndexRange> { ncs, ncs, nvs, nvs } );   
   tensop_data_map_->emplace( "X" , Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor( fs4, one ) );
 
   cout <<"X->norm() = " << tensop_data_map_->at("X")->norm() << endl; 
