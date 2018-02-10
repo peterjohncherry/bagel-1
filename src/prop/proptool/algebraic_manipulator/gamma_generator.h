@@ -27,6 +27,18 @@ class AContribInfo {
      std::vector<int>   id_order(int qq) {return id_orders[qq]; }; 
      std::pair<double,double> factor(int qq) {return factors[qq]; }; 
 
+     std::string name() {return name_ ;}
+     int bra_num() const { return Bra_num_ ; }
+     int ket_num() const { return Ket_num_ ; }
+
+     int total_uses() const { return total_uses_ ; }
+     int remaining_uses() const { return remaining_uses_ ; }
+
+     void increase_total_uses() { total_uses_+=1; }  
+     void increase_remaining_uses() { remaining_uses_+=1; }  
+     void decrease_total_uses() { total_uses_-=1; }  
+     void decrease_remaining_uses() { remaining_uses_-=1; }  
+
 };
 
 class GammaInfo {
@@ -82,6 +94,14 @@ class GammaInfo {
      std::shared_ptr<CIVecInfo<double>> Bra_info() {return  Bra_info_; };
      std::shared_ptr<CIVecInfo<double>> prev_Bra_info(){ return prev_Bra_info_; };
      std::shared_ptr<CIVecInfo<double>> Ket_info() { return Ket_info_; };
+
+     int Bra_nalpha() const {return  Bra_info_->nalpha(); };
+     int prev_Bra_nalpha() const { return prev_Bra_info_->nalpha(); };
+     int Ket_nalpha() const { return Ket_info_->nalpha(); };
+     
+     int Bra_nbeta() const {return  Bra_info_->nbeta(); };
+     int prev_Bra_nbeta() const { return prev_Bra_info_->nbeta(); };
+     int Ket_nbeta() const { return Ket_info_->nbeta(); };
 
 };
 

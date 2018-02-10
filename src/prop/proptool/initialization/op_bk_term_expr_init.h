@@ -2,7 +2,6 @@
 #define __SRC_PROP_PROPTOOL_WICKTOOL_TERM_INIT_H
 
 #include <src/prop/proptool/proputils.h>
-#include <src/prop/proptool/algebraic_manipulator/braket.h>
 //Classes for initializing objects in equation
 class Op_Init {
   

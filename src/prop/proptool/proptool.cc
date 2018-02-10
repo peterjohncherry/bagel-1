@@ -1,7 +1,9 @@
 #include <src/prop/proptool/proptool.h>
+#include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
 
 using namespace std;
 using namespace bagel;
+using namespace Symmetry_Operations;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, shared_ptr<const Reference> r): 
@@ -10,11 +12,6 @@ PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geo
   cout << "PropTool::PropTool::PropTool" << endl;
 
   // sort out how to determine datatype!!
-  sigma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
-  civec_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
-  gamma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
-  tensop_data_map_ = make_shared<map< string, shared_ptr<SMITH::Tensor_<double>>>>();
-
   inp_factor_map_ = make_shared<map<string, double>>();
   inp_indexed_factor_map_ = make_shared<map<string, shared_ptr<vector<double>>>>(); // TODO sort this
   inp_range_map_ = make_shared<map<string, shared_ptr<vector<int>>>>();
@@ -27,38 +24,72 @@ PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geo
 
   read_input_and_initialize(); 
 
-  // eqn_dependence = "share" :  equations can be done in any order and share information
-  // eqn_dependence = "sequential" :  equations must be done in the order they appear in the input and share information
-  // eqn_dependence = "noshare" :  equations can be done in any order, but do not share information
   build_algebraic_task_lists( idata_->get<string>("equation interdependence", "share" ) ) ;
 
-}
+  execute_compute_lists();  
 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::execute_compute_lists(){  
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ cout << "PropTool::PropTool::execute_compute_lists()" << endl; 
+ 
+ for ( string& equation_name : equation_execution_list_ ) 
+   system_computer_->build_equation_computer( equation_name );
+  
+ return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::define_necessary_tensor_blocks(){  
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "PropTool::PropTool::define_necessary_tensor_blocks()" << endl; 
+
+//  expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, sys_info_->expression_map, range_conversion_map_, tensop_data_map_, 
+//                                                                                              gamma_data_map_, sigma_data_map_, civec_data_map_ );
+  cout << "built expression machine" << endl;
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// eqn_dependence = "share" :  equations can be done in any order and share information
+// eqn_dependence = "sequential" :  equations must be done in the order they appear in the input and share information
+// eqn_dependence = "noshare" :  equations can be done in any order, but do not share information
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::build_algebraic_task_lists( string  eqn_interdependence ){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "PropTool::PropTool::build_algebraic_task_lists()" << endl; 
+  cout << "PropTool::PropTool::build_algebraic_task_lists()" << endl; 
  
- if ( eqn_interdependence == "share"  ) { 
-   for ( string& equation_name : equation_execution_list_ ) 
-      sys_info_->construct_equation_task_list( equation_name ) ; 
- } else { 
-    throw logic_error( "form of equation interdependence \"" + eqn_interdependence +"\" not implemented yet" ) ; 
- } 
+  if ( eqn_interdependence == "share"  ) { 
+    for ( string& equation_name : equation_execution_list_ ) 
+       sys_info_->construct_equation_task_list( equation_name ) ; 
+  } else { 
+     throw logic_error( "form of equation interdependence \"" + eqn_interdependence +"\" not implemented yet" ) ; 
+  } 
+  return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::read_input_and_initialize(){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  // gets information about the wavefunction from the refence
-  get_wavefunction_info();
+cout << "void PropTool::PropTool::read_input_and_initialize()" << endl; 
 
   // Get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
   get_expression_variables( idata_->get_child("variables") );
  
-  calculate_mo_integrals();
+  // gets information about the wavefunction from the refence
+  get_wavefunction_info();
 
+  // build system information object ( for algebraic task list construction)
   sys_info_ = make_shared<System_Info<double>>( targets_info_, true );
+
+  // build system computer (for computational task list construction/execution)
+  auto moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_,
+                                                     nfrozenvirt_, block_diag_fock_ );
+  auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
+
+  //TODO should build gamma_computer inside system_computer, like this due to DVec class dependence of B_Gamma_Computer 
+  auto gamma_computer = make_shared<B_Gamma_Computer::B_Gamma_Computer<double>>(civectors_); 
+
+  system_computer_ = make_shared<System_Computer::System_Computer<double>>(sys_info_, moint_computer, range_conversion_map_, gamma_computer );
 
   cout << "initialized sys_info" << endl;
   shared_ptr< const PTree > ops_def_tree = idata_->get_child_optional( "operators" ) ;
@@ -72,33 +103,11 @@ void PropTool::PropTool::read_input_and_initialize(){
   cout << "got terms_init" << endl;
 
   get_equations_init( idata_->get_child( "equations" ) );
-  cout << "got  equations_init" << endl;
-
-  expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, sys_info_->expression_map, range_conversion_map_, tensop_data_map_, 
-                                                                                              gamma_data_map_, sigma_data_map_, civec_data_map_ );
-
-  cout << "built expression machine" << endl;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Gets ranges and factors from the input which will be used in definition of terms
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void PropTool::PropTool::calculate_mo_integrals() {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "PropTool::PropTool::calculate_mo_integrals()" << endl;
-
-  cout << "getting mo integrals " <<  endl; 
-  shared_ptr<MOInt_Init<double>> moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_, nfrozenvirt_, block_diag_fock_ );
-  shared_ptr<MOInt_Computer<double>> moint_comp = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
-
-  vector<string> test_ranges4 = { "notcor", "notcor", "notvir", "notvir" }; 
-  vector<string> test_ranges2 = { "free", "free" }; 
-  shared_ptr<SMITH::Tensor_<double>> h1_  =  moint_comp->get_h1( test_ranges2, true ) ;
-  shared_ptr<SMITH::Tensor_<double>> v2_  =  moint_comp->get_v2( test_ranges4 ) ;
-  cout << " new_coeffs  v2_->norm() = " << v2_->norm() << endl; 
+  cout << "got equations_init" << endl;
 
   return;
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets ranges and factors from the input which will be used in definition of terms
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +117,8 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
 
   //Initializing range sizes either from idate or reference wfn 
   maxtile_   = idata_->get<int>("maxtile", 10);
-  cimaxtile_ = idata_->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
+  //cimaxtile_ = idata_->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
+  cimaxtile_ = 100000; //TODO fix this so it uses the above statement, issue in b_gamma_computer means must use large cimaxblock for now
 
   const bool frozen = idata_->get<bool>("frozen", true);
   ncore_ = idata_->get<int>("ncore", (frozen ? ref_->geom()->num_count_ncore_only()/2 : 0));
@@ -124,6 +134,11 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   nocc_     = nclosed_ + nact_; 
   nfrozenvirt_ = idata_->get<int>( "nfrozenvirt", 0 );
 
+  // TODO : should be determined from summation ranges in expression
+  nstates_ = idata_->get<int>( "nstates" , ciwfn_->nstates() );
+  target_states_ = vector<int>(nstates_); 
+  std::iota(target_states_.begin(), target_states_.end(), 0 ); 
+     
   // leave for now
   block_diag_fock_ = false;
   gaunt_    = false;
@@ -134,7 +149,6 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   //creates the ci_info from the reference wavefunction
   set_target_state_info();
   set_ci_range_info();
- 
 
   return;
 }
@@ -266,8 +280,8 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
     string                             TimeSymm = op_def_inp->get<string>( "TimeSymm", "none" );
     bool                               hconj = conv_to_bool(op_def_inp->get<int>( "HermConj", false ));
       
-    vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> symmfuncs =  sys_info_->identity_only() ; // TODO define this by list of pairs of vectors
-    vector<bool(*)(shared_ptr<vector<string>>)> constraints = { &System_Info<double>::System_Info::always_true };  // TODO define this by list of vectors 
+    vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> symmfuncs =  Symmetry_Operations::identity_only() ; // TODO define this by list of pairs of vectors
+    vector<bool(*)(shared_ptr<vector<string>>)> constraints = { &Symmetry_Operations::always_true };  // TODO define this by list of vectors 
     
     cout << "user defined op name : " << op_name << endl;
     shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp( op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep); 
@@ -303,7 +317,7 @@ void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_de
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_equation_init_Value( shared_ptr<const PTree> equation_inp ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << " PropTool::PropTool::get_linear_equation_init_Value" << endl;
+cout << " PropTool::PropTool::get_equation_init_Value" << endl;
 
   string eqn_name = equation_inp->get<string>( "name" );
 
@@ -341,8 +355,6 @@ cout << " PropTool::PropTool::get_linear_equation_init_Value" << endl;
   auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
   auto eqn_init = make_shared<Equation_Init_Value<double>>( eqn_name, "Value", master_expression, inp_range_map_, target_indices, inp_factor_map_ );
   eqn_init->initialize_expressions();
-
-  
  
   sys_info_->create_equation( eqn_name, "Value", eqn_init->term_braket_map_ , eqn_init->expression_term_map_ );
 
@@ -482,6 +494,8 @@ cout << "PropTool::PropTool::set_ao_range_info" << endl;
 void PropTool::PropTool::set_ci_range_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "PropTool::PropTool::set_ci_range_info" << endl;
+
+  
 
   cout << " set ci ranges " << endl;
   for ( int ii : target_states_ ) {

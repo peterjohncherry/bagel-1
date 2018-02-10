@@ -5,7 +5,6 @@
 #include <src/smith/indexrange.h>
 #include <src/prop/proptool/proputils.h>
 namespace bagel {
-namespace SMITH { 
 
 namespace Tensor_Arithmetic_Utils {  
 
@@ -17,23 +16,28 @@ namespace Tensor_Arithmetic_Utils {
      std::shared_ptr<std::vector<int>> get_Tens_strides_column_major( std::vector<int>& range_sizes); 
      std::shared_ptr<std::vector<int>> get_Tens_strides_row_major( std::vector<int>& range_sizes);
  
-     std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> old_ids) ;
-     std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::shared_ptr<std::vector<std::shared_ptr<IndexRange>>> old_ids) ;
-     std::shared_ptr<std::vector<Index>> get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::vector<IndexRange>& id_ranges);
- 
-     std::shared_ptr<std::vector<int>> get_num_index_blocks_vec(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
-     std::shared_ptr<std::vector<int>> get_num_index_blocks_vec(std::shared_ptr<std::vector<IndexRange>> rngvec) ;
-     std::vector<int>                  get_num_index_blocks_vec(std::vector<IndexRange>& rngvec);
+     std::shared_ptr<std::vector<SMITH::Index>>
+     get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::shared_ptr<std::vector<std::shared_ptr<const SMITH::IndexRange>>> old_ids) ;
 
-     std::shared_ptr<std::vector<int>>     get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec, int skip_id) ;
-     std::shared_ptr<std::vector<int>>     get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const IndexRange>>> rngvec) ;
+     std::shared_ptr<std::vector<SMITH::Index>>
+     get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::shared_ptr<std::vector<std::shared_ptr<SMITH::IndexRange>>> old_ids) ;
+
+     std::shared_ptr<std::vector<SMITH::Index>>
+     get_rng_blocks(std::shared_ptr<std::vector<int>> block_pos, std::vector<SMITH::IndexRange>& id_ranges);
  
-     std::shared_ptr<std::vector<size_t>>  get_sizes(std::shared_ptr<std::vector<Index>> Idvec, int skip_id);
-     std::shared_ptr<std::vector<size_t>>  get_sizes(std::shared_ptr<std::vector<Index>> Idvec);
-     std::vector<int>                      get_sizes(std::vector<Index>& Idvec) ;
+     std::shared_ptr<std::vector<int>> get_num_index_blocks_vec(std::shared_ptr<std::vector<std::shared_ptr<const SMITH::IndexRange>>> rngvec) ;
+     std::shared_ptr<std::vector<int>> get_num_index_blocks_vec(std::shared_ptr<std::vector<SMITH::IndexRange>> rngvec) ;
+     std::vector<int>                  get_num_index_blocks_vec(std::vector<SMITH::IndexRange>& rngvec);
+
+     std::shared_ptr<std::vector<int>>     get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const SMITH::IndexRange>>> rngvec, int skip_id) ;
+     std::shared_ptr<std::vector<int>>     get_sizes(std::shared_ptr<std::vector<std::shared_ptr<const SMITH::IndexRange>>> rngvec) ;
  
-     std::shared_ptr<std::vector<int>>  get_range_lengths( std::shared_ptr<std::vector<IndexRange>> Id_ranges ) ;
-     std::shared_ptr<std::vector<int>>  get_range_lengths( std::vector<IndexRange>& Id_ranges ) ;
+     std::shared_ptr<std::vector<size_t>>  get_sizes(std::shared_ptr<std::vector<SMITH::Index>> Idvec, int skip_id);
+     std::shared_ptr<std::vector<size_t>>  get_sizes(std::shared_ptr<std::vector<SMITH::Index>> Idvec);
+     std::vector<int>                      get_sizes(std::vector<SMITH::Index>& Idvec) ;
+ 
+     std::shared_ptr<std::vector<int>>  get_range_lengths( std::shared_ptr<std::vector<SMITH::IndexRange>> Id_ranges ) ;
+     std::shared_ptr<std::vector<int>>  get_range_lengths( std::vector<SMITH::IndexRange>& Id_ranges ) ;
  
      std::shared_ptr<std::vector<int>>  put_ctr_at_front(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
      std::shared_ptr<std::vector<int>>  put_ctr_at_back(std::shared_ptr<std::vector<int>> orig_pos , int ctr_pos);
@@ -46,26 +50,36 @@ namespace Tensor_Arithmetic_Utils {
      void put_ctrs_at_back( std::vector<int>& id_pos, std::vector<int>& ctr_todo);
      void put_ctrs_at_back( std::vector<int>& id_pos, std::pair<int,int>& ctr_todo);
 
-     void Print_Tensor(std::shared_ptr<Tensor_<double>> Tens, std::string name = "") ;
-     void Print_Tensor_row_major( std::shared_ptr<Tensor_<double>> Tens, std::string name = "") ;
+     void Print_Tensor(std::shared_ptr<SMITH::Tensor_<double>> Tens, std::string name = "") ;
+     void Print_Tensor_row_major( std::shared_ptr<SMITH::Tensor_<double>> Tens, std::string name = "") ;
 
-     void Print_Vector_Tensor_Format( std::shared_ptr<Tensor_<double>> VecIn, std::string name );
+     void Print_Vector_Tensor_Format( std::shared_ptr<SMITH::Tensor_<double>> VecIn, std::string name );
 
-     size_t get_block_size(std::vector<Index>::iterator beginpos, std::vector<Index>::iterator endpos  ); 
+     size_t get_block_size(std::vector<SMITH::Index>::iterator beginpos, std::vector<SMITH::Index>::iterator endpos  ); 
 
-     size_t get_unc_block_size( std::vector<Index>& idvec, std::pair<int,int> ctr ) ;
+     size_t get_unc_block_size( std::vector<SMITH::Index>& idvec, std::pair<int,int> ctr ) ;
 
-     std::shared_ptr<std::vector<std::pair<size_t,size_t>>> get_block_start( std::shared_ptr<std::vector<IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos ) ;
+     std::shared_ptr<std::vector<std::pair<size_t,size_t>>> get_block_start( std::shared_ptr<std::vector<SMITH::IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos ) ;
 
-     std::shared_ptr<std::vector<std::vector<int>>> get_block_offsets(std::vector<IndexRange>&  ranges ) ;
-     std::shared_ptr<std::vector<std::vector<int>>> get_block_offsets(std::shared_ptr<std::vector<IndexRange>> ranges ) ;
+     std::shared_ptr<std::vector<std::vector<int>>> get_block_offsets(std::vector<SMITH::IndexRange>&  ranges ) ;
+     std::shared_ptr<std::vector<std::vector<int>>> get_block_offsets(std::shared_ptr<std::vector<SMITH::IndexRange>> ranges ) ;
 
-     void check_contracted_indexes( std::vector<IndexRange>&  idx_block, std::vector<int>& contracted_index_positions );
+     void check_contracted_indexes( std::vector<SMITH::IndexRange>&  idx_block, std::vector<int>& contracted_index_positions );
 
-     std::shared_ptr<Tensor_<double>> get_sub_tensor( std::shared_ptr<Tensor_<double>> Tens_in,  std::vector<IndexRange>& range_names );
+     template<typename DataType> 
+     std::shared_ptr<SMITH::Tensor_<DataType>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in,  std::vector<SMITH::IndexRange>& range_names );
 
-     std::shared_ptr<Tensor_<double>> get_sub_tensor( std::shared_ptr<Tensor_<double>> Tens_in,  std::vector<std::string>& range_names,
-                                                      std::shared_ptr< std::map< std::string, std::shared_ptr<IndexRange> >> range_conversion_map );
+     template<> 
+     std::shared_ptr<SMITH::Tensor_<double>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<double>> Tens_in,  std::vector<SMITH::IndexRange>& range_names );
+
+
+     template<typename DataType> 
+     std::shared_ptr<SMITH::Tensor_<DataType>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in,  std::vector<std::string>& range_names,
+                                                      std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::IndexRange> >> range_conversion_map );
+     template<>
+     std::shared_ptr<SMITH::Tensor_<double>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<double>> Tens_in,  std::vector<std::string>& range_names,
+                                                      std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::IndexRange> >> range_conversion_map );
+
 
      //messy, but I can't see a better way
      template<class vtype>
@@ -100,7 +114,6 @@ namespace Tensor_Arithmetic_Utils {
        return newvec;
      };
 
-}
 }
 }
 #endif 

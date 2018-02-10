@@ -5,7 +5,7 @@
 
 using namespace std;
 using namespace bagel; 
-using namespace bagel::SMITH::Tensor_Arithmetic; 
+using namespace bagel::Tensor_Arithmetic; 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //note, this does not have the diagonal component
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -20,8 +20,8 @@ cout << "MOInt_Computer<DataType>::get_v2" << endl;
 
   // again for flipping indexes
   shared_ptr<vector<int>> alt_to_norm_order =  make_shared<vector<int>>( vector<int>  { 3, 1, 2, 0 }) ;
-  auto Tensor_Calc = make_shared<Tensor_Arithmetic<DataType>>();
-  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
+  auto Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
+  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
 
   return v2.tensor(); //  v2_tens;
 }
@@ -50,8 +50,10 @@ cout << "MOInt_Computer<DataType>::get_v2 string ver" << endl;
    cout << " v2.tensor()->norm() = " << v2.tensor()->norm() << endl; 
   // again for flipping indexes
   shared_ptr<vector<int>> alt_to_norm_order =  make_shared<vector<int>>( vector<int>  { 3, 1, 2, 0 } );
-//  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
-  return v2.tensor();// v2_tens; 
+  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
+  cout << "X" << endl;
+  //return v2.tensor();// v2_tens; 
+  return  v2_tens; 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //is the core fock minus diagonal component from above
@@ -107,6 +109,21 @@ cout << "MOInt_Computer<DataType>::get_h1 string ver" << endl;
   cout << "new  coeffs_->norm() = " <<  coeffs_->norm() << endl; 
 
   return h1.tensor();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Dupe routine with string input
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_test_tensor( const vector<string>& blocks_str ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "MOInt_Computer<DataType>::get_test_tensor string ver" << endl;
+
+  shared_ptr<vector<SMITH::IndexRange>> blocks = make_shared<vector<SMITH::IndexRange>>(blocks_str.size());
+  for ( int ii = 0 ; ii != blocks_str.size(); ii++ ) 
+    blocks->at(ii) = *(range_conversion_map_->at(blocks_str[ii])); 
+
+  return  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_Tensor_row_major( blocks );
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class MOInt_Computer<double>;

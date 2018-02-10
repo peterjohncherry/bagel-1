@@ -10,12 +10,13 @@ proptool/algebraic_manipulator/ctrtensop.cc proptool/algebraic_manipulator/expre
 proptool/algebraic_manipulator/gamma_generator.cc proptool/algebraic_manipulator/spin_manager.cc \
 proptool/algebraic_manipulator/symmetry_operations.cc proptool/algebraic_manipulator/system_info.cc \
 \
-proptool/initialization/equation_init.cc  proptool/initialization/tensop_info.cc \
+proptool/initialization/equation_init.cc \
 \
 proptool/tensor_and_ci_lib/b_gamma_computer.cc proptool/tensor_and_ci_lib/gamma_computer.cc proptool/tensor_and_ci_lib/tensor_arithmetic.cc \
 proptool/tensor_and_ci_lib/tensor_arithmetic_utils.cc \
 \
-proptool/task_translation/tensop_computer.cc proptool/task_translation/expression_computer.cc \
+proptool/task_translator/tensop_computer.cc proptool/task_translator/expression_computer.cc \
+proptool/task_translator/equation_computer.cc proptool/task_translator/system_computer.cc \
 \
 proptool/integrals/moint.cc proptool/integrals/moint_computer.cc \
 proptool/integrals/moint_init.cc proptool/tensor_and_ci_lib/tensor_sorter.cc 

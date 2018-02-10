@@ -11,13 +11,13 @@ using namespace WickUtils;
 template<typename DataType>
 void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
                                                             shared_ptr<map<string, shared_ptr< map<string, AContribInfo >>>> G_to_A_map,
-                                                            shared_ptr<map<string, shared_ptr< GammaInfo >>> GammaMap,
+                                                            shared_ptr<map<string, shared_ptr< GammaInfo >>> gamma_info_map,
                                                             shared_ptr<StatesInfo<DataType>> target_states ) {  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "BraKet::generate_gamma_Atensor_contractions" << endl;
+  cout << "BraKet::generate_gamma_Atensor_contractions : " << name_ << endl; 
   //TODO fix this so it uses proper number of states; if statement in center should call Bra_num Ket_num appropriate Ops
   //     GammaGen should be initialized outside states loop, and wipe Gamma_Vec for each new range.
-  //     Loop through dense ranges on the outside, then check sparsity on the inner when adding to GammaMap.
+  //     Loop through dense ranges on the outside, then check sparsity on the inner when adding to gamma_info_map.
   
   Total_Op_ = MT_map->at(multiop_name_);
   shared_ptr<vector<string>> idxs_buff  = make_shared<vector<string>>(*(Total_Op_->idxs()));
@@ -35,7 +35,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 
     } else { 
       cout << " ... yes " << endl; 
-      shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, GammaMap, G_to_A_map, factor_ ); 
+      shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ ); 
       GGen->add_gamma( range_map_it->second );
       GGen->norm_order();
       bool does_this_block_contribute = GGen->optimized_alt_order(); //TODO remember the reasons for this variable...

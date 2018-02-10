@@ -3,7 +3,7 @@
 
 using namespace std;
 
-//TODO GammaMap should be generated outside and not fed in here. It constains _no_ Expression specific information.
+//TODO gamma_info_map should be generated outside and not fed in here. It constains _no_ Expression specific information.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_list,
@@ -12,19 +12,27 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
                                   shared_ptr<map< string, shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,
                                   shared_ptr<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,
                                   shared_ptr<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>     ACompute_map,
-                                  shared_ptr<map< string, shared_ptr<GammaInfo> > >                         GammaMap ):
+                                  shared_ptr<map< string, shared_ptr<GammaInfo> > >                         gamma_info_map ):
                                   braket_list_(braket_list), states_info_(states_info), MT_map_(MT_map), CTP_map_(CTP_map), CMTP_map_(CMTP_map),
-                                  ACompute_map_(ACompute_map), GammaMap_(GammaMap) {
+                                  ACompute_map_(ACompute_map), gamma_info_map_(gamma_info_map) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression<DataType>::Expression (new constructor) " << endl;
 
   //Note that this G_to_A_map_ is expression specific
   G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, AContribInfo >>>>();
 
+  name_ = "";
+  for ( BraKet<DataType>& bk : *braket_list_ ) {
+    if (bk.factor() != 0.0 )
+      name_ += "(" + to_string(bk.factor()) + ")" + bk.name() + " + ";
+  }
+  name_.pop_back();
+  name_.pop_back();
+
   // Will loop through terms and then generate mathematical task map. It's split into
   // two functions as this will gives more control over merging together of different BraKets G_to_A_maps.
   for ( BraKet<DataType>& braket : *braket_list_ )
-     braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, GammaMap_, states_info_ );
+    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_ );
   get_gamma_Atensor_contraction_list();
 }
 
@@ -54,7 +62,7 @@ void Expression<DataType>::get_gamma_Atensor_contraction_list(){
         ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
         CMTP_map_->at(CMTP_name)->FullContract(CTP_map_, ACompute_list, ACompute_map_);
         ACompute_map_->emplace(CMTP_name, ACompute_list);
-        CMTP_map_->at(CMTP_name)->got_compute_list = true;
+        CMTP_map_->at(CMTP_name)->got_compute_list( true );
       }
       cout << CMTP_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(CMTP_name)->size() << endl;
     }
@@ -84,8 +92,8 @@ void Expression<DataType>::necessary_tensor_blocks(){
 
       //awkward, but this will avoid issues where members of CTP_vec are formed from multiple tensors
       shared_ptr<CtrMultiTensorPart<DataType>> CMTP = CMTP_loc->second;
-      shared_ptr<vector<string>> ranges = CMTP->full_id_ranges;
-      shared_ptr<vector<string>> idxs = CMTP->full_idxs;
+      shared_ptr<vector<string>> ranges = CMTP->full_id_ranges();
+      shared_ptr<vector<string>> idxs = CMTP->full_idxs();
       int t_num = 0;
       int op_size = 1;
       char op_name = idxs->at(0)[0];
@@ -104,13 +112,11 @@ void Expression<DataType>::necessary_tensor_blocks(){
           op_size = 1;
         }
       }
- 
-//      shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = CMTP->CTP_vec;
 
+//      shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = CMTP->CTP_vec;
     }
-    cout << "X" << endl;
   }
-  cout << "leaving Get_CMTP_compute_Terms" << endl;
+  cout << "leaving Expression::necessary_tensor_blocks" << endl;
   return;
 }
 

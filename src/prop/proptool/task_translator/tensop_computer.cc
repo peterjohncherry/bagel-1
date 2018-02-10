@@ -1,28 +1,23 @@
 #include <bagel_config.h>
-#include <src/prop/proptool/task_translation/tensop_computer.h>
+#include <src/prop/proptool/task_translator/tensop_computer.h>
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
-using namespace bagel::SMITH::Tensor_Sorter;
-using namespace bagel::SMITH::Tensor_Arithmetic; 
-using namespace bagel::SMITH::Tensor_Arithmetic_Utils; 
-
+using namespace bagel::Tensor_Sorter;
+using namespace bagel::Tensor_Arithmetic; 
+using namespace bagel::Tensor_Arithmetic_Utils; 
+using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 TensOp_Computer::TensOp_Computer<DataType>::TensOp_Computer( shared_ptr< map< string, shared_ptr<vector<shared_ptr<CtrOp_base>>>>> ACompute_map_in,
                                                              shared_ptr< map< string, shared_ptr<CtrTensorPart<DataType>>>> CTP_map_in,
-                                                             shared_ptr< map< string, shared_ptr<IndexRange>>> range_conversion_map_in,
-                                                             shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>> Data_map_in ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp_Computer::TensOp_Computer::TensOp_Computer" << endl;
+                                                             shared_ptr< map< string, shared_ptr<IndexRange>>> range_conversion_map,
+                                                             shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>> Data_map_in ):
+                                                             ACompute_map(ACompute_map_in), CTP_map(CTP_map_in), Data_map(Data_map_in),
+                                                             range_conversion_map_(range_conversion_map), 
+                                                             Tensor_Calc(make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>()){}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  ACompute_map = ACompute_map_in;
-  CTP_map      = CTP_map_in;
-  Data_map     = Data_map_in;
-  range_conversion_map = range_conversion_map_in;
-
-  Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
@@ -44,14 +39,17 @@ TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo& AInfo )
       if ( ctr_op->ctr_type()[0] == 'g'){  cout << " : no contraction, fetch this tensor part" << endl; 
         New_Tdata =  get_block_Tensor(ctr_op->Tout_name());
         Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+        cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
   
       } else if ( ctr_op->ctr_type()[0] == 'd' ){ cout << " : contract different tensors" << endl; 
         New_Tdata = contract_different_tensors( ctr_op->T1name(), ctr_op->T2name(), ctr_op->Tout_name(), make_pair(ctr_op->T1_ctr_rel_pos(), ctr_op->T2_ctr_rel_pos()) );
         Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+        cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
       
       } else if ( ctr_op->ctr_type()[0] == 's' ) { cout << " : contract on same tensor" <<  endl; 
         New_Tdata = contract_on_same_tensor( ctr_op->T1name(), ctr_op->Tout_name(), ctr_op->ctr_rel_pos() ); 
         Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+        cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
       } else { 
         throw std::runtime_error(" unknown contraction type : " + ctr_op->ctr_type() ) ;
       }
@@ -76,11 +74,20 @@ shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_bl
      tens = Data_map->at(Tname);
 
    } else {
-     shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map->at(Tname)->unc_id_ranges ) ;
+     shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map->at(Tname)->unc_id_ranges() ) ;
 
      if(  Data_map->find(Tname.substr(0,1)) != Data_map->end()){
        cout << "initializing uncontracted tensor block " << Tname << " using data from parent tensor \"" << Tname.substr(0,1) << "\"" << endl;
+       print_vector( *(CTP_map->at(Tname)->unc_id_ranges()) , "unc_id_ranges" ) ; cout <<endl;  
        tens = get_sub_tensor( Data_map->at(Tname.substr(0,1)), *id_block );
+
+       cout << Tname<< "->norm() = " << tens->norm() << endl; 
+ 
+     } else if ( Tname[0] == 'X' || Tname[0] == 'T' ) {  
+       cout << "new tensor block : " << Tname << " is being initialized to 1.0,  for exciations" << endl; 
+       tens = make_shared<Tensor_<DataType>>(*id_block);
+       tens->allocate();
+       Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( tens, 1.0);
 
      } else {  
        cout << "new tensor block : " << Tname << " is being initialized to zero" << endl; 
@@ -184,7 +191,7 @@ TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string T_in_nam
   
   auto Data_map_loc = Data_map->find(T_in_name); 
   shared_ptr<Tensor_<DataType>> T_part; 
-  if(  Data_map_loc == Data_map->end()){
+  if( Data_map_loc == Data_map->end() ){
     T_part =  get_block_Tensor(T_in_name); 
     Data_map->emplace(T_in_name , T_part );
   } else { 
@@ -204,8 +211,8 @@ TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,
  cout << "TensOp_Computer::TensOp_Computer::relativize_ctr_positions" << endl;
    pair<int,int> rel_ctr;
 
-   int T1_orig_size = CTP1->full_id_ranges->size(); 
-   int T2_orig_size = CTP2->full_id_ranges->size(); 
+   int T1_orig_size = CTP1->full_id_ranges()->size(); 
+   int T2_orig_size = CTP2->full_id_ranges()->size(); 
 
    if (ctr_todo.first >= T1_orig_size ){ 
      rel_ctr = make_pair(ctr_todo.second, ctr_todo.first-T2_orig_size);
@@ -213,14 +220,14 @@ TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,
      rel_ctr = make_pair(ctr_todo.first, ctr_todo.second-T1_orig_size);
    }
 
-  for ( int ii = 0 ; ii != CTP1->unc_pos->size() ; ii++ )
-     if ( CTP1->unc_pos->at(ii) == rel_ctr.first){
+  for ( int ii = 0 ; ii != CTP1->unc_pos()->size() ; ii++ )
+     if ( CTP1->unc_pos(ii) == rel_ctr.first){
        rel_ctr.first = ii;
        break;
      }
 
-  for ( int ii = 0 ; ii != CTP2->unc_pos->size() ; ii++ )
-     if (CTP2->unc_pos->at(ii) == rel_ctr.second){ 
+  for ( int ii = 0 ; ii != CTP2->unc_pos()->size() ; ii++ )
+     if (CTP2->unc_pos(ii) == rel_ctr.second){ 
        rel_ctr.second = ii;
        break;
      }
@@ -252,7 +259,6 @@ TensOp_Computer::TensOp_Computer<DataType>::find_or_get_CTP_data(string CTP_name
   
   return CTP_data;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<vector<shared_ptr<const IndexRange>>>
@@ -262,26 +268,24 @@ cout << "Get_Bagel_const_IndexRanges 1arg" << endl;
 
   shared_ptr<vector<shared_ptr<const IndexRange>>> ranges_Bagel = make_shared<vector<shared_ptr<const IndexRange>>>(0);
   for ( auto rng : *ranges_str) 
-    ranges_Bagel->push_back(make_shared<const IndexRange>(*range_conversion_map->at(rng)));
+    ranges_Bagel->push_back(make_shared<const IndexRange>(*range_conversion_map_->at(rng)));
 
   return ranges_Bagel;
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<vector<shared_ptr<const IndexRange>>>
 TensOp_Computer::TensOp_Computer<DataType>::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str, shared_ptr<vector<int>> unc_pos){ 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp_Computer::Get_Bagel_const_IndexRanges 2arg" ; print_vector(*ranges_str, "ranges_str" ) ;
 cout <<  "  "; cout.flush();  print_vector(*unc_pos, "unc_pos" ) ; cout << endl;
 
   vector<shared_ptr<const IndexRange>>  ranges_Bagel(unc_pos->size());
   for ( int ii = 0 ; ii != unc_pos->size() ; ii++) 
-    ranges_Bagel[ii]=(make_shared<const IndexRange>(*range_conversion_map->at(ranges_str->at(unc_pos->at(ii)))));
+    ranges_Bagel[ii]=(make_shared<const IndexRange>(*range_conversion_map_->at(ranges_str->at(unc_pos->at(ii)))));
 
   return make_shared<vector<shared_ptr<const IndexRange>>>(ranges_Bagel);
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<vector<IndexRange>>
@@ -291,7 +295,7 @@ cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str
 
   shared_ptr<vector<IndexRange>> ranges_Bagel = make_shared<vector<IndexRange>>(ranges_str->size());
   for ( int ii = 0 ; ii != ranges_str->size(); ii++)
-    ranges_Bagel->at(ii) = *range_conversion_map->at(ranges_str->at(ii));
+    ranges_Bagel->at(ii) = *range_conversion_map_->at(ranges_str->at(ii));
 
   return ranges_Bagel;
 }

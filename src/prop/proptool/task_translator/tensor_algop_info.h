@@ -1,5 +1,5 @@
-#ifndef __SRC_PROP_PROPTOOL_tensor_algop_info_H
-#define __SRC_PROP_PROPTOOL_tensor_algop_info_H
+#ifndef __SRC_PROP_PROPTOOL_TASKTRANSLATOR_ALGOP_H
+#define __SRC_PROP_PROPTOOL_TASKTRANSLATOR_ALGOP_H
 
 //Classes for defining contraction operations
 //ctr_abs pos is the position of the contracted index in the totally uncontracted tensor

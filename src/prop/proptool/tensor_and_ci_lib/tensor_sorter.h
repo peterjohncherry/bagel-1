@@ -4,7 +4,6 @@
 #include <src/util/prim_op.h>
 #include <iostream>
 namespace bagel {
-namespace SMITH { 
 
 namespace Tensor_Sorter { 
 
@@ -59,7 +58,6 @@ class Tensor_Sorter {
                           const DataType* in, DataType* out ) ;
     
 };
-}
 }
 }
 #endif

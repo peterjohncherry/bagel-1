@@ -6,6 +6,7 @@ using namespace bagel::SMITH;
 using namespace WickUtils;
  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
 shared_ptr<Tensor_<double>>  Tensor_Arithmetic_Utils::get_sub_tensor( shared_ptr<Tensor_<double>> Tens_in, vector<string>& range_names,
                                                                       shared_ptr<map< string, shared_ptr<IndexRange> > > range_conversion_map ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,19 +33,23 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor 3arg" << endl;
 
   return Tens_out;
 }
- 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
 shared_ptr<Tensor_<double>>  Tensor_Arithmetic_Utils::get_sub_tensor( shared_ptr<Tensor_<double>> Tens_in, vector<IndexRange>& id_ranges) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Tensor_Arithemetic_Utils::get_sub_tensor 2arg" << endl;
 
-
+  cout << "id_range_sizes = [ " ; cout.flush();
+  for ( IndexRange& idrng  : id_ranges ) {
+    cout << idrng.size() << " " ; cout.flush(); 
+  }
+  cout << "] "<< endl;
+  
   shared_ptr<Tensor_<double>> Tens_out = make_shared<Tensor_<double>>(id_ranges);
   Tens_out->allocate();
   shared_ptr<vector<int>> range_maxs  =  get_range_lengths( id_ranges ) ;
   shared_ptr<vector<int>> block_pos   =  make_shared<vector<int>>(range_maxs->size(),0);  
   shared_ptr<vector<int>> mins        =  make_shared<vector<int>>(range_maxs->size(),0);  
-
 
   do { 
 

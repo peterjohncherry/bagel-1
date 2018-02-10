@@ -18,8 +18,8 @@ B_Gamma_Computer::B_Gamma_Computer::TensOp_Data_Init( std::shared_ptr<const Dvec
   cc_     = cc_in;
   
   Gamma_info_map = Gamma_info_map_in;
-  Gamma_data_map = Gamma_data_map_in;
-  Sigma_data_map = Sigma_data_map_in;
+  gamma_data_map_ = gamma_data_map;
+  sigma_data_map_ = sigma_data_map;
   CIvec_data_map = CIvec_data_map_in;
 
   range_conversion_map = range_conversion_map_in;
@@ -30,7 +30,6 @@ B_Gamma_Computer::B_Gamma_Computer::TensOp_Data_Init( std::shared_ptr<const Dvec
   det_old_map    = make_shared<std::map< std::string, std::shared_ptr<Determinants>>>();
   cvec_old_map   = make_shared<std::map< std::string, std::shared_ptr<Civec>>>();
 }  
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Obviously a hack for now; duplicates everything.
 // Assumes that cimaxblock is _larger_ than the length of the civec. 
@@ -50,7 +49,7 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
   shared_ptr<Tensor_<double>> Tens_sigma = make_shared<Tensor_<double>>( *sigma_ranges ); 
   Tens_sigma->allocate();
   Tens_sigma->zero();
-  Sigma_data_map->emplace( sigma_name, Tens_sigma ); 
+  sigma_data_map_->emplace( sigma_name, Tens_sigma ); 
 
   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( *sigma_ranges ) ;
 
@@ -111,7 +110,7 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
   shared_ptr<Tensor_<double>> Tens_gammaN = make_shared<Tensor_<double>>( *gammaN_ranges ); 
   Tens_gammaN->allocate();
   Tens_gammaN->zero();
-  Gamma_data_map->emplace( gammaN_name, Tens_gammaN ); 
+  gamma_data_map_->emplace( gammaN_name, Tens_gammaN ); 
 
   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( *gammaN_ranges ) ;
 
@@ -146,8 +145,6 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
 
   return;
 }
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This assumes all orbitals have the same size of range, OK for alpha beta spins, not OK 
 //if different active spaces.
@@ -204,13 +201,12 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
  
   convert_civec_to_tensor( Bra_name );
 
-  shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( Sigma_data_map->at( sigma2_name ), CIvec_data_map->at( Bra_name ), 0 );
-  Gamma_data_map->emplace( gamma2_info->name(), Tens_gamma2 ); 
+  shared_ptr<Tensor_<double>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( sigma_data_map_->at( sigma2_name ), CIvec_data_map->at( Bra_name ), 0 );
+  gamma_data_map_->emplace( gamma2_info->name(), Tens_gamma2 ); 
 
   cout << "leaving B_Gamma_Computer::B_Gamma_Computer::get_gamma2_from_sigma2 " <<endl;
   return; 
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void B_Gamma_Computer::B_Gamma_Computer::compute_sigma2( shared_ptr<GammaInfo> gamma2_info )  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -240,7 +236,6 @@ void B_Gamma_Computer::B_Gamma_Computer::compute_sigma2( shared_ptr<GammaInfo> g
   }
   return;
 }
-  
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void B_Gamma_Computer::B_Gamma_Computer::sigma_2a1(double* cvec_ptr, double* sigma_ptr, shared_ptr<Determinants> dets  )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                               
@@ -279,8 +274,6 @@ void B_Gamma_Computer::B_Gamma_Computer::sigma_2a2( double* cvec_ptr, double* si
     }
   }
 }
- 
-                                                                                                                                                    
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void B_Gamma_Computer::B_Gamma_Computer::get_wfn_data( shared_ptr<CIVecInfo<double>>  cvec_info ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -297,7 +290,6 @@ void B_Gamma_Computer::B_Gamma_Computer::get_wfn_data( shared_ptr<CIVecInfo<doub
 
   return;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void B_Gamma_Computer::B_Gamma_Computer::convert_civec_to_tensor( string civec_name )  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -331,8 +323,6 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_civec_to_tensor( string civec_n
   }
   return;
 }
-
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<IndexRange>> B_Gamma_Computer::B_Gamma_Computer::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -344,10 +334,6 @@ cout << "B_Gamma_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_st
 
   return ranges_Bagel;
 }
-
-
-
-
 //  if (order == 4) { 
 //  int n1 = Dvec_sigma->det()->norb();
 //  int n2 = n1*n1;
