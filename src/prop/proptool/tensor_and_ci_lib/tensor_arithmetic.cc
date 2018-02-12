@@ -676,6 +676,90 @@ void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems(shared_ptr
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Divides elements of T1 by elements of T2, i.e.,  T1_{ijkl..} = T1_{ijkl..} / T2_{ijkl..}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::divide_tensors_in_place( shared_ptr<Tensor_<DataType>> T1, shared_ptr<Tensor_<DataType>> T2 ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Tensor_Arithmetic<DataType>::divide_tensors " << endl;
+ 
+   vector<IndexRange> id_ranges = T1->indexrange();
+#ifndef NDEBUG
+   if (id_ranges != T2->indexrange()) 
+    throw logic_error( "Trying to do elementwise division of two arrays with different dimensions!! Aborting" ); 
+#endif
+
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( id_ranges ) ; 
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
+   do {
+     vector<Index> id_blocks =  *(get_rng_blocks( block_pos, id_ranges ));
+     if ( T1->exists(id_blocks) && T2->exists(id_blocks )) { 
+       unique_ptr<DataType[]> block_1 = T1->get_block(id_blocks);
+       unique_ptr<DataType[]> block_2 = T2->get_block(id_blocks);
+       DataType*  t1_data_ptr = block_1.get();
+       DataType*  t2_data_ptr = block_2.get();
+       DataType* block_1_end = t1_data_ptr+T1->get_size(id_blocks);
+
+       do {    
+          *t1_data_ptr++ = *t1_data_ptr++/ *t2_data_ptr++; 
+       } while (t1_data_ptr != block_1_end) ;
+
+       T1->put_block(block_1, id_blocks); // TODO check if this is necessary, I don't think it is really; get_block moves
+     } else {
+       cout << "WARNING:: you just tried to fetch a tensor block which does not exist!!" << endl;
+     }
+   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
+
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//returns a tensor T3 such with elements T3_{ijkl..} = T1_{ijkl..} / T2_{ijkl..}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<SMITH::Tensor_<DataType>> 
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::divide_tensors( shared_ptr<Tensor_<DataType>> T1, shared_ptr<Tensor_<DataType>> T2 ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "Tensor_Arithmetic<DataType>::divide_tensors " << endl;
+ 
+   vector<IndexRange> id_ranges = T1->indexrange();
+#ifndef NDEBUG
+   if (id_ranges != T2->indexrange()) 
+    throw logic_error( "Trying to do elementwise division of two arrays with different dimensions!! Aborting" ); 
+#endif
+
+   shared_ptr<Tensor_<DataType>> T3 =  T1->clone();
+   T3->allocate();
+
+   shared_ptr<vector<int>> range_lengths = get_range_lengths( id_ranges ) ; 
+   shared_ptr<vector<int>> block_pos = make_shared<vector<int>>(range_lengths->size(),0);  
+   shared_ptr<vector<int>> mins = make_shared<vector<int>>(range_lengths->size(),0);  
+   do {
+     vector<Index> id_blocks =  *(get_rng_blocks( block_pos, id_ranges ));
+     if ( T1->exists(id_blocks) && T2->exists(id_blocks )) { 
+       unique_ptr<DataType[]> block_1 = T1->get_block(id_blocks);
+       unique_ptr<DataType[]> block_2 = T2->get_block(id_blocks);
+       unique_ptr<DataType[]> block_3 = T2->get_block(id_blocks);
+       DataType*  t1_data_ptr = block_1.get();
+       DataType*  t2_data_ptr = block_2.get();
+       DataType*  t3_data_ptr = block_3.get();
+       DataType* block_1_end = t1_data_ptr+T1->get_size(id_blocks);
+
+       do {    
+          *t3_data_ptr++ = *t1_data_ptr++/ *t2_data_ptr++; 
+       } while (t1_data_ptr != block_1_end) ;
+
+       T3->put_block(block_3, id_blocks); // TODO check if this is necessary, I don't think it is really; get_block moves
+     } else {
+       cout << "WARNING:: you just tried to fetch a tensor block which does not exist!!" << endl;
+     }
+   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
+
+   return T3;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Sets all elements of input tensor Tens to the value specified by elem_val 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>

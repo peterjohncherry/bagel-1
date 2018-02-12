@@ -123,6 +123,12 @@ class Tensor_Arithmetic {
 
      static DataType
      dot_product( size_t vec_size, DataType* v1, DataType* v2); 
+
+     static std::shared_ptr<SMITH::Tensor_<DataType>> 
+     divide_tensors( std::shared_ptr<SMITH::Tensor_<DataType>> T1, std::shared_ptr<SMITH::Tensor_<DataType>> T2 );
+
+     static void
+     divide_tensors_in_place( std::shared_ptr<SMITH::Tensor_<DataType>> T1, std::shared_ptr<SMITH::Tensor_<DataType>> T2 );
 }; 
  
 template<> void Tensor_Arithmetic<double>::gemm ( char op1, char op2, int size_i, int size_l, int size_j, 

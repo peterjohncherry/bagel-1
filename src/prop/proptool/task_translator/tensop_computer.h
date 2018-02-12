@@ -54,6 +54,10 @@ class TensOp_Computer {
   
     std::shared_ptr<SMITH::Tensor_<DataType>> get_uniform_Tensor(std::shared_ptr<std::vector<std::string>> unc_ranges, DataType XX );
 
+    std::shared_ptr<SMITH::Tensor_<DataType>> divide_tensors( std::string T1_name, std::string T2_name );
+
+    void divide_tensors_in_place( std::string T1_name, std::string T2_name );
+
     /////////// Utility routines /////////////////////////
 
     void Calculate_CTP( AContribInfo& A_contrib_name );
