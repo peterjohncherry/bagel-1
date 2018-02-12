@@ -17,8 +17,9 @@ proptool/tensor_and_ci_lib/tensor_arithmetic_utils.cc \
 \
 proptool/task_translator/tensop_computer.cc proptool/task_translator/expression_computer.cc \
 proptool/task_translator/equation_computer.cc proptool/task_translator/system_computer.cc \
+proptool/task_translator/equation_linearRM_computer.cc \
 \
 proptool/integrals/moint.cc proptool/integrals/moint_computer.cc \
-proptool/integrals/moint_init.cc proptool/tensor_and_ci_lib/tensor_sorter.cc 
+proptool/integrals/moint_init.cc proptool/tensor_and_ci_lib/tensor_sorter.cc
 
 AM_CXXFLAGS=-I$(top_srcdir)
