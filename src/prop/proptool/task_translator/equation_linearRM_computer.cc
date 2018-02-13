@@ -52,7 +52,7 @@ void Equation_Computer_LinearRM<DataType>::solve_equation(){
         pt_amps->at(ii)->ax_plus_y( -1.0, tensor_calc->divide_tensors( residues->at(ii), denom->at(ii) )) ;  
     }
     
-//    auto solver = make_shared<LinearRM<MultiTensor>>( max_davidson_subspace_size_, pt_term[LL]);
+//  auto solver = make_shared<LinearRM<MultiTensor>>( max_davidson_subspace_size_, pt_term[LL]);
     int max_iter = 5;
     for (int iter = 0; iter != max_iter; ++iter) {
       residues->zero();

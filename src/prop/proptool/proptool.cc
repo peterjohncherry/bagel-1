@@ -368,9 +368,9 @@ void PropTool::PropTool::get_equation_init_LinearRM( shared_ptr<const PTree> equ
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
 
+  int counter = 0 ;
   string eqn_name = equation_inp->get<string>( "name" );
   string eqn_target = equation_inp->get<string>( "target" );
-
   auto target_indices = make_shared<vector<string>>(0);
   auto ti_ptree = equation_inp->get_child("target indexes"); // Must solve for all "target" with these indices
   for (auto& si : *ti_ptree) 
@@ -384,6 +384,7 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   
     string term_name = term_info->get<string>( "term" );
     string term_factor = term_info->get<string>( "factor" );
+    cout << "term_name = " << term_name << endl;
     term_list->push_back(make_pair(term_factor, term_init_map_->at(term_name)));
 
     auto term_idrange_map = make_shared<map<string, pair<bool,string>>>();
@@ -403,6 +404,10 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   auto eqn_init = make_shared<Equation_Init_LinearRM<double>>( eqn_name, "LinearRM", master_expression, inp_range_map_, eqn_target, target_indices,
                                                                inp_factor_map_ );
   eqn_init->initialize_expressions();
+ 
+  sys_info_->create_equation( eqn_name, "LinearRM", eqn_init->term_braket_map_ , eqn_init->expression_term_map_ );
+
+  equation_execution_list_.push_back(eqn_name); 
 
   return;
 }

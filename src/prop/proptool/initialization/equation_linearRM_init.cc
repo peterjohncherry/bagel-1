@@ -9,9 +9,11 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
   cout << "Equation_Init_LinearRM<DataType>::initialize_expressions()" << endl;
 
   for ( int ii = 0 ; ii != master_expression_->term_list_->size(); ii++  ){
-
+    cout << " ii = " << ii << endl;
+    int counter = 0;
     DataType term_factor = factor_map_->at(master_expression_->term_list_->at(ii).first);
     shared_ptr< Term_Init > term_init = master_expression_->term_list_->at(ii).second;
+    expression_term_map_->emplace( term_init->name_ , make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_init->name_) ) );
     shared_ptr<map< string, pair<bool, string>>> term_idrange_map = master_expression_->term_range_maps_->at(ii);
     shared_ptr<map< string, int>> term_idx_val_map = term_init->idx_val_map_;
 
@@ -35,6 +37,7 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
   
     do {
 
+      //print_vector( *fvec, "fvec" ) ; cout.flush();
       int kk = 0 ;
       vector<int>::iterator fvec_it = fvec->begin();
       for ( auto tiv_it = term_idx_val_map->begin() ; tiv_it != term_idx_val_map->end(); tiv_it++ ) {
@@ -60,10 +63,17 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
       } 
       
       vector<pair<string,int>> fixed_id_vals; 
-      for ( int rr = 0 ; rr != fvec->size() ;rr++ ) 
+
+      cout << term_init->name_ << " " ; cout.flush(); cout << " [ "; cout.flush();  
+      for ( int rr = 0 ; rr != fvec->size() ;rr++ ) {  
         fixed_id_vals.push_back(make_pair( idx_ordered_names[rr], term_idx_val_map->at(idx_ordered_names[rr]) ));
-     
+        cout << "{ " << fixed_id_vals.back().first << ", " << fixed_id_vals.back().second << " } "; cout.flush();
+      }
+      cout <<  "] " <<  endl;
       sort(fixed_id_vals.begin(), fixed_id_vals.end()); 
+
+      term_braket_map_->emplace( term_init->name_, make_shared<vector<BraKet<DataType>>>(braket_list) ); 
+
       expression_term_map_by_states_->emplace( make_pair(term_init->name_, fixed_id_vals), make_shared<vector<pair<DataType, string>>>( 1, make_pair((DataType)1.0, term_init->name_)));
 
     } while( fvec_cycle_skipper( fvec, maxs, mins ) );
