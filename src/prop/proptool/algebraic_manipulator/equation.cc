@@ -25,6 +25,7 @@ void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string,
   cout << "leaving void Equation_Value<DataType>::set_maps" << endl;
   return;
 }
+
 //////////////////////////////////////////////////////////////////////////
 using namespace std;
 template<typename DataType>

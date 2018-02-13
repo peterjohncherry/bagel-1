@@ -1,6 +1,6 @@
 #ifndef __SRC_PROP_PROPTOOL_SYSTEM_INFO_H
 #define __SRC_PROP_PROPTOOL_SYSTEM_INFO_H
-#include <src/prop/proptool/algebraic_manipulator/equation.h>
+#include <src/prop/proptool/algebraic_manipulator/equation_linearRM.h>
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;

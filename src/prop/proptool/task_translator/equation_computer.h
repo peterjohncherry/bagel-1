@@ -7,8 +7,8 @@
 #include <src/smith/tensor.h>
 #include <src/smith/multitensor.h>
 #include <src/smith/indexrange.h>
-#include <src/prop/proptool/algebraic_manipulator/equation.h>
 #include <src/prop/proptool/task_translator/expression_computer.h>
+#include <src/prop/proptool/algebraic_manipulator/system_info.h>
 
 namespace bagel { 
 template<typename DataType>

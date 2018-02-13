@@ -78,6 +78,7 @@ std::shared_ptr<SMITH::Tensor_<DataType>>
 Equation_Computer_Base<DataType>::get_tensop( string tensop_name, vector<pair<string, int>>& fixed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   std::cout << "Equation_Computer_Base<DataType>::get_tensop not done" << std::endl;
+
   std::shared_ptr<SMITH::Tensor_<DataType>> tens = tensop_data_map_->at(tensop_name);
 
   return tens;

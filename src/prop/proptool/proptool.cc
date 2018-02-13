@@ -403,7 +403,7 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
   auto eqn_init = make_shared<Equation_Init_LinearRM<double>>( eqn_name, "LinearRM", master_expression, inp_range_map_, eqn_target, target_indices,
                                                                inp_factor_map_ );
-  eqn_init->initialize_expressions();
+  eqn_init->initialize_all_terms();
  
   sys_info_->create_equation( eqn_name, "LinearRM", eqn_init->term_braket_map_ , eqn_init->expression_term_map_ );
 
