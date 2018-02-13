@@ -10,7 +10,7 @@ proptool/algebraic_manipulator/ctrtensop.cc proptool/algebraic_manipulator/expre
 proptool/algebraic_manipulator/gamma_generator.cc proptool/algebraic_manipulator/spin_manager.cc \
 proptool/algebraic_manipulator/symmetry_operations.cc proptool/algebraic_manipulator/system_info.cc \
 \
-proptool/initialization/equation_init.cc \
+proptool/initialization/equation_init.cc proptool/initialization/equation_linearRM_init.cc \
 \
 proptool/tensor_and_ci_lib/b_gamma_computer.cc proptool/tensor_and_ci_lib/gamma_computer.cc proptool/tensor_and_ci_lib/tensor_arithmetic.cc \
 proptool/tensor_and_ci_lib/tensor_arithmetic_utils.cc \

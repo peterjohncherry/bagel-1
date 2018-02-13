@@ -27,16 +27,32 @@ class Equation_Computer_Base {
      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map_;
 
      DataType
-     get_scalar_result( std::string result_name, std::pair<std::string, int> idx1, ... );
+     get_scalar_result( std::string result_name, std::vector<std::pair<std::string, int>>& fixed_idxs  );
+
+     DataType
+     get_scalar_result( std::string result_name, std::vector<std::pair<std::string, int>>& fixed_idxs,
+                                                 std::vector<std::pair<std::string, int>>& summed_idxs );
+ 
+     std::shared_ptr<SMITH::Tensor_<DataType>>
+     get_tensop( std::string tensop_name, std::vector<std::pair<std::string, int>>& fixed_idxs  );
    
-     std::shared_ptr<SMITH::Tensor_<DataType>> 
-     get_tensop( std::string tensop_name, std::pair<std::string, int> idx1, ... );
+     std::shared_ptr<SMITH::Tensor_<DataType>>
+     get_tensop( std::string tensop_name, std::vector<std::pair<std::string, int>>& fixed_idxs,
+                                          std::vector<std::pair<std::string, int>>& summed_idxs );
+  
+     std::shared_ptr<SMITH::MultiTensor_<DataType>>
+     get_tensop_vector( std::string tensop_name, std::vector<std::pair<std::string, int>>& fixed_idxs  );
 
      std::shared_ptr<SMITH::MultiTensor_<DataType>>
-     get_tensop_vector( std::string tensop_name, std::pair<std::string, int> idx1, ... );
+     get_tensop_vector( std::string tensop_name, std::vector<std::pair<std::string, int>>& fixed_idxs,
+                                          std::vector<std::pair<std::string, int>>& summed_idxs );
 
-     void
-     evaluate_expression( std::string expression_name, std::pair<std::string, int> idx1, ... ); 
+     void 
+     evaluate_term( std::string tensop_name, std::vector<std::pair<std::string, int>>& fixed_idxs );
+
+     void 
+     evaluate_term( std::string tensop_name, std::vector<std::pair<std::string, int>>& fixed_idx,
+                                             std::vector<std::pair<std::string, int>>& summed_idxs );
 
    public :
 

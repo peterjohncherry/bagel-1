@@ -42,9 +42,21 @@ void Equation_Computer_Base<DataType>::build_expression_computer(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 DataType
-Equation_Computer_Base<DataType>::get_scalar_result( string result_name, pair<string, int> idx1, ... ){ 
+Equation_Computer_Base<DataType>::get_scalar_result( string result_name, vector<pair<string, int>>& fixed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- std::cout << "get_scalar_result" << std::endl;
+ std::cout << "Equation_Computer_Base<DataType>::get_scalar_result" << std::endl;
+ DataType x = 1.0 ;
+ return x;
+
+ } 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType> 
+DataType
+Equation_Computer_Base<DataType>::get_scalar_result( string result_name, vector<pair<string, int>>& fixed_idxs,
+                                                                         vector<pair<string, int>>& summed_idxs ){ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ std::cout << "Equation_Computer_Base<DataType>::get_scalar_result" << std::endl;
  DataType x = 1.0 ;
  return x;
 
@@ -52,9 +64,20 @@ Equation_Computer_Base<DataType>::get_scalar_result( string result_name, pair<st
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 std::shared_ptr<SMITH::Tensor_<DataType>> 
-Equation_Computer_Base<DataType>::get_tensop( string tensop_name, pair<string, int>  idx1, ... ){
+Equation_Computer_Base<DataType>::get_tensop( string tensop_name, vector<pair<string, int>>& fixed_idxs,
+                                                                  vector<pair<string, int>>& summed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "get_tensop not done" << std::endl;
+  std::cout << "Equation_Computer_Base<DataType>::get_tensop not done" << std::endl;
+  std::shared_ptr<SMITH::Tensor_<DataType>> tens = tensop_data_map_->at(tensop_name);
+
+  return tens;
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType> 
+std::shared_ptr<SMITH::Tensor_<DataType>> 
+Equation_Computer_Base<DataType>::get_tensop( string tensop_name, vector<pair<string, int>>& fixed_idxs ){ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  std::cout << "Equation_Computer_Base<DataType>::get_tensop not done" << std::endl;
   std::shared_ptr<SMITH::Tensor_<DataType>> tens = tensop_data_map_->at(tensop_name);
 
   return tens;
@@ -62,9 +85,29 @@ Equation_Computer_Base<DataType>::get_tensop( string tensop_name, pair<string, i
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 std::shared_ptr<SMITH::MultiTensor_<DataType>>
-Equation_Computer_Base<DataType>::get_tensop_vector( string tensop_name, pair<string, int>  idx1, ... ){
+Equation_Computer_Base<DataType>::get_tensop_vector( string tensop_name, vector<pair<string, int>>& fixed_idxs,
+                                                                         vector<pair<string, int>>& summed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "get_tensop not done" << std::endl;
+  std::cout << "Equation_Computer_Base<DataType>::get_tensop not done" << std::endl;
+
+  vector<shared_ptr<Tensor_<DataType>>> tens_list(5); 
+  // TODO replace with call to range map in equation for varios input idxs
+  vector<int> range = { 1,2,3,4,5}; 
+  for ( int  ii : range )  
+    tens_list[ii] = tensop_data_map_->at(tensop_name);
+
+  vector<DataType> factor_list( tens_list.size(), 1.0) ; // all ones for now
+
+  shared_ptr<MultiTensor_<DataType>> multitens = make_shared<MultiTensor_<DataType>>( factor_list, tens_list );
+
+  return multitens;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType> 
+std::shared_ptr<SMITH::MultiTensor_<DataType>>
+Equation_Computer_Base<DataType>::get_tensop_vector( string tensop_name, vector<pair<string, int>>& fixed_idxs ){ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  std::cout << "Equation_Computer_Base<DataType>::get_tensop not done" << std::endl;
 
   vector<shared_ptr<Tensor_<DataType>>> tens_list(5); 
   // TODO replace with call to range map in equation for varios input idxs
@@ -81,20 +124,32 @@ Equation_Computer_Base<DataType>::get_tensop_vector( string tensop_name, pair<st
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void
-Equation_Computer_Base<DataType>::evaluate_expression( string expression_name , pair<string, int>  idx1, ... ) {
+Equation_Computer_Base<DataType>::evaluate_term( string expression_name, vector<pair<string, int>>& fixed_idxs,
+                                                                               vector<pair<string, int>>& summed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "evaluate expression not done" << std::endl;
+  std::cout << "Equation_Computer_Base<DataType>::evaluate expression not done" << std::endl;
 
   expression_computer_->evaluate_expression( expression_name);
 
   return; 
-};
+}
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType> 
+void
+Equation_Computer_Base<DataType>::evaluate_term( string expression_name, vector<pair<string, int>>& fixed_idxs ){ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  std::cout << "Equation_Computer_Base<DataType>::evaluate expression not done" << std::endl;
+
+  expression_computer_->evaluate_expression( expression_name);
+
+  return; 
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void Equation_Computer_Value<DataType>::solve_equation(){ /*not really solving anything here*/ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Equation_Computer_Value<DataType>::solve_equation() " << endl;
+  cout << "Equation_Computer_Base<DataType>::Equation_Computer_Value<DataType>::solve_equation() " << endl;
 
   for ( auto& expr_map_elem : *equation_->expression_map() )
     expression_computer_->evaluate_expression( expr_map_elem.first ) ; 

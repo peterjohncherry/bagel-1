@@ -1,6 +1,5 @@
-
-#include <src/prop/proptool/task_translator/equation_computer.h>
 #include <src/prop/proptool/task_translator/equation_linearRM_computer.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 
 using namespace std;
 using namespace bagel;
@@ -11,25 +10,46 @@ template<typename DataType>
 void Equation_Computer_LinearRM<DataType>::solve_equation(){  
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
+  auto tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>(); 
+  shared_ptr<MultiTensor_<DataType>> residues; 
+  shared_ptr<MultiTensor_<DataType>> pt_amps; 
+  shared_ptr<MultiTensor_<DataType>> denom;
+  vector<pair<string,int>> fixed_indexes;
+  vector<pair<string,int>> summed_indexes;
+
   // \sum{NN} < L | X_{MM, NN} (H - e_{QQ} -e_{s}) \X_{MM,NN} | N >
   for (int QQ = 0; QQ != ref_space_dim; ++QQ)  
-    for ( int MM = 0; MM != ref_space_dim; ++MM )  
-      shared_ptr<MultiTensor_<double>> residues = this->get_tensop_vector( "residual", make_pair("T1", MM ), make_pair("e_shift", QQ) ) ;
+    for ( int MM = 0; MM != ref_space_dim; ++MM ){ 
+      
+      fixed_indexes = { make_pair("T1", MM ), make_pair("e_shift", QQ), make_pair("Ket", QQ)  };
+      this->evaluate_term( "proj_ham", fixed_indexes );
+      //shared_ptr<MultiTensor_<double>> residues = this->get_tensop_vector( "residual", T1_MM__eshift_QQ ) ;
+    } 
 
   // solve linear equation for t amplitudes
+  // should sum over states, but for now just doing state specific case setting bra and ket to LL
   bool converged = true;
   for (int LL = 0; LL != ref_space_dim; LL++) { 
     bool conv = false;
-    shared_ptr<MultiTensor_<DataType>> residues = this->get_tensop_vector( "residual", make_pair("bra", LL) ) ;
-    shared_ptr<MultiTensor_<DataType>> pt_amps  = this->get_tensop_vector( "pt_amps", make_pair("bra", LL) );
+    fixed_indexes = { make_pair( "bra", LL )}; 
 
-    shared_ptr<Tensor_<DataType>> pt_term = this->get_tensop( "pt_term" , make_pair("state", LL ) );
-    if ( pt_term->rms() < 1.0e-15) {
+    this->evaluate_term( "residual" , fixed_indexes ); 
+    residues = this->get_tensop_vector( "residual", fixed_indexes );
+
+    fixed_indexes = { make_pair( "bra", LL ), make_pair( "T1", LL ) } ;
+    pt_amps = this->get_tensop_vector( "pt_amps",  fixed_indexes );
+
+    fixed_indexes= { make_pair( "bra", LL ), make_pair( "ket", LL ) } ;
+    denom = this->get_tensop_vector( "denom" , fixed_indexes );
+
+    if ( residues->rms() < 1.0e-15) {
       if (LL+1 != ref_space_dim) cout << endl;
       continue;
+
     } else {
-//    Both of these have a sum over NN 
-//    update_amplitude(pt_amps, pt_term);
+      // Update_amplitudes should go here eventually
+      for ( int ii = 0; ii !=residues->tensors().size(); ii++ ) 
+        pt_amps->at(ii)->ax_plus_y( -1.0, tensor_calc->divide_tensors( residues->at(ii), denom->at(ii) )) ;  
     }
     
 //    auto solver = make_shared<LinearRM<MultiTensor>>( max_davidson_subspace_size_, pt_term[LL]);
@@ -42,10 +62,12 @@ void Equation_Computer_LinearRM<DataType>::solve_equation(){
       pt_amps->scale(1.0/norm);
     
       // Calculate residuals
-      for (int MM = 0; MM != ref_space_dim; ++MM)  // MM bra vector
-        for (int NN = 0; NN != ref_space_dim; ++NN)  // NN ket vector
-          this->evaluate_expression( "residual", make_pair("T1",MM), make_pair("T2", NN), make_pair("bra", LL)  );
-        
+      for (int MM = 0; MM != ref_space_dim; ++MM){  // MM bra vector
+        for (int NN = 0; NN != ref_space_dim; ++NN) {  // NN ket vector
+          fixed_indexes = { make_pair("T1",MM), make_pair("T2", NN), make_pair("bra", LL) };  
+          this->evaluate_term( "residual", fixed_indexes  );
+        }
+      }
       // these are Bagel routines, nothe that the compute residual here is _not_ the residual form the ci equations
       // residues = solver->compute_residual(pt_amps, residues);
       // pt_amps = solver->civec();
@@ -71,23 +93,30 @@ void Equation_Computer_LinearRM<DataType>::solve_equation(){
 
   //This is the last term in the effective Hamiltonian    
   for (int NN = 0; NN != ref_space_dim; ++NN) {
-    DataType norm = this->get_scalar_result( "norm", make_pair("state",NN ));
+    fixed_indexes = { make_pair("state",NN)};  
+    DataType norm = this->get_scalar_result( "norm", fixed_indexes );
     norm = (DataType)(0.0);
+
     for (int LL = 0; LL != ref_space_dim; ++LL)  // bra
-      for (int MM = 0; MM != ref_space_dim; ++MM)  // ket
-        this->evaluate_expression( "norm", make_pair("bra", LL), make_pair("ket", MM ) );
-   
-    DataType pt_energy = this->get_scalar_result( "pt_energy", make_pair("state", NN) );
+      for (int MM = 0; MM != ref_space_dim; ++MM){  // ket
+        fixed_indexes = { make_pair("bra",NN), make_pair("ket", MM) };  
+        this->evaluate_term( "norm",  fixed_indexes );
+      }
+    
+
+    fixed_indexes = { make_pair("state",NN)};  
+    DataType pt_energy = this->get_scalar_result( "pt_energy", fixed_indexes );
     //pt2energy = energy_[NN]+(xms_ham)(NN,NN) - e_shift_*norm;
   }
 
-//  shared_ptr<Matrix> h_eff = make_shared<Matrix>( ref_space_dim, ref_space_dim );
+  h_eff = make_shared<Matrix>( ref_space_dim, ref_space_dim );
  
   // Loop through projected ham terms 
   for (int QQ = 0; QQ != ref_space_dim; ++QQ) {
     for (int MM = 0; MM != ref_space_dim; ++MM){ 
-      this->evaluate_expression( "norm", make_pair("ket", QQ), make_pair("bra", MM ) );
-      this->evaluate_expression( "proj_ham", make_pair("ket", QQ), make_pair("bra", MM ) );
+      fixed_indexes = { make_pair("bra",MM), make_pair("ket", QQ) };  
+      this->evaluate_term( "norm", fixed_indexes );
+      this->evaluate_term( "proj_ham", fixed_indexes );
     }
     for (int LL = 0; LL != ref_space_dim; ++LL) {
       if (QQ == LL) {
@@ -99,6 +128,7 @@ void Equation_Computer_LinearRM<DataType>::solve_equation(){
     }
   }
 }
+
 ///////////////////////////////////////////////////////////////
 template class Equation_Computer_LinearRM<double>;
 ///////////////////////////////////////////////////////////////
