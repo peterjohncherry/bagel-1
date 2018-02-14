@@ -83,6 +83,15 @@ class System_Info {
                                                                 DataType factor, std::string Tsymmetry, bool hconj, int state_dependence ) ;
        
         void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
+
+        void  create_equation( std::string name, std::string type, 
+                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
+                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map, 
+                               std::shared_ptr<std::map<std::pair< std::string, std::vector<std::pair<std::string, int>>>, 
+                                                                   std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec, 
+                               std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
+                                                         std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec ); 
+
         
         void create_equation( std::string name, std::string type, 
                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,

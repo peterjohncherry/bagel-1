@@ -55,12 +55,14 @@ System_Info<DataType>::construct_equation_task_list( string equation_name ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "System_Info<DataType>::System_Info::construct_equation_task_list : " << equation_name << endl;
 
-  equation_map_->at( equation_name)->generate_all_expressions(); 
+  if (equation_map_->at( equation_name)->type() == "Value" ) { 
+    equation_map_->at( equation_name)->generate_all_expressions();
+  } else if (equation_map_->at( equation_name)->type() == "LinearRM" ) { 
+    equation_map_->at( equation_name)->generate_state_specific_terms();
+  } 
 //  if ( eqn->type() == "Value" ) 
 //    for ( auto& expression_info : *eqn->expression_term_map_ ) 
 //      Build_Expression ( expression_info.first );
-
-
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -113,6 +115,46 @@ template<class DataType>
 void
 System_Info<DataType>::create_equation( std::string name, std::string type, 
                                         std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
+                                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map, 
+                                        std::shared_ptr<std::map<std::pair< std::string, std::vector<std::pair<std::string, int>>>, 
+                                                                            std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec, 
+                                        std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
+                                                                  std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec ) { 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "System_Info<DataType>::System_Info::create_equation " << endl; 
+
+  term_braket_map_->insert(term_braket_map->begin(), term_braket_map->end()) ;
+  expression_term_map_->insert(expression_term_map->begin(), expression_term_map->end()) ;
+  
+  shared_ptr<Equation_Base<DataType>>  new_eqn;
+  if ( type == "Value" ) { 
+    shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map );
+    new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map, MT_map, CTP_map, CMTP_map );
+    equation_map_->emplace( name, new_eqn); 
+
+  } else if ( type == "LinearRM") { 
+    shared_ptr<Equation_LinearRM<DataType>> new_eqn_val  = make_shared<Equation_LinearRM<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map,
+                                                                                                            term_braket_map_state_spec, expression_term_map_state_spec );
+    new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map, MT_map, CTP_map, CMTP_map );
+    equation_map_->emplace( name, new_eqn); 
+  
+  } else {  
+    throw logic_error( "equation type \""+ type + "\" not implemented yet! Aborting!"); 
+
+  }
+
+  return;
+
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void
+System_Info<DataType>::create_equation( std::string name, std::string type, 
+                                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
                                         std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "System_Info<DataType>::System_Info::create_equation " << endl; 
@@ -127,7 +169,11 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
     new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map, MT_map, CTP_map, CMTP_map );
     equation_map_->emplace( name, new_eqn); 
 
-  } else { 
+  } else if ( type == "LinearRM") { 
+  
+    throw logic_error( "Must provide state specific term map for doing linearRM!! Aborting!! " ) ; 
+    
+  } else {  
     throw logic_error( "equation type \""+ type + "\" not implemented yet! Aborting!"); 
 
   }

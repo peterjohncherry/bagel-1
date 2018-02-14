@@ -4,7 +4,7 @@
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator.h>
 
 using namespace std;
-
+ 
 /////////////////////////////////////////////////////////////////////////////
 template<class DType>
 void CtrTensorPart<DType>::get_name(){
@@ -301,18 +301,18 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    Tmap->emplace(CTP_new->name, CTP_new);
     
 
-    if ( full_idxs_->at(abs_ctr.first)[0] == 'X' || full_idxs_->at(abs_ctr.second)[0] == 'X' ) {
-      if ( full_idxs_->at(abs_ctr.first)[0] != 'X' || full_idxs_->at(abs_ctr.second)[0] != 'X' ) { // TODO replace with CtrOp_single_id
-        ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
-                                                            abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
-      } else {  // TODO replace with CtrOp_exc_ids 
-        ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
-                                                            abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
-      }
-    } else  {  
+   // if ( full_idxs_->at(abs_ctr.first)[0] == 'X' || full_idxs_->at(abs_ctr.second)[0] == 'X' ) {
+   //   if ( full_idxs_->at(abs_ctr.first)[0] != 'X' || full_idxs_->at(abs_ctr.second)[0] != 'X' ) { // TODO replace with CtrOp_single_id
+   //     ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
+   //                                                         abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+   //   } else {  // TODO replace with CtrOp_exc_ids 
+   //     ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
+   //                                                         abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+   //   }
+   // } else  {  
        ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
                                                            abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
-    }
+   // }
 
    ACompute_map->emplace( CTP_new->get_next_name(CTP_new->ctrs_done_), make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list));
    
@@ -323,7 +323,6 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors" << endl;
    cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << abs_ctr.first << "," << abs_ctr.second << ") to get " << get_next_name(CTP_new->ctrs_done_) << endl;
    return CTP_new;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DType>
@@ -338,6 +337,15 @@ cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl;
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "CtrMultiTensorPart<DType>::Binary_Contract_diff_tensors_MT" << endl; 
+
+   for ( pair<pair<int,int> , pair<int,int>>  cross_ctr : *cross_ctrs_pos_ ) {
+     int T1_pos = cross_ctr.first.first;
+     int T2_pos = cross_ctr.second.first;
+     int T1_ctr_pos = cross_ctr.second.first;
+     int T2_ctr_pos = cross_ctr.second.second;
+     //cout << " {[" << CTP_vec->at(T1_pos)->name() << ":" << T1_ctr_pos << "].[ " << CTP_vec->at(T2_pos)->name() << ":" << T2_ctr_pos << "]}" ; cout.flush();
+     cout << " {[" << T1_pos << ":" << T1_ctr_pos << "].[ " << T2_pos << ":" << T2_ctr_pos << "]}" ; cout.flush();
+   } cout << endl;
 
    shared_ptr<CtrTensorPart<DType>> T1T2_ctrd =  Binary_Contract_diff_tensors(cross_ctrs_pos_->back(), ctr, Tmap, ACompute_list, ACompute_map );
    Tmap->emplace(T1T2_ctrd->name, T1T2_ctrd);

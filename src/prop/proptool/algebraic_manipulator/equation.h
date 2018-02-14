@@ -67,6 +67,7 @@ class Equation_Base {
      std::string name() { return name_ ; }; 
      std::string type() { return type_ ; }; 
 
+     virtual void generate_state_specific_terms() { throw std::logic_error ( "generate state specific terms not set for class Equation_Base!! Aborting!!"); }
 }; 
  
 // Generates an Equation object to evaluate all f_ij 
