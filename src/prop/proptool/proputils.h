@@ -109,6 +109,37 @@ namespace WickUtils {
     return;
   }
 
+  template<typename DataType>
+  void print_pair_pair_vector( std::vector<std::pair<std::pair<DataType,DataType>, std::pair<DataType,DataType>>> ccp_vec,
+                               std::string name = "" ) {
+    std::cout << name << " = [ "; std::cout.flush();
+    for ( auto& elem : ccp_vec ){
+      std::cout << "{(" << elem.first.first << "," << elem.first.second << "),("  ;std::cout.flush();
+      std::cout << elem.second.first << "," << elem.second.second << ")} "  ; std::cout.flush();
+    }
+    std::cout << "]" ; std::cout.flush();
+    
+    return;
+  }
+ 
+  template<typename DataType>
+  void print_vec_elem_names( std::vector<std::shared_ptr<DataType>>& invec, std::string name = "" ) {
+    std::cout <<  name << " = [ " ; std::cout.flush();
+    for ( auto& elem : invec )
+      std::cout << elem->name() << " " ; std::cout.flush();
+    std::cout << " ] "; std::cout.flush();
+  }
+ 
+  template<typename DataType>
+  void print_vec_elem_names( std::vector<DataType>& invec, std::string name = "" ) {
+    std::cout <<  name << " = [ " ; std::cout.flush();
+    for ( auto& elem : invec )
+      std::cout << elem.name() << " " ; std::cout.flush();
+    std::cout << " ] "; std::cout.flush();
+  }
+
+
+
   //TODO you need type name here, but why ? Find out, it could be a problem.
   template<typename DataType>
   std::shared_ptr<std::vector<DataType>> dereference_vector(std::vector<DataType*>& invec){

@@ -179,9 +179,9 @@ cout << endl <<  "CtrTensorPart<DataType>::FullContract : CTP name =  " << name_
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void CtrMultiTensorPart<DataType>::FullContract(shared_ptr<map<string,shared_ptr<CtrTensorPart_Base> >> Tmap,
-                                             shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list ,
-                                             shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
+void CtrMultiTensorPart<DataType>::FullContract( shared_ptr<map<string,shared_ptr<CtrTensorPart_Base> >> Tmap,
+                                                 shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list ,
+                                                 shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_CtrMultiTensorPart
 cout << "CtrMultiTensorPart<DataType>::FullContract" << endl; 

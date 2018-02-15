@@ -29,6 +29,8 @@ class CtrTensorPart_Base  {
     bool got_data_;
     bool got_compute_list_;
     bool contracted_;
+ 
+    int size_;
 
   public :
     CtrTensorPart_Base()  { //TODO Fix this rubbish 
@@ -47,7 +49,7 @@ class CtrTensorPart_Base  {
                         std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos,
                         std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors ) :
                         full_id_ranges_(full_id_ranges), full_idxs_(full_idxs), ctrs_pos_(ctrs_pos),
-                        ReIm_factors_(ReIm_factors), got_data_(false) {}
+                        ReIm_factors_(ReIm_factors), got_data_(false), size_( full_idxs_->size()) {}
     ~CtrTensorPart_Base(){};
 
     std::string name() { return name_; }
@@ -71,7 +73,9 @@ class CtrTensorPart_Base  {
 
     bool got_compute_list(){ return got_compute_list_; }
     void got_compute_list( bool val ){ got_compute_list_ = val; }
-
+    
+    int size() { return full_idxs_->size() ; } 
+  
     void get_name();
     void get_ctp_idxs_ranges();
 
