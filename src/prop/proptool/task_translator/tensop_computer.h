@@ -21,13 +21,13 @@ class TensOp_Computer {
 
     public: 
     TensOp_Computer( std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map_in,
-                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>>>> CTP_map,
+                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> Data_map_in );
     ~TensOp_Computer(){};
   
     std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>>>> CTP_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base>>> CTP_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> Data_map;
 
@@ -78,8 +78,8 @@ class TensOp_Computer {
     find_or_get_CTP_data(std::string CTP_name);
 
     std::pair<int,int>
-    relativize_ctr_positions(std::pair <int,int> ctr_todo, std::shared_ptr<CtrTensorPart<DataType>>  CTP1,
-                                                           std::shared_ptr<CtrTensorPart<DataType>>  CTP2);
+    relativize_ctr_positions(std::pair <int,int> ctr_todo, std::shared_ptr<CtrTensorPart_Base>  CTP1,
+                                                           std::shared_ptr<CtrTensorPart_Base>  CTP2);
 
 
 

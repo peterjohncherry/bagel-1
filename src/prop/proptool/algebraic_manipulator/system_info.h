@@ -51,7 +51,7 @@ class System_Info {
         
         // key :    Name of contracted part of TensorOp (CTP)
         // result : Info for contracted part of TensorOp info
-        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >> CTP_map;      
+        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map;      
         
         // key :    Name of contracted part of multitensorop (CMTP)
         // result : Info for contracted part of multitensorop info

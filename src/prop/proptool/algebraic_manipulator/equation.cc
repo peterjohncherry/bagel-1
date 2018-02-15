@@ -9,7 +9,7 @@ void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string,
                                          shared_ptr< map <string, shared_ptr< vector<shared_ptr<CtrOp_base>>>>> ACompute_map,
                                          shared_ptr< map< string, shared_ptr< TensOp::TensOp<DataType>>>> T_map,
                                          shared_ptr< map< string, shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map,
-                                         shared_ptr< map< string, shared_ptr< CtrTensorPart<DataType>>>> CTP_map,     
+                                         shared_ptr< map< string, shared_ptr< CtrTensorPart_Base>>> CTP_map,     
                                          shared_ptr< map< string, shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "void Equation_Value<DataType>::set_maps" << endl;

@@ -83,11 +83,11 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
             
            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
 
-              shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = Expr->CMTP_map_->at(A_contrib_name)->CTP_vec ;
+              shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = Expr->CMTP_map_->at(A_contrib_name)->CTP_vec ;
               vector<string> sub_tensor_names(CTP_vec->size()); 
 
               for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
-                sub_tensor_names[rr] = CTP_vec->at(rr)->myname();
+                sub_tensor_names[rr] = CTP_vec->at(rr)->name();
 
               shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );//TODO fix so uses piecewise contraction where possible 
               tensop_data_map_->emplace( A_contrib_name, A_contrib_data );
@@ -105,10 +105,10 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
           cout << "XXXX3" << endl; 
           if ( tensop_data_map_->find(A_contrib_name) == tensop_data_map_->end() ) {cout << A_contrib_name <<  " not yet in map, must form from direct product" << endl;
 
-            shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = Expr->CMTP_map_->at(A_contrib_name)->CTP_vec ;
+            shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = Expr->CMTP_map_->at(A_contrib_name)->CTP_vec ;
             vector<string> sub_tensor_names(CTP_vec->size()); 
             for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
-              sub_tensor_names[rr] = CTP_vec->at(rr)->myname();
+              sub_tensor_names[rr] = CTP_vec->at(rr)->name();
             
             shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
             for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){

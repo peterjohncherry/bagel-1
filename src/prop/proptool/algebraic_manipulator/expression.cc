@@ -9,7 +9,7 @@ template<class DataType>
 Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_list,
                                   shared_ptr<StatesInfo<DataType>> states_info,
                                   shared_ptr<map< string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,
-                                  shared_ptr<map< string, shared_ptr<CtrTensorPart<DataType>> >>            CTP_map,
+                                  shared_ptr<map< string, shared_ptr<CtrTensorPart_Base> >>            CTP_map,
                                   shared_ptr<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,
                                   shared_ptr<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>     ACompute_map,
                                   shared_ptr<map< string, shared_ptr<GammaInfo> > >                         gamma_info_map ):
@@ -113,7 +113,7 @@ void Expression<DataType>::necessary_tensor_blocks(){
         }
       }
 
-//      shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = CMTP->CTP_vec;
+//      shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = CMTP->CTP_vec;
     }
   }
   cout << "leaving Expression::necessary_tensor_blocks" << endl;

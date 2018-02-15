@@ -22,7 +22,7 @@ System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info
 
   T_map          = make_shared< map <string, shared_ptr<TensOp::TensOp<DataType>>>>();
   MT_map         = make_shared< map <string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>();
-  CTP_map        = make_shared< map <string, shared_ptr<CtrTensorPart<DataType>>>>();
+  CTP_map        = make_shared< map <string, shared_ptr<CtrTensorPart_Base>>>();
   CMTP_map       = make_shared< map <string, shared_ptr<CtrMultiTensorPart<DataType>>>>();
   ACompute_map   = make_shared< map <string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>();
   Gamma_map      = make_shared< map <string, shared_ptr<GammaInfo> > >();

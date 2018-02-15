@@ -10,7 +10,7 @@ using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 TensOp_Computer::TensOp_Computer<DataType>::TensOp_Computer( shared_ptr< map< string, shared_ptr<vector<shared_ptr<CtrOp_base>>>>> ACompute_map_in,
-                                                             shared_ptr< map< string, shared_ptr<CtrTensorPart<DataType>>>> CTP_map_in,
+                                                             shared_ptr< map< string, shared_ptr<CtrTensorPart_Base>>> CTP_map_in,
                                                              shared_ptr< map< string, shared_ptr<IndexRange>>> range_conversion_map,
                                                              shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>> Data_map_in ):
                                                              ACompute_map(ACompute_map_in), CTP_map(CTP_map_in), Data_map(Data_map_in),
@@ -228,8 +228,8 @@ TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string T_in_nam
 template<class DataType>
 pair<int,int>
 TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,int> ctr_todo, 
-                                                            shared_ptr<CtrTensorPart<DataType>> CTP1,
-                                                            shared_ptr<CtrTensorPart<DataType>> CTP2 ){
+                                                            shared_ptr<CtrTensorPart_Base> CTP1,
+                                                            shared_ptr<CtrTensorPart_Base> CTP2 ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  cout << "TensOp_Computer::TensOp_Computer::relativize_ctr_positions" << endl;
    pair<int,int> rel_ctr;

@@ -101,7 +101,7 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp" <<   endl;
           
-  CTP_map_ = make_shared< map< string, shared_ptr<CtrTensorPart<DataType>> >>();
+  CTP_map_ = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
    
   std::vector<int> plus_ops;
   std::vector<int> kill_ops;
@@ -235,9 +235,9 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
    shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
    shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
 
-   shared_ptr<CtrTensorPart<DataType>>  CTP       = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors ); 
-   cout << "CTP->myname() = " << CTP->myname() << " is going into CTP_map" <<  endl;
-   CTP_map_->emplace(CTP->myname(), CTP); //maybe should be addded in with ctr_idxs
+   shared_ptr<CtrTensorPart<DataType>>  CTP = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors ); 
+   cout << "CTP->name() = " << CTP->name() << " is going into CTP_map" <<  endl;
+   CTP_map_->emplace(CTP->name(), CTP); //maybe should be addded in with ctr_idxs
  }
  
   //puts_contracted ranges into map
@@ -259,8 +259,8 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
           shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
 
           shared_ptr<CtrTensorPart<DataType>> CTP = make_shared<CtrTensorPart<DataType>>( full_idxs, full_ranges, ctr_vec, ReIm_factors ); 
-          cout << "CTP->myname() = " << CTP->myname() << "is going into CTP_map " << endl;
-          CTP_map_->emplace(CTP->myname(), CTP); 
+          cout << "CTP->name() = " << CTP->name() << "is going into CTP_map " << endl;
+          CTP_map_->emplace(CTP->name(), CTP); 
 
         }
       }
@@ -308,7 +308,7 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
     unique_range_blocks->push_back( make_shared<const vector<string>>(all_range_map_it.first) ); 
   
   Op_dense_ = make_shared<const MultiTensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, make_pair(1.0,1.0), cmlsizevec, unique_range_blocks, all_ranges_ptr ); 
-  CTP_map_  = make_shared< map< string, shared_ptr<CtrTensorPart<DataType>> >>();
+  CTP_map_  = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
   CMTP_map_ = make_shared< map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>();
    
 }
@@ -457,7 +457,7 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 ////////////////////////////////////////////////////////////////////////////////////////
 //cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 
-  shared_ptr<vector<shared_ptr<CtrTensorPart<DataType>>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart<DataType>> >> (num_tensors_); 
+  shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart_Base> >> (num_tensors_); 
   vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
   vector<vector<pair<int,int>>> sameT_ctrs_pos( num_tensors_,  pint_vec(0));
   shared_ptr<vector<pair<int,int>>> no_ctrs =  make_shared<vector<pair<int,int>>>(0);
@@ -498,16 +498,16 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
     } else { 
       CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec ); 
     }
-    CTP_map_->emplace(CTP_vec->at(ii)->name, CTP_vec->at(ii)); 
+    CTP_map_->emplace(CTP_vec->at(ii)->name(), CTP_vec->at(ii)); 
 
   }
   
 
   //TODO silly hack way of dealing with states find a better way
   shared_ptr<CtrMultiTensorPart<DataType>> CMTP = make_shared<CtrMultiTensorPart<DataType> >(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos) ); 
-  //cout << CMTP->myname() << " is going into the map " << endl;
-  CMTP_map_->emplace(CMTP->myname(), CMTP);
-  CTP_map_->emplace(CMTP->myname(), CMTP);
+  //cout << CMTP->name() << " is going into the map " << endl;
+  CMTP_map_->emplace(CMTP->name(), CMTP);
+  CTP_map_->emplace(CMTP->name(), CMTP);
 
   return;
 }
