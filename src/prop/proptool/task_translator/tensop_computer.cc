@@ -50,7 +50,7 @@ TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo& AInfo )
         New_Tdata = contract_on_same_tensor( ctr_op->T1name(), ctr_op->Tout_name(), ctr_op->ctr_rel_pos() ); 
         Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
         cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
-      } else if ( ctr_op->ctr_type()[0] == 'r' ) { cout << " : reorder tensor ZZZZ" <<  endl; 
+      } else if ( ctr_op->ctr_type()[0] == 'r' ) { cout << " : reorder tensor" <<  endl; 
         New_Tdata = reorder_block_Tensor( ctr_op->T1name(), ctr_op->new_order() ); 
         Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
         cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
@@ -328,4 +328,5 @@ cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class TensOp_Computer::TensOp_Computer<double>;
+template class TensOp_Computer::TensOp_Computer<complex<double>>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

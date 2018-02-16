@@ -34,7 +34,6 @@ class CtrTensorPart_Base  {
 
   public :
     CtrTensorPart_Base()  { //TODO Fix this rubbish 
-                    std::cout << "CtrMultiTensorPart::CtrMultiTensorPart base" << std::endl; 
                     full_idxs_      = std::make_shared< std::vector<std::string>>(0);
                     full_id_ranges_ = std::make_shared< std::vector<std::string>>(0);
                     ctrs_pos_       = std::make_shared< std::vector<std::pair<int,int>>>(0);
@@ -51,11 +50,9 @@ class CtrTensorPart_Base  {
                         std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors ) :
                         full_id_ranges_(full_id_ranges), full_idxs_(full_idxs), ctrs_pos_(ctrs_pos),
                         ReIm_factors_(ReIm_factors), got_data_(false), size_( full_idxs_->size()) {
-                          std::cout << "CtrTensorPart::CtrTensorPart base" << std::endl;
                           ctrs_todo_ = std::make_shared<std::vector<std::pair<int,int>>>(*ctrs_pos);
                           ctrs_done_ = std::make_shared<std::vector<std::pair<int,int>>>(0);
                           got_data_ = false;
-                          std::cout << "CtrTensorPart::CtrTensorPart" << std::endl; 
                           get_ctp_idxs_ranges();
                           get_name();
                         } 
@@ -210,6 +207,4 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
 
 };
 
-extern template class CtrTensorPart<double>;
-extern template class CtrMultiTensorPart<double>;
 #endif

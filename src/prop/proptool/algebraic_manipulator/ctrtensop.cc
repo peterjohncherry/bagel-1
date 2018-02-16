@@ -52,11 +52,9 @@ string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_c
 //////////////////////////////////////////////////////////////////////////////
 void CtrTensorPart_Base::get_ctp_idxs_ranges(){
 //////////////////////////////////////////////////////////////////////////////
-cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
+//cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
 int counter = 0;
   vector<bool> get_unc(full_idxs_->size(), true);
-  print_pair_vector(*ctrs_pos_, "ctp_base_gci ctrs_pos"); cout << endl;
-  print_vector(*full_idxs_, "ctp_base_gci full_idxs"); cout << endl;
 
   for (int ii =0; ii != ctrs_pos_->size() ; ii++){
     get_unc[ctrs_pos_->at(ii).first] = false;
@@ -72,9 +70,9 @@ int counter = 0;
   int jj = 0;
   for ( int ii = 0 ; ii !=get_unc.size() ; ii++ ) {
     if (get_unc[ii]){
-      unc_id_ranges_->at(jj) = full_id_ranges_->at(ii); cout << "A";cout.flush();
-      unc_idxs_->at(jj)      = full_idxs_->at(ii);      cout << "B";cout.flush();
-      unc_pos_->at(jj)       = ii;                      cout << "C";cout.flush();
+      unc_id_ranges_->at(jj) = full_id_ranges_->at(ii); 
+      unc_idxs_->at(jj)      = full_idxs_->at(ii);      
+      unc_pos_->at(jj)       = ii;                      
       jj++;
     }
   } 
@@ -345,13 +343,12 @@ cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors_MT" << endl;
 #endif 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors_MT" << endl; 
-
+   throw logic_error( " Should not be using this rountine anymore !!! Kept only for checking; Aborting!! " ); 
    for ( pair<pair<int,int> , pair<int,int>>  cross_ctr : *cross_ctrs_pos_ ) {
      int T1_pos = cross_ctr.first.first;
      int T2_pos = cross_ctr.second.first;
      int T1_ctr_pos = cross_ctr.second.first;
      int T2_ctr_pos = cross_ctr.second.second;
-     //cout << " {[" << CTP_vec->at(T1_pos)->name() << ":" << T1_ctr_pos << "].[ " << CTP_vec->at(T2_pos)->name() << ":" << T2_ctr_pos << "]}" ; cout.flush();
      cout << " {[" << T1_pos << ":" << T1_ctr_pos << "].[ " << T2_pos << ":" << T2_ctr_pos << "]}" ; cout.flush();
    } cout << endl;
 
@@ -373,5 +370,7 @@ cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors_MT" << endl;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class CtrTensorPart<double>;
+template class CtrTensorPart<complex<double>>;
 template class CtrMultiTensorPart<double>;
+template class CtrMultiTensorPart<complex<double>>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
