@@ -538,11 +538,15 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
 
   }
   if ( CTP_vec->size() < 3  ){ 
+    cout  << " 2 Tens MultiTens method" << endl;
     auto new_cmtp = make_shared<CtrMultiTensorPart<DataType>>(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos));
     CMTP_map_->emplace(new_cmtp->name(), new_cmtp ) ;
     CTP_map_->emplace(new_cmtp->name(), new_cmtp );
+    cout  << " 2 Tens MultiTens method done" << endl;
   } else {
+    cout  << " >2 Tens MultiTens method" << endl;
     get_cmtp(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos) ); 
+    cout  << " >2 Tens MultiTens method done" << endl;
   } 
   //cout << CMTP->name() << " is going into the map " << endl;
 
@@ -587,18 +591,18 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
 
       print_vec_elem_names(*ctp_vec_tatb , "ctp_vec_tatb" ) ; cout << endl;
       print_pair_pair_vector( *ccp_vec_tatb, "ccp_vec_tatb" ); cout <<endl;
-      cout << " X" << inside_counter++ << endl;
+      cout << " X" << inside_counter++ << "after inner for" << endl;
       shared_ptr<CtrMultiTensorPart<DataType>> cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb );
-      cout << " X" << inside_counter++ << endl;
+      cout << " X" << inside_counter++ << "after inner for" << endl;
       CMTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
       cout << " X" << inside_counter++ << endl;
 
       shift_ccp_and_ctp_vecs( cmtp_tatb, ta_pos, tb_pos, ctp_vec, ccp_vec_merged_tatb );
-      cout << " X" << inside_counter++ << endl;
+      cout << " X" << inside_counter++ <<  "after inner for" << endl;
       ccp_vec = make_shared<vector<pair<pair<int,int>, pair<int,int>> >>(*ccp_vec_merged_tatb);
-      cout << " X" << inside_counter++ << endl;
+      cout << " X" << inside_counter++ <<  "after inner for" << endl;
       ccp_it = ccp_vec->begin();
-      cout << " X" << inside_counter++ << endl;
+      cout << " X" << inside_counter++ <<  "after inner for" << endl;
 
     } while( ccp_vec->size() != 0 ) ;
 

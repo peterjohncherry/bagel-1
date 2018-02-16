@@ -83,8 +83,10 @@ class CtrTensorPart_Base  {
 
     virtual void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
                                std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
-                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map) {
-                               throw std::logic_error(" Calling full contract from CtrTensorPart_Base !! Aborting !! ");  } ; 
+                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map) = 0 ; 
+//                              { throw std::logic_error(" Calling full contract from CtrTensorPart_Base !! Aborting !! ");  } ; 
+    
+    virtual std::pair<int,int> get_pre_contract_ctr_rel_pos( std::pair<int,int>& ctr_pos ) = 0;
 };
 
 template<typename DataType>
@@ -128,7 +130,7 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
     CtrMultiTensorPart( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec_in,
                         std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >> cross_ctrs_pos_in  )
                         : CtrTensorPart_Base() {
-
+                         int counter = 0;
                          CTP_vec         = CTP_vec_in;
                          cross_ctrs_pos_ = cross_ctrs_pos_in;
                          Tsizes_cml      = std::make_shared<std::vector<int>>(0);
@@ -150,11 +152,14 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
 
                          get_ctp_idxs_ranges();
                          get_name();
+                         std::cout << "finished building cmtp" << std::endl;
                        };
 
 
     //fix names; CTP_vec should at least be private
     std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> get_CTP_vec() const { return CTP_vec; }  ;
+
+    std::pair<int,int> get_pre_contract_ctr_rel_pos( std::pair<int,int>& ctr_pos ) { throw std::logic_error("not implemented yet!! Aborting!!" );  return std::make_pair(-1, -1 ); };
 
     void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> Tmap,
                        std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
@@ -167,6 +172,7 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
                                   std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base> >> ACompute_list,
                                   std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map);
 
+    // TODO : Remove, this should not be needed once the mutiltensor nesting is done correctly.
     std::shared_ptr<CtrMultiTensorPart<DataType>>
     Binary_Contract_diff_tensors_MT( std::string T1, std::string T2, std::pair<int,int> ctr_todo,
                                      std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
@@ -176,4 +182,6 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
 
 };
 
+extern template class CtrTensorPart<double>;
+extern template class CtrMultiTensorPart<double>;
 #endif

@@ -2,7 +2,7 @@
 #include <src/prop/proptool/algebraic_manipulator/ctrtensop.h>
 #include <src/prop/proptool/proputils.h>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator.h>
-
+#include <cassert>
 using namespace std;
   
 ///////////////////////////////////////////////////////////////////////////
@@ -52,7 +52,8 @@ string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_c
 //////////////////////////////////////////////////////////////////////////////
 void CtrTensorPart_Base::get_ctp_idxs_ranges(){
 //////////////////////////////////////////////////////////////////////////////
-
+//cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << endl;
+int counter = 0;
   vector<bool> get_unc(full_idxs_->size(), true);
   for (int ii =0; ii != ctrs_pos_->size() ; ii++){
     get_unc[ctrs_pos_->at(ii).first] = false;
@@ -76,9 +77,9 @@ void CtrTensorPart_Base::get_ctp_idxs_ranges(){
   } 
 
   unc_rel_pos_ = make_shared<map<int,int>>();
-  for( int ii =0 ; ii != unc_pos_->size(); ii++) 
+  for( int ii =0 ; ii != unc_pos_->size(); ii++) { 
     unc_rel_pos_->emplace(unc_pos_->at(ii), ii);
- 
+  }
   return; 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +118,7 @@ cout << "CtrTensorPart<DataType>::FullContract" << endl;
 #endif 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << endl <<  "CtrTensorPart<DataType>::FullContract : CTP name =  " << name_ << endl;
-
+int counter = 0 ;
   while ( ctrs_todo_->size() != 0 ){ 
 
     string CTP_in_name = get_next_name(ctrs_done_);
@@ -125,15 +126,19 @@ cout << endl <<  "CtrTensorPart<DataType>::FullContract : CTP name =  " << name_
     string CTP_out_name = get_next_name(ctrs_done_);
     ctrs_todo_->pop_back();
 
-    shared_ptr<CtrTensorPart<DataType>> CTP_in;
+    shared_ptr<CtrTensorPart_Base> CTP_in;
     if ( Tmap->find(CTP_in_name) == Tmap->end()) {
       shared_ptr<vector<pair<int,int>>> new_ctrs_pos = make_shared<vector<pair<int,int>>>(*ctrs_todo_);
       shared_ptr<vector<pair<int,int>>> new_ReIm_factors = make_shared<vector<pair<int,int>>>(1, make_pair(1,1));
+
       CTP_in = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos, new_ReIm_factors );
-      Tmap->emplace(CTP_in->name_,  CTP_in);
+      Tmap->emplace(CTP_in->name(),  CTP_in);
     } else {
-      CTP_in = dynamic_pointer_cast<CtrTensorPart<DataType>>(Tmap->at(CTP_in_name));
+     // CTP_in = dynamic_pointer_cast<CtrTensorPart<DataType>>(Tmap->at(CTP_in_name));
+      CTP_in = Tmap->at(CTP_in_name);
+      assert(CTP_in);
     }
+    CTP_in->dependents_.emplace(CTP_out_name);
     CTP_in->dependents_.emplace(name_);
  
     pair<int,int> ctrs_rel_pos_in = get_pre_contract_ctr_rel_pos( ctrs_done_->back() ) ;
@@ -143,7 +148,7 @@ cout << endl <<  "CtrTensorPart<DataType>::FullContract : CTP name =  " << name_
       CTP_in->FullContract(Tmap, ACompute_list_new, ACompute_map);                                                       
     }
 
-    shared_ptr<CtrTensorPart<DataType>> CTP_out;
+    shared_ptr<CtrTensorPart_Base> CTP_out;
     if ( Tmap->find(CTP_out_name) == Tmap->end()) {
 
       shared_ptr<vector<pair<int,int>>> new_ctrs_pos = make_shared<vector<pair<int,int>>>(*ctrs_done_);
@@ -152,10 +157,11 @@ cout << endl <<  "CtrTensorPart<DataType>::FullContract : CTP name =  " << name_
       Tmap->emplace(CTP_out_name,  CTP_out); 
 
     } else {
-      CTP_out = dynamic_pointer_cast<CtrTensorPart<DataType>>(Tmap->at(CTP_out_name));
+      CTP_out = Tmap->at(CTP_out_name);
     }
     CTP_out->dependencies_.emplace(name_);
 
+    // TODO This does nothing at the moment, but you want these ifs here when you do the proper treatment of excitation ops, so keep it!
     if ( full_idxs_->at(ctrs_done_->back().first)[0] == 'X' || full_idxs_->at(ctrs_done_->back().second)[0] == 'X' ) { 
       if ( full_idxs_->at(ctrs_done_->back().first)[0] != 'X' || full_idxs_->at(ctrs_done_->back().second)[0] != 'X' ) { // TODO replace with CtrOp_single_id
         ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name_ << "'s Acompute_list"<<  endl;
@@ -163,9 +169,9 @@ cout << endl <<  "CtrTensorPart<DataType>::FullContract : CTP name =  " << name_
         ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name_ << "'s Acompute_list"<<  endl;
       }
     } else  {  
-      cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done_->back().first << ","<< ctrs_done_->back().second << ") to get " << CTP_out_name ; cout.flush();
       ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name_ << "'s Acompute_list"<<  endl;
     }
+    cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done_->back().first << ","<< ctrs_done_->back().second << ") to get " << CTP_out_name ; cout.flush();
 
     shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list_out =  make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list);
     ACompute_map->emplace(CTP_out_name, ACompute_list_out);
@@ -292,19 +298,19 @@ cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors" << endl;
    CTP_new->ctrs_done_ = ctrs_done_;
    Tmap->emplace(CTP_new->name_, CTP_new);
     
-
-   // if ( full_idxs_->at(abs_ctr.first)[0] == 'X' || full_idxs_->at(abs_ctr.second)[0] == 'X' ) {
-   //   if ( full_idxs_->at(abs_ctr.first)[0] != 'X' || full_idxs_->at(abs_ctr.second)[0] != 'X' ) { // TODO replace with CtrOp_single_id
-   //     ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
-   //                                                         abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
-   //   } else {  // TODO replace with CtrOp_exc_ids 
-   //     ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
-   //                                                         abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
-   //   }
-   // } else  {  
+    // TODO This does nothing at the moment, but you want these ifs here when you do the proper treatment of excitation ops, so keep it!
+    if ( full_idxs_->at(abs_ctr.first)[0] == 'X' || full_idxs_->at(abs_ctr.second)[0] == 'X' ) {
+      if ( full_idxs_->at(abs_ctr.first)[0] != 'X' || full_idxs_->at(abs_ctr.second)[0] != 'X' ) { // TODO replace with CtrOp_single_id
+        ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
+                                                            abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+      } else {  // TODO replace with CtrOp_exc_ids 
+        ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
+                                                            abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+      }
+    } else  {  
        ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
                                                            abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
-   // }
+    }
 
    ACompute_map->emplace( CTP_new->get_next_name(CTP_new->ctrs_done_), make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list));
    
