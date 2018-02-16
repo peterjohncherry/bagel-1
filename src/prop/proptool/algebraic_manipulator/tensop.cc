@@ -561,7 +561,12 @@ template<typename DataType>
 void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>>  ctp_vec,  // ctp : contracted_tensor_parts
                                                    shared_ptr<vector<pair<pair<int,int>, pair<int,int>>>> ccp_vec  ){ // ccp : cross_ctrs_pos
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << endl; 
   cout << "MultiTensOp::MultiTensOp<DataType>::get_cmtp " << endl;
+  
+  auto ctp_vec_buff =  make_shared<vector<shared_ptr<CtrTensorPart_Base>>>(*ctp_vec);  
+  auto ccp_vec_buff =  make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(*ccp_vec);
+  auto cmtp_orig_ctp_order = make_shared<CtrMultiTensorPart<DataType>>(ctp_vec_buff, ccp_vec_buff);
 
   vector<pair<pair<int,int>, pair<int,int>>>::iterator ccp_it = ccp_vec->begin();
   int counter = 0 ;
@@ -592,8 +597,10 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
       print_vec_elem_names(*ctp_vec_tatb , "ctp_vec_tatb" ) ; cout << endl;
       print_pair_pair_vector( *ccp_vec_tatb, "ccp_vec_tatb" ); cout <<endl;
       print_vec_elem_names(*ctp_vec , "ctp_vec" ) ; cout << endl;
-      print_pair_pair_vector( *ccp_vec_merged_tatb, "ccp_vec_merged_tatb" ); cout <<endl;
+      print_pair_pair_vector( *ccp_vec_merged_tatb, "ccp_vec_merged_tatb" );
+      cout << endl;
       shared_ptr<CtrMultiTensorPart<DataType>> cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb );
+      cout << endl;
       CMTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
 
       shift_ccp_and_ctp_vecs( cmtp_tatb, ta_pos, tb_pos, ctp_vec, ccp_vec_merged_tatb );
@@ -608,20 +615,39 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
 
   } else { 
     while ( ctp_vec->size() > 2 ) { 
+      cout << " XX" << endl;
       auto ctp_vec_tatb = make_shared<vector<shared_ptr<CtrTensorPart_Base>>>( vector<shared_ptr<CtrTensorPart_Base>> { *(ctp_vec->end()-2), *(ctp_vec->end()-1) } );
       auto ccp_vec_tatb = make_shared<vector<pair<pair<int,int>, pair<int,int>> >>(0);
+      cout << endl;
       auto cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb );
+      cout << endl;
       CMTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
       cout << "cmtp_tatb->name() = "<< cmtp_tatb->name()  << endl;
       ctp_vec->pop_back(); 
-      ctp_vec->pop_back(); 
+      ctp_vec->back() = cmtp_tatb;
     }
   }   
 
-  shared_ptr<CtrMultiTensorPart<DataType>> new_cmtp = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec, ccp_vec );
-  cout <<" new_cmtp->name() = " << new_cmtp->name() <<endl; 
-  CMTP_map_->emplace(new_cmtp->name(), new_cmtp ) ;
-  CTP_map_->emplace(new_cmtp->name(), new_cmtp );
+  cout << endl;
+  shared_ptr<CtrMultiTensorPart<DataType>> cmtp_new_ctp_order = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec, ccp_vec );
+  cout << endl;
+
+  print_vector( *(cmtp_orig_ctp_order->full_idxs()) , " cmtp_orig_ctp_order->full_idxs()" ) ; cout << endl;  
+  print_vector( *(cmtp_new_ctp_order->full_idxs()) , " cmtp_new_ctp_order->full_idxs()" ) ; cout << endl;  
+  print_vector( *(cmtp_orig_ctp_order->full_idxs()) , " cmtp_orig_ctp_order->unc_idxs()" ) ; cout << endl;  
+  print_vector( *(cmtp_new_ctp_order->full_idxs()) , " cmtp_new_ctp_order->unc_idxs()" ) ; cout << endl;  
+  std::shared_ptr<std::vector<int>> new_order_to_orig_order =  get_pattern_match_order( cmtp_orig_ctp_order->unc_idxs(), cmtp_new_ctp_order->unc_idxs() ) ; 
+
+  print_vector( *(new_order_to_orig_order), " new_order_to_orig_order" ) ; cout << endl;  
+
+  cmtp_orig_ctp_order->use_new_order_compute_list( new_order_to_orig_order, cmtp_new_ctp_order->name() );
+
+  cout << "cmtp_new_ctp_order->name() = " << cmtp_new_ctp_order->name() <<endl; 
+  cout << "cmtp_orig_ctp_order->name() = " << cmtp_new_ctp_order->name() <<endl; 
+  CMTP_map_->emplace(cmtp_orig_ctp_order->name(), cmtp_orig_ctp_order ) ;
+  CTP_map_->emplace( cmtp_orig_ctp_order->name(), cmtp_orig_ctp_order );
+  CMTP_map_->emplace(cmtp_new_ctp_order->name(), cmtp_new_ctp_order ) ;
+  CTP_map_->emplace( cmtp_new_ctp_order->name(), cmtp_new_ctp_order );
 
   return;
 }
@@ -650,6 +676,7 @@ MultiTensOp::MultiTensOp<DataType>::shift_ccp_and_ctp_vecs( shared_ptr<CtrMultiT
     }
   }
   new_ctp_vec->back() = tatb_cmtp;
+  ctp_vec = new_ctp_vec;
 
   shifted_ctp_pos_map.emplace(ta, new_ctp_vec->size()-1);
   shifted_ctp_pos_map.emplace(tb, new_ctp_vec->size()-1);
@@ -663,8 +690,6 @@ MultiTensOp::MultiTensOp<DataType>::shift_ccp_and_ctp_vecs( shared_ptr<CtrMultiT
     ccp.first.first = shifted_ctp_pos_map.at(ccp.first.first);
     ccp.second.first = shifted_ctp_pos_map.at(ccp.second.first);
   }
-
-  ctp_vec = new_ctp_vec;
 
   return;
 }

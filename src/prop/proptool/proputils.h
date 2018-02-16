@@ -17,6 +17,7 @@
 #include <iostream>
 #include <numeric>
 #include <complex> 
+#include <cassert>
 namespace WickUtils {  
 
   using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
@@ -138,6 +139,20 @@ namespace WickUtils {
     std::cout << " ] "; std::cout.flush();
   }
 
+  template<typename DataType> // returns the relative order of the elements in destination and origin
+  std::shared_ptr<std::vector<int>> get_pattern_match_order( std::shared_ptr<std::vector<DataType>> destination , std::shared_ptr<std::vector<DataType>> origin ) { 
+    assert( destination->size() == origin->size() ); 
+    std::shared_ptr<std::vector<int>> new_order = std::make_shared<std::vector<int>>(destination->size()); 
+    std::vector<int>::iterator new_order_it = new_order->begin();  
+    for ( int ii = 0 ; ii != destination->size() ; ii++  ) 
+      for ( int jj = 0 ; jj != origin->size() ; jj++  ) 
+        if ( destination->at(ii) == origin->at(jj) ) {
+          *new_order_it++ = jj;
+          break;
+        }
+    assert( new_order_it == new_order->end()); // if this trips the vectors don't have the same elements 
+    return new_order;
+  }
 
 
   //TODO you need type name here, but why ? Find out, it could be a problem.

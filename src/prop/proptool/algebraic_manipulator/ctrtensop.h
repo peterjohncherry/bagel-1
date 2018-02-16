@@ -129,6 +129,10 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
     std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec;
     std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >> cross_ctrs_pos_;
 
+    bool get_compute_list_from_reordered_tens_;
+    std::string  reordered_tens_name_;
+    std::shared_ptr<std::vector<int>> reordering_; 
+
     CtrMultiTensorPart(){};
 
     CtrMultiTensorPart( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec_in,
@@ -141,6 +145,7 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
                          Tsizes_cml      = std::make_shared<std::vector<int>>(0);
                          ctrs_pos_       = std::make_shared<std::vector<std::pair<int,int>>>(0);
                          got_compute_list_ = false;
+                         get_compute_list_from_reordered_tens_ = false;
 
                          int cml_size = 0;
                          for (std::shared_ptr<CtrTensorPart_Base> ctp : *CTP_vec){
@@ -176,6 +181,13 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
     std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> get_CTP_vec() const { return CTP_vec; }  ;
 
     std::pair<int,int> get_pre_contract_ctr_rel_pos( std::pair<int,int>& ctr_pos ) { throw std::logic_error("not implemented yet!! Aborting!!" );  return std::make_pair(-1, -1 ); };
+
+    void use_new_order_compute_list( std::shared_ptr<std::vector<int>> reordering, std::string reordered_tens_name ) {
+             std::cout << "checkZZZZZ" << std::endl;
+             get_compute_list_from_reordered_tens_ = true;
+             reordering_ = reordering;
+             reordered_tens_name_ = reordered_tens_name; return; } 
+                                                                                         
 
     void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> Tmap,
                        std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,

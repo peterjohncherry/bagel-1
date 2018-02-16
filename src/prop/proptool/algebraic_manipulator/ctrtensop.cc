@@ -113,8 +113,8 @@ cout << "CtrTensorPart::get_pre_contract_ctr_rel_pos" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void CtrTensorPart<DataType>::FullContract( shared_ptr<map<string,shared_ptr<CtrTensorPart_Base> >> Tmap,
-                                         shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
-                                         shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
+                                            shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
+                                            shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_CtrTensorPart
 cout << "CtrTensorPart<DataType>::FullContract" << endl; 
@@ -197,7 +197,15 @@ cout << "CtrMultiTensorPart<DataType>::FullContract" << endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << endl << "CtrMultiTensorPart<DataType>::FullContract NEWVER :   CMTP name = " << name_ << endl;
 
-   if (ctrs_pos_->size() > 0 ) {
+  if ( get_compute_list_from_reordered_tens_ ) {  
+              
+    Tmap->at(reordered_tens_name_)->FullContract( Tmap, ACompute_list, ACompute_map) ; 
+    ACompute_list = ACompute_map->at( reordered_tens_name_ ); 
+     
+    ACompute_list->push_back( make_shared<CtrOp_reorder> ( reordered_tens_name_, name_, reordering_, "reordering" ));
+    cout << "reordering " <<  reordered_tens_name_ << " ---> " <<  name_  << " added to " << name_ << "'s Acompute_list"<<  endl;
+
+  } else if (ctrs_pos_->size() > 0 ) {
     
      cout << "CTP_vec->size() = " << CTP_vec->size() <<  "     cross_ctrs_pos_->size() = " <<  cross_ctrs_pos_->size() << endl;
      if ( (CTP_vec->size() == 2) && ( cross_ctrs_pos_->size() > 0 ) ) {
@@ -327,10 +335,10 @@ cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors" << endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<CtrMultiTensorPart<DataType>>
-CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors_MT(string T1name, string T2name, pair<int,int> ctr,
-                                                           shared_ptr< map<string, shared_ptr<CtrTensorPart_Base>> > Tmap,
-                                                           shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
-                                                           shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
+CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors_MT( string T1name, string T2name, pair<int,int> ctr,
+                                                               shared_ptr< map<string, shared_ptr<CtrTensorPart_Base>> > Tmap,
+                                                               shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
+                                                               shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_CtrMultiTensorPart
 cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors_MT" << endl; 
