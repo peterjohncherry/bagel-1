@@ -34,6 +34,7 @@ class CtrTensorPart_Base  {
 
   public :
     CtrTensorPart_Base()  { //TODO Fix this rubbish 
+                    std::cout << "CtrMultiTensorPart::CtrMultiTensorPart base" << std::endl; 
                     full_idxs_      = std::make_shared< std::vector<std::string>>(0);
                     full_id_ranges_ = std::make_shared< std::vector<std::string>>(0);
                     ctrs_pos_       = std::make_shared< std::vector<std::pair<int,int>>>(0);
@@ -49,7 +50,16 @@ class CtrTensorPart_Base  {
                         std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos,
                         std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors ) :
                         full_id_ranges_(full_id_ranges), full_idxs_(full_idxs), ctrs_pos_(ctrs_pos),
-                        ReIm_factors_(ReIm_factors), got_data_(false), size_( full_idxs_->size()) {}
+                        ReIm_factors_(ReIm_factors), got_data_(false), size_( full_idxs_->size()) {
+                          std::cout << "CtrTensorPart::CtrTensorPart base" << std::endl;
+                          ctrs_todo_ = std::make_shared<std::vector<std::pair<int,int>>>(*ctrs_pos);
+                          ctrs_done_ = std::make_shared<std::vector<std::pair<int,int>>>(0);
+                          got_data_ = false;
+                          std::cout << "CtrTensorPart::CtrTensorPart" << std::endl; 
+                          get_ctp_idxs_ranges();
+                          get_name();
+                        } 
+
     ~CtrTensorPart_Base(){};
 
     std::string name() { return name_; }
@@ -99,17 +109,11 @@ class CtrTensorPart : public CtrTensorPart_Base /*, public: std::enable_shared_f
                   std::shared_ptr<std::vector<std::string>> full_id_ranges,
                   std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos,
                   std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors ) :
-                  CtrTensorPart_Base( full_idxs, full_id_ranges, ctrs_pos, ReIm_factors) {
-                  ctrs_todo_ = std::make_shared<std::vector<std::pair<int,int>>>(*ctrs_pos);
-                  ctrs_done_ = std::make_shared<std::vector<std::pair<int,int>>>(0);
-                  got_data_ = false;
-                  get_ctp_idxs_ranges();
-                  get_name();
-                };
+                  CtrTensorPart_Base( full_idxs, full_id_ranges, ctrs_pos, ReIm_factors){};
 
-     void FullContract(std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
-                       std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
-                       std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map);
+     void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
+                        std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
+                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> ACompute_map );
 
     std::pair<int,int> get_pre_contract_ctr_rel_pos( std::pair<int,int>& ctr_pos );
 
@@ -130,6 +134,7 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
     CtrMultiTensorPart( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec_in,
                         std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >> cross_ctrs_pos_in  )
                         : CtrTensorPart_Base() {
+                         std::cout << "CtrMultiTensorPart::CtrMultiTensorPart" << std::endl; 
                          int counter = 0;
                          CTP_vec         = CTP_vec_in;
                          cross_ctrs_pos_ = cross_ctrs_pos_in;

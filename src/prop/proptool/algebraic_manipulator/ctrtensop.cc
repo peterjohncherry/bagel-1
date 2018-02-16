@@ -52,7 +52,7 @@ string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_c
 //////////////////////////////////////////////////////////////////////////////
 void CtrTensorPart_Base::get_ctp_idxs_ranges(){
 //////////////////////////////////////////////////////////////////////////////
-//cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << endl;
+cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
 int counter = 0;
   vector<bool> get_unc(full_idxs_->size(), true);
   for (int ii =0; ii != ctrs_pos_->size() ; ii++){
@@ -134,7 +134,6 @@ int counter = 0 ;
       CTP_in = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos, new_ReIm_factors );
       Tmap->emplace(CTP_in->name(),  CTP_in);
     } else {
-     // CTP_in = dynamic_pointer_cast<CtrTensorPart<DataType>>(Tmap->at(CTP_in_name));
       CTP_in = Tmap->at(CTP_in_name);
       assert(CTP_in);
     }
