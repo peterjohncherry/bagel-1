@@ -570,8 +570,8 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
       int inside_counter = 0 ;
       print_vec_elem_names(*ctp_vec , "ctp_vec" ) ; cout << endl;
       print_pair_pair_vector( *ccp_vec, "ccp_vec" ); cout <<endl;
-      int ta_pos = ccp_it->first.first;
-      int tb_pos = ccp_it->second.first;
+      int ta_pos = ccp_it->first.first < ccp_it->second.first ? ccp_it->first.first : ccp_it->second.first ;
+      int tb_pos = ccp_it->first.first > ccp_it->second.first ? ccp_it->first.first : ccp_it->second.first ;
 
       auto ctp_vec_tatb = make_shared<vector<shared_ptr<CtrTensorPart_Base>>>( vector<shared_ptr<CtrTensorPart_Base>> { ctp_vec->at(ta_pos), ctp_vec->at(tb_pos) } );
       auto ccp_vec_tatb = make_shared<vector<pair<pair<int,int>, pair<int,int>> >>(0);
@@ -579,9 +579,9 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
 
       for ( auto ccp_ab_it = ccp_vec->begin(); ccp_ab_it != ccp_vec->end();  ccp_ab_it++ ) {
         if (ccp_ab_it->first.first == ta_pos && ccp_ab_it->second.first == tb_pos) {
-          ccp_vec_tatb->push_back( make_pair( make_pair(0, ccp_ab_it->first.second), make_pair(1, ccp_ab_it->second.second) ));
+          ccp_vec_tatb->push_back( make_pair( make_pair( 0, ccp_ab_it->first.second), make_pair(1, ccp_ab_it->second.second) ));
         } else if (ccp_ab_it->first.first == tb_pos && ccp_ab_it->second.first == ta_pos){
-          ccp_vec_tatb->push_back( make_pair( make_pair(0, ccp_ab_it->second.second), make_pair(1, ccp_ab_it->first.second) ));
+          ccp_vec_tatb->push_back( make_pair( make_pair( 0, ccp_ab_it->second.second), make_pair(1, ccp_ab_it->first.second) ));
         } else {
           cout << "X" << counter++ << ", " << inside_counter++  << " not tatb" << endl; 
           ccp_vec_merged_tatb->push_back(*ccp_ab_it);
@@ -591,18 +591,18 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
 
       print_vec_elem_names(*ctp_vec_tatb , "ctp_vec_tatb" ) ; cout << endl;
       print_pair_pair_vector( *ccp_vec_tatb, "ccp_vec_tatb" ); cout <<endl;
-      cout << " X" << inside_counter++ << "after inner for" << endl;
+      print_vec_elem_names(*ctp_vec , "ctp_vec" ) ; cout << endl;
+      print_pair_pair_vector( *ccp_vec_merged_tatb, "ccp_vec_merged_tatb" ); cout <<endl;
       shared_ptr<CtrMultiTensorPart<DataType>> cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb );
-      cout << " X" << inside_counter++ << "after inner for" << endl;
       CMTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
-      cout << " X" << inside_counter++ << endl;
 
       shift_ccp_and_ctp_vecs( cmtp_tatb, ta_pos, tb_pos, ctp_vec, ccp_vec_merged_tatb );
-      cout << " X" << inside_counter++ <<  "after inner for" << endl;
+      cout << "ta_pos = " << ta_pos << "    tb_pos = " << tb_pos << endl;
+      print_vec_elem_names(*ctp_vec , "shifted ctp_vec" ) ; cout << endl;
+      print_pair_pair_vector( *ccp_vec_merged_tatb, "shifted ccp_vec_merged_tatb" ); cout <<endl;
+
       ccp_vec = make_shared<vector<pair<pair<int,int>, pair<int,int>> >>(*ccp_vec_merged_tatb);
-      cout << " X" << inside_counter++ <<  "after inner for" << endl;
       ccp_it = ccp_vec->begin();
-      cout << " X" << inside_counter++ <<  "after inner for" << endl;
 
     } while( ccp_vec->size() != 0 ) ;
 
@@ -640,7 +640,7 @@ MultiTensOp::MultiTensOp<DataType>::shift_ccp_and_ctp_vecs( shared_ptr<CtrMultiT
   auto new_ctp_vec = make_shared<vector<shared_ptr<CtrTensorPart_Base>>>( ctp_vec->size()-1 );
   auto new_ctp_vec_it = new_ctp_vec->begin();
   map<int,int> shifted_ctp_pos_map;
-  int tb_id_shift = ctp_vec->at(ta)->size()-1;
+  int tb_id_shift = ctp_vec->at(ta)->size();
 
   int new_ctp_pos = 0;
   for (int ii = 0 ; ii != ctp_vec->size() ; ii++ ){

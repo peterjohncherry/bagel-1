@@ -55,6 +55,9 @@ void CtrTensorPart_Base::get_ctp_idxs_ranges(){
 cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
 int counter = 0;
   vector<bool> get_unc(full_idxs_->size(), true);
+  print_pair_vector(*ctrs_pos_, "ctp_base_gci ctrs_pos"); cout << endl;
+  print_vector(*full_idxs_, "ctp_base_gci full_idxs"); cout << endl;
+
   for (int ii =0; ii != ctrs_pos_->size() ; ii++){
     get_unc[ctrs_pos_->at(ii).first] = false;
     get_unc[ctrs_pos_->at(ii).second] = false;
@@ -69,15 +72,15 @@ int counter = 0;
   int jj = 0;
   for ( int ii = 0 ; ii !=get_unc.size() ; ii++ ) {
     if (get_unc[ii]){
-      unc_id_ranges_->at(jj) = full_id_ranges_->at(ii);
-      unc_idxs_->at(jj)      = full_idxs_->at(ii);
-      unc_pos_->at(jj)       = ii;
+      unc_id_ranges_->at(jj) = full_id_ranges_->at(ii); cout << "A";cout.flush();
+      unc_idxs_->at(jj)      = full_idxs_->at(ii);      cout << "B";cout.flush();
+      unc_pos_->at(jj)       = ii;                      cout << "C";cout.flush();
       jj++;
     }
   } 
 
   unc_rel_pos_ = make_shared<map<int,int>>();
-  for( int ii =0 ; ii != unc_pos_->size(); ii++) { 
+  for( int ii = 0 ; ii != unc_pos_->size(); ii++) { 
     unc_rel_pos_->emplace(unc_pos_->at(ii), ii);
   }
   return; 
