@@ -142,6 +142,12 @@ Equation_Computer_Base<DataType>::evaluate_term( string expression_name, vector<
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   std::cout << "Equation_Computer_Base<DataType>::evaluate_term B" << std::endl;
 
+  cout << "expression_name = " << expression_name  << " = [ ";  cout.flush();
+  for ( auto& xx : fixed_idxs ) {
+    cout << "(" << xx.first << ","<< xx.second << ") "; cout.flush();
+  } 
+  cout << "]" << endl;
+
   shared_ptr<Expression<DataType>> expr =  equation_->get_term( expression_name, fixed_idxs);
 
   cout << "got expression : expr->name() = " << expr->name() <<endl;  

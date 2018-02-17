@@ -24,8 +24,10 @@ cout << "Equation_Computer_LinearRM<DataType>::solve_equation()" << endl;
   for (int QQ = 0; QQ != ref_space_dim; ++QQ)  
     for ( int MM = 0; MM != ref_space_dim; ++MM ){ 
       
-      fixed_indexes = { make_pair("T1", MM ), make_pair("e_shift", QQ), make_pair("Ket", QQ)  };
+      fixed_indexes = { make_pair("bra_id", MM ), make_pair("X1", QQ), make_pair("ket_id", QQ)  };
+      sort( fixed_indexes.begin() , fixed_indexes.end() ); 
       this->evaluate_term( "proj_ham", fixed_indexes );
+      cout << "evaluated term in eq_lrm" << endl;
       //shared_ptr<MultiTensor_<double>> residues = this->get_tensop_vector( "residual", T1_MM__eshift_QQ ) ;
     } 
 
@@ -40,9 +42,11 @@ cout << "Equation_Computer_LinearRM<DataType>::solve_equation()" << endl;
     residues = this->get_tensop_vector( "residual", fixed_indexes );
 
     fixed_indexes = { make_pair( "bra", LL ), make_pair( "T1", LL ) } ;
+      sort( fixed_indexes.begin() , fixed_indexes.end() ); 
     pt_amps = this->get_tensop_vector( "pt_amps",  fixed_indexes );
 
     fixed_indexes= { make_pair( "bra", LL ), make_pair( "ket", LL ) } ;
+      sort( fixed_indexes.begin() , fixed_indexes.end() ); 
     denom = this->get_tensop_vector( "denom" , fixed_indexes );
 
     if ( residues->rms() < 1.0e-15) {
@@ -68,6 +72,7 @@ cout << "Equation_Computer_LinearRM<DataType>::solve_equation()" << endl;
       for (int MM = 0; MM != ref_space_dim; ++MM){  // MM bra vector
         for (int NN = 0; NN != ref_space_dim; ++NN) {  // NN ket vector
           fixed_indexes = { make_pair("T1",MM), make_pair("T2", NN), make_pair("bra", LL) };  
+	  sort( fixed_indexes.begin() , fixed_indexes.end() ); 
           this->evaluate_term( "residual", fixed_indexes  );
         }
       }
@@ -97,12 +102,14 @@ cout << "Equation_Computer_LinearRM<DataType>::solve_equation()" << endl;
   //This is the last term in the effective Hamiltonian    
   for (int NN = 0; NN != ref_space_dim; ++NN) {
     fixed_indexes = { make_pair("state",NN)};  
+	  sort( fixed_indexes.begin() , fixed_indexes.end() ); 
     DataType norm = this->get_scalar_result( "norm", fixed_indexes );
     norm = (DataType)(0.0);
 
     for (int LL = 0; LL != ref_space_dim; ++LL)  // bra
       for (int MM = 0; MM != ref_space_dim; ++MM){  // ket
         fixed_indexes = { make_pair("bra",NN), make_pair("ket", MM) };  
+	  sort( fixed_indexes.begin() , fixed_indexes.end() ); 
         this->evaluate_term( "norm",  fixed_indexes );
       }
     
@@ -118,6 +125,7 @@ cout << "Equation_Computer_LinearRM<DataType>::solve_equation()" << endl;
   for (int QQ = 0; QQ != ref_space_dim; ++QQ) {
     for (int MM = 0; MM != ref_space_dim; ++MM){ 
       fixed_indexes = { make_pair("bra",MM), make_pair("ket", QQ) };  
+      sort( fixed_indexes.begin() , fixed_indexes.end() ); 
       this->evaluate_term( "norm", fixed_indexes );
       this->evaluate_term( "proj_ham", fixed_indexes );
     }

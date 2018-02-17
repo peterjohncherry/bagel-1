@@ -8,6 +8,7 @@
 #include <src/prop/proptool/integrals/moint_computer.h>
 #include <src/prop/proptool/algebraic_manipulator/system_info.h>
 #include <src/prop/proptool/task_translator/equation_computer.h>
+#include <src/prop/proptool/task_translator/equation_computer_linearRM.h>
 
 namespace bagel {
 namespace  System_Computer { 

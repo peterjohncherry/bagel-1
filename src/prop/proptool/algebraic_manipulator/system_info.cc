@@ -60,9 +60,6 @@ System_Info<DataType>::construct_equation_task_list( string equation_name ) {
   } else if (equation_map_->at( equation_name)->type() == "LinearRM" ) { 
     equation_map_->at( equation_name)->generate_state_specific_terms();
   } 
-//  if ( eqn->type() == "Value" ) 
-//    for ( auto& expression_info : *eqn->expression_term_map_ ) 
-//      Build_Expression ( expression_info.first );
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,12 +146,15 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
     new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map, MT_map, CTP_map, CMTP_map );
     cout << " set maps in new_eqn " <<endl;
     new_eqn_lrm->generate_state_specific_terms();
+    cout << "got state specific terms" <<endl;
     equation_map_->emplace( name, new_eqn); 
   
+    cout << "put in map" <<endl;
   } else {  
     throw logic_error( "equation type \""+ type + "\" not implemented yet! Aborting!"); 
 
   }
+  cout << "leaving create equation" << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

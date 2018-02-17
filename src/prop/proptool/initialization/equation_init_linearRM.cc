@@ -179,8 +179,17 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
 template<typename DataType> 
 void Equation_Init_LinearRM<DataType>::initialize_all_terms() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Equation_Init_LinearRM<DataType>::initialize_expressions()" << endl;
+  cout << "Equation_Init_LinearRM<DataType>::initialize_all_terms()" << endl;
 
+  cout << "range_map_ = " << endl;
+  for (auto& elem : *range_map_ ) { 
+    cout << "{ " <<  elem.first  << ", [ ";  cout.flush(); 
+    for ( int xx : *elem.second ) 
+    cout << xx << " "; cout.flush();
+    cout << "] } "<< endl;
+  }
+  cout << endl;
+ 
   for ( int ii = 0 ; ii != master_expression_->term_list_->size(); ii++  ){
     cout << " ii = " << ii << endl;
     int counter = 0;

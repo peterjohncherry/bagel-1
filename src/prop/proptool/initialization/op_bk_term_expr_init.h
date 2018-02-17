@@ -66,17 +66,15 @@ class Op_Init {
 // though these terms will still be merged (if possible) in expression
 class BraKet_Init {
 
-  public :
-
-   std::shared_ptr<std::vector<Op_Init>> op_list_;
-
    std::string bra_index_;
    int* bra_index_ptr_;
 
    std::string ket_index_;
    int* ket_index_ptr_;
 
+  public :
    std::string name_;
+   std::shared_ptr<std::vector<Op_Init>> op_list_;
 
    BraKet_Init( std::shared_ptr<std::vector<Op_Init>> op_list,
                 std::string bra_index, int* bra_index_ptr, std::string ket_index, int* ket_index_ptr ) :
@@ -108,7 +106,8 @@ class BraKet_Init {
      }
      return;
    }
-
+    
+//   Op_Init& op_list( int jj ) { return op_list_->at(jj); }
    int bra_index(){ return *bra_index_ptr_; }
    int ket_index(){ return *ket_index_ptr_; }
    
@@ -129,7 +128,8 @@ class Term_Init {
     std::shared_ptr<std::vector<BraKet_Init>> braket_list_;
     std::shared_ptr<std::vector<std::string>> braket_factors_;
     std::shared_ptr<std::map<std::string, int>> idx_val_map_;
-   
+    std::shared_ptr<std::map<std::string, std::string>> idx_name_map_;
+
     std::string alg_name_;
 
     Term_Init( std::string name, std::string type,

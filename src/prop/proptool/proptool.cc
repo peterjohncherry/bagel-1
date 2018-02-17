@@ -348,6 +348,7 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
   eqn_init->initialize_expressions();
  
   sys_info_->create_equation( eqn_name, "Value", eqn_init->term_braket_map_ , eqn_init->expression_term_map_ );
+      
 
   equation_execution_list_.push_back(eqn_name); 
 
@@ -398,10 +399,11 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
  
   sys_info_->create_equation( eqn_name, "LinearRM", eqn_init->term_braket_map_ , eqn_init->expression_term_map_,
                                                     eqn_init->term_braket_map_state_spec_ , eqn_init->expression_term_map_state_spec_ );
-
+  cout << "hello" <<endl; 
   cout << "eqn_name = " << eqn_name << endl;
   equation_execution_list_.push_back(eqn_name); 
-
+  cout << " LEAVING PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
+  
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
