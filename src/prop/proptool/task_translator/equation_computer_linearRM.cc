@@ -11,7 +11,7 @@ void Equation_Computer_LinearRM<DataType>::solve_equation(){
 //////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Equation_Computer_LinearRM<DataType>::solve_equation()" << endl; 
 
-  //ref_space_dim = 3;
+  ref_space_dim = 3;
 
   auto tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>(); 
   shared_ptr<MultiTensor_<DataType>> residues; 
@@ -27,7 +27,7 @@ cout << "Equation_Computer_LinearRM<DataType>::solve_equation()" << endl;
       fixed_indexes = { make_pair("bra_id", MM ), make_pair("X1", QQ), make_pair("ket_id", QQ)  };
       sort( fixed_indexes.begin() , fixed_indexes.end() ); 
       this->evaluate_term( "proj_ham", fixed_indexes );
-      cout << "evaluated term in eq_lrm" << endl;
+      cout << "evaluated proj_ham for bra_id = " << QQ << " X1 = ket_id = " << MM  << endl;
       //shared_ptr<MultiTensor_<double>> residues = this->get_tensop_vector( "residual", T1_MM__eshift_QQ ) ;
     } 
 
@@ -35,18 +35,13 @@ cout << "Equation_Computer_LinearRM<DataType>::solve_equation()" << endl;
   // should sum over states, but for now just doing state specific case setting bra and ket to LL
   bool converged = true;
   for (int LL = 0; LL != ref_space_dim; LL++) { 
+    fixed_indexes= { make_pair( "bra_id", LL ), make_pair( "ket_id", LL ), make_pair("X1",LL) } ;
+    sort( fixed_indexes.begin() , fixed_indexes.end() ); 
     bool conv = false;
-    fixed_indexes = { make_pair( "bra", LL )}; 
 
     this->evaluate_term( "residual" , fixed_indexes ); 
     residues = this->get_tensop_vector( "residual", fixed_indexes );
-
-    fixed_indexes = { make_pair( "bra", LL ), make_pair( "T1", LL ) } ;
-      sort( fixed_indexes.begin() , fixed_indexes.end() ); 
     pt_amps = this->get_tensop_vector( "pt_amps",  fixed_indexes );
-
-    fixed_indexes= { make_pair( "bra", LL ), make_pair( "ket", LL ) } ;
-      sort( fixed_indexes.begin() , fixed_indexes.end() ); 
     denom = this->get_tensop_vector( "denom" , fixed_indexes );
 
     if ( residues->rms() < 1.0e-15) {

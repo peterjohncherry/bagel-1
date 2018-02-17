@@ -254,7 +254,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigmaN( shared_ptr<Ga
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gamma2_from_sigma2( shared_ptr<GammaInfo> gamma2_info ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl; 
+cout << "B_Gamma_Computer::get_gamma2_from_sigma2" << endl; 
 
   string sigma2_name =  gamma2_info->sigma_name();
   string Bra_name    =  gamma2_info->Bra_name();
@@ -278,6 +278,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<Ga
   string Ket_name = gamma2_info->Ket_name();
 
   get_wfn_data( gamma2_info->Ket_info() );
+  get_wfn_data( gamma2_info->Bra_info() );
 
   if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha() ) { 
 
@@ -345,7 +346,8 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a2( DataType* cvec_ptr
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_wfn_data( shared_ptr<CIVecInfo<DataType>>  cvec_info ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+cout << " B_Gamma_Computer::get_wfn_data " << endl;
+  
   string cvec_name = cvec_info->name();
   auto cvec_det_loc = det_old_map->find(cvec_name); 
   if( cvec_det_loc == det_old_map->end()){
@@ -355,7 +357,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_wfn_data( shared_ptr<CIVe
     det_old_map->emplace( cvec_name, det_cvec);
     cvec_old_map->emplace( cvec_name, make_shared<Civec>(*(cc_->data(II))) );
   }  
-
+  cout << "got " << cvec_name << " in cvec_old_map " <<endl; 
   return;
 }
 
@@ -375,8 +377,9 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::convert_civec_to_tensor( stri
     civec_tensor->zero();
     
     size_t idx_position = 0;
+    cout << "looking for old civec " << civec_name << " ....." ; cout.flush(); 
     shared_ptr<Civec> civector = cvec_old_map->at(civec_name); 
-    
+    cout << "found it!! " << endl;
     for ( Index idx_block : civec_idxrng[0].range() ){
 
        unique_ptr<DataType[]> civec_block(new DataType[idx_block.size()]);

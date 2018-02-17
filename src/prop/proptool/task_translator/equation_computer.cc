@@ -112,7 +112,7 @@ Equation_Computer_Base<DataType>::get_tensop_vector( string tensop_name, vector<
 
   vector<shared_ptr<Tensor_<DataType>>> tens_list(5); 
   // TODO replace with call to range map in equation for varios input idxs
-  vector<int> range = { 1,2,3,4,5}; 
+  vector<int> range = { 1,2,3,4,5 }; 
   for ( int  ii : range )  
     tens_list[ii] = tensop_data_map_->at(tensop_name);
 
