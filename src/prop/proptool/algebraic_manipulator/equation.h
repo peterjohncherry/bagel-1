@@ -32,12 +32,38 @@ class Equation_Base {
 
 //     std::shared_ptr<std::vector<std::<std::tuple<std::pair<std::string,int>>>>> term_val_list_;
 
+    std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>,
+                                   std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec_;
+
+    std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
+                              std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec_;
+
+    std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, std::shared_ptr<Expression<DataType>>>> term_map_; 
+
    public :
+     // for equation_value
      Equation_Base( std::string name, std::string type, std::shared_ptr<StatesInfo<DataType>> states_info, 
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map )
                     : name_(name), type_(type), states_info_(states_info), term_braket_map_(term_braket_map),
                       expression_term_map_(expression_term_map) {}
+ 
+    // for equation_linearrm
+    Equation_Base( std::string name, std::string type, std::shared_ptr<StatesInfo<DataType>> states_info, 
+                   std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
+                   std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map, 
+                   std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>,
+                                                  std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec,
+                   std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
+                                             std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec ) 
+                    : name_(name), type_(type), states_info_(states_info), term_braket_map_(term_braket_map),
+                      expression_term_map_(expression_term_map), term_braket_map_state_spec_(term_braket_map_state_spec),
+                      expression_term_map_state_spec_(expression_term_map_state_spec) {
+                      cout << " eqn_base for eqn_lrm" << endl;
+                      term_map_  = 
+                      std::make_shared<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, std::shared_ptr<Expression<DataType>>>>(); 
+                      }  
+
 
     ~Equation_Base(){};
 
@@ -66,6 +92,9 @@ class Equation_Base {
 
      std::string name() { return name_ ; }; 
      std::string type() { return type_ ; }; 
+
+     std::shared_ptr<Expression<DataType>>
+     get_term( std::string& term_name, std::vector<std::pair<std::string,int>>& idxvals ){ return term_map_->at(std::make_pair(term_name, idxvals)); } 
 
      virtual void generate_state_specific_terms() { throw std::logic_error ( "generate state specific terms not set for class Equation_Base!! Aborting!!"); }
 }; 

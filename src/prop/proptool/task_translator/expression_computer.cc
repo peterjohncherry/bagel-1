@@ -16,35 +16,49 @@ Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_
                                                                          shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    tensop_data_map       ):
   gamma_computer_(gamma_computer), expression_map_(expression_map), range_conversion_map_(range_conversion_map), tensop_data_map_(tensop_data_map) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  scalar_results_map = make_shared<map< string, DataType >>(); 
+  scalar_results_map = make_shared<map< string, DataType >>(); //TODO dumb, check why not in header and fix  
 }  
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename DataType >
+template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( string expression_name ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : " << expression_name <<  endl;
+  cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : name input : " << expression_name <<  endl;
+
+  shared_ptr<Expression<DataType>> expr = expression_map_->at(expression_name); cout << "got " << expression_name << " info "<< endl;
+  evaluate_expression(expr);
+  return;
+} 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+template < typename DataType >
+void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( shared_ptr<Expression<DataType>> expression ) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Expression<DataType>> input : " << expression->name() << endl;
+
+  string expression_name = expression->name();
 
   bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
   if ( !new_result )  
     cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
 
-  shared_ptr<Expression<DataType>> Expr = expression_map_->at(expression_name); cout << "got " << expression_name << " info "<< endl;
+  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_);
 
-  shared_ptr<TensOp_Computer::TensOp_Computer<DataType>> TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( Expr->ACompute_map_, Expr->CTP_map_, range_conversion_map_, tensop_data_map_);
 
+  cout << "X2" << endl;
   DataType result = 0.0;
   map< string, DataType > g_result_map;
 
+  cout << "X3" << endl;
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
-  for ( auto AG_contrib : *(Expr->gamma_info_map_) ) {
+  for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
 
     string gamma_name = AG_contrib.first;  cout << " gamma_name  = " << gamma_name << endl; 
 
     shared_ptr<Tensor_<DataType>> A_combined_data;
     // Build A_tensor to hold sums of different A-tensors.
     if ( gamma_name != "ID" ) {
-      A_combined_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(Expr->gamma_info_map_->at(gamma_name)->id_ranges())) );
+      A_combined_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(expression->gamma_info_map_->at(gamma_name)->id_ranges())) );
     } else {
       A_combined_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
     }  
@@ -52,8 +66,8 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
     A_combined_data->zero(); 
  
     // Loop through A-tensors needed for this gamma
-    auto A_contrib_loc = Expr->G_to_A_map_->find( gamma_name );
-    if ( (A_contrib_loc != Expr->G_to_A_map_->end()) &&  (A_contrib_loc->second->size() != 0) ) {
+    auto A_contrib_loc = expression->G_to_A_map_->find( gamma_name );
+    if ( (A_contrib_loc != expression->G_to_A_map_->end()) &&  (A_contrib_loc->second->size() != 0) ) {
   
 
       for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
@@ -64,7 +78,7 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
         if (check_AContrib_factors(A_contrib))
           continue;
       
-	print_AContraction_list( Expr->ACompute_map_->at(A_contrib_name), A_contrib_name );
+	print_AContraction_list( expression->ACompute_map_->at(A_contrib_name), A_contrib_name );
         TensOp_Machine->Calculate_CTP( A_contrib );
 
         if ( gamma_name != "ID" ) {
@@ -83,7 +97,7 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
             
            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
 
-              shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = Expr->CMTP_map_->at(A_contrib_name)->CTP_vec ;
+              shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CMTP_map_->at(A_contrib_name)->CTP_vec ;
               vector<string> sub_tensor_names(CTP_vec->size()); 
 
               for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
@@ -105,7 +119,7 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
           cout << "XXXX3" << endl; 
           if ( tensop_data_map_->find(A_contrib_name) == tensop_data_map_->end() ) {cout << A_contrib_name <<  " not yet in map, must form from direct product" << endl;
 
-            shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = Expr->CMTP_map_->at(A_contrib_name)->CTP_vec ;
+            shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CMTP_map_->at(A_contrib_name)->CTP_vec ;
             vector<string> sub_tensor_names(CTP_vec->size()); 
             for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
               sub_tensor_names[rr] = CTP_vec->at(rr)->name();

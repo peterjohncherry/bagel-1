@@ -128,7 +128,7 @@ void
 Equation_Computer_Base<DataType>::evaluate_term( string expression_name, vector<pair<string, int>>& fixed_idxs,
                                                                                vector<pair<string, int>>& summed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "Equation_Computer_Base<DataType>::evaluate expression not done" << std::endl;
+  std::cout << "Equation_Computer_Base<DataType>::evaluate_term A" << std::endl;
 
   expression_computer_->evaluate_expression( expression_name);
 
@@ -140,9 +140,13 @@ template<typename DataType>
 void
 Equation_Computer_Base<DataType>::evaluate_term( string expression_name, vector<pair<string, int>>& fixed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "Equation_Computer_Base<DataType>::evaluate expression not done" << std::endl;
+  std::cout << "Equation_Computer_Base<DataType>::evaluate_term B" << std::endl;
 
-  expression_computer_->evaluate_expression( expression_name);
+  shared_ptr<Expression<DataType>> expr =  equation_->get_term( expression_name, fixed_idxs);
+
+  cout << "got expression : expr->name() = " << expr->name() <<endl;  
+
+  expression_computer_->evaluate_expression(equation_->get_term( expression_name, fixed_idxs));
 
   return; 
 }

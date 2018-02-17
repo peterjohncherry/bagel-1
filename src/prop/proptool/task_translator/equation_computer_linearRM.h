@@ -21,10 +21,11 @@ class Equation_Computer_LinearRM : public Equation_Computer_Base<DataType> {
    int ref_space_dim;
 
    public :
-
-     Equation_Computer_LinearRM( std::shared_ptr<Equation_LinearRM<DataType>> equation,
+     //TODO Could take equation_base as argument, but I think this way is safer
+     Equation_Computer_LinearRM( std::shared_ptr<Equation_Base<DataType>> equation,
                                  std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map ) : 
-                                 Equation_Computer_Base<DataType>( equation, range_conversion_map ) {};
+                                 Equation_Computer_Base<DataType>( equation, range_conversion_map ) 
+                                 { assert(std::dynamic_pointer_cast<Equation_LinearRM<DataType>>(equation)); }
 
     ~Equation_Computer_LinearRM(){};
 

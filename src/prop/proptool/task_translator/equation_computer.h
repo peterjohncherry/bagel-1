@@ -94,7 +94,8 @@ class Equation_Computer_Value : public Equation_Computer_Base<DataType> {
 
      Equation_Computer_Value( std::shared_ptr<Equation_Base<DataType>> equation,
                               std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map ) : 
-                              Equation_Computer_Base<DataType>( equation, range_conversion_map ) {}; 
+                              Equation_Computer_Base<DataType>( equation, range_conversion_map ) {  
+                              assert(std::dynamic_pointer_cast<Equation_Value<DataType>>(equation)); }; 
 
 
     ~Equation_Computer_Value(){};

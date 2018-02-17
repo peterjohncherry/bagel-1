@@ -121,35 +121,42 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
                                         std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
                                                                   std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "System_Info<DataType>::System_Info::create_equation " << endl; 
+  cout << "System_Info<DataType>::System_Info::create_equation" << endl; 
 
   term_braket_map_->insert(term_braket_map->begin(), term_braket_map->end()) ;
   expression_term_map_->insert(expression_term_map->begin(), expression_term_map->end()) ;
   
   shared_ptr<Equation_Base<DataType>>  new_eqn;
   if ( type == "Value" ) { 
+    cout << "now build equation_value" << endl;
     shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map );
     new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
+    if (!new_eqn) { throw runtime_error("cast from Equation_Value to equation_base failed" ); }
     new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map, MT_map, CTP_map, CMTP_map );
     equation_map_->emplace( name, new_eqn); 
 
   } else if ( type == "LinearRM") { 
-    shared_ptr<Equation_LinearRM<DataType>> new_eqn_val  = make_shared<Equation_LinearRM<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map,
-                                                                                                            term_braket_map_state_spec, expression_term_map_state_spec );
-    new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
+    cout << "now build equation_linearrm" << endl;
+    cout << " term_braket_map_state_spec->size()     = " << term_braket_map_state_spec->size()      << endl; 
+    cout << " expression_term_map_state_spec->size() = " << expression_term_map_state_spec->size()  << endl;
+
+    shared_ptr<Equation_LinearRM<DataType>> new_eqn_lrm  = make_shared<Equation_LinearRM<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map,
+                                                                                                       term_braket_map_state_spec, expression_term_map_state_spec );
+    cout << "built_eqution_lrm" <<endl;
+    new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_lrm);
+    cout << "casted equation_lrm to base" << endl;
+    if (!new_eqn) { throw runtime_error("cast from Equation_LinearRM to Equation_Base failed" ); }
     new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map, MT_map, CTP_map, CMTP_map );
+    cout << " set maps in new_eqn " <<endl;
+    new_eqn_lrm->generate_state_specific_terms();
     equation_map_->emplace( name, new_eqn); 
   
   } else {  
     throw logic_error( "equation type \""+ type + "\" not implemented yet! Aborting!"); 
 
   }
-
   return;
-
 }
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void

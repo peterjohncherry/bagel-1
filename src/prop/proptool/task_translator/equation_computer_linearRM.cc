@@ -9,6 +9,9 @@ using namespace bagel::SMITH;
 template<typename DataType> 
 void Equation_Computer_LinearRM<DataType>::solve_equation(){  
 //////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Equation_Computer_LinearRM<DataType>::solve_equation()" << endl; 
+
+  //ref_space_dim = 3;
 
   auto tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>(); 
   shared_ptr<MultiTensor_<DataType>> residues; 

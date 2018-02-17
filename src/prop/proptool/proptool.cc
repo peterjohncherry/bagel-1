@@ -36,19 +36,10 @@ void PropTool::PropTool::execute_compute_lists(){
  
  for ( string& equation_name : equation_execution_list_ ) 
    system_computer_->build_equation_computer( equation_name );
-  
+ 
  return;
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void PropTool::PropTool::define_necessary_tensor_blocks(){  
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "PropTool::PropTool::define_necessary_tensor_blocks()" << endl; 
 
-//  expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, sys_info_->expression_map, range_conversion_map_, tensop_data_map_, 
-//                                                                                              gamma_data_map_, sigma_data_map_, civec_data_map_ );
-  cout << "built expression machine" << endl;
-  return;
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // eqn_dependence = "share" :  equations can be done in any order and share information
@@ -408,6 +399,7 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   sys_info_->create_equation( eqn_name, "LinearRM", eqn_init->term_braket_map_ , eqn_init->expression_term_map_,
                                                     eqn_init->term_braket_map_state_spec_ , eqn_init->expression_term_map_state_spec_ );
 
+  cout << "eqn_name = " << eqn_name << endl;
   equation_execution_list_.push_back(eqn_name); 
 
   return;
@@ -558,4 +550,14 @@ shared_ptr<vector<SMITH::IndexRange>> PropTool::PropTool::convert_to_indexrange(
 
   return range_block; 
 
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::define_necessary_tensor_blocks(){  
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "PropTool::PropTool::define_necessary_tensor_blocks()" << endl; 
+
+//  expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, sys_info_->expression_map, range_conversion_map_, tensop_data_map_, 
+//                                                                                              gamma_data_map_, sigma_data_map_, civec_data_map_ );
+  cout << "built expression machine" << endl;
+  return;
 }

@@ -20,12 +20,12 @@ Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_
   cout << "Gamma_Computer::Gamma_Computer::Gamma_Computer" << endl;
   maxtile  = 10000;
 
-  Gamma_info_map       = Gamma_info_map_in;       cout << "set Gamma_info_map            "<< endl; 
-  CIvec_data_map       = CIvec_data_map_in;       cout << "set CIvec_data_map      "<< endl;  
-  sigma_data_map_       = sigma_data_map;       cout << "set sigma_data_map_      "<< endl;  
-  gamma_data_map_       = gamma_data_map;       cout << "set gamma_data_map_      "<< endl;  
-  Determinants_map     = Determinants_map_in;     cout << "set Determinants_map    "<< endl; 
-  range_conversion_map = range_conversion_map_in; cout << "set range_conversion_map"<< endl; 
+  Gamma_info_map       = Gamma_info_map_in;       cout << "set Gamma_info_map      " << endl; 
+  CIvec_data_map       = CIvec_data_map_in;       cout << "set CIvec_data_map      " << endl;  
+  sigma_data_map_       = sigma_data_map;         cout << "set sigma_data_map_     " << endl;  
+  gamma_data_map_       = gamma_data_map;         cout << "set gamma_data_map_     " << endl;  
+  Determinants_map     = Determinants_map_in;     cout << "set Determinants_map    " << endl; 
+  range_conversion_map = range_conversion_map_in; cout << "set range_conversion_map" << endl; 
 
   Determinants_map_new = make_shared< map < string, shared_ptr<Determinants> >>();     cout << "building Determinants_map_new    "<< endl; 
 
@@ -53,11 +53,9 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
     shared_ptr<GammaInfo> gamma_info = Gamma_info_map->at(gamma_name) ;
     int order = gamma_info->order();
     if ( order == 2 ) { 
-
       build_gamma2_tensor( gamma_info );
       
     } else {
-    
       build_gammaN_tensor( gamma_info ) ;
 
     }

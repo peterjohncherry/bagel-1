@@ -26,17 +26,12 @@ class Equation_LinearRM : public Equation_Base<DataType> {
     using Equation_Base<DataType>::CTP_map_;      
     using Equation_Base<DataType>::CMTP_map_;  
 
-    std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>,
-                                   std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec_;
-
-    std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
-                              std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec_;
-
-    std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, std::shared_ptr<Expression<DataType>>>> term_map_; 
-
+    using Equation_Base<DataType>::term_braket_map_state_spec_; 
+    using Equation_Base<DataType>::expression_term_map_state_spec_;
+    using Equation_Base<DataType>::term_map_; 
 
   public :
-
+                   
     Equation_LinearRM( std::string name, std::string type, std::shared_ptr<StatesInfo<DataType>> states_info, 
                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map, 
@@ -44,12 +39,7 @@ class Equation_LinearRM : public Equation_Base<DataType> {
                                                       std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec,
                        std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
                                                  std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec ) 
-                    : Equation_Base<DataType>( name, type, states_info, term_braket_map, expression_term_map ), 
-                      term_braket_map_state_spec_(term_braket_map_state_spec), expression_term_map_state_spec_(expression_term_map_state_spec) {
-
-                      term_map_  = 
-                      std::make_shared<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, std::shared_ptr<Expression<DataType>>>>(); 
-                      }  
+                    : Equation_Base<DataType>( name, type, states_info, term_braket_map, expression_term_map, term_braket_map_state_spec, expression_term_map_state_spec){ cout << " eqn_lrm" << endl;}  
 
    ~Equation_LinearRM(){};
 

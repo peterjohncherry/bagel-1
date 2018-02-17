@@ -114,7 +114,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     state_dep = 2;
 
   } else if ( op_name == "t" ) {  /* ---- T Tensor herm conj TODO  should find a better way fo dealing with this----  */
-
+    cout << "getting t op " << endl;
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string>{"t0", "t1", "t2", "t3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  {false, false, true, true } );
