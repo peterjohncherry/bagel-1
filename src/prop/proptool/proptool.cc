@@ -75,6 +75,7 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
   // build system computer (for computational task list construction/execution)
   auto moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_,
                                                      nfrozenvirt_, block_diag_fock_ );
+
   auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
 
   //TODO should build gamma_computer inside system_computer, like this due to DVec class dependence of B_Gamma_Computer 

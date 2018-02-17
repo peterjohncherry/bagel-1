@@ -41,8 +41,12 @@ namespace bagel {
       std::shared_ptr<SMITH::Tensor_<DataType>> get_v2( const std::vector<std::string>& blocks );
 
       //is the core fock minus diagonal component from above
-      std::shared_ptr<SMITH::Tensor_<DataType>> get_h1( const std::vector<std::string>& blocks, bool store = false );
-      std::shared_ptr<SMITH::Tensor_<DataType>> get_h1( const std::vector<SMITH::IndexRange>& blocks, bool store = false );
+      std::shared_ptr<SMITH::Tensor_<DataType>> get_h1( const std::vector<std::string>& blocks, bool set_coeffs = false );
+      std::shared_ptr<SMITH::Tensor_<DataType>> get_h1( const std::vector<SMITH::IndexRange>& blocks, bool set_coeffs = false );
+ 
+      // core fock, without subtracted diagonal component
+      std::shared_ptr<SMITH::Tensor_<DataType>> get_fock( const std::vector<std::string>& blocks, bool set_coeffs = false );
+      std::shared_ptr<SMITH::Tensor_<DataType>> get_fock( const std::vector<SMITH::IndexRange>& blocks, bool set_coeffs = false );
 
       // A test tensor 
       std::shared_ptr<SMITH::Tensor_<DataType>> get_test_tensor( const std::vector<std::string>& blocks  );

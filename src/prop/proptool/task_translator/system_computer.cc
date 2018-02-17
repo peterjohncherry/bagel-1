@@ -129,12 +129,14 @@ void System_Computer::System_Computer<DataType>::calculate_mo_integrals() {
   vector<string> act4 = { "act", "act", "act", "act" };
   vector<string> free2 = { "free", "free" };
 
+  f1_  =  moint_computer_->get_fock( free2, false ) ;
   h1_  =  moint_computer_->get_h1( free2, true ) ;
   v2_  =  moint_computer_->get_v2( free4 ) ;
   cout << " new_coeffs  v2->norm() = " << v2_->norm() << endl;
 
   tensop_data_map_->emplace( "H" , v2_ );
-  tensop_data_map_->emplace( "f" , h1_ );
+  tensop_data_map_->emplace( "h" , h1_ );
+  tensop_data_map_->emplace( "f" , f1_ );
 
   //  tensop_data_map_->emplace( "T" , moint_computer_->get_test_tensor( free4 ) );
   //tensop_data_map_->emplace( "X" , moint_computer_->get_test_tensor( free4 ) );

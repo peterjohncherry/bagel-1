@@ -205,29 +205,29 @@ cout << endl << "CtrMultiTensorPart<DataType>::FullContract NEWVER :   CMTP name
 
   } else if (ctrs_pos_->size() > 0 ) {
     
-     cout << "CTP_vec->size() = " << CTP_vec->size() <<  "     cross_ctrs_pos_->size() = " <<  cross_ctrs_pos_->size() << endl;
-     if ( (CTP_vec->size() == 2) && ( cross_ctrs_pos_->size() > 0 ) ) {
-     
-       shared_ptr<CtrTensorPart<DataType>> new_CTP = Binary_Contract_diff_tensors(cross_ctrs_pos_->back(), ctrs_pos_->back(), Tmap,  ACompute_list, ACompute_map);
+    cout << "CTP_vec->size() = " << CTP_vec->size() <<  "     cross_ctrs_pos_->size() = " <<  cross_ctrs_pos_->size() << endl;
+    if ( (CTP_vec->size() == 2) && ( cross_ctrs_pos_->size() > 0 ) ) {
     
-       if (Tmap->find(new_CTP->name_) == Tmap->end())
-         Tmap->emplace(new_CTP->name_, new_CTP);
-         
-       if ( cross_ctrs_pos_->size() > 1 )   
-         new_CTP->FullContract(Tmap, ACompute_list, ACompute_map);
-       
-     } else if ( cross_ctrs_pos_->size() == 0 ) {
+      shared_ptr<CtrTensorPart<DataType>> new_CTP = Binary_Contract_diff_tensors(cross_ctrs_pos_->back(), ctrs_pos_->back(), Tmap,  ACompute_list, ACompute_map);
+    
+      if (Tmap->find(new_CTP->name_) == Tmap->end())
+        Tmap->emplace(new_CTP->name_, new_CTP);
+        
+      if ( cross_ctrs_pos_->size() > 1 )   
+        new_CTP->FullContract(Tmap, ACompute_list, ACompute_map);
       
-       for ( auto& inner_CTP : *CTP_vec ) 
-         inner_CTP->FullContract(Tmap, ACompute_list, ACompute_map);
+    } else if ( cross_ctrs_pos_->size() == 0 ) {
+     
+      for ( auto& inner_CTP : *CTP_vec ) 
+        inner_CTP->FullContract(Tmap, ACompute_list, ACompute_map);
 
-     } else {
-       cout << "USING MT BINARY CONTRACT DIFF TENSORS" << endl;
-       shared_ptr<CtrMultiTensorPart> new_CMTP = Binary_Contract_diff_tensors_MT( CTP_vec->at(cross_ctrs_pos_->back().first.first)->name_,
-                                                                                  CTP_vec->at(cross_ctrs_pos_->back().second.first)->name_,
-                                                                                  ctrs_pos_->back(), Tmap, ACompute_list, ACompute_map);
-       new_CMTP->FullContract(Tmap, ACompute_list, ACompute_map);
-     }
+    } else {
+      throw logic_error("USING MT BINARY CONTRACT DIFF TENSORS MT!! This shouldn't happen anymore ... Aborting !! ");
+      shared_ptr<CtrMultiTensorPart> new_CMTP = Binary_Contract_diff_tensors_MT( CTP_vec->at(cross_ctrs_pos_->back().first.first)->name_,
+                                                                                 CTP_vec->at(cross_ctrs_pos_->back().second.first)->name_,
+                                                                                 ctrs_pos_->back(), Tmap, ACompute_list, ACompute_map);
+      new_CMTP->FullContract(Tmap, ACompute_list, ACompute_map);
+    }
   }
   ACompute_map->emplace(name_, ACompute_list);
   return;
@@ -288,9 +288,8 @@ cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors" << endl;
    shared_ptr<vector<pair<int,int>>> ctrs_todo_ = make_shared<vector<pair<int,int>>>(0);
    for (int ii = 0 ;  ii != cross_ctrs_pos_->size() ; ii++) 
      if ( (cross_ctrs_pos_->at(ii).first.first + cross_ctrs_pos_->at(ii).second.first) == (T1pos + T2pos) )
-       ctrs_todo_->push_back(make_pair(Tsizes_cml->at(cross_ctrs_pos_->at(ii).first.first)  +  cross_ctrs_pos_->at(ii).first.second,
-                                      Tsizes_cml->at(cross_ctrs_pos_->at(ii).second.first) +  cross_ctrs_pos_->at(ii).second.second));
-
+       ctrs_todo_->push_back(make_pair( Tsizes_cml->at( cross_ctrs_pos_->at(ii).first.first )  +  cross_ctrs_pos_->at(ii).first.second,
+                                        Tsizes_cml->at( cross_ctrs_pos_->at(ii).second.first ) +  cross_ctrs_pos_->at(ii).second.second ));
     
    shared_ptr<vector<pair<int,int>>> full_ctrs = make_shared<vector<pair<int,int>>>( ctrs_done_->begin(), ctrs_done_->end() );
    full_ctrs->insert(full_ctrs->end(), ctrs_todo_->begin(), ctrs_todo_->end());
