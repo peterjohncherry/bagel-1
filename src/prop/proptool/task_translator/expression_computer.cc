@@ -17,6 +17,7 @@ Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_
   gamma_computer_(gamma_computer), expression_map_(expression_map), range_conversion_map_(range_conversion_map), tensop_data_map_(tensop_data_map) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
   scalar_results_map = make_shared<map< string, DataType >>(); //TODO dumb, check why not in header and fix  
+
 }  
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,12 +45,9 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Exp
 
   auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_);
 
-
-  cout << "X2" << endl;
   DataType result = 0.0;
   map< string, DataType > g_result_map;
 
-  cout << "X3" << endl;
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
 

@@ -85,6 +85,7 @@ class Equation_Base {
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map() { return CTP_map_; }      
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map() { return CMTP_map_; }  
+     std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType>>>> T_map() { return T_map_    ; }      
      std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map() { return MT_map_    ; }      
      std::shared_ptr< std::map <std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>>  ACompute_map() { return ACompute_map_; }
      std::shared_ptr< std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map() const  { return expression_term_map_; };

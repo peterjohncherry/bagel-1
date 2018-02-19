@@ -18,6 +18,7 @@ class BraKet{
        const int ket_num_;
        const std::string type_ ; // should be "ci_deriv" or "full" 
        const std::string multiop_name_;
+       
 
        std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op_;
 
@@ -50,6 +51,9 @@ class BraKet{
        std::string bk_name() { return name_ ; } 
        std::string name() { return name_ ; } 
        DataType factor() const { return factor_ ; } 
+
+      // void add_required_tens_block( std::string block_name ) { required_blocks.emplace( block_name ); } 
+      // std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { required_blocks.emplace( block_name ); } 
 
        void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
                                                  std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map,

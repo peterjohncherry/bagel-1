@@ -35,11 +35,22 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 
     } else { 
       cout << " ... yes " << endl; 
-      shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ ); 
+      
+      shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ );
       GGen->add_gamma( range_map_it->second );
       GGen->norm_order();
-      bool does_this_block_contribute = GGen->optimized_alt_order(); //TODO remember the reasons for this variable...
-
+      bool does_this_block_contribute = GGen->optimized_alt_order();
+      if ( does_this_block_contribute ) {
+        cout << "We need these blocks : " ; cout.flush();
+        auto tvec_it = Total_Op_->orig_tensors_.begin();
+        for ( auto&  tens_block : *(range_map_it->second->range_blocks()) ){ 
+          cout << tens_block->orig_name()  << " " ; cout.flush(); 
+          cout << "(*tvec_it)->name() = " << (*tvec_it)->name() << endl;
+          (*tvec_it)->add_required_block( tens_block->orig_name() );
+          tvec_it++; 
+        }
+        cout << endl; 
+      }
     } 
   }
  

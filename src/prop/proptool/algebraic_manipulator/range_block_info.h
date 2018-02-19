@@ -7,6 +7,8 @@
 #include <set> 
 #include <vector>
 #include <memory>
+#include <src/prop/proptool/proputils.h>
+
 class range_block_info {
 
   // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
@@ -20,11 +22,13 @@ class range_block_info {
       const  std::shared_ptr<const std::vector<std::string>> transformed_idxs_;
       const  std::shared_ptr<const std::vector<bool>> orig_aops_; 
       const  int num_idxs_;                      
+      const  std::string orig_name_;
+      const  std::string transformed_name_;
+      const  std::string TensOp_name_;
 
       std::set<std::vector<int>> sparsity_ ;
 
   public :
-
 
     range_block_info( bool is_unique,
                       bool survives,
@@ -37,7 +41,10 @@ class range_block_info {
                       is_unique_(is_unique), survives_(survives),factors_(factors),
                       orig_block_(orig_block), unique_block_(unique_block),
                       orig_idxs_(orig_idxs), transformed_idxs_(transformed_idxs),
-                      orig_aops_(orig_aops), num_idxs_(orig_block_->size()) {};
+                      orig_aops_(orig_aops), num_idxs_(orig_block_->size()), 
+                      orig_name_(WickUtils::get_Aname(*orig_idxs, *orig_block)),
+                      transformed_name_(WickUtils::get_Aname(*transformed_idxs, *unique_block )),
+                      TensOp_name_(orig_idxs->at(0).substr(0,1)) {};
 
     ~range_block_info(){};
     
@@ -59,6 +66,10 @@ class range_block_info {
     void add_sparse( std::vector<int>& state_idxs ) { sparsity_.emplace(state_idxs); return; } // defines this range block as being sparse for input states 
 
     int num_idxs() const { return num_idxs_; } 
+
+    std::string TensOp_name() const { return TensOp_name_; }
+    std::string orig_name() const { return orig_name_; }
+    std::string transformed_name() const { return transformed_name_; }
 
     // returns true if this block is sparse for input states
     virtual bool is_sparse( std::vector<int>& state_idxs ) { return ( sparsity_.find(state_idxs) != sparsity_.end() ); } 
@@ -145,23 +156,20 @@ class split_range_block_info : public  range_block_info {
 
   private : 
     std::shared_ptr<std::vector<std::shared_ptr<range_block_info>>> range_blocks_;
+
   public :
 
     split_range_block_info( srbi_helper& helper ) :
                       range_block_info( helper.unique_, helper.survives_, helper.factors_, helper.orig_block_,
                                         helper.unique_block_, helper.orig_idxs_, helper.transformed_idxs_, helper.orig_aops_ ),
                                         range_blocks_(helper.range_blocks_) {}  
-
-//    split_range_block_info( std::shared_ptr<std::vector<std::shared_ptr<range_block_info>>> range_blocks ) :
-//                      tmp(srbi_helper(range_blocks)), range_blocks_(range_blocks), num_idxs_(tmp.num_idxs_),  
-//                      range_block_info( tmp.unique_, tmp.survives_, tmp.factors_, tmp.orig_block_,
-//                                        tmp.unique_block_, tmp.orig_idxs_, tmp.transformed_idxs_ ) {}  
-
- 
    ~split_range_block_info(){};
 
     int num_idxs() { return num_idxs_ ; } 
 
+    std::shared_ptr<std::vector<std::shared_ptr<range_block_info>>> range_blocks(){ return range_blocks_ ;} 
+
+    //TODO can't really need three is_sparse functions...
     bool is_sparse( std::vector<std::vector<int>>& state_idxs ) { 
       std::vector<std::shared_ptr<range_block_info>>::iterator rb_iter =  range_blocks_->begin();
       for ( std::vector<std::vector<int>>::iterator si_iter = state_idxs.begin(); si_iter != state_idxs.end(); si_iter++ ){

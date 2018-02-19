@@ -140,12 +140,14 @@ class TensOp_base {
      std::string Tsymm_;
      int state_dep_; 
      std::shared_ptr<const Op_General_base> Op_dense_;
+     std::shared_ptr<std::set<std::string>> required_blocks_;
 
    public:
-
  
-     TensOp_base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name), spinfree_(spinfree), Tsymm_(Tsymm), state_dep_(state_dep)  {};
-     TensOp_base( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0)  {};
+     TensOp_base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name), spinfree_(spinfree), Tsymm_(Tsymm), state_dep_(state_dep),
+                                                                                        required_blocks_(std::make_shared<std::set<std::string>>()) {};
+     TensOp_base( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0),
+                                                      required_blocks_(std::make_shared<std::set<std::string>>())  {};
      ~TensOp_base(){};
 
      std::string const name(){ return name_;}
@@ -171,10 +173,12 @@ class TensOp_base {
      std::shared_ptr< const std::vector<int>> kill_ops(){ return Op_dense_->kill_ops();}
      int kill_ops(int ii){ return Op_dense_->kill_ops(ii);}
 
-
      std::shared_ptr< const std::vector< std::shared_ptr< const std::vector<std::string>>>> unique_range_blocks() const { return Op_dense_->unique_range_blocks(); }
      std::shared_ptr< const std::vector<std::string>> unique_range_blocks(int ii) const { return Op_dense_->unique_range_blocks(ii); }
-     
+    
+     void add_required_block( std::string block_name ) { required_blocks_->emplace( block_name ); } 
+     std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { return required_blocks_; } 
+ 
      virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info > > > all_ranges() const  { return Op_dense_->all_ranges(); }
      virtual std::shared_ptr< range_block_info > all_ranges(const std::vector<std::string> range_block ) const  { return Op_dense_->all_ranges(range_block); }
 
@@ -252,6 +256,8 @@ class MultiTensOp : public TensOp_base {
 
     std::shared_ptr<const std::vector<int>> cmlsizevec() const  {  return Op_dense_->cmlsizevec(); } ;
     int cmlsizevec(int ii )const { return Op_dense_->cmlsizevec(ii); };
+
+    std::vector<std::shared_ptr<TensOp::TensOp<DataType>>> tensop_vec(){ return orig_tensors_; } 
  
     void get_ctrs_tens_ranges(); 
  

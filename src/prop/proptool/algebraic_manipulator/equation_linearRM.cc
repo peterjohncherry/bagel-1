@@ -21,8 +21,6 @@ cout << " void Equation_LinearRM<DataType>::generate_state_specific_terms() " <<
       cout << "(" << fi_it->first << "," << fi_it->second << ") " ;
     cout << "]" << endl;
 
-    cout << "hello gsst" <<  endl;
-
     for ( auto  fi_it = fixed_idxs.begin() ; fi_it != fixed_idxs.end(); fi_it++ ) 
       if( fi_it->first == "none") {  
         fixed_idxs.erase( fi_it ); 

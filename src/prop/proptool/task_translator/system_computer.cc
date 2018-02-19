@@ -40,13 +40,12 @@ void System_Computer::System_Computer<DataType>::build_equation_computer(std::st
 
   shared_ptr<Equation_Base<DataType>> equation_basic = system_info_->equation_map_->at(equation_name);
 
-  //TODO Skipping for now
-  // TODO Should only set the tensors on an expression by expression basis
-  // Currently gets all necessary tensor blocks at once...
-  //  for ( auto& expr_map_loc : *equation_basic->expression_map() )
-  //  get_necessary_tensor_blocks(expr_map_loc.second);
-
-   shared_ptr<Equation_Computer_Value<DataType>> equation_computer_sss;
+//  for ( auto& tmap_it : equation_basic->T_map() ){ 
+//    shared_ptr<set<string>> required_blocks = tmap_it->second->required_blocks() 
+//    for ( string block_name : *required_blocks )
+//      if ( tensop_data_map_->find(block_name) == tensop_data_map_->end() ) 
+//        cout << "REMOVE THIS" << endl;
+//  }
   if ( equation_basic->type()  ==  "Value" ) {
     //shared_ptr<Equation_Value<DataType>> equation_val = dynamic_pointer_cast<Equation_Value<DataType>>(equation_basic);
     shared_ptr<Equation_Computer_Value<DataType>> equation_computer = make_shared<Equation_Computer_Value<DataType>>( equation_basic, range_conversion_map_ );
@@ -153,13 +152,6 @@ void System_Computer::System_Computer<DataType>::calculate_mo_integrals() {
   shared_ptr<vector<SMITH::IndexRange>> fs4 = make_shared<vector<SMITH::IndexRange>>(vector<SMITH::IndexRange> { ncs, ncs, nvs, nvs } );   
   shared_ptr<SMITH::Tensor_<DataType>> XTens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor( fs4, one ); 
   tensop_data_map_->emplace( "X" , XTens );
-
-//  v2_->zero(); 
-//  XTens->zero(); 
-  SMITH::IndexRange bact = *(range_conversion_map_->at("act"));
-  vector<SMITH::IndexRange> a4 = { bact, bact, bact, bact }; 
-//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( v2_, a4, (DataType)(1.0) );
-//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( XTens, a4, (DataType)(1.0) );
 
   cout <<"X->norm() = "; cout.flush() ; cout << tensop_data_map_->at("X")->norm() << endl; 
 

@@ -53,7 +53,8 @@ string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_c
 void CtrTensorPart_Base::get_ctp_idxs_ranges(){
 //////////////////////////////////////////////////////////////////////////////
 //cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
-int counter = 0;
+
+  int counter = 0;
   vector<bool> get_unc(full_idxs_->size(), true);
 
   for (int ii =0; ii != ctrs_pos_->size() ; ii++){
@@ -78,10 +79,10 @@ int counter = 0;
   } 
 
   unc_rel_pos_ = make_shared<map<int,int>>();
-  for( int ii = 0 ; ii != unc_pos_->size(); ii++) { 
+  for( int ii = 0 ; ii != unc_pos_->size(); ii++)
     unc_rel_pos_->emplace(unc_pos_->at(ii), ii);
-  }
-  return; 
+
+  return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // This is a hack and should be done in a better way, maybe incorporate into constructor
