@@ -12,8 +12,8 @@ template<class DataType>
 TensOp_Computer::TensOp_Computer<DataType>::TensOp_Computer( shared_ptr< map< string, shared_ptr<vector<shared_ptr<CtrOp_base>>>>> ACompute_map_in,
                                                              shared_ptr< map< string, shared_ptr<CtrTensorPart_Base>>> CTP_map_in,
                                                              shared_ptr< map< string, shared_ptr<IndexRange>>> range_conversion_map,
-                                                             shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>> Data_map_in ):
-                                                             ACompute_map(ACompute_map_in), CTP_map(CTP_map_in), Data_map(Data_map_in),
+                                                             shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>> tensop_data_map ):
+                                                             ACompute_map(ACompute_map_in), CTP_map(CTP_map_in), tensop_data_map_(tensop_data_map),
                                                              range_conversion_map_(range_conversion_map), 
                                                              Tensor_Calc(make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>()){}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,26 +33,26 @@ TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo& AInfo )
   for (shared_ptr<CtrOp_base> ctr_op : *(ACompute_map->at(A_contrib))){ cout << "getting " <<  ctr_op->Tout_name() << endl;
    
     // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
-    if( Data_map->find(ctr_op->Tout_name()) == Data_map->end() ) { cout << A_contrib << " not in data_map, must calculate it " << endl;
+    if( tensop_data_map_->find(ctr_op->Tout_name()) == tensop_data_map_->end() ) { cout << A_contrib << " not in data_map, must calculate it " << endl;
        shared_ptr<Tensor_<DataType>>  New_Tdata; 
  
       if ( ctr_op->ctr_type()[0] == 'g'){  cout << " : no contraction, fetch this tensor part" << endl; 
         New_Tdata =  get_block_Tensor(ctr_op->Tout_name());
-        Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+        tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
         cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
   
       } else if ( ctr_op->ctr_type()[0] == 'd' ){ cout << " : contract different tensors" << endl; 
         New_Tdata = contract_different_tensors( ctr_op->T1name(), ctr_op->T2name(), ctr_op->Tout_name(), make_pair(ctr_op->T1_ctr_rel_pos(), ctr_op->T2_ctr_rel_pos()) );
-        Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+        tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
         cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
       
       } else if ( ctr_op->ctr_type()[0] == 's' ) { cout << " : contract on same tensor" <<  endl; 
         New_Tdata = contract_on_same_tensor( ctr_op->T1name(), ctr_op->Tout_name(), ctr_op->ctr_rel_pos() ); 
-        Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+        tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
         cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
       } else if ( ctr_op->ctr_type()[0] == 'r' ) { cout << " : reorder tensor" <<  endl; 
         New_Tdata = reorder_block_Tensor( ctr_op->T1name(), ctr_op->new_order() ); 
-        Data_map->emplace(ctr_op->Tout_name(), New_Tdata); 
+        tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
         cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
       } else { 
         throw std::runtime_error(" unknown contraction type : " + ctr_op->ctr_type() ) ;
@@ -97,16 +97,16 @@ shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_bl
  
    shared_ptr<Tensor_<DataType>> tens; 
    
-   if(  Data_map->find(Tname) != Data_map->end()){
-     tens = Data_map->at(Tname);
+   if(  tensop_data_map_->find(Tname) != tensop_data_map_->end()){
+     tens = tensop_data_map_->at(Tname);
 
    } else {
      shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map->at(Tname)->unc_id_ranges() ) ;
 
-     if(  Data_map->find(Tname.substr(0,1)) != Data_map->end()){
+     if(  tensop_data_map_->find(Tname.substr(0,1)) != tensop_data_map_->end()){
        cout << "initializing uncontracted tensor block " << Tname << " using data from parent tensor \"" << Tname.substr(0,1) << "\"" << endl;
        print_vector( *(CTP_map->at(Tname)->unc_id_ranges()) , "unc_id_ranges" ) ; cout <<endl;  
-       tens = get_sub_tensor( Data_map->at(Tname.substr(0,1)), *id_block );
+       tens = get_sub_tensor( tensop_data_map_->at(Tname.substr(0,1)), *id_block );
 
        cout << Tname<< "->norm() = " << tens->norm() << endl; 
  
@@ -216,13 +216,13 @@ TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string T_in_nam
   cout << " : " << T_in_name ; cout.flush();
   cout <<  " New_order = [ "; cout.flush();  for (int pos : *new_order ) { cout << pos << " " ; cout.flush(); } cout << "] " << endl;
   
-  auto Data_map_loc = Data_map->find(T_in_name); 
+  auto tensop_data_map_loc = tensop_data_map_->find(T_in_name); 
   shared_ptr<Tensor_<DataType>> T_part; 
-  if( Data_map_loc == Data_map->end() ){
+  if( tensop_data_map_loc == tensop_data_map_->end() ){
     T_part =  get_block_Tensor(T_in_name); 
-    Data_map->emplace(T_in_name , T_part );
+    tensop_data_map_->emplace(T_in_name , T_part );
   } else { 
-    T_part = Data_map_loc->second; 
+    T_part = tensop_data_map_loc->second; 
   }
 
   return Tensor_Calc->reorder_block_Tensor( T_part , new_order );
@@ -276,10 +276,10 @@ TensOp_Computer::TensOp_Computer<DataType>::find_or_get_CTP_data(string CTP_name
  cout << "TensOp_Computer::TensOp_Computer::find_or_get_CTP_data  : " <<  CTP_name <<  endl;
 
   shared_ptr<Tensor_<DataType>> CTP_data;
-  auto Data_loc =  Data_map->find(CTP_name); 
-  if ( Data_loc == Data_map->end() ){
+  auto Data_loc =  tensop_data_map_->find(CTP_name); 
+  if ( Data_loc == tensop_data_map_->end() ){
     CTP_data = get_block_Tensor(CTP_name);   
-    Data_map->emplace(CTP_name, CTP_data);   
+    tensop_data_map_->emplace(CTP_name, CTP_data);   
   } else {
     CTP_data = Data_loc->second;
   }

@@ -57,19 +57,6 @@ namespace PropTool {
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_ ;
    
-    // Tensor operators in MO basis and maps 
-    std::vector<std::shared_ptr<SMITH::MultiTensor_<double>>> T2_all;
-    std::vector<std::shared_ptr<SMITH::MultiTensor_<double>>> lambda_all;
-    std::shared_ptr<SMITH::Tensor_<double>> F_1el_all;
-    std::shared_ptr<SMITH::Tensor_<double>> H_1el_all;
-    std::shared_ptr<SMITH::Tensor_<double>> H_2el_all;// only {occ, virt, occ, virt});
-    std::shared_ptr<SMITH::Tensor_<double>> v2_; 
-
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> civec_data_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> sigma_data_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> gamma_data_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<double>>>> tensop_data_map_;
- 
     std::shared_ptr<System_Info<double>> sys_info_;
     std::shared_ptr<System_Computer::System_Computer<double>> system_computer_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> expression_map_;
@@ -86,8 +73,6 @@ namespace PropTool {
     void set_target_state_info();
     void set_ao_range_info();
     void set_ci_range_info();
-
-    void calculate_mo_integrals();
 
     void build_op_tensors( std::vector<std::string>& expression_list ) ;
     std::shared_ptr<std::vector<SMITH::IndexRange>> convert_to_indexrange( std::shared_ptr<const std::vector<std::string>> range_block_str ) ;
@@ -107,8 +92,6 @@ namespace PropTool {
     std::shared_ptr<std::map< std::string , std::shared_ptr<std::vector<int>> >> inp_range_map_;
 
     std::vector<std::string> equation_execution_list_;
-
-    void define_necessary_tensor_blocks();
 
     public: 
 

@@ -20,7 +20,9 @@ System_Computer::System_Computer<DataType>::System_Computer(shared_ptr<System_In
   sigma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
   civec_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
   gamma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
+
   tensop_data_map_ = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
+
   gamma_data_map_ = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
 
   b_gamma_computer_->set_maps( range_conversion_map_, system_info_->Gamma_map, gamma_data_map_,
@@ -129,7 +131,7 @@ void System_Computer::System_Computer<DataType>::calculate_mo_integrals() {
   vector<string> act4 = { "act", "act", "act", "act" };
   vector<string> free2 = { "free", "free" };
 
-  f1_  =  moint_computer_->get_fock( free2, false ) ;
+  f1_ =  moint_computer_->get_fock( free2, false ) ;
   h1_  =  moint_computer_->get_h1( free2, true ) ;
   v2_  =  moint_computer_->get_v2( free4 ) ;
   cout << " new_coeffs  v2->norm() = " << v2_->norm() << endl;
