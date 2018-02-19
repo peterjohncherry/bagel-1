@@ -36,18 +36,8 @@ void PropTool::PropTool::execute_compute_lists(){
  
  for ( string& equation_name : equation_execution_list_ ) 
    system_computer_->build_equation_computer( equation_name );
-  
+ 
  return;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void PropTool::PropTool::define_necessary_tensor_blocks(){  
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "PropTool::PropTool::define_necessary_tensor_blocks()" << endl; 
-
-//  expression_machine_ = make_shared<SMITH::Expression_Computer::Expression_Computer<double>>( civectors_, sys_info_->expression_map, range_conversion_map_, tensop_data_map_, 
-//                                                                                              gamma_data_map_, sigma_data_map_, civec_data_map_ );
-  cout << "built expression machine" << endl;
-  return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,6 +74,7 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
   // build system computer (for computational task list construction/execution)
   auto moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_,
                                                      nfrozenvirt_, block_diag_fock_ );
+
   auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
 
   //TODO should build gamma_computer inside system_computer, like this due to DVec class dependence of B_Gamma_Computer 
@@ -285,7 +276,7 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
     
     cout << "user defined op name : " << op_name << endl;
     shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp( op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep); 
-    sys_info_->T_map->emplace( op_name, new_op );
+    sys_info_->T_map()->emplace( op_name, new_op );
 
   }
 
@@ -357,6 +348,7 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
   eqn_init->initialize_expressions();
  
   sys_info_->create_equation( eqn_name, "Value", eqn_init->term_braket_map_ , eqn_init->expression_term_map_ );
+      
 
   equation_execution_list_.push_back(eqn_name); 
 
@@ -368,9 +360,9 @@ void PropTool::PropTool::get_equation_init_LinearRM( shared_ptr<const PTree> equ
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
 
+  int counter = 0 ;
   string eqn_name = equation_inp->get<string>( "name" );
   string eqn_target = equation_inp->get<string>( "target" );
-
   auto target_indices = make_shared<vector<string>>(0);
   auto ti_ptree = equation_inp->get_child("target indexes"); // Must solve for all "target" with these indices
   for (auto& si : *ti_ptree) 
@@ -384,6 +376,7 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   
     string term_name = term_info->get<string>( "term" );
     string term_factor = term_info->get<string>( "factor" );
+    cout << "term_name = " << term_name << endl;
     term_list->push_back(make_pair(term_factor, term_init_map_->at(term_name)));
 
     auto term_idrange_map = make_shared<map<string, pair<bool,string>>>();
@@ -402,8 +395,15 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
   auto eqn_init = make_shared<Equation_Init_LinearRM<double>>( eqn_name, "LinearRM", master_expression, inp_range_map_, eqn_target, target_indices,
                                                                inp_factor_map_ );
-  eqn_init->initialize_expressions();
-
+  eqn_init->initialize_all_terms();
+ 
+  sys_info_->create_equation( eqn_name, "LinearRM", eqn_init->term_braket_map_ , eqn_init->expression_term_map_,
+                                                    eqn_init->term_braket_map_state_spec_ , eqn_init->expression_term_map_state_spec_ );
+  cout << "hello" <<endl; 
+  cout << "eqn_name = " << eqn_name << endl;
+  equation_execution_list_.push_back(eqn_name); 
+  cout << " LEAVING PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
+  
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -533,7 +533,7 @@ void PropTool::PropTool::build_op_tensors( vector<string>& expression_list ) {
 
   // Creating tensors from existing matrices; seperate loop as must run through all states first to make proper use of symmetry
   for (string expression_name : expression_list ) {
-    for ( auto tensop_it : *(sys_info_->T_map) ) {
+    for ( auto tensop_it : *(sys_info_->T_map()) ) {
       vector< shared_ptr< const vector<string>>> unique_range_blocks = *(tensop_it.second->unique_range_blocks());
       for ( shared_ptr<const vector<string>> range_block : unique_range_blocks ) {
         shared_ptr<vector<SMITH::IndexRange>> range_block_bgl = convert_to_indexrange( range_block );

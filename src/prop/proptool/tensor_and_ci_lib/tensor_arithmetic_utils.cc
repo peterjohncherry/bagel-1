@@ -4,7 +4,65 @@ using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 using namespace WickUtils;
- 
+  
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+shared_ptr<Tensor_<complex<double>>>  Tensor_Arithmetic_Utils::get_sub_tensor( shared_ptr<Tensor_<complex<double>>> Tens_in, vector<string>& range_names,
+                                                                      shared_ptr<map< string, shared_ptr<IndexRange> > > range_conversion_map ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithemetic_Utils::get_sub_tensor 3arg" << endl;
+
+  vector<IndexRange> id_ranges(range_names.size());
+  for ( int ii = 0; ii != range_names.size() ; ii++ )
+    id_ranges[ii] = *range_conversion_map->at(range_names[ii]);
+
+  shared_ptr<Tensor_<complex<double>>> Tens_out = make_shared<Tensor_<complex<double>>>(id_ranges);
+  Tens_out->allocate();
+
+  shared_ptr<vector<int>> range_maxs  =  get_range_lengths( id_ranges ) ;
+  shared_ptr<vector<int>> block_pos   =  make_shared<vector<int>>(range_maxs->size(),0);  
+  shared_ptr<vector<int>> mins        =  make_shared<vector<int>>(range_maxs->size(),0);  
+
+  do { 
+
+     vector<Index> id_blocks = *(get_rng_blocks( block_pos, id_ranges ));
+     unique_ptr<complex<double>[]> block = Tens_in->get_block( id_blocks );
+     Tens_out->put_block( block, id_blocks );
+
+  } while (fvec_cycle_skipper( block_pos, range_maxs, mins ) ); 
+
+  return Tens_out;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+shared_ptr<Tensor_<complex<double>>>  Tensor_Arithmetic_Utils::get_sub_tensor( shared_ptr<Tensor_<complex<double>>> Tens_in, vector<IndexRange>& id_ranges) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "Tensor_Arithemetic_Utils::get_sub_tensor 2arg" << endl;
+
+  cout << "id_range_sizes = [ " ; cout.flush();
+  for ( IndexRange& idrng  : id_ranges ) {
+    cout << idrng.size() << " " ; cout.flush(); 
+  }
+  cout << "] "<< endl;
+  
+  shared_ptr<Tensor_<complex<double>>> Tens_out = make_shared<Tensor_<complex<double>>>(id_ranges);
+  Tens_out->allocate();
+  shared_ptr<vector<int>> range_maxs  =  get_range_lengths( id_ranges ) ;
+  shared_ptr<vector<int>> block_pos   =  make_shared<vector<int>>(range_maxs->size(),0);  
+  shared_ptr<vector<int>> mins        =  make_shared<vector<int>>(range_maxs->size(),0);  
+
+  do { 
+
+     vector<Index> id_blocks = *(get_rng_blocks( block_pos, id_ranges ));
+     unique_ptr<complex<double>[]> block = Tens_in->get_block( id_blocks );
+     Tens_out->put_block( block, id_blocks );
+
+  } while (fvec_cycle_skipper( block_pos, range_maxs, mins ) ); 
+
+  return Tens_out;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
 shared_ptr<Tensor_<double>>  Tensor_Arithmetic_Utils::get_sub_tensor( shared_ptr<Tensor_<double>> Tens_in, vector<string>& range_names,
@@ -61,8 +119,8 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor 2arg" << endl;
 
   return Tens_out;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
 void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, string name  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
@@ -175,7 +233,16 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, st
    return ;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
+void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<complex<double>>> Tens, string name  ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  throw runtime_error( " have not implemented print routines for complex tensors yet!! Aborting!! " ) ;
+  return ;
+}   
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
 void Tensor_Arithmetic_Utils::Print_Vector_Tensor_Format( shared_ptr<Tensor_<double>> VecIn, string name ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Tensor_Arithmetic_Utils::Print_Vector_Tensor_Format" <<endl; 
@@ -201,8 +268,16 @@ cout << "Tensor_Arithmetic_Utils::Print_Vector_Tensor_Format" <<endl;
   return;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
+void Tensor_Arithmetic_Utils::Print_Vector_Tensor_Format( shared_ptr<Tensor_<complex<double>>> VecIn, string name ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  throw runtime_error("have not implemented print routines for complex tensors yet!! Aborting !! " ); 
+  return; 
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
 void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<double>> Tens, string name ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   cout << "Tensor_Arithmetic_Utils::Print_Tensor " << endl;
@@ -283,6 +358,13 @@ void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<double>
    } while (fvec_cycle(block_pos, range_lengths, mins ));
  
    return ;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
+void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<complex<double>>> Tens, string name ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  throw runtime_error("have not implemented print routines for complex tensors yet!! Aborting !! " ); 
+  return; 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides(vector<int>& range_sizes) { 

@@ -96,8 +96,13 @@ namespace MOInt {
             };
 
     
-      // fock operator
+      // fock operator, without minusing shenanigans
       std::shared_ptr<Tensor> tensor() { return data_; }
+
+      // fock operator, without minusing shenanigans ( second function for my peace of mind, should be removed; suspect other routines I want will use MOFock_new
+      // data function
+      std::shared_ptr<Tensor> fock() { return data_; }
+
       // core Fock operator minus diagonal part of the two-body integrals
       std::shared_ptr<Tensor> h1() { return h1_; }
     

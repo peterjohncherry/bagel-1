@@ -6,8 +6,9 @@
 #include <src/smith/indexrange.h>
 #include <src/prop/proptool/proputils.h> 
 #include <src/prop/proptool/integrals/moint_computer.h>
-#include <src/prop/proptool/task_translator/equation_computer.h>
 #include <src/prop/proptool/algebraic_manipulator/system_info.h>
+#include <src/prop/proptool/task_translator/equation_computer.h>
+#include <src/prop/proptool/task_translator/equation_computer_linearRM.h>
 
 namespace bagel {
 namespace  System_Computer { 
@@ -15,13 +16,9 @@ template<class DataType>
 class System_Computer {
   private: 
     // Tensor operators in MO basis and maps 
-    std::vector<std::shared_ptr<SMITH::MultiTensor_<DataType>>> T2_all;
-    std::vector<std::shared_ptr<SMITH::MultiTensor_<DataType>>> lambda_all;
-    std::shared_ptr<SMITH::Tensor_<DataType>> F_1el_all;
-    std::shared_ptr<SMITH::Tensor_<DataType>> H_1el_all;
-    std::shared_ptr<SMITH::Tensor_<DataType>> H_2el_all;// only {occ, virt, occ, virt});
-    std::shared_ptr<SMITH::Tensor_<DataType>> v2_; 
     std::shared_ptr<SMITH::Tensor_<DataType>> h1_; 
+    std::shared_ptr<SMITH::Tensor_<DataType>> f1_; 
+    std::shared_ptr<SMITH::Tensor_<DataType>> v2_; 
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map_;

@@ -1,6 +1,6 @@
 #ifndef __SRC_PROP_PROPTOOL_SYSTEM_INFO_H
 #define __SRC_PROP_PROPTOOL_SYSTEM_INFO_H
-#include <src/prop/proptool/algebraic_manipulator/equation.h>
+#include <src/prop/proptool/algebraic_manipulator/equation_linearRM.h>
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
@@ -43,19 +43,15 @@ class System_Info {
         
         // key :    Name of uncontracted part of TensorOp.
         // result : Info for uncontracted part of TensorOp info.
-        std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType> > >> T_map    ;      
+        std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType> > >> T_map_;      
         
         // key :    Name of uncontracted part of MultiTensorOp.
         // result : Info for uncontracted part of MultiTensorOp info.
-        std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map    ;      
+        std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map_;      
         
-        // key :    Name of contracted part of TensorOp (CTP)
-        // result : Info for contracted part of TensorOp info
-        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >> CTP_map;      
-        
-        // key :    Name of contracted part of multitensorop (CMTP)
-        // result : Info for contracted part of multitensorop info
-        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map   ;  
+        // key :    Name of Contracted Tensor Op Block (CTP)  or  Contracted Multi Tens Op Block (CMTP) 
+        // result : Info object for CTP or CMTP
+        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map_;      
         
         // key : name of ATensor (also name of CTP)     
         // result : contraction list list for calculating that ATensor
@@ -83,6 +79,15 @@ class System_Info {
                                                                 DataType factor, std::string Tsymmetry, bool hconj, int state_dependence ) ;
        
         void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
+
+        void  create_equation( std::string name, std::string type, 
+                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
+                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map, 
+                               std::shared_ptr<std::map<std::pair< std::string, std::vector<std::pair<std::string, int>>>, 
+                                                                   std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec, 
+                               std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
+                                                         std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec ); 
+
         
         void create_equation( std::string name, std::string type, 
                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
@@ -92,6 +97,23 @@ class System_Info {
         int nbeta(int state_num)  { return states_info_->nbeta( state_num );  };
         int nact(int state_num)   { return states_info_->nact( state_num );   };
         bool spinfree() {return spinfree_;}
+
+
+
+        
+        std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> braket_map(){return braket_map_;}
+           
+        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map(){return term_braket_map_;}
+        
+        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map(){ return expression_term_map_;}
+        
+        std::shared_ptr< std::map <std::string, std::shared_ptr<Equation_Base<DataType>>>> equation_map(){ return equation_map_;}
+        
+        std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType> > >> T_map(){ return  T_map_;  }    
+        
+        std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map() { return MT_map_; }     
+        
+        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map() { return CTP_map_;   }   
         
         struct compare_string_length {
           bool operator()(const std::string& first, const std::string& second) {

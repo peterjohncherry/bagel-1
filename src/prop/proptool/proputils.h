@@ -17,6 +17,7 @@
 #include <iostream>
 #include <numeric>
 #include <complex> 
+#include <cassert>
 namespace WickUtils {  
 
   using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
@@ -108,6 +109,51 @@ namespace WickUtils {
     std::cout << "]  " ;
     return;
   }
+
+  template<typename DataType>
+  void print_pair_pair_vector( std::vector<std::pair<std::pair<DataType,DataType>, std::pair<DataType,DataType>>> ccp_vec,
+                               std::string name = "" ) {
+    std::cout << name << " = [ "; std::cout.flush();
+    for ( auto& elem : ccp_vec ){
+      std::cout << "{(" << elem.first.first << "," << elem.first.second << "),("  ;std::cout.flush();
+      std::cout << elem.second.first << "," << elem.second.second << ")} "  ; std::cout.flush();
+    }
+    std::cout << "]" ; std::cout.flush();
+    
+    return;
+  }
+ 
+  template<typename DataType>
+  void print_vec_elem_names( std::vector<std::shared_ptr<DataType>>& invec, std::string name = "" ) {
+    std::cout <<  name << " = [ " ; std::cout.flush();
+    for ( auto& elem : invec )
+      std::cout << elem->name() << " " ; std::cout.flush();
+    std::cout << " ] "; std::cout.flush();
+  }
+ 
+  template<typename DataType>
+  void print_vec_elem_names( std::vector<DataType>& invec, std::string name = "" ) {
+    std::cout <<  name << " = [ " ; std::cout.flush();
+    for ( auto& elem : invec )
+      std::cout << elem.name() << " " ; std::cout.flush();
+    std::cout << " ] "; std::cout.flush();
+  }
+
+  template<typename DataType> // returns the relative order of the elements in destination and origin
+  std::shared_ptr<std::vector<int>> get_pattern_match_order( std::shared_ptr<std::vector<DataType>> destination , std::shared_ptr<std::vector<DataType>> origin ) { 
+    assert( destination->size() == origin->size() ); 
+    std::shared_ptr<std::vector<int>> new_order = std::make_shared<std::vector<int>>(destination->size()); 
+    std::vector<int>::iterator new_order_it = new_order->begin();  
+    for ( int ii = 0 ; ii != destination->size() ; ii++  ) 
+      for ( int jj = 0 ; jj != origin->size() ; jj++  ) 
+        if ( destination->at(ii) == origin->at(jj) ) {
+          *new_order_it++ = jj;
+          break;
+        }
+    assert( new_order_it == new_order->end()); // if this trips the vectors don't have the same elements 
+    return new_order;
+  }
+
 
   //TODO you need type name here, but why ? Find out, it could be a problem.
   template<typename DataType>

@@ -140,12 +140,15 @@ class TensOp_base {
      std::string Tsymm_;
      int state_dep_; 
      std::shared_ptr<const Op_General_base> Op_dense_;
+     std::shared_ptr<std::set<std::string>> required_blocks_;
+     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart_Base> > > CTP_map_;
 
    public:
-
  
-     TensOp_base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name), spinfree_(spinfree), Tsymm_(Tsymm), state_dep_(state_dep)  {};
-     TensOp_base( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0)  {};
+     TensOp_base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name), spinfree_(spinfree), Tsymm_(Tsymm), state_dep_(state_dep),
+                                                                                        required_blocks_(std::make_shared<std::set<std::string>>()) {};
+     TensOp_base( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0),
+                                                      required_blocks_(std::make_shared<std::set<std::string>>())  {};
      ~TensOp_base(){};
 
      std::string const name(){ return name_;}
@@ -171,17 +174,24 @@ class TensOp_base {
      std::shared_ptr< const std::vector<int>> kill_ops(){ return Op_dense_->kill_ops();}
      int kill_ops(int ii){ return Op_dense_->kill_ops(ii);}
 
-
      std::shared_ptr< const std::vector< std::shared_ptr< const std::vector<std::string>>>> unique_range_blocks() const { return Op_dense_->unique_range_blocks(); }
      std::shared_ptr< const std::vector<std::string>> unique_range_blocks(int ii) const { return Op_dense_->unique_range_blocks(ii); }
-     
+    
+     void add_required_block( std::string block_name ) { required_blocks_->emplace( block_name ); } 
+     std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { return required_blocks_; } 
+
+     virtual void get_ctrs_tens_ranges() = 0;
+ 
      virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info > > > all_ranges() const  { return Op_dense_->all_ranges(); }
-     virtual std::shared_ptr< range_block_info > all_ranges(const std::vector<std::string> range_block ) const  { return Op_dense_->all_ranges(range_block); }
+     virtual std::shared_ptr< range_block_info > all_ranges(const std::vector<std::string> range_block ) const { return Op_dense_->all_ranges(range_block); }
 
-     virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info > > > split_ranges() const{ return Op_dense_->split_ranges(); } 
-     virtual std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block )const { return Op_dense_->split_ranges(range_block); } 
-//     virtual std::shared_ptr<range_block_info > sparsed_ranges(const std::vector<int> range_block ) const  = 0 ; 
+     virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info > > > split_ranges() const = 0 ; // { return Op_dense_->split_ranges(); } 
+     virtual std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block ) const = 0 ; // { return Op_dense_->split_ranges(range_block); } 
 
+     virtual void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges ) = 0 ; 
+ 
+     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base> >> CTP_map() { return CTP_map_; } 
+     //virtual std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<double> > >> CTP_map() = 0;  
 };
 
 namespace TensOp {
@@ -197,7 +207,6 @@ class TensOp : public TensOp_base {
 //     std::map< std::vector<int>, std::vector<std::shared_ptr<const std::vector<std::string> > >  > state_sparsity_map_; 
 
    public:
-     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> > > CTP_map_;
 
      TensOp( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
              std::vector<bool>& aops, DataType orig_factor,
@@ -225,7 +234,9 @@ class TensOp : public TensOp_base {
        throw std::logic_error("2 TensOp Should not be trying to access split range map from merged TensOp, probably error in range looping! Aborting! " ) ; 
      return Op_dense_->split_ranges(range_block); } 
 
-    std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >> CTP_map() { return CTP_map_; } 
+     void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges ) { 
+        throw std::logic_error( "TensOp::TensOp<DataType> should cannot call enter_into_CTP_map form this class!! Aborting!!" ); } 
+
 };
 }
 
@@ -235,10 +246,6 @@ class MultiTensOp : public TensOp_base {
 
    public :
      std::vector<std::shared_ptr<TensOp::TensOp<DataType>>> orig_tensors_; 
-
-     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart<DataType>> > > CTP_map_;
-
-     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map_;
 
      int num_tensors_;
      
@@ -252,9 +259,18 @@ class MultiTensOp : public TensOp_base {
 
     std::shared_ptr<const std::vector<int>> cmlsizevec() const  {  return Op_dense_->cmlsizevec(); } ;
     int cmlsizevec(int ii )const { return Op_dense_->cmlsizevec(ii); };
+
+    std::vector<std::shared_ptr<TensOp::TensOp<DataType>>> tensop_vec(){ return orig_tensors_; } 
  
     void get_ctrs_tens_ranges(); 
-  
+ 
+    void get_cmtp( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>>  ctp_vec, 
+                   std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>>>> ccp_vec );
+
+    void shift_ccp_and_ctp_vecs( std::shared_ptr<CtrMultiTensorPart<DataType>>& tatb_cmtp,
+                                 int ta, int tb, std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>>& ctp_vec,
+                                 std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >>& ccp_vec  );
+
     std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info > > > all_ranges() const  {
       return std::dynamic_pointer_cast<const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info > > >(Op_dense_->all_ranges());
     }
@@ -266,10 +282,8 @@ class MultiTensOp : public TensOp_base {
     std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info > > > split_ranges() const{return Op_dense_->split_ranges(); } 
     std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block )const { return Op_dense_->split_ranges(range_block); } 
 
-    void enter_into_CMTP_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges );
+    void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges );
 
-    std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart<DataType> > >> CTP_map() { return CTP_map_; } 
-    std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map() { return CMTP_map_; } 
 };
 }
 #endif

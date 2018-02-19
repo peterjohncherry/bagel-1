@@ -23,6 +23,7 @@ class CtrOp_base {
     virtual int T2_ctr_rel_pos(){ throw std::runtime_error("Not defined in CtrOp_base class!"); return 1;};
     virtual std::pair<int,int> ctr_rel_pos(){ throw std::runtime_error("Not defined in CtrOp_base class!"); return std::make_pair(-1,-1) ;};
     virtual std::pair<int,int> ctr_abs_pos(){ throw std::runtime_error("Not defined in CtrOp_base class!"); return std::make_pair(-1,-1) ;};;
+    virtual std::shared_ptr<std::vector<int>> new_order() { throw std::runtime_error( " Not defined in CtrOp_base class!");  return std::make_shared<std::vector<int>>(1,0);}
 
 };
 
@@ -103,6 +104,25 @@ class CtrOp_exc_ids : public CtrOp_base {
     std::string T1name() override { return T1name_ ;}
     std::pair<int,int> ctr_rel_pos() override { return ctr_rel_pos_;};
     std::pair<int,int> ctr_abs_pos() override { return ctr_abs_pos_;};
+
+};
+
+//Just a reordering operation
+//TODO find some way of combining this with the reordering from the gamma_map 
+class CtrOp_reorder : public CtrOp_base {
+  public : 
+    const std::string T1name_;
+    const std::pair<int,int> ctr_abs_pos_;
+    const std::pair<int,int> ctr_rel_pos_;
+    const std::shared_ptr<std::vector<int>> new_order_;
+
+    CtrOp_reorder( std::string T1name, std::string Tout_name, std::shared_ptr<std::vector<int>> new_order, std::string ctr_type  ) :
+                   CtrOp_base(Tout_name, ctr_type), T1name_(T1name), new_order_(new_order) {};
+
+    ~CtrOp_reorder(){};
+
+    std::string T1name() override { return T1name_ ;}
+    std::shared_ptr<std::vector<int>> new_order() { return new_order_;}
 
 };
  
