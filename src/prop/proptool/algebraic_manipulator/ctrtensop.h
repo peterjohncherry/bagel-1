@@ -5,7 +5,7 @@
 #include <src/prop/proptool/task_translator/tensor_algop_info.h>
 #include <unordered_set>
 
-class CtrTensorPart_Base /* :std::enable_shared_from_this<CtrTensorPart_Base> */  {
+class CtrTensorPart_Base  {
   public : //TODO change to private
 
     std::shared_ptr<std::vector<std::string>> full_idxs_;
@@ -101,7 +101,7 @@ class CtrTensorPart_Base /* :std::enable_shared_from_this<CtrTensorPart_Base> */
 };
 
 template<typename DataType>
-class CtrTensorPart : /* std::enable_shared_from_this<CtrTensorPart<DataType>> */  public CtrTensorPart_Base   {
+class CtrTensorPart : public  CtrTensorPart_Base , public std::enable_shared_from_this<CtrTensorPart<DataType>>   {
    public:
 
     CtrTensorPart() : CtrTensorPart_Base() {} 
@@ -123,7 +123,7 @@ class CtrTensorPart : /* std::enable_shared_from_this<CtrTensorPart<DataType>> *
 
 
 template<typename DataType>
-class CtrMultiTensorPart : /*  std::enable_shared_from_this<CtrMultiTensorPart<DataType>>,  */ public CtrTensorPart_Base   {
+class CtrMultiTensorPart : public CtrTensorPart_Base , public  std::enable_shared_from_this<CtrMultiTensorPart<DataType>>  {
    public :
 
     std::shared_ptr<std::vector<int>> Tsizes_cml;
