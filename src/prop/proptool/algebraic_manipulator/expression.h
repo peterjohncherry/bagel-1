@@ -20,13 +20,9 @@ class Expression {
         // result : the info
         std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map_;
         
-        // key : name of block of contracted and uncontracted single tensor info
-        // result : the info
+        // key : name of block of contracted and uncontracted tensor/multitensor info objects
+        // result : the info object
         std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map_;
-        
-        // key : name of block of contracted and uncontracted multitensors info
-        // result : the info
-        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map_;
         
         // key:  Name of a contracted tensor or contracted combintation fo tensors
         // result : List of operations which need to be performed to obtain it
@@ -44,7 +40,6 @@ class Expression {
                     std::shared_ptr<StatesInfo<DataType>> states_info,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base> >>            CTP_map,
-                    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >                         gamma_info_map );
         ~Expression(){};
@@ -58,7 +53,6 @@ class Expression {
         std::shared_ptr<StatesInfo<DataType>> states_info(){ return  states_info_;}
         std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map(){ return  MT_map_;}
         std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map(){ return  CTP_map_;}
-        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map(){ return  CMTP_map_;}
         std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map(){ return  ACompute_map_;}
         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo> > > gamma_info_map(){ return  gamma_info_map_;}
         std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo > >>> G_to_A_map(){ return  G_to_A_map_;} //TODO should be private

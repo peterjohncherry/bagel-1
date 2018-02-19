@@ -9,8 +9,7 @@ void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string,
                                          shared_ptr< map <string, shared_ptr< vector<shared_ptr<CtrOp_base>>>>> ACompute_map,
                                          shared_ptr< map< string, shared_ptr< TensOp::TensOp<DataType>>>> T_map,
                                          shared_ptr< map< string, shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map,
-                                         shared_ptr< map< string, shared_ptr< CtrTensorPart_Base>>> CTP_map,     
-                                         shared_ptr< map< string, shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map){
+                                         shared_ptr< map< string, shared_ptr< CtrTensorPart_Base>>> CTP_map ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "void Equation_Value<DataType>::set_maps" << endl;
 
@@ -20,7 +19,6 @@ void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string,
   T_map_          = T_map;            if(!T_map_          ) throw logic_error( "T_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
   MT_map_         = MT_map;           if(!MT_map_         ) throw logic_error( "MT_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
   CTP_map_        = CTP_map;          if(!CTP_map_        ) throw logic_error( "CTP_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
-  CMTP_map_       = CMTP_map;         if(!CMTP_map_       ) throw logic_error( "CMTP_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
 
   cout << "leaving void Equation_Value<DataType>::set_maps" << endl;
   return;
@@ -84,7 +82,7 @@ shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( shar
         cout << "must initialize tensor" << endl;
         shared_ptr<TensOp::TensOp<DataType>> new_op = TensOp_Info_Init::Initialize_Tensor_Op_Info<DataType>( op_name );
         cout << "initialized tensor" << endl;
-        CTP_map_->insert( new_op->CTP_map_->begin(), new_op->CTP_map_->end());
+        CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());
         T_map_->emplace( op_name, new_op );
       }
     } 
@@ -100,7 +98,6 @@ shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( shar
       shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info.multiop_name_, /*spinfree_ = */ true, SubOps );
       multiop->get_ctrs_tens_ranges();
       CTP_map_->insert( multiop->CTP_map()->begin(), multiop->CTP_map()->end());
-      CMTP_map_->insert( multiop->CMTP_map()->begin(), multiop->CMTP_map()->end());
       MT_map_->emplace(braket_info.multiop_name_, multiop );
     } 
     
@@ -109,7 +106,7 @@ shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( shar
   }
   
   cout << "making expression" << endl;
-  auto  expr = make_shared<Expression<DataType>>( expr_bk_list, states_info_, MT_map_, CTP_map_, CMTP_map_, ACompute_map_, gamma_info_map_ );
+  auto  expr = make_shared<Expression<DataType>>( expr_bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_ );
   
   cout << "made expression" << endl;
   return expr;

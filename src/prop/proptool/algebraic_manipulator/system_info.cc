@@ -23,7 +23,6 @@ System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info
   T_map_          = make_shared< map <string, shared_ptr<TensOp::TensOp<DataType>>>>();
   MT_map_         = make_shared< map <string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>();
   CTP_map_        = make_shared< map <string, shared_ptr<CtrTensorPart_Base>>>();
-  CMTP_map_       = make_shared< map <string, shared_ptr<CtrMultiTensorPart<DataType>>>>();
   ACompute_map   = make_shared< map <string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>();
   Gamma_map      = make_shared< map <string, shared_ptr<GammaInfo> > >();
 
@@ -129,7 +128,7 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
     shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map );
     new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
     if (!new_eqn) { throw runtime_error("cast from Equation_Value to equation_base failed" ); }
-    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map_, MT_map_, CTP_map_, CMTP_map_ );
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map_, MT_map_, CTP_map_ );
     equation_map_->emplace( name, new_eqn); 
 
   } else if ( type == "LinearRM") { 
@@ -143,7 +142,7 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
     new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_lrm);
     cout << "casted equation_lrm to base" << endl;
     if (!new_eqn) { throw runtime_error("cast from Equation_LinearRM to Equation_Base failed" ); }
-    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map_, MT_map_, CTP_map_, CMTP_map_ );
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map_, MT_map_, CTP_map_ );
     cout << " set maps in new_eqn " <<endl;
     new_eqn_lrm->generate_state_specific_terms();
     cout << "got state specific terms" <<endl;
@@ -173,7 +172,7 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
   if ( type == "Value" ) { 
     shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map );
     new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
-    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map_, MT_map_, CTP_map_, CMTP_map_ );
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map_, MT_map_, CTP_map_ );
     equation_map_->emplace( name, new_eqn); 
 
   } else if ( type == "LinearRM") { 

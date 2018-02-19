@@ -24,7 +24,6 @@ class Equation_LinearRM : public Equation_Base<DataType> {
     using Equation_Base<DataType>::MT_map_ ;      
 
     using Equation_Base<DataType>::CTP_map_;      
-    using Equation_Base<DataType>::CMTP_map_;  
 
     using Equation_Base<DataType>::term_braket_map_state_spec_; 
     using Equation_Base<DataType>::expression_term_map_state_spec_;

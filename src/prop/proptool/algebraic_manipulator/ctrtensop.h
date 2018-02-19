@@ -5,7 +5,7 @@
 #include <src/prop/proptool/task_translator/tensor_algop_info.h>
 #include <unordered_set>
 
-class CtrTensorPart_Base  {
+class CtrTensorPart_Base /* :std::enable_shared_from_this<CtrTensorPart_Base> */  {
   public : //TODO change to private
 
     std::shared_ptr<std::vector<std::string>> full_idxs_;
@@ -32,6 +32,7 @@ class CtrTensorPart_Base  {
  
     int size_;
 
+    std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec_;
   public :
     CtrTensorPart_Base()  { //TODO Fix this rubbish 
                     full_idxs_      = std::make_shared< std::vector<std::string>>(0);
@@ -55,6 +56,7 @@ class CtrTensorPart_Base  {
                           got_data_ = false;
                           get_ctp_idxs_ranges();
                           get_name();
+                          CTP_vec_ = std::make_shared<std::vector<std::shared_ptr<CtrTensorPart_Base>>>(1);
                         } 
 
     ~CtrTensorPart_Base(){};
@@ -81,6 +83,8 @@ class CtrTensorPart_Base  {
     bool got_compute_list(){ return got_compute_list_; }
     void got_compute_list( bool val ){ got_compute_list_ = val; }
     
+    std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec() { return CTP_vec_; }
+    
     int size() { return full_idxs_->size() ; } 
   
     void get_name();
@@ -97,7 +101,7 @@ class CtrTensorPart_Base  {
 };
 
 template<typename DataType>
-class CtrTensorPart : public CtrTensorPart_Base /*, public: std::enable_shared_from_this<CtrTensorPart>*/ {
+class CtrTensorPart : /* std::enable_shared_from_this<CtrTensorPart<DataType>> */  public CtrTensorPart_Base   {
    public:
 
     CtrTensorPart() : CtrTensorPart_Base() {} 
@@ -119,11 +123,10 @@ class CtrTensorPart : public CtrTensorPart_Base /*, public: std::enable_shared_f
 
 
 template<typename DataType>
-class CtrMultiTensorPart :  public CtrTensorPart_Base  {
+class CtrMultiTensorPart : /*  std::enable_shared_from_this<CtrMultiTensorPart<DataType>>,  */ public CtrTensorPart_Base   {
    public :
 
     std::shared_ptr<std::vector<int>> Tsizes_cml;
-    std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec;
     std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >> cross_ctrs_pos_;
 
     bool get_compute_list_from_reordered_tens_;
@@ -132,12 +135,12 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
 
     CtrMultiTensorPart(){};
 
-    CtrMultiTensorPart( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec_in,
+    CtrMultiTensorPart( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec,
                         std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >> cross_ctrs_pos_in  )
                         : CtrTensorPart_Base() {
                          std::cout << "CtrMultiTensorPart::CtrMultiTensorPart" << std::endl; 
                          int counter = 0;
-                         CTP_vec         = CTP_vec_in;
+                         CTP_vec_         = CTP_vec;
                          cross_ctrs_pos_ = cross_ctrs_pos_in;
                          Tsizes_cml      = std::make_shared<std::vector<int>>(0);
                          ctrs_pos_       = std::make_shared<std::vector<std::pair<int,int>>>(0);
@@ -145,7 +148,7 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
                          get_compute_list_from_reordered_tens_ = false;
 
                          int cml_size = 0;
-                         for (std::shared_ptr<CtrTensorPart_Base> ctp : *CTP_vec){
+                         for (std::shared_ptr<CtrTensorPart_Base> ctp : *CTP_vec_){
                            Tsizes_cml->push_back(cml_size);
                            full_idxs_->insert(full_idxs_->end() , ctp->full_idxs_->begin(), ctp->full_idxs_->end());
                            full_id_ranges_->insert(full_id_ranges_->end(),  ctp->full_id_ranges_->begin(), ctp->full_id_ranges_->end());
@@ -175,12 +178,11 @@ class CtrMultiTensorPart :  public CtrTensorPart_Base  {
 
 
     //fix names; CTP_vec should at least be private
-    std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> get_CTP_vec() const { return CTP_vec; }  ;
+    std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> get_CTP_vec() const { return CTP_vec_; }  ;
 
     std::pair<int,int> get_pre_contract_ctr_rel_pos( std::pair<int,int>& ctr_pos ) { throw std::logic_error("not implemented yet!! Aborting!!" );  return std::make_pair(-1, -1 ); };
 
     void use_new_order_compute_list( std::shared_ptr<std::vector<int>> reordering, std::string reordered_tens_name ) {
-             std::cout << "checkZZZZZ" << std::endl;
              get_compute_list_from_reordered_tens_ = true;
              reordering_ = reordering;
              reordered_tens_name_ = reordered_tens_name; return; } 

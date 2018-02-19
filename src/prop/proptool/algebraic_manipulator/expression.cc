@@ -10,10 +10,9 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
                                   shared_ptr<StatesInfo<DataType>> states_info,
                                   shared_ptr<map< string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,
                                   shared_ptr<map< string, shared_ptr<CtrTensorPart_Base> >>            CTP_map,
-                                  shared_ptr<map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>       CMTP_map,
                                   shared_ptr<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>     ACompute_map,
                                   shared_ptr<map< string, shared_ptr<GammaInfo> > >                         gamma_info_map ):
-                                  braket_list_(braket_list), states_info_(states_info), MT_map_(MT_map), CTP_map_(CTP_map), CMTP_map_(CMTP_map),
+                                  braket_list_(braket_list), states_info_(states_info), MT_map_(MT_map), CTP_map_(CTP_map),
                                   ACompute_map_(ACompute_map), gamma_info_map_(gamma_info_map) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression<DataType>::Expression (new constructor) " << endl;
@@ -48,23 +47,23 @@ void Expression<DataType>::get_gamma_Atensor_contraction_list(){
   for (auto G2A_mapit = G_to_A_map_->begin(); G2A_mapit != G_to_A_map_->end(); G2A_mapit++) {
     auto A_map = G2A_mapit->second;
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
-      string CMTP_name  = A_map_it->first;
+      string cmtp_name  = A_map_it->first;
       shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list;
-      if ( CMTP_map_->find(CMTP_name) == CMTP_map_->end())
-        throw std::logic_error( CMTP_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
+      if ( CTP_map_->find(cmtp_name) == CTP_map_->end())
+        throw std::logic_error( cmtp_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
 
-      auto ACompute_list_loc = ACompute_map_->find(CMTP_name);
+      auto ACompute_list_loc = ACompute_map_->find(cmtp_name);
       if ( ACompute_list_loc != ACompute_map_->end() ){
-        cout << "Expression::get_gamma_Atensor_contraction_list::already built compute list for " << CMTP_name << " during generation of earlier compute list" << endl;
-        cout << CMTP_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(CMTP_name)->size() << "  --- Still in if " << endl;
+        cout << "Expression::get_gamma_Atensor_contraction_list::already built compute list for " << cmtp_name << " during generation of earlier compute list" << endl;
+        cout << cmtp_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(cmtp_name)->size() << "  --- Still in if " << endl;
         continue;
       } else {
         ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
-        CMTP_map_->at(CMTP_name)->FullContract(CTP_map_, ACompute_list, ACompute_map_);
-        ACompute_map_->emplace(CMTP_name, ACompute_list);
-        CMTP_map_->at(CMTP_name)->got_compute_list( true );
+        CTP_map_->at(cmtp_name)->FullContract(CTP_map_, ACompute_list, ACompute_map_);
+        ACompute_map_->emplace(cmtp_name, ACompute_list);
+        CTP_map_->at(cmtp_name)->got_compute_list( true );
       }
-      cout << CMTP_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(CMTP_name)->size() << endl;
+      cout << cmtp_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(cmtp_name)->size() << endl;
     }
   }
   cout << "leaving Get_CMTP_compute_Terms" << endl;
@@ -85,13 +84,13 @@ void Expression<DataType>::necessary_tensor_blocks(){
     
     auto A_map = G2A_mapit->second;
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
-      string CMTP_name  = A_map_it->first;
-      auto CMTP_loc = CMTP_map_->find(CMTP_name);
-      if ( CMTP_loc == CMTP_map_->end())
-        throw std::logic_error( CMTP_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
+      string cmtp_name  = A_map_it->first;
+      auto CMTP_loc = CTP_map_->find(cmtp_name);
+      if ( CMTP_loc == CTP_map_->end())
+        throw std::logic_error( cmtp_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
 
       //awkward, but this will avoid issues where members of CTP_vec are formed from multiple tensors
-      shared_ptr<CtrMultiTensorPart<DataType>> CMTP = CMTP_loc->second;
+      shared_ptr<CtrTensorPart_Base> CMTP = CMTP_loc->second;
       shared_ptr<vector<string>> ranges = CMTP->full_id_ranges();
       shared_ptr<vector<string>> idxs = CMTP->full_idxs();
       int t_num = 0;

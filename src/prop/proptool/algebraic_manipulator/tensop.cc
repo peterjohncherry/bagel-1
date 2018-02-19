@@ -7,11 +7,11 @@ using namespace WickUtils;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                 std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
-                 std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
-                 std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr< range_block_info> >> all_ranges ):
-                 idxs_(idxs),  aops_(aops), plus_ops_(plus_ops), kill_ops_(kill_ops), idx_ranges_(idx_ranges), orig_factor_(factor), num_idxs_(idxs.size()),
-                 unique_range_blocks_(*unique_range_blocks), all_ranges_(all_ranges) {
+                                  std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
+                                  std::shared_ptr<std::vector< std::shared_ptr<const std::vector<std::string>>>> unique_range_blocks,
+                                  std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr< range_block_info> >> all_ranges ):
+                                  idxs_(idxs),  aops_(aops), plus_ops_(plus_ops), kill_ops_(kill_ops), idx_ranges_(idx_ranges), orig_factor_(factor), num_idxs_(idxs.size()),
+                                  unique_range_blocks_(*unique_range_blocks), all_ranges_(all_ranges) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Op_General_base::Op_General_base constructor"<< endl;
            
@@ -76,6 +76,7 @@ cout << "TensOp_General::TensOp_General "<< endl;
   // has split ranges
 
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 MultiTensOp_General::MultiTensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
                                           std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor, std::vector<int>& cmlsizevec, 
@@ -228,17 +229,17 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
 //////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp<DataType> get_ctrs_tens_ranges" /* << name_*/ << endl;
 
- //puts uncontracted ranges into map 
- shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
- for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
-   shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, rng_it->second->factors()); 
-   shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
-   shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
-
-   shared_ptr<CtrTensorPart<DataType>>  CTP = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors ); 
-   cout << "CTP->name() = " << CTP->name() << " is going into CTP_map" <<  endl;
-   CTP_map_->emplace(CTP->name(), CTP); //maybe should be addded in with ctr_idxs
- }
+  //puts uncontracted ranges into map 
+  shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
+  for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
+    shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, rng_it->second->factors()); 
+    shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
+    shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
+ 
+    shared_ptr<CtrTensorPart<DataType>>  CTP = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors ); 
+    cout << "CTP->name() = " << CTP->name() << " is going into CTP_map" <<  endl;
+    CTP_map_->emplace(CTP->name(), CTP); //maybe should be addded in with ctr_idxs
+  }
  
   //puts_contracted ranges into map
   for ( int nctrs = 1 ; nctrs != (num_idxs()/2)+1 ; nctrs++ ){
@@ -345,7 +346,6 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
   
   Op_dense_ = make_shared<const MultiTensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, make_pair(1.0,1.0), cmlsizevec, unique_range_blocks, all_ranges_ptr ); 
   CTP_map_  = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
-  CMTP_map_ = make_shared< map< string, shared_ptr<CtrMultiTensorPart<DataType>> >>();
    
 }
 
@@ -455,7 +455,7 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
       continue;
 
     } else {
-      enter_into_CMTP_map(*noctrs, rng_it->second->factors(), rng_it->first );
+      enter_cmtps_into_map(*noctrs, rng_it->second->factors(), rng_it->first );
 
     }
   }
@@ -476,7 +476,7 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
           }
         }
         if (valid)
-          enter_into_CMTP_map(*ctr_vec, rng_it->second->factors(), rng_it->first );
+          enter_cmtps_into_map(*ctr_vec, rng_it->second->factors(), rng_it->first );
         
       }
     }
@@ -485,13 +485,13 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
 }  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void MultiTensOp::MultiTensOp<DataType>::enter_into_CMTP_map(pint_vec ctr_pos_list, pair<int,int> ReIm_factors, const vector<string>& id_ranges ){
+void MultiTensOp::MultiTensOp<DataType>::enter_cmtps_into_map(pint_vec ctr_pos_list, pair<int,int> ReIm_factors, const vector<string>& id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_TensOp 
-cout << "MultiTensOp::enter_into_CMTP_map" << endl;
+cout << "MultiTensOp::enter_into_CTP_map" << endl;
 #endif 
 ////////////////////////////////////////////////////////////////////////////////////////
-//cout << "MultiTensOp::enter_into_CMTP_map" << endl;
+//cout << "MultiTensOp::enter_into_CTP_map" << endl;
 
   shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart_Base> >> (num_tensors_); 
   vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
@@ -540,7 +540,6 @@ cout << "MultiTensOp::enter_into_CMTP_map" << endl;
   if ( CTP_vec->size() < 3  ){ 
     cout  << " 2 Tens MultiTens method" << endl;
     auto new_cmtp = make_shared<CtrMultiTensorPart<DataType>>(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos));
-    CMTP_map_->emplace(new_cmtp->name(), new_cmtp ) ;
     CTP_map_->emplace(new_cmtp->name(), new_cmtp );
     cout  << " 2 Tens MultiTens method done" << endl;
   } else {
@@ -601,7 +600,7 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
       cout << endl;
       shared_ptr<CtrMultiTensorPart<DataType>> cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb );
       cout << endl;
-      CMTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
+      CTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
 
       shift_ccp_and_ctp_vecs( cmtp_tatb, ta_pos, tb_pos, ctp_vec, ccp_vec_merged_tatb );
       cout << "ta_pos = " << ta_pos << "    tb_pos = " << tb_pos << endl;
@@ -621,7 +620,7 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
       cout << endl;
       auto cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb );
       cout << endl;
-      CMTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
+      CTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
       cout << "cmtp_tatb->name() = "<< cmtp_tatb->name()  << endl;
       ctp_vec->pop_back(); 
       ctp_vec->back() = cmtp_tatb;
@@ -644,9 +643,7 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
 
   cout << "cmtp_new_ctp_order->name() = " << cmtp_new_ctp_order->name() <<endl; 
   cout << "cmtp_orig_ctp_order->name() = " << cmtp_new_ctp_order->name() <<endl; 
-  CMTP_map_->emplace(cmtp_orig_ctp_order->name(), cmtp_orig_ctp_order ) ;
-  CTP_map_->emplace( cmtp_orig_ctp_order->name(), cmtp_orig_ctp_order );
-  CMTP_map_->emplace(cmtp_new_ctp_order->name(), cmtp_new_ctp_order ) ;
+  CTP_map_->emplace( cmtp_orig_ctp_order->name(), cmtp_orig_ctp_order ) ;
   CTP_map_->emplace( cmtp_new_ctp_order->name(), cmtp_new_ctp_order );
 
   return;

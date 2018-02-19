@@ -84,7 +84,7 @@ void System_Computer::System_Computer<DataType>::get_necessary_tensor_blocks( sh
   for ( auto& gamma_contribs : *expression->G_to_A_map_ ){
     for ( auto& A_contrib_list : *gamma_contribs.second ){
       auto& A_contrib  = A_contrib_list.second; 
-      for ( auto& CTP : *( expression->CMTP_map()->at(A_contrib.name())->get_CTP_vec() ) )
+      for ( auto& CTP : *( expression->CTP_map()->at(A_contrib.name())->CTP_vec() ) )
         if ( tensop_data_map_->find(CTP->name() ) == tensop_data_map_->end() )
           get_tensor_block( CTP->name(), CTP->full_id_ranges() );
     }

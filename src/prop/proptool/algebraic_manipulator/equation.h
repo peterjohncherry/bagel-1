@@ -28,7 +28,6 @@ class Equation_Base {
      std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map_;      
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map_;      
-     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map_;  
 
 //     std::shared_ptr<std::vector<std::<std::tuple<std::pair<std::string,int>>>>> term_val_list_;
 
@@ -72,8 +71,7 @@ class Equation_Base {
                     std::shared_ptr< std::map<std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map,
                     std::shared_ptr< std::map<std::string, std::shared_ptr< TensOp::TensOp<DataType>>>> T_map,
                     std::shared_ptr< std::map<std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map,
-                    std::shared_ptr< std::map<std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map,     
-                    std::shared_ptr< std::map<std::string, std::shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map);
+                    std::shared_ptr< std::map<std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map);
 
 
      void generate_all_expressions();  
@@ -84,7 +82,6 @@ class Equation_Base {
      std::shared_ptr< std::map <std::string, std::shared_ptr< GammaInfo >>> gamma_info_map() { return gamma_info_map_; }
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map() { return CTP_map_; }      
-     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> >>> CMTP_map() { return CMTP_map_; }  
      std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType>>>> T_map() { return T_map_    ; }      
      std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map() { return MT_map_    ; }      
      std::shared_ptr< std::map <std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>>  ACompute_map() { return ACompute_map_; }
@@ -122,7 +119,6 @@ class Equation_Value : public Equation_Base<DataType> {
      using Equation_Base<DataType>::MT_map_ ;      
 
      using Equation_Base<DataType>::CTP_map_;      
-     using Equation_Base<DataType>::CMTP_map_;  
 
 
    public :

@@ -49,13 +49,9 @@ class System_Info {
         // result : Info for uncontracted part of MultiTensorOp info.
         std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map_;      
         
-        // key :    Name of contracted part of TensorOp (CTP)
-        // result : Info for contracted part of TensorOp info
+        // key :    Name of Contracted Tensor Op Block (CTP)  or  Contracted Multi Tens Op Block (CMTP) 
+        // result : Info object for CTP or CMTP
         std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map_;      
-        
-        // key :    Name of contracted part of multitensorop (CMTP)
-        // result : Info for contracted part of multitensorop info
-        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map_;  
         
         // key : name of ATensor (also name of CTP)     
         // result : contraction list list for calculating that ATensor
@@ -118,8 +114,6 @@ class System_Info {
         std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map() { return MT_map_; }     
         
         std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map() { return CTP_map_;   }   
-        
-        std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<DataType> > >> CMTP_map() {return CMTP_map_;}   
         
         struct compare_string_length {
           bool operator()(const std::string& first, const std::string& second) {
