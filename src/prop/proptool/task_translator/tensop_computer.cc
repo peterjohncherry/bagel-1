@@ -221,21 +221,24 @@ TensOp_Computer::TensOp_Computer<DataType>::contract_different_tensors( std::str
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
-TensOp_Computer::TensOp_Computer<DataType>::direct_product_tensors( std::vector<std::string>& Tensor_names ){
+TensOp_Computer::TensOp_Computer<DataType>::direct_product_tensors( std::vector<std::string>& tensor_names ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp_Computer::direct_product_tensors" << endl; 
 
-  print_vector(Tensor_names, "Tensor_names"); cout <<endl; 
+  assert(tensor_names.size() > 1 );
 
-  shared_ptr<Tensor_<DataType>> Tens_prod = find_or_get_CTP_data(Tensor_names[0]);
+  print_vector(tensor_names, "tensor_names"); cout <<endl; 
+
+  string Tname_comp = tensor_names.front();
+  shared_ptr<Tensor_<DataType>> Tens_prod = find_or_get_CTP_data( Tname_comp );
   shared_ptr<Tensor_<DataType>> Tens_intermediate;
-  string Tname_comp ="";
-  for ( string& Tname : Tensor_names ) {
-    Tname_comp += Tname;
-    cout <<"Tname = " << Tname << "  Tname_comp = " << Tname_comp << endl;
-    shared_ptr<Tensor_<DataType>> Tens_next = find_or_get_CTP_data(Tname);
+  for ( vector<string>::iterator tn_it = tensor_names.begin()+1 ; tn_it != tensor_names.end(); tn_it++ ) {
+    cout << "*tn_it = " << *tn_it << endl;
+    shared_ptr<Tensor_<DataType>> Tens_next = find_or_get_CTP_data(*tn_it);
     Tens_intermediate = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::direct_tensor_product( Tens_prod, Tens_next ); 
     Tens_prod = Tens_intermediate;
+    Tname_comp += *tn_it;
+    cout << "  Tname_comp = " << Tname_comp << endl;
   }           
  
   return Tens_prod;
