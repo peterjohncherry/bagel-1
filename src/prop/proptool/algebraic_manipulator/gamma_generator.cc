@@ -578,6 +578,60 @@ cout << "GammaGenerator::gamma_survives" << endl;
 
 }
 //////////////////////////////////////////////////////////////////////////////
+// This assumes the following format :
+// < Bra_info |  {proj_ids} {gamma_ids} | Ket_info >  
+//////////////////////////////////////////////////////////////////////////////
+bool
+GammaGenerator::check_orb_ranges_proj_bra( const vector<string>& gamma_ranges,
+                                           const vector<bool>& gamma_aops,
+                                           shared_ptr<CIVecInfo<double>> ket_info ) { 
+//////////////////////////////////////////////////////////////////////////////
+
+  shared_ptr<map<char,int>> ket_hole_range_map = make_shared<map<char,int>>( *(ket_info->hole_range_map()) );
+  shared_ptr<map<char,int>> ket_el_range_map = make_shared<map<char,int>>( *(ket_info->elec_range_map()) );
+   
+  for ( int ii = gamma_aops.size()-1 ; ii != -1; ii-- ) {
+    if ( gamma_aops[ii] ) {
+      auto khrm_loc = ket_hole_range_map->find(gamma_ranges[ii][0]); 
+      if ( khrm_loc == ket_hole_range_map->end() || (--khrm_loc->second)  == 0 ) 
+        return false; 
+     
+    } else { 
+      auto kerm_loc = ket_el_range_map->find(gamma_ranges[ii][0]); 
+      if ( kerm_loc == ket_el_range_map->end() || (--kerm_loc->second)  == 0 ) 
+        return false; 
+    } 
+  } 
+
+  return true;
+}
+//////////////////////////////////////////////////////////////////////////////
+// This assumes the following format :
+// < Bra_info |  {proj_ids}  
+//////////////////////////////////////////////////////////////////////////////
+bool 
+GammaGenerator::get_proj_bra_range_map( const vector<string>& proj_ranges,
+                                        const vector<bool>& proj_aops,
+                                        shared_ptr<CIVecInfo<double>> bra_info )  {
+//////////////////////////////////////////////////////////////////////////////
+
+  shared_ptr<map<char,int>> proj_bra_hole_range_map = make_shared<map<char,int>>( *(bra_info->hole_range_map()) );
+  shared_ptr<map<char,int>> proj_bra_el_range_map = make_shared<map<char,int>>( *(bra_info->elec_range_map()) );
+  for ( int ii = 0 ; ii !=  proj_aops.size() ; ii++ ) {
+     if ( proj_aops[ii] ) {
+      auto pbhrm_loc = proj_bra_hole_range_map->find(proj_ranges[ii][0]); 
+      if ( pbhrm_loc == proj_bra_hole_range_map->end() || (--pbhrm_loc->second)  == 0 ) 
+        return false; 
+     
+    } else { 
+      auto pberm_loc = proj_bra_el_range_map->find(proj_ranges[ii][0]); 
+      if ( pberm_loc == proj_bra_el_range_map->end() || (--pberm_loc->second)  == 0 ) 
+        return false; 
+    } 
+  } 
+  return true;
+} 
+//////////////////////////////////////////////////////////////////////////////
 // This should not be necessary, but keep it for debugging
 //////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::RangeCheck(shared_ptr<const vector<string>> full_id_ranges) {

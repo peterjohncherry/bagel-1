@@ -201,5 +201,11 @@ class GammaGenerator{
 
     std::vector<int> get_standardized_alt_order( const std::vector<std::string>& rngs ,const std::vector<bool>& aops ) ;
 
+    bool get_proj_bra_range_map( const std::vector<std::string>& gamma_ranges, const std::vector<bool>& gamma_aops,
+                                 std::shared_ptr<CIVecInfo<double>> ket_info ); 
+
+    bool check_orb_ranges_proj_bra( const std::vector<std::string>& proj_ranges, const std::vector<bool>& proj_aops,
+                                    std::shared_ptr<CIVecInfo<double>> bra_info ); 
+
 };
 #endif
