@@ -44,7 +44,8 @@ template<typename DataType>
 DataType
 Equation_Computer_Base<DataType>::get_scalar_result( string result_name, vector<pair<string, int>>& fixed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- std::cout << "Equation_Computer_Base<DataType>::get_scalar_result" << std::endl;
+ std::cout << "Equation_Computer_Base<DataType>::get_scalar_result (name, fixed) "  << result_name << std::endl;
+ throw logic_error("not implemented");
  DataType x = 1.0 ;
  return x;
 
@@ -56,7 +57,8 @@ DataType
 Equation_Computer_Base<DataType>::get_scalar_result( string result_name, vector<pair<string, int>>& fixed_idxs,
                                                                          vector<pair<string, int>>& summed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- std::cout << "Equation_Computer_Base<DataType>::get_scalar_result" << std::endl;
+ std::cout << "Equation_Computer_Base<DataType>::get_scalar_result (name, fixed, summed)" << result_name <<  std::endl;
+ throw logic_error("not implemented");
  DataType x = 1.0 ;
  return x;
 
@@ -67,7 +69,8 @@ std::shared_ptr<SMITH::Tensor_<DataType>>
 Equation_Computer_Base<DataType>::get_tensop( string tensop_name, vector<pair<string, int>>& fixed_idxs,
                                                                   vector<pair<string, int>>& summed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "Equation_Computer_Base<DataType>::get_tensop not done" << std::endl;
+  std::cout << "Equation_Computer_Base<DataType>::get_tensop( name, fixed, summed )" << std::endl;
+  assert( tensop_data_map_->find(tensop_name) != tensop_data_map_->end() ) ;
   std::shared_ptr<SMITH::Tensor_<DataType>> tens = tensop_data_map_->at(tensop_name);
 
   return tens;
@@ -77,8 +80,9 @@ template<typename DataType>
 std::shared_ptr<SMITH::Tensor_<DataType>> 
 Equation_Computer_Base<DataType>::get_tensop( string tensop_name, vector<pair<string, int>>& fixed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "Equation_Computer_Base<DataType>::get_tensop not done" << std::endl;
+  std::cout << "Equation_Computer_Base<DataType>::get_tensop (name, fixed)" << std::endl;
 
+  assert( tensop_data_map_->find(tensop_name) != tensop_data_map_->end() ) ;
   std::shared_ptr<SMITH::Tensor_<DataType>> tens = tensop_data_map_->at(tensop_name);
 
   return tens;
@@ -89,14 +93,15 @@ std::shared_ptr<SMITH::MultiTensor_<DataType>>
 Equation_Computer_Base<DataType>::get_tensop_vector( string tensop_name, vector<pair<string, int>>& fixed_idxs,
                                                                          vector<pair<string, int>>& summed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "Equation_Computer_Base<DataType>::get_tensop not done" << std::endl;
+  std::cout << "Equation_Computer_Base<DataType>::get_tensop_vector ( name, fixed, summed) " << std::endl;
 
   vector<shared_ptr<Tensor_<DataType>>> tens_list(5); 
   // TODO replace with call to range map in equation for varios input idxs
   vector<int> range = { 1,2,3,4,5}; 
-  for ( int  ii : range )  
+  for ( int  ii : range ) { 
+    assert( tensop_data_map_->find(tensop_name) != tensop_data_map_->end() ) ;
     tens_list[ii] = tensop_data_map_->at(tensop_name);
-
+  }
   vector<DataType> factor_list( tens_list.size(), 1.0) ; // all ones for now
 
   shared_ptr<MultiTensor_<DataType>> multitens = make_shared<MultiTensor_<DataType>>( factor_list, tens_list );
@@ -108,13 +113,17 @@ template<typename DataType>
 std::shared_ptr<SMITH::MultiTensor_<DataType>>
 Equation_Computer_Base<DataType>::get_tensop_vector( string tensop_name, vector<pair<string, int>>& fixed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "Equation_Computer_Base<DataType>::get_tensop not done" << std::endl;
+  std::cout << "Equation_Computer_Base<DataType>::get_tensop_vector (name, fixed)" << std::endl;
+  cout << tensop_name << endl;  
+
 
   vector<shared_ptr<Tensor_<DataType>>> tens_list(5); 
   // TODO replace with call to range map in equation for varios input idxs
   vector<int> range = { 1,2,3,4,5 }; 
-  for ( int  ii : range )  
+  for ( int  ii : range ) { 
+    assert( tensop_data_map_->find(tensop_name) != tensop_data_map_->end() ) ;
     tens_list[ii] = tensop_data_map_->at(tensop_name);
+  }
 
   vector<DataType> factor_list( tens_list.size(), 1.0) ; // all ones for now
 

@@ -106,8 +106,8 @@ namespace WickUtils {
     return;
   }
 
-  template<class DataType>
-  void print_pair_vector(std::vector<std::pair<DataType,DataType>> invec, std::string name =""){
+  template<class T1, class T2  >
+  void print_pair_vector(std::vector<std::pair<T1,T2>> invec, std::string name =""){
     if (name != "" ) 
       std::cout << name << " ="; 
     std::cout << " [ ";
@@ -117,8 +117,8 @@ namespace WickUtils {
     return;
   }
 
-  template<typename DataType>
-  void print_pair_pair_vector( std::vector<std::pair<std::pair<DataType,DataType>, std::pair<DataType,DataType>>> ccp_vec,
+  template<class T1, class T2, class T3, class T4 >
+  void print_pair_pair_vector( std::vector<std::pair<std::pair<T1,T2>, std::pair<T3,T4>>> ccp_vec,
                                std::string name = "" ) {
     std::cout << name << " = [ "; std::cout.flush();
     for ( auto& elem : ccp_vec ){
