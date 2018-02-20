@@ -86,6 +86,14 @@ namespace WickUtils {
   get_cross_pairs( std::shared_ptr<std::vector<int>> vec1 , std::shared_ptr<std::vector<int>> vec2, std::shared_ptr<std::vector<std::string>> id_names );
 
   bool RangeCheck(const std::vector<std::string>& id_ranges, const std::vector<bool>& aops ) ;
+  
+  std::shared_ptr<std::vector<std::pair<int,int>>>
+  standardize_delta_ordering_generic( std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ) ;
+
+  std::shared_ptr<std::vector<std::pair<int,int>>>
+  standardize_delta_ordering_generic( const std::vector<std::pair<int,int>>& deltas_pos );
+
+  std::string get_ctp_name( const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges, const std::vector<std::pair<int,int>>& ctrs_pos ); 
 
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
@@ -97,7 +105,6 @@ namespace WickUtils {
     std::cout << "]  " ;
     return;
   }
-
 
   template<class DataType>
   void print_pair_vector(std::vector<std::pair<DataType,DataType>> invec, std::string name =""){

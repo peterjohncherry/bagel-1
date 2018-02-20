@@ -9,7 +9,7 @@ using namespace WickUtils;
 //merging, symmetry checking and sparsity. As well as controlling the reordering 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
+void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<TensOp_Base>>> MT_map,                
                                                             shared_ptr<map<string, shared_ptr< map<string, AContribInfo >>>> G_to_A_map,
                                                             shared_ptr<map<string, shared_ptr< GammaInfo >>> gamma_info_map,
                                                             shared_ptr<StatesInfo<DataType>> target_states ) {  
@@ -42,12 +42,13 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       bool does_this_block_contribute = GGen->optimized_alt_order();
       if ( does_this_block_contribute ) {
         cout << "We need these blocks : " ; cout.flush();
-        auto tvec_it = Total_Op_->orig_tensors_.begin();
+        cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
+        vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
+        int qq = 0 ;
         for ( auto&  tens_block : *(range_map_it->second->range_blocks()) ){ 
           cout << tens_block->orig_name()  << " " ; cout.flush(); 
-          cout << "(*tvec_it)->name() = " << (*tvec_it)->name() << endl;
-          (*tvec_it)->add_required_block( tens_block->orig_name() );
-          tvec_it++; 
+          cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
+          MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
         }
         cout << endl; 
       }

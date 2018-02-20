@@ -132,7 +132,7 @@ class MultiTensOp_General : public  Op_General_base {
 };
 
 
-class TensOp_base {
+class TensOp_Base {
 
    protected :
      const std::string name_;
@@ -142,14 +142,21 @@ class TensOp_base {
      std::shared_ptr<const Op_General_base> Op_dense_;
      std::shared_ptr<std::set<std::string>> required_blocks_;
      std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart_Base> > > CTP_map_;
+     std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_; 
 
    public:
  
-     TensOp_base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name), spinfree_(spinfree), Tsymm_(Tsymm), state_dep_(state_dep),
+     TensOp_Base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name), spinfree_(spinfree), Tsymm_(Tsymm), state_dep_(state_dep),
                                                                                         required_blocks_(std::make_shared<std::set<std::string>>()) {};
-     TensOp_base( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0),
+
+     TensOp_Base( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0),
                                                       required_blocks_(std::make_shared<std::set<std::string>>())  {};
-     ~TensOp_base(){};
+
+     TensOp_Base( std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp_Base>>& sub_tensops ) :
+                  name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0), sub_tensops_(sub_tensops), 
+                  required_blocks_(std::make_shared<std::set<std::string>>())  {};
+
+     ~TensOp_Base(){};
 
      std::string const name(){ return name_;}
 
@@ -180,23 +187,24 @@ class TensOp_base {
      void add_required_block( std::string block_name ) { required_blocks_->emplace( block_name ); } 
      std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { return required_blocks_; } 
 
-     virtual void get_ctrs_tens_ranges() = 0;
+     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base> >> CTP_map() { return CTP_map_; } 
  
      virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info > > > all_ranges() const  { return Op_dense_->all_ranges(); }
      virtual std::shared_ptr< range_block_info > all_ranges(const std::vector<std::string> range_block ) const { return Op_dense_->all_ranges(range_block); }
 
-     virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info > > > split_ranges() const = 0 ; // { return Op_dense_->split_ranges(); } 
-     virtual std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block ) const = 0 ; // { return Op_dense_->split_ranges(range_block); } 
+     virtual void get_ctrs_tens_ranges() = 0;
+
+     virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info > > > split_ranges() const = 0 ;  
+     virtual std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block ) const = 0 ;
 
      virtual void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges ) = 0 ; 
+     virtual std::vector<std::shared_ptr<TensOp_Base>> sub_tensops() = 0;
  
-     std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base> >> CTP_map() { return CTP_map_; } 
-     //virtual std::shared_ptr< std::map< std::string, std::shared_ptr< CtrMultiTensorPart<double> > >> CTP_map() = 0;  
 };
 
 namespace TensOp {
 template<typename DataType>
-class TensOp : public TensOp_base {
+class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<DataType>> {
    private :
      std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs_; 
      std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) > constraints_;
@@ -237,21 +245,22 @@ class TensOp : public TensOp_base {
      void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges ) { 
         throw std::logic_error( "TensOp::TensOp<DataType> should cannot call enter_into_CTP_map form this class!! Aborting!!" ); } 
 
+    std::vector<std::shared_ptr<TensOp_Base>> sub_tensops(){  std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_ ; return sub_tensops_; } 
+
 };
 }
 
 namespace MultiTensOp {
 template<typename DataType>
-class MultiTensOp : public TensOp_base {
+class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<MultiTensOp<DataType>> {
 
    public :
-     std::vector<std::shared_ptr<TensOp::TensOp<DataType>>> orig_tensors_; 
 
      int num_tensors_;
      
      DataType orig_factor_;
 
-     MultiTensOp( std::string name , bool spinfree, std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>& orig_tensors );
+     MultiTensOp( std::string name , bool spinfree, std::vector<std::shared_ptr<TensOp_Base>>& sub_tensops );
     ~MultiTensOp(){};
 
     std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<split_range_block_info >>>
@@ -260,7 +269,7 @@ class MultiTensOp : public TensOp_base {
     std::shared_ptr<const std::vector<int>> cmlsizevec() const  {  return Op_dense_->cmlsizevec(); } ;
     int cmlsizevec(int ii )const { return Op_dense_->cmlsizevec(ii); };
 
-    std::vector<std::shared_ptr<TensOp::TensOp<DataType>>> tensop_vec(){ return orig_tensors_; } 
+    std::vector<std::shared_ptr<TensOp_Base>> sub_tensops(){ return sub_tensops_; } 
  
     void get_ctrs_tens_ranges(); 
  
@@ -283,6 +292,7 @@ class MultiTensOp : public TensOp_base {
     std::shared_ptr< split_range_block_info > split_ranges(const std::vector<std::string> range_block )const { return Op_dense_->split_ranges(range_block); } 
 
     void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges );
+
 
 };
 }

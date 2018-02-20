@@ -78,7 +78,6 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Exp
         TensOp_Machine->Calculate_CTP( A_contrib );
 
         if ( gamma_name != "ID" ) {
-          cout << "XXXX1" << endl; 
           if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) { cout << A_contrib_name << " found in map" << endl;
 
             for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
@@ -112,7 +111,6 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Exp
 
         } else {
   
-          cout << "XXXX3" << endl; 
           if ( tensop_data_map_->find(A_contrib_name) == tensop_data_map_->end() ) {cout << A_contrib_name <<  " not yet in map, must form from direct product" << endl;
 
             shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
@@ -123,6 +121,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Exp
             shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
             for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
               A_combined_data->ax_plus_y( (DataType)(A_contrib.factor(qq).first), A_contrib_data );
+
               cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
               cout <<  A_contrib.factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
 	      cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
@@ -130,7 +129,6 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Exp
              }
           } else {
 
-          cout << "XXXX4" << endl; 
             for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
               cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
               cout <<  A_contrib.factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;

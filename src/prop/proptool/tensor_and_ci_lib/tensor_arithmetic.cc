@@ -1327,7 +1327,7 @@ void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::gemv( char op1,
 template<>
 void Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, double T2_data_ptr, double* Tout_data_ptr){  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, double* T2_data_ptr, double* Tout_data_ptr) " << endl;
+//  cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, double* T2_data_ptr, double* Tout_data_ptr) " << endl;
   dscal_( T1_block_size, T2_data_ptr, Tout_data_ptr, 1); 
   return;
 }
@@ -1336,7 +1336,7 @@ void Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, do
 template<>
 void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::scaler( int T1_block_size, std::complex<double> T2_data_ptr, std::complex<double>* Tout_data_ptr){  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, complex<double>* T2_data_ptr, complex<double>* Tout_data_ptr) " << endl;
+//cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, complex<double>* T2_data_ptr, complex<double>* Tout_data_ptr) " << endl;
   zscal_( T1_block_size, T2_data_ptr, Tout_data_ptr, 1); 
   return;
 }

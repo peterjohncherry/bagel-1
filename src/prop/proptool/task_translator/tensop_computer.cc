@@ -50,7 +50,9 @@ TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo& AInfo )
         New_Tdata = contract_on_same_tensor( ctr_op->T1name(), ctr_op->Tout_name(), ctr_op->ctr_rel_pos() ); 
         tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
         cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
+
       } else if ( ctr_op->ctr_type()[0] == 'r' ) { cout << " : reorder tensor" <<  endl; 
+        cout << "ctr_op->T1name() = " << ctr_op->T1name() << "    ctr_op->Toutname() = " << ctr_op->Tout_name() << endl;
         New_Tdata = reorder_block_Tensor( ctr_op->T1name(), ctr_op->new_order() ); 
         tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
         cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
@@ -105,7 +107,9 @@ shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_bl
 
      if(  tensop_data_map_->find(Tname.substr(0,1)) != tensop_data_map_->end()){
        cout << "initializing uncontracted tensor block " << Tname << " using data from parent tensor \"" << Tname.substr(0,1) << "\"" << endl;
+      
        print_vector( *(CTP_map->at(Tname)->unc_id_ranges()) , "unc_id_ranges" ) ; cout <<endl;  
+       throw logic_error("must not do this anymore ... Aborting!!");  
        tens = get_sub_tensor( tensop_data_map_->at(Tname.substr(0,1)), *id_block );
 
        cout << Tname<< "->norm() = " << tens->norm() << endl; 
@@ -196,8 +200,11 @@ TensOp_Computer::TensOp_Computer<DataType>::direct_product_tensors( std::vector<
 
   shared_ptr<Tensor_<DataType>> Tens_prod = find_or_get_CTP_data(Tensor_names[0]);
   shared_ptr<Tensor_<DataType>> Tens_intermediate;
-  for ( int rr = 1 ; rr != Tensor_names.size() ; rr++) {
-    shared_ptr<Tensor_<DataType>> Tens_next = find_or_get_CTP_data(Tensor_names[rr]);
+  string Tname_comp ="";
+  for ( string&  Tname : Tensor_names ) {
+    Tname_comp+=Tname;
+    cout <<"Tname = " << Tname << "    Tname_comp = " << Tname_comp << endl;
+    shared_ptr<Tensor_<DataType>> Tens_next = find_or_get_CTP_data(Tname);
     Tens_intermediate = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::direct_tensor_product( Tens_prod, Tens_next ); 
     Tens_prod = Tens_intermediate;
   }           
@@ -215,7 +222,7 @@ TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string T_in_nam
   cout << "TensOp_Computer::TensOp_Computer::reorder_block_Tensor "; cout.flush();
   cout << " : " << T_in_name ; cout.flush();
   cout <<  " New_order = [ "; cout.flush();  for (int pos : *new_order ) { cout << pos << " " ; cout.flush(); } cout << "] " << endl;
-  
+ 
   auto tensop_data_map_loc = tensop_data_map_->find(T_in_name); 
   shared_ptr<Tensor_<DataType>> T_part; 
   if( tensop_data_map_loc == tensop_data_map_->end() ){

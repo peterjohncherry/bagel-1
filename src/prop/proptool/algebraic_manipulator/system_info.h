@@ -47,7 +47,7 @@ class System_Info {
         
         // key :    Name of uncontracted part of MultiTensorOp.
         // result : Info for uncontracted part of MultiTensorOp info.
-        std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map_;      
+        std::shared_ptr< std::map< std::string, std::shared_ptr<TensOp_Base> >> MT_map_;      
         
         // key :    Name of Contracted Tensor Op Block (CTP)  or  Contracted Multi Tens Op Block (CMTP) 
         // result : Info object for CTP or CMTP
@@ -78,8 +78,6 @@ class System_Info {
                                                                 std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>)> Constraint_Funcs,
                                                                 DataType factor, std::string Tsymmetry, bool hconj, int state_dependence ) ;
        
-        void Set_BraKet_Ops(std::shared_ptr<std::vector<std::string>> Op_names, std::string term_name ) ;
-
         void  create_equation( std::string name, std::string type, 
                                std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
                                std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map, 
@@ -109,9 +107,7 @@ class System_Info {
         
         std::shared_ptr< std::map <std::string, std::shared_ptr<Equation_Base<DataType>>>> equation_map(){ return equation_map_;}
         
-        std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType> > >> T_map(){ return  T_map_;  }    
-        
-        std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map() { return MT_map_; }     
+        std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp_Base >>> MT_map() { return MT_map_; }     
         
         std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map() { return CTP_map_;   }   
         

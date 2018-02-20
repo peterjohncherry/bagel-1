@@ -50,12 +50,12 @@ class CtrTensorPart_Base  {
                         std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos,
                         std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors ) :
                         full_id_ranges_(full_id_ranges), full_idxs_(full_idxs), ctrs_pos_(ctrs_pos),
-                        ReIm_factors_(ReIm_factors), got_data_(false), size_( full_idxs_->size()) {
+                        ReIm_factors_(ReIm_factors), got_data_(false), size_( full_idxs_->size()),
+                        name_(WickUtils::get_ctp_name(*full_idxs_, *full_id_ranges_, *ctrs_pos_ )) {  
                           ctrs_todo_ = std::make_shared<std::vector<std::pair<int,int>>>(*ctrs_pos);
                           ctrs_done_ = std::make_shared<std::vector<std::pair<int,int>>>(0);
                           got_data_ = false;
                           get_ctp_idxs_ranges();
-                          get_name();
                           CTP_vec_ = std::make_shared<std::vector<std::shared_ptr<CtrTensorPart_Base>>>(1);
                         } 
 
@@ -110,7 +110,7 @@ class CtrTensorPart : public  CtrTensorPart_Base , public std::enable_shared_fro
                   std::shared_ptr<std::vector<std::string>> full_id_ranges,
                   std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos,
                   std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors ) :
-                  CtrTensorPart_Base( full_idxs, full_id_ranges, ctrs_pos, ReIm_factors){};
+                  CtrTensorPart_Base( full_idxs, full_id_ranges, ctrs_pos, ReIm_factors) {};
 
      void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
                         std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
@@ -172,7 +172,7 @@ class CtrMultiTensorPart : public CtrTensorPart_Base , public  std::enable_share
                          WickUtils::print_pair_vector( *ctrs_pos_, " full ctrs_pos in constructor"  ); std::cout << std::endl; 
 
                          get_ctp_idxs_ranges();
-                         get_name();
+                         this->name_ = WickUtils::get_ctp_name(*full_idxs_, *full_id_ranges_, *ctrs_pos_ ) ;
                          std::cout << "finished building cmtp" << std::endl;
                        };
 

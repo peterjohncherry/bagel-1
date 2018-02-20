@@ -18,7 +18,7 @@ class Expression {
 
         // key : name of multitensor info
         // result : the info
-        std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map_;
+        std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp_Base > >> MT_map_;
         
         // key : name of block of contracted and uncontracted tensor/multitensor info objects
         // result : the info object
@@ -38,7 +38,7 @@ class Expression {
         
         Expression( std::shared_ptr<std::vector<BraKet<DataType>>> braket_list,
                     std::shared_ptr<StatesInfo<DataType>> states_info,
-                    std::shared_ptr<std::map< std::string, std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,
+                    std::shared_ptr<std::map< std::string, std::shared_ptr<TensOp_Base>>>  MT_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base> >>            CTP_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >                         gamma_info_map );
@@ -51,7 +51,7 @@ class Expression {
         std::string name() {return name_; }
         std::shared_ptr<std::vector< BraKet<DataType>>> braket_list(){ return  braket_list_;}
         std::shared_ptr<StatesInfo<DataType>> states_info(){ return  states_info_;}
-        std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType> > >> MT_map(){ return  MT_map_;}
+        std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp_Base >>> MT_map(){ return  MT_map_;}
         std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map(){ return  CTP_map_;}
         std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map(){ return  ACompute_map_;}
         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo> > > gamma_info_map(){ return  gamma_info_map_;}

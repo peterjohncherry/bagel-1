@@ -775,4 +775,83 @@ bool WickUtils::RangeCheck(const vector<string>& id_ranges, const vector<bool>& 
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<pair<int,int>>>
+WickUtils::standardize_delta_ordering_generic(shared_ptr<vector<pair<int,int>>> deltas_pos ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "WickUtils::standardize_delta_ordering_generic" << endl;
+ 
+  shared_ptr<vector<pair<int,int>>> new_deltas_pos;
+ 
+  if (deltas_pos->size() > 1 ) {
+    new_deltas_pos =  make_shared <vector<pair<int,int>>>( deltas_pos->size());
+    vector<int> posvec(deltas_pos->size(),0);
+    for (int ii = 0 ; ii != deltas_pos->size() ; ii++) 
+      for (int jj = 0 ; jj != deltas_pos->size() ; jj++) 
+        if (deltas_pos->at(ii).first > deltas_pos->at(jj).first )
+          posvec[ii]++ ;      
+    
+    for (int ii = 0 ; ii != deltas_pos->size() ; ii++) 
+      new_deltas_pos->at(posvec[ii]) = deltas_pos->at(ii);
+ 
+  } else { 
+    new_deltas_pos = deltas_pos;
+  }
+  return new_deltas_pos;   
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<pair<int,int>>>
+WickUtils::standardize_delta_ordering_generic( const vector<pair<int,int>>& deltas_pos ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "WickUtils::standardize_delta_ordering_generic" << endl;
+ 
+  shared_ptr<vector<pair<int,int>>> new_deltas_pos;
+ 
+  if (deltas_pos.size() > 1 ) {
+    new_deltas_pos =  make_shared <vector<pair<int,int>>>( deltas_pos.size());
+    vector<int> posvec(deltas_pos.size(),0);
+    for (int ii = 0 ; ii != deltas_pos.size() ; ii++) 
+      for (int jj = 0 ; jj != deltas_pos.size() ; jj++) 
+        if (deltas_pos[ii].first > deltas_pos[jj].first )
+          posvec[ii]++ ;      
+    
+    for (int ii = 0 ; ii != deltas_pos.size() ; ii++) 
+      new_deltas_pos->at(posvec[ii]) = deltas_pos.at(ii);
+ 
+  } else { 
+    vector<pair<int,int>>deltas_pos_buff = deltas_pos;
+    new_deltas_pos = make_shared<vector<pair<int,int>>>(deltas_pos_buff);
+  }
+  return new_deltas_pos;   
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// get range for ctrtensorpart  
+////////////////////////////////////////////////////////////////////////////////////////////////////
+string WickUtils::get_ctp_name( const vector<string>& idxs, const vector<string>& id_ranges, 
+                                const vector<pair<int,int>>& ctrs_pos ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "WickUtils::get_ctp_name" << endl; 
+
+  string ctp_name = ""; 
+  for ( string id : idxs ) 
+    ctp_name += id;
+ 
+  ctp_name += "_";
+
+  for (string id : id_ranges ) 
+    ctp_name += id[0];
+
+  if (ctrs_pos.size() != 0 ){ 
+    ctp_name += "_";
+    vector<pair<int,int>> ctrs_buff =  ctrs_pos;
+    shared_ptr<vector<pair<int,int>>> ctrs_standard = standardize_delta_ordering_generic(ctrs_buff); 
+    for ( pair<int,int>& ctr : *ctrs_standard )  
+      ctp_name += to_string(ctr.first)+to_string(ctr.second);
+  }
+ 
+  return ctp_name;
+
+}
 #endif

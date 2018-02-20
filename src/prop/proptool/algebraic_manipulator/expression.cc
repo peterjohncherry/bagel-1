@@ -8,7 +8,7 @@ using namespace std;
 template<class DataType>
 Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_list,
                                   shared_ptr<StatesInfo<DataType>> states_info,
-                                  shared_ptr<map< string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,
+                                  shared_ptr<map< string, shared_ptr<TensOp_Base>>>  MT_map,
                                   shared_ptr<map< string, shared_ptr<CtrTensorPart_Base> >>            CTP_map,
                                   shared_ptr<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>     ACompute_map,
                                   shared_ptr<map< string, shared_ptr<GammaInfo> > >                         gamma_info_map ):

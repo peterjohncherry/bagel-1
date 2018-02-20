@@ -24,8 +24,7 @@ class Equation_Base {
      std::shared_ptr< std::map <std::string, std::shared_ptr< BraKet<DataType>>>> braket_map_;
      std::shared_ptr< std::map <std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map_;
 
-     std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType>>>> T_map_;      
-     std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map_;      
+     std::shared_ptr< std::map< std::string, std::shared_ptr<TensOp_Base>>> MT_map_;      
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map_;      
 
@@ -69,8 +68,7 @@ class Equation_Base {
      void set_maps( std::shared_ptr< std::map <std::string, std::shared_ptr< Expression<DataType>>>> expression_map,
                     std::shared_ptr< std::map<std::string, std::shared_ptr< GammaInfo >>> gamma_info_map,
                     std::shared_ptr< std::map<std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map,
-                    std::shared_ptr< std::map<std::string, std::shared_ptr< TensOp::TensOp<DataType>>>> T_map,
-                    std::shared_ptr< std::map<std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map,
+                    std::shared_ptr< std::map<std::string, std::shared_ptr< TensOp_Base>>> MT_map,
                     std::shared_ptr< std::map<std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map);
 
 
@@ -82,8 +80,7 @@ class Equation_Base {
      std::shared_ptr< std::map <std::string, std::shared_ptr< GammaInfo >>> gamma_info_map() { return gamma_info_map_; }
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map() { return CTP_map_; }      
-     std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp::TensOp<DataType>>>> T_map() { return T_map_    ; }      
-     std::shared_ptr< std::map< std::string, std::shared_ptr< MultiTensOp::MultiTensOp<DataType>>>> MT_map() { return MT_map_    ; }      
+     std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp_Base >>> MT_map() { return MT_map_    ; }      
      std::shared_ptr< std::map <std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>>  ACompute_map() { return ACompute_map_; }
      std::shared_ptr< std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map() const  { return expression_term_map_; };
      std::shared_ptr< std::map <std::string, std::shared_ptr< Expression<DataType>>>> expression_map() const { return expression_map_; }
@@ -115,7 +112,6 @@ class Equation_Value : public Equation_Base<DataType> {
      using Equation_Base<DataType>::braket_map_;
      using Equation_Base<DataType>::ACompute_map_;
 
-     using Equation_Base<DataType>::T_map_ ;      
      using Equation_Base<DataType>::MT_map_ ;      
 
      using Equation_Base<DataType>::CTP_map_;      

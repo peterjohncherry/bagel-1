@@ -276,7 +276,7 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
     
     cout << "user defined op name : " << op_name << endl;
     shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp( op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep); 
-    sys_info_->T_map()->emplace( op_name, new_op );
+    sys_info_->MT_map()->emplace( op_name, new_op );
 
   }
 
@@ -533,7 +533,7 @@ void PropTool::PropTool::build_op_tensors( vector<string>& expression_list ) {
 
   // Creating tensors from existing matrices; seperate loop as must run through all states first to make proper use of symmetry
   for (string expression_name : expression_list ) {
-    for ( auto tensop_it : *(sys_info_->T_map()) ) {
+    for ( auto tensop_it : *(sys_info_->MT_map()) ) {
       vector< shared_ptr< const vector<string>>> unique_range_blocks = *(tensop_it.second->unique_range_blocks());
       for ( shared_ptr<const vector<string>> range_block : unique_range_blocks ) {
         shared_ptr<vector<SMITH::IndexRange>> range_block_bgl = convert_to_indexrange( range_block );

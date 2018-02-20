@@ -20,7 +20,7 @@ class BraKet{
        const std::string multiop_name_;
        
 
-       std::shared_ptr<MultiTensOp::MultiTensOp<DataType>> Total_Op_;
+       std::shared_ptr<TensOp_Base> Total_Op_;
 
        BraKet( std::vector<std::string>& op_list, DataType factor, int bra_num, int ket_num, 
                std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type) :
@@ -55,7 +55,7 @@ class BraKet{
       // void add_required_tens_block( std::string block_name ) { required_blocks.emplace( block_name ); } 
       // std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { required_blocks.emplace( block_name ); } 
 
-       void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<MultiTensOp::MultiTensOp<DataType>>>> MT_map,                
+       void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<TensOp_Base>>> MT_map,                
                                                  std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map,
                                                  std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> gamma_info_map,
                                                  std::shared_ptr<StatesInfo<DataType>> target_states );         
