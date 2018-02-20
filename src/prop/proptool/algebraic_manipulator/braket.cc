@@ -12,7 +12,8 @@ template<typename DataType>
 void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<TensOp_Base>>> MT_map,                
                                                             shared_ptr<map<string, shared_ptr< map<string, AContribInfo >>>> G_to_A_map,
                                                             shared_ptr<map<string, shared_ptr< GammaInfo >>> gamma_info_map,
-                                                            shared_ptr<StatesInfo<DataType>> target_states ) {  
+                                                            shared_ptr<StatesInfo<DataType>> target_states,
+                                                            shared_ptr<set<string>> required_blocks ) {  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::generate_gamma_Atensor_contractions : " << name_ << endl; 
   //TODO fix this so it uses proper number of states; if statement in center should call Bra_num Ket_num appropriate Ops
@@ -41,14 +42,13 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       GGen->norm_order();
       bool does_this_block_contribute = GGen->optimized_alt_order();
       if ( does_this_block_contribute ) {
-        cout << "We need these blocks : " ; cout.flush();
-        cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
+        cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
         vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
         int qq = 0 ;
         for ( auto&  tens_block : *(range_map_it->second->range_blocks()) ){ 
-          cout << tens_block->orig_name()  << " " ; cout.flush(); 
-          cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
+          cout << tens_block->orig_name()  << " " ; cout.flush(); cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
           MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
+          required_blocks->emplace( tens_block->orig_name() );
         }
         cout << endl; 
       }

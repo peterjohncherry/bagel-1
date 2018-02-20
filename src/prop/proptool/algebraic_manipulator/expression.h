@@ -35,7 +35,10 @@ class Expression {
         // key: name of gamma (or sigma)
         // result :  name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors.
         std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo > >>> G_to_A_map_; //TODO should be private
-        
+      
+        // names of the range blocks of the original input tensors which are needed to compute this expression
+        std::shared_ptr<std::set<std::string>> required_blocks_;
+
         Expression( std::shared_ptr<std::vector<BraKet<DataType>>> braket_list,
                     std::shared_ptr<StatesInfo<DataType>> states_info,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<TensOp_Base>>>  MT_map,
@@ -56,6 +59,7 @@ class Expression {
         std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map(){ return  ACompute_map_;}
         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo> > > gamma_info_map(){ return  gamma_info_map_;}
         std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo > >>> G_to_A_map(){ return  G_to_A_map_;} //TODO should be private
+        std::shared_ptr<std::set<std::string>> required_blocks()  { return  required_blocks_; } 
 
 };
 #endif

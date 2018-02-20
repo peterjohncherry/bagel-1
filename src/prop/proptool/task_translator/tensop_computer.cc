@@ -103,33 +103,62 @@ shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_bl
      tens = tensop_data_map_->at(Tname);
 
    } else {
-     shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map->at(Tname)->unc_id_ranges() ) ;
+     cout <<"not in map ... " <<  Tname << "must be formed from direct product tensor" << endl; 
+     vector<string> sub_tens_names(0);
+     for ( shared_ptr<CtrTensorPart_Base>& ctp : *(CTP_map->at(Tname)->CTP_vec())) 
+       sub_tens_names.push_back(ctp->name());
 
-     if(  tensop_data_map_->find(Tname.substr(0,1)) != tensop_data_map_->end()){
-       cout << "initializing uncontracted tensor block " << Tname << " using data from parent tensor \"" << Tname.substr(0,1) << "\"" << endl;
-      
-       print_vector( *(CTP_map->at(Tname)->unc_id_ranges()) , "unc_id_ranges" ) ; cout <<endl;  
-       throw logic_error("must not do this anymore ... Aborting!!");  
-       tens = get_sub_tensor( tensop_data_map_->at(Tname.substr(0,1)), *id_block );
+     print_vector(sub_tens_names, "sub_tens_names" ); cout << endl; 
+     tens = direct_product_tensors( sub_tens_names ); 
 
-       cout << Tname<< "->norm() = " << tens->norm() << endl; 
- 
-     } else if ( Tname[0] == 'X' || Tname[0] == 'T' ) {  
-       cout << "new tensor block : " << Tname << " is being initialized to 1.0,  for exciations" << endl; 
-       tens = make_shared<Tensor_<DataType>>(*id_block);
-       tens->allocate();
-       Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( tens, 1.0);
-
-     } else {  
-       cout << "new tensor block : " << Tname << " is being initialized to zero" << endl; 
-       tens = make_shared<Tensor_<DataType>>(*id_block);
-       tens->allocate();
-       tens->zero();
-     }
    }
 
    cout << "leaving TensOp_Computer::TensOp_Computer::get_block_Tensor : " << Tname << endl;
    return tens;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void TensOp_Computer::TensOp_Computer<DataType>::get_block_Tensor_test(shared_ptr<set<string>> required_blocks ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "TensOp_Computer::TensOp_Computer::get_block_Tensor_test " << endl;
+
+   for ( string Tname : *required_blocks ) { 
+ 
+     shared_ptr<Tensor_<DataType>> tens; 
+     
+     if(  tensop_data_map_->find(Tname) != tensop_data_map_->end()){
+       tens = tensop_data_map_->at(Tname);
+     
+     } else {
+       shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map->at(Tname)->unc_id_ranges() ) ;
+     
+       if(  tensop_data_map_->find(Tname.substr(0,1)) != tensop_data_map_->end()){
+         cout << "gbTt initializing uncontracted tensor block " << Tname << " using data from parent tensor \"" << Tname.substr(0,1) << "\"" << endl;
+        
+         print_vector( *(CTP_map->at(Tname)->unc_id_ranges()) , "unc_id_ranges" ) ; cout <<endl;  
+         tens = get_sub_tensor( tensop_data_map_->at(Tname.substr(0,1)), *id_block );
+     
+         cout << Tname<< "->norm() = " << tens->norm() << endl; 
+     
+       } else if ( Tname[0] == 'X' || Tname[0] == 'T' ) {  
+         cout << "gbTt new tensor block : " << Tname << " is being initialized to 1.0,  for exciations" << endl; 
+         tens = make_shared<Tensor_<DataType>>(*id_block);
+         tens->allocate();
+         Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( tens, 1.0);
+     
+       } else {  
+         cout << "gbTt new tensor block : " << Tname << " is being initialized to zero" << endl; 
+         tens = make_shared<Tensor_<DataType>>(*id_block);
+         tens->allocate();
+         tens->zero();
+       }
+     }
+     tensop_data_map_->emplace(Tname, tens) ;
+   } 
+   cout << "leaving TensOp_Computer::TensOp_Computer::get_block_Tensor_test " << endl;
+   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a tensor with ranges specified by unc_ranges, where all values are equal to XX  
@@ -201,9 +230,9 @@ TensOp_Computer::TensOp_Computer<DataType>::direct_product_tensors( std::vector<
   shared_ptr<Tensor_<DataType>> Tens_prod = find_or_get_CTP_data(Tensor_names[0]);
   shared_ptr<Tensor_<DataType>> Tens_intermediate;
   string Tname_comp ="";
-  for ( string&  Tname : Tensor_names ) {
-    Tname_comp+=Tname;
-    cout <<"Tname = " << Tname << "    Tname_comp = " << Tname_comp << endl;
+  for ( string& Tname : Tensor_names ) {
+    Tname_comp += Tname;
+    cout <<"Tname = " << Tname << "  Tname_comp = " << Tname_comp << endl;
     shared_ptr<Tensor_<DataType>> Tens_next = find_or_get_CTP_data(Tname);
     Tens_intermediate = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::direct_tensor_product( Tens_prod, Tens_next ); 
     Tens_prod = Tens_intermediate;

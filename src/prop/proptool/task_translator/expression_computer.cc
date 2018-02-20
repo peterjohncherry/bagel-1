@@ -38,12 +38,19 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( sh
 cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Expression<DataType>> input : " << expression->name() << endl;
 
   string expression_name = expression->name();
+  cout << endl << endl;
+  cout << " --------- required_blocks ---------" << endl; 
+  for ( string block_name : *(expression->required_blocks()) ) 
+    cout << block_name << endl;
+  cout << endl << endl;
 
   bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
   if ( !new_result )  
     cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
 
   auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_);
+ 
+  TensOp_Machine->get_block_Tensor_test( expression->required_blocks_ );
 
   DataType result = 0.0;
   map< string, DataType > g_result_map;
@@ -95,9 +102,12 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Exp
               shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
               vector<string> sub_tensor_names(CTP_vec->size()); 
 
-              for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
+              cout << "sub_tensor_names = [ " ; cout.flush(); 
+              for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ ) { 
                 sub_tensor_names[rr] = CTP_vec->at(rr)->name();
-
+                cout << sub_tensor_names[rr]  << " " ; cout.flush(); 
+              } cout << "]" << endl;
+              
               shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );//TODO fix so uses piecewise contraction where possible 
               tensop_data_map_->emplace( A_contrib_name, A_contrib_data );
               shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib.id_order(qq)) );

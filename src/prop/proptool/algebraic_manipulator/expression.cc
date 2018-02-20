@@ -28,10 +28,11 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
   name_.pop_back();
   name_.pop_back();
 
+  required_blocks_ = make_shared<set<string>>();
   // Will loop through terms and then generate mathematical task map. It's split into
   // two functions as this will gives more control over merging together of different BraKets G_to_A_maps.
   for ( BraKet<DataType>& braket : *braket_list_ )
-    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_ );
+    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_,  required_blocks_ );
   get_gamma_Atensor_contraction_list();
 }
 
