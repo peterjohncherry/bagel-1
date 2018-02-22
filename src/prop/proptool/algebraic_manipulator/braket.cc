@@ -39,19 +39,18 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       
       shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ );
       GGen->add_gamma( range_map_it->second );
-//      GGen->norm_order();
-      GGen->generic_reorderer( "normal_order", true /*first_reordering*/, false /*final_reordering*/ ); 
-      bool does_this_block_contribute = GGen->optimized_alt_order();
-      if ( does_this_block_contribute ) {
-        cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
-        vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
-        int qq = 0 ;
-        for ( auto&  tens_block : *(range_map_it->second->range_blocks()) ){ 
-          cout << tens_block->orig_name()  << " " ; cout.flush(); cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
-          MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
-          required_blocks->emplace( tens_block->orig_name() );
+      if ( GGen->generic_reorderer( "normal_order", true , false ) ){  
+        if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
+          cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
+          vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
+          int qq = 0 ;
+          for ( auto&  tens_block : *(range_map_it->second->range_blocks()) ){ 
+            cout << tens_block->orig_name()  << " " ; cout.flush(); cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
+            MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
+            required_blocks->emplace( tens_block->orig_name() );
+          }
+          cout << endl; 
         }
-        cout << endl; 
       }
     } 
   }
