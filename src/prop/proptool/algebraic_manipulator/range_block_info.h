@@ -9,7 +9,7 @@
 #include <memory>
 #include <src/prop/proptool/proputils.h>
 
-class range_block_info {
+class range_block_info : public std::enable_shared_from_this<range_block_info> {
 
   // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
   protected :
@@ -74,6 +74,9 @@ class range_block_info {
     // returns true if this block is sparse for input states
     virtual bool is_sparse( std::vector<int>& state_idxs ) { return ( sparsity_.find(state_idxs) != sparsity_.end() ); } 
     virtual bool is_sparse( const std::vector<int>& state_idxs ) { return ( sparsity_.find(state_idxs) != sparsity_.end() ); }  
+    virtual std::shared_ptr<std::vector<std::shared_ptr<range_block_info>>> range_blocks(){
+        throw std::logic_error("Not a split_range_block; cannot get range_block_vec! Aborting!!" );
+          return std::make_shared<std::vector<std::shared_ptr<range_block_info>>>(1, shared_from_this()); }  
 
 
 };

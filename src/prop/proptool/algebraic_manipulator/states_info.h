@@ -38,8 +38,8 @@ class CIVecInfo {
      std::string name() { return name_;};
      int state_num() { return state_number_;};
      bool sparse() { return sparse_;}
-     std::shared_ptr<std::map< char ,int>> hole_range_map() { return hole_range_map_; } 
-     std::shared_ptr<std::map< char ,int>> elec_range_map() { return elec_range_map_; } 
+     std::shared_ptr<std::map< char, int>> hole_range_map() { return hole_range_map_; } 
+     std::shared_ptr<std::map< char, int>> elec_range_map() { return elec_range_map_; } 
 
 };
 
@@ -50,32 +50,45 @@ class StatesInfo  {
    
    public: 
      std::vector<int> target_state_nums_;
-     std::map< std::string, std::shared_ptr<CIVecInfo<DataType>> > civec_info_map;    
+     std::map< std::string, std::shared_ptr<CIVecInfo<DataType>> > civec_info_map_;    
+     std::map< int, std::shared_ptr<std::vector<std::string>> > state_civec_names_;
 
-     //for spin-free only
-     std::map< int, std::string > state_name_;
+     bool multisector_; //TODO having civecs in multiple sectors should be dealt by templating class and having specialized function
 
-     StatesInfo(std::vector<int> Target_state_nums) : target_state_nums_(Target_state_nums) {};
+     StatesInfo(std::vector<int> Target_state_nums) : target_state_nums_(Target_state_nums), multisector_(false)  {}; // 
      ~StatesInfo(){}; 
 
-     int spin_diff( std::string bra, std::string ket ) { return civec_info_map.at(bra)->nalpha() - civec_info_map.at(ket)->nalpha(); }         
- 
+     int spin_diff( std::string bra, std::string ket ) { return civec_info_map_.at(bra)->nalpha() - civec_info_map_.at(ket)->nalpha(); }         
+  
+
+     // TODO needs to be specialized for multisector case; 
      void add_state( const int nact, const int nele, const int state_number, std::shared_ptr<std::map<char, int>> elec_range_map,
                      std::shared_ptr<std::map<char, int>> hole_range_map ) {
-       std::string civec_name = WickUtils::get_civec_name( state_number, elec_range_map->at('a') + hole_range_map->at('a'), elec_range_map->at('a'), elec_range_map->at('A'));
-       state_name_.emplace(state_number, civec_name);
-       civec_info_map.emplace( civec_name, std::make_shared<CIVecInfo<DataType>>( state_number, civec_name, elec_range_map, hole_range_map ) ); 
+        
+       if ( state_civec_names_.find(state_number) == state_civec_names_.end() ){ 
+         std::string civec_name = WickUtils::get_civec_name( state_number, elec_range_map->at('a') + hole_range_map->at('a'), elec_range_map->at('a'), elec_range_map->at('A'));
+         civec_info_map_.emplace( civec_name, std::make_shared<CIVecInfo<DataType>>( state_number, civec_name, elec_range_map, hole_range_map ) ); 
+         state_civec_names_.emplace(state_number, std::make_shared<std::vector<std::string>>(1, civec_name));
+       } else { 
+         std::cout << "state " << state_number << " already has it's civecs in the map !! " << std::endl; 
+       }
      }
  
      //for spin-free only 
-     std::string name(int state_number)   { return state_name_.at(state_number); }
+     std::shared_ptr<std::vector<std::string>> civec_names(int state_number) { return state_civec_names_.at(state_number); }
 
-     int nalpha(int state_number) { return civec_info_map.at(state_name_.at(state_number))->nalpha(); }
-     int nbeta(int state_number) { return civec_info_map.at(state_name_.at(state_number))->nbeta(); }
-     int nact(int state_number) { return civec_info_map.at(state_name_.at(state_number))->nact(); }
-     int nele(int state_number) { return civec_info_map.at(state_name_.at(state_number))->nele(); } 
+     int nalpha(int state_number) { return civec_info_map_.at(state_civec_names_.at(state_number)->front())->nalpha(); }
+     int nbeta(int state_number) { return civec_info_map_.at(state_civec_names_.at(state_number)->front())->nbeta(); }
+     int nact(int state_number) { return civec_info_map_.at(state_civec_names_.at(state_number)->front())->nact(); }
+     int nele(int state_number) { return civec_info_map_.at(state_civec_names_.at(state_number)->front())->nele(); } 
 
-     std::shared_ptr<CIVecInfo<DataType>> civec_info ( int state_number )  { return civec_info_map.at(state_name_.at(state_number)); };
+     std::shared_ptr<std::vector< std::shared_ptr<CIVecInfo<DataType>>>> civec_info ( int state_number )  {
+       return civec_info_map_.at(state_civec_names_.at(state_number));
+     };
+ 
+     std::shared_ptr<CIVecInfo<DataType>> civec_info ( std::string civec_name )  {
+       return civec_info_map_.at(civec_name);
+     };
   
 };
 #endif

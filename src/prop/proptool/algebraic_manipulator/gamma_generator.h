@@ -158,6 +158,12 @@ class GammaGenerator{
     std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> Gamma_map;
 
     bool projected_bra_;
+    bool projected_ket_; // TODO implement this!!
+
+    std::shared_ptr<std::vector<std::string>> Bra_names_; 
+    std::shared_ptr<std::vector<std::string>> Ket_names_;
+    std::string Bra_name_;
+    std::string Ket_name_;
 
     // key    : name of A-tensor
     // result : list of reorderings which much be applied to this A-tensor before it is contracted with this gamma.
@@ -192,8 +198,12 @@ class GammaGenerator{
     void normal_order( int kk );
     void anti_normal_order( int kk );
     void contract_proj_annihilators_with_gamma_creators( int kk ); 
+    void contract_gamma_annihilators_with_proj_creators( int kk );
     void alternating_order( int kk );
     void add_Acontrib_to_map( int kk );
+
+    std::shared_ptr<std::map< std::pair<std::string,bool>, std::shared_ptr<std::vector<int>>>>
+    build_proj_range_map(std::string bra_or_ket, int proj_ranges, std::string civec_name );
 
     void Contract_remaining_indexes(int kk);
    
