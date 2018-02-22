@@ -134,7 +134,12 @@ class GammaGenerator{
 
     std::shared_ptr<const std::vector<bool>> orig_aops_ ;
     std::shared_ptr<const std::vector<std::string>> orig_ids_ ;
+    
+    std::shared_ptr<const std::vector<bool>> free_aops_;
+    std::shared_ptr<const std::vector<std::string>> free_ids_;
 
+    std::shared_ptr<const std::vector<bool>> proj_aops_;
+    std::shared_ptr<const std::vector<std::string>> proj_ids_;
    
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
@@ -152,6 +157,8 @@ class GammaGenerator{
     // result : information used here and in compute routines
     std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> Gamma_map;
 
+    bool projected_bra_;
+
     // key    : name of A-tensor
     // result : list of reorderings which much be applied to this A-tensor before it is contracted with this gamma.
     //          second part of pair is factor associated with each reordering.
@@ -163,6 +170,14 @@ class GammaGenerator{
                     std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in,
                     double bk_factor );
+
+    GammaGenerator( std::shared_ptr<StatesInfo<double>> target_states, int Bra_num, int Ket_num,
+                    std::shared_ptr<const std::vector<std::string>> orig_ids, std::shared_ptr<const std::vector<bool>> orig_aops,
+                    std::shared_ptr<const std::vector<std::string>> proj_ids, std::shared_ptr<const std::vector<bool>> proj_aops,
+                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in, 
+                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo >>>> G_to_A_map,
+                    double bk_factor );
+
     ~GammaGenerator(){};
 
     void add_gamma(std::shared_ptr<range_block_info> block_info );
