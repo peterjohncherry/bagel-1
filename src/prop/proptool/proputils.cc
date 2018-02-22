@@ -20,49 +20,50 @@ using namespace std;
 shared_ptr<vector<pint_vec>>  
 WickUtils::get_cross_pairs( shared_ptr<vector<int>> vec1 , shared_ptr<vector<int>> vec2, shared_ptr<vector<string>> id_names ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "WickUtils::get_cross_pairs" << endl;
   
- if  ( vec1->empty() || vec2->empty()){
-   auto all_pairs =  make_shared<vector<vector<pair<int,int>>>>(0);
-   return all_pairs;
- }
-
- auto fvec = make_shared<vector<int>>(vec2->size(),0);
- auto maxs = make_shared<vector<int>>();
- auto mins = make_shared<vector<int>>(vec2->size(),0);
-
- auto prvec = [](shared_ptr<vector<int>> invec){ cout << "[ " ; for (auto elem : *invec) { cout << elem << " " ;} cout << "]" ;};
-
- vector<int> reset_pos;
- for (int ii = 0; ii !=vec2->size();  ii++){
-   maxs->push_back(vec2->size()-1-ii);
-   reset_pos.push_back(ii);
- }
+  if  ( vec1->empty() || vec2->empty()){
+    auto all_pairs =  make_shared<vector<vector<pair<int,int>>>>(0);
+    return all_pairs;
+  }
  
- auto all_pairs =  make_shared<vector<vector<pair<int,int>>>>(0);
- do {   
-   vector<int> perm;
-   vector<int> pos = reset_pos;;
-
-   for(int ii= 0; ii !=fvec->size() ; ii++){
-      perm.push_back(vec2->at(pos[fvec->at(ii)]));       
-      pos.erase(pos.begin()+fvec->at(ii));
-   }
-
-   vector<pair<int,int>> pair_vec(0);
-   bool check = true;
-   for (auto ii =0 ;  ii !=perm.size(); ii++) {
-     if ( id_names->at(vec1->at(ii))[0] == id_names->at(perm[ii])[0] ){ 
-       check =false;
-       break;
-     }
-     pair_vec.push_back(make_pair(vec1->at(ii),perm[ii])) ;
-   }
-
-   if (check) all_pairs->push_back(pair_vec);
-
- } while(fvec_cycle(fvec, maxs, mins));
-
- return all_pairs;
+  auto fvec = make_shared<vector<int>>(vec2->size(),0);
+  auto maxs = make_shared<vector<int>>();
+  auto mins = make_shared<vector<int>>(vec2->size(),0);
+ 
+  auto prvec = [](shared_ptr<vector<int>> invec){ cout << "[ " ; for (auto elem : *invec) { cout << elem << " " ;} cout << "]" ;};
+ 
+  vector<int> reset_pos;
+  for (int ii = 0; ii !=vec2->size();  ii++){
+    maxs->push_back(vec2->size()-1-ii);
+    reset_pos.push_back(ii);
+  }
+  
+  auto all_pairs =  make_shared<vector<vector<pair<int,int>>>>(0);
+  do {   
+    vector<int> perm;
+    vector<int> pos = reset_pos;;
+ 
+    for(int ii= 0; ii !=fvec->size() ; ii++){
+       perm.push_back(vec2->at(pos[fvec->at(ii)]));       
+       pos.erase(pos.begin()+fvec->at(ii));
+    }
+ 
+    vector<pair<int,int>> pair_vec(0);
+    bool check = true;
+    for (auto ii =0 ;  ii !=perm.size(); ii++) {
+      if ( id_names->at(vec1->at(ii))[0] == id_names->at(perm[ii])[0] ){ 
+        check =false;
+        break;
+      }
+      pair_vec.push_back(make_pair(vec1->at(ii),perm[ii])) ;
+    }
+ 
+    if (check) all_pairs->push_back(pair_vec);
+ 
+  } while(fvec_cycle(fvec, maxs, mins));
+ 
+  return all_pairs;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void WickUtils::fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max ) {

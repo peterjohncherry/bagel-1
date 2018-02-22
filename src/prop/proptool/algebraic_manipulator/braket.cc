@@ -39,7 +39,8 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       
       shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ );
       GGen->add_gamma( range_map_it->second );
-      GGen->norm_order();
+//      GGen->norm_order();
+      GGen->generic_reorderer( "normal_order", true /*first_reordering*/, false /*final_reordering*/ ); 
       bool does_this_block_contribute = GGen->optimized_alt_order();
       if ( does_this_block_contribute ) {
         cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 

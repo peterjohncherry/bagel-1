@@ -183,17 +183,26 @@ class GammaGenerator{
     void add_gamma(std::shared_ptr<range_block_info> block_info );
     
     bool norm_order();
+
+    bool anti_norm_order();
     
     bool optimized_alt_order();
+
+    bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering ); 
+    void normal_order( int kk );
+    void anti_normal_order( int kk );
+    void contract_proj_annihilators_with_gamma_creators( int kk ); 
+    void alternating_order( int kk );
+    void add_Acontrib_to_map( int kk );
 
     void Contract_remaining_indexes(int kk);
    
     void swap( int ii, int jj, int kk, std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec );
     
-    std::shared_ptr<pint_vec> Standardize_delta_ordering(std::shared_ptr<pint_vec> deltas_pos ) ;
+    std::shared_ptr<pint_vec> Standardize_delta_ordering(std::shared_ptr<pint_vec> deltas_pos );
  
-    bool ordering( std::pair<std::string,std::string> a, std::pair<std::string,std::string> b ) {
-                  return( (idx_order->at(a.first) < idx_order->at(b.first) ) ? true : false ); };
+    bool ordering( std::pair<std::string,std::string> a, std::pair<std::string,std::string> b ){
+                   return( (idx_order->at(a.first) < idx_order->at(b.first) ) ? true : false ); }
    
     bool RangeCheck( std::shared_ptr<const std::vector<std::string>> full_id_ranges );
     
@@ -222,5 +231,6 @@ class GammaGenerator{
     bool check_orb_ranges_proj_bra( const std::vector<std::string>& proj_ranges, const std::vector<bool>& proj_aops,
                                     std::shared_ptr<CIVecInfo<double>> bra_info ); 
 
+    void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec, std::string name ); 
 };
 #endif
