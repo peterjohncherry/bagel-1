@@ -91,7 +91,7 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
                                 orig_ids_(orig_ids), orig_aops_(orig_aops),
                                 free_ids_(orig_ids), free_aops_(orig_aops), 
                                 G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in), bk_factor(bk_factor_in),
-                                projected_bra_(false) {
+                                projected_bra_(false), projected_ket_(false)  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_GammaGenerator
 cout << "GammaGenerator::GammaGenerator" << endl; 
@@ -126,7 +126,7 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
                                 orig_ids_(orig_ids), orig_aops_(orig_aops), 
                                 G_to_A_map(G_to_A_map_in),
                                 Gamma_map(Gamma_map_in),
-                                bk_factor(bk_factor_in), projected_bra_(true) {
+                                bk_factor(bk_factor_in), projected_ket_(false) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "GammaGenerator::GammaGenerator with bra_projection" << endl;
 
@@ -164,10 +164,8 @@ void GammaGenerator::add_gamma( shared_ptr<range_block_info> block_info ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGenerator::add_gamma" << endl; 
  
-  shared_ptr<vector<string>> Bra_names_ = target_states_->civec_names( Bra_num_ );
-  shared_ptr<vector<string>> Ket_names_ = target_states_->civec_names( Ket_num_ );
-  Bra_name_ = Bra_names_->front();
-  Ket_name_ = Ket_names_->front();
+  Bra_names_ = target_states_->civec_names( Bra_num_ );
+  Ket_names_ = target_states_->civec_names( Ket_num_ );
 
   shared_ptr<vector<pair<int,int>>> deltas_pos_in = make_shared<vector<pair<int,int>>>(0);
   int my_sign_in = 1;
@@ -187,37 +185,143 @@ void GammaGenerator::add_gamma( shared_ptr<range_block_info> block_info ) {
     gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(1, make_shared<GammaIntermediate>(id_ranges_in, ids_pos_init, deltas_pos_in, my_sign_in)); 
     final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
 
-    auto proj_ranges = make_shared<vector<string>>(block_info->orig_block()->begin()+proj_ids_->size(), block_info->orig_block()->begin()+proj_ids_->size());
-    shared_ptr<map< pair<string,bool>, shared_ptr<vector<int>>>> projbrainfo;
+    auto proj_ranges = make_shared<vector<string>>(block_info->orig_block()->begin(), block_info->orig_block()->begin()+proj_ids_->size());
+    build_proj_range_map( "Bra", proj_ranges );
 
-  }  else { 
-     throw logic_error( "Projected ket not implemented yet!! Aborting!! ");
+  } else { 
+    throw logic_error( "Projected ket not implemented yet!! Aborting!! ");
+
   } 
   return; 
 }                     
-//////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<map< pair<string,bool>, shared_ptr<vector<int>>>>
-GammaGenerator::build_proj_range_map(string bra_or_ket, int proj_ranges, string civec_name ){ 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::build_proj_range_map(string bra_or_ket )" << endl; 
- 
-  auto bob = make_shared<map< pair<string,bool>, shared_ptr<vector<int>>>>();
- 
-  shared_ptr<map< char, int >> hole_range_check_map;  
-  shared_ptr<map< char, int >> elec_range_check_map;  
- 
+void GammaGenerator::build_proj_range_map( string bra_or_ket, shared_ptr<vector<string>> proj_ranges ){ 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "GammaGenerator::build_proj_range_map" << endl; 
+
   if (bra_or_ket[0] == 'b' || bra_or_ket[0] == 'B' ) {  
-    hole_range_check_map = make_shared<map< char, int >>( *(target_states_->civec_info( civec_name )->hole_range_map()) ); 
-    elec_range_check_map = make_shared<map< char, int >>( *(target_states_->civec_info( civec_name )->elec_range_map()) );
+    for ( string bra_name : *Bra_names_ ){  
+      auto proj_bra_hole_range_map = make_shared<map< char, int >>( *(target_states_->civec_info( bra_name )->hole_range_map()) ); 
+      auto proj_bra_elec_range_map = make_shared<map< char, int >>( *(target_states_->civec_info( bra_name )->elec_range_map()) );
       
-  } else {
-    throw logic_error("not implemented for ket yet!! Aborting!!"); 
- 
+      for ( string&  range_name :  *proj_ranges ) {  
+        vector<bool>::const_iterator proj_aops_it = proj_aops_->begin(); 
+        if ( *proj_aops_it ) { 
+          auto proj_bra_hole_range_map_loc = proj_bra_hole_range_map->find(range_name[0]); 
+          if ( proj_bra_hole_range_map_loc == proj_bra_hole_range_map->end() ){ 
+            proj_bra_hole_range_map->emplace(range_name[0], -1 ); 
+          } else { 
+            proj_bra_hole_range_map_loc->second -= 1;
+          } 
+        } else { 
+          auto proj_bra_elec_range_map_loc = proj_bra_elec_range_map->find(range_name[0]); 
+          if ( proj_bra_elec_range_map_loc == proj_bra_elec_range_map->end() ){ 
+            proj_bra_elec_range_map->emplace(range_name[0], -1 ); 
+          } else { 
+            proj_bra_elec_range_map_loc->second -= 1;
+          } 
+        }
+        proj_aops_it++;
+      }  
+      proj_bra_hole_range_maps_.emplace( bra_name, proj_bra_hole_range_map);
+      proj_bra_elec_range_maps_.emplace( bra_name, proj_bra_elec_range_map);
+
+    }
+
+  } else if (bra_or_ket[0] == 'k' || bra_or_ket[0] == 'K' ) {  
+    for ( string ket_name : *Ket_names_ ){  
+      auto proj_ket_hole_range_map = make_shared<map< char, int >>( *(target_states_->civec_info( ket_name )->hole_range_map()) ); 
+      auto proj_ket_elec_range_map = make_shared<map< char, int >>( *(target_states_->civec_info( ket_name )->elec_range_map()) );
+      vector<bool>::const_iterator proj_aops_it = proj_aops_->begin(); 
+      for ( string&  range_name :  *proj_ranges ) {
+        if ( *proj_aops_it ) { 
+          auto proj_ket_hole_range_map_loc = proj_ket_hole_range_map->find(range_name[0]); 
+          if ( proj_ket_hole_range_map_loc == proj_ket_hole_range_map->end() ){ 
+            proj_ket_hole_range_map->emplace(range_name[0], -1 ); 
+          } else { 
+            proj_ket_hole_range_map_loc->second -= 1;
+          } 
+        } else { 
+          auto proj_ket_elec_range_map_loc = proj_ket_elec_range_map->find(range_name[0]); 
+          if ( proj_ket_elec_range_map_loc == proj_ket_elec_range_map->end() ){ 
+            proj_ket_elec_range_map->emplace(range_name[0], -1 ); 
+          } else { 
+            proj_ket_elec_range_map_loc->second -= 1;
+          } 
+        }
+        proj_aops_it++;
+      }  
+      proj_ket_hole_range_maps_.emplace( ket_name, proj_ket_hole_range_map);
+      proj_ket_elec_range_maps_.emplace( ket_name, proj_ket_elec_range_map);
+    }
   }
-  return bob; 
+  return; 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint,
+                                    map<char,int> ket_hole_map, map<char, int> bra_hole_map,
+                                    map<char,int> ket_elec_map, map<char, int> bra_elec_map ){ 
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Grossly inefficient, but totally generic, should write seperate routines for normal and antinormal
+//ordering; consecutive operators means can just count.
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "GammaGenerator::proj_onto_map" << endl; 
+  
+  shared_ptr<vector<int>> idxs_pos =  gint->ids_pos; 
+   
+  auto id_ranges = make_shared<vector<string>>(idxs_pos->size());
+  auto aops      = make_shared<vector<bool>>(idxs_pos->size());
+  for (int ii = 0 ; ii != idxs_pos->size(); ii++ ){ 
+    id_ranges->at(ii) = gint->full_id_ranges->at(idxs_pos->at(ii)); 
+    aops->at(ii)      = free_aops_->at(idxs_pos->at(ii));
+  }
+ 
+  vector<bool>::reverse_iterator aops_it = aops->rbegin(); 
+  for ( auto rng = id_ranges->rbegin(); rng != id_ranges->rend(); rng++, aops_it++ ) {
+    if( !(*aops_it) ){ 
+      auto ket_elec_map_loc = ket_elec_map.find( (*rng)[0] );     
+      if ( ket_elec_map_loc == ket_elec_map.end() ) {
+        return false;   
+      } else if ( (ket_elec_map_loc->second -= 1 ) == -1  ) {  
+        return false;
+      } 
+      auto ket_hole_map_loc = ket_hole_map.find( (*rng)[0] );     
+      if ( ket_hole_map_loc == ket_hole_map.end() ) {
+        ket_hole_map.emplace( (*rng)[0], 1 );   
+      } else {  
+        ket_hole_map_loc->second += 1; 
+      } 
+    } else { 
+      auto ket_hole_map_loc = ket_hole_map.find( (*rng)[0] );     
+      if ( ket_hole_map_loc == ket_hole_map.end() ) {
+        return false;   
+      } else if ( (ket_hole_map_loc->second -= 1 ) == -1  ) {  
+        return false;
+      } 
+      auto ket_elec_map_loc = ket_elec_map.find( (*rng)[0] );     
+      if ( ket_elec_map_loc == ket_elec_map.end() ) {
+        ket_elec_map.emplace( (*rng)[0], 1 );   
+      } else {  
+        ket_elec_map_loc->second += 1; 
+      } 
+    }
+  }
+  
+  for (auto& elem : ket_elec_map ) { 
+    if ( bra_elec_map.at(elem.first) != elem.second ) { 
+      return false;
+    } else { 
+      cout << "should get reordering list here" << endl;
+    }
+  }
+
+  return true;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
+//TODO should use specialized template function, not ifs; the user is unlikely to ever want to 
+//     specify gamma reordering schemes.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
 bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reordering, bool final_reordering ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
@@ -266,9 +370,26 @@ bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reord
   if ( does_it_contribute ) 
     print_gamma_contributions( gamma_vec , reordering_name ); 
 
-  if ( final_reordering ) 
-    for (int kk = 0 ; kk != gamma_vec->size() ; kk++ ) 
-      add_Acontrib_to_map(kk);                                                                           
+  if ( final_reordering ) {
+    if ( projected_bra_ || projected_ket_ ) { 
+      for ( string bra_name : *Bra_names_ ){ 
+         shared_ptr<map<char,int>> bra_hole_map = proj_bra_hole_range_maps_.at(bra_name);
+         shared_ptr<map<char,int>> bra_elec_map = proj_bra_elec_range_maps_.at(bra_name);
+        for ( string ket_name : *Ket_names_ ){ 
+          shared_ptr<map<char,int>> ket_elec_map = proj_ket_hole_range_maps_.at(ket_name);
+          shared_ptr<map<char,int>> ket_hole_map = proj_ket_elec_range_maps_.at(ket_name); 
+          for (int kk = 0 ; kk != gamma_vec->size() ; kk++ ){ 
+            if (proj_onto_map( gamma_vec->at(kk), *ket_hole_map, *bra_hole_map, *ket_elec_map, *bra_elec_map )){  
+              add_Acontrib_to_map(kk, bra_name,  ket_name);// TODO need to get gamma ordering                                                                           
+            }
+          }
+        }
+      }  
+    } else {
+      for (int kk = 0 ; kk != gamma_vec->size() ; kk++ ) 
+        add_Acontrib_to_map(kk, Bra_names_->at(0),  Ket_names_->at(0));                                                                           
+    }
+  }
 
   return does_it_contribute;
 }
@@ -313,7 +434,7 @@ void GammaGenerator::normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
 void GammaGenerator::anti_normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
-cout << "GammaGenerator::anti_normal_order" << endl;
+  cout << "GammaGenerator::anti_normal_order" << endl;
  
   shared_ptr<vector<int>> ids_pos  = gamma_vec->at(kk)->ids_pos; 
   int num_pops = ( ids_pos->size()/2 )-1;     
@@ -358,8 +479,6 @@ void GammaGenerator::alternating_order( int kk ) {  // e.g. +-+-+-+-
   shared_ptr<const vector<string>>  full_id_ranges = gamma_vec->at(kk)->full_id_ranges;
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos;
 
-  string init_gname = get_gamma_name( full_id_ranges, free_aops_, ids_pos, Bra_name_, Ket_name_ );
-
   vector<string> unc_ranged_idxs(full_id_ranges->size() - 2*deltas_pos->size());
   vector<string>::iterator unc_ranged_idxs_it = unc_ranged_idxs.begin();
   vector<bool> unc_aops(free_aops_->size() - 2*deltas_pos->size());
@@ -390,10 +509,10 @@ void GammaGenerator::alternating_order( int kk ) {  // e.g. +-+-+-+-
   return;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
-void GammaGenerator::add_Acontrib_to_map(int kk){      // e.g. ++++----                                                                             
-//////////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
-//  cout << "void GammaGenerator::add_Acontrib_to_map" << endl;                                                                             
+///////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
+void GammaGenerator::add_Acontrib_to_map( int kk, string bra_name, string ket_name ){  // e.g. ++++----
+///////////////////////////////////////////////////////////////////////////////////////////////////////                                                              
+  cout << "void GammaGenerator::add_Acontrib_to_map" << endl;                                                                             
 
   shared_ptr<GammaIntermediate> gamma_int = gamma_vec->at(kk); 
 
@@ -402,9 +521,8 @@ void GammaGenerator::add_Acontrib_to_map(int kk){      // e.g. ++++----
   shared_ptr<vector<pair<int,int>>> deltas_pos     = gamma_int->deltas_pos;
   shared_ptr<vector<int>> ids_pos        = gamma_int->ids_pos;
 
-  //TODO change for relativistic
   string Aname_alt = get_Aname( *free_ids_, *full_id_ranges, *deltas_pos );
-  string Gname_alt = get_gamma_name( full_id_ranges, free_aops_, ids_pos, Bra_name_, Ket_name_ );
+  string Gname_alt = get_gamma_name( full_id_ranges, free_aops_, ids_pos, bra_name, ket_name );
 
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() ) 
     G_to_A_map->emplace( Gname_alt, make_shared<map<string, AContribInfo>>() );
@@ -412,7 +530,7 @@ void GammaGenerator::add_Acontrib_to_map(int kk){      // e.g. ++++----
   vector<int> Aid_order_new = get_Aid_order ( *ids_pos ) ; 
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
-    AContribInfo AInfo( Aname_alt, Aid_order_new, make_pair(my_sign,my_sign), Bra_num_, Ket_num_ );
+    AContribInfo AInfo( Aname_alt, Aid_order_new, make_pair(my_sign,my_sign) );
     G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
 
   } else {
@@ -431,8 +549,7 @@ void GammaGenerator::add_Acontrib_to_map(int kk){      // e.g. ++++----
       }
     }
   }
-  //TODO change state fetching so it is suited to relativistic version 
-  Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(Bra_name_), target_states_->civec_info(Ket_name_), 
+  Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name), 
                                                          free_aops_, full_id_ranges, ids_pos, Gamma_map) );
   return;
 }      
@@ -457,10 +574,18 @@ void GammaGenerator::contract_gamma_annihilators_with_proj_creators( int kk ){
   return;
 } 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<GammaIntermediate>>> final_gamma_vec, string name) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  print_gamma_contributions( final_gamma_vec, name, Bra_names_->at(0), Ket_names_->at(0) );
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<GammaIntermediate>>> final_gamma_vec,
-                                                string name ){ 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                string name,  string bra_name, string ket_name ){ 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "GammaGenerator::print_gamma_contributions" << endl;
 
   cout << "-----------------------------------------------------" << endl;
@@ -468,7 +593,7 @@ void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<Gam
   cout << "-----------------------------------------------------" << endl;
 
   for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
-    string Gname_tmp = WickUtils::get_gamma_name( gint->full_id_ranges, free_aops_,  gint->ids_pos, Bra_name_, Ket_name_ ) ;
+    string Gname_tmp = WickUtils::get_gamma_name( gint->full_id_ranges, free_aops_,  gint->ids_pos, bra_name, ket_name) ;
     cout <<Gname_tmp <<  "   ("<< gint->my_sign <<","<< gint->my_sign << ")       " ;
     cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos) ) << endl;
   }
@@ -476,11 +601,11 @@ void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<Gam
  
   return;
 }
-///////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Replace this with something more sophisticated which uses constraint functions.
-///////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::Forbidden_Index( shared_ptr<const vector<string>> full_id_ranges,  int position ){
-///////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "GammaGenerator::Forbidden_Index" << endl;
 
   if ( full_id_ranges->at(position)[0] != 'a'){
