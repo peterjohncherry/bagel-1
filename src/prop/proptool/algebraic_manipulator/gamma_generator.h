@@ -164,6 +164,9 @@ class GammaGenerator{
     std::map< std::string, std::shared_ptr<std::map< char, int >>> proj_ket_hole_range_maps_; 
     std::map< std::string, std::shared_ptr<std::map< char, int >>> proj_ket_elec_range_maps_; 
 
+    std::shared_ptr< std::map< char, std::shared_ptr<std::vector<int>> >> proj_kill_map_;
+    std::shared_ptr< std::map< char, std::shared_ptr<std::vector<int>> >> proj_plus_map_;
+
     // key    : name of A-tensor
     // result : list of reorderings which much be applied to this A-tensor before it is contracted with this gamma.
     //          second part of pair is factor associated with each reordering.
@@ -205,7 +208,11 @@ class GammaGenerator{
                         std::map<char,int> ket_hole_map, std::map<char, int> bra_hole_map,
                         std::map<char,int> ket_elec_map, std::map<char, int> bra_elec_map ); 
 
-    void build_proj_range_map( std::string bra_or_ket, std::shared_ptr<std::vector<std::string>> proj_ranges ); 
+    void build_bra_ket_space_maps( std::string bra_or_ket, std::shared_ptr<std::vector<std::string>> proj_ranges ); 
+
+    void build_proj_maps( std::shared_ptr<std::vector<bool>> proj_aops,  std::shared_ptr<std::vector<std::string>> proj_ranges );
+
+    void pair_gamma_annhilation_with_proj_creation() ;
 
     void Contract_remaining_indexes(int kk);
    
