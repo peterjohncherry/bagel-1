@@ -103,10 +103,11 @@ class GammaInfo {
 class GammaIntermediate {
 
    public :
-     std::shared_ptr<const std::vector<std::string>> full_id_ranges ;
-     std::shared_ptr<std::vector<int>> ids_pos ;
-     std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ;
-     int my_sign ;
+     std::shared_ptr<const std::vector<std::string>> full_id_ranges;
+     std::shared_ptr<std::vector<int>> ids_pos;
+     std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos;
+     std::shared_ptr<std::vector<int>> proj_id_order; 
+     int my_sign;
 
      GammaIntermediate( std::shared_ptr<const std::vector<std::string>> full_id_ranges_in,
                         std::shared_ptr<std::vector<int>> ids_pos_in,
@@ -213,6 +214,7 @@ class GammaGenerator{
     void build_proj_maps( std::shared_ptr<std::vector<bool>> proj_aops,  std::shared_ptr<std::vector<std::string>> proj_ranges );
 
     void pair_gamma_annhilation_with_proj_creation() ;
+    void pair_gamma_creation_with_proj_annihiliation();
 
     void Contract_remaining_indexes(int kk);
    

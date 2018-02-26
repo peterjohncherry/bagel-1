@@ -138,7 +138,6 @@ class CtrMultiTensorPart : public CtrTensorPart_Base , public  std::enable_share
     CtrMultiTensorPart( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec,
                         std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >> cross_ctrs_pos_in  )
                         : CtrTensorPart_Base() {
-                         std::cout << "CtrMultiTensorPart::CtrMultiTensorPart" << std::endl; 
                          int counter = 0;
                          CTP_vec_         = CTP_vec;
                          cross_ctrs_pos_ = cross_ctrs_pos_in;
@@ -152,28 +151,17 @@ class CtrMultiTensorPart : public CtrTensorPart_Base , public  std::enable_share
                            Tsizes_cml->push_back(cml_size);
                            full_idxs_->insert(full_idxs_->end() , ctp->full_idxs_->begin(), ctp->full_idxs_->end());
                            full_id_ranges_->insert(full_id_ranges_->end(),  ctp->full_id_ranges_->begin(), ctp->full_id_ranges_->end());
-                           std::cout << "ctp->name() = " <<  ctp->name() << std::endl;
-                           WickUtils::print_pair_vector( *ctp->ctrs_pos_,  ctp->name() + " ctrs_pos in constructor"  ); std::cout << std::endl; 
-                           WickUtils::print_vector( *ctp->full_idxs_, ctp->name() + " full_idxs in constructor"  ); std::cout << std::endl; 
                            for (auto relctr : *ctp->ctrs_pos_ )
                              ctrs_pos_->push_back( std::make_pair(relctr.first+Tsizes_cml->back(), relctr.second+Tsizes_cml->back()));
 
-                           WickUtils::print_pair_vector( *ctp->ctrs_pos_, ctp->name() +  " ctrs_pos in constructor"  ); std::cout << std::endl; 
                            cml_size+=ctp->full_idxs_->size();
-                           std::cout << "cml_size = " << cml_size << std::endl;
                          }
-                       
           
-                         WickUtils::print_vector( *Tsizes_cml, "Tsizes_cml" ); std::cout << std::endl; 
-                         WickUtils::print_pair_pair_vector( *cross_ctrs_pos_in, "cross_ctrs_pos_in" ); std::cout << std::endl;
-                         for (auto cctr : *cross_ctrs_pos_in) { 
+                         for (auto cctr : *cross_ctrs_pos_in)  
                            ctrs_pos_->push_back(std::make_pair(Tsizes_cml->at(cctr.first.first)+cctr.first.second, Tsizes_cml->at(cctr.second.first)+cctr.second.second));
-                         }
-                         WickUtils::print_pair_vector( *ctrs_pos_, " full ctrs_pos in constructor"  ); std::cout << std::endl; 
-
+                         
                          get_ctp_idxs_ranges();
                          this->name_ = WickUtils::get_ctp_name(*full_idxs_, *full_id_ranges_, *ctrs_pos_ ) ;
-                         std::cout << "finished building cmtp" << std::endl;
                        };
 
 

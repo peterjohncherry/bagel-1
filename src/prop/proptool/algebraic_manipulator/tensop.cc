@@ -74,9 +74,7 @@ TensOp_General::TensOp_General( std::vector<std::string>& idxs,  std::vector<boo
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp_General::TensOp_General "<< endl;
   // has split ranges
-
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 MultiTensOp_General::MultiTensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
                                           std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor, std::vector<int>& cmlsizevec, 
@@ -86,8 +84,7 @@ MultiTensOp_General::MultiTensOp_General( std::vector<std::string>& idxs,  std::
                                           cmlsizevec_(cmlsizevec) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "MultiTensOp_General::MultiTensOp_General "<< endl;
-           
-//  all_ranges_ =  make_shared<const map< const vector<string>, shared_ptr<split_range_block_info >>>(all_ranges_);
+  //  all_ranges_ =  make_shared<const map< const vector<string>, shared_ptr<split_range_block_info >>>(all_ranges_);
   cmlsizevec_ptr_ =  make_shared<const vector<int>>(cmlsizevec_);
   split_ranges_ = split_ranges; 
 }
@@ -120,8 +117,6 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
 
   Op_dense_ = make_shared<const TensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, orig_factor_tmp, get<1>(test_var), get<0>(test_var) );
 
-
-  cout << "TensOp::TensOp Leaving" << endl;
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -205,7 +200,6 @@ cout << "TensOp::generate_ranges" <<   endl;
   auto unique_ranges_ptr = make_shared<std::vector< std::shared_ptr< const std::vector<std::string>> >>(unique_range_blocks);                                                                                                                
   return tie ( all_ranges_ptr, unique_ranges_ptr );
               
-  cout << "TensOp::generate_ranges()" <<   endl;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
@@ -368,7 +362,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
 
   map< const vector<string>, shared_ptr<split_range_block_info> > all_ranges;
   shared_ptr< const map <const vector<string>, shared_ptr<split_range_block_info >>>  all_ranges_tmp_ptr;   
-  cout << " num_tensors_ = " << num_tensors_ << endl;
 
   // Such an ugly loop that this should be fixed when switch ranges to numbers
   // The reason for it is that maps can't map->begin()+ii , so must iterate
@@ -492,11 +485,7 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
 template<typename DataType>
 void MultiTensOp::MultiTensOp<DataType>::enter_cmtps_into_map(pint_vec ctr_pos_list, pair<int,int> ReIm_factors, const vector<string>& id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_TensOp 
-cout << "MultiTensOp::enter_into_CTP_map" << endl;
-#endif 
-////////////////////////////////////////////////////////////////////////////////////////
-//cout << "MultiTensOp::enter_into_CTP_map" << endl;
+ // cout << "MultiTensOp::enter_into_CTP_map" << endl;
 
   shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart_Base> >> (num_tensors_); 
   vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
@@ -543,16 +532,11 @@ cout << "MultiTensOp::enter_into_CTP_map" << endl;
 
   }
   if ( CTP_vec->size() < 3  ){ 
-    cout  << " 2 Tens MultiTens method" << endl;
     auto new_cmtp = make_shared<CtrMultiTensorPart<DataType>>(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos));
     CTP_map_->emplace(new_cmtp->name(), new_cmtp );
-    cout  << " 2 Tens MultiTens method done" << endl;
   } else {
-    cout  << " >2 Tens MultiTens method" << endl;
     get_cmtp(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos) ); 
-    cout  << " >2 Tens MultiTens method done" << endl;
   } 
-  //cout << CMTP->name() << " is going into the map " << endl;
 
   return;
 }
@@ -565,8 +549,7 @@ template<typename DataType>
 void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>>  ctp_vec,  // ctp : contracted_tensor_parts
                                                    shared_ptr<vector<pair<pair<int,int>, pair<int,int>>>> ccp_vec  ){ // ccp : cross_ctrs_pos
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << endl; 
-  cout << "MultiTensOp::MultiTensOp<DataType>::get_cmtp " << endl;
+ // cout << "MultiTensOp::MultiTensOp<DataType>::get_cmtp " << endl;
   
   auto ctp_vec_buff =  make_shared<vector<shared_ptr<CtrTensorPart_Base>>>(*ctp_vec);  
   auto ccp_vec_buff =  make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(*ccp_vec);
@@ -577,8 +560,6 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
   if ( ccp_vec->size() != 0 ) { 
     do {
       int inside_counter = 0 ;
-      print_vec_elem_names(*ctp_vec , "ctp_vec" ) ; cout << endl;
-      print_pair_pair_vector( *ccp_vec, "ccp_vec" ); cout <<endl;
       int ta_pos = ccp_it->first.first < ccp_it->second.first ? ccp_it->first.first : ccp_it->second.first ;
       int tb_pos = ccp_it->first.first > ccp_it->second.first ? ccp_it->first.first : ccp_it->second.first ;
 
@@ -592,25 +573,14 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
         } else if (ccp_ab_it->first.first == tb_pos && ccp_ab_it->second.first == ta_pos){
           ccp_vec_tatb->push_back( make_pair( make_pair( 0, ccp_ab_it->second.second), make_pair(1, ccp_ab_it->first.second) ));
         } else {
-          cout << "X" << counter++ << ", " << inside_counter++  << " not tatb" << endl; 
           ccp_vec_merged_tatb->push_back(*ccp_ab_it);
-          cout << "X" << counter++ << ", " << inside_counter++  << " not tatb" << endl; 
         }
       }
 
-      print_vec_elem_names(*ctp_vec_tatb , "ctp_vec_tatb" ) ; cout << endl;
-      print_pair_pair_vector( *ccp_vec_tatb, "ccp_vec_tatb" ); cout <<endl;
-      print_vec_elem_names(*ctp_vec , "ctp_vec" ) ; cout << endl;
-      print_pair_pair_vector( *ccp_vec_merged_tatb, "ccp_vec_merged_tatb" );
-      cout << endl;
       shared_ptr<CtrMultiTensorPart<DataType>> cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb );
-      cout << endl;
       CTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
 
       shift_ccp_and_ctp_vecs( cmtp_tatb, ta_pos, tb_pos, ctp_vec, ccp_vec_merged_tatb );
-      cout << "ta_pos = " << ta_pos << "    tb_pos = " << tb_pos << endl;
-      print_vec_elem_names(*ctp_vec , "shifted ctp_vec" ) ; cout << endl;
-      print_pair_pair_vector( *ccp_vec_merged_tatb, "shifted ccp_vec_merged_tatb" ); cout <<endl;
 
       ccp_vec = make_shared<vector<pair<pair<int,int>, pair<int,int>> >>(*ccp_vec_merged_tatb);
       ccp_it = ccp_vec->begin();
@@ -619,35 +589,20 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
 
   } else { 
     while ( ctp_vec->size() > 2 ) { 
-      cout << " XX" << endl;
       auto ctp_vec_tatb = make_shared<vector<shared_ptr<CtrTensorPart_Base>>>( vector<shared_ptr<CtrTensorPart_Base>> { *(ctp_vec->end()-2), *(ctp_vec->end()-1) } );
       auto ccp_vec_tatb = make_shared<vector<pair<pair<int,int>, pair<int,int>> >>(0);
-      cout << endl;
       auto cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb );
-      cout << endl;
       CTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
-      cout << "cmtp_tatb->name() = "<< cmtp_tatb->name()  << endl;
       ctp_vec->pop_back(); 
       ctp_vec->back() = cmtp_tatb;
     }
   }   
 
-  cout << endl;
   shared_ptr<CtrMultiTensorPart<DataType>> cmtp_new_ctp_order = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec, ccp_vec );
-  cout << endl;
-
-  print_vector( *(cmtp_orig_ctp_order->full_idxs()) , " cmtp_orig_ctp_order->full_idxs()" ) ; cout << endl;  
-  print_vector( *(cmtp_new_ctp_order->full_idxs()) , " cmtp_new_ctp_order->full_idxs()" ) ; cout << endl;  
-  print_vector( *(cmtp_orig_ctp_order->full_idxs()) , " cmtp_orig_ctp_order->unc_idxs()" ) ; cout << endl;  
-  print_vector( *(cmtp_new_ctp_order->full_idxs()) , " cmtp_new_ctp_order->unc_idxs()" ) ; cout << endl;  
   std::shared_ptr<std::vector<int>> new_order_to_orig_order =  get_pattern_match_order( cmtp_orig_ctp_order->unc_idxs(), cmtp_new_ctp_order->unc_idxs() ) ; 
-
-  print_vector( *(new_order_to_orig_order), " new_order_to_orig_order" ) ; cout << endl;  
 
   cmtp_orig_ctp_order->use_new_order_compute_list( new_order_to_orig_order, cmtp_new_ctp_order->name() );
 
-  cout << "cmtp_new_ctp_order->name() = " << cmtp_new_ctp_order->name() <<endl; 
-  cout << "cmtp_orig_ctp_order->name() = " << cmtp_new_ctp_order->name() <<endl; 
   CTP_map_->emplace( cmtp_orig_ctp_order->name(), cmtp_orig_ctp_order ) ;
   CTP_map_->emplace( cmtp_new_ctp_order->name(), cmtp_new_ctp_order );
 
@@ -663,7 +618,7 @@ MultiTensOp::MultiTensOp<DataType>::shift_ccp_and_ctp_vecs( shared_ptr<CtrMultiT
                                                             int ta, int tb, shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>>& ctp_vec,
                                                             shared_ptr<vector<pair<pair<int,int>, pair<int,int>> >>& ccp_vec ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::MultiTensOp<DataType>::shift_ccp_ctp_vecs" << endl;
+//  cout << "MultiTensOp::MultiTensOp<DataType>::shift_ccp_ctp_vecs" << endl;
 
   auto new_ctp_vec = make_shared<vector<shared_ptr<CtrTensorPart_Base>>>( ctp_vec->size()-1 );
   auto new_ctp_vec_it = new_ctp_vec->begin();

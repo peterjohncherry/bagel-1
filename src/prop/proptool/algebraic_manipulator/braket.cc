@@ -26,20 +26,20 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 
   for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
     
-    print_vector( *(range_map_it->second->unique_block()), " ranges into gamma? " ); 
+//    print_vector( *(range_map_it->second->unique_block()), " ranges into gamma? " ); 
 
     if ( !range_map_it->second->survives() ) {
-      cout << " ... no ; needs to be contracted with something else. " << endl;  
+  //    cout << " ... no ; needs to be contracted with something else. " << endl;  
 
     } else if ( range_map_it->second->is_sparse( op_state_ids_ ) ){  
-      cout << " ... no ; this block is sparse" << endl;  
+    //  cout << " ... no ; this block is sparse" << endl;  
 
     } else { 
-      cout << " ... yes " << endl; 
+   //   cout << " ... yes " << endl; 
       
       shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ );
       GGen->add_gamma( range_map_it->second );
-      if ( GGen->generic_reorderer( "normal_order", true , false ) ){  
+      if ( GGen->generic_reorderer( "normal order", true , false ) ){  
         if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
           cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
           vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
