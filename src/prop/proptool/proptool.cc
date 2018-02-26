@@ -456,7 +456,14 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
             
       braket_list->push_back( BraKet_Init( bk_ops, bra_index, bra_index_ptr, ket_index, ket_index_ptr ));
     }
-    auto new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map );  
+   
+    shared_ptr<Term_Init> new_term; 
+    if ( term_type == "orbital projector" ) {
+      string proj_op_name = term_inp->get<string>( "projection op" , "X" );
+      new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map, proj_op_name );  
+    } else { 
+      new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map );  
+    }
 
     term_init_map_->emplace( term_name, new_term );
   }

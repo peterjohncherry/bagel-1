@@ -127,8 +127,14 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
               bk_info.op_list_->at(jj).get_op_idxs( op_state_ids->at(jj) );
             }
           }
-       
-          braket_list.push_back(BraKet<DataType>( bk_op_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
+
+          if  ( !term_init->orbital_projector_ ){  
+            braket_list.push_back(BraKet<DataType>( bk_op_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
+          } else { 
+            braket_list.push_back(BraKet<DataType>( bk_op_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_,
+                                                    term_init->proj_op_name_ )); 
+          }
+
         } 
 
       } while( fvec_cycle_skipper( fvec, maxs, mins ) );

@@ -171,6 +171,7 @@ class split_range_block_info : public  range_block_info {
     int num_idxs() { return num_idxs_ ; } 
 
     std::shared_ptr<std::vector<std::shared_ptr<range_block_info>>> range_blocks(){ return range_blocks_ ;} 
+    std::shared_ptr<range_block_info> range_blocks(int ii){ return range_blocks_->at(ii) ;} 
 
     //TODO can't really need three is_sparse functions...
     bool is_sparse( std::vector<std::vector<int>>& state_idxs ) { 

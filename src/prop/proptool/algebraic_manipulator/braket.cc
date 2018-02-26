@@ -21,36 +21,83 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
   //     Loop through dense ranges on the outside, then check sparsity on the inner when adding to gamma_info_map.
   
   Total_Op_ = MT_map->at(multiop_name_);
+
+  int projector_position; 
+  if ( proj_op_ ) { 
+    if ( proj_op_name_ == Total_Op_->sub_tensops().back()->name() ) { 
+      cout << proj_op_name_ << " == Total_Op_->sub_tensops().back()->name()" << Total_Op_->sub_tensops().back()->name() << endl;
+      projected_ket_ = true;
+      projector_position = Total_Op_->sub_tensops().size() -1 ;
+    } else if ( proj_op_name_ == Total_Op_->sub_tensops().front()->name() ) { 
+      cout << proj_op_name_ << " == Total_Op_->sub_tensops().front()->name()" << Total_Op_->sub_tensops().front()->name() << endl;
+      projected_bra_ = true;
+      projector_position = 0 ;
+    } else { 
+      throw logic_error("requested orbital projected term but could not find specified projection operator : " + proj_op_name_ + " Aborting!!" );
+    }
+  }
+
+ 
+
+  cout << "got operator position = " ; cout.flush() ; cout << projector_position << endl; 
+
   shared_ptr<vector<string>> idxs_buff  = make_shared<vector<string>>(*(Total_Op_->idxs()));
   shared_ptr<vector<bool>> aops_buff  = make_shared<vector<bool>>(*Total_Op_->aops());    
 
-  for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
-    
-//    print_vector( *(range_map_it->second->unique_block()), " ranges into gamma? " ); 
-
-    if ( !range_map_it->second->survives() ) {
-  //    cout << " ... no ; needs to be contracted with something else. " << endl;  
-
-    } else if ( range_map_it->second->is_sparse( op_state_ids_ ) ){  
-    //  cout << " ... no ; this block is sparse" << endl;  
-
-    } else { 
-   //   cout << " ... yes " << endl; 
+  if ( !proj_op_ ) {     
+    for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
+   
+      if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
       
-      shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ );
-      GGen->add_gamma( range_map_it->second );
-      if ( GGen->generic_reorderer( "normal order", true , false ) ){  
-        if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
-          cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
-          vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
-          int qq = 0 ;
-          for ( auto&  tens_block : *(range_map_it->second->range_blocks()) ){ 
-            cout << tens_block->orig_name()  << " " ; cout.flush(); cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
-            MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
-            required_blocks->emplace( tens_block->orig_name() );
+        shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ );
+        GGen->add_gamma( range_map_it->second );
+        if ( GGen->generic_reorderer( "normal order", true , false ) ){  
+          if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
+            cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
+            vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
+            int qq = 0 ;
+            for ( auto&  tens_block : *(range_map_it->second->range_blocks()) ){ 
+              cout << tens_block->orig_name()  << " " ; cout.flush(); cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
+              MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
+              required_blocks->emplace( tens_block->orig_name() );
+            }
+            cout << endl; 
           }
-          cout << endl; 
         }
+      }
+    }
+
+  } else  {     
+    for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
+      if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
+ 
+        cout << "definining split block " ; cout.flush() ; cout << projector_position << endl; 
+        
+        std::shared_ptr<range_block_info>  proj_range_block = range_map_it->second->range_blocks(projector_position);
+        shared_ptr<const std::vector<std::string>> proj_ids = proj_range_block->transformed_idxs();
+        shared_ptr<const std::vector<bool>> proj_aops = proj_range_block->orig_aops();
+
+        print_vector( *idxs_buff, "idxs_buff" ) ; cout << endl;
+        print_vector( *aops_buff, "aops_buff" ) ; cout << endl;
+        print_vector( *proj_aops , "proj_aops" ) ; cout << endl;
+        print_vector( *proj_ids , "proj_ids" ) ; cout << endl;
+ 
+        shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, proj_ids, proj_aops, gamma_info_map, G_to_A_map, factor_ );
+        GGen->add_gamma( range_map_it->second );
+//        if ( GGen->generic_reorderer( "normal order", true , false ) ){  
+//          if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
+//            cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
+//            vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
+//            int qq = 0 ;
+//            for ( auto&  tens_block : *(range_map_it->second->range_blocks()) ){ 
+//              cout << tens_block->orig_name()  << " " ; cout.flush(); cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
+//              MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
+//              required_blocks->emplace( tens_block->orig_name() );
+//            }
+//            cout << endl; 
+//          
+//          }
+//        }
       }
     } 
   }

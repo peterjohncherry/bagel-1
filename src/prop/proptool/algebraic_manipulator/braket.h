@@ -18,15 +18,19 @@ class BraKet{
        const int ket_num_;
        const std::string type_ ; // should be "ci_deriv" or "full" 
        const std::string multiop_name_;
-       
+       const bool proj_op_;        
+       const std::string proj_op_name_;        
+       bool projected_bra_;
+       bool projected_ket_;
 
        std::shared_ptr<TensOp_Base> Total_Op_;
 
        BraKet( std::vector<std::string>& op_list, DataType factor, int bra_num, int ket_num, 
                std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type) :
                op_list_(op_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
-               op_state_ids_(op_state_ids), type_(type),
-               multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))) {
+               op_state_ids_(op_state_ids), type_(type), 
+               multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))),
+               proj_op_(false) {
 
                if (type_[0] == 'c' )// checking if derivative  
                  name_ = "c_{I}"; 
@@ -44,7 +48,38 @@ class BraKet{
                  }
                  name_ += " |"+ std::to_string(ket_num) + ">";
                   
+                 projected_bra_ = false;
+                 projected_ket_ = false;
                }; 
+
+       BraKet( std::vector<std::string>& op_list, DataType factor, int bra_num, int ket_num, 
+               std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type,
+               std::string proj_op_name) :
+               op_list_(op_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
+               op_state_ids_(op_state_ids), type_(type),
+               multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))),
+               proj_op_(true), proj_op_name_(proj_op_name) {
+
+               if (type_[0] == 'c' )// checking if derivative  
+                 name_ = "c_{I}"; 
+ 
+               name_ = "<" + std::to_string(bra_num)+ "| ";
+               
+                 for ( int ii = 0 ; ii != op_list_.size(); ii++ ) {
+                   name_ += op_list_[ii] ;
+                   if (op_state_ids_->at(ii).size() > 0 ) {
+                     name_ +=  "^{"; 
+                     for( int jj = 0; jj != op_state_ids_->at(ii).size(); jj++ ) 
+                       name_ += std::to_string(op_state_ids_->at(ii)[jj]); 
+                     name_ += "}"; 
+                   }
+                 }
+                 name_ += " |"+ std::to_string(ket_num) + ">";
+                  
+                 projected_bra_ = false;
+                 projected_ket_ = false;
+               }; 
+
       ~BraKet(){};
 
 
