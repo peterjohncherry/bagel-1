@@ -119,7 +119,7 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
                                 proj_ids_(proj_ids), proj_aops_(proj_aops),
                                 G_to_A_map(G_to_A_map_in),
                                 Gamma_map(Gamma_map_in),
-                                bk_factor(bk_factor_in), projected_ket_(false) {
+                                bk_factor(bk_factor_in), projected_bra_(true), projected_ket_(false) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "GammaGenerator::GammaGenerator with bra_projection" << endl;
 
@@ -176,10 +176,15 @@ void GammaGenerator::add_gamma( shared_ptr<range_block_info> block_info ) {
     final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
 
   } else if ( projected_bra_ && !projected_ket_ ) {
+    cout << " setting initial id vec for gamma vec with projected bra " << endl; 
     shared_ptr<vector<int>> ids_pos_init =  make_shared<vector<int>>(block_info->orig_idxs()->size()-proj_ids_->size());
     iota( ids_pos_init->begin() , ids_pos_init->end(), 0 );
     auto id_ranges_in = make_shared<vector<string>>(block_info->orig_block()->begin()+proj_ids_->size(), block_info->orig_block()->end());
 
+    cout << "  ids_pos_init->size() = "<< ids_pos_init->size() << endl;
+      
+    print_vector( *ids_pos_init , "ids_pos_init" ) ; cout << endl; 
+    print_vector( *id_ranges_in , "id_ranges_in" ) ; cout << endl; 
     gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(1, make_shared<GammaIntermediate>(id_ranges_in, ids_pos_init, deltas_pos_in, my_sign_in));
     final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
 
@@ -637,9 +642,10 @@ void GammaGenerator::normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::anti_normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::anti_normal_order" << endl;
+  cout << "GammaGenerator::anti-normal_order" << endl;
 
   shared_ptr<vector<int>> ids_pos  = gamma_vec->at(kk)->ids_pos;
+  print_vector(*ids_pos, "ids_pos"); cout << endl;
   int num_pops = ( ids_pos->size()/2 )-1;
   for (int ii = ids_pos->size()-1 ; ii != -1; ii--){
     print_vector(*ids_pos, "ids_pos"); cout << "ii = " << ii << endl;
