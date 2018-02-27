@@ -320,6 +320,7 @@ bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reord
 
   }
 
+ 
   gamma_vec = final_gamma_vec;
   does_it_contribute = (gamma_vec->size() > 0 );
 
@@ -540,6 +541,8 @@ void GammaGenerator::pair_gamma_annhilation_with_proj_creation() {
     }
   }
 
+  cout << "new_gamma_vec->size() = " << new_gamma_vec->size() << endl;
+  final_gamma_vec = new_gamma_vec;
   gamma_vec = new_gamma_vec;
 
   return;
@@ -645,12 +648,9 @@ void GammaGenerator::anti_normal_order( int kk ) {
   cout << "GammaGenerator::anti-normal_order" << endl;
 
   shared_ptr<vector<int>> ids_pos  = gamma_vec->at(kk)->ids_pos;
-  print_vector(*ids_pos, "ids_pos"); cout << endl;
   int num_pops = ( ids_pos->size()/2 )-1;
   for (int ii = ids_pos->size()-1 ; ii != -1; ii--){
-    print_vector(*ids_pos, "ids_pos"); cout << "ii = " << ii << endl;
     if ( ii > num_pops ) {
-      cout << "XA : " << ii << endl;
       if (!free_aops_->at(ids_pos->at(ii)))
         continue;
 
@@ -662,9 +662,7 @@ void GammaGenerator::anti_normal_order( int kk ) {
           }
         }
       }
-      cout << "XB : " << ii << endl;
     } else if (ii<=num_pops) {
-      cout << "YA : " << ii << endl;
       if (free_aops_->at(ids_pos->at(ii)))
         continue;
 
@@ -676,7 +674,6 @@ void GammaGenerator::anti_normal_order( int kk ) {
           }
         }
       }
-      cout << "YB : " << ii << endl;
     }
   }
   return;

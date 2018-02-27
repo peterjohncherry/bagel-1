@@ -84,8 +84,28 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
  
         shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, proj_ids, proj_aops, gamma_info_map, G_to_A_map, factor_ );
         GGen->add_gamma( range_map_it->second );
-        GGen->generic_reorderer( "anti-normal order", true , false );
-//        if ( GGen->generic_reorderer( "anti-normal order", true , false ) ){  
+        if (GGen->generic_reorderer( "anti-normal order", true , false )){
+          cout << " PRINTING ANTI-NORMAL ORDERED GAMMAS" << endl;
+          for ( shared_ptr<GammaIntermediate> gint : *(GGen->gamma_vec) ) { 
+            cout << " gamma_int ids = "; cout.flush(); 
+            for ( int  id_pos : *(gint->ids_pos) ) {
+              cout << idxs_buff->at(id_pos) ; cout.flush();
+            }
+            cout << "   gamma_int aops   = "; cout.flush();
+            for ( int  id_pos : *(gint->ids_pos) ){ 
+              cout << aops_buff->at(id_pos); cout.flush();
+            }
+            cout << "   gamma_int ranges = " ; cout.flush(); 
+            for ( int  id_pos : *(gint->ids_pos) ){ 
+              cout << gint->full_id_ranges->at(id_pos); cout.flush();
+            }
+            cout << endl;
+          }
+        }
+  
+              
+      //    if ( GGen->generic_reorderer( "normal order", false , false ) ){  
+      //      forGGen 
 //          if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
 //            cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
 //            vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();

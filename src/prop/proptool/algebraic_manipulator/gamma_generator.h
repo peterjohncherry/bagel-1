@@ -137,7 +137,6 @@ class GammaGenerator{
     std::shared_ptr<const std::vector<bool>> proj_aops_;
     std::shared_ptr<const std::vector<std::string>> proj_ids_;
 
-    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
 
     std::shared_ptr<std::map< char, int>>         op_order ;
@@ -188,6 +187,11 @@ class GammaGenerator{
                     double bk_factor );
 
     ~GammaGenerator(){};
+
+
+    //TODO make this private again when finished testing!!!
+    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
+
 
     void add_gamma(std::shared_ptr<range_block_info> block_info );
 
