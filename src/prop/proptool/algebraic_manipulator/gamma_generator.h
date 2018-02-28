@@ -202,8 +202,8 @@ class GammaGenerator{
     bool optimized_alt_order();
 
     bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering );
-    void normal_order( int kk );
-    void anti_normal_order( int kk );
+    void normal_order_new( int kk );
+    void anti_normal_order_new( int kk );
     void contract_proj_annihilators_with_gamma_creators( int kk );
     void contract_gamma_annihilators_with_proj_creators( int kk );
     void alternating_order( int kk );
@@ -215,10 +215,10 @@ class GammaGenerator{
 
     void build_bra_ket_space_maps( std::string bra_or_ket, std::shared_ptr<std::vector<std::string>> proj_ranges );
 
-    void build_proj_maps( std::shared_ptr<std::vector<bool>> proj_aops,  std::shared_ptr<std::vector<std::string>> proj_ranges );
+    void build_proj_maps( std::shared_ptr<const std::vector<bool>> proj_aops,  std::shared_ptr<std::vector<std::string>> proj_ranges );
 
     void pair_gamma_annhilation_with_proj_creation() ;
-    void pair_gamma_creation_with_proj_annihiliation();
+    void pair_gamma_creation_with_proj_annihilation();
 
     void Contract_remaining_indexes(int kk);
 

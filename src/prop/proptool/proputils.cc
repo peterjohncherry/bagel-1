@@ -1,6 +1,6 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
- #include <src/prop/proptool/proputils.h>
+#include <src/prop/proptool/proputils.h>
  // #include "wickutils.h"
 using namespace std;
 
@@ -780,7 +780,7 @@ bool WickUtils::RangeCheck(const vector<string>& id_ranges, const vector<bool>& 
 shared_ptr<vector<pair<int,int>>>
 WickUtils::standardize_delta_ordering_generic(shared_ptr<vector<pair<int,int>>> deltas_pos ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "WickUtils::standardize_delta_ordering_generic" << endl;
+//  cout << "WickUtils::standardize_delta_ordering_generic" << endl;
  
   shared_ptr<vector<pair<int,int>>> new_deltas_pos;
  
@@ -805,7 +805,7 @@ WickUtils::standardize_delta_ordering_generic(shared_ptr<vector<pair<int,int>>> 
 shared_ptr<vector<pair<int,int>>>
 WickUtils::standardize_delta_ordering_generic( const vector<pair<int,int>>& deltas_pos ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "WickUtils::standardize_delta_ordering_generic" << endl;
+//  cout << "WickUtils::standardize_delta_ordering_generic" << endl;
  
   shared_ptr<vector<pair<int,int>>> new_deltas_pos;
  
@@ -833,7 +833,7 @@ WickUtils::standardize_delta_ordering_generic( const vector<pair<int,int>>& delt
 string WickUtils::get_ctp_name( const vector<string>& idxs, const vector<string>& id_ranges, 
                                 const vector<pair<int,int>>& ctrs_pos ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "WickUtils::get_ctp_name" << endl; 
+//  cout << "WickUtils::get_ctp_name" << endl; 
 
   string ctp_name = ""; 
   for ( string id : idxs ) 
