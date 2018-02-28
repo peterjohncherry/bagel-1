@@ -136,6 +136,7 @@ class GammaGenerator{
 
     std::shared_ptr<const std::vector<bool>> proj_aops_;
     std::shared_ptr<const std::vector<std::string>> proj_ids_;
+    std::shared_ptr<const std::vector<std::string>> proj_ranges_;
 
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
 
@@ -192,7 +193,6 @@ class GammaGenerator{
     //TODO make this private again when finished testing!!!
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
 
-
     void add_gamma(std::shared_ptr<range_block_info> block_info );
 
     bool norm_order();
@@ -202,23 +202,40 @@ class GammaGenerator{
     bool optimized_alt_order();
 
     bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering );
+
     void normal_order_new( int kk );
+
     void anti_normal_order_new( int kk );
+
     void contract_proj_annihilators_with_gamma_creators( int kk );
+
     void contract_gamma_annihilators_with_proj_creators( int kk );
+
     void alternating_order( int kk );
+
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
+    bool check_if_same_sector( std::string bra_name, std::string ket_name );
+
+    bool generic_reorderer_same_sector( std::string reordering_name, std::string bra_name,
+                                        bool final_reordering );
+
+    bool generic_reorderer_different_sector( std::string reordering_name, std::string bra_name,
+                                             std::string ket_name, bool final_reordering );
+
     bool proj_onto_map( std::shared_ptr<GammaIntermediate> gint,
-                        std::map<char,int> ket_hole_map, std::map<char, int> bra_hole_map,
-                        std::map<char,int> ket_elec_map, std::map<char, int> bra_elec_map );
+                        std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
+                        std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
 
-    void build_bra_ket_space_maps( std::string bra_or_ket, std::shared_ptr<std::vector<std::string>> proj_ranges );
+    void build_bra_ket_space_maps( std::string bra_or_ket, std::shared_ptr<const std::vector<std::string>> proj_ranges );
 
-    void build_proj_maps( std::shared_ptr<const std::vector<bool>> proj_aops,  std::shared_ptr<std::vector<std::string>> proj_ranges );
+    void build_proj_maps( std::shared_ptr<const std::vector<bool>> proj_aops,  std::shared_ptr<const std::vector<std::string>> proj_ranges );
 
-    void pair_gamma_annhilation_with_proj_creation() ;
-    void pair_gamma_creation_with_proj_annihilation();
+    void pair_gamma_annhilation_with_proj_creation(  std::shared_ptr<std::map<char,int>> bra_hole_map, std::shared_ptr<std::map<char,int>> bra_elec_map,
+                                                     std::shared_ptr<std::map<char,int>> ket_hole_map, std::shared_ptr<std::map<char,int>> ket_elec_map );
+                                                                                                                            
+    void pair_gamma_creation_with_proj_annihilation( std::shared_ptr<std::map<char,int>> bra_hole_map, std::shared_ptr<std::map<char,int>> bra_elec_map,
+                                                     std::shared_ptr<std::map<char,int>> ket_hole_map, std::shared_ptr<std::map<char,int>> ket_elec_map );
 
     void Contract_remaining_indexes(int kk);
 

@@ -89,6 +89,14 @@ class StatesInfo  {
      std::shared_ptr<CIVecInfo<DataType>> civec_info ( std::string civec_name )  {
        return civec_info_map_.at(civec_name);
      };
+
+     std::shared_ptr<std::map< char ,int>> hole_range_map( std::string civec_name )  {
+       return civec_info_map_.at(civec_name)->hole_range_map();
+     };
+  
+     std::shared_ptr<std::map< char ,int>> elec_range_map( std::string civec_name )  {
+       return civec_info_map_.at(civec_name)->elec_range_map();
+     };
   
 };
 #endif

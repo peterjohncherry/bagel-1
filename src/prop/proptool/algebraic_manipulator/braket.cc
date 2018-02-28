@@ -71,40 +71,17 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
     for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
       if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
  
-        cout << "definining split block " ; cout.flush() ; cout << projector_position << endl; 
-        
         std::shared_ptr<range_block_info>  proj_range_block = range_map_it->second->range_blocks(projector_position);
         shared_ptr<const std::vector<std::string>> proj_ids = proj_range_block->transformed_idxs();
         shared_ptr<const std::vector<bool>> proj_aops = proj_range_block->orig_aops();
-
-        print_vector( *idxs_buff, "idxs_buff" ) ; cout << endl;
-        print_vector( *aops_buff, "aops_buff" ) ; cout << endl;
-        print_vector( *proj_aops , "proj_aops" ) ; cout << endl;
-        print_vector( *proj_ids , "proj_ids" ) ; cout << endl;
- 
-        shared_ptr<GammaGenerator>  GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, proj_ids, proj_aops, gamma_info_map, G_to_A_map, factor_ );
+        
+        cout << endl;  
+        auto GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, proj_ids, proj_aops, gamma_info_map, G_to_A_map, factor_ );
         GGen->add_gamma( range_map_it->second );
-        if (GGen->generic_reorderer( "anti-normal order", true , false )){
-          cout << " out of anti normal ordering GAMMAS" << endl;
-          if (GGen->generic_reorderer( "normal order", false, true )){
-            cout << " PRINTING NORMAL ORDERED GAMMAS" << endl;
-            for ( shared_ptr<GammaIntermediate> gint : *(GGen->gamma_vec) ) { 
-              cout << " gamma_int ids = "; cout.flush(); 
-              for ( int  id_pos : *(gint->ids_pos) ) {
-                cout << idxs_buff->at(id_pos) ; cout.flush();
-              }
-              cout << "   gamma_int aops   = "; cout.flush();
-              for ( int  id_pos : *(gint->ids_pos) ){ 
-                cout << aops_buff->at(id_pos); cout.flush();
-              }
-              cout << "   gamma_int ranges = " ; cout.flush(); 
-              for ( int  id_pos : *(gint->ids_pos) ){ 
-                cout << gint->full_id_ranges->at(id_pos); cout.flush();
-              }
-              cout << endl;
-            }
-          }
-        }
+        if (GGen->generic_reorderer( "anti-normal order", true , false ))
+          GGen->generic_reorderer( "normal order", false, true );
+        
+        cout << endl; 
       }
     } 
   }
