@@ -113,7 +113,17 @@ class GammaIntermediate {
                         std::shared_ptr<std::vector<int>> ids_pos_in,
                         std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
                         int my_sign_in) :
-     full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), my_sign(my_sign_in) {};
+     full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), 
+     proj_id_order(std::make_shared<std::vector<int>>(0)), my_sign(my_sign_in) {};
+
+
+     GammaIntermediate( std::shared_ptr<const std::vector<std::string>> full_id_ranges_in,
+                        std::shared_ptr<std::vector<int>> ids_pos_in,
+                        std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
+                        int my_sign_in, std::shared_ptr<std::vector<int>> proj_id_order_in ) :
+     full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), 
+     proj_id_order(proj_id_order_in), my_sign(my_sign_in) {};
+
      ~GammaIntermediate(){};
 
 };
@@ -203,9 +213,9 @@ class GammaGenerator{
 
     bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering );
 
-    void normal_order_new( int kk );
+    void normal_order( int kk );
 
-    void anti_normal_order_new( int kk );
+    void anti_normal_order( int kk );
 
     void contract_proj_annihilators_with_gamma_creators( int kk );
 
