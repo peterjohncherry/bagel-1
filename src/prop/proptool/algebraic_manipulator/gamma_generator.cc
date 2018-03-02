@@ -262,13 +262,10 @@ void GammaGenerator::build_bra_ket_space_maps( string bra_or_ket, shared_ptr<con
 bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reordering, bool final_reordering ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGenerator::generic_reorderer" << endl; 
-
-  print_vector( *(gamma_vec->front()->full_id_ranges), " full_id_ranges "); cout << endl;
-
+  
   int kk = 0;
   bool does_it_contribute = false;
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
-
   
    for ( string bra_name : *Bra_names_ ){
      for ( string ket_name : *Ket_names_ ){
@@ -282,89 +279,6 @@ bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reord
    return true;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-bool GammaGenerator::generic_reorderer_same_sector( string reordering_name, string bra_name,
-                                                    bool final_reordering                    ) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "GammaGenerator::generic_reorderer_same_sector" << endl;
-
-  shared_ptr<map<char,int>> bra_hole_map;
-  shared_ptr<map<char,int>> bra_elec_map;
-
-  shared_ptr<map<char,int>> ket_hole_map;
-  shared_ptr<map<char,int>> ket_elec_map;
-
-  bra_hole_map = target_states_->hole_range_map(bra_name);
-  bra_elec_map = target_states_->elec_range_map(bra_name);
-
-  ket_hole_map = bra_hole_map;
-  ket_elec_map = bra_elec_map;
-
-  if ( reordering_name == "normal order" ) {
-    
-    int kk = 0;
-    while ( kk != gamma_vec->size()) {
-      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) )
-        normal_order(kk);
-      kk++;
-    }
-
-    if ( projected_bra_ ){
-      pair_gamma_creation_with_proj_annihilation( bra_hole_map, bra_elec_map, ket_hole_map, ket_elec_map );
-
-    } else if ( projected_ket_ ) {
-      pair_gamma_annhilation_with_proj_creation( bra_hole_map, bra_elec_map, ket_hole_map, ket_elec_map );
-
-    } else {
-      for ( shared_ptr<GammaIntermediate>& gint : *gamma_vec )
-        if ( proj_onto_map( gint, *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) )
-          final_gamma_vec->push_back( gint );
-    }
-
-  } else if ( reordering_name == "anti-normal order" ) {
-    int kk = 0;
-    while ( kk != gamma_vec->size()){
-      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) )
-        anti_normal_order(kk);
-      kk++;
-    }
-
-    if ( projected_bra_ ){
-      pair_gamma_annhilation_with_proj_creation(  bra_hole_map, bra_elec_map, ket_hole_map, ket_elec_map );
-
-    } else if ( projected_ket_ ){
-      pair_gamma_creation_with_proj_annihilation(  bra_hole_map, bra_elec_map, ket_hole_map, ket_elec_map );
-
-    } else {
-      for ( shared_ptr<GammaIntermediate>& gint : *gamma_vec )
-        final_gamma_vec->push_back( gint );
-    }
-
-  } else if ( reordering_name == "alternating order" ) {
-    int kk = 0;
-    while ( kk != gamma_vec->size())
-      alternating_order(kk++);
-
-    for ( shared_ptr<GammaIntermediate>& gint : *gamma_vec )
-      if ( proj_onto_map( gint, *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) )
-        final_gamma_vec->push_back( gint );
-  }
-
-  gamma_vec = final_gamma_vec;
-  bool does_it_contribute = (gamma_vec->size() > 0 );
-
-  if ( does_it_contribute ) 
-    print_gamma_contributions( gamma_vec, reordering_name );
-
-  int kk= 0;
-  while ( kk != gamma_vec->size()){
-    if ( final_reordering ) 
-      add_Acontrib_to_map(kk, bra_name, bra_name);
-    kk++;
-  }
-
-  return true;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::generic_reorderer_different_sector( string reordering_name, string bra_name,
                                                          string ket_name, bool final_reordering   ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -375,6 +289,7 @@ cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
                                                                                     
   shared_ptr<map<char,int>> ket_hole_map = target_states_->hole_range_map(ket_name);;
   shared_ptr<map<char,int>> ket_elec_map = target_states_->elec_range_map(ket_name);;
+
  
   if ( reordering_name == "normal order" ) {
     
@@ -432,7 +347,9 @@ cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
       if ( !proj_onto_map( gint, *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
         cout << "DIES after anti normal order and pairing" << endl;
         print_vector( *(gint->ids_pos), "gids_pos" ); 
+        cout << "z1" << endl;
         print_vector( *(gint->proj_id_order), "proj_id_order" ); 
+        cout << "z2" << endl;
       } else {
         final_gamma_vec->push_back( gint );
       }
@@ -453,13 +370,13 @@ cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
   gamma_vec = final_gamma_vec;
   bool does_it_contribute = (gamma_vec->size() > 0 );
 
-  if ( does_it_contribute ) 
+  if ( does_it_contribute && final_reordering ) 
     print_gamma_contributions( gamma_vec, reordering_name );
 
   int kk= 0;
   while ( kk != gamma_vec->size()){
     if ( final_reordering ) 
-      add_Acontrib_to_map(kk, bra_name, bra_name);
+      add_Acontrib_to_map(kk, bra_name, ket_name);
     kk++;
   }
 
@@ -899,7 +816,7 @@ void GammaGenerator::alternating_order( int kk ) {  // e.g. +-+-+-+-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::add_Acontrib_to_map( int kk, string bra_name, string ket_name ){  // e.g. ++++----
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "void GammaGenerator::add_Acontrib_to_map" << endl;
+//  cout << "void GammaGenerator::add_Acontrib_to_map" << endl;
 
   shared_ptr<GammaIntermediate> gamma_int = gamma_vec->at(kk);
 
@@ -1389,37 +1306,3 @@ vector<int> GammaGenerator::get_standardized_alt_order ( const vector<string>& r
 
   return standard_alt_order;
 };
-
-
-//    if (!gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
-//       cout << " These indexes won't survive : [ ";  for ( int pos : *ids_pos ) {cout <<  full_id_ranges->at(pos) << " " ;} cout << "]" << endl;
-//       Contract_remaining_indexes(kk);
-//    }  else if (gamma_survives(ids_pos, full_id_ranges) && ids_pos->size() != 0){
-//     if ( gint_kill_ops->size() < proj_plus_ops->size() ){
-//       print_vector( *gint_kill_ops, "gamma_kill_ops"); cout<< endl;
-//       print_vector( *proj_plus_ops, "proj_kill_ops"); cout<< endl;
-//       throw logic_error("this term should already have been thrown out by bra-ket projection !! Aborting !!" );
-//  if ( final_reordering ) {                                                                                           }
-//      if ( projected_bra_ || projected_ket_ ) {
-//        for ( string bra_name : *Bra_names_ ){
-//           cout <<  "bra_name = "<< bra_name << endl;
-//           shared_ptr<map<char,int>> bra_hole_map = proj_bra_hole_range_maps_.at(bra_name);
-//           shared_ptr<map<char,int>> bra_elec_map = proj_bra_elec_range_maps_.at(bra_name);
-//          for ( string ket_name : *Ket_names_ ){
-//            cout <<  "ket_name = "<< ket_name << endl;
-//            shared_ptr<map<char,int>> ket_elec_map = proj_ket_hole_range_maps_.at(ket_name);
-//            shared_ptr<map<char,int>> ket_hole_map = proj_ket_elec_range_maps_.at(ket_name);
-//            for (int kk = 0 ; kk != gamma_vec->size() ; kk++ ){
-//              if ( proj_onto_map( gamma_vec->at(kk), *ket_hole_map, *bra_hole_map, *ket_elec_map, *bra_elec_map ) )
-//                add_Acontrib_to_map(kk, bra_name,  ket_name);// TODO need to get gamma ordering
-//              
-//            }
-//          }
-//        }
-//      } else {
-//        for (int kk = 0 ; kk != gamma_vec->size() ; kk++ )
-//          add_Acontrib_to_map(kk, Bra_names_->at(0),  Ket_names_->at(0));
-//      }
-//    }
-//  
-//    return does_it_contribute;

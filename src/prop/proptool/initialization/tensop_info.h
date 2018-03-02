@@ -56,7 +56,19 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    symmfuncs = identity_only(); //set_1el_symmfuncs();
    constraints = {  &Symmetry_Operations::always_true };
    state_dep = 0;
- 
+  
+  } else if ( op_name == "Q" ) {  /* ---- test six index ----  */
+
+   factor = (DataType) (1.0);
+   idxs = make_shared<vector<string>>(vector<string> {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5" });
+   aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
+   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free, free, free});
+   time_symm = "none";
+   symmfuncs = identity_only();
+   constraints = {  &Symmetry_Operations::always_true };
+   state_dep = 0;
+
+
   } else if ( op_name == "f" ) {  /* ---- state averaged fock operator ----  */
 
    factor = (DataType) (1.0);
@@ -121,9 +133,8 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
     time_symm = "none";
     symmfuncs = identity_only();
-    constraints = {  &Symmetry_Operations::NotAllAct };
+    constraints = { &Symmetry_Operations::NotAllAct };
     state_dep = 2;
-
 
   } else if ( op_name == "X" ) {
 
