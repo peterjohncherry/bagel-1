@@ -143,18 +143,19 @@ class TensOp_Base {
      std::shared_ptr<std::set<std::string>> required_blocks_;
      std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart_Base> > > CTP_map_;
      std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_; 
+     bool projector_; 
 
    public:
  
      TensOp_Base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name), spinfree_(spinfree), Tsymm_(Tsymm), state_dep_(state_dep),
                                                                                         required_blocks_(std::make_shared<std::set<std::string>>()) {};
 
-     TensOp_Base( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0),
+     TensOp_Base( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0), 
                                                       required_blocks_(std::make_shared<std::set<std::string>>())  {};
 
      TensOp_Base( std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp_Base>>& sub_tensops ) :
                   name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0), sub_tensops_(sub_tensops), 
-                  required_blocks_(std::make_shared<std::set<std::string>>())  {};
+                  required_blocks_(std::make_shared<std::set<std::string>>()) {};
 
      ~TensOp_Base(){};
 
@@ -189,6 +190,8 @@ class TensOp_Base {
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base> >> CTP_map() { return CTP_map_; } 
  
+     virtual bool is_projector(){ return false ; } 
+
      virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<range_block_info > > > all_ranges() const  { return Op_dense_->all_ranges(); }
      virtual std::shared_ptr< range_block_info > all_ranges(const std::vector<std::string> range_block ) const { return Op_dense_->all_ranges(range_block); }
 

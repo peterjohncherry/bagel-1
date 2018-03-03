@@ -130,7 +130,7 @@ void GammaGenerator::add_gamma( shared_ptr<range_block_info> block_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reordering, bool final_reordering ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::generic_reorderer" << endl; 
+//  cout << "GammaGenerator::generic_reorderer" << endl; 
   
   int kk = 0;
   bool does_it_contribute = false;
@@ -147,14 +147,13 @@ bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reord
 bool GammaGenerator::generic_reorderer_different_sector( string reordering_name, string bra_name,
                                                          string ket_name, bool final_reordering   ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
+//cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
 
   shared_ptr<map<char,int>> bra_hole_map = target_states_->hole_range_map(bra_name);;
   shared_ptr<map<char,int>> bra_elec_map = target_states_->elec_range_map(bra_name);;
                                                                                     
   shared_ptr<map<char,int>> ket_hole_map = target_states_->hole_range_map(ket_name);;
   shared_ptr<map<char,int>> ket_elec_map = target_states_->elec_range_map(ket_name);;
-
   
   if ( reordering_name == "normal order" ) {
     
@@ -211,12 +210,11 @@ cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
       alternating_order(kk++);
 
     for ( shared_ptr<GammaIntermediate>& gint : *gamma_vec ){
-      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){ 
-        print_vector( *(gint->ids_pos), "DIES after alternating" ); 
+      if ( !proj_onto_map( gint, *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){ 
+        print_vector( *(gint->ids_pos), "DIES after alternating" );  cout << endl;
       } else {
         final_gamma_vec->push_back( gint );
       }
-      kk++;
     }
   }
 
@@ -330,7 +328,7 @@ bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::anti_normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::anti_normal_order" << endl;
+//  cout << "GammaGenerator::anti_normal_order" << endl;
 
   shared_ptr<vector<int>> ids_pos  = gamma_vec->at(kk)->ids_pos;
   int num_kill = 0;
