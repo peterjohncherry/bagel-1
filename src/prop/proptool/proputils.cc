@@ -554,6 +554,41 @@ shared_ptr<vector<int>> WickUtils::get_unc_ids_from_deltas_ids_comparison(shared
    return make_shared<vector<int>>(unc_ids);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
+string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges,
+                             const vector<char>& proj_names ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  string name = "";
+  vector<bool> not_proj( full_idxs.size(), true );
+  vector<bool>::iterator np_it = not_proj.begin();
+  for(string idx : full_idxs){
+    for ( char pname : proj_names){ 
+      if ( idx[0] == pname ){ 
+        *np_it = false;
+         break;
+      }
+    }
+    np_it++;
+  }
+     
+  np_it = not_proj.begin();
+  for(string idx : full_idxs)
+    if ( *np_it ) 
+      name += idx;
+  
+  name+="_";
+
+  np_it = not_proj.begin();
+  for(string idx_range : full_idx_ranges){ 
+    if ( *np_it ) 
+      name += idx_range[0];
+    np_it++;
+  }
+  
+  return name;
+
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
 string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -569,6 +604,48 @@ string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<strin
   return name;
 
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
+string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges,
+                             const vector<pair<int,int>>& all_ctrs_pos, const vector<char>& proj_names ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  string name = "";
+  vector<bool> not_proj( full_idxs.size(), true );
+  vector<bool>::iterator np_it = not_proj.begin();
+  for(string idx : full_idxs){
+    for ( char pname : proj_names){ 
+      if ( idx[0] == pname ){ 
+        *np_it = false;
+         break;
+      }
+    }
+    np_it++;
+  }
+     
+  np_it = not_proj.begin();
+  for(string idx : full_idxs)
+    if ( *np_it ) 
+      name += idx;
+  
+  name+="_";
+
+  np_it = not_proj.begin();
+  for(string idx_range : full_idx_ranges){ 
+    if ( *np_it ) 
+      name += idx_range[0];
+    np_it++;
+  }
+   
+  if (all_ctrs_pos.size() !=0 ){
+    name+="_"; 
+    for(pair<int,int> delta : all_ctrs_pos)
+      if ( not_proj[delta.first] && not_proj[delta.second] ) 
+        name += to_string(delta.first)+to_string(delta.second);
+  }
+ 
+  return name;
+
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
 string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges, 
                              const vector<pair<int,int>>& all_ctrs_pos ){

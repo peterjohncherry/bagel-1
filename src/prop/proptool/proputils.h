@@ -73,8 +73,15 @@ namespace WickUtils {
 
   std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges );
 
+  std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges,
+                         const std::vector<char>& proj_names );
+
   std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges, 
                          const std::vector<std::pair<int,int>>& all_ctrs_pos  );
+ 
+  std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges,
+                         const std::vector<std::pair<int,int>>& all_ctrs_pos, const std::vector<char>& proj_names );
+
 
   std::string get_civec_name( const int state_num,  const int norb,  const int nalpha, const int nbeta);
 
