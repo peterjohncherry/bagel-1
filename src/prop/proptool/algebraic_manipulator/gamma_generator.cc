@@ -177,6 +177,7 @@ void GammaGenerator::add_gamma( shared_ptr<range_block_info> block_info ) {
     iota( ids_pos_init->begin() , ids_pos_init->end(), 0 );
     shared_ptr<vector<int>> proj_id_order = make_shared<vector<int>>(proj_ids_->size(), -1 );
     gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(1, make_shared<GammaIntermediate>(id_ranges_in, ids_pos_init, deltas_pos_in, my_sign_in, proj_id_order));
+
     //Add gamma survives check here...
     build_bra_ket_space_maps( "Bra", proj_ranges_ );
     build_proj_maps( proj_aops_, proj_ranges_ );
@@ -285,7 +286,6 @@ cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
                                                                                     
   shared_ptr<map<char,int>> ket_hole_map = target_states_->hole_range_map(ket_name);;
   shared_ptr<map<char,int>> ket_elec_map = target_states_->elec_range_map(ket_name);;
-
  
   if ( reordering_name == "normal order" ) {
     
