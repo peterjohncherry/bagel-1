@@ -54,13 +54,15 @@ namespace WickUtils {
 
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<std::vector<int>> vec1, int NN );
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<const std::vector<int>> vec1, int NN );
-
+ 
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
   get_unique_pairs(std::shared_ptr<std::vector<int>> ids1 , std::shared_ptr<std::vector<int>> ids2 , int num_pairs);
-  
+ 
+  std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
+  get_unique_pairs(std::shared_ptr<std::vector<int>> ids1 , std::shared_ptr<std::vector<int>> ids2 ); 
+ 
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
   get_unique_pairs(std::shared_ptr< const std::vector<int>> ids1 , std::shared_ptr< const std::vector<int>> ids2 , int num_pairs);
-
   std::shared_ptr<std::vector<int>> reorder_vector(std::vector<int>& neworder , const std::vector<int>& origvec ) ;
 
   void print_pvec (pint_vec pvec) ;

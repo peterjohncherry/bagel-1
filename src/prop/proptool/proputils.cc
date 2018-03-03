@@ -401,11 +401,8 @@ cout << "print_pvec" << endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> WickUtils::get_unique_pairs(shared_ptr<const vector<int>> ids1 , shared_ptr<const vector<int>> ids2 , int num_pairs){
-//////////////////////////////////////////////////////////////////////////////////////////////
-#if defined DBG_WickUtils || defined DBG_all 
-cout << "get_unique_pairs" << endl;
-#endif
+shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>
+WickUtils::get_unique_pairs(shared_ptr<const vector<int>> ids1 , shared_ptr<const vector<int>> ids2 , int num_pairs){
 //////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> pairs_vec = make_shared<vector<shared_ptr<vector<pair<int,int>>>>>(0);
@@ -453,14 +450,21 @@ cout << "get_unique_pairs" << endl;
     return pairs_vec;
   }
 } 
+ 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
+WickUtils::get_unique_pairs(std::shared_ptr<std::vector<int>> ids1 , std::shared_ptr<std::vector<int>> ids2 ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    return get_unique_pairs( ids1, ids2 , (ids1->size() < ids2->size() ? ids1->size() : ids2->size() ) );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>
+WickUtils::get_unique_pairs(shared_ptr<vector<int>> ids1 , shared_ptr<vector<int>> ids2 , int num_pairs){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "WickUtils::get_unique_pairs" << endl;
 
-////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> WickUtils::get_unique_pairs(shared_ptr<vector<int>> ids1 , shared_ptr<vector<int>> ids2 , int num_pairs){
-//////////////////////////////////////////////////////////////////////////////////////////////
-#if defined DBG_WickUtils || defined DBG_all 
-cout << "get_unique_pairs" << endl;
-#endif
-//////////////////////////////////////////////////////////////////////////////////////////////
+  assert( !(ids2->size() < num_pairs) ); 
+  assert( !(ids1->size() < num_pairs) ); 
 
   auto pairs_vec = make_shared<vector<shared_ptr<vector<pair<int,int>>>>>(0);
 

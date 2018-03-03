@@ -269,11 +269,7 @@ bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reord
   
    for ( string bra_name : *Bra_names_ ){
      for ( string ket_name : *Ket_names_ ){
-//       if (bra_name == ket_name) {
-//         does_it_contribute = generic_reorderer_same_sector( reordering_name, bra_name, final_reordering);
-//       } else {
-         does_it_contribute = generic_reorderer_different_sector( reordering_name, bra_name, ket_name, final_reordering);
-//       }
+       does_it_contribute = generic_reorderer_different_sector( reordering_name, bra_name, ket_name, final_reordering);
      }
    }
    return true;
@@ -436,6 +432,8 @@ void GammaGenerator::pair_gamma_creation_with_proj_annihilation( shared_ptr<map<
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGenerator::pair_gamma_creation_with_proj_annihilation" << endl;
 
+  auto factorial = []( int nn ){ if (nn == 0 ) {return 0; } else { while ( (nn-1) != 0) { nn*=(nn-1); } return nn ;} };  
+
   shared_ptr<vector<shared_ptr<GammaIntermediate>>> new_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>();
   for ( shared_ptr<GammaIntermediate>& gint : *gamma_vec ){
 
@@ -455,10 +453,10 @@ void GammaGenerator::pair_gamma_creation_with_proj_annihilation( shared_ptr<map<
             gint_plus_ops->push_back( *gp_it );
   
       shared_ptr<vector<int>> proj_kill_ops = pk_map_loc->second;
-      
-      shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>
-      pkill_gplus_pairs_tmp = WickUtils::get_unique_pairs( proj_kill_ops, gint_plus_ops, proj_kill_ops->size() );
 
+      shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>
+      pkill_gplus_pairs_tmp = WickUtils::get_unique_pairs( proj_kill_ops, gint_plus_ops);
+    
       if ( pk_map_loc == proj_kill_map_->begin() ) {
         pkill_gplus_pairs = pkill_gplus_pairs_tmp;
 
@@ -512,7 +510,8 @@ void GammaGenerator::pair_gamma_annhilation_with_proj_creation( shared_ptr<map<c
                                                                 shared_ptr<map<char,int>> ket_elec_map  ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGenerator::pair_gamma_annihilation_with_proj_creation" << endl;
-   
+  auto factorial = []( int nn ){ if (nn == 0 ) {return 0; } else { while ( (nn-1) != 0) { nn*=(nn-1); } return nn ;} };  
+
   shared_ptr<vector<shared_ptr<GammaIntermediate>>> new_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>();
   for ( shared_ptr<GammaIntermediate>& gint : *gamma_vec ) {
 
@@ -528,8 +527,9 @@ void GammaGenerator::pair_gamma_annhilation_with_proj_creation( shared_ptr<map<c
 
       shared_ptr<vector<int>> proj_plus_ops = pp_map_loc->second;
       
+     // int npairs = factorial( proj_plus_ops->size() ) * gint_kill_ops->size();  cout << " npairs = " << npairs << endl; 
       shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>
-      pplus_gkill_pairs_tmp = WickUtils::get_unique_pairs( proj_plus_ops, gint_kill_ops, proj_plus_ops->size() );
+      pplus_gkill_pairs_tmp = WickUtils::get_unique_pairs( proj_plus_ops, gint_kill_ops );
 
       if ( pp_map_loc == proj_plus_map_->begin() ) {
         pplus_gkill_pairs = pplus_gkill_pairs_tmp;
@@ -672,15 +672,15 @@ bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint,
     }
   }
 
-  cout << "ket rng, num_ket_elec, num_bra_elec" << endl;
-  for (auto& elem : ket_elec_map ) { 
-    string rng_name = "";
-    rng_name += elem.first;
-    cout << rng_name << " " << elem.second << " " <<  bra_elec_map.at(elem.first) << endl;
-    if ( bra_elec_map.at(elem.first) != elem.second ) {
-      return false;
-    }
-  }
+//  cout << "ket rng, num_ket_elec, num_bra_elec" << endl;
+//  for (auto& elem : ket_elec_map ) { 
+//    string rng_name = "";
+//    rng_name += elem.first;
+//    cout << rng_name << " " << elem.second << " " <<  bra_elec_map.at(elem.first) << endl;
+//    if ( bra_elec_map.at(elem.first) != elem.second ) {
+//      return false;
+//    }
+//  }
 
   return true;
 }
@@ -1270,7 +1270,6 @@ vector<int> GammaGenerator::get_Aid_order ( const vector<int>& id_pos ) {
 
   return new_order;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 vector<int> GammaGenerator::get_standardized_alt_order ( const vector<string>& rngs ,const vector<bool>& aops ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

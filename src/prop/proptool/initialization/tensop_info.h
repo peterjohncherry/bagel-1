@@ -62,7 +62,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5" });
    aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
-   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,  free, free, free, free, free });
+   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core,  not_core, not_core, not_virt, not_virt, not_virt });
    time_symm = "none";
    symmfuncs = identity_only();
    constraints = {  &Symmetry_Operations::always_true };
@@ -141,7 +141,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>( vector<string> {"X0", "X1", "X2", "X3"} );
     aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, act } );
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt } );
     time_symm = "none";
     symmfuncs = identity_only();
    //constraints = {  &Symmetry_Operations::always_true };
