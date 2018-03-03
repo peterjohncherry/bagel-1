@@ -76,7 +76,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
         shared_ptr<const std::vector<bool>> proj_aops = proj_range_block->orig_aops();
         
         cout << endl;  
-        auto GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, proj_ids, proj_aops, gamma_info_map, G_to_A_map, factor_ );
+        auto GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ );
         GGen->add_gamma( range_map_it->second );
         if (GGen->generic_reorderer( "anti-normal order", true , false ))
           GGen->generic_reorderer( "normal order", false, true );

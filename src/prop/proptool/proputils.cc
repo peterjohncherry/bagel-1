@@ -461,10 +461,10 @@ WickUtils::get_unique_pairs(std::shared_ptr<std::vector<int>> ids1 , std::shared
 shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>
 WickUtils::get_unique_pairs(shared_ptr<vector<int>> ids1 , shared_ptr<vector<int>> ids2 , int num_pairs){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "WickUtils::get_unique_pairs" << endl;
+//cout << "WickUtils::get_unique_pairs" << endl;
 
-  assert( !(ids2->size() < num_pairs) ); 
-  assert( !(ids1->size() < num_pairs) ); 
+//  assert( !(ids2->size() < num_pairs) ); 
+//  assert( !(ids1->size() < num_pairs) ); 
 
   auto pairs_vec = make_shared<vector<shared_ptr<vector<pair<int,int>>>>>(0);
 

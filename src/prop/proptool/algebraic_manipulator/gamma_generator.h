@@ -144,10 +144,6 @@ class GammaGenerator{
     std::shared_ptr<const std::vector<bool>> free_aops_;
     std::shared_ptr<const std::vector<std::string>> free_ids_;
 
-    std::shared_ptr<const std::vector<bool>> proj_aops_;
-    std::shared_ptr<const std::vector<std::string>> proj_ids_;
-    std::shared_ptr<const std::vector<std::string>> proj_ranges_;
-
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
 
     std::shared_ptr<std::map< char, int>>         op_order ;
@@ -164,19 +160,10 @@ class GammaGenerator{
     std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> Gamma_map;
 
     bool projected_bra_;
-    bool projected_ket_; // TODO implement this!!
+    bool projected_ket_; 
 
     std::shared_ptr<std::vector<std::string>> Bra_names_;
     std::shared_ptr<std::vector<std::string>> Ket_names_;
-
-    std::map< std::string, std::shared_ptr<std::map< char, int >>> proj_bra_hole_range_maps_;
-    std::map< std::string, std::shared_ptr<std::map< char, int >>> proj_bra_elec_range_maps_;
-
-    std::map< std::string, std::shared_ptr<std::map< char, int >>> proj_ket_hole_range_maps_;
-    std::map< std::string, std::shared_ptr<std::map< char, int >>> proj_ket_elec_range_maps_;
-
-    std::shared_ptr< std::map< char, std::shared_ptr<std::vector<int>> >> proj_kill_map_;
-    std::shared_ptr< std::map< char, std::shared_ptr<std::vector<int>> >> proj_plus_map_;
 
     // key    : name of A-tensor
     // result : list of reorderings which much be applied to this A-tensor before it is contracted with this gamma.
@@ -188,13 +175,6 @@ class GammaGenerator{
                     std::shared_ptr<const std::vector<std::string>> orig_ids, std::shared_ptr< const std::vector<bool>> orig_aops,
                     std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in,
                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in,
-                    double bk_factor );
-
-    GammaGenerator( std::shared_ptr<StatesInfo<double>> target_states, int Bra_num, int Ket_num,
-                    std::shared_ptr<const std::vector<std::string>> orig_ids, std::shared_ptr<const std::vector<bool>> orig_aops,
-                    std::shared_ptr<const std::vector<std::string>> proj_ids, std::shared_ptr<const std::vector<bool>> proj_aops,
-                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in,
-                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo >>>> G_to_A_map,
                     double bk_factor );
 
     ~GammaGenerator(){};
@@ -217,10 +197,6 @@ class GammaGenerator{
 
     void anti_normal_order( int kk );
 
-    void contract_proj_annihilators_with_gamma_creators( int kk );
-
-    void contract_gamma_annihilators_with_proj_creators( int kk );
-
     void alternating_order( int kk );
 
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
@@ -237,16 +213,6 @@ class GammaGenerator{
                         std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
                         std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
 
-    void build_bra_ket_space_maps( std::string bra_or_ket, std::shared_ptr<const std::vector<std::string>> proj_ranges );
-
-    void build_proj_maps( std::shared_ptr<const std::vector<bool>> proj_aops,  std::shared_ptr<const std::vector<std::string>> proj_ranges );
-
-    void pair_gamma_annhilation_with_proj_creation(  std::shared_ptr<std::map<char,int>> bra_hole_map, std::shared_ptr<std::map<char,int>> bra_elec_map,
-                                                     std::shared_ptr<std::map<char,int>> ket_hole_map, std::shared_ptr<std::map<char,int>> ket_elec_map );
-                                                                                                                            
-    void pair_gamma_creation_with_proj_annihilation( std::shared_ptr<std::map<char,int>> bra_hole_map, std::shared_ptr<std::map<char,int>> bra_elec_map,
-                                                     std::shared_ptr<std::map<char,int>> ket_hole_map, std::shared_ptr<std::map<char,int>> ket_elec_map );
-
     void Contract_remaining_indexes(int kk);
 
     void swap( int ii, int jj, int kk, std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec );
@@ -259,6 +225,8 @@ class GammaGenerator{
     bool RangeCheck( std::shared_ptr<const std::vector<std::string>> full_id_ranges );
 
     bool Forbidden_Index( std::shared_ptr<const std::vector<std::string>> id_ranges, int position );
+
+    bool all_active_ranges( std::shared_ptr<GammaIntermediate> gint);
 
     bool gamma_survives( std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<const std::vector<std::string>> id_ranges) ;
 
@@ -276,12 +244,6 @@ class GammaGenerator{
     std::vector<int> get_standard_idx_order(const std::vector<std::string>& idxs) ;
 
     std::vector<int> get_standardized_alt_order( const std::vector<std::string>& rngs ,const std::vector<bool>& aops ) ;
-
-    bool get_proj_bra_range_map( const std::vector<std::string>& gamma_ranges, const std::vector<bool>& gamma_aops,
-                                 std::shared_ptr<CIVecInfo<double>> ket_info );
-
-    bool check_orb_ranges_proj_bra( const std::vector<std::string>& proj_ranges, const std::vector<bool>& proj_aops,
-                                    std::shared_ptr<CIVecInfo<double>> bra_info );
 
     void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec, std::string name );
     void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec, std::string name,
