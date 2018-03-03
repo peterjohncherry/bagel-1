@@ -62,7 +62,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5" });
    aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
-   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free, free, free});
+   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,  free, free, free, free, free });
    time_symm = "none";
    symmfuncs = identity_only();
    constraints = {  &Symmetry_Operations::always_true };

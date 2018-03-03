@@ -361,10 +361,11 @@ cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
       alternating_order(kk++);
 
     for ( shared_ptr<GammaIntermediate>& gint : *gamma_vec )
-      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) 
+      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){ 
+        print_vector( *(gint->ids_pos), "DIES after alternating" ); 
+      } else {
         final_gamma_vec->push_back( gint );
-      else
-        print_vector( *(gint->ids_pos), "DIES" ); 
+      }
   }
 
   gamma_vec = final_gamma_vec;
@@ -671,15 +672,15 @@ bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint,
     }
   }
 
-//  cout << "ket rng, num_ket_elec, num_bra_elec" << endl;
-//  for (auto& elem : ket_elec_map ) { 
-//    string rng_name = "";
-//    rng_name += elem.first;
-//    cout << rng_name << " " << elem.second << " " <<  bra_elec_map.at(elem.first) << endl;
-//    if ( bra_elec_map.at(elem.first) != elem.second ) {
-//      return false;
-//    }
-//  }
+  cout << "ket rng, num_ket_elec, num_bra_elec" << endl;
+  for (auto& elem : ket_elec_map ) { 
+    string rng_name = "";
+    rng_name += elem.first;
+    cout << rng_name << " " << elem.second << " " <<  bra_elec_map.at(elem.first) << endl;
+    if ( bra_elec_map.at(elem.first) != elem.second ) {
+      return false;
+    }
+  }
 
   return true;
 }
@@ -1208,11 +1209,7 @@ vector<int> GammaGenerator::get_standard_range_order(const vector<string> &rngs)
   vector<int> pos(rngs.size());
   iota(pos.begin(), pos.end(), 0);
   sort(pos.begin(), pos.end(), [&rngs](int i1, int i2){
-//                                 if ( rngs[i1][0] == 'X' ){
-//                                   return false;
-//                                 } else {
                                    return (bool)( rngs[i1] < rngs[i2] );
-//                                 }
 });
 
   return pos;
@@ -1227,11 +1224,7 @@ vector<int> GammaGenerator::get_standard_idx_order(const vector<string>&idxs) {
 
   auto op_order_tmp = op_order;
   sort(pos.begin(), pos.end(), [&idxs, &op_order_tmp](int i1, int i2){
-                            //     if ( idxs[i1][0] == 'X' ){
-                            //       return false;
-                            //     } else {
                                    return (bool)( op_order_tmp->at(idxs[i1][0]) < op_order_tmp->at(idxs[i2][0]) );
-                            //     }
                                  }
                             );
 
