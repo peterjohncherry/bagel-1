@@ -22,14 +22,15 @@ class Equation_Init_LinearRM : public Equation_Init_Base {
                                std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec_;
 
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_;
+
      std::shared_ptr<std::map<std::pair< std::string, std::vector<std::pair<std::string, int>>>, 
                                          std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec_;
    
-     Equation_Init_LinearRM( std::string name,  std::string type, std::shared_ptr<Expression_Init> master_expression,
+     Equation_Init_LinearRM( std::string name,  std::string type, std::shared_ptr<std::vector<std::shared_ptr<Expression_Init>>> master_expressions,
                              std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<int>> >> range_map,
                              std::string target_variable, std::shared_ptr<std::vector<std::string>> target_indexes, 
                              std::shared_ptr<std::map< std::string, DataType >> factor_map ) :
-                             Equation_Init_Base ( name, type, master_expression, range_map ),
+                             Equation_Init_Base ( name, type, master_expressions, range_map ),
                              target_variable_(target_variable), target_indexes_(target_indexes),
                              factor_map_(factor_map)  {
 

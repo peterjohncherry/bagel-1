@@ -360,7 +360,6 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
 
   return;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_equation_init_LinearRM( shared_ptr<const PTree> equation_inp ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -371,25 +370,15 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   auto target_indices = make_shared<vector<string>>(0);
   auto ti_ptree = equation_inp->get_child("target indexes"); // Must solve for all "target" with these indices
   
-  
   for (auto& si : *ti_ptree) 
     target_indices->push_back( lexical_cast<string>(si->data()));
   
   auto term_list = make_shared<vector<pair<string,shared_ptr<Term_Init>>>>();
   auto term_idrange_map_list = make_shared<vector<shared_ptr<map<string,pair<bool,string>>>>>();
-
-  auto expression_term_map =  make_shared<map<string, shared_ptr<vector<pair<double, string>>>>>();
-
-  auto expression_term_map_state_spec = make_shared<map< pair<string, vector<pair<string, int>>>, 
-                                                         shared_ptr<vector<pair<double, string>>>>>();
-
-  auto term_braket_map = make_shared<map<string, shared_ptr<vector<BraKet<double>>>>>();
-
-  auto term_braket_map_state_spec =  make_shared<map<pair< string, vector<pair<string, int>>>,  shared_ptr<vector<BraKet<double>>>>>();     
-
-  auto expressions_list = equation_inp->get_child( "expression" );
+  auto expressions_inp = equation_inp->get_child( "expression" );
+  auto expression_init_list  = make_shared<vector<shared_ptr<Expression_Init>>>(); 
   string expression_type = "full";
-  for ( auto& expression_def : *expressions_list ) { 
+  for ( auto& expression_def : *expressions_inp ) { 
     for ( auto& term_info : *expression_def) {
   
       string term_name = term_info->get<string>( "term" );
@@ -417,21 +406,16 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
     }
     //TODO clean up these classes, names are confusing; initialization is badly scrambled due to changes in how to deal with indexes and varying term
     //     types in the expression_computer. 
-    auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list, expression_type ); 
-    auto eqn_init = make_shared<Equation_Init_LinearRM<double>>( eqn_name, "LinearRM", master_expression, inp_range_map_, eqn_target, target_indices,
-                                                                 inp_factor_map_ );
-    eqn_init->initialize_all_terms();
-
-    // merging maps for this expression into the expression maps used to build the final equation 
-    // TODO This merging of maps will not add new elements with the same ket; if the naming is unique that's fine, but check it really is...
-    term_braket_map->insert( eqn_init->term_braket_map_->begin(), eqn_init->term_braket_map_->end() ) ; 
-    expression_term_map->insert( eqn_init->expression_term_map_->begin(), eqn_init->expression_term_map_->end() ) ; 
-    term_braket_map_state_spec->insert( eqn_init->term_braket_map_state_spec_->begin(), eqn_init->term_braket_map_state_spec_->end() ) ; 
-    expression_term_map_state_spec->insert( eqn_init->expression_term_map_state_spec_->begin(), eqn_init->expression_term_map_state_spec_->end() ) ;     
+    expression_init_list->push_back(make_shared<Expression_Init>( term_list, term_idrange_map_list, expression_type )); 
 
   }
- 
-  sys_info_->create_equation( eqn_name, "LinearRM", term_braket_map, expression_term_map, term_braket_map_state_spec, expression_term_map_state_spec );
+    
+  auto eqn_init = make_shared<Equation_Init_LinearRM<double>>( eqn_name, "LinearRM", expression_init_list, inp_range_map_, eqn_target, target_indices,
+                                                               inp_factor_map_ );
+  eqn_init->initialize_all_terms();
+
+  sys_info_->create_equation( eqn_name, "LinearRM", eqn_init->term_braket_map_, eqn_init->expression_term_map_,
+                              eqn_init->term_braket_map_state_spec_, eqn_init->expression_term_map_state_spec_ );
 
   cout << "eqn_name = "; cout.flush(); cout << eqn_name << endl;
   equation_execution_list_.push_back(eqn_name); 

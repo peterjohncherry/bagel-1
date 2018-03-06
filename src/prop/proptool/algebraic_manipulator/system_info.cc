@@ -105,11 +105,14 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
   
   shared_ptr<Equation_Base<DataType>>  new_eqn;
   if ( type == "Value" ) { 
-    shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map );
-    new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
+
+    auto new_eqn_val = make_shared<Equation_Value<DataType>>( name, type, states_info_, term_braket_map, expression_term_map );
+    new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>( new_eqn_val );
+
     if (!new_eqn) { throw runtime_error("cast from Equation_Value to equation_base failed" ); }
+
     new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, MT_map_, CTP_map_ );
-    equation_map_->emplace( name, new_eqn); 
+    equation_map_->emplace( name, new_eqn ); 
 
   } else if ( type == "LinearRM") { 
 
@@ -118,7 +121,9 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
                                               term_braket_map_state_spec, expression_term_map_state_spec );
 
     new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_lrm);
+
     if (!new_eqn) { throw runtime_error("cast from Equation_LinearRM to Equation_Base failed" ); }
+
     new_eqn->set_maps( expression_map, Gamma_map, ACompute_map,  MT_map_, CTP_map_ );
     new_eqn_lrm->generate_state_specific_terms();
     equation_map_->emplace( name, new_eqn); 

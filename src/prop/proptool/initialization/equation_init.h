@@ -23,12 +23,20 @@ class Equation_Init_Base {
      std::string type_;
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<int>>>> range_map_; 
      std::shared_ptr<Expression_Init> master_expression_;
+     std::shared_ptr<std::vector<std::shared_ptr<Expression_Init>>> master_expression_list_;
 
      Equation_Init_Base( std::string name, std::string type, 
                          std::shared_ptr<Expression_Init> master_expression,
                          std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<int>>>> range_map ) :
                          name_(name), type_(type),  master_expression_(master_expression),
                          range_map_(range_map) {};
+
+     Equation_Init_Base( std::string name, std::string type, 
+                         std::shared_ptr<std::vector<std::shared_ptr<Expression_Init>>> master_expression_list,
+                         std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<int>>>> range_map ) :
+                         name_(name), type_(type),  master_expression_list_(master_expression_list),
+                         range_map_(range_map) {};
+
 
      ~Equation_Init_Base(){};
 

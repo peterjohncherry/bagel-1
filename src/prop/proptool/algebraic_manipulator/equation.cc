@@ -52,12 +52,10 @@ shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( stri
     shared_ptr<vector<BraKet<DataType>>> term_bk_list = term_braket_map_->at( term_name_list->at(ii).second ); //term_info.second);
     for ( BraKet<DataType> bk :  *term_bk_list ) 
       bk_list->push_back(bk);
- //   bk_list->insert( bk_list->end(), term_bk_list->begin(), term_bk_list->end()); // TODO Why doesn't this work? 
   }
 
   return build_expression( bk_list );
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {
@@ -65,21 +63,21 @@ shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( shar
   cout << "Equation_Base<DataType>::Build_Expression bk input" << endl;
   shared_ptr< vector<pair<string, DataType>> > braKet_name_list = make_shared<vector<pair< string, DataType >>>(0);
 
-  cout << " expr_bk_list->size() = " <<  expr_bk_list->size() << endl; 
- 
+
+  string expression_type; 
   // This is looping over states; op sparsity depends on states, should replace with term_info_map, and
   // have double loop, outer for ket state, inner for brastate
   for ( BraKet<DataType>& braket_info : *expr_bk_list ) {
 
     for (string op_name : braket_info.op_list_ ) { // TODO should loop  over states defined in term_info, 
-      cout << "op_name = " << op_name << endl; 
+
+      if (op_name == "X" ) 
+        expression_type = "orbital_excitation_derivative";
+
       cout << MT_map_->size();
       auto T_loc = MT_map_->find(op_name);
-      cout << "done location of " << op_name << endl; 
       if( T_loc == MT_map_->end() ){ 
-        cout << "must initialize tensor" << endl;
         shared_ptr<TensOp::TensOp<DataType>> new_op = TensOp_Info_Init::Initialize_Tensor_Op_Info<DataType>( op_name );
-        cout << "initialized tensor" << endl;
         CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());
         MT_map_->emplace( op_name, new_op );
       }
@@ -104,7 +102,7 @@ shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( shar
   }
   
   cout << "making expression" << endl;
-  auto  expr = make_shared<Expression<DataType>>( expr_bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_ );
+  auto  expr = make_shared<Expression<DataType>>( expr_bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type );
   
   cout << "made expression" << endl;
   return expr;

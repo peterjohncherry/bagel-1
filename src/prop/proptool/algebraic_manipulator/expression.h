@@ -46,7 +46,8 @@ class Expression {
                     std::shared_ptr<std::map< std::string, std::shared_ptr<TensOp_Base>>>  MT_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base> >>            CTP_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
-                    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >                         gamma_info_map );
+                    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >                         gamma_info_map,
+                    std::string expression_type );
         ~Expression(){};
         
         void get_gamma_Atensor_contraction_list();
