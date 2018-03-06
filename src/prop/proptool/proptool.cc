@@ -323,11 +323,18 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
   auto term_idrange_map_list = make_shared<vector<shared_ptr<map<string,pair<bool,string>>>>>();
 
   auto expression_def = equation_inp->get_child( "expression" );
+
+  string expression_type = "full"; 
   for (auto& term_info: *expression_def) {
-  
+     
     string term_name = term_info->get<string>( "term" );
     string term_factor = term_info->get<string>( "factor" );
-    term_list->push_back(make_pair(term_factor, term_init_map_->at(term_name)));
+    shared_ptr<Term_Init> new_term_init = term_init_map_->at(term_name);
+
+    if ( new_term_init->orbital_projector_ )
+      expression_type = "orb_excitation_derivative"; 
+
+    term_list->push_back(make_pair(term_factor, new_term_init));
 
     auto term_idrange_map = make_shared<map<string, pair<bool,string>>>();
     auto indexes_ptree =  term_info->get_child("indexes"); 
@@ -343,12 +350,11 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
     term_idrange_map_list->push_back( term_idrange_map );     
     
   }
-  auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
+  auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list, expression_type ); 
   auto eqn_init = make_shared<Equation_Init_Value<double>>( eqn_name, "Value", master_expression, inp_range_map_, target_indices, inp_factor_map_ );
   eqn_init->initialize_expressions();
  
   sys_info_->create_equation( eqn_name, "Value", eqn_init->term_braket_map_ , eqn_init->expression_term_map_ );
-      
 
   equation_execution_list_.push_back(eqn_name); 
 
@@ -360,47 +366,74 @@ void PropTool::PropTool::get_equation_init_LinearRM( shared_ptr<const PTree> equ
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
 
-  int counter = 0 ;
   string eqn_name = equation_inp->get<string>( "name" );
   string eqn_target = equation_inp->get<string>( "target" );
   auto target_indices = make_shared<vector<string>>(0);
   auto ti_ptree = equation_inp->get_child("target indexes"); // Must solve for all "target" with these indices
+  
+  
   for (auto& si : *ti_ptree) 
     target_indices->push_back( lexical_cast<string>(si->data()));
   
   auto term_list = make_shared<vector<pair<string,shared_ptr<Term_Init>>>>();
   auto term_idrange_map_list = make_shared<vector<shared_ptr<map<string,pair<bool,string>>>>>();
 
-  auto expression_def = equation_inp->get_child( "expression" );
-  for (auto& term_info: *expression_def) {
-  
-    string term_name = term_info->get<string>( "term" );
-    string term_factor = term_info->get<string>( "factor" );
-    cout << "term_name = " << term_name << endl;
-    term_list->push_back(make_pair(term_factor, term_init_map_->at(term_name)));
+  auto expression_term_map =  make_shared<map<string, shared_ptr<vector<pair<double, string>>>>>();
 
-    auto term_idrange_map = make_shared<map<string, pair<bool,string>>>();
-    auto indexes_ptree =  term_info->get_child("indexes"); 
-    for (auto& index_info : *indexes_ptree){
-      string id_name = index_info->get<string>("name"); 
-      string id_range = index_info->get<string>("range");
-       
-      bool   id_sum =  index_info->get<bool>("sum", false );
-      term_idrange_map->emplace( id_name, make_pair(id_sum, id_range));
+  auto expression_term_map_state_spec = make_shared<map< pair<string, vector<pair<string, int>>>, 
+                                                         shared_ptr<vector<pair<double, string>>>>>();
+
+  auto term_braket_map = make_shared<map<string, shared_ptr<vector<BraKet<double>>>>>();
+
+  auto term_braket_map_state_spec =  make_shared<map<pair< string, vector<pair<string, int>>>,  shared_ptr<vector<BraKet<double>>>>>();     
+
+  auto expressions_list = equation_inp->get_child( "expression" );
+  string expression_type = "full";
+  for ( auto& expression_def : *expressions_list ) { 
+    for ( auto& term_info : *expression_def) {
+  
+      string term_name = term_info->get<string>( "term" );
+      string term_factor = term_info->get<string>( "factor" );
+      cout << "term_name = " << term_name << endl;
+      
+      shared_ptr<Term_Init> term_init = term_init_map_->at(term_name); 
+      if ( term_init->orbital_projector_ )
+        expression_type = "orb_excitation_derivative"; 
+      term_list->push_back(make_pair(term_factor, term_init ));
+      
+      auto term_idrange_map = make_shared<map<string, pair<bool,string>>>();
+      auto indexes_ptree =  term_info->get_child("indexes"); 
+      for (auto& index_info : *indexes_ptree){
+        string id_name = index_info->get<string>("name"); 
+        string id_range = index_info->get<string>("range");
+         
+        bool   id_sum =  index_info->get<bool>("sum", false );
+        term_idrange_map->emplace( id_name, make_pair(id_sum, id_range));
+      }
+      
+      term_idrange_map->emplace( "none" , make_pair( false, "none" ) ); // TODO sort a better way of dealing with this case 
+      term_idrange_map_list->push_back( term_idrange_map );     
+      
     }
-    term_idrange_map->emplace( "none" , make_pair( false, "none" ) ); // TODO sort a better way of dealing with this case 
-    term_idrange_map_list->push_back( term_idrange_map );     
-    
+    //TODO clean up these classes, names are confusing; initialization is badly scrambled due to changes in how to deal with indexes and varying term
+    //     types in the expression_computer. 
+    auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list, expression_type ); 
+    auto eqn_init = make_shared<Equation_Init_LinearRM<double>>( eqn_name, "LinearRM", master_expression, inp_range_map_, eqn_target, target_indices,
+                                                                 inp_factor_map_ );
+    eqn_init->initialize_all_terms();
+
+    // merging maps for this expression into the expression maps used to build the final equation 
+    // TODO This merging of maps will not add new elements with the same ket; if the naming is unique that's fine, but check it really is...
+    term_braket_map->insert( eqn_init->term_braket_map_->begin(), eqn_init->term_braket_map_->end() ) ; 
+    expression_term_map->insert( eqn_init->expression_term_map_->begin(), eqn_init->expression_term_map_->end() ) ; 
+    term_braket_map_state_spec->insert( eqn_init->term_braket_map_state_spec_->begin(), eqn_init->term_braket_map_state_spec_->end() ) ; 
+    expression_term_map_state_spec->insert( eqn_init->expression_term_map_state_spec_->begin(), eqn_init->expression_term_map_state_spec_->end() ) ;     
+
   }
-  auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list ); 
-  auto eqn_init = make_shared<Equation_Init_LinearRM<double>>( eqn_name, "LinearRM", master_expression, inp_range_map_, eqn_target, target_indices,
-                                                               inp_factor_map_ );
-  eqn_init->initialize_all_terms();
  
-  sys_info_->create_equation( eqn_name, "LinearRM", eqn_init->term_braket_map_ , eqn_init->expression_term_map_,
-                                                    eqn_init->term_braket_map_state_spec_ , eqn_init->expression_term_map_state_spec_ );
-  cout << "hello" <<endl; 
-  cout << "eqn_name = " << eqn_name << endl;
+  sys_info_->create_equation( eqn_name, "LinearRM", term_braket_map, expression_term_map, term_braket_map_state_spec, expression_term_map_state_spec );
+
+  cout << "eqn_name = "; cout.flush(); cout << eqn_name << endl;
   equation_execution_list_.push_back(eqn_name); 
   cout << " LEAVING PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   

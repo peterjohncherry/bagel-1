@@ -136,11 +136,10 @@ bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reord
   bool does_it_contribute = false;
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
   
-   for ( string bra_name : *Bra_names_ ){
-     for ( string ket_name : *Ket_names_ ){
+   for ( string bra_name : *Bra_names_ )
+     for ( string ket_name : *Ket_names_ )
        does_it_contribute = generic_reorderer_different_sector( reordering_name, bra_name, ket_name, final_reordering);
-     }
-   }
+
    return true;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////

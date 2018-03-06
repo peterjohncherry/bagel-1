@@ -213,10 +213,13 @@ class Expression_Init {
     std::shared_ptr<std::vector<std::shared_ptr<std::map<std::string,std::pair<bool,std::string>>>>> term_range_maps_;
    
     std::string name_;
+    
+    std::string type_;
 
     Expression_Init( std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<Term_Init>>>> term_list,
-                     std::shared_ptr<std::vector<std::shared_ptr<std::map<std::string,std::pair<bool,std::string>>>>> term_range_maps ):
-                     term_list_(term_list), term_range_maps_(term_range_maps) {
+                     std::shared_ptr<std::vector<std::shared_ptr<std::map<std::string,std::pair<bool,std::string>>>>> term_range_maps,
+                     std::string type ):
+                     term_list_(term_list), term_range_maps_(term_range_maps), type_(type) {
                        for ( std::pair<std::string, std::shared_ptr<Term_Init>> term : *term_list_ )
                          name_ += "(" +term.first +")."+ term.second->name_+ "+";
                        name_.pop_back();

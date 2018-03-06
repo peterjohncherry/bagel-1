@@ -9,31 +9,31 @@ using namespace WickUtils;
 
 class AContribInfo {
 
-   public :
-     std::string name_;
-     std::vector<std::vector<int>> id_orders;
-     std::vector<std::pair<double,double>> factors;
-     int total_uses_;
-     int remaining_uses_;
+  public :
+    std::string name_;
+    std::vector<std::vector<int>> id_orders;
+    std::vector<std::pair<double,double>> factors;
+    int total_uses_;
+    int remaining_uses_;
 
-     AContribInfo( std::string name,  std::vector<int> init_order_in , std::pair<double,double> factor_in ):
-                   name_(name), id_orders(std::vector<std::vector<int>>(1,init_order_in)),
-                   factors(std::vector<std::pair<double,double>>(1,factor_in)),
-                   total_uses_(1), remaining_uses_(1) {};
-     ~AContribInfo(){};
+    AContribInfo( std::string name,  std::vector<int> init_order_in , std::pair<double,double> factor_in ):
+                  name_(name), id_orders(std::vector<std::vector<int>>(1,init_order_in)),
+                  factors(std::vector<std::pair<double,double>>(1,factor_in)),
+                  total_uses_(1), remaining_uses_(1) {};
+    ~AContribInfo(){};
 
-     std::vector<int>   id_order(int qq) {return id_orders[qq]; };
-     std::pair<double,double> factor(int qq) {return factors[qq]; };
+    std::vector<int>   id_order(int qq) {return id_orders[qq]; };
+    std::pair<double,double> factor(int qq) {return factors[qq]; };
 
-     std::string name() {return name_ ;}
+    std::string name() {return name_ ;}
 
-     int total_uses() const { return total_uses_ ; }
-     int remaining_uses() const { return remaining_uses_ ; }
+    int total_uses() const { return total_uses_ ; }
+    int remaining_uses() const { return remaining_uses_ ; }
 
-     void increase_total_uses() { total_uses_+=1; }
-     void increase_remaining_uses() { remaining_uses_+=1; }
-     void decrease_total_uses() { total_uses_-=1; }
-     void decrease_remaining_uses() { remaining_uses_-=1; }
+    void increase_total_uses() { total_uses_+=1; }
+    void increase_remaining_uses() { remaining_uses_+=1; }
+    void decrease_total_uses() { total_uses_-=1; }
+    void decrease_remaining_uses() { remaining_uses_-=1; }
 
 };
 

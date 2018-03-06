@@ -67,7 +67,17 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    symmfuncs = identity_only();
    constraints = {  &Symmetry_Operations::always_true };
    state_dep = 0;
+ 
+  } else if ( op_name == "R" ) {  /* ---- test six index ----  */
 
+   factor = (DataType) (1.0);
+   idxs = make_shared<vector<string>>(vector<string> {"R0", "R1", "R2", "R3", "R4", "R5" });
+   aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
+   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt,  virt, act, act, core, core });
+   time_symm = "none";
+   symmfuncs = identity_only();
+   constraints = {  &Symmetry_Operations::always_true };
+   state_dep = 0;
 
   } else if ( op_name == "f" ) {  /* ---- state averaged fock operator ----  */
 

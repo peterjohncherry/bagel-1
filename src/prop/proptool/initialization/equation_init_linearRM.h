@@ -24,7 +24,6 @@ class Equation_Init_LinearRM : public Equation_Init_Base {
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_;
      std::shared_ptr<std::map<std::pair< std::string, std::vector<std::pair<std::string, int>>>, 
                                          std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec_;
-
    
      Equation_Init_LinearRM( std::string name,  std::string type, std::shared_ptr<Expression_Init> master_expression,
                              std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<int>> >> range_map,

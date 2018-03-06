@@ -102,11 +102,13 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Exp
               shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
               vector<string> sub_tensor_names(CTP_vec->size()); 
 
+              for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )  
+                sub_tensor_names[rr] = CTP_vec->at(rr)->name();
+              
               cout << "sub_tensor_names = [ " ; cout.flush(); 
               for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ ) { 
-                sub_tensor_names[rr] = CTP_vec->at(rr)->name();
                 cout << sub_tensor_names[rr]  << " " ; cout.flush(); 
-              } cout << "]" << endl;
+              }  cout << "]" << endl;
               
               shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );//TODO fix so uses piecewise contraction where possible 
               tensop_data_map_->emplace( A_contrib_name, A_contrib_data );
@@ -140,7 +142,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Exp
           } else {
 
             for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
-              cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
+              cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")->norm() = ";
               cout <<  A_contrib.factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
               A_combined_data->ax_plus_y( (DataType)(A_contrib.factor(qq).first), tensop_data_map_->at(A_contrib_name) );
 	      cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;

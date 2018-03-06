@@ -10,6 +10,8 @@ class Expression {
       public :
         std::string name_;   
 
+        std::string type_; // full, orb_exc_deriv, ci_deriv
+
         //List of terms, currently a list of BraKets...
         std::shared_ptr<std::vector< BraKet<DataType>>> braket_list_;
 
