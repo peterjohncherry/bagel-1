@@ -199,10 +199,9 @@ cout << endl << "CtrMultiTensorPart<DataType>::FullContract NEWVER :   CMTP name
   if ( get_compute_list_from_reordered_tens_ ) {  
               
     Tmap->at(reordered_tens_name_)->FullContract( Tmap, ACompute_list, ACompute_map) ; 
-    ACompute_list = ACompute_map->at( reordered_tens_name_ ); 
-     
+    ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >> (*(ACompute_map->at( reordered_tens_name_ ))); 
+
     ACompute_list->push_back( make_shared<CtrOp_reorder> ( reordered_tens_name_, name_, reordering_, "reordering" ));
-    cout << "reordering " <<  reordered_tens_name_ << " ---> " <<  name_  << " added to " << name_ << "'s Acompute_list"<<  endl;
 
   } else if (ctrs_pos_->size() > 0 ) {
     

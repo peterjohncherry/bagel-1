@@ -5,7 +5,7 @@
 #include <src/prop/proptool/task_translator/tensor_algop_info.h>
 #include <unordered_set>
 
-class CtrTensorPart_Base /* :std::enable_shared_from_this<CtrTensorPart_Base> */  {
+class CtrTensorPart_Base  {
   public : //TODO change to private
 
     std::shared_ptr<std::vector<std::string>> full_idxs_;
@@ -50,12 +50,12 @@ class CtrTensorPart_Base /* :std::enable_shared_from_this<CtrTensorPart_Base> */
                         std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos,
                         std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors ) :
                         full_id_ranges_(full_id_ranges), full_idxs_(full_idxs), ctrs_pos_(ctrs_pos),
-                        ReIm_factors_(ReIm_factors), got_data_(false), size_( full_idxs_->size()) {
+                        ReIm_factors_(ReIm_factors), got_data_(false), size_( full_idxs_->size()),
+                        name_(WickUtils::get_ctp_name(*full_idxs_, *full_id_ranges_, *ctrs_pos_ )) {  
                           ctrs_todo_ = std::make_shared<std::vector<std::pair<int,int>>>(*ctrs_pos);
                           ctrs_done_ = std::make_shared<std::vector<std::pair<int,int>>>(0);
                           got_data_ = false;
                           get_ctp_idxs_ranges();
-                          get_name();
                           CTP_vec_ = std::make_shared<std::vector<std::shared_ptr<CtrTensorPart_Base>>>(1);
                         } 
 
@@ -101,7 +101,7 @@ class CtrTensorPart_Base /* :std::enable_shared_from_this<CtrTensorPart_Base> */
 };
 
 template<typename DataType>
-class CtrTensorPart : /* std::enable_shared_from_this<CtrTensorPart<DataType>> */  public CtrTensorPart_Base   {
+class CtrTensorPart : public  CtrTensorPart_Base , public std::enable_shared_from_this<CtrTensorPart<DataType>>   {
    public:
 
     CtrTensorPart() : CtrTensorPart_Base() {} 
@@ -110,7 +110,7 @@ class CtrTensorPart : /* std::enable_shared_from_this<CtrTensorPart<DataType>> *
                   std::shared_ptr<std::vector<std::string>> full_id_ranges,
                   std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos,
                   std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors ) :
-                  CtrTensorPart_Base( full_idxs, full_id_ranges, ctrs_pos, ReIm_factors){};
+                  CtrTensorPart_Base( full_idxs, full_id_ranges, ctrs_pos, ReIm_factors) {};
 
      void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
                         std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
@@ -123,7 +123,7 @@ class CtrTensorPart : /* std::enable_shared_from_this<CtrTensorPart<DataType>> *
 
 
 template<typename DataType>
-class CtrMultiTensorPart : /*  std::enable_shared_from_this<CtrMultiTensorPart<DataType>>,  */ public CtrTensorPart_Base   {
+class CtrMultiTensorPart : public CtrTensorPart_Base , public  std::enable_shared_from_this<CtrMultiTensorPart<DataType>>  {
    public :
 
     std::shared_ptr<std::vector<int>> Tsizes_cml;
@@ -138,7 +138,6 @@ class CtrMultiTensorPart : /*  std::enable_shared_from_this<CtrMultiTensorPart<D
     CtrMultiTensorPart( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec,
                         std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >> cross_ctrs_pos_in  )
                         : CtrTensorPart_Base() {
-                         std::cout << "CtrMultiTensorPart::CtrMultiTensorPart" << std::endl; 
                          int counter = 0;
                          CTP_vec_         = CTP_vec;
                          cross_ctrs_pos_ = cross_ctrs_pos_in;
@@ -152,28 +151,17 @@ class CtrMultiTensorPart : /*  std::enable_shared_from_this<CtrMultiTensorPart<D
                            Tsizes_cml->push_back(cml_size);
                            full_idxs_->insert(full_idxs_->end() , ctp->full_idxs_->begin(), ctp->full_idxs_->end());
                            full_id_ranges_->insert(full_id_ranges_->end(),  ctp->full_id_ranges_->begin(), ctp->full_id_ranges_->end());
-                           std::cout << "ctp->name() = " <<  ctp->name() << std::endl;
-                           WickUtils::print_pair_vector( *ctp->ctrs_pos_,  ctp->name() + " ctrs_pos in constructor"  ); std::cout << std::endl; 
-                           WickUtils::print_vector( *ctp->full_idxs_, ctp->name() + " full_idxs in constructor"  ); std::cout << std::endl; 
                            for (auto relctr : *ctp->ctrs_pos_ )
                              ctrs_pos_->push_back( std::make_pair(relctr.first+Tsizes_cml->back(), relctr.second+Tsizes_cml->back()));
 
-                           WickUtils::print_pair_vector( *ctp->ctrs_pos_, ctp->name() +  " ctrs_pos in constructor"  ); std::cout << std::endl; 
                            cml_size+=ctp->full_idxs_->size();
-                           std::cout << "cml_size = " << cml_size << std::endl;
                          }
-                       
           
-                         WickUtils::print_vector( *Tsizes_cml, "Tsizes_cml" ); std::cout << std::endl; 
-                         WickUtils::print_pair_pair_vector( *cross_ctrs_pos_in, "cross_ctrs_pos_in" ); std::cout << std::endl;
-                         for (auto cctr : *cross_ctrs_pos_in) { 
+                         for (auto cctr : *cross_ctrs_pos_in)  
                            ctrs_pos_->push_back(std::make_pair(Tsizes_cml->at(cctr.first.first)+cctr.first.second, Tsizes_cml->at(cctr.second.first)+cctr.second.second));
-                         }
-                         WickUtils::print_pair_vector( *ctrs_pos_, " full ctrs_pos in constructor"  ); std::cout << std::endl; 
-
+                         
                          get_ctp_idxs_ranges();
-                         get_name();
-                         std::cout << "finished building cmtp" << std::endl;
+                         this->name_ = WickUtils::get_ctp_name(*full_idxs_, *full_id_ranges_, *ctrs_pos_ ) ;
                        };
 
 

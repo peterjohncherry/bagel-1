@@ -32,9 +32,12 @@ namespace PropTool {
     bool breit_;
     bool gaunt_;
     bool block_diag_fock_;
+    bool spinfree_;
     int nstates_;
     std::vector<int> target_states_; //note this is total range of the states
     std::vector<int> all_states_;
+
+
 
     //range info 
     int nclosed_; 

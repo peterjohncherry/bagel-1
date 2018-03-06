@@ -13,6 +13,8 @@ class Op_Init {
     std::string name_;
     std::string alg_name_;
     int state_dep_ = 0;
+    bool proj_op_;
+                                               
      
     Op_Init(std::string base_name, std::vector<std::string>& idxs, std::shared_ptr<std::vector<int*>> idx_ptrs ) :
             name_(base_name), idxs_(idxs), idx_ptrs_(idx_ptrs), alg_name_(base_name) {
@@ -75,11 +77,13 @@ class BraKet_Init {
   public :
    std::string name_;
    std::shared_ptr<std::vector<Op_Init>> op_list_;
+   std::string proj_name_;
+   bool projected_;
 
    BraKet_Init( std::shared_ptr<std::vector<Op_Init>> op_list,
                 std::string bra_index, int* bra_index_ptr, std::string ket_index, int* ket_index_ptr ) :
                 op_list_(op_list), bra_index_(bra_index), bra_index_ptr_(bra_index_ptr),
-                ket_index_(ket_index),  ket_index_ptr_(ket_index_ptr) {
+                ket_index_(ket_index),  ket_index_ptr_(ket_index_ptr), projected_(false) {
                
                   name_ = "<" + bra_index + "|";
                   for ( Op_Init op : *op_list )
@@ -87,6 +91,21 @@ class BraKet_Init {
                   
                   name_+= "|" + ket_index_+ ">" ;
                };
+
+   BraKet_Init( std::shared_ptr<std::vector<Op_Init>> op_list,
+                std::string bra_index, int* bra_index_ptr, std::string ket_index, int* ket_index_ptr, std::string proj_name ) :
+                op_list_(op_list), bra_index_(bra_index), bra_index_ptr_(bra_index_ptr),
+                ket_index_(ket_index),  ket_index_ptr_(ket_index_ptr), proj_name_(proj_name), projected_(true) {
+               
+                  name_ = "<" + bra_index + "|";
+                  for ( Op_Init op : *op_list )
+                    name_ += op.alg_name_;
+                  
+                  name_+= "|" + ket_index_+ ">" ;
+               };
+
+
+
 
    ~BraKet_Init(){};
 
@@ -129,6 +148,8 @@ class Term_Init {
     std::shared_ptr<std::vector<std::string>> braket_factors_;
     std::shared_ptr<std::map<std::string, int>> idx_val_map_;
     std::shared_ptr<std::map<std::string, std::string>> idx_name_map_;
+    bool orbital_projector_;
+    std::string proj_op_name_;
 
     std::string alg_name_;
 
@@ -137,7 +158,7 @@ class Term_Init {
                std::shared_ptr<std::vector<std::string>> braket_factors,
                std::shared_ptr<std::map<std::string, int>> idx_val_map) :
                name_(name), type_(type), braket_list_(braket_list), braket_factors_(braket_factors),
-               idx_val_map_(idx_val_map){
+               idx_val_map_(idx_val_map), orbital_projector_(false) {
              
                alg_name_ = "";
                for ( int ii =0 ; ii != braket_factors_->size(); ii++ )
@@ -146,8 +167,23 @@ class Term_Init {
                std::cout << "======================= New Term =======================" << std::endl;
                std::cout << alg_name_ << std::endl << std::endl;
                };
-
-                                               
+    
+    // second variation of initialization for terms with orbital projector
+    Term_Init( std::string name, std::string type,
+               std::shared_ptr<std::vector<BraKet_Init>> braket_list,
+               std::shared_ptr<std::vector<std::string>> braket_factors,
+               std::shared_ptr<std::map<std::string, int>> idx_val_map,
+               std::string proj_op_name ) :
+               name_(name), type_(type), braket_list_(braket_list), braket_factors_(braket_factors),
+               idx_val_map_(idx_val_map), orbital_projector_(true), proj_op_name_(proj_op_name)  {
+             
+               alg_name_ = "";
+               for ( int ii =0 ; ii != braket_factors_->size(); ii++ )
+                 alg_name_ += "(" + braket_factors_->at(ii) + ")" + braket_list->at(ii).name_ + " + ";
+               alg_name_.pop_back();
+               std::cout << "======================= New Term =======================" << std::endl;
+               std::cout << alg_name_ << std::endl << std::endl;
+               };
 
     ~Term_Init(){};
 };
@@ -177,10 +213,13 @@ class Expression_Init {
     std::shared_ptr<std::vector<std::shared_ptr<std::map<std::string,std::pair<bool,std::string>>>>> term_range_maps_;
    
     std::string name_;
+    
+    std::string type_;
 
     Expression_Init( std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<Term_Init>>>> term_list,
-                     std::shared_ptr<std::vector<std::shared_ptr<std::map<std::string,std::pair<bool,std::string>>>>> term_range_maps ):
-                     term_list_(term_list), term_range_maps_(term_range_maps) {
+                     std::shared_ptr<std::vector<std::shared_ptr<std::map<std::string,std::pair<bool,std::string>>>>> term_range_maps,
+                     std::string type ):
+                     term_list_(term_list), term_range_maps_(term_range_maps), type_(type) {
                        for ( std::pair<std::string, std::shared_ptr<Term_Init>> term : *term_list_ )
                          name_ += "(" +term.first +")."+ term.second->name_+ "+";
                        name_.pop_back();

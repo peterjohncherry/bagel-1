@@ -20,7 +20,6 @@ class Equation_LinearRM : public Equation_Base<DataType> {
     using Equation_Base<DataType>::braket_map_;
     using Equation_Base<DataType>::ACompute_map_;
 
-    using Equation_Base<DataType>::T_map_ ;      
     using Equation_Base<DataType>::MT_map_ ;      
 
     using Equation_Base<DataType>::CTP_map_;      

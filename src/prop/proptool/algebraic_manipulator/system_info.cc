@@ -20,8 +20,7 @@ System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info
   
   equation_map_       = make_shared< map <string, shared_ptr<Equation_Base<DataType>>>>();
 
-  T_map_          = make_shared< map <string, shared_ptr<TensOp::TensOp<DataType>>>>();
-  MT_map_         = make_shared< map <string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>();
+  MT_map_         = make_shared< map <string, shared_ptr<TensOp_Base>>>();
   CTP_map_        = make_shared< map <string, shared_ptr<CtrTensorPart_Base>>>();
   ACompute_map   = make_shared< map <string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>();
   Gamma_map      = make_shared< map <string, shared_ptr<GammaInfo> > >();
@@ -78,6 +77,7 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
   int tmpfac = 1;
   shared_ptr<TensOp::TensOp<DataType>> new_op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
                                                                                         tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, state_dep);
+  
   // change to be state specific
   cout << "getting  ctr tens ranges for New_Op : " << op_name << endl;
   new_op->get_ctrs_tens_ranges();
@@ -85,25 +85,6 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
   cout << "got ctr tens ranges for new_op : " << op_name << endl;
 
   return new_op;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-void System_Info<DataType>::Set_BraKet_Ops(shared_ptr<vector<string>> Op_names, string BraKet_name ) { 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout <<  "System_Info::System_Info::Set_BraKet_Ops(shared_ptr<vector<string>> Op_names, string term_name ) " << endl;
-  
-  shared_ptr<vector<shared_ptr<TensOp::TensOp<double>>>> BraKet_Ops = make_shared<vector< shared_ptr<TensOp::TensOp<double>> > >( Op_names->size());
-
-  vector<shared_ptr<TensOp::TensOp<double>>>::iterator BraKet_Ops_it = BraKet_Ops->begin();
-  for ( string name : *Op_names ){  
-     cout << "looking_for " << name << " ... " ; cout.flush();
-    *BraKet_Ops_it++ = T_map_->at(name);
-     cout << " found it! " << endl;    
-  }
-  braket_map_->emplace(BraKet_name, BraKet_Ops);
-
-  return;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,36 +105,34 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
   
   shared_ptr<Equation_Base<DataType>>  new_eqn;
   if ( type == "Value" ) { 
-    cout << "now build equation_value" << endl;
-    shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map );
-    new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
+
+    auto new_eqn_val = make_shared<Equation_Value<DataType>>( name, type, states_info_, term_braket_map, expression_term_map );
+    new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>( new_eqn_val );
+
     if (!new_eqn) { throw runtime_error("cast from Equation_Value to equation_base failed" ); }
-    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map_, MT_map_, CTP_map_ );
-    equation_map_->emplace( name, new_eqn); 
+
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, MT_map_, CTP_map_ );
+    equation_map_->emplace( name, new_eqn ); 
 
   } else if ( type == "LinearRM") { 
-    cout << "now build equation_linearrm" << endl;
-    cout << " term_braket_map_state_spec->size()     = " << term_braket_map_state_spec->size()      << endl; 
-    cout << " expression_term_map_state_spec->size() = " << expression_term_map_state_spec->size()  << endl;
 
-    shared_ptr<Equation_LinearRM<DataType>> new_eqn_lrm  = make_shared<Equation_LinearRM<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map,
-                                                                                                       term_braket_map_state_spec, expression_term_map_state_spec );
-    cout << "built_eqution_lrm" <<endl;
+    shared_ptr<Equation_LinearRM<DataType>> new_eqn_lrm  =
+    make_shared<Equation_LinearRM<DataType>>( name, type, states_info_, term_braket_map, expression_term_map,
+                                              term_braket_map_state_spec, expression_term_map_state_spec );
+
     new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_lrm);
-    cout << "casted equation_lrm to base" << endl;
+
     if (!new_eqn) { throw runtime_error("cast from Equation_LinearRM to Equation_Base failed" ); }
-    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map_, MT_map_, CTP_map_ );
-    cout << " set maps in new_eqn " <<endl;
+
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map,  MT_map_, CTP_map_ );
     new_eqn_lrm->generate_state_specific_terms();
-    cout << "got state specific terms" <<endl;
     equation_map_->emplace( name, new_eqn); 
   
-    cout << "put in map" <<endl;
   } else {  
     throw logic_error( "equation type \""+ type + "\" not implemented yet! Aborting!"); 
 
   }
-  cout << "leaving create equation" << endl;
+  cout << "put equation " << name << " into map" <<endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +151,7 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
   if ( type == "Value" ) { 
     shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map );
     new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
-    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, T_map_, MT_map_, CTP_map_ );
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, MT_map_, CTP_map_ );
     equation_map_->emplace( name, new_eqn); 
 
   } else if ( type == "LinearRM") { 

@@ -1,6 +1,6 @@
 #include <bagel_config.h>
 #ifdef COMPILE_SMITH
- #include <src/prop/proptool/proputils.h>
+#include <src/prop/proptool/proputils.h>
  // #include "wickutils.h"
 using namespace std;
 
@@ -20,49 +20,50 @@ using namespace std;
 shared_ptr<vector<pint_vec>>  
 WickUtils::get_cross_pairs( shared_ptr<vector<int>> vec1 , shared_ptr<vector<int>> vec2, shared_ptr<vector<string>> id_names ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "WickUtils::get_cross_pairs" << endl;
   
- if  ( vec1->empty() || vec2->empty()){
-   auto all_pairs =  make_shared<vector<vector<pair<int,int>>>>(0);
-   return all_pairs;
- }
-
- auto fvec = make_shared<vector<int>>(vec2->size(),0);
- auto maxs = make_shared<vector<int>>();
- auto mins = make_shared<vector<int>>(vec2->size(),0);
-
- auto prvec = [](shared_ptr<vector<int>> invec){ cout << "[ " ; for (auto elem : *invec) { cout << elem << " " ;} cout << "]" ;};
-
- vector<int> reset_pos;
- for (int ii = 0; ii !=vec2->size();  ii++){
-   maxs->push_back(vec2->size()-1-ii);
-   reset_pos.push_back(ii);
- }
+  if  ( vec1->empty() || vec2->empty()){
+    auto all_pairs =  make_shared<vector<vector<pair<int,int>>>>(0);
+    return all_pairs;
+  }
  
- auto all_pairs =  make_shared<vector<vector<pair<int,int>>>>(0);
- do {   
-   vector<int> perm;
-   vector<int> pos = reset_pos;;
-
-   for(int ii= 0; ii !=fvec->size() ; ii++){
-      perm.push_back(vec2->at(pos[fvec->at(ii)]));       
-      pos.erase(pos.begin()+fvec->at(ii));
-   }
-
-   vector<pair<int,int>> pair_vec(0);
-   bool check = true;
-   for (auto ii =0 ;  ii !=perm.size(); ii++) {
-     if ( id_names->at(vec1->at(ii))[0] == id_names->at(perm[ii])[0] ){ 
-       check =false;
-       break;
-     }
-     pair_vec.push_back(make_pair(vec1->at(ii),perm[ii])) ;
-   }
-
-   if (check) all_pairs->push_back(pair_vec);
-
- } while(fvec_cycle(fvec, maxs, mins));
-
- return all_pairs;
+  auto fvec = make_shared<vector<int>>(vec2->size(),0);
+  auto maxs = make_shared<vector<int>>();
+  auto mins = make_shared<vector<int>>(vec2->size(),0);
+ 
+  auto prvec = [](shared_ptr<vector<int>> invec){ cout << "[ " ; for (auto elem : *invec) { cout << elem << " " ;} cout << "]" ;};
+ 
+  vector<int> reset_pos;
+  for (int ii = 0; ii !=vec2->size();  ii++){
+    maxs->push_back(vec2->size()-1-ii);
+    reset_pos.push_back(ii);
+  }
+  
+  auto all_pairs =  make_shared<vector<vector<pair<int,int>>>>(0);
+  do {   
+    vector<int> perm;
+    vector<int> pos = reset_pos;;
+ 
+    for(int ii= 0; ii !=fvec->size() ; ii++){
+       perm.push_back(vec2->at(pos[fvec->at(ii)]));       
+       pos.erase(pos.begin()+fvec->at(ii));
+    }
+ 
+    vector<pair<int,int>> pair_vec(0);
+    bool check = true;
+    for (auto ii =0 ;  ii !=perm.size(); ii++) {
+      if ( id_names->at(vec1->at(ii))[0] == id_names->at(perm[ii])[0] ){ 
+        check =false;
+        break;
+      }
+      pair_vec.push_back(make_pair(vec1->at(ii),perm[ii])) ;
+    }
+ 
+    if (check) all_pairs->push_back(pair_vec);
+ 
+  } while(fvec_cycle(fvec, maxs, mins));
+ 
+  return all_pairs;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void WickUtils::fvec_cycle(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max ) {
@@ -400,11 +401,8 @@ cout << "print_pvec" << endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> WickUtils::get_unique_pairs(shared_ptr<const vector<int>> ids1 , shared_ptr<const vector<int>> ids2 , int num_pairs){
-//////////////////////////////////////////////////////////////////////////////////////////////
-#if defined DBG_WickUtils || defined DBG_all 
-cout << "get_unique_pairs" << endl;
-#endif
+shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>
+WickUtils::get_unique_pairs(shared_ptr<const vector<int>> ids1 , shared_ptr<const vector<int>> ids2 , int num_pairs){
 //////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> pairs_vec = make_shared<vector<shared_ptr<vector<pair<int,int>>>>>(0);
@@ -452,14 +450,21 @@ cout << "get_unique_pairs" << endl;
     return pairs_vec;
   }
 } 
+ 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
+WickUtils::get_unique_pairs(std::shared_ptr<std::vector<int>> ids1 , std::shared_ptr<std::vector<int>> ids2 ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    return get_unique_pairs( ids1, ids2 , (ids1->size() < ids2->size() ? ids1->size() : ids2->size() ) );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>
+WickUtils::get_unique_pairs(shared_ptr<vector<int>> ids1 , shared_ptr<vector<int>> ids2 , int num_pairs){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//cout << "WickUtils::get_unique_pairs" << endl;
 
-////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> WickUtils::get_unique_pairs(shared_ptr<vector<int>> ids1 , shared_ptr<vector<int>> ids2 , int num_pairs){
-//////////////////////////////////////////////////////////////////////////////////////////////
-#if defined DBG_WickUtils || defined DBG_all 
-cout << "get_unique_pairs" << endl;
-#endif
-//////////////////////////////////////////////////////////////////////////////////////////////
+//  assert( !(ids2->size() < num_pairs) ); 
+//  assert( !(ids1->size() < num_pairs) ); 
 
   auto pairs_vec = make_shared<vector<shared_ptr<vector<pair<int,int>>>>>(0);
 
@@ -549,6 +554,41 @@ shared_ptr<vector<int>> WickUtils::get_unc_ids_from_deltas_ids_comparison(shared
    return make_shared<vector<int>>(unc_ids);
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
+string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges,
+                             const vector<char>& proj_names ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  string name = "";
+  vector<bool> not_proj( full_idxs.size(), true );
+  vector<bool>::iterator np_it = not_proj.begin();
+  for(string idx : full_idxs){
+    for ( char pname : proj_names){ 
+      if ( idx[0] == pname ){ 
+        *np_it = false;
+         break;
+      }
+    }
+    np_it++;
+  }
+     
+  np_it = not_proj.begin();
+  for(string idx : full_idxs)
+    if ( *np_it ) 
+      name += idx;
+  
+  name+="_";
+
+  np_it = not_proj.begin();
+  for(string idx_range : full_idx_ranges){ 
+    if ( *np_it ) 
+      name += idx_range[0];
+    np_it++;
+  }
+  
+  return name;
+
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
 string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -564,6 +604,48 @@ string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<strin
   return name;
 
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
+string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges,
+                             const vector<pair<int,int>>& all_ctrs_pos, const vector<char>& proj_names ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  string name = "";
+  vector<bool> not_proj( full_idxs.size(), true );
+  vector<bool>::iterator np_it = not_proj.begin();
+  for(string idx : full_idxs){
+    for ( char pname : proj_names){ 
+      if ( idx[0] == pname ){ 
+        *np_it = false;
+         break;
+      }
+    }
+    np_it++;
+  }
+     
+  np_it = not_proj.begin();
+  for(string idx : full_idxs)
+    if ( *np_it ) 
+      name += idx;
+  
+  name+="_";
+
+  np_it = not_proj.begin();
+  for(string idx_range : full_idx_ranges){ 
+    if ( *np_it ) 
+      name += idx_range[0];
+    np_it++;
+  }
+   
+  if (all_ctrs_pos.size() !=0 ){
+    name+="_"; 
+    for(pair<int,int> delta : all_ctrs_pos)
+      if ( not_proj[delta.first] && not_proj[delta.second] ) 
+        name += to_string(delta.first)+to_string(delta.second);
+  }
+ 
+  return name;
+
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////        
 string WickUtils::get_Aname( const vector<string>& full_idxs, const vector<string>& full_idx_ranges, 
                              const vector<pair<int,int>>& all_ctrs_pos ){
@@ -775,4 +857,83 @@ bool WickUtils::RangeCheck(const vector<string>& id_ranges, const vector<bool>& 
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<pair<int,int>>>
+WickUtils::standardize_delta_ordering_generic(shared_ptr<vector<pair<int,int>>> deltas_pos ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "WickUtils::standardize_delta_ordering_generic" << endl;
+ 
+  shared_ptr<vector<pair<int,int>>> new_deltas_pos;
+ 
+  if (deltas_pos->size() > 1 ) {
+    new_deltas_pos =  make_shared <vector<pair<int,int>>>( deltas_pos->size());
+    vector<int> posvec(deltas_pos->size(),0);
+    for (int ii = 0 ; ii != deltas_pos->size() ; ii++) 
+      for (int jj = 0 ; jj != deltas_pos->size() ; jj++) 
+        if (deltas_pos->at(ii).first > deltas_pos->at(jj).first )
+          posvec[ii]++ ;      
+    
+    for (int ii = 0 ; ii != deltas_pos->size() ; ii++) 
+      new_deltas_pos->at(posvec[ii]) = deltas_pos->at(ii);
+ 
+  } else { 
+    new_deltas_pos = deltas_pos;
+  }
+  return new_deltas_pos;   
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<pair<int,int>>>
+WickUtils::standardize_delta_ordering_generic( const vector<pair<int,int>>& deltas_pos ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "WickUtils::standardize_delta_ordering_generic" << endl;
+ 
+  shared_ptr<vector<pair<int,int>>> new_deltas_pos;
+ 
+  if (deltas_pos.size() > 1 ) {
+    new_deltas_pos =  make_shared <vector<pair<int,int>>>( deltas_pos.size());
+    vector<int> posvec(deltas_pos.size(),0);
+    for (int ii = 0 ; ii != deltas_pos.size() ; ii++) 
+      for (int jj = 0 ; jj != deltas_pos.size() ; jj++) 
+        if (deltas_pos[ii].first > deltas_pos[jj].first )
+          posvec[ii]++ ;      
+    
+    for (int ii = 0 ; ii != deltas_pos.size() ; ii++) 
+      new_deltas_pos->at(posvec[ii]) = deltas_pos.at(ii);
+ 
+  } else { 
+    vector<pair<int,int>>deltas_pos_buff = deltas_pos;
+    new_deltas_pos = make_shared<vector<pair<int,int>>>(deltas_pos_buff);
+  }
+  return new_deltas_pos;   
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// get range for ctrtensorpart  
+////////////////////////////////////////////////////////////////////////////////////////////////////
+string WickUtils::get_ctp_name( const vector<string>& idxs, const vector<string>& id_ranges, 
+                                const vector<pair<int,int>>& ctrs_pos ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "WickUtils::get_ctp_name" << endl; 
+
+  string ctp_name = ""; 
+  for ( string id : idxs ) 
+    ctp_name += id;
+ 
+  ctp_name += "_";
+
+  for (string id : id_ranges ) 
+    ctp_name += id[0];
+
+  if (ctrs_pos.size() != 0 ){ 
+    ctp_name += "_";
+    vector<pair<int,int>> ctrs_buff =  ctrs_pos;
+    shared_ptr<vector<pair<int,int>>> ctrs_standard = standardize_delta_ordering_generic(ctrs_buff); 
+    for ( pair<int,int>& ctr : *ctrs_standard )  
+      ctp_name += to_string(ctr.first)+to_string(ctr.second);
+  }
+ 
+  return ctp_name;
+
+}
 #endif

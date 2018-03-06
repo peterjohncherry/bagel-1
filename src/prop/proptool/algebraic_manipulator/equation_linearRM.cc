@@ -27,15 +27,14 @@ cout << " void Equation_LinearRM<DataType>::generate_state_specific_terms() " <<
         break;
       }
     
-    cout << "without none" <<  endl;
+    cout << "fixed_indexes : " <<  endl;
     for ( auto  fi_it = fixed_idxs.begin() ; fi_it != fixed_idxs.end(); fi_it++ ) 
       cout << "(" << fi_it->first << "," << fi_it->second << ") " ;
+    cout << endl;
 
     auto new_key = make_pair( term_info.first.first, fixed_idxs );  
-    cout <<"asdxx1"<<endl;
     if ( term_map_->find( new_key ) == term_map_->end() ) 
       term_map_->emplace( new_key, this->build_expression( term_info.second ) );
-    cout <<"asdxx2"<<endl;
 
   }
   cout << " LEAVING Equation_LinearRM<DataType>::generate_state_specific_terms() " << endl;  

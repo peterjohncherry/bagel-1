@@ -54,13 +54,15 @@ namespace WickUtils {
 
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<std::vector<int>> vec1, int NN );
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<const std::vector<int>> vec1, int NN );
-
+ 
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
   get_unique_pairs(std::shared_ptr<std::vector<int>> ids1 , std::shared_ptr<std::vector<int>> ids2 , int num_pairs);
-  
+ 
+  std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
+  get_unique_pairs(std::shared_ptr<std::vector<int>> ids1 , std::shared_ptr<std::vector<int>> ids2 ); 
+ 
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
   get_unique_pairs(std::shared_ptr< const std::vector<int>> ids1 , std::shared_ptr< const std::vector<int>> ids2 , int num_pairs);
-
   std::shared_ptr<std::vector<int>> reorder_vector(std::vector<int>& neworder , const std::vector<int>& origvec ) ;
 
   void print_pvec (pint_vec pvec) ;
@@ -71,8 +73,15 @@ namespace WickUtils {
 
   std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges );
 
+  std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges,
+                         const std::vector<char>& proj_names );
+
   std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges, 
                          const std::vector<std::pair<int,int>>& all_ctrs_pos  );
+ 
+  std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges,
+                         const std::vector<std::pair<int,int>>& all_ctrs_pos, const std::vector<char>& proj_names );
+
 
   std::string get_civec_name( const int state_num,  const int norb,  const int nalpha, const int nbeta);
 
@@ -86,6 +95,14 @@ namespace WickUtils {
   get_cross_pairs( std::shared_ptr<std::vector<int>> vec1 , std::shared_ptr<std::vector<int>> vec2, std::shared_ptr<std::vector<std::string>> id_names );
 
   bool RangeCheck(const std::vector<std::string>& id_ranges, const std::vector<bool>& aops ) ;
+  
+  std::shared_ptr<std::vector<std::pair<int,int>>>
+  standardize_delta_ordering_generic( std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ) ;
+
+  std::shared_ptr<std::vector<std::pair<int,int>>>
+  standardize_delta_ordering_generic( const std::vector<std::pair<int,int>>& deltas_pos );
+
+  std::string get_ctp_name( const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges, const std::vector<std::pair<int,int>>& ctrs_pos ); 
 
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
@@ -98,9 +115,8 @@ namespace WickUtils {
     return;
   }
 
-
-  template<class DataType>
-  void print_pair_vector(std::vector<std::pair<DataType,DataType>> invec, std::string name =""){
+  template<class T1, class T2  >
+  void print_pair_vector(std::vector<std::pair<T1,T2>> invec, std::string name =""){
     if (name != "" ) 
       std::cout << name << " ="; 
     std::cout << " [ ";
@@ -110,8 +126,8 @@ namespace WickUtils {
     return;
   }
 
-  template<typename DataType>
-  void print_pair_pair_vector( std::vector<std::pair<std::pair<DataType,DataType>, std::pair<DataType,DataType>>> ccp_vec,
+  template<class T1, class T2, class T3, class T4 >
+  void print_pair_pair_vector( std::vector<std::pair<std::pair<T1,T2>, std::pair<T3,T4>>> ccp_vec,
                                std::string name = "" ) {
     std::cout << name << " = [ "; std::cout.flush();
     for ( auto& elem : ccp_vec ){

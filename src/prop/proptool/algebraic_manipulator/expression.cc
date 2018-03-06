@@ -8,12 +8,13 @@ using namespace std;
 template<class DataType>
 Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_list,
                                   shared_ptr<StatesInfo<DataType>> states_info,
-                                  shared_ptr<map< string, shared_ptr<MultiTensOp::MultiTensOp<DataType>>>>  MT_map,
+                                  shared_ptr<map< string, shared_ptr<TensOp_Base>>>  MT_map,
                                   shared_ptr<map< string, shared_ptr<CtrTensorPart_Base> >>            CTP_map,
                                   shared_ptr<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>     ACompute_map,
-                                  shared_ptr<map< string, shared_ptr<GammaInfo> > >                         gamma_info_map ):
+                                  shared_ptr<map< string, shared_ptr<GammaInfo> > >                         gamma_info_map,
+                                  string expression_type ):
                                   braket_list_(braket_list), states_info_(states_info), MT_map_(MT_map), CTP_map_(CTP_map),
-                                  ACompute_map_(ACompute_map), gamma_info_map_(gamma_info_map) {
+                                  ACompute_map_(ACompute_map), gamma_info_map_(gamma_info_map), type_(expression_type) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression<DataType>::Expression (new constructor) " << endl;
 
@@ -30,8 +31,9 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
 
   // Will loop through terms and then generate mathematical task map. It's split into
   // two functions as this will gives more control over merging together of different BraKets G_to_A_maps.
+  required_blocks_ = make_shared<set<string>>();
   for ( BraKet<DataType>& braket : *braket_list_ )
-    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_ );
+    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_,  required_blocks_ );
   get_gamma_Atensor_contraction_list();
 }
 
