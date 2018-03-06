@@ -161,6 +161,8 @@ class GammaGenerator{
 
     bool projected_bra_;
     bool projected_ket_; 
+    bool orb_exc_deriv_; 
+    char proj_op_name_;  
 
     std::shared_ptr<std::vector<std::string>> Bra_names_;
     std::shared_ptr<std::vector<std::string>> Ket_names_;
@@ -201,6 +203,8 @@ class GammaGenerator{
 
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
+    void add_Acontrib_to_map_orb_deriv( int kk, std::string bra_name, std::string ket_name );
+ 
     bool check_if_same_sector( std::string bra_name, std::string ket_name );
 
     bool generic_reorderer_same_sector( std::string reordering_name, std::string bra_name,

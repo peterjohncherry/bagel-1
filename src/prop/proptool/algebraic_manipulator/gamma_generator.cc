@@ -50,7 +50,7 @@ GammaInfo::GammaInfo ( shared_ptr<CIVecInfo<double>> Bra_info, shared_ptr<CIVecI
   for ( int  ii = 1 ; ii != sigma_id_ranges_->size() ; ii++ )
     sigma_id_ranges_->at(ii) = id_ranges_->at(ii-1);
 
-  name_ = get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos, Bra_info_->name(), Ket_info_->name() ); cout << "gamma name = " <<  name_ << endl;
+  name_ = get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos, Bra_info_->name(), Ket_info_->name() ); 
   sigma_name_ = "S_"+name_;
 
   if ( (idxs_pos->size() > 2 ) && ( idxs_pos->size() % 2 == 0 ) ) {
@@ -90,8 +90,12 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
                                 projected_bra_(false), projected_ket_(false)  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //needed to keep ordering of contractions consistent, should find better way of defining opname
-  auto opname = orig_ids_->at(0)[0];
+  auto opname = orig_ids_->at(0)[0]; 
+
+  proj_op_name_ = 'X'; //TODO make it so the projector_op name is taken from expression
+ 
   op_order = make_shared<map< char, int>>();
+  orb_exc_deriv_ = false;
   int ii =0;
   op_order->emplace (opname, ii);
   for ( string elem : *orig_ids ){
@@ -99,13 +103,17 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
       opname = elem[0];
       op_order->emplace(opname, ++ii);
     }
+    if ( elem[0] == proj_op_name_ ) 
+      orb_exc_deriv_ = true;
   }
+
 
   ii=0; //TODO This should not be needed here (I think); normal idx order when initialized
         //     Have shuffled idx order specified in range_block_info in add_gamma
   idx_order = make_shared<map< string, int>>();
   for ( string elem : *free_ids_ )
     idx_order->emplace(elem, ii);
+
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::add_gamma( shared_ptr<range_block_info> block_info ) {
@@ -168,7 +176,7 @@ bool GammaGenerator::generic_reorderer_different_sector( string reordering_name,
     kk = 0;
     while ( kk != gamma_vec->size()){
       if ( !proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
-        print_vector( *gamma_vec->at(kk)->ids_pos, "DIES after normal order with proj between gamma and proj indexes" ); 
+        print_vector( *gamma_vec->at(kk)->ids_pos, "DIES after normal order with proj between gamma and proj indexes" ); cout << endl; 
       } else if ( gamma_vec->at(kk)->ids_pos->size() != 0 ) { 
         if ( !all_active_ranges(gamma_vec->at(kk)) ) {  
           Contract_remaining_indexes(kk);
@@ -183,7 +191,7 @@ bool GammaGenerator::generic_reorderer_different_sector( string reordering_name,
     int kk= 0 ;
     while ( kk != gamma_vec->size()){
       if ( !proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
-        print_vector( *gamma_vec->at(kk)->ids_pos, "DIES before anti normal ordering" ); 
+        print_vector( *gamma_vec->at(kk)->ids_pos, "DIES before anti normal ordering" ); cout << endl; 
       } else { 
         anti_normal_order(kk);
       }
@@ -192,7 +200,7 @@ bool GammaGenerator::generic_reorderer_different_sector( string reordering_name,
     kk = 0;
     while ( kk != gamma_vec->size()){
       if ( !proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
-        print_vector( *gamma_vec->at(kk)->ids_pos, "DIES after anti normal ordering" ); 
+        print_vector( *gamma_vec->at(kk)->ids_pos, "DIES after anti normal ordering" ); cout << endl;
       } else if ( gamma_vec->at(kk)->ids_pos->size() != 0 ) { 
         if ( !all_active_ranges(gamma_vec->at(kk)) ){ 
           Contract_remaining_indexes(kk);
@@ -223,11 +231,19 @@ bool GammaGenerator::generic_reorderer_different_sector( string reordering_name,
   if ( does_it_contribute && final_reordering ) 
     print_gamma_contributions( gamma_vec, reordering_name );
 
-  int kk= 0;
-  while ( kk != gamma_vec->size()){
-    if ( final_reordering ) 
-      add_Acontrib_to_map(kk, bra_name, ket_name);
-    kk++;
+  int kk = 0;
+  if ( final_reordering ) { 
+    if ( !orb_exc_deriv_ ) {  
+      while ( kk != gamma_vec->size()){
+        add_Acontrib_to_map( kk, bra_name, ket_name );
+        kk++;
+      } 
+    } else {
+      while ( kk != gamma_vec->size()){
+        add_Acontrib_to_map_orb_deriv( kk, bra_name, ket_name );
+        kk++;
+      } 
+    }
   }
 
   return does_it_contribute;
@@ -498,6 +514,91 @@ void GammaGenerator::add_Acontrib_to_map( int kk, string bra_name, string ket_na
   return;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGenerator::add_Acontrib_to_map_orb_deriv( int kk, string bra_name, string ket_name ){  // e.g. ++++----
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "void GammaGenerator::add_Acontrib_to_map_orb_deriv" << endl;
+
+  shared_ptr<GammaIntermediate> gint = gamma_vec->at(kk);
+
+  double my_sign = bk_factor*gint->my_sign;
+  shared_ptr<const vector<string>>  full_id_ranges = gint->full_id_ranges;
+  shared_ptr<vector<pair<int,int>>> deltas_pos     = gint->deltas_pos;
+  shared_ptr<vector<int>> ids_pos = gint->ids_pos;
+
+
+  //aids_pos is the list of indexes which need to be contracted with the gamma
+
+  //TODO this should deal with ordering
+  vector<int> aids_pos;          // aid positions (to be contracted )
+  vector<int> pids_pos;             // pid positions (never contracted )
+  for ( int& pos : *ids_pos ){ 
+    if ( orig_ids_->at(pos)[0] == proj_op_name_ ){
+      pids_pos.push_back(pos);
+    } else { 
+      aids_pos.push_back(pos);
+    }
+  } 
+  vector<int> gids_pos_new = aids_pos;
+  vector<string> pure_exc_contractions;  
+  vector<pair<int,int>> deltas_pos_purged;  // Deltas without contractions with exc indexes
+  for ( pair<int,int>& delta_pos : *deltas_pos ) {
+    if ( orig_ids_->at(delta_pos.first)[0] !=  proj_op_name_ ){
+      if ( orig_ids_->at(delta_pos.second)[0] !=  proj_op_name_ ){  
+        deltas_pos_purged.push_back(delta_pos);
+      } else {  
+        aids_pos.push_back( delta_pos.first );
+        pids_pos.push_back( delta_pos.second );  
+      }
+    } else if ( orig_ids_->at(delta_pos.second)[0] == proj_op_name_ ) { 
+      pure_exc_contractions.push_back(gint->full_id_ranges->at(delta_pos.first)); 
+    } else {
+      aids_pos.push_back( delta_pos.second ); 
+      pids_pos.push_back( delta_pos.first );
+    }
+  } 
+ 
+  vector<int> Aid_order_new = get_Aid_order ( aids_pos ) ;
+  vector<int> pid_order_new = get_Aid_order ( pids_pos ) ;
+
+  vector<string> full_aids;
+  for ( string id : *orig_ids_ ) 
+    if ( id[0] != proj_op_name_ ) 
+      full_aids.push_back(id); 
+ 
+  string Aname_alt = get_Aname( *orig_ids_, *(gint->full_id_ranges), deltas_pos_purged );
+  string Gname_alt = get_gamma_name( gint->full_id_ranges, orig_aops_, make_shared<vector<int>>(gids_pos_new), bra_name, ket_name );
+
+  if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
+    G_to_A_map->emplace( Gname_alt, make_shared<map<string, AContribInfo>>() );
+
+  auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
+  if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
+    AContribInfo AInfo( Aname_alt, Aid_order_new, make_pair(my_sign,my_sign) );
+    G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
+
+  } else {
+    AContribInfo AInfo = AInfo_loc->second;
+    for ( int qq = 0 ; qq != AInfo.id_orders.size(); qq++ ) {
+      if( Aid_order_new == AInfo.id_order(qq) ){
+        AInfo.factors[qq].first  += my_sign;
+        AInfo.factors[qq].second += my_sign;
+        AInfo.remaining_uses_ += 1;
+        AInfo.total_uses_ += 1;
+        break;
+
+      } else if ( qq == AInfo.id_orders.size()-1) {
+        AInfo.id_orders.push_back(Aid_order_new);
+        AInfo.factors.push_back(make_pair(my_sign,my_sign));
+      }
+    }
+  }
+  Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
+                                                         free_aops_, full_id_ranges, ids_pos, Gamma_map) );
+  return;
+}
+
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<GammaIntermediate>>> final_gamma_vec, string name) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -511,7 +612,8 @@ void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<Gam
                                                 string name,  string bra_name, string ket_name ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "GammaGenerator::print_gamma_contributions" << endl;
-
+  
+  cout << endl;
   cout << "-----------------------------------------------------" << endl;
   cout << "     LIST OF GAMMAS FOLLOWING " << name;  cout << "N = " << final_gamma_vec->size() << endl;
   cout << "-----------------------------------------------------" << endl;
