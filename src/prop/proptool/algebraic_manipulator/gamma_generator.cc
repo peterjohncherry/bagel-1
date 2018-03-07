@@ -15,7 +15,7 @@ GammaInfo::GammaInfo ( shared_ptr<CIVecInfo<double>> Bra_info, shared_ptr<CIVecI
                        shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map ) :
                        order_(idxs_pos->size()), Bra_info_(Bra_info), Ket_info_(Ket_info) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "GammaInfo:GammaInfo" << endl;
+ cout << "GammaInfo:GammaInfo" << endl;
   id_ranges_ = make_shared<vector<string>>(idxs_pos->size());
   aops_      = make_shared<vector<bool>>(idxs_pos->size());
   for (int ii = 0 ; ii != idxs_pos->size(); ii++ ){
@@ -86,7 +86,6 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
                                 double bk_factor_in                                                            ):
                                 target_states_(target_states), Bra_num_(Bra_num), Ket_num_(Ket_num),
                                 orig_ids_(orig_ids), orig_aops_(orig_aops),
-                                free_ids_(orig_ids), free_aops_(orig_aops),
                                 G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in), bk_factor(bk_factor_in),
                                 projected_bra_(false), projected_ket_(false)  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,19 +98,34 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
   orb_exc_deriv_ = false;
   int ii =0;
   op_order->emplace (opname, ii);
-  for ( string elem : *orig_ids ){
-    if ( opname != elem[0] ){
-      opname = elem[0];
+
+  free_aops_ = make_shared<vector<bool>>();
+  free_ids_ = make_shared<vector<string>>();
+
+  int orig_pos = 0;
+  int free_pos = 0;
+  vector<bool>::const_iterator oa_it = orig_aops_->begin();
+  for ( vector<string>::const_iterator oi_it = orig_ids_->begin(); oi_it != orig_ids_->end() ; oi_it++, oa_it++, orig_pos++ ) {
+
+    if ( opname != (*oi_it)[0] ){
+      opname = (*oi_it)[0];
       op_order->emplace(opname, ++ii);
     }
-    if ( elem[0] == proj_op_name_ ) 
+
+    if ( (*oi_it)[0] == proj_op_name_ ) {
       orb_exc_deriv_ = true;
+    } else { 
+      free_aops_->push_back(*oa_it);
+      free_ids_->push_back(*oi_it);
+      orig_to_free_pos_.emplace( orig_pos, free_pos++); 
+    }     
+
   }
 
   ii=0; //TODO This should not be needed here (I think); normal idx order when initialized
         //     Have shuffled idx order specified in range_block_info in add_gamma
   idx_order = make_shared<map< string, int>>();
-  for ( string elem : *free_ids_ )
+  for ( string elem : *orig_ids_ )
     idx_order->emplace(elem, ii);
 
 }
@@ -132,12 +146,13 @@ void GammaGenerator::add_gamma( shared_ptr<range_block_info> block_info ) {
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(1, make_shared<GammaIntermediate>(id_ranges_in, ids_pos_init, deltas_pos_in, my_sign_in));
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
 
+  cout << " Leaving GammaGenerator::add_gamma" << endl;
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reordering, bool final_reordering ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator::generic_reorderer" << endl; 
+  cout << "GammaGenerator::generic_reorderer" << endl; 
   
   int kk = 0;
   bool does_it_contribute = false;
@@ -153,7 +168,7 @@ bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reord
 bool GammaGenerator::generic_reorderer_different_sector( string reordering_name, string bra_name,
                                                          string ket_name, bool final_reordering   ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-//cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
+cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
 
   shared_ptr<map<char,int>> bra_hole_map = target_states_->hole_range_map(bra_name);;
   shared_ptr<map<char,int>> bra_elec_map = target_states_->elec_range_map(bra_name);;
@@ -281,7 +296,7 @@ bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint,
 //Grossly inefficient, but totally generic, should write seperate routines for normal and antinormal
 //ordering; consecutive operators means can just count.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator::proj_onto_map" << endl;
+  cout << "GammaGenerator::proj_onto_map" << endl;
 
   shared_ptr<vector<int>> idxs_pos =  gint->ids_pos;
 
@@ -292,7 +307,7 @@ bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint,
   vector<bool>::iterator a_it = aops->begin();
   for ( vector<int>::iterator ip_it = idxs_pos->begin(); ip_it != idxs_pos->end(); ip_it++ ){
     *ir_it++ = gint->full_id_ranges->at(*ip_it);
-    *a_it++  = free_aops_->at(*ip_it);
+    *a_it++  = orig_aops_->at(*ip_it);
   }
 
   vector<bool>::reverse_iterator aops_it = aops->rbegin();
@@ -342,12 +357,12 @@ bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::anti_normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator::anti_normal_order" << endl;
+  cout << "GammaGenerator::anti_normal_order" << endl;
 
   shared_ptr<vector<int>> ids_pos  = gamma_vec->at(kk)->ids_pos;
   int num_kill = 0;
   for ( int pos : *ids_pos )
-    if (!free_aops_->at(pos)) 
+    if (!orig_aops_->at(pos)) 
       num_kill++; 
 
   num_kill--; 
@@ -355,12 +370,12 @@ void GammaGenerator::anti_normal_order( int kk ) {
   for (int ii = ids_pos->size()-1 ; ii != -1; ii--){
 
     if ( ii > num_kill ) {
-      if (free_aops_->at(ids_pos->at(ii)))
+      if (orig_aops_->at(ids_pos->at(ii)))
         continue;
 
-      while(!free_aops_->at( ids_pos->at(ii) )){
+      while(!orig_aops_->at( ids_pos->at(ii) )){
         for ( int jj = (ii-1); jj != -1 ; jj--) {
-          if (free_aops_->at( ids_pos->at(jj) )){
+          if (orig_aops_->at( ids_pos->at(jj) )){
             swap( jj, jj+1, kk, gamma_vec);
             break;
           }
@@ -368,12 +383,12 @@ void GammaGenerator::anti_normal_order( int kk ) {
       }
 
     } else if (ii <= num_kill) {
-      if (!free_aops_->at(ids_pos->at(ii)))
+      if (!orig_aops_->at(ids_pos->at(ii)))
         continue;
 
-      while(free_aops_->at(ids_pos->at(ii))){
+      while(orig_aops_->at(ids_pos->at(ii))){
         for ( int jj = (ii-1); jj != -1 ; jj--) {
-          if(!free_aops_->at(ids_pos->at(jj)) ){
+          if(!orig_aops_->at(ids_pos->at(jj)) ){
             swap( jj, jj+1, kk, gamma_vec);
             break;
           }
@@ -388,12 +403,12 @@ void GammaGenerator::anti_normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator::normal_order" << endl;
+  cout << "GammaGenerator::normal_order" << endl;
 
   shared_ptr<vector<int>> ids_pos  = gamma_vec->at(kk)->ids_pos;
   int num_plus = 0;
   for ( int pos : *ids_pos )
-    if (free_aops_->at(pos)) 
+    if (orig_aops_->at(pos)) 
       num_plus++; 
 
   num_plus--; 
@@ -401,12 +416,12 @@ void GammaGenerator::normal_order( int kk ) {
   for (int ii = ids_pos->size()-1 ; ii != -1; ii--){
 
     if ( ii > num_plus ) {
-      if (!free_aops_->at(ids_pos->at(ii)))
+      if (!orig_aops_->at(ids_pos->at(ii)))
         continue;
 
-      while(free_aops_->at( ids_pos->at(ii) )){
+      while(orig_aops_->at( ids_pos->at(ii) )){
         for ( int jj = (ii-1); jj != -1 ; jj--) {
-          if (!free_aops_->at( ids_pos->at(jj) )){
+          if (!orig_aops_->at( ids_pos->at(jj) )){
             swap( jj, jj+1, kk, gamma_vec);
             break;
           }
@@ -414,12 +429,12 @@ void GammaGenerator::normal_order( int kk ) {
       }
 
     } else if (ii <= num_plus) {
-      if (free_aops_->at(ids_pos->at(ii)))
+      if (orig_aops_->at(ids_pos->at(ii)))
         continue;
 
-      while(!free_aops_->at(ids_pos->at(ii))){
+      while(!orig_aops_->at(ids_pos->at(ii))){
         for ( int jj = (ii-1); jj != -1 ; jj--) {
-          if(free_aops_->at(ids_pos->at(jj)) ){
+          if(orig_aops_->at(ids_pos->at(jj)) ){
             swap( jj, jj+1, kk, gamma_vec);
             break;
           }
@@ -432,7 +447,7 @@ void GammaGenerator::normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::alternating_order( int kk ) {  // e.g. +-+-+-+-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator::alternating_order" << endl;
+  cout << "GammaGenerator::alternating_order" << endl;
 
   shared_ptr<vector<int>>           ids_pos = gamma_vec->at(kk)->ids_pos;
   shared_ptr<const vector<string>>  full_id_ranges = gamma_vec->at(kk)->full_id_ranges;
@@ -440,12 +455,12 @@ void GammaGenerator::alternating_order( int kk ) {  // e.g. +-+-+-+-
 
   vector<string> unc_ranged_idxs(full_id_ranges->size() - 2*deltas_pos->size());
   vector<string>::iterator unc_ranged_idxs_it = unc_ranged_idxs.begin();
-  vector<bool> unc_aops(free_aops_->size() - 2*deltas_pos->size());
+  vector<bool> unc_aops(orig_aops_->size() - 2*deltas_pos->size());
 
   vector<bool>::iterator unc_aops_it = unc_aops.begin();
   for (int pos : *ids_pos ) {
     *unc_ranged_idxs_it++ = orig_ids_->at(pos)+full_id_ranges->at(pos);
-    *unc_aops_it++ = free_aops_->at(pos);
+    *unc_aops_it++ = orig_aops_->at(pos);
   }
 
   vector<int> standard_alt_order = get_standardized_alt_order( unc_ranged_idxs, unc_aops );
@@ -480,8 +495,8 @@ void GammaGenerator::add_Acontrib_to_map( int kk, string bra_name, string ket_na
   shared_ptr<vector<pair<int,int>>> deltas_pos     = gamma_int->deltas_pos;
   shared_ptr<vector<int>> ids_pos        = gamma_int->ids_pos;
 
-  string Aname_alt = get_Aname( *free_ids_, *full_id_ranges, *deltas_pos );
-  string Gname_alt = get_gamma_name( full_id_ranges, free_aops_, ids_pos, bra_name, ket_name );
+  string Aname_alt = get_Aname( *orig_ids_, *full_id_ranges, *deltas_pos );
+  string Gname_alt = get_gamma_name( full_id_ranges, orig_aops_, ids_pos, bra_name, ket_name );
 
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
     G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo>>>() );
@@ -508,37 +523,41 @@ void GammaGenerator::add_Acontrib_to_map( int kk, string bra_name, string ket_na
       }
     }
   }
+  
   Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
-                                                         free_aops_, full_id_ranges, ids_pos, Gamma_map) );
+                                                         orig_aops_, full_id_ranges, ids_pos, Gamma_map) );
   return;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::add_Acontrib_to_map_orb_deriv( int kk, string bra_name, string ket_name ){  // e.g. ++++----
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "void GammaGenerator::add_Acontrib_to_map_orb_deriv" << endl;
+  cout << "void GammaGenerator::add_Acontrib_to_map_orb_deriv" << endl;
 
   shared_ptr<GammaIntermediate> gint = gamma_vec->at(kk);
 
+  cout << "X1" << endl;
+ 
   double my_sign = bk_factor*gint->my_sign;
   shared_ptr<const vector<string>>  full_id_ranges = gint->full_id_ranges;
   shared_ptr<vector<pair<int,int>>> deltas_pos     = gint->deltas_pos;
   shared_ptr<vector<int>> ids_pos = gint->ids_pos;
 
-
-  //aids_pos is the list of indexes which need to be contracted with the gamma
-
+  cout << "X2" << endl;
   //TODO this should deal with ordering
   vector<int> aids_pos;          // aid positions (to be contracted )
   vector<int> pids_pos;             // pid positions (never contracted )
   for ( int& pos : *ids_pos ){ 
     if ( orig_ids_->at(pos)[0] == proj_op_name_ ){
-      pids_pos.push_back(pos);
+      pids_pos.push_back(pos); 
     } else { 
+      //aids_pos.push_back(orig_to_free_pos_.at(pos));
       aids_pos.push_back(pos);
     }
   } 
-  vector<int> gids_pos_new = aids_pos;
+  cout << "X3" << endl;
+  shared_ptr<vector<int>> gids_pos_new = make_shared<vector<int>>(vector<int>(aids_pos));
+   
   vector<string> pure_exc_contractions;  
   vector<pair<int,int>> deltas_pos_purged;  // Deltas without contractions with exc indexes
   for ( pair<int,int>& delta_pos : *deltas_pos ) {
@@ -546,17 +565,20 @@ void GammaGenerator::add_Acontrib_to_map_orb_deriv( int kk, string bra_name, str
       if ( orig_ids_->at(delta_pos.second)[0] !=  proj_op_name_ ){  
         deltas_pos_purged.push_back(delta_pos);
       } else {  
+        //aids_pos.push_back( orig_to_free_pos_.at(delta_pos.first) );
         aids_pos.push_back( delta_pos.first );
         pids_pos.push_back( delta_pos.second );  
       }
     } else if ( orig_ids_->at(delta_pos.second)[0] == proj_op_name_ ) { 
       pure_exc_contractions.push_back(gint->full_id_ranges->at(delta_pos.first)); 
     } else {
+      //aids_pos.push_back( orig_to_free_pos_.at(delta_pos.second) ); 
       aids_pos.push_back( delta_pos.second ); 
       pids_pos.push_back( delta_pos.first );
     }
   } 
  
+  cout << "X4" << endl;
   vector<int> Aid_order_new = get_Aid_order ( aids_pos ) ;
   vector<int> pid_order_new = get_Aid_order ( pids_pos ) ;
 
@@ -565,8 +587,9 @@ void GammaGenerator::add_Acontrib_to_map_orb_deriv( int kk, string bra_name, str
     if ( id[0] != proj_op_name_ ) 
       full_aids.push_back(id); 
  
+  cout << "X4a" << endl;
   string Aname_alt = get_Aname( *orig_ids_, *(gint->full_id_ranges), deltas_pos_purged );
-  string Gname_alt = get_gamma_name( gint->full_id_ranges, orig_aops_, make_shared<vector<int>>(gids_pos_new), bra_name, ket_name );
+  string Gname_alt = get_gamma_name( gint->full_id_ranges, orig_aops_, gids_pos_new, bra_name, ket_name );
 
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
     G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo>>>() );
@@ -574,35 +597,62 @@ void GammaGenerator::add_Acontrib_to_map_orb_deriv( int kk, string bra_name, str
   pair<double,double> new_fac = make_pair(my_sign, my_sign); 
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
+    cout << "X5" << endl;
     auto AInfo = make_shared<AContribInfo_ExcDeriv>( Aname_alt, Aid_order_new, pid_order_new, new_fac );
-    G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
+    G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo);
+    cout << "X6" << endl;
 
   } else {
 
+    cout << "X7a" << endl;
     shared_ptr<AContribInfo> AInfo = AInfo_loc->second;
+    cout << "X7aa AInfo->aid_orders().size() = " << AInfo->aid_orders().size() << endl;
     for ( int qq = 0 ; qq != AInfo->aid_orders().size(); qq++ ) {
+      cout << "X7aaa qq = " << qq << "  AInfo->aid_orders().size() = " << AInfo->aid_orders().size() << endl;
+      cout << "X7b qq = " << qq  << endl;
       if( Aid_order_new == *(AInfo->aid_order(qq)) ){
+        cout << "X7bb qq = " << qq  << endl;
         AInfo->remaining_uses_ += 1;
         AInfo->total_uses_ += 1;
+        cout << "X7bbb qq = " << qq << " AInfo->pid_orders().size() = " << AInfo->pid_orders().size() << endl;
+        bool switcher = false;
         for ( int rr = 0 ; rr != AInfo->aid_pid_orders(qq)->size(); rr++ ) {
+          cout << "X7c rr = " << rr  << endl;
           if( pid_order_new == *(AInfo->pid_order(qq, rr )) ){
+            cout << "X7d rr = " << rr  << endl;
             AInfo->combine_factors(qq, rr, new_fac ) ;
+            cout << "X7dd rr = " << rr  << endl;
+            switcher = true;
             break;
           } else if ( rr == AInfo->aid_pid_orders(qq)->size()-1) {
+            cout << "X7e rr = " << rr  << endl;
             AInfo->add_pid_order(qq, pid_order_new);
+            cout << "X7f rr = " << rr  << endl;
             AInfo->add_factor( qq, new_fac );
+            cout << "X7g rr = " << rr  << endl;
+            switcher = true;
+            break;
           }
         }
-        break;
-      } else if ( qq == AInfo->aid_orders().size()-1) {
-        AInfo->add_aid_order(Aid_order_new);
-        AInfo->add_pid_order(qq, pid_order_new);
+       
+      //  if ( qq == AInfo->aid_orders().size()-1) {
+        if ( switcher ) {
+          cout << "X7h qq = " << qq  << endl;
+          AInfo->add_aid_order( Aid_order_new );
+          cout << "X7hh qq = " << qq << "  AInfo->aid_orders().size() = " << AInfo->aid_orders().size() << endl; cout << "X7i qq = " << qq << endl;
+          AInfo->add_pid_order( qq, pid_order_new );
+          cout << "X7ii qq = " << qq << "  AInfo->pid_orders().size() = " << AInfo->pid_orders().size() << endl; cout << "X7j qq = " << qq << endl;
+          break; 
+        } 
       }
     }
+    cout << "X8" << endl;
   }
 
+  cout << "X9" << endl;
   Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
-                                                         free_aops_, full_id_ranges, ids_pos, Gamma_map) );
+                                                         orig_aops_, full_id_ranges, gids_pos_new, Gamma_map) );
+  cout << "X10" << endl;
 
   return;
 }
@@ -619,7 +669,7 @@ void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<Gam
 void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<GammaIntermediate>>> final_gamma_vec,
                                                 string name,  string bra_name, string ket_name ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator::print_gamma_contributions" << endl;
+ // cout << "GammaGenerator::print_gamma_contributions" << endl;
   
   cout << endl;
   cout << "-----------------------------------------------------" << endl;
@@ -627,7 +677,7 @@ void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<Gam
   cout << "-----------------------------------------------------" << endl;
 
   for ( shared_ptr<GammaIntermediate> gint : *final_gamma_vec ) {
-    string Gname_tmp = WickUtils::get_gamma_name( gint->full_id_ranges, free_aops_,  gint->ids_pos, bra_name, ket_name) ;
+    string Gname_tmp = WickUtils::get_gamma_name( gint->full_id_ranges, orig_aops_,  gint->ids_pos, bra_name, ket_name) ;
     cout <<Gname_tmp <<  "   ("<< gint->my_sign <<","<< gint->my_sign << ")       " ;
     cout << get_Aname( *(orig_ids_), *(gint->full_id_ranges), *(gint->deltas_pos) ) << endl;
   }
@@ -679,7 +729,7 @@ void GammaGenerator::Contract_remaining_indexes( int kk ){
     if ( Forbidden_Index(full_id_ranges, ids_pos->at(jj) ) ) {
       do  {
         if( jj != start_pos  &&  rng == diff_rngs[ii] ){
-          if ( free_aops_->at(ids_pos->at(jj)) ){
+          if ( orig_aops_->at(ids_pos->at(jj)) ){
             make_ops_pos->at(ii)->push_back(ids_pos->at(jj));
           } else {
             kill_ops_pos->at(ii)->push_back(ids_pos->at(jj));
@@ -691,7 +741,7 @@ void GammaGenerator::Contract_remaining_indexes( int kk ){
           diff_rngs.push_back(rng);
           shared_ptr<vector<int>> init_vec1_ = make_shared<vector<int>>(1,ids_pos->at(jj));
           shared_ptr<vector<int>> init_vec2_ = make_shared<vector<int>>(0);
-          if ( free_aops_->at(ids_pos->at(jj)) ){
+          if ( orig_aops_->at(ids_pos->at(jj)) ){
             make_ops_pos->push_back(init_vec1_);
             kill_ops_pos->push_back(init_vec2_);
           } else {
@@ -750,11 +800,11 @@ void GammaGenerator::swap( int ii, int jj, int kk, shared_ptr<vector<shared_ptr<
   ids_pos->at(jj) = idx_buff;
 
   if ( (full_id_ranges->at(ids_pos->at(jj)) == full_id_ranges->at(ids_pos->at(ii))) &&
-       (free_aops_->at(ids_pos->at(ii)) !=  orig_aops_->at(ids_pos->at(jj))) ){
+       (orig_aops_->at(ids_pos->at(ii)) !=  orig_aops_->at(ids_pos->at(jj))) ){
 
     shared_ptr<pint_vec> new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);
 
-    pair<int,int> new_delta = free_aops_->at(ids_pos->at(jj)) ? make_pair(ids_pos->at(jj), ids_pos->at(ii)) : make_pair(ids_pos->at(ii), ids_pos->at(jj));
+    pair<int,int> new_delta = orig_aops_->at(ids_pos->at(jj)) ? make_pair(ids_pos->at(jj), ids_pos->at(ii)) : make_pair(ids_pos->at(ii), ids_pos->at(jj));
     new_deltas_tmp->push_back(new_delta);
     shared_ptr<pint_vec> new_deltas = Standardize_delta_ordering_generic( new_deltas_tmp );
     int new_sign = gamma_vec->at(kk)->my_sign;
@@ -806,7 +856,7 @@ shared_ptr<pint_vec> GammaGenerator::Standardize_delta_ordering(shared_ptr<pint_
 
    auto dtmp = make_shared<pint_vec>(*deltas_pos);
 
-   if ( free_aops_->at( dtmp->back().second ))
+   if ( orig_aops_->at( dtmp->back().second ))
      dtmp->back() = make_pair( deltas_pos->back().second, deltas_pos->back().first );
 
    //sort(dtmp->begin(), dtmp->end() );
@@ -870,7 +920,7 @@ bool GammaGenerator::RangeCheck(shared_ptr<const vector<string>> full_id_ranges)
 //cout << "GammaGenerator::RangeCheck" << endl;
 
   vector<string> diff_rngs(1, full_id_ranges->at(0) );
-  vector<int> updown(1, ( free_aops_->at(0) ? 1 : -1)  );
+  vector<int> updown(1, ( orig_aops_->at(0) ? 1 : -1)  );
 
   for ( int jj = 1;  jj !=full_id_ranges->size() ; jj++){
     int ii = 0;
@@ -879,7 +929,7 @@ bool GammaGenerator::RangeCheck(shared_ptr<const vector<string>> full_id_ranges)
 
     do {
       if(rng == diff_rngs[ii]){
-        if ( free_aops_->at(jj)){
+        if ( orig_aops_->at(jj)){
           updown[ii]+=1;
         } else {
           updown[ii]-=1;
@@ -888,7 +938,7 @@ bool GammaGenerator::RangeCheck(shared_ptr<const vector<string>> full_id_ranges)
       }
       if ( ii == diff_rngs.size()-1){
         diff_rngs.push_back(rng);
-        if ( free_aops_->at(jj)){
+        if ( orig_aops_->at(jj)){
           updown.push_back(1);
         } else {
           updown.push_back(-1);

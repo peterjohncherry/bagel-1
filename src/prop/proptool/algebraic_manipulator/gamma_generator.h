@@ -185,12 +185,11 @@ class AContribInfo_ExcDeriv : public AContribInfo {
     void add_aid_order( std::vector<int>& new_aid_order ) { aid_orders_.push_back(std::make_shared<std::vector<int>>(new_aid_order)); }  
 
     void add_pid_order( int qq,  std::vector<int>& new_pid_order ) {
-      if ( pid_orders_.size() -1 < qq ) {
-        pid_orders_.push_back(std::make_shared<std::vector<std::shared_ptr<std::vector<int>>>>( 1,
-        std::make_shared<std::vector<int>>(  new_pid_order)));
-      } else {  
-        pid_orders_[qq]->push_back(std::make_shared<std::vector<int>>(new_pid_order));  
-      } 
+      if ( pid_orders_.size() == qq ) {
+        pid_orders_.push_back(std::make_shared<std::vector<std::shared_ptr<std::vector<int>>>>( 1, std::make_shared<std::vector<int>>(  new_pid_order)));
+      } else {
+        pid_orders_[qq]->push_back(std::make_shared<std::vector<int>>(new_pid_order));
+      }
     }
  
     std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> aid_pid_orders(int qq) {
@@ -303,8 +302,10 @@ class GammaGenerator{
     std::shared_ptr<const std::vector<bool>> orig_aops_ ;
     std::shared_ptr<const std::vector<std::string>> orig_ids_ ;
 
-    std::shared_ptr<const std::vector<bool>> free_aops_;
-    std::shared_ptr<const std::vector<std::string>> free_ids_;
+    std::shared_ptr<std::vector<bool>> free_aops_;
+    std::shared_ptr<std::vector<std::string>> free_ids_;
+
+    std::map<int,int> orig_to_free_pos_;
 
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
 
@@ -325,6 +326,7 @@ class GammaGenerator{
     bool projected_ket_; 
     bool orb_exc_deriv_; 
     char proj_op_name_;  
+
 
     std::shared_ptr<std::vector<std::string>> Bra_names_;
     std::shared_ptr<std::vector<std::string>> Ket_names_;
