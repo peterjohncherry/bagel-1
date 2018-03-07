@@ -86,13 +86,12 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
                                 double bk_factor_in                                                            ):
                                 target_states_(target_states), Bra_num_(Bra_num), Ket_num_(Ket_num),
                                 orig_ids_(orig_ids), orig_aops_(orig_aops),
-                                G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in), bk_factor(bk_factor_in),
-                                projected_bra_(false), projected_ket_(false)  {
+                                G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in), bk_factor(bk_factor_in)  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   //needed to keep ordering of contractions consistent, should find better way of defining opname
   auto opname = orig_ids_->at(0)[0]; 
 
-  proj_op_name_ = 'X'; //TODO make it so the projector_op name is taken from expression
+  proj_op_name_ = 'X'; //TODO make it so the projector_op name(s) are taken from expression
  
   op_order = make_shared<map< char, int>>();
   orb_exc_deriv_ = false;
@@ -101,9 +100,10 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
 
   free_aops_ = make_shared<vector<bool>>();
   free_ids_ = make_shared<vector<string>>();
+  free_pos_ = make_shared<vector<int>>();
 
   int orig_pos = 0;
-  int free_pos = 0;
+  int nexc_pos = 0;
   vector<bool>::const_iterator oa_it = orig_aops_->begin();
   for ( vector<string>::const_iterator oi_it = orig_ids_->begin(); oi_it != orig_ids_->end() ; oi_it++, oa_it++, orig_pos++ ) {
 
@@ -117,7 +117,8 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
     } else { 
       free_aops_->push_back(*oa_it);
       free_ids_->push_back(*oi_it);
-      orig_to_free_pos_.emplace( orig_pos, free_pos++); 
+      free_pos_->push_back(orig_pos);
+      orig_to_free_pos_.emplace( orig_pos, nexc_pos++); 
     }     
 
   }
@@ -132,7 +133,7 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::add_gamma( shared_ptr<range_block_info> block_info ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::add_gamma" << endl;
+//  cout << "GammaGenerator::add_gamma" << endl;
 
   Bra_names_ = target_states_->civec_names( Bra_num_ );
   Ket_names_ = target_states_->civec_names( Ket_num_ );
@@ -146,13 +147,18 @@ void GammaGenerator::add_gamma( shared_ptr<range_block_info> block_info ) {
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(1, make_shared<GammaIntermediate>(id_ranges_in, ids_pos_init, deltas_pos_in, my_sign_in));
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediate>>>(0);
 
-  cout << " Leaving GammaGenerator::add_gamma" << endl;
+  free_ranges_ = make_shared<vector<string>>(free_pos_->size());
+  vector<string>::iterator fr_it = free_ranges_->begin();
+  for ( int& pos : *free_pos_ ) 
+    *fr_it++ = id_ranges_in->at(pos);
+  
+
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reordering, bool final_reordering ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::generic_reorderer" << endl; 
+//  cout << "GammaGenerator::generic_reorderer" << endl; 
   
   int kk = 0;
   bool does_it_contribute = false;
@@ -168,7 +174,7 @@ bool GammaGenerator::generic_reorderer( string reordering_name, bool first_reord
 bool GammaGenerator::generic_reorderer_different_sector( string reordering_name, string bra_name,
                                                          string ket_name, bool final_reordering   ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
+//cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
 
   shared_ptr<map<char,int>> bra_hole_map = target_states_->hole_range_map(bra_name);;
   shared_ptr<map<char,int>> bra_elec_map = target_states_->elec_range_map(bra_name);;
@@ -296,7 +302,7 @@ bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint,
 //Grossly inefficient, but totally generic, should write seperate routines for normal and antinormal
 //ordering; consecutive operators means can just count.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::proj_onto_map" << endl;
+//  cout << "GammaGenerator::proj_onto_map" << endl;
 
   shared_ptr<vector<int>> idxs_pos =  gint->ids_pos;
 
@@ -357,7 +363,7 @@ bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::anti_normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::anti_normal_order" << endl;
+//  cout << "GammaGenerator::anti_normal_order" << endl;
 
   shared_ptr<vector<int>> ids_pos  = gamma_vec->at(kk)->ids_pos;
   int num_kill = 0;
@@ -403,7 +409,7 @@ void GammaGenerator::anti_normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::normal_order" << endl;
+//  cout << "GammaGenerator::normal_order" << endl;
 
   shared_ptr<vector<int>> ids_pos  = gamma_vec->at(kk)->ids_pos;
   int num_plus = 0;
@@ -447,7 +453,7 @@ void GammaGenerator::normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::alternating_order( int kk ) {  // e.g. +-+-+-+-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::alternating_order" << endl;
+//  cout << "GammaGenerator::alternating_order" << endl;
 
   shared_ptr<vector<int>>           ids_pos = gamma_vec->at(kk)->ids_pos;
   shared_ptr<const vector<string>>  full_id_ranges = gamma_vec->at(kk)->full_id_ranges;
@@ -532,127 +538,93 @@ void GammaGenerator::add_Acontrib_to_map( int kk, string bra_name, string ket_na
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::add_Acontrib_to_map_orb_deriv( int kk, string bra_name, string ket_name ){  // e.g. ++++----
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "void GammaGenerator::add_Acontrib_to_map_orb_deriv" << endl;
+//  cout << "void GammaGenerator::add_Acontrib_to_map_orb_deriv" << endl;
 
   shared_ptr<GammaIntermediate> gint = gamma_vec->at(kk);
-
-  cout << "X1" << endl;
  
   double my_sign = bk_factor*gint->my_sign;
   shared_ptr<const vector<string>>  full_id_ranges = gint->full_id_ranges;
   shared_ptr<vector<pair<int,int>>> deltas_pos     = gint->deltas_pos;
   shared_ptr<vector<int>> ids_pos = gint->ids_pos;
 
-  cout << "X2" << endl;
-  //TODO this should deal with ordering
-  vector<int> aids_pos;          // aid positions (to be contracted )
-  vector<int> pids_pos;             // pid positions (never contracted )
+  vector<int> aids_pos;
+  vector<int> pids_pos;
   for ( int& pos : *ids_pos ){ 
     if ( orig_ids_->at(pos)[0] == proj_op_name_ ){
       pids_pos.push_back(pos); 
     } else { 
-      //aids_pos.push_back(orig_to_free_pos_.at(pos));
       aids_pos.push_back(pos);
     }
   } 
-  cout << "X3" << endl;
-  shared_ptr<vector<int>> gids_pos_new = make_shared<vector<int>>(vector<int>(aids_pos));
    
   vector<string> pure_exc_contractions;  
-  vector<pair<int,int>> deltas_pos_purged;  // Deltas without contractions with exc indexes
+  vector<pair<int,int>> aid_deltas_pos;  // Deltas without contractions with exc indexes
   for ( pair<int,int>& delta_pos : *deltas_pos ) {
     if ( orig_ids_->at(delta_pos.first)[0] !=  proj_op_name_ ){
       if ( orig_ids_->at(delta_pos.second)[0] !=  proj_op_name_ ){  
-        deltas_pos_purged.push_back(delta_pos);
+        aid_deltas_pos.push_back( make_pair(orig_to_free_pos_.at(delta_pos.first), orig_to_free_pos_.at(delta_pos.second)) );
       } else {  
-        //aids_pos.push_back( orig_to_free_pos_.at(delta_pos.first) );
         aids_pos.push_back( delta_pos.first );
         pids_pos.push_back( delta_pos.second );  
       }
     } else if ( orig_ids_->at(delta_pos.second)[0] == proj_op_name_ ) { 
       pure_exc_contractions.push_back(gint->full_id_ranges->at(delta_pos.first)); 
     } else {
-      //aids_pos.push_back( orig_to_free_pos_.at(delta_pos.second) ); 
       aids_pos.push_back( delta_pos.second ); 
       pids_pos.push_back( delta_pos.first );
     }
   } 
  
-  cout << "X4" << endl;
   vector<int> Aid_order_new = get_Aid_order ( aids_pos ) ;
   vector<int> pid_order_new = get_Aid_order ( pids_pos ) ;
 
-  vector<string> full_aids;
-  for ( string id : *orig_ids_ ) 
-    if ( id[0] != proj_op_name_ ) 
-      full_aids.push_back(id); 
- 
-  cout << "X4a" << endl;
-  string Aname_alt = get_Aname( *orig_ids_, *(gint->full_id_ranges), deltas_pos_purged );
-  string Gname_alt = get_gamma_name( gint->full_id_ranges, orig_aops_, gids_pos_new, bra_name, ket_name );
+  string atens_name = get_Aname( *free_ids_, *free_ranges_, aid_deltas_pos );
+  string gamma_name = get_gamma_name( gint->full_id_ranges, orig_aops_, ids_pos, bra_name, ket_name );
 
-  if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
-    G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo>>>() );
+  if ( G_to_A_map->find( gamma_name ) == G_to_A_map->end() )
+    G_to_A_map->emplace( gamma_name, make_shared<map<string, shared_ptr<AContribInfo>>>() );
 
   pair<double,double> new_fac = make_pair(my_sign, my_sign); 
-  auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
-  if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
-    cout << "X5" << endl;
-    auto AInfo = make_shared<AContribInfo_ExcDeriv>( Aname_alt, Aid_order_new, pid_order_new, new_fac );
-    G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo);
-    cout << "X6" << endl;
+  auto AInfo_loc =  G_to_A_map->at( gamma_name )->find(atens_name);
+  if ( AInfo_loc == G_to_A_map->at( gamma_name )->end() ) {
+    auto AInfo = make_shared<AContribInfo_ExcDeriv>( atens_name, Aid_order_new, pid_order_new, new_fac );
+    G_to_A_map->at( gamma_name )->emplace(atens_name, AInfo);
 
   } else {
 
-    cout << "X7a" << endl;
     shared_ptr<AContribInfo> AInfo = AInfo_loc->second;
-    cout << "X7aa AInfo->aid_orders().size() = " << AInfo->aid_orders().size() << endl;
+    bool is_new_aid_order = true;
     for ( int qq = 0 ; qq != AInfo->aid_orders().size(); qq++ ) {
-      cout << "X7aaa qq = " << qq << "  AInfo->aid_orders().size() = " << AInfo->aid_orders().size() << endl;
-      cout << "X7b qq = " << qq  << endl;
       if( Aid_order_new == *(AInfo->aid_order(qq)) ){
-        cout << "X7bb qq = " << qq  << endl;
+        is_new_aid_order = false;
         AInfo->remaining_uses_ += 1;
         AInfo->total_uses_ += 1;
-        cout << "X7bbb qq = " << qq << " AInfo->pid_orders().size() = " << AInfo->pid_orders().size() << endl;
-        bool switcher = false;
+
         for ( int rr = 0 ; rr != AInfo->aid_pid_orders(qq)->size(); rr++ ) {
-          cout << "X7c rr = " << rr  << endl;
           if( pid_order_new == *(AInfo->pid_order(qq, rr )) ){
-            cout << "X7d rr = " << rr  << endl;
             AInfo->combine_factors(qq, rr, new_fac ) ;
-            cout << "X7dd rr = " << rr  << endl;
-            switcher = true;
             break;
           } else if ( rr == AInfo->aid_pid_orders(qq)->size()-1) {
-            cout << "X7e rr = " << rr  << endl;
             AInfo->add_pid_order(qq, pid_order_new);
-            cout << "X7f rr = " << rr  << endl;
             AInfo->add_factor( qq, new_fac );
-            cout << "X7g rr = " << rr  << endl;
-            switcher = true;
             break;
           }
         }
-       
-      //  if ( qq == AInfo->aid_orders().size()-1) {
-        if ( switcher ) {
-          cout << "X7h qq = " << qq  << endl;
-          AInfo->add_aid_order( Aid_order_new );
-          cout << "X7hh qq = " << qq << "  AInfo->aid_orders().size() = " << AInfo->aid_orders().size() << endl; cout << "X7i qq = " << qq << endl;
-          AInfo->add_pid_order( qq, pid_order_new );
-          cout << "X7ii qq = " << qq << "  AInfo->pid_orders().size() = " << AInfo->pid_orders().size() << endl; cout << "X7j qq = " << qq << endl;
-          break; 
-        } 
       }
+
     }
-    cout << "X8" << endl;
+
+    if ( is_new_aid_order ) {
+      AInfo->add_aid_order( Aid_order_new );
+      AInfo->add_pid_order( AInfo->aid_orders().size(), pid_order_new );
+      AInfo->add_factor( AInfo->aid_orders().size(), new_fac );
+      AInfo->remaining_uses_ += 1;
+      AInfo->total_uses_ += 1;
+    } 
   }
 
-  cout << "X9" << endl;
-  Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
-                                                         orig_aops_, full_id_ranges, gids_pos_new, Gamma_map) );
-  cout << "X10" << endl;
+  Gamma_map->emplace( gamma_name, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
+                                                          orig_aops_, full_id_ranges, ids_pos, Gamma_map) );
 
   return;
 }
@@ -685,6 +657,7 @@ void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<Gam
 
   return;
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Replace this with something more sophisticated which uses constraint functions.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
