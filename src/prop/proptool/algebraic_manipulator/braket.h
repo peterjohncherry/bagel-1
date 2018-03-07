@@ -91,7 +91,7 @@ class BraKet{
       // std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { required_blocks.emplace( block_name ); } 
 
        void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<TensOp_Base>>> MT_map,                
-                                                 std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, AContribInfo >>>> G_to_A_map,
+                                                 std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> >>>> G_to_A_map,
                                                  std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> gamma_info_map,
                                                  std::shared_ptr<StatesInfo<DataType>> target_states,
                                                  std::shared_ptr<std::set<std::string>> required_blocks );         

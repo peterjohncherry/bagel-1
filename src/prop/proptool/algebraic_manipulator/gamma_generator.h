@@ -11,19 +11,17 @@ class AContribInfo {
 
   public :
     std::string name_;
-    std::vector<std::vector<int>> id_orders;
     std::vector<std::pair<double,double>> factors;
     int total_uses_;
     int remaining_uses_;
 
-    AContribInfo( std::string name,  std::vector<int> init_order_in , std::pair<double,double> factor_in ):
-                  name_(name), id_orders(std::vector<std::vector<int>>(1,init_order_in)),
-                  factors(std::vector<std::pair<double,double>>(1,factor_in)),
+    AContribInfo( std::string name, std::pair<double,double> factor ):
+                  name_(name), factors(std::vector<std::pair<double,double>>(1,factor)),
                   total_uses_(1), remaining_uses_(1) {};
     ~AContribInfo(){};
 
-    std::vector<int>   id_order(int qq) {return id_orders[qq]; };
     std::pair<double,double> factor(int qq) {return factors[qq]; };
+    void add_factor( std::pair<int,int> new_factor ) { factors.push_back(new_factor); };
 
     std::string name() {return name_ ;}
 
@@ -35,7 +33,98 @@ class AContribInfo {
     void decrease_total_uses() { total_uses_-=1; }
     void decrease_remaining_uses() { remaining_uses_-=1; }
 
+
+    virtual std::vector<std::vector<int>>  id_orders() = 0; // TODO change this to ptr
+    virtual std::vector<std::shared_ptr<std::vector<int>>> pid_orders() = 0; 
+    virtual std::vector<std::shared_ptr<std::vector<int>>> aid_orders() = 0;
+
+    virtual std::vector<int>   id_order(int qq) = 0; // TODO change this to ptr
+    virtual std::shared_ptr<std::vector<int>> aid_order(int qq) = 0;
+    virtual std::shared_ptr<std::vector<int>> pid_order(int qq) = 0; 
+
+    virtual void add_id_order(  std::vector<int>& new_id_order) = 0; // TODO change this to ptr
+    virtual void add_aid_order( std::vector<int>& new_aid_order ) = 0;
+    virtual void add_pid_order( std::vector<int>& new_pid_order ) = 0; 
+
 };
+
+
+class AContribInfo_Full : public AContribInfo {
+
+  public :
+    std::vector<std::vector<int>> id_orders_;
+
+    AContribInfo_Full( std::string name,  std::vector<int>& id_order , std::pair<double,double> factor ):
+                  AContribInfo(name, factor), id_orders_(std::vector<std::vector<int>>(1,id_order)) {};
+    ~AContribInfo_Full(){};
+
+    std::vector<int> id_order(int qq) { return id_orders_[qq]; };
+    std::vector<std::vector<int>> id_orders() { return id_orders_; };
+
+    std::shared_ptr<std::vector<int>> aid_order(int qq) { 
+        throw std::logic_error( " should not call aid_order from AContribInfo_Full ") ; 
+      return std::make_shared<std::vector<int>>();
+    };
+
+    std::shared_ptr<std::vector<int>> pid_order(int qq) {
+        throw std::logic_error( " should not call pid_order from AContribInfo_Full ") ; 
+      return std::make_shared<std::vector<int>>();
+    };
+
+    std::vector<std::shared_ptr<std::vector<int>>> aid_orders() {
+        throw std::logic_error( "should not call aid_orders from AContribInfo_Full ") ; 
+        std::vector<std::shared_ptr<std::vector<int>>> dummy;
+      return dummy;
+    }
+
+    std::vector<std::shared_ptr<std::vector<int>>> pid_orders() {
+       throw std::logic_error( "should not call pid_orders from AContribInfo_Full ") ; 
+       std::vector<std::shared_ptr<std::vector<int>>> dummy; 
+      return dummy;
+    }
+    void add_id_order( std::vector<int>& new_id_order ) {  id_orders_.push_back(new_id_order); }  
+    void add_aid_order( std::vector<int>& new_aid_order ) { throw std::logic_error( "should not call add_aid_order from AContribInfo_Full ") ; }  
+    void add_pid_order( std::vector<int>& new_pid_order ) { throw std::logic_error( "should not call add_pid_order from AContribInfo_Full ") ; }  
+};
+
+class AContribInfo_ExcDeriv : public AContribInfo {
+
+  public :
+    std::vector<std::shared_ptr<std::vector<int>>> aid_orders_;
+    std::vector<std::shared_ptr<std::vector<int>>> pid_orders_;
+
+    AContribInfo_ExcDeriv( std::string name,  std::vector<int>& aid_order, std::vector<int>& pid_order,
+                  std::pair<double,double> factor ): AContribInfo(name, factor),
+                  aid_orders_(std::vector<std::shared_ptr<std::vector<int>>>(1,std::make_shared<std::vector<int>>(aid_order))),
+                  pid_orders_(std::vector<std::shared_ptr<std::vector<int>>>(1,std::make_shared<std::vector<int>>(pid_order))) {};
+
+    ~AContribInfo_ExcDeriv(){};
+
+    std::vector<int> id_order(int qq) {
+        throw std::logic_error( " should not call id_order from AContribInfo_Exc ") ; 
+      return *(aid_orders_[qq]);
+    };
+ 
+    std::vector<std::vector<int>> id_orders() {
+        throw std::logic_error( " should not call id_orders from AContribInfo_Exc ") ; 
+       std::vector<std::vector<int>> dummy(0); 
+      return dummy;
+    };
+   
+    std::shared_ptr<std::vector<int>> aid_order(int qq) { return aid_orders_[qq]; }
+    std::shared_ptr<std::vector<int>> pid_order(int qq) { return pid_orders_[qq]; }
+
+   
+    std::vector<std::shared_ptr<std::vector<int>>> aid_orders() { return aid_orders_; }
+
+    std::vector<std::shared_ptr<std::vector<int>>> pid_orders() { return pid_orders_; }
+
+    void add_id_order( std::vector<int>& new_id_order ) { throw std::logic_error( "should not call add_id_order from AContribInfo_Exc ") ; }  
+    void add_aid_order( std::vector<int>& new_aid_order ) { aid_orders_.push_back(std::make_shared<std::vector<int>>(new_aid_order)); }  
+    void add_pid_order( std::vector<int>& new_pid_order ) { pid_orders_.push_back(std::make_shared<std::vector<int>>(new_pid_order)); }  
+
+};
+
 
 class GammaInfo {
 
@@ -153,7 +242,7 @@ class GammaGenerator{
 
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
-    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo>> >> G_to_A_map;
+    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo>>> >> G_to_A_map;
 
     // key    : name of this gamma
     // result : information used here and in compute routines
@@ -176,7 +265,7 @@ class GammaGenerator{
     GammaGenerator( std::shared_ptr<StatesInfo<double>> target_states_, int Ket_num, int Bra_num,
                     std::shared_ptr<const std::vector<std::string>> orig_ids, std::shared_ptr< const std::vector<bool>> orig_aops,
                     std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in,
-                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, AContribInfo  >>>> G_to_A_map_in,
+                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo>  >>>> G_to_A_map_in,
                     double bk_factor );
 
     ~GammaGenerator(){};

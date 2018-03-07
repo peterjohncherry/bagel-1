@@ -10,7 +10,7 @@ using namespace WickUtils;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<TensOp_Base>>> MT_map,                
-                                                            shared_ptr<map<string, shared_ptr< map<string, AContribInfo >>>> G_to_A_map,
+                                                            shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>> G_to_A_map,
                                                             shared_ptr<map<string, shared_ptr< GammaInfo >>> gamma_info_map,
                                                             shared_ptr<StatesInfo<DataType>> target_states,
                                                             shared_ptr<set<string>> required_blocks ) {  
@@ -68,9 +68,9 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 
       for( auto A_map_it = map_it->second->begin() ; A_map_it != map_it->second->end();  A_map_it++){
         cout <<  A_map_it->first << "  "; cout.flush();
-        for ( int qq = 0; qq !=A_map_it->second.id_orders.size(); qq++) {
-          cout << "{ " ; print_vector( A_map_it->second.id_order(qq), "" ); 
-          cout << " (" << A_map_it->second.factor(qq).first <<  "," <<  A_map_it->second.factor(qq).first<<  ") }" ; cout <<endl;
+        for ( int qq = 0; qq !=A_map_it->second->id_orders().size(); qq++) {
+          cout << "{ " ; print_vector( A_map_it->second->id_order(qq), "" ); 
+          cout << " (" << A_map_it->second->factor(qq).first <<  "," <<  A_map_it->second->factor(qq).first<<  ") }" ; cout <<endl;
         }
         cout << endl;
       }

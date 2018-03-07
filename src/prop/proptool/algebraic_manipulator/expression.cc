@@ -19,7 +19,7 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
   cout << "Expression<DataType>::Expression (new constructor) " << endl;
 
   //Note that this G_to_A_map_ is expression specific
-  G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, AContribInfo >>>>();
+  G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>>();
 
   name_ = "";
   for ( BraKet<DataType>& bk : *braket_list_ ) {

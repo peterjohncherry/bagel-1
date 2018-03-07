@@ -76,28 +76,28 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Exp
       for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
       
         string  A_contrib_name = A_contrib_map_elem.first;    
-        AContribInfo A_contrib = A_contrib_map_elem.second;    
+        shared_ptr<AContribInfo> A_contrib = A_contrib_map_elem.second;    
 
-        if (check_AContrib_factors(A_contrib))
+        if (check_AContrib_factors(*A_contrib))
           continue;
       
 	print_AContraction_list( expression->ACompute_map_->at(A_contrib_name), A_contrib_name );
-        TensOp_Machine->Calculate_CTP( A_contrib );
+        TensOp_Machine->Calculate_CTP( *A_contrib );
 
         if ( gamma_name != "ID" ) {
           if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) { cout << A_contrib_name << " found in map" << endl;
 
-            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
-              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib.id_order(qq)) );
-              A_combined_data->ax_plus_y( (DataType)(A_contrib.factor(qq).first), A_contrib_reordered );
-	      cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
-	      cout <<  A_contrib.factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
+            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
+              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
+              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
+	      cout << " A_contrib->factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
+	      cout <<  A_contrib->factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
               cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
             }
 
          } else { cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO is a way to avoid this, implement it
             
-           for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
+           for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
 
               shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
               vector<string> sub_tensor_names(CTP_vec->size()); 
@@ -112,11 +112,11 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Exp
               
               shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );//TODO fix so uses piecewise contraction where possible 
               tensop_data_map_->emplace( A_contrib_name, A_contrib_data );
-              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib.id_order(qq)) );
-              A_combined_data->ax_plus_y( (DataType)(A_contrib.factor(qq).first), A_contrib_reordered );
+              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
+              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
 
-              cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
-	      cout <<  A_contrib.factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
+              cout << " A_contrib->factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
+	      cout <<  A_contrib->factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
               cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
             }
           }
@@ -131,20 +131,20 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Exp
               sub_tensor_names[rr] = CTP_vec->at(rr)->name();
             
             shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
-            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
-              A_combined_data->ax_plus_y( (DataType)(A_contrib.factor(qq).first), A_contrib_data );
+            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
+              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_data );
 
-              cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
-              cout <<  A_contrib.factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
+              cout << " A_contrib->factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
+              cout <<  A_contrib->factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
 	      cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
 
              }
           } else {
 
-            for ( int qq = 0 ; qq != A_contrib.id_orders.size(); qq++){
-              cout << " A_contrib.factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")->norm() = ";
-              cout <<  A_contrib.factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
-              A_combined_data->ax_plus_y( (DataType)(A_contrib.factor(qq).first), tensop_data_map_->at(A_contrib_name) );
+            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
+              cout << " A_contrib->factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")->norm() = ";
+              cout <<  A_contrib->factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
+              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), tensop_data_map_->at(A_contrib_name) );
 	      cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
             }
           }
@@ -229,13 +229,13 @@ bool Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors(
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   bool  skip = false;
-  for ( int qq = 0 ; qq != AC_info.id_orders.size(); qq++) { 
+  for ( int qq = 0 ; qq != AC_info.id_orders().size(); qq++) { 
      if ( AC_info.factor(qq).first != 0 || AC_info.factor(qq).second !=0) { 
-       print_vector( AC_info.id_orders[qq], "AC_info.id_orders["+to_string(qq)+"]") ; cout << "has non-zero factor (" <<  AC_info.factor(qq).first <<","<< AC_info.factor(qq).second << ")" <<endl; 
+       print_vector( AC_info.id_order(qq), "AC_info.id_orders["+to_string(qq)+"]") ; cout << "has non-zero factor (" <<  AC_info.factor(qq).first <<","<< AC_info.factor(qq).second << ")" <<endl; 
        break;
      }
-     if ( qq == AC_info.id_orders.size()-1 ) {
-       print_vector( AC_info.id_orders[qq], "AC_info.id_orders["+to_string(qq)+"]") ; cout << "has NO non-zero factors" <<endl; 
+     if ( qq == AC_info.id_orders().size()-1 ) {
+       print_vector( AC_info.id_order(qq), "AC_info.id_orders["+to_string(qq)+"]") ; cout << "has NO non-zero factors" <<endl; 
        skip =true;
      }
   } 

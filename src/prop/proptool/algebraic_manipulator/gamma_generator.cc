@@ -81,7 +81,7 @@ GammaInfo::GammaInfo ( shared_ptr<CIVecInfo<double>> Bra_info, shared_ptr<CIVecI
 GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, int Bra_num, int Ket_num,
                                 shared_ptr<const vector<string>> orig_ids, shared_ptr<const vector<bool>> orig_aops,
                                 shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map_in,
-                                shared_ptr<map<string, shared_ptr<map<string, AContribInfo >>>> G_to_A_map_in,
+                                shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo> >>>> G_to_A_map_in,
                                 double bk_factor_in                                                            ):
                                 target_states_(target_states), Bra_num_(Bra_num), Ket_num_(Ket_num),
                                 orig_ids_(orig_ids), orig_aops_(orig_aops),
@@ -485,27 +485,27 @@ void GammaGenerator::add_Acontrib_to_map( int kk, string bra_name, string ket_na
   string Gname_alt = get_gamma_name( full_id_ranges, free_aops_, ids_pos, bra_name, ket_name );
 
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
-    G_to_A_map->emplace( Gname_alt, make_shared<map<string, AContribInfo>>() );
+    G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo>>>() );
 
   vector<int> Aid_order_new = get_Aid_order ( *ids_pos ) ;
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
-    AContribInfo AInfo( Aname_alt, Aid_order_new, make_pair(my_sign,my_sign) );
+    auto AInfo = make_shared<AContribInfo_Full>( Aname_alt, Aid_order_new, make_pair(my_sign,my_sign) );
     G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
 
   } else {
-    AContribInfo AInfo = AInfo_loc->second;
-    for ( int qq = 0 ; qq != AInfo.id_orders.size(); qq++ ) {
-      if( Aid_order_new == AInfo.id_order(qq) ){
-        AInfo.factors[qq].first  += my_sign;
-        AInfo.factors[qq].second += my_sign;
-        AInfo.remaining_uses_ += 1;
-        AInfo.total_uses_ += 1;
+    shared_ptr<AContribInfo> AInfo = AInfo_loc->second;
+    for ( int qq = 0 ; qq != AInfo->id_orders().size(); qq++ ) {
+      if( Aid_order_new == AInfo->id_order(qq) ){
+        AInfo->factors[qq].first  += my_sign;
+        AInfo->factors[qq].second += my_sign;
+        AInfo->remaining_uses_ += 1;
+        AInfo->total_uses_ += 1;
         break;
 
-      } else if ( qq == AInfo.id_orders.size()-1) {
-        AInfo.id_orders.push_back(Aid_order_new);
-        AInfo.factors.push_back(make_pair(my_sign,my_sign));
+      } else if ( qq == AInfo->id_orders().size()-1) {
+        AInfo->add_id_order(Aid_order_new);
+        AInfo->add_factor(make_pair(my_sign,my_sign));
       }
     }
   }
@@ -569,32 +569,8 @@ void GammaGenerator::add_Acontrib_to_map_orb_deriv( int kk, string bra_name, str
   string Aname_alt = get_Aname( *orig_ids_, *(gint->full_id_ranges), deltas_pos_purged );
   string Gname_alt = get_gamma_name( gint->full_id_ranges, orig_aops_, make_shared<vector<int>>(gids_pos_new), bra_name, ket_name );
 
-  if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
-    G_to_A_map->emplace( Gname_alt, make_shared<map<string, AContribInfo>>() );
 
-  auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
-  if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
-    AContribInfo AInfo( Aname_alt, Aid_order_new, make_pair(my_sign,my_sign) );
-    G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
 
-  } else {
-    AContribInfo AInfo = AInfo_loc->second;
-    for ( int qq = 0 ; qq != AInfo.id_orders.size(); qq++ ) {
-      if( Aid_order_new == AInfo.id_order(qq) ){
-        AInfo.factors[qq].first  += my_sign;
-        AInfo.factors[qq].second += my_sign;
-        AInfo.remaining_uses_ += 1;
-        AInfo.total_uses_ += 1;
-        break;
-
-      } else if ( qq == AInfo.id_orders.size()-1) {
-        AInfo.id_orders.push_back(Aid_order_new);
-        AInfo.factors.push_back(make_pair(my_sign,my_sign));
-      }
-    }
-  }
-  Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
-                                                         free_aops_, full_id_ranges, ids_pos, Gamma_map) );
   return;
 }
 
