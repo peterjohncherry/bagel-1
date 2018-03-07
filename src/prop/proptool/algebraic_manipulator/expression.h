@@ -14,7 +14,7 @@ class Expression {
 
         //List of terms, currently a list of BraKets...
         std::shared_ptr<std::vector< BraKet<DataType>>> braket_list_;
-
+   
         //information about target states of the system
         std::shared_ptr<StatesInfo<DataType>> states_info_;
 
@@ -37,6 +37,10 @@ class Expression {
         // key: name of gamma (or sigma)
         // result :  name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors.
         std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> > >>> G_to_A_map_; //TODO should be private
+     
+        // key: name of block of target tensor
+        // result :  G_to_A_map for this target tensor block 
+        std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> > >>> >> target_to_G_to_A_map_; //TODO should be private
       
         // names of the range blocks of the original input tensors which are needed to compute this expression
         std::shared_ptr<std::set<std::string>> required_blocks_;
@@ -50,9 +54,10 @@ class Expression {
                     std::string expression_type );
         ~Expression(){};
         
-        void get_gamma_Atensor_contraction_list();
-        
         void necessary_tensor_blocks();
+
+        void get_gamma_Atensor_contraction_list();
+        virtual void generate_algebraic_task_list(){ assert( false); }
    
         std::string name() {return name_; }
         std::shared_ptr<std::vector< BraKet<DataType>>> braket_list(){ return  braket_list_;}
@@ -64,5 +69,66 @@ class Expression {
         std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> > >>> G_to_A_map(){ return  G_to_A_map_;} //TODO should be private
         std::shared_ptr<std::set<std::string>> required_blocks()  { return  required_blocks_; } 
 
+};
+
+template<typename DataType>
+class Expression_Full : public Expression<DataType>   {
+
+   public :
+
+     using Expression<DataType>::braket_list_;
+     using Expression<DataType>::states_info_;
+     using Expression<DataType>::name_;   
+     using Expression<DataType>::type_;
+     using Expression<DataType>::MT_map_;
+     using Expression<DataType>::CTP_map_;
+     using Expression<DataType>::ACompute_map_;
+     using Expression<DataType>::gamma_info_map_;
+     using Expression<DataType>::required_blocks_;
+     using Expression<DataType>::target_to_G_to_A_map_; //TODO remove
+     using Expression<DataType>::G_to_A_map_;
+
+     
+     Expression_Full( std::shared_ptr<std::vector<BraKet<DataType>>> braket_list,
+                      std::shared_ptr<StatesInfo<DataType>> states_info,
+                      std::shared_ptr<std::map< std::string, std::shared_ptr<TensOp_Base>>>  MT_map,
+                      std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
+                      std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
+                      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > > gamma_info_map,
+                      std::string expression_type ) :
+                      Expression<DataType>( braket_list, states_info, MT_map, CTP_map, ACompute_map, gamma_info_map, expression_type ){};
+     ~Expression_Full(){};
+             
+     void generate_algebraic_task_list(); 
+};
+
+template<typename DataType>
+class Expression_Orb_Exc_Deriv : public Expression<DataType>   {
+
+   public :
+
+     using Expression<DataType>::braket_list_;
+     using Expression<DataType>::states_info_;
+     using Expression<DataType>::name_;   
+     using Expression<DataType>::type_;
+     using Expression<DataType>::MT_map_;
+     using Expression<DataType>::CTP_map_;
+     using Expression<DataType>::ACompute_map_;
+     using Expression<DataType>::gamma_info_map_;
+     using Expression<DataType>::required_blocks_;
+     using Expression<DataType>::target_to_G_to_A_map_;
+     using Expression<DataType>::G_to_A_map_; //TODO remove
+ 
+   Expression_Orb_Exc_Deriv( std::shared_ptr<std::vector<BraKet<DataType>>> braket_list,
+                             std::shared_ptr<StatesInfo<DataType>> states_info,
+                             std::shared_ptr<std::map< std::string, std::shared_ptr<TensOp_Base>>>  MT_map,
+                             std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
+                             std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
+                             std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > > gamma_info_map,
+                             std::string expression_type ) :
+                             Expression<DataType>( braket_list, states_info, MT_map, CTP_map, ACompute_map, gamma_info_map, expression_type ){};
+   ~Expression_Orb_Exc_Deriv(){};
+
+   void generate_algebraic_task_list(); 
 };
 #endif

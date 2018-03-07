@@ -34,12 +34,35 @@ cout << " void Equation_LinearRM<DataType>::generate_state_specific_terms() " <<
 
     auto new_key = make_pair( term_info.first.first, fixed_idxs );  
     if ( term_map_->find( new_key ) == term_map_->end() ) 
-      term_map_->emplace( new_key, this->build_expression( term_info.second ) );
+      add_term( new_key, term_info.second );
 
   }
   cout << " LEAVING Equation_LinearRM<DataType>::generate_state_specific_terms() " << endl;  
   return;
 
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Terms are state specific parts of the expression
+//////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void
+Equation_LinearRM<DataType>::add_term( pair<string, vector<pair<string,int>>>&  new_key,
+                                       shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {  
+//////////////////////////////////////////////////////////////////////////
+cout << " void Equation_LinearRM<DataType>::add_term" << endl;
+
+  string expression_type = this->add_expression_info( expr_bk_list );
+
+  if ( expression_type == "orbital_excitation_derivative"  ) {
+    term_map_->emplace( new_key, make_shared<Expression_Orb_Exc_Deriv<DataType>>( expr_bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type ));
+  } else  if ( expression_type == "full"  ) {
+    term_map_->emplace( new_key, make_shared<Expression_Full<DataType>>( expr_bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type ));
+  } else {
+    assert (false);
+//    throw std::logic_error( "have not implemented expression type \"" + expression_type "\" ... Aborting!!" );
+  }
+  return;
 }
 //////////////////////////////////////////////////////////////////////////
 template class Equation_LinearRM<double>;

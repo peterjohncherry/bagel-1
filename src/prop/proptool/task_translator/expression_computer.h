@@ -32,7 +32,12 @@ class Expression_Computer {
     ~Expression_Computer() {};
     
     void evaluate_expression( std::shared_ptr<Expression<DataType>> expression );
+
     void evaluate_expression( std::string expression_name );
+
+    void evaluate_expression_orb_exc_deriv( std::shared_ptr<Expression<DataType>> expression );
+
+    void evaluate_expression_full( std::shared_ptr<Expression<DataType>> expression );
 
     void print_AContraction_list(std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>> ACompute_list, std::string A_Contrib_name );
 

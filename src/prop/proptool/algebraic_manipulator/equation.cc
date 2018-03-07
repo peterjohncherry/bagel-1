@@ -32,7 +32,7 @@ cout << " void Equation_Base<DataType>::generate_all_expressions() " << endl;
   for ( auto& expr_info : *expression_term_map_ ){ 
     cout <<"expr_info.first = " << expr_info.first << endl;
     if ( expression_map_->find( expr_info.first ) == expression_map_->end() )
-      expression_map_->emplace( expr_info.first, build_expression( expr_info.first ) );
+      add_expression(expr_info.first);
   }
 
   return;
@@ -40,7 +40,7 @@ cout << " void Equation_Base<DataType>::generate_all_expressions() " << endl;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( string expression_name ) {
+void Equation_Base<DataType>::add_expression( string expression_name ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Base<DataType>::Build_Expression : " << expression_name << endl;
  
@@ -53,18 +53,28 @@ shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( stri
     for ( BraKet<DataType> bk :  *term_bk_list ) 
       bk_list->push_back(bk);
   }
+  
+  string expression_type = add_expression_info( bk_list ) ;
 
-  return build_expression( bk_list );
+  cout << "making expression" << endl;
+  if ( expression_type == "orbital_excitation_derivative"  ) {
+    expression_map_->emplace( expression_name, make_shared<Expression_Orb_Exc_Deriv<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type ));
+  } else  if ( expression_type == "full"  ) {
+    expression_map_->emplace( expression_name, make_shared<Expression_Full<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type ));
+  } else { 
+//    throw logic_error( "have not implemented expression type \"" + expression_type "\" ... Aborting!!" );  
+    assert(false);
+  } 
+  return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {
+string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Base<DataType>::Build_Expression bk input" << endl;
   shared_ptr< vector<pair<string, DataType>> > braKet_name_list = make_shared<vector<pair< string, DataType >>>(0);
 
-
-  string expression_type; 
+  string expression_type = "full"; 
   // This is looping over states; op sparsity depends on states, should replace with term_info_map, and
   // have double loop, outer for ket state, inner for brastate
   for ( BraKet<DataType>& braket_info : *expr_bk_list ) {
@@ -101,11 +111,7 @@ shared_ptr<Expression<DataType>> Equation_Base<DataType>::build_expression( shar
     cout << "Pushed " <<  braket_info.multiop_name_ << " back into braket_name_list" << endl;
   }
   
-  cout << "making expression" << endl;
-  auto  expr = make_shared<Expression<DataType>>( expr_bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type );
-  
-  cout << "made expression" << endl;
-  return expr;
+  return expression_type;
 }
 
 //////////////////////////////////////////////////////////////////////////

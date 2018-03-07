@@ -42,6 +42,7 @@ class Equation_LinearRM : public Equation_Base<DataType> {
    ~Equation_LinearRM(){};
 
     void generate_state_specific_terms(); 
- }; 
-
- #endif
+  
+    void add_term( std::pair<std::string, std::vector<std::pair<std::string,int>>>&  new_key, std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list );
+}; 
+#endif

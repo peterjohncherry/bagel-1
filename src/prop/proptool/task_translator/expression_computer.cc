@@ -35,7 +35,60 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( shared_ptr<Expression<DataType>> expression ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : sp<Expression<DataType>> input : " << expression->name() << endl;
+  cout << "Expression_Computer::Expression_Computer<DataType>::evaluate_expression" << endl; 
+  
+  if ( expression->type_ == "full" ) {
+    evaluate_expression_full( expression );
+ 
+  } else if ( expression->type_ == "orbital_excitation_derivative") {
+    evaluate_expression_orb_exc_deriv( expression );
+  
+  } else { 
+    cout << "expression type \"" << expression->type_ << "\" is not implemented" <<  endl; 
+  }  
+  return;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+template < typename DataType >
+void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb_exc_deriv( shared_ptr<Expression<DataType>> expression ) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_deriv : " << expression->name() << endl;
+
+  string expression_name = expression->name();
+  cout << endl << endl;
+  cout << " --------- required_blocks ---------" << endl; 
+  for ( string block_name : *(expression->required_blocks()) ) 
+    cout << block_name << endl;
+  cout << endl << endl;
+
+  bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
+  if ( !new_result )  
+    cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
+
+  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_);
+ 
+  TensOp_Machine->get_block_Tensor_test( expression->required_blocks_ );
+
+  //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
+  for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
+    string gamma_name = AG_contrib.first;  cout << " gamma_name  = " << gamma_name << endl; 
+    shared_ptr<Tensor_<DataType>> A_combined_data;
+    // Build A_tensor to hold sums of different A-tensors.
+    if ( gamma_name != "ID" ) {
+      A_combined_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(expression->gamma_info_map_->at(gamma_name)->id_ranges())) );
+    } else {
+      A_combined_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
+    }  
+    A_combined_data->allocate();
+    A_combined_data->zero(); 
+  }
+  return;  
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+template < typename DataType >
+void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_full( shared_ptr<Expression<DataType>> expression ) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : " << expression->name() << endl;
 
   string expression_name = expression->name();
   cout << endl << endl;

@@ -74,8 +74,8 @@ class Equation_Base {
 
      void generate_all_expressions();  
 
-     std::shared_ptr<Expression<DataType>> build_expression (std::string expression_name ) ;
-     std::shared_ptr<Expression<DataType>> build_expression( std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list );
+     void add_expression(std::string expression_name ) ;
+     std::string add_expression_info( std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list );
 
      std::shared_ptr< std::map <std::string, std::shared_ptr< GammaInfo >>> gamma_info_map() { return gamma_info_map_; }
 
@@ -126,7 +126,6 @@ class Equation_Value : public Equation_Base<DataType> {
 
     ~Equation_Value(){};
 
-     void generate_all_expressions(); 
 }; 
 
 #endif
