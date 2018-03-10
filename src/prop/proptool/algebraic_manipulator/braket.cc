@@ -59,6 +59,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       }
     }
   }
+  cout << "required_blocks->size() = " <<  required_blocks->size() << endl; 
   if ( !has_orb_exc ) { 
 
     for( auto map_it = G_to_A_map->begin() ; map_it != G_to_A_map->end(); map_it++){

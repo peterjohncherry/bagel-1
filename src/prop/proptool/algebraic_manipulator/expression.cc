@@ -21,6 +21,7 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
 
   //Note that this G_to_A_map_ is expression specific
   G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>>();
+  target_to_G_to_A_map_ = make_shared<map<string, shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo> > >>> >>();
 
   name_ = "";
   for ( BraKet<DataType>& bk : *braket_list_ ) {
@@ -37,7 +38,7 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
 template<class DataType>
 void Expression_Full<DataType>::generate_algebraic_task_list(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "void Expression<DataType>::generate_algebraic_task_list()" << endl;
+  cout << "void Expression_Full<DataType>::generate_algebraic_task_list()" << endl;
  
   // Will loop through terms and then generate mathematical task map. It's split into
   // two functions as this will gives more control over merging together of different BraKets' G_to_A_maps.
@@ -52,23 +53,63 @@ void Expression_Full<DataType>::generate_algebraic_task_list(){
 template<class DataType>
 void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "void Expression<DataType>::generate_algebraic_task_list()" << endl;
+  cout << "void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list()" << endl;
  
-  // Will loop through terms and then generate mathematical task map. It's split into
-  // two functions as this will gives more control over merging together of different BraKets' G_to_A_maps.
   required_blocks_ = make_shared<set<string>>();
-  
- // for ( BraKet<DataType>& braket : *braket_list_ )
-//    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_,  required_blocks_ );
-//  get_gamma_Atensor_contraction_list();
+  string exc_op_name = "X"; // TODO replace with definition from input
+ 
+  auto exc_op = MT_map_->at(exc_op_name);
+  for ( auto& exc_ctp_map_it : *(exc_op->CTP_map()) ) {
+    string exc_block_name = exc_ctp_map_it.first;
+    auto  exc_block_G_to_A_map = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>>();
+    for ( BraKet<DataType>& braket : *braket_list_ )
+      braket.generate_gamma_Atensor_contractions( MT_map_, exc_block_G_to_A_map, gamma_info_map_, states_info_,  required_blocks_ );
+    this->get_gamma_Atensor_contraction_list( exc_block_G_to_A_map );
+    cout << "exc_block_G_to_A_map->size() = " <<  exc_block_G_to_A_map->size() << endl;
+    cout << "putting into map " << exc_block_name << endl;
+    target_to_G_to_A_map_->emplace( exc_block_name, exc_block_G_to_A_map);
+    cout << "have put into map " << exc_block_name << endl;
+  }
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>> exc_block_G_to_A_map  ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Expression_Orb_Exc_Deriv::get_gamma_Atensor_contraction_list" << endl;
+
+  //loop through G_to_A_map ; get all A-tensors associated with a given gamma
+  for (auto G2A_mapit = exc_block_G_to_A_map->begin(); G2A_mapit != exc_block_G_to_A_map->end(); G2A_mapit++) {
+    auto A_map = G2A_mapit->second;
+    for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
+      string cmtp_name  = A_map_it->first;
+      shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list;
+      if ( CTP_map_->find(cmtp_name) == CTP_map_->end())
+        throw std::logic_error( cmtp_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
+
+      auto ACompute_list_loc = ACompute_map_->find(cmtp_name);
+      if ( ACompute_list_loc != ACompute_map_->end() ){
+        cout << "Expression::get_gamma_Atensor_contraction_list::already built compute list for " << cmtp_name << " during generation of earlier compute list" << endl;
+        cout << cmtp_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(cmtp_name)->size() << "  --- Still in if " << endl;
+        continue;
+      } else {
+        ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
+        CTP_map_->at(cmtp_name)->FullContract(CTP_map_, ACompute_list, ACompute_map_);
+        ACompute_map_->emplace(cmtp_name, ACompute_list);
+        CTP_map_->at(cmtp_name)->got_compute_list( true );
+      }
+      cout << cmtp_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(cmtp_name)->size() << endl;
+    }
+  }
+  cout << "leaving Get_CMTP_compute_Terms" << endl;
+  return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Adds terms associated with each gamma (as determined by BraKet) into the map
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Expression<DataType>::get_gamma_Atensor_contraction_list(){
+void Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression::get_gamma_Atensor_contraction_list" << endl;
+  cout << "Expression_Full::get_gamma_Atensor_contraction_list" << endl;
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto G2A_mapit = G_to_A_map_->begin(); G2A_mapit != G_to_A_map_->end(); G2A_mapit++) {

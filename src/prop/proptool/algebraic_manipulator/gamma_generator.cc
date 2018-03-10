@@ -15,7 +15,7 @@ GammaInfo::GammaInfo ( shared_ptr<CIVecInfo<double>> Bra_info, shared_ptr<CIVecI
                        shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map ) :
                        order_(idxs_pos->size()), Bra_info_(Bra_info), Ket_info_(Ket_info) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "GammaInfo:GammaInfo" << endl;
+// cout << "GammaInfo:GammaInfo" << endl;
   id_ranges_ = make_shared<vector<string>>(idxs_pos->size());
   aops_      = make_shared<vector<bool>>(idxs_pos->size());
   for (int ii = 0 ; ii != idxs_pos->size(); ii++ ){
@@ -151,7 +151,6 @@ void GammaGenerator::add_gamma( shared_ptr<range_block_info> block_info ) {
   vector<string>::iterator fr_it = free_ranges_->begin();
   for ( int& pos : *free_pos_ ) 
     *fr_it++ = id_ranges_in->at(pos);
-  
 
   return;
 }
@@ -186,18 +185,20 @@ bool GammaGenerator::generic_reorderer_different_sector( string reordering_name,
     
     int kk = 0;
     while ( kk != gamma_vec->size()) {
-      if ( !proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){
-        print_vector( *(gamma_vec->at(kk)->ids_pos), "DIES before normal ordering" ); cout << endl << endl;  
-      } else { 
+//      if ( !proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){
+//        print_vector( *(gamma_vec->at(kk)->ids_pos), "DIES before normal ordering" ); cout << endl << endl;  
+//      } else { 
+      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){
         normal_order(kk);
       }
       kk++;
     }
     kk = 0;
     while ( kk != gamma_vec->size()){
-      if ( !proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
-        print_vector( *gamma_vec->at(kk)->ids_pos, "DIES after normal order with proj between gamma and proj indexes" ); cout << endl; 
-      } else if ( gamma_vec->at(kk)->ids_pos->size() != 0 ) { 
+//      if ( !proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
+//        print_vector( *gamma_vec->at(kk)->ids_pos, "DIES after normal order with proj between gamma and proj indexes" ); cout << endl; 
+//      } else if ( gamma_vec->at(kk)->ids_pos->size() != 0 ) { 
+      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) && ( gamma_vec->at(kk)->ids_pos->size() != 0 ) ) { 
         if ( !all_active_ranges(gamma_vec->at(kk)) ) {  
           Contract_remaining_indexes(kk);
         } else {
@@ -210,18 +211,20 @@ bool GammaGenerator::generic_reorderer_different_sector( string reordering_name,
   } else if ( reordering_name == "anti-normal order" ) {
     int kk= 0 ;
     while ( kk != gamma_vec->size()){
-      if ( !proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
-        print_vector( *gamma_vec->at(kk)->ids_pos, "DIES before anti normal ordering" ); cout << endl; 
-      } else { 
+  //    if ( !proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
+  //      print_vector( *gamma_vec->at(kk)->ids_pos, "DIES before anti normal ordering" ); cout << endl; 
+  //    } else { 
+      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
         anti_normal_order(kk);
       }
       kk++;
     }
     kk = 0;
     while ( kk != gamma_vec->size()){
-      if ( !proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
-        print_vector( *gamma_vec->at(kk)->ids_pos, "DIES after anti normal ordering" ); cout << endl;
-      } else if ( gamma_vec->at(kk)->ids_pos->size() != 0 ) { 
+//      if ( !proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
+//        print_vector( *gamma_vec->at(kk)->ids_pos, "DIES after anti normal ordering" ); cout << endl;
+//      } else if ( gamma_vec->at(kk)->ids_pos->size() != 0 ) { 
+      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) && ( gamma_vec->at(kk)->ids_pos->size() != 0 ) ) { 
         if ( !all_active_ranges(gamma_vec->at(kk)) ){ 
           Contract_remaining_indexes(kk);
         } else { 
@@ -237,9 +240,10 @@ bool GammaGenerator::generic_reorderer_different_sector( string reordering_name,
       alternating_order(kk++);
 
     for ( shared_ptr<GammaIntermediate>& gint : *gamma_vec ){
-      if ( !proj_onto_map( gint, *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){ 
-        print_vector( *(gint->ids_pos), "DIES after alternating" );  cout << endl;
-      } else {
+//      if ( !proj_onto_map( gint, *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){ 
+//        print_vector( *(gint->ids_pos), "DIES after alternating" );  cout << endl;
+//      } else {
+      if ( proj_onto_map( gint, *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){ 
         final_gamma_vec->push_back( gint );
       }
     }

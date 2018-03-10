@@ -56,8 +56,9 @@ class Expression {
         
         void necessary_tensor_blocks();
 
-        void get_gamma_Atensor_contraction_list();
-        virtual void generate_algebraic_task_list(){ assert( false); }
+        virtual void get_gamma_Atensor_contraction_list() { assert( false); };
+        virtual void generate_algebraic_task_list(){ assert(false); };
+        virtual void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map<std::string,std::shared_ptr<std::map<std::string,std::shared_ptr<AContribInfo>>>>> exc_block_G_to_A_map ){ assert(false);};
    
         std::string name() {return name_; }
         std::shared_ptr<std::vector< BraKet<DataType>>> braket_list(){ return  braket_list_;}
@@ -100,6 +101,8 @@ class Expression_Full : public Expression<DataType>   {
      ~Expression_Full(){};
              
      void generate_algebraic_task_list(); 
+     void get_gamma_Atensor_contraction_list();
+     void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> >>>>  exc_block_G_to_A_map ){ assert(false);};
 };
 
 template<typename DataType>
@@ -126,9 +129,13 @@ class Expression_Orb_Exc_Deriv : public Expression<DataType>   {
                              std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
                              std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > > gamma_info_map,
                              std::string expression_type ) :
-                             Expression<DataType>( braket_list, states_info, MT_map, CTP_map, ACompute_map, gamma_info_map, expression_type ){};
+                             Expression<DataType>( braket_list, states_info, MT_map, CTP_map, ACompute_map, gamma_info_map, expression_type ){} 
    ~Expression_Orb_Exc_Deriv(){};
 
    void generate_algebraic_task_list(); 
+   void get_gamma_Atensor_contraction_list( ) { assert(false);} 
+   void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> >>>>  exc_block_G_to_A_map );
+
+
 };
 #endif

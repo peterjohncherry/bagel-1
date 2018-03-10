@@ -58,9 +58,15 @@ void Equation_Base<DataType>::add_expression( string expression_name ) {
 
   cout << "making expression" << endl;
   if ( expression_type == "orbital_excitation_derivative"  ) {
-    expression_map_->emplace( expression_name, make_shared<Expression_Orb_Exc_Deriv<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type ));
+    cout << "expression_type = " << expression_type <<  endl;
+    shared_ptr<Expression_Orb_Exc_Deriv<DataType>>  new_exp = make_shared<Expression_Orb_Exc_Deriv<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type );
+    new_exp->generate_algebraic_task_list();
+    expression_map_->emplace( expression_name, new_exp);
   } else  if ( expression_type == "full"  ) {
-    expression_map_->emplace( expression_name, make_shared<Expression_Full<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type ));
+    cout << "expression_type = " << expression_type <<  endl;
+    shared_ptr<Expression_Full<DataType>>  new_exp = make_shared<Expression_Full<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type );
+    new_exp->generate_algebraic_task_list();
+    expression_map_->emplace( expression_name, new_exp );
   } else { 
 //    throw logic_error( "have not implemented expression type \"" + expression_type "\" ... Aborting!!" );  
     assert(false);
