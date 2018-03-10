@@ -96,5 +96,8 @@ class BraKet{
                                                  std::shared_ptr<StatesInfo<DataType>> target_states,
                                                  std::shared_ptr<std::set<std::string>> required_blocks );         
        
+      void print_gamma_Atensor_contractions(std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> >>>> G_to_A_map,
+		                                        bool has_orb_exc );
+
 };
 #endif

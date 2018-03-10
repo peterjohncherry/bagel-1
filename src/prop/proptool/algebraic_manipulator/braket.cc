@@ -59,7 +59,16 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       }
     }
   }
-  cout << "required_blocks->size() = " <<  required_blocks->size() << endl; 
+
+  return; 
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void BraKet<DataType>::print_gamma_Atensor_contractions(shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>> G_to_A_map,
+		                                        bool has_orb_exc ){ 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ cout <<  "BraKet<DataType>::print_gamma_Atensor_contractions()" << endl; 
+
   if ( !has_orb_exc ) { 
 
     for( auto map_it = G_to_A_map->begin() ; map_it != G_to_A_map->end(); map_it++){
@@ -84,6 +93,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
         }
       }
     }
+
   } else { 
 
     for( auto map_it = G_to_A_map->begin() ; map_it != G_to_A_map->end(); map_it++){
@@ -97,10 +107,10 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
         cout << endl << "      - No Contributions! -" <<  endl << endl;
     
       } else {
-    
-        for( auto A_map_it = map_it->second->begin() ; A_map_it != map_it->second->end();  A_map_it++){
-          cout <<  A_map_it->first << "  "; cout.flush();
-          string spacer = "  "; for ( int ss =0 ; ss != A_map_it->first.size() ; ss++ )  spacer += ' '; 
+      
+      for( auto A_map_it = map_it->second->begin() ; A_map_it != map_it->second->end();  A_map_it++){
+        cout <<  A_map_it->first << "  "; cout.flush();
+        string spacer = "  "; for ( int ss =0 ; ss != A_map_it->first.size() ; ss++ )  spacer += ' '; 
           for ( int qq = 0; qq !=A_map_it->second->aid_orders().size(); qq++) {
             cout << "{ " ; print_vector( *(A_map_it->second->aid_order(qq)), "" );
             cout << " : [ "; cout.flush();
@@ -116,9 +126,8 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       }
     }
   }
-  return; 
+  return;
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class BraKet<double>;
 //template class BraKet<std::complex<double>>;

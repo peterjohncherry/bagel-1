@@ -65,10 +65,7 @@ void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list(){
     for ( BraKet<DataType>& braket : *braket_list_ )
       braket.generate_gamma_Atensor_contractions( MT_map_, exc_block_G_to_A_map, gamma_info_map_, states_info_,  required_blocks_ );
     this->get_gamma_Atensor_contraction_list( exc_block_G_to_A_map );
-    cout << "exc_block_G_to_A_map->size() = " <<  exc_block_G_to_A_map->size() << endl;
-    cout << "putting into map " << exc_block_name << endl;
     target_to_G_to_A_map_->emplace( exc_block_name, exc_block_G_to_A_map);
-    cout << "have put into map " << exc_block_name << endl;
   }
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

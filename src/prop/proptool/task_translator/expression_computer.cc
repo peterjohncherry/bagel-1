@@ -55,15 +55,7 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
   cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_deriv : " << expression->name() << endl;
 
   string expression_name = expression->name();
-  cout << endl << endl;
-  cout << " --------- required_blocks ---------" << endl; 
   int counter = 0;
-  cout << "expression->required_blocks() =  " << expression->required_blocks()->size() << endl;   
-  for ( string block_name : *(expression->required_blocks()) ){  
-    cout << "XX : " << counter++ << endl; 
-    cout << block_name << endl;
-  }
-  cout << endl << endl;
 
   bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
   if ( !new_result )  
