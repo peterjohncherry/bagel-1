@@ -118,11 +118,11 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string> {"N0", "N1", "N2", "N3"});
     aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false });
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, core });
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act });
     time_symm = "none";
     symmfuncs = identity_only();
-    constraints = { &Symmetry_Operations::NotAllAct };
-    state_dep = 2;
+    constraints = { &Symmetry_Operations::always_true  };
+    state_dep = 0;
     
   } else if ( op_name == "T" ) {  /* ---- T Tensor ----  */
 
@@ -174,12 +174,12 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>( vector<string> { "Z0", "Z1", "Z2", "Z3" } );
-    aops = make_shared<vector<bool>>( vector<bool>  { true, true, false, false } );
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, act, core } );
+    aops = make_shared<vector<bool>>( vector<bool>  { false, false, true, true } );
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act } );
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = {  &Symmetry_Operations::always_true };
-    state_dep = 2;
+    state_dep = 0;
 
   } else {
     

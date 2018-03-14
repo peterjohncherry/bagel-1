@@ -15,25 +15,32 @@ class GammaIntermediate {
      std::shared_ptr<const std::vector<std::string>> full_id_ranges;
      std::shared_ptr<std::vector<int>> ids_pos;
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos;
-     std::shared_ptr<std::vector<int>> proj_id_order;
      int my_sign;
 
      GammaIntermediate( std::shared_ptr<const std::vector<std::string>> full_id_ranges_in,
                         std::shared_ptr<std::vector<int>> ids_pos_in,
                         std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
-                        int my_sign_in) :
+                        int my_sign_in ) :
      full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), 
-     proj_id_order(std::make_shared<std::vector<int>>(0)), my_sign(my_sign_in) {};
-
-
-     GammaIntermediate( std::shared_ptr<const std::vector<std::string>> full_id_ranges_in,
-                        std::shared_ptr<std::vector<int>> ids_pos_in,
-                        std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
-                        int my_sign_in, std::shared_ptr<std::vector<int>> proj_id_order_in ) :
-     full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), 
-     proj_id_order(proj_id_order_in), my_sign(my_sign_in) {};
+     my_sign(my_sign_in) {};
 
      ~GammaIntermediate(){};
+
+};
+
+class GammaIntermediateUnranged {
+
+   public :
+     std::shared_ptr<std::vector<int>> ids_pos_;
+     std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_;
+     int my_sign_;
+
+     GammaIntermediateUnranged( std::shared_ptr<std::vector<int>> ids_pos,
+                        std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos,
+                        int my_sign ) :
+     ids_pos_(ids_pos), deltas_pos_(deltas_pos), my_sign_(my_sign) {};
+
+     ~GammaIntermediateUnranged(){};
 
 };
 
@@ -98,6 +105,7 @@ class GammaGenerator{
 
     //TODO make this private again when finished testing!!!
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
+    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateUnranged>>> gamma_vec_unranged_;
 
     void add_gamma(std::shared_ptr<range_block_info> block_info );
 
@@ -115,6 +123,14 @@ class GammaGenerator{
 
     void alternating_order( int kk );
 
+    void normal_order_unranged( int kk );
+
+    void anti_normal_order_unranged( int kk );
+
+    void alternating_order_unranged( int kk );
+
+    std::vector<int> get_standardized_alt_order_unranged ( int kk );
+
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
     void add_Acontrib_to_map_orb_deriv( int kk, std::string bra_name, std::string ket_name );
@@ -126,6 +142,11 @@ class GammaGenerator{
 
     bool generic_reorderer_different_sector( std::string reordering_name, std::string bra_name,
                                              std::string ket_name, bool final_reordering );
+
+    void swap_unranged( int ii, int jj, int kk );
+    bool generic_reorderer_unranged( std::string reordering_name, bool first_reordering, bool final_reordering );
+    bool generic_reorderer_different_sector_unranged( std::string reordering_name, std::string bra_name,
+                                                      std::string ket_name, bool final_reordering         );
 
     bool proj_onto_map( std::shared_ptr<GammaIntermediate> gint,
                         std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,

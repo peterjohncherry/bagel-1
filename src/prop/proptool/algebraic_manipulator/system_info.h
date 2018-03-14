@@ -20,6 +20,9 @@ class System_Info {
         std::vector<std::string> core;
         std::vector<std::string> act;
         std::vector<std::string> virt;
+ 
+        std::vector<int> primes_ranges_;
+        std::vector<int> primes_ctrs_;
         
         // key :    Name of BraKet
         // result : Vector of TensOps corresponding to BraKet
