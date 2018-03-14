@@ -27,6 +27,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
     if ( tens->is_projector() ) 
       projector_names.push_back(tens->name()[0]);
 
+  //should obtain these from range block...
   shared_ptr<vector<string>> idxs_buff  = make_shared<vector<string>>(*(Total_Op_->idxs()));
   shared_ptr<vector<bool>> aops_buff  = make_shared<vector<bool>>(*Total_Op_->aops());    
 
@@ -45,15 +46,13 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
         if ( GGen->generic_reorderer( "normal order", false, false ) ) {
           if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
 
-            cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
             vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
             int qq = 0 ;
             for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){ 
-              cout << tens_block->orig_name()  << " " ; cout.flush(); cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
               MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
               required_blocks->emplace( tens_block->orig_name() );
-            }
-            cout << endl;
+
+	    }
           }
         }
       }
