@@ -36,16 +36,14 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
     if ( id_name[0] == 'X' ) 
       has_orb_exc = true;
 
+  auto GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ );
   for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
     if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
-
-      auto GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ );
       GGen->add_gamma( range_map_it->second );
       
       if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){
         if ( GGen->generic_reorderer( "normal order", false, false ) ) {
           if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
-
             vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
             int qq = 0 ;
             for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){ 
@@ -58,6 +56,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       }
     }
   }
+  print_gamma_Atensor_contractions( G_to_A_map, has_orb_exc );
 
   return; 
 }
@@ -69,7 +68,7 @@ void BraKet<DataType>::print_gamma_Atensor_contractions(shared_ptr<map<string, s
  cout <<  "BraKet<DataType>::print_gamma_Atensor_contractions()" << endl; 
 
   if ( !has_orb_exc ) { 
-
+    cout << "no proj" << endl;
     for( auto map_it = G_to_A_map->begin() ; map_it != G_to_A_map->end(); map_it++){
     
       cout << "====================================================" << endl;
@@ -93,20 +92,20 @@ void BraKet<DataType>::print_gamma_Atensor_contractions(shared_ptr<map<string, s
       }
     }
 
-  } else { 
-
+  } else {
+    cout << "no proj" << endl;
     for( auto map_it = G_to_A_map->begin() ; map_it != G_to_A_map->end(); map_it++){
-    
+
       cout << "====================================================" << endl;
       cout << map_it->first << endl;
       cout << "====================================================" << endl;
-    
+
       if ( map_it->second->size() == 0 ) {
-    
+
         cout << endl << "      - No Contributions! -" <<  endl << endl;
-    
+
       } else {
-      
+
       for( auto A_map_it = map_it->second->begin() ; A_map_it != map_it->second->end();  A_map_it++){
         cout <<  A_map_it->first << "  "; cout.flush();
         string spacer = "  "; for ( int ss =0 ; ss != A_map_it->first.size() ; ss++ )  spacer += ' '; 

@@ -8,8 +8,8 @@ using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, int Bra_num, int Ket_num,
                                 shared_ptr<const vector<string>> orig_ids, shared_ptr<const vector<bool>> orig_aops,
-                                shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map_in,
-                                shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo> >>>> G_to_A_map_in,
+                                shared_ptr<map<string, shared_ptr<GammaInfo>>>& Gamma_map_in,
+                                shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo> >>>>& G_to_A_map_in,
                                 double bk_factor_in                                                            ):
                                 target_states_(target_states), Bra_num_(Bra_num), Ket_num_(Ket_num),
                                 orig_ids_(orig_ids), orig_aops_(orig_aops),

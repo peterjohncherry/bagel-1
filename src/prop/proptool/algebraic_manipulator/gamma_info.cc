@@ -12,7 +12,7 @@ using namespace WickUtils;
 GammaInfo::GammaInfo ( shared_ptr<CIVecInfo<double>> Bra_info, shared_ptr<CIVecInfo<double>> Ket_info,
                        shared_ptr<const vector<bool>> full_aops_vec, shared_ptr<const vector<string>> full_idx_ranges,
                        shared_ptr<vector<int>> idxs_pos  ,
-                       shared_ptr<map<string, shared_ptr<GammaInfo>>> Gamma_map ) :
+                       shared_ptr<map<string, shared_ptr<GammaInfo>>>& Gamma_map ) :
                        order_(idxs_pos->size()), Bra_info_(Bra_info), Ket_info_(Ket_info) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // cout << "GammaInfo:GammaInfo" << endl;

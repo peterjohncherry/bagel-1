@@ -142,7 +142,7 @@ void TensOp_Computer::TensOp_Computer<DataType>::get_block_Tensor_test(shared_pt
      
          cout << Tname<< "->norm() = " << tens->norm() << endl; 
      
-       } else if ( Tname[0] == 'X' || Tname[0] == 'T' ) {  
+       } else if ( Tname[0] == 'X' || Tname[0] == 'T' || Tname[0] == 't' ) {  
          cout << "gbTt new tensor block : " << Tname << " is being initialized to 1.0,  for exciations" << endl; 
          tens = make_shared<Tensor_<DataType>>(*id_block);
          tens->allocate();

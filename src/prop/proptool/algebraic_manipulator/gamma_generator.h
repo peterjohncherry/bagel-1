@@ -89,8 +89,8 @@ class GammaGenerator{
   public :
     GammaGenerator( std::shared_ptr<StatesInfo<double>> target_states_, int Ket_num, int Bra_num,
                     std::shared_ptr<const std::vector<std::string>> orig_ids, std::shared_ptr< const std::vector<bool>> orig_aops,
-                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>> Gamma_map_in,
-                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo>  >>>> G_to_A_map_in,
+                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>>& Gamma_map_in,
+                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo>  >>>>& G_to_A_map_in,
                     double bk_factor );
 
     ~GammaGenerator(){};
