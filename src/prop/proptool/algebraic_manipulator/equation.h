@@ -28,6 +28,8 @@ class Equation_Base {
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map_;      
 
+     std::shared_ptr< std::map< char, long unsigned int>> range_prime_map_;
+
 //     std::shared_ptr<std::vector<std::<std::tuple<std::pair<std::string,int>>>>> term_val_list_;
 
     std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>,
@@ -69,7 +71,8 @@ class Equation_Base {
                     std::shared_ptr< std::map<std::string, std::shared_ptr< GammaInfo >>> gamma_info_map,
                     std::shared_ptr< std::map<std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map,
                     std::shared_ptr< std::map<std::string, std::shared_ptr< TensOp_Base>>> MT_map,
-                    std::shared_ptr< std::map<std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map);
+                    std::shared_ptr< std::map<std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map,
+                    std::shared_ptr< std::map< char, long unsigned int>> range_prime_map );
 
 
      void generate_all_expressions();  

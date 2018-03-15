@@ -10,13 +10,16 @@ PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geo
                    idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "PropTool::PropTool::PropTool" << endl;
+  cout << " std::numeric_limits<unsigned long>::max() =  " <<  std::numeric_limits<unsigned long>::max() <<  endl;
 
   // sort out how to determine datatype!!
   inp_factor_map_ = make_shared<map<string, double>>();
   inp_indexed_factor_map_ = make_shared<map<string, shared_ptr<vector<double>>>>(); // TODO sort this
   inp_range_map_ = make_shared<map<string, shared_ptr<vector<int>>>>();
 
+  set_primes();
   range_conversion_map_ = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
+  range_prime_map_ = make_shared<map<char,long unsigned int>>();
 
   term_init_map_ = make_shared<map<string, shared_ptr<Term_Init>>>();
   expression_init_map_ = make_shared<map<string, shared_ptr<Expression_Init>>>();
@@ -70,6 +73,7 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
 
   // build system information object ( for algebraic task list construction)
   sys_info_ = make_shared<System_Info<double>>( targets_info_, true );
+  sys_info_->range_prime_map_ = range_prime_map_;
 
   // build system computer (for computational task list construction/execution)
   auto moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_,
@@ -86,7 +90,6 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
   shared_ptr< const PTree > ops_def_tree = idata_->get_child_optional( "operators" ) ;
   if (ops_def_tree)
     get_new_ops_init( ops_def_tree ); 
-
   cout << "got ops_init" << endl;
 
   // Getting info about target expression (this includes which states are relevant)
@@ -136,10 +139,10 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   breit_    = false;
 
   set_ao_range_info();
-
   //creates the ci_info from the reference wavefunction
-  set_target_state_info();
   set_ci_range_info();
+
+  set_target_state_info();
 
   return;
 }
@@ -240,6 +243,8 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
            if( rng[0] == 'v' ) return "vir";
       };
 
+  //TODO  add in user defined ranges (not just on the operators; actual range extents using orbital numbers
+  //      create these new ranges, put them into the range conversion map, and assign them a prime.
   for ( auto& op_def_inp : *ops_def_tree ){
   
     auto idxs_ptree =  op_def_inp->get_child("idxs"); 
@@ -492,6 +497,7 @@ void PropTool::PropTool::set_ao_range_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "PropTool::PropTool::set_ao_range_info" << endl;
 
+  //TODO should also read user defined ranges from input!
   closed_rng_  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nclosed_-ncore_, maxtile_, 0, ncore_));
   active_rng_  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact_, min((size_t)10,maxtile_), closed_rng_->nblock(), ncore_ + closed_rng_->size()));
   virtual_rng_ = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nvirt_, maxtile_, closed_rng_->nblock()+ active_rng_->nblock(), ncore_+closed_rng_->size()+active_rng_->size()));
@@ -511,7 +517,21 @@ cout << "PropTool::PropTool::set_ao_range_info" << endl;
   range_conversion_map_->emplace("notcor", not_closed_rng_);
   range_conversion_map_->emplace("notact", not_active_rng_);
   range_conversion_map_->emplace("notvir", not_virtual_rng_); 
-  
+
+
+  // TODO  sort this out properly
+  vector<char> range_list;
+  bool spinfree = false;
+  if ( !spinfree ) {
+    range_list = vector<char>( { 'v', 'V', 'c', 'C', 'a', 'A' } ); 
+  }  else  {
+    range_list = vector<char>( { 'v', 'c', 'a' } ); 
+  }
+  for ( char elem : range_list ) {
+    range_prime_map_->emplace( elem , range_primes_.back());
+    range_primes_.pop_back();
+  }
+
   return;                    
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -548,8 +568,8 @@ cout << "PropTool::PropTool::set_target_info" << endl;
        shared_ptr<map<char,int>> elec_range_map = make_shared<map<char,int>>(); 
        elec_range_map->emplace('c', nclosed_ - ncore_);
        elec_range_map->emplace('C', nclosed_ - ncore_);
-       elec_range_map->emplace('a', civectors_->data(state_num)->det()->nelea());
-       elec_range_map->emplace('A', civectors_->data(state_num)->det()->neleb());
+       elec_range_map->emplace('A', civectors_->data(state_num)->det()->nelea());
+       elec_range_map->emplace('a', civectors_->data(state_num)->det()->neleb());
        elec_range_map->emplace('v', 0 );
        elec_range_map->emplace('V', 0 );
     
@@ -558,11 +578,11 @@ cout << "PropTool::PropTool::set_target_info" << endl;
        hole_range_map->emplace('C', 0);
        hole_range_map->emplace('a', nact_ - civectors_->data(state_num)->det()->nelea() );
        hole_range_map->emplace('A', nact_ - civectors_->data(state_num)->det()->neleb() );
-       hole_range_map->emplace('v', 1000 ); // TODO this is almost certainly always OK, but should be set properly...
-       hole_range_map->emplace('V', 1000 );
-      
+       hole_range_map->emplace('v', 100 ); // TODO this is almost certainly always OK, but should be set properly...
+       hole_range_map->emplace('V', 100 );
+
        targets_info_->add_state( nact_, civectors_->data(state_num)->det()->nelea() + civectors_->data(state_num)->det()->neleb(), state_num,
-                                 elec_range_map, hole_range_map ); 
+                                 elec_range_map, hole_range_map); 
     }
 
   } else {
@@ -585,6 +605,13 @@ cout << "PropTool::PropTool::set_target_info" << endl;
                                  elec_range_map, hole_range_map ); 
     }
   } 
+   
+  for ( auto& elem : targets_info_->civec_info_map_ ){ 
+    elem.second->set_elec_hole_pnums( range_prime_map_ );
+    cout << elem.second->name() << " elec_pnum = " << elem.second->elec_pnum() << " hole_pnum = " << elem.second->hole_pnum() << endl;  
+  }
+  
+  targets_info_->range_prime_map_ = range_prime_map_;
 
   return;
 }
@@ -616,3 +643,36 @@ shared_ptr<vector<SMITH::IndexRange>> PropTool::PropTool::convert_to_indexrange(
   return range_block; 
 
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::set_primes() {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "PropTool::PropTool::set_primes" << endl;
+
+  // for encoding ranges and contractions
+  range_primes_ =  { 1013, 1009, 997, 991, 983, 977, 971, 967, 953, 947, 941, 937, 929, 919, 911, 907, 887, 883, 881, 877,
+                      863, 859, 857, 853, 839, 829, 827, 823, 821, 811, 809, 797, 787, 773, 769, 761, 757, 751, 743, 739, 733,
+                      727, 719, 709, 701, 691, 683, 677, 673, 661, 659, 653, 647, 643, 641, 631, 619, 617, 613, 607, 601, 599,
+                      593, 587, 577, 571, 569, 563, 557, 547, 541, 523, 521, 509, 503, 499, 491, 487, 479, 467, 463, 461, 457,
+                      449, 443, 439, 433, 431, 421, 419, 409, 401, 397, 389, 383, 379, 373, 367, 359, 353, 349, 347, 337, 331,
+                      317, 313, 311, 307, 293, 283, 281, 277, 271, 269, 263, 257, 251, 241, 239, 233, 229, 227, 223, 211, 199,
+                      197, 193, 191, 181, 179, 173, 167, 163, 157, 151, 149, 139, 137, 131, 127, 113, 109, 107, 103, 101, 97,
+                      89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2 } ;
+
+  ctr_primes_ =  { 1013, 1009, 997, 991, 983, 977, 971, 967, 953, 947, 941, 937, 929, 919, 911, 907, 887, 883, 881, 877,
+                    863, 859, 857, 853, 839, 829, 827, 823, 821, 811, 809, 797, 787, 773, 769, 761, 757, 751, 743, 739, 733,
+                    727, 719, 709, 701, 691, 683, 677, 673, 661, 659, 653, 647, 643, 641, 631, 619, 617, 613, 607, 601, 599,
+                    593, 587, 577, 571, 569, 563, 557, 547, 541, 523, 521, 509, 503, 499, 491, 487, 479, 467, 463, 461, 457,
+                    449, 443, 439, 433, 431, 421, 419, 409, 401, 397, 389, 383, 379, 373, 367, 359, 353, 349, 347, 337, 331,
+                    317, 313, 311, 307, 293, 283, 281, 277, 271, 269, 263, 257, 251, 241, 239, 233, 229, 227, 223, 211, 199,
+                    197, 193, 191, 181, 179, 173, 167, 163, 157, 151, 149, 139, 137, 131, 127, 113, 109, 107, 103, 101, 97,
+                    89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2 } ;
+
+
+   // contract_number (0,4)(1,3)(7,8) =  primes_[ (0*1 +4*aops->size() ]   
+   // range_number_ = just check through defined ranges, pop from back  
+   // allowed_contraction_number = product of all contraction numbers (not as big as you'd think, and still faster than lookup);
+   // vector<bool> allowed_ctrs = ( aops->size() * aops->size() );
+   // bool allowed_contraction( ii, jj ) {  allowed_contraction_ctrs[ ii + jj*aops->size()];  } is simpler. 
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

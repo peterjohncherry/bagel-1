@@ -8,7 +8,8 @@ void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string,
                                          shared_ptr< map <string, shared_ptr< GammaInfo >>> gamma_info_map,
                                          shared_ptr< map <string, shared_ptr< vector<shared_ptr<CtrOp_base>>>>> ACompute_map,
                                          shared_ptr< map< string, shared_ptr< TensOp_Base >>> MT_map,
-                                         shared_ptr< map< string, shared_ptr< CtrTensorPart_Base>>> CTP_map ) {
+                                         shared_ptr< map< string, shared_ptr< CtrTensorPart_Base>>> CTP_map,
+                                         shared_ptr< map< char, long unsigned int>> range_prime_map  ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "void Equation_Value<DataType>::set_maps" << endl;
 
@@ -17,6 +18,7 @@ void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string,
   ACompute_map_   = ACompute_map;     if(!ACompute_map_   ) throw logic_error( "ACompute_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
   MT_map_         = MT_map;           if(!MT_map_         ) throw logic_error( "MT_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
   CTP_map_        = CTP_map;          if(!CTP_map_        ) throw logic_error( "CTP_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
+  range_prime_map_  = range_prime_map; if(!range_prime_map_        ) throw logic_error( "range_prime_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
 
   cout << "leaving void Equation_Value<DataType>::set_maps" << endl;
   return;
@@ -68,8 +70,8 @@ void Equation_Base<DataType>::add_expression( string expression_name ) {
     new_exp->generate_algebraic_task_list();
     expression_map_->emplace( expression_name, new_exp );
   } else { 
-//    throw logic_error( "have not implemented expression type \"" + expression_type "\" ... Aborting!!" );  
-    assert(false);
+    throw std::logic_error( "have not implemented expression type... Aborting!!" );  
+  //  assert(false);
   } 
   return;
 }
@@ -93,7 +95,7 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
       cout << MT_map_->size();
       auto T_loc = MT_map_->find(op_name);
       if( T_loc == MT_map_->end() ){ 
-        shared_ptr<TensOp::TensOp<DataType>> new_op = TensOp_Info_Init::Initialize_Tensor_Op_Info<DataType>( op_name );
+        shared_ptr<TensOp::TensOp<DataType>> new_op = TensOp_Info_Init::Initialize_Tensor_Op_Info<DataType>( op_name, range_prime_map_ );
         CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());
         MT_map_->emplace( op_name, new_op );
       }
@@ -107,7 +109,7 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
 
       cout << "set subops" << endl;
 
-      shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info.multiop_name_, /*spinfree_ = */ true, SubOps );
+      shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info.multiop_name_, /*spinfree_ = */ true, SubOps, range_prime_map_ );
       multiop->get_ctrs_tens_ranges();
       CTP_map_->insert( multiop->CTP_map()->begin(), multiop->CTP_map()->end());
       MT_map_->emplace(braket_info.multiop_name_, multiop );

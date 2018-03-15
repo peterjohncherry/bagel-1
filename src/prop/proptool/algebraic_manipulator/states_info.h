@@ -18,6 +18,9 @@ class CIVecInfo {
      std::shared_ptr<std::map< char ,int>>  hole_range_map_;
      std::shared_ptr<std::map< char ,int>>  elec_range_map_;
 
+     int elec_pnum_;
+     int hole_pnum_;
+
    public:
 
      bool sparse_;
@@ -41,6 +44,31 @@ class CIVecInfo {
      std::shared_ptr<std::map< char, int>> hole_range_map() { return hole_range_map_; } 
      std::shared_ptr<std::map< char, int>> elec_range_map() { return elec_range_map_; } 
 
+     int elec_pnum() { return elec_pnum_ ; }  
+     int hole_pnum() { return hole_pnum_ ; }  
+  
+     // characeteristic numbers for determining  if < A | ..... | B > is zero without maps
+     void set_elec_hole_pnums( std::shared_ptr<std::map<char, long unsigned int>> range_prime_map ) {
+
+       hole_pnum_ = 1;
+       for ( auto& elem : *hole_range_map_ ) 
+         if ( elem.second != 0 )
+           if ( elem.second < 5 ){ 
+             hole_pnum_*=(elem.second* range_prime_map->at(elem.first)); 
+           } else { 
+             hole_pnum_*=pow(range_prime_map->at(elem.first), 5); 
+           }
+
+       elec_pnum_ = 1; 
+       for ( auto& elem : *elec_range_map_ ) 
+         if ( elem.second != 0 ) 
+           if ( elem.second < 5 ){ 
+             elec_pnum_*=(elem.second* range_prime_map->at(elem.first)); 
+           } else { 
+             elec_pnum_*=pow(range_prime_map->at(elem.first), 5); 
+           }
+     }
+
 };
 
 //Written strangely so can be compatible with states with multiple spin sectors.
@@ -55,13 +83,14 @@ class StatesInfo  {
 
      bool multisector_; //TODO having civecs in multiple sectors should be dealt by templating class and having specialized function
 
+     std::shared_ptr<std::map< char , long unsigned int >> range_prime_map_;
+
      StatesInfo(std::vector<int> Target_state_nums) : target_state_nums_(Target_state_nums), multisector_(false)  {}; // 
      ~StatesInfo(){}; 
 
      int spin_diff( std::string bra, std::string ket ) { return civec_info_map_.at(bra)->nalpha() - civec_info_map_.at(ket)->nalpha(); }         
   
 
-     // TODO needs to be specialized for multisector case; 
      void add_state( const int nact, const int nele, const int state_number, std::shared_ptr<std::map<char, int>> elec_range_map,
                      std::shared_ptr<std::map<char, int>> hole_range_map ) {
         

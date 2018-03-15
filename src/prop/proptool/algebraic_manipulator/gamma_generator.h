@@ -107,7 +107,7 @@ class GammaGenerator{
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec;
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateUnranged>>> gamma_vec_unranged_;
 
-    void add_gamma(std::shared_ptr<range_block_info> block_info );
+    void add_gamma(std::shared_ptr<Range_Block_Info> block_info );
 
     bool norm_order();
 

@@ -20,10 +20,12 @@ class System_Info {
         std::vector<std::string> core;
         std::vector<std::string> act;
         std::vector<std::string> virt;
- 
-        std::vector<int> primes_ranges_;
-        std::vector<int> primes_ctrs_;
-        
+
+         
+        // key :    Name of range
+        // result : prime for this range
+        std::shared_ptr< std::map < char, long unsigned int >>  range_prime_map_; 
+
         // key :    Name of BraKet
         // result : Vector of TensOps corresponding to BraKet
         std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> braket_map_;

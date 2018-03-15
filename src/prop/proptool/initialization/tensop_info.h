@@ -13,7 +13,7 @@ namespace  TensOp_Info_Init {
 //Build the operators here.
 /////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( string op_name ) {
+shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( string op_name, shared_ptr<map<char, long unsigned int>> range_prime_map ) {
 /////////////////////////////////////////////////////////////////////////////////
 cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info" << endl;
 
@@ -188,7 +188,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
   }
 
   shared_ptr<TensOp::TensOp<DataType>> new_tens =  make_shared<TensOp::TensOp<DataType>>( op_name, *idxs, *idx_ranges, *aops,
-                                                                                          factor, symmfuncs, constraints, time_symm, state_dep);
+                                                                                          factor, symmfuncs, constraints, time_symm, state_dep, range_prime_map);
   new_tens->get_ctrs_tens_ranges();
 
   return new_tens;

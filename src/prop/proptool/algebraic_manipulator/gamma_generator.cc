@@ -52,7 +52,7 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
   }
 
   ii=0; //TODO This should not be needed here (I think); normal idx order when initialized
-        //     Have shuffled idx order specified in range_block_info in add_gamma
+        //     Have shuffled idx order specified in Range_Block_Info in add_gamma
   idx_order = make_shared<map< string, int>>();
   for ( string elem : *orig_ids_ )
     idx_order->emplace(elem, ii);
@@ -67,7 +67,7 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
   Ket_names_ = target_states_->civec_names( Ket_num_ );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GammaGenerator::add_gamma( shared_ptr<range_block_info> block_info ) {
+void GammaGenerator::add_gamma( shared_ptr<Range_Block_Info> block_info ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "GammaGenerator::add_gamma" << endl;
 
@@ -167,7 +167,7 @@ bool GammaGenerator::generic_reorderer_different_sector_unranged( string reorder
 bool GammaGenerator::generic_reorderer_different_sector( string reordering_name, string bra_name,
                                                          string ket_name, bool final_reordering   ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
+// cout << "GammaGenerator::generic_reorderer_different_sector" << endl;
 
   shared_ptr<map<char,int>> bra_hole_map = target_states_->hole_range_map(bra_name);;
   shared_ptr<map<char,int>> bra_elec_map = target_states_->elec_range_map(bra_name);;

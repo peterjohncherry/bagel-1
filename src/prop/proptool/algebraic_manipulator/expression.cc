@@ -24,6 +24,7 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
   target_to_G_to_A_map_ = make_shared<map<string, shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo> > >>> >>();
 
   name_ = "";
+  cout << "braket_list_->size() = " << braket_list_->size() << endl;
   for ( BraKet<DataType>& bk : *braket_list_ ) {
     if (bk.factor() != 0.0 )
       name_ += "(" + to_string(bk.factor()) + ")" + bk.name() + " + ";

@@ -43,33 +43,6 @@ System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info
     act      = {"actA", "actB"};
     virt     = {"virA", "virB"};
   }
-
-  // for encoding ranges and contractions
-  primes_ranges_ =  { 1013, 1009, 997, 991, 983, 977, 971, 967, 953, 947, 941, 937, 929, 919, 911, 907, 887, 883, 881, 877,
-                        863, 859, 857, 853, 839, 829, 827, 823, 821, 811, 809, 797, 787, 773, 769, 761, 757, 751, 743, 739, 733,
-                        727, 719, 709, 701, 691, 683, 677, 673, 661, 659, 653, 647, 643, 641, 631, 619, 617, 613, 607, 601, 599,
-                        593, 587, 577, 571, 569, 563, 557, 547, 541, 523, 521, 509, 503, 499, 491, 487, 479, 467, 463, 461, 457,
-                        449, 443, 439, 433, 431, 421, 419, 409, 401, 397, 389, 383, 379, 373, 367, 359, 353, 349, 347, 337, 331,
-                        317, 313, 311, 307, 293, 283, 281, 277, 271, 269, 263, 257, 251, 241, 239, 233, 229, 227, 223, 211, 199,
-                        197, 193, 191, 181, 179, 173, 167, 163, 157, 151, 149, 139, 137, 131, 127, 113, 109, 107, 103, 101, 97,
-                        89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2 } ;
-
-  primes_ctrs_ =  { 1013, 1009, 997, 991, 983, 977, 971, 967, 953, 947, 941, 937, 929, 919, 911, 907, 887, 883, 881, 877,
-                        863, 859, 857, 853, 839, 829, 827, 823, 821, 811, 809, 797, 787, 773, 769, 761, 757, 751, 743, 739, 733,
-                        727, 719, 709, 701, 691, 683, 677, 673, 661, 659, 653, 647, 643, 641, 631, 619, 617, 613, 607, 601, 599,
-                        593, 587, 577, 571, 569, 563, 557, 547, 541, 523, 521, 509, 503, 499, 491, 487, 479, 467, 463, 461, 457,
-                        449, 443, 439, 433, 431, 421, 419, 409, 401, 397, 389, 383, 379, 373, 367, 359, 353, 349, 347, 337, 331,
-                        317, 313, 311, 307, 293, 283, 281, 277, 271, 269, 263, 257, 251, 241, 239, 233, 229, 227, 223, 211, 199,
-                        197, 193, 191, 181, 179, 173, 167, 163, 157, 151, 149, 139, 137, 131, 127, 113, 109, 107, 103, 101, 97,
-                        89, 83, 79, 73, 71, 67, 61, 59, 53, 47, 43, 41, 37, 31, 29, 23, 19, 17, 13, 11, 7, 5, 3, 2 } ;
-
-
-   // contract_number (0,4)(1,3)(7,8) =  primes_[ (0*1 +4*aops->size() ]   
-   // range_number_ = just check through defined ranges, pop from back  
-   // allowed_contraction_number = product of all contraction numbers (not as big as you'd think, and still faster than lookup);
-   // vector<bool> allowed_ctrs = ( aops->size() * aops->size() );
-   // bool allowed_contraction( ii, jj ) {  allowed_contraction_ctrs[ ii + jj*aops->size()];  } is simpler. 
-
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -95,14 +68,14 @@ System_Info<DataType>::Build_TensOp( string op_name,
                                      shared_ptr<vector<vector<string>>> op_idx_ranges,
                                      vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
                                      vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
-                                     DataType factor, string Tsymmetry, bool hconj,  int state_dep ) {
+                                     DataType factor, string Tsymmetry, bool hconj,  int state_dep  ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
 
   //NOTE: change to use proper factor
   int tmpfac = 1;
   shared_ptr<TensOp::TensOp<DataType>> new_op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
-                                                                                        tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, state_dep);
+                                                                                        tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, state_dep, range_prime_map_);
   
   // change to be state specific
   cout << "getting  ctr tens ranges for New_Op : " << op_name << endl;
@@ -137,7 +110,7 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
 
     if (!new_eqn) { throw runtime_error("cast from Equation_Value to equation_base failed" ); }
 
-    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, MT_map_, CTP_map_ );
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, MT_map_, CTP_map_, range_prime_map_ );
     equation_map_->emplace( name, new_eqn ); 
 
   } else if ( type == "LinearRM") { 
@@ -150,7 +123,7 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
 
     if (!new_eqn) { throw runtime_error("cast from Equation_LinearRM to Equation_Base failed" ); }
 
-    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map,  MT_map_, CTP_map_ );
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map,  MT_map_, CTP_map_, range_prime_map_ );
     new_eqn_lrm->generate_state_specific_terms();
     equation_map_->emplace( name, new_eqn); 
   
@@ -177,7 +150,7 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
   if ( type == "Value" ) { 
     shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map );
     new_eqn = dynamic_pointer_cast<Equation_Base<DataType>>(new_eqn_val);
-    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, MT_map_, CTP_map_ );
+    new_eqn->set_maps( expression_map, Gamma_map, ACompute_map, MT_map_, CTP_map_, range_prime_map_ );
     equation_map_->emplace( name, new_eqn); 
 
   } else if ( type == "LinearRM") { 

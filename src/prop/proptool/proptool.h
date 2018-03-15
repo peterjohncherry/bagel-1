@@ -36,9 +36,6 @@ namespace PropTool {
     int nstates_;
     std::vector<int> target_states_; //note this is total range of the states
     std::vector<int> all_states_;
-
-
-
     //range info 
     int nclosed_; 
     int ncore_; 
@@ -59,7 +56,13 @@ namespace PropTool {
     std::shared_ptr<SMITH::IndexRange> not_virtual_rng_ ;
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_ ;
-   
+ 
+    //TODO come up with a better encoding
+    std::vector<long unsigned int> range_primes_;
+    std::vector<long unsigned int> ctr_primes_;
+    std::shared_ptr<std::map< char, long unsigned int >> range_prime_map_;
+
+  
     std::shared_ptr<System_Info<double>> sys_info_;
     std::shared_ptr<System_Computer::System_Computer<double>> system_computer_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> expression_map_;
@@ -71,6 +74,7 @@ namespace PropTool {
     std::shared_ptr<StatesInfo<double>> targets_info_; //this contains all information about the states
 
     // initialiation info
+    void set_primes();
     void read_input_and_initialize(); 
     void get_wavefunction_info();
     void set_target_state_info();
