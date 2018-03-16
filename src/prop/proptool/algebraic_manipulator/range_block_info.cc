@@ -14,7 +14,7 @@ Range_Block_Info::Range_Block_Info( bool is_unique, bool survives, std::pair<dou
                                     orig_name_(WickUtils::get_Aname(*orig_idxs, *orig_block)), transformed_name_(WickUtils::get_Aname(*transformed_idxs, *unique_block )),
                                     TensOp_name_(orig_idxs->at(0).substr(0,1)) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "range_blcok_info::Range_Block_Info" << endl;
+//  cout << "Range_Block_Info::Range_Block_Info" << endl;
   plus_pnum_ = 1;   
   kill_pnum_ = 1;  
   std::vector<bool>::const_iterator oa_it = orig_aops_->begin(); 
@@ -30,7 +30,7 @@ Range_Block_Info::Range_Block_Info( bool is_unique, bool survives, std::pair<dou
 SRBI_Helper::SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks ) :
                             range_blocks_(range_blocks), factors_(std::make_pair(1.0,1.0)) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "SRBI_Helper::SRBI_Helper" << endl;
+ // cout << "SRBI_Helper::SRBI_Helper" << endl;
 
   num_idxs_ = 0;
   unique_   = true;

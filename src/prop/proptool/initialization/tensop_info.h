@@ -149,7 +149,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
   } else if ( op_name == "X" ) {
 
     factor = (DataType) (1.0);
-    idxs = make_shared<vector<string>>( vector<string> {"X0", "X1", "X2", "X3"} );
+    idxs = make_shared<vector<string>>( vector<string> {"X3", "X2", "X1", "X0"} );
     aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt } );
     time_symm = "none";

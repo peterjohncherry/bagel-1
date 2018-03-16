@@ -18,8 +18,8 @@ class CIVecInfo {
      std::shared_ptr<std::map< char ,int>>  hole_range_map_;
      std::shared_ptr<std::map< char ,int>>  elec_range_map_;
 
-     int elec_pnum_;
-     int hole_pnum_;
+     long unsigned int elec_pnum_;
+     long unsigned int hole_pnum_;
 
    public:
 
@@ -44,8 +44,8 @@ class CIVecInfo {
      std::shared_ptr<std::map< char, int>> hole_range_map() { return hole_range_map_; } 
      std::shared_ptr<std::map< char, int>> elec_range_map() { return elec_range_map_; } 
 
-     int elec_pnum() { return elec_pnum_ ; }  
-     int hole_pnum() { return hole_pnum_ ; }  
+     long unsigned int elec_pnum() { return elec_pnum_ ; }  
+     long unsigned int  hole_pnum() { return hole_pnum_ ; }  
   
      // characeteristic numbers for determining  if < A | ..... | B > is zero without maps
      void set_elec_hole_pnums( std::shared_ptr<std::map<char, long unsigned int>> range_prime_map ) {

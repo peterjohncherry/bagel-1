@@ -39,9 +39,9 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
   auto GGen = make_shared<GammaGenerator>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ );
 
   if ( GGen->generic_reorderer_unranged( "anti-normal order", true, false ) ) { ;
-    cout << "out  of unranged reordering" << endl;
-    GGen->generic_reorderer_unranged( "normal order", false, false );
-    GGen->generic_reorderer_unranged( "print", false, false );
+    if (GGen->generic_reorderer_unranged( "normal order", false, false ) ) 
+      if ( GGen->generic_reorderer_unranged( "alternating order", false, false ) )
+        GGen->generic_reorderer_unranged( "print", false, false );
   }
 //      GGen->generic_reorderer_unranged( "alternating order", false, true ); 
 

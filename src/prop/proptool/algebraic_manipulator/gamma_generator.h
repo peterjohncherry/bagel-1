@@ -16,6 +16,8 @@ class GammaIntermediate {
      std::shared_ptr<std::vector<int>> ids_pos;
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos;
      int my_sign;
+     long unsigned int plus_pnum_;
+     long unsigned int kill_pnum_;
 
      GammaIntermediate( std::shared_ptr<const std::vector<std::string>> full_id_ranges_in,
                         std::shared_ptr<std::vector<int>> ids_pos_in,
@@ -23,6 +25,13 @@ class GammaIntermediate {
                         int my_sign_in ) :
      full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), 
      my_sign(my_sign_in) {};
+
+     GammaIntermediate( std::shared_ptr<const std::vector<std::string>> full_id_ranges_in,
+                        std::shared_ptr<std::vector<int>> ids_pos_in,
+                        std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
+                        int my_sign_in, long unsigned int  plus_pnum, long unsigned int kill_pnum ) :
+     full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), 
+     my_sign(my_sign_in), plus_pnum_(plus_pnum), kill_pnum_(kill_pnum) {};
 
      ~GammaIntermediate(){};
 
@@ -66,8 +75,9 @@ class GammaGenerator{
 
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec;
 
-    std::shared_ptr<std::map< char, int>>         op_order ;
-    std::shared_ptr<std::map< std::string, int>>  idx_order ;
+    std::shared_ptr<std::map< char, int>>         op_order_ ;
+    std::shared_ptr<std::map< std::string, int>>  idx_order_ ;
+    std::vector<int> standardized_idx_order_;
 
     double bk_factor;
 
@@ -129,7 +139,8 @@ class GammaGenerator{
 
     void alternating_order_unranged( int kk );
 
-    std::vector<int> get_standardized_alt_order_unranged ( int kk );
+
+    void set_standardized_alt_order_unranged ( int kk, std::vector<int>& alt_order_unranged );
 
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
@@ -152,6 +163,9 @@ class GammaGenerator{
                         std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
                         std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
 
+//    bool braket_survival_check( std::shared_ptr<GammaIntermediate> gint, std::shared_ptr<CIVecInfo> bra_info, 
+//                                std::shared_ptr<CIVecInfo> ket_info );
+
     void Contract_remaining_indexes(int kk);
 
     void swap( int ii, int jj, int kk, std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> gamma_vec );
@@ -159,7 +173,7 @@ class GammaGenerator{
     std::shared_ptr<pint_vec> Standardize_delta_ordering(std::shared_ptr<pint_vec> deltas_pos );
 
     bool ordering( std::pair<std::string,std::string> a, std::pair<std::string,std::string> b ){
-                   return( (idx_order->at(a.first) < idx_order->at(b.first) ) ? true : false ); }
+                   return( (idx_order_->at(a.first) < idx_order_->at(b.first) ) ? true : false ); }
 
     bool RangeCheck( std::shared_ptr<const std::vector<std::string>> full_id_ranges );
 
@@ -180,6 +194,10 @@ class GammaGenerator{
 
     std::vector<int> get_standard_order (const std::vector<std::string>& rngs );
 
+    //reordering of initial idxs
+    void get_standard_idx_order_init();
+
+    //reorders with respect to the range obtained in the above 
     std::vector<int> get_standard_idx_order(const std::vector<std::string>& idxs) ;
 
     std::vector<int> get_standardized_alt_order( const std::vector<std::string>& rngs ,const std::vector<bool>& aops ) ;
