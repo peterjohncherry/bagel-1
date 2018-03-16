@@ -96,20 +96,19 @@ cout << "GammaGenerator::get_standard_idx_order_init() " << endl;
     cout <<  orig_ids_->at(idx_order_->at(orig_ids_->at(ii))) << " "; cout.flush();
   }
   cout << "] " << endl;
-  
+
+  print_vector(standardized_idx_order_, " standardized_idx_order" ); cout << endl; 
+ 
   auto& standardized_idx_order_tmp = standardized_idx_order_;
-  vector<int> order_map(orig_ids_->size()) ;
-  iota( order_map.begin() , order_map.end(), 0 );
-  sort(order_map.begin(), order_map.end(), [ standardized_idx_order_tmp ](int i1, int i2){
-                                 return(bool)( standardized_idx_order_tmp[i1] < standardized_idx_order_tmp[i2] );
+  vector<int> ascending(standardized_idx_order_.size());
+  iota( ascending.begin() , ascending.end(), 0 );
+  order_map_ = ascending;
+  sort(order_map_.begin(), order_map_.end(), [ &ascending, standardized_idx_order_tmp ](int i1, int i2){
+                                 return(bool)( ascending[standardized_idx_order_tmp[i1]] < ascending[standardized_idx_order_tmp[i2]] );
                                }
                             );
-  cout << "reordered ids check2 = [  " ; cout.flush();
-  for ( int ii =0 ; ii != order_map.size() ; ii++ ) { 
-    cout <<  orig_ids_->at(order_map[ii]) << " "; cout.flush();
-  }
-  cout << "] " << endl;
 
+  print_vector( order_map_ ,"order_map" ) ; cout << endl;
 
 
   return;
@@ -1209,37 +1208,46 @@ void GammaGenerator::set_standardized_alt_order_unranged ( int kk , vector<int>&
     *ui_it = orig_ids_->at(*ip_it);
     *ua_it = orig_aops_->at(*ip_it);
   }
-  print_vector(unc_aops , "unc_aops" ) ; cout << "    " ; cout.flush(); print_vector( unc_idxs, "unc_idxs"); cout << endl; 
 
-  vector<int> new_order( unc_idxs.size() );
-  iota(new_order.begin(), new_order.end(), 0);
+  cout << "unsorted ids = [ " ; 
+  for ( int pos : *ids_pos) {
+    cout << orig_ids_->at(pos) << " " ; cout.flush();
+  }
+  cout << "] " <<endl;
+
+  cout << "sorted ids = [ " ; 
+  for ( int pos : *ids_pos) {
+    cout << orig_ids_->at(standardized_idx_order_[pos]) << " " ; cout.flush();
+  }
+  cout << "] " <<endl;
+
+  cout << "sorted aops = [ " ; 
+  for ( int pos : *ids_pos) {
+    cout << orig_aops_->at(standardized_idx_order_[pos]) << " " ; cout.flush();
+  }
+  cout << "] " <<endl;
+
   auto& standardized_idx_order_tmp = standardized_idx_order_;
-  auto& ids_pos_tmp = ids_pos;
-  sort(new_order.begin(), new_order.end(), [ ids_pos_tmp, standardized_idx_order_tmp ](int i1, int i2){
-                                 return(bool)( standardized_idx_order_tmp[ids_pos_tmp->at(i1)] > standardized_idx_order_tmp[ids_pos_tmp->at(i2)] );
+  vector<int> ascending(standardized_idx_order_.size());
+  iota( ascending.begin() , ascending.end(), 0 );
+  shared_ptr<vector<int>> standard_order = make_shared<vector<int>> (*ids_pos);
+  sort(standard_order->begin(), standard_order->end(), [ &ascending, standardized_idx_order_tmp ](int i1, int i2){
+                                 return(bool)( ascending[standardized_idx_order_tmp[i1]] < ascending[standardized_idx_order_tmp[i2]] );
                                }
                             );
-  print_vector(*ids_pos ,       "ids_pos  " ); cout << endl;
-  print_vector( new_order,      "new_order'"); cout << endl;
-  sort(new_order.begin(), new_order.end());
 
-  print_vector( new_order,      "new_order"); cout << endl;
-  print_vector( *orig_ids_,     "orig_ids "); cout << endl;
-  shared_ptr<vector<int>> standard_order = reorder_vector( new_order, *ids_pos);
-  print_vector(*standard_order, "std_order"); cout << endl; 
-  cout << "standard_ordered_ids = ["; cout.flush();
-  for ( int p : new_order ){ 
-    cout << orig_ids_->at(ids_pos->at(p)) << " " ; cout.flush();
+  cout << "sorted ids X = [ " ; 
+  for ( int pos : *standard_order) {
+    cout << orig_ids_->at(ids_pos->at(pos)) << " " ; cout.flush();
   }
-  cout << "]" << endl;
+  cout << "] " <<endl;
 
-  cout << "reordered ids check = [  " ; cout.flush();
-  for ( int ii =0 ; ii != standardized_idx_order_.size() ; ii++ ) { 
-    cout <<  orig_ids_->at(idx_order_->at(orig_ids_->at(ids_pos->at(ii)))) << " "; cout.flush();
-  }
-  cout << "] " << endl;
- 
 
+//  shared_ptr<vector<int>> standard_order = make_shared<vector<int>> (ids_pos->size());
+//  vector<int>::iterator so_it = standard_order->begin();
+//  for ( int pos : *ids_pos) {
+//    *so_it++ = standardized_idx_order_[pos];
+//  }
 
   vector<int> standard_order_plus(standard_order->size()/2);
   vector<int> standard_order_kill(standard_order->size()/2);

@@ -78,6 +78,7 @@ class GammaGenerator{
     std::shared_ptr<std::map< char, int>>         op_order_ ;
     std::shared_ptr<std::map< std::string, int>>  idx_order_ ;
     std::vector<int> standardized_idx_order_;
+    std::vector<int> order_map_;
 
     double bk_factor;
 
