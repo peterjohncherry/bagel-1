@@ -172,7 +172,7 @@ bool GammaGenerator::generic_reorderer_different_sector_unranged( string reorder
   } else if ( reordering_name == "alternating order" ) {
     int kk = 0;
     while ( kk != gamma_vec_unranged_->size()){
-      alternating_order_unranged(kk++);
+      alternating_order_unranged(kk);
       kk++;
     }
   } else if ( reordering_name == "print" ) {
@@ -180,6 +180,10 @@ bool GammaGenerator::generic_reorderer_different_sector_unranged( string reorder
     cout << endl << "====================================== Gamma orders list ===========================================" << endl;
     while ( kk != gamma_vec_unranged_->size()){
       print_vector(*(gamma_vec_unranged_->at(kk)->ids_pos_) , "ids_pos" ); 
+      cout << "alt_ids = [";
+      for ( int elem : *gamma_vec_unranged_->at(kk)->ids_pos_ ) 
+        cout << orig_ids_->at(elem) << " " ; 
+      cout << "]"; cout.flush();
       print_pair_vector(*(gamma_vec_unranged_->at(kk)->deltas_pos_) , "     deltas_pos" );
       cout << "      sign = " << gamma_vec_unranged_->at(kk)->my_sign_ << endl; 
       kk++;
@@ -379,7 +383,7 @@ bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::anti_normal_order_unranged( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::anti_normal_order_unranged" << endl;
+//  cout << "GammaGenerator::anti_normal_order_unranged" << endl;
 
   shared_ptr<vector<int>> ids_pos  = gamma_vec_unranged_->at(kk)->ids_pos_;
   int num_kill = 0;
@@ -424,7 +428,7 @@ void GammaGenerator::anti_normal_order_unranged( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::normal_order_unranged( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::normal_order_unranged" << endl;
+//  cout << "GammaGenerator::normal_order_unranged" << endl;
 
   shared_ptr<vector<int>> ids_pos  = gamma_vec_unranged_->at(kk)->ids_pos_;
   int num_plus = 0;
@@ -559,17 +563,13 @@ void GammaGenerator::normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::alternating_order_unranged( int kk ) {  // e.g. +-+-+-+-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::alternating_order_unranged" << endl;
+//  cout << "GammaGenerator::alternating_order_unranged" << endl;
 
   shared_ptr<vector<int>> ids_pos = gamma_vec_unranged_->at(kk)->ids_pos_; 
-  cout << "X" << endl;
   vector<int> alt_order_ids_pos(ids_pos->size()); 
   set_standardized_alt_order_unranged( kk, alt_order_ids_pos );
 
-  cout << "alternating order  = [" ; cout.flush(); 
-  for ( auto& pos : alt_order_ids_pos )  
-    cout << orig_ids_->at(pos) << " " ;
-  cout << "] " << endl; 
+  cout << "alternating order 1 = [" ; cout.flush();   for ( auto& pos : alt_order_ids_pos ) cout << orig_ids_->at(pos) << " " ; cout << "] " << endl; 
 
   for (int ii = ids_pos->size()-1 ; ii != -1; ii-- ){
     if (ids_pos->at(ii) == alt_order_ids_pos[ii])
@@ -584,6 +584,7 @@ void GammaGenerator::alternating_order_unranged( int kk ) {  // e.g. +-+-+-+-
       }
     }
   }
+  cout << "alternating order 2 = [" ; cout.flush();   for ( auto& pos : *ids_pos ) cout << orig_ids_->at(pos) << " " ; cout << "] " << endl; 
 
   return;
 }
@@ -1174,7 +1175,7 @@ vector<int> GammaGenerator::get_Aid_order ( const vector<int>& id_pos ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::set_standardized_alt_order_unranged ( int kk , vector<int>& standard_alt_order) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::set_standardized_alt_order_unranged" << endl;
+//  cout << "GammaGenerator::set_standardized_alt_order_unranged" << endl;
 
   shared_ptr<vector<int>>           ids_pos = gamma_vec_unranged_->at(kk)->ids_pos_;
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec_unranged_->at(kk)->deltas_pos_; 
@@ -1195,27 +1196,19 @@ void GammaGenerator::set_standardized_alt_order_unranged ( int kk , vector<int>&
   for ( vector<int>::iterator ip_it  =ids_pos->begin(); ip_it != ids_pos->end(); ip_it++, ips_it++ )
     *ips_it = standard_order_[*ip_it];
 
-  print_vector(ids_pos_standardized, "ids_pos_standardized"); cout << endl << endl; 
- 
   iota( good_order.begin(), good_order.end(), 0);
   sort( good_order.begin(), good_order.end(), [&ids_pos_standardized ] ( int i1, int i2) { return (bool)( ids_pos_standardized[i1] < ids_pos_standardized[i2]); });  
-  print_vector( good_order, "good_order" ); cout << endl; 
- 
 
   vector<int> ids_reordered_pos(ids_pos->size());
   vector<int>::iterator irp_it = ids_reordered_pos.begin();
   for ( auto elem : good_order ) 
     *irp_it++ =  ids_pos->at(elem); 
   
-  print_vector( ids_reordered_pos, "ids_reordered_pos"); cout <<endl;
- 
   vector<string> ids_reordered(ids_pos->size());
   vector<string>::iterator ir_it = ids_reordered.begin();
   for ( auto elem : ids_reordered_pos ) 
     *ir_it++ =  orig_ids_->at(elem); 
   
-  print_vector( ids_reordered, "ids_reordered"); cout <<endl;
-
   vector<int> standard_order_plus(ids_reordered_pos.size()/2);
   vector<int> standard_order_kill(ids_reordered_pos.size()/2);
   vector<int>::iterator standard_order_plus_it = standard_order_plus.begin();
@@ -1228,9 +1221,6 @@ void GammaGenerator::set_standardized_alt_order_unranged ( int kk , vector<int>&
     }
   }
 
-  print_vector( standard_order_plus , "standard_order_plus" ) ; cout << "    " ;
-  print_vector( standard_order_kill , "standard_order_kill" ) ;  cout << endl; 
-
   vector<int>::iterator standard_alt_order_it = standard_alt_order.begin();
   standard_order_plus_it = standard_order_plus.begin();
   standard_order_kill_it = standard_order_kill.begin();
@@ -1238,14 +1228,6 @@ void GammaGenerator::set_standardized_alt_order_unranged ( int kk , vector<int>&
     *standard_alt_order_it++ = *standard_order_plus_it++;
     *standard_alt_order_it++ = *standard_order_kill_it++;
   }
- 
-  print_vector( standard_alt_order, "standard_alt_order"  ); cout << endl; 
-  print_vector( *orig_ids_, "orig_ids") ; cout << endl; 
-  cout << "alt_ordered_ids = ["; cout.flush();
-  for ( int p : standard_alt_order ){ 
-    cout << orig_ids_->at(p) << " " ; cout.flush();
-  }
-  cout << "]" << endl;
 
   return;
 }

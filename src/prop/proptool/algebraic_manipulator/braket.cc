@@ -43,28 +43,27 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       if ( GGen->generic_reorderer_unranged( "alternating order", false, false ) )
         GGen->generic_reorderer_unranged( "print", false, false );
   }
-//      GGen->generic_reorderer_unranged( "alternating order", false, true ); 
 
-  for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
-    if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
-      GGen->add_gamma( range_map_it->second );
-      
-      if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){
-        if ( GGen->generic_reorderer( "normal order", false, false ) ) {
-          if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
-            vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
-            int qq = 0 ;
-            for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){ 
-              MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
-              required_blocks->emplace( tens_block->orig_name() );
-
-	    }
-          }
-        }
-      }
-    }
-  }
-  print_gamma_Atensor_contractions( G_to_A_map, has_orb_exc );
+//  for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
+//    if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
+//      GGen->add_gamma( range_map_it->second );
+//      
+//      if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){
+//        if ( GGen->generic_reorderer( "normal order", false, false ) ) {
+//          if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
+//            vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
+//            int qq = 0 ;
+//            for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){ 
+//              MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
+//              required_blocks->emplace( tens_block->orig_name() );
+//
+//	    }
+//          }
+//        }
+//      }
+//    }
+//  }
+//  print_gamma_Atensor_contractions( G_to_A_map, has_orb_exc );
 
   return; 
 }
