@@ -17,14 +17,42 @@ Range_Block_Info::Range_Block_Info( bool is_unique, bool survives, std::pair<dou
 //  cout << "Range_Block_Info::Range_Block_Info" << endl;
   plus_pnum_ = 1;   
   kill_pnum_ = 1;  
+
+  vector<int> kill_pos(orig_aops_->size()/2); 
+  vector<int> plus_pos(orig_aops_->size()/2); 
+  vector<int>::iterator kp_it = kill_pos.begin();
+  vector<int>::iterator pp_it = plus_pos.begin(); 
+
+  int pos = 0;
   std::vector<bool>::const_iterator oa_it = orig_aops_->begin(); 
-  for ( std::vector<std::string>::const_iterator ob_it = orig_block_->begin(); ob_it != orig_block_->end(); ob_it++, oa_it++ ){ 
+  for ( std::vector<std::string>::const_iterator ob_it = orig_block_->begin(); ob_it != orig_block_->end(); ++ob_it, ++oa_it, ++pos ){ 
     if (*oa_it) { 
       plus_pnum_ *= range_prime_map->at( (*ob_it)[0] );   
+      *pp_it = range_prime_map->at( (*ob_it)[0] );
+       ++pp_it;
     } else {  
       kill_pnum_ *= range_prime_map->at( (*ob_it)[0] );   
+      *kp_it = range_prime_map->at( (*ob_it)[0] );
+       ++kp_it;
     }
   }
+
+  // TODO this generates the contractions, should probably be replaced with arithmetical version
+  allowed_contractions_ = vector<bool>(kill_pos.size() * plus_pos.size() ); 
+  pp_it = plus_pos.begin(); 
+  for ( vector<bool>::iterator ac_it = allowed_contractions_.begin(); ac_it != allowed_contractions_.end(); ++pp_it ){ 
+    kp_it = kill_pos.begin();
+    for( ; kp_it != kill_pos.end(); ++kp_it, ++ac_it ) 
+      *ac_it = ( *kp_it == *pp_it );
+  } 
+  
+  print_vector( kill_pos, "kill_pos"); cout << "   " ; cout.flush(); print_vector( plus_pos, "plus_pos"); cout << "    "; cout.flush();
+
+  cout << "allowed contractions = [" ; cout.flush();
+  for ( bool ac : allowed_contractions_ )
+    cout << ac << " " ;
+  cout << "]" << endl; 
+
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SRBI_Helper::SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks ) :
@@ -34,8 +62,6 @@ SRBI_Helper::SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bloc
 
   num_idxs_ = 0;
   unique_   = true;
-  
-
 
   for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_iter =  range_blocks_->begin(); rb_iter != range_blocks_->end();  rb_iter++ ){
     num_idxs_  += (*rb_iter)->num_idxs(); } 

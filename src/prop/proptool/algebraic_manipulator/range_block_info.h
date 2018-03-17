@@ -25,12 +25,14 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
       const  std::string orig_name_;
       const  std::string transformed_name_;
       const  std::string TensOp_name_;
-      long unsigned int plus_pnum_;
-      long unsigned int kill_pnum_;
 
       std::set<std::vector<int>> sparsity_ ;
 
   public :
+
+    std::vector<bool> allowed_contractions_;
+    long unsigned int plus_pnum_;
+    long unsigned int kill_pnum_;
 
     Range_Block_Info( bool is_unique,
                       bool survives,

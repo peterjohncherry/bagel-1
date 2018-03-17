@@ -42,12 +42,20 @@ class GammaIntermediateUnranged {
    public :
      std::shared_ptr<std::vector<int>> ids_pos_;
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_;
+     std::vector<bool> deltas_vec_;
      int my_sign_;
 
      GammaIntermediateUnranged( std::shared_ptr<std::vector<int>> ids_pos,
                         std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos,
                         int my_sign ) :
-     ids_pos_(ids_pos), deltas_pos_(deltas_pos), my_sign_(my_sign) {};
+     ids_pos_(ids_pos), deltas_pos_(deltas_pos),  my_sign_(my_sign) {};
+
+
+     GammaIntermediateUnranged( std::shared_ptr<std::vector<int>> ids_pos,
+                        std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos,
+                        std::vector<bool>& deltas_vec,
+                        int my_sign ) :
+     ids_pos_(ids_pos), deltas_pos_(deltas_pos), deltas_vec_(deltas_vec), my_sign_(my_sign) {};
 
      ~GammaIntermediateUnranged(){};
 
@@ -62,6 +70,7 @@ class GammaGenerator{
     std::shared_ptr<StatesInfo<double>> target_states_;
     int Ket_num_;
     int Bra_num_;
+    int orig_aops_half_size_;
 
     std::shared_ptr<const std::vector<bool>> orig_aops_ ;
     std::shared_ptr<const std::vector<std::string>> orig_ids_ ;
