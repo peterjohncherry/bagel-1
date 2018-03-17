@@ -80,6 +80,8 @@ class GammaGenerator{
     std::vector<int> standardized_idx_order_;
     std::vector<int> order_map_;
 
+    std::vector<int> standard_order_;
+
     double bk_factor;
 
     // key    : name of this gamma
