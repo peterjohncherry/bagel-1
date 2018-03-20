@@ -56,7 +56,7 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
   shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
   shared_ptr<vector<int>> ids_pos =  make_shared<vector<int>>( orig_ids_->size() );
   iota( ids_pos->begin() , ids_pos->end(), 0 );
-  vector<bool> deltas_vec(orig_aops_half_size_*orig_aops_half_size_, false);
+  vector<int> deltas_vec(0);
   gamma_vec_unranged_ = make_shared<vector<shared_ptr<GammaIntermediateUnranged>>>(1, make_shared<GammaIntermediateUnranged>(ids_pos, deltas_pos, deltas_vec, my_sign));
 
   print_vector(*orig_ids_ , "orig_ids"); cout << endl;
@@ -65,7 +65,6 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
   Bra_names_ = target_states_->civec_names( Bra_num_ );
   Ket_names_ = target_states_->civec_names( Ket_num_ );
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Reordering of the original ids; don't use the original order so we can 
 //merge h.c. terms, e.g.,  f1f0x1x0 and x0x1f0f1 . 
@@ -145,11 +144,22 @@ bool GammaGenerator::generic_reorderer_unranged( string reordering_name, bool fi
 
    return does_it_contribute;
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGenerator::get_ranged_gammas( shared_ptr<Range_Block_Info> block_info ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "GammaGenerator::get_ranged_gammas" << endl;
+
+  for ( string bra_name : *Bra_names_ )
+    for ( string ket_name : *Ket_names_ )
+      braket_survival_check_normal_order( block_info, target_states_->civec_info(bra_name), target_states_->civec_info(ket_name));
+
+  return;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::generic_reorderer_different_sector_unranged( string reordering_name, string bra_name,
                                                                   string ket_name, bool final_reordering   ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-  //cout << "GammaGenerator::generic_reorderer_different_sector_unranged" << endl;
+//cout << "GammaGenerator::generic_reorderer_different_sector_unranged" << endl;
 
   shared_ptr<map<char,int>> bra_hole_map = target_states_->hole_range_map(bra_name);;
   shared_ptr<map<char,int>> bra_elec_map = target_states_->elec_range_map(bra_name);;
@@ -192,8 +202,6 @@ bool GammaGenerator::generic_reorderer_different_sector_unranged( string reorder
     }
     cout << "========================================================================================================" << endl << endl; 
   }
-
-
   return (gamma_vec_unranged_->size() > 0 );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -311,37 +319,67 @@ bool GammaGenerator::check_if_same_sector( string bra_name, string ket_name ) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-//bool GammaGenerator::braket_survival_check_normal_order( shared_ptr<range_block_info> block_info, 
-//                                            shared_ptr<CIVecInfo> bra_info, shared_ptr<CIVecInfo> ket_info ) { 
+void GammaGenerator::braket_survival_check_normal_order( shared_ptr<Range_Block_Info> block_info, 
+                                                         shared_ptr<CIVecInfo<double>> bra_info, shared_ptr<CIVecInfo<double>> ket_info ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout <<" GammaGenerator::braket_survival_check" << endl;
-// 
-//  int range_plus_num = block_info_->plus_pnum_;
-//  int range_kill_num = block_info_->kill_pnum_;
-//  int bra_elec_num = bra_info_->elec_pnum_;
-//  int bra_hole_num = bra_info_->hole_pnum_;
-//
-//  for ( shared_ptr<GammaGeneratorUnranged>& gint : *gamma_vec_unranged_ ){ 
-//  range_kill_num/contraction_ranges  //  divide range block numbers by contraction range numbers for this gint,
-//
-//  if ( !(bra_elec_num % range_kill_num) ) { 
-//    return false;
-//  } else {
-//    bra_elec_num /= range_kill_num;
-//    bra_hole_num *= range_kill_num;
-//  }
-//  if ( !(bra_hole_num % range_plus_num) ) {
-//    return false;
-//  } else {
-//    bra_elec_num *= range_plus_num;
-//    bra_hole_num /= range_plus_num;
-//  }
-//  
-//  if ( bra_hole_num != ket_hole_num || bra_elec_num != ket_elec_num )  
-//     return false;
-//
-// return true;
-//}  
+  cout <<" GammaGenerator::braket_survival_check" << endl;
+ 
+  for ( shared_ptr<GammaIntermediateUnranged>& gint : *gamma_vec_unranged_ ){ 
+
+    cout << "checking : " ; cout.flush();
+    cout << WickUtils::get_gamma_name( block_info->unique_block(), block_info->orig_aops(), gint->ids_pos_, bra_info->name(), ket_info->name() ) << endl; 
+
+    bool skip = false;
+    for ( vector<int>::iterator dv_it =  gint->deltas_vec_.begin(); dv_it != gint->deltas_vec_.end(); dv_it++ )
+      if ( !block_info->allowed_contractions_[*dv_it] ){ 
+	skip = true;
+        break; 
+      }
+   
+    if ( skip )
+      continue;   
+ 
+    long unsigned int range_plus_num = block_info->plus_pnum_;
+    long unsigned int range_kill_num = block_info->kill_pnum_;
+    long unsigned int bra_elec_num = bra_info->elec_pnum();
+    long unsigned int bra_hole_num = bra_info->hole_pnum();
+
+    cout << "  range_plus_num = " << range_plus_num << endl;
+    cout << "  range_kill_num = " << range_kill_num << endl;
+    cout << "  bra_elec_num   = " << bra_elec_num   << endl;
+    cout << "  bra_hole_num   = " << bra_hole_num   << endl;
+ 
+    cout << "   1 survives!!! " << endl; 
+    
+    if ( (bra_elec_num % range_kill_num) != 0 ) { 
+      continue;
+ 
+    cout << "   2 survives!!! " << endl; 
+    } else {
+      bra_elec_num /= range_kill_num;
+      bra_hole_num *= range_kill_num;
+    }
+    cout << "   3 survives!!! " << endl; 
+ 
+    if ( (bra_hole_num % range_plus_num) != 0  ) {
+      continue;
+ 
+    cout << "   4 survives!!! " << endl; 
+    } else {
+      bra_elec_num *= range_plus_num;
+      bra_hole_num /= range_plus_num;
+    }
+    cout << "   5 survives!!! " << endl; 
+    
+    if ( bra_hole_num != ket_info->elec_pnum() || bra_elec_num != ket_info->elec_pnum() )  
+      continue;
+   
+    //make the ranged gamma here
+    
+    cout << "   6 survives!!! " << endl; 
+  }
+  return;
+}  
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint, 
                                     map<char,int> bra_hole_map, map<char,int> bra_elec_map,
@@ -397,7 +435,6 @@ bool GammaGenerator::proj_onto_map( shared_ptr<GammaIntermediate> gint,
 
   return true;
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::anti_normal_order_unranged( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -440,7 +477,6 @@ void GammaGenerator::anti_normal_order_unranged( int kk ) {
       }
     }
   }
-
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -532,8 +568,6 @@ void GammaGenerator::anti_normal_order( int kk ) {
   }
   return;
 }
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -637,10 +671,8 @@ void GammaGenerator::alternating_order( int kk ) {  // e.g. +-+-+-+-
       }
     }
   }
-
   return;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::add_Acontrib_to_map( int kk, string bra_name, string ket_name ){  // e.g. ++++----
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -686,7 +718,6 @@ void GammaGenerator::add_Acontrib_to_map( int kk, string bra_name, string ket_na
                                                          orig_aops_, full_id_ranges, ids_pos, Gamma_map) );
   return;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::add_Acontrib_to_map_orb_deriv( int kk, string bra_name, string ket_name ){  // e.g. ++++----
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -780,7 +811,6 @@ void GammaGenerator::add_Acontrib_to_map_orb_deriv( int kk, string bra_name, str
 
   return;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<GammaIntermediate>>> final_gamma_vec, string name) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -788,7 +818,6 @@ void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<Gam
   print_gamma_contributions( final_gamma_vec, name, Bra_names_->at(0), Ket_names_->at(0) );
   return;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<GammaIntermediate>>> final_gamma_vec,
                                                 string name,  string bra_name, string ket_name ){
@@ -809,7 +838,6 @@ void GammaGenerator::print_gamma_contributions( shared_ptr<vector<shared_ptr<Gam
 
   return;
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Replace this with something more sophisticated which uses constraint functions.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -901,7 +929,7 @@ void GammaGenerator::Contract_remaining_indexes( int kk ){
     for ( int qq = 0; qq != forvec->size(); qq++)
       new_deltas_pos_tmp->insert(new_deltas_pos_tmp->end(), new_contractions[qq]->at(forvec->at(qq))->begin(), new_contractions[qq]->at(forvec->at(qq))->end());
 
-    shared_ptr<vector<pair<int,int>>> new_deltas_pos = Standardize_delta_ordering_generic( new_deltas_pos_tmp ) ;
+    shared_ptr<vector<pair<int,int>>> new_deltas_pos = standardize_delta_ordering_generic( new_deltas_pos_tmp ) ;
     shared_ptr<vector<int>> new_ids_pos =  get_unc_ids_from_deltas_ids_comparison( ids_pos , new_deltas_pos );
     final_gamma_vec->push_back(make_shared<GammaIntermediate>(full_id_ranges, new_ids_pos, new_deltas_pos, my_sign));
 
@@ -909,7 +937,6 @@ void GammaGenerator::Contract_remaining_indexes( int kk ){
 
   return;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Swaps indexes round, flips sign, and if ranges are the same puts new density matrix in the list.
 // CAREFUL : always keep creation operator as the left index in the contraction .
@@ -937,10 +964,10 @@ void GammaGenerator::swap_unranged( int ii, int jj, int kk  ){
     pair<int,int> new_delta = orig_aops_->at(ids_pos_jj) ? make_pair(ids_pos_jj, ids_pos_ii) : make_pair(ids_pos_ii, ids_pos_jj);
     new_deltas_tmp->push_back(new_delta);
 
-    vector<bool> deltas_vec = gamma_vec_unranged_->at(kk)->deltas_vec_; 
-    deltas_vec[new_delta.first*orig_aops_half_size_ + new_delta.second] = true;  
+    vector<int> deltas_vec = gamma_vec_unranged_->at(kk)->deltas_vec_; 
+    deltas_vec.push_back( new_delta.first*orig_aops_half_size_ + new_delta.second ); 
 
-    shared_ptr<pint_vec> new_deltas = Standardize_delta_ordering_generic( new_deltas_tmp );
+    shared_ptr<pint_vec> new_deltas = standardize_delta_ordering_generic( new_deltas_tmp);
     int new_sign = gint->my_sign_;
 
     shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>();
@@ -956,7 +983,6 @@ void GammaGenerator::swap_unranged( int ii, int jj, int kk  ){
 
   return;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Swaps indexes round, flips sign, and if ranges are the same puts new density matrix in the list.
 // CAREFUL : always keep creation operator as the left index in the contraction .
@@ -979,7 +1005,7 @@ void GammaGenerator::swap( int ii, int jj, int kk, shared_ptr<vector<shared_ptr<
 
     pair<int,int> new_delta = orig_aops_->at(ids_pos->at(jj)) ? make_pair(ids_pos->at(jj), ids_pos->at(ii)) : make_pair(ids_pos->at(ii), ids_pos->at(jj));
     new_deltas_tmp->push_back(new_delta);
-    shared_ptr<pint_vec> new_deltas = Standardize_delta_ordering_generic( new_deltas_tmp );
+    shared_ptr<pint_vec> new_deltas = standardize_delta_ordering_generic( new_deltas_tmp );
     int new_sign = gamma_vec->at(kk)->my_sign;
 
     shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>();
@@ -996,26 +1022,33 @@ void GammaGenerator::swap( int ii, int jj, int kk, shared_ptr<vector<shared_ptr<
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<pint_vec> GammaGenerator::Standardize_delta_ordering_generic(shared_ptr<pint_vec> deltas_pos ) {
+shared_ptr<pint_vec>
+GammaGenerator::standardize_delta_ordering_generic( shared_ptr<pint_vec> deltas_pos  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-//cout << "GammaGenerator::Standardize_delta_ordering_generic" << endl;
+//cout << "GammaGenerator::standardize_delta_ordering_generic" << endl;
+//TODO must order by indexes, not just by initial position
+//     If one of the indexes is X, cannot "just" not contract
+//     must also account for reordering ; T_{ijkl} = ... + <I| ijklmnop | J> A_{mnop} delta_{lm}
+//     T_{ijkl} = .... + < I | ijklmnop | J> A_{lmop} 
+//     so must flip order of A based on T (X) position
 
- shared_ptr<vector<pair<int,int>>> new_deltas_pos;
-
- if (deltas_pos->size() > 1 ) {
-   new_deltas_pos =  make_shared <vector<pair<int,int>>>( deltas_pos->size());
-   vector<int> posvec(deltas_pos->size(),0);
-   for (int ii = 0 ; ii != deltas_pos->size() ; ii++)
-     for (int jj = 0 ; jj != deltas_pos->size() ; jj++)
-       if (deltas_pos->at(ii).first > deltas_pos->at(jj).first )
-         posvec[ii]++ ;
-
-   for (int ii = 0 ; ii != deltas_pos->size() ; ii++)
-     new_deltas_pos->at(posvec[ii]) = deltas_pos->at(ii);
-
- } else {
-   new_deltas_pos = deltas_pos;
- }
+  shared_ptr<vector<pair<int,int>>> new_deltas_pos;
+ 
+  if (deltas_pos->size() > 1 ) {
+    new_deltas_pos =  make_shared <vector<pair<int,int>>>( deltas_pos->size());
+    vector<int> posvec(deltas_pos->size(),0);
+    for (int ii = 0 ; ii != deltas_pos->size() ; ii++)
+      for (int jj = 0 ; jj != deltas_pos->size() ; jj++)
+        if (orig_ids_->at(deltas_pos->at(ii).first) > orig_ids_->at(deltas_pos->at(jj).first) )
+          posvec[ii]++;
+ 
+    for (int ii = 0 ; ii != deltas_pos->size(); ii++)
+      new_deltas_pos->at(posvec[ii]) = deltas_pos->at(ii);
+ 
+  } else {
+    new_deltas_pos = deltas_pos;
+ 
+  }
   return new_deltas_pos;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -104,6 +104,10 @@ namespace WickUtils {
 
   std::string get_ctp_name( const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges, const std::vector<std::pair<int,int>>& ctrs_pos ); 
 
+  std::shared_ptr<std::vector<std::pair<int,int>>> 
+  standardize_delta_ordering_generic( std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos, std::shared_ptr<std::vector<std::string>> idxs );
+
+
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
     if (name != "" ) 

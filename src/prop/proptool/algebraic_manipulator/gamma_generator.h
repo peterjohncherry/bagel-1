@@ -24,7 +24,7 @@ class GammaIntermediate {
                         std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
                         int my_sign_in ) :
      full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), 
-     my_sign(my_sign_in) {};
+     my_sign(my_sign_in) {  };
 
      GammaIntermediate( std::shared_ptr<const std::vector<std::string>> full_id_ranges_in,
                         std::shared_ptr<std::vector<int>> ids_pos_in,
@@ -42,7 +42,7 @@ class GammaIntermediateUnranged {
    public :
      std::shared_ptr<std::vector<int>> ids_pos_;
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_;
-     std::vector<bool> deltas_vec_;
+     std::vector<int> deltas_vec_;
      int my_sign_;
 
      GammaIntermediateUnranged( std::shared_ptr<std::vector<int>> ids_pos,
@@ -53,7 +53,7 @@ class GammaIntermediateUnranged {
 
      GammaIntermediateUnranged( std::shared_ptr<std::vector<int>> ids_pos,
                         std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos,
-                        std::vector<bool>& deltas_vec,
+                        std::vector<int>& deltas_vec,
                         int my_sign ) :
      ids_pos_(ids_pos), deltas_pos_(deltas_pos), deltas_vec_(deltas_vec), my_sign_(my_sign) {};
 
@@ -166,6 +166,11 @@ class GammaGenerator{
     bool generic_reorderer_different_sector( std::string reordering_name, std::string bra_name,
                                              std::string ket_name, bool final_reordering );
 
+    void get_ranged_gammas(  std::shared_ptr<Range_Block_Info> block_info ); 
+
+    void braket_survival_check_normal_order( std::shared_ptr<Range_Block_Info> block_info, 
+                                             std::shared_ptr<CIVecInfo<double>> bra_info, std::shared_ptr<CIVecInfo<double>> ket_info );
+
     void swap_unranged( int ii, int jj, int kk );
     bool generic_reorderer_unranged( std::string reordering_name, bool first_reordering, bool final_reordering );
     bool generic_reorderer_different_sector_unranged( std::string reordering_name, std::string bra_name,
@@ -174,9 +179,6 @@ class GammaGenerator{
     bool proj_onto_map( std::shared_ptr<GammaIntermediate> gint,
                         std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
                         std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
-
-//    bool braket_survival_check( std::shared_ptr<GammaIntermediate> gint, std::shared_ptr<CIVecInfo> bra_info, 
-//                                std::shared_ptr<CIVecInfo> ket_info );
 
     void Contract_remaining_indexes(int kk);
 
@@ -195,8 +197,8 @@ class GammaGenerator{
 
     bool gamma_survives( std::shared_ptr<std::vector<int>> ids_pos, std::shared_ptr<const std::vector<std::string>> id_ranges) ;
 
-    static std::shared_ptr<std::vector<std::pair<int,int>>>
-           Standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ) ;
+    std::shared_ptr<std::vector<std::pair<int,int>>>
+    standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
 
     std::vector<int> get_standard_range_order(const std::vector<std::string> &rngs) ;
 
@@ -217,5 +219,8 @@ class GammaGenerator{
     void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec, std::string name );
     void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate>>> final_gamma_vec, std::string name,
                                     std::string bra_name, std::string ket_name );
+
+ 
+
 };
 #endif

@@ -44,6 +44,11 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
         GGen->generic_reorderer_unranged( "print", false, false );
   }
 
+  for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it != Total_Op_->split_ranges()->end(); range_map_it++ )
+    if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) )  
+      GGen->get_ranged_gammas( range_map_it->second );
+  
+
 //  for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
 //    if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
 //      GGen->add_gamma( range_map_it->second );

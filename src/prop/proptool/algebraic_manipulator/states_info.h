@@ -15,8 +15,8 @@ class CIVecInfo {
      const int nele_;
      const int state_number_;
      const std::string name_;
-     std::shared_ptr<std::map< char ,int>>  hole_range_map_;
-     std::shared_ptr<std::map< char ,int>>  elec_range_map_;
+     std::shared_ptr<std::map< char ,int>> hole_range_map_;
+     std::shared_ptr<std::map< char ,int>> elec_range_map_;
 
      long unsigned int elec_pnum_;
      long unsigned int hole_pnum_;
@@ -45,7 +45,7 @@ class CIVecInfo {
      std::shared_ptr<std::map< char, int>> elec_range_map() { return elec_range_map_; } 
 
      long unsigned int elec_pnum() { return elec_pnum_ ; }  
-     long unsigned int  hole_pnum() { return hole_pnum_ ; }  
+     long unsigned int hole_pnum() { return hole_pnum_ ; }  
   
      // characeteristic numbers for determining  if < A | ..... | B > is zero without maps
      void set_elec_hole_pnums( std::shared_ptr<std::map<char, long unsigned int>> range_prime_map ) {
@@ -54,18 +54,18 @@ class CIVecInfo {
        for ( auto& elem : *hole_range_map_ ) 
          if ( elem.second != 0 )
            if ( elem.second < 5 ){ 
-             hole_pnum_*=(elem.second* range_prime_map->at(elem.first)); 
+             hole_pnum_ *= (elem.second* range_prime_map->at(elem.first)); 
            } else { 
-             hole_pnum_*=pow(range_prime_map->at(elem.first), 5); 
+             hole_pnum_ *= pow(range_prime_map->at(elem.first), 5); 
            }
 
        elec_pnum_ = 1; 
        for ( auto& elem : *elec_range_map_ ) 
          if ( elem.second != 0 ) 
            if ( elem.second < 5 ){ 
-             elec_pnum_*=(elem.second* range_prime_map->at(elem.first)); 
+             elec_pnum_ *= (elem.second* range_prime_map->at(elem.first)); 
            } else { 
-             elec_pnum_*=pow(range_prime_map->at(elem.first), 5); 
+             elec_pnum_ *= pow(range_prime_map->at(elem.first), 5); 
            }
      }
 
