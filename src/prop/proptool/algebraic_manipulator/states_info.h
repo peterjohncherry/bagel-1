@@ -54,16 +54,16 @@ class CIVecInfo {
        for ( auto& elem : *hole_range_map_ ) 
          if ( elem.second != 0 )
            if ( elem.second < 5 ){ 
-             hole_pnum_ *= (elem.second* range_prime_map->at(elem.first)); 
+             hole_pnum_ *= pow( range_prime_map->at(elem.first), elem.second); 
            } else { 
-             hole_pnum_ *= pow(range_prime_map->at(elem.first), 5); 
+             hole_pnum_ *= pow( range_prime_map->at(elem.first), 5); 
            }
 
        elec_pnum_ = 1; 
        for ( auto& elem : *elec_range_map_ ) 
          if ( elem.second != 0 ) 
            if ( elem.second < 5 ){ 
-             elec_pnum_ *= (elem.second* range_prime_map->at(elem.first)); 
+             elec_pnum_ *= pow(range_prime_map->at(elem.first), elem.second  ); 
            } else { 
              elec_pnum_ *= pow(range_prime_map->at(elem.first), 5); 
            }

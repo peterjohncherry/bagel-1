@@ -322,12 +322,17 @@ bool GammaGenerator::check_if_same_sector( string bra_name, string ket_name ) {
 void GammaGenerator::braket_survival_check_normal_order( shared_ptr<Range_Block_Info> block_info, 
                                                          shared_ptr<CIVecInfo<double>> bra_info, shared_ptr<CIVecInfo<double>> ket_info ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout <<" GammaGenerator::braket_survival_check" << endl;
- 
-  for ( shared_ptr<GammaIntermediateUnranged>& gint : *gamma_vec_unranged_ ){ 
+  cout << endl << endl << " GammaGenerator::braket_survival_check" << endl;
 
-    cout << "checking : " ; cout.flush();
-    cout << WickUtils::get_gamma_name( block_info->unique_block(), block_info->orig_aops(), gint->ids_pos_, bra_info->name(), ket_info->name() ) << endl; 
+ cout << " block_info->plus_pnum_= "<<  block_info->plus_pnum_ << endl;
+ cout << " block_info->kill_pnum_= "<<  block_info->kill_pnum_ << endl;
+ cout << " ket_info->elec_pnum() = "<<  ket_info->elec_pnum()  << endl;
+ cout << " ket_info->hole_pnum() = "<<  ket_info->hole_pnum()  << endl;
+ print_vector( *(block_info->orig_block()), "block_info->orig_block_"); cout <<endl;
+ print_vector( *(block_info->unique_block()), "block_info->unique_block_"); cout <<endl;
+ cout << endl << endl;
+  
+  for ( shared_ptr<GammaIntermediateUnranged>& gint : *gamma_vec_unranged_ ){ 
 
     bool skip = false;
     for ( vector<int>::iterator dv_it =  gint->deltas_vec_.begin(); dv_it != gint->deltas_vec_.end(); dv_it++ )
@@ -339,44 +344,53 @@ void GammaGenerator::braket_survival_check_normal_order( shared_ptr<Range_Block_
     if ( skip )
       continue;   
  
+//   cout << "checking : " ; cout.flush();
+//   cout << WickUtils::get_gamma_name( block_info->unique_block(), block_info->orig_aops(), gint->ids_pos_, bra_info->name(), ket_info->name() );
+//   cout <<" : "; cout.flush(); 
+
     long unsigned int range_plus_num = block_info->plus_pnum_;
     long unsigned int range_kill_num = block_info->kill_pnum_;
-    long unsigned int bra_elec_num = bra_info->elec_pnum();
-    long unsigned int bra_hole_num = bra_info->hole_pnum();
+    long unsigned int ket_elec_num = ket_info->elec_pnum();
+    long unsigned int ket_hole_num = ket_info->hole_pnum();
 
-    cout << "  range_plus_num = " << range_plus_num << endl;
-    cout << "  range_kill_num = " << range_kill_num << endl;
-    cout << "  bra_elec_num   = " << bra_elec_num   << endl;
-    cout << "  bra_hole_num   = " << bra_hole_num   << endl;
- 
-    cout << "   1 survives!!! " << endl; 
-    
-    if ( (bra_elec_num % range_kill_num) != 0 ) { 
+    long unsigned int range_plus_num_ref = block_info->plus_pnum_;
+    long unsigned int range_kill_num_ref = block_info->kill_pnum_;
+    long unsigned int ket_elec_num_ref = ket_info->elec_pnum();
+    long unsigned int ket_hole_num_ref = ket_info->hole_pnum();
+
+  //  cout << bra_elec_num << " % " << range_kill_num << " = "; cout.flush();
+  //  cout << bra_elec_num % range_kill_num; cout.flush();
+
+    if ( (ket_elec_num % range_kill_num) != 0 || ( ket_elec_num < range_kill_num ) ) { 
+    //  cout << " ... skip" << endl;
       continue;
- 
-    cout << "   2 survives!!! " << endl; 
-    } else {
-      bra_elec_num /= range_kill_num;
-      bra_hole_num *= range_kill_num;
+    } else { 
+      ket_elec_num /= range_kill_num;
+      ket_hole_num *= range_kill_num;
     }
-    cout << "   3 survives!!! " << endl; 
  
-    if ( (bra_hole_num % range_plus_num) != 0  ) {
+    if ( (ket_hole_num % range_plus_num) != 0 || ( ket_hole_num < range_plus_num ) ) {
       continue;
- 
-    cout << "   4 survives!!! " << endl; 
     } else {
-      bra_elec_num *= range_plus_num;
-      bra_hole_num /= range_plus_num;
+      ket_elec_num *= range_plus_num;
+      ket_hole_num /= range_plus_num;
     }
-    cout << "   5 survives!!! " << endl; 
-    
-    if ( bra_hole_num != ket_info->elec_pnum() || bra_elec_num != ket_info->elec_pnum() )  
+
+    cout << "range_plus_num_ref = " << range_plus_num_ref  <<  endl;
+    cout << "range_kill_num_ref = " << range_kill_num_ref  <<  endl;
+    cout << "ket_elec_num_ref   = " << ket_elec_num_ref    <<  endl;
+    cout << "ket_hole_num_ref   = " << ket_hole_num_ref    <<  endl;
+ 
+    //if ( bra_hole_num != ket_info->elec_pnum() || bra_elec_num != ket_info->elec_pnum() )  
+    cout << " if ( " << ket_elec_num << " != " << bra_info->elec_pnum() << " ) " << endl;  
+    if ( (ket_elec_num != bra_info->elec_pnum()) || (ket_hole_num != bra_info->hole_pnum())  )  {
+    //  cout << " if ( " << bra_elec_num << " != " << ket_info->elec_pnum() << " ) " << endl;  
       continue;
-   
-    //make the ranged gamma here
-    
-    cout << "   6 survives!!! " << endl; 
+    } else { 
+     //make the ranged gamma here
+     cout << WickUtils::get_gamma_name( block_info->unique_block(), block_info->orig_aops(), gint->ids_pos_, bra_info->name(), ket_info->name() );
+     cout << "   Survives!!! " << endl; 
+    }
   }
   return;
 }  

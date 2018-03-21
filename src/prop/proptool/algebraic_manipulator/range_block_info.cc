@@ -18,10 +18,10 @@ Range_Block_Info::Range_Block_Info( bool is_unique, bool survives, std::pair<dou
   plus_pnum_ = 1;   
   kill_pnum_ = 1;  
 
-  vector<int> kill_pos(orig_aops_->size()/2); 
-  vector<int> plus_pos(orig_aops_->size()/2); 
-  vector<int>::iterator kp_it = kill_pos.begin();
-  vector<int>::iterator pp_it = plus_pos.begin(); 
+  vector<unsigned int> kill_pos(orig_aops_->size()/2); 
+  vector<unsigned int> plus_pos(orig_aops_->size()/2); 
+  vector<unsigned int>::iterator kp_it = kill_pos.begin();
+  vector<unsigned int>::iterator pp_it = plus_pos.begin(); 
 
   int pos = 0;
   std::vector<bool>::const_iterator oa_it = orig_aops_->begin(); 
@@ -36,6 +36,9 @@ Range_Block_Info::Range_Block_Info( bool is_unique, bool survives, std::pair<dou
        ++kp_it;
     }
   }
+  print_vector( kill_pos, "kill_ranges" ) ; cout.flush();   
+  print_vector( plus_pos, "  plus_ranges" ) ; cout.flush();   
+  print_vector( *orig_block_, "  orig_block" ) ; cout.flush();   cout << "    kill_pnum_ = " << kill_pnum_ << "     plus_pnum_ = " << plus_pnum_ << endl;
 
   // TODO this generates the contractions, should probably be replaced with arithmetical version
   allowed_contractions_ = vector<bool>(kill_pos.size() * plus_pos.size() ); 
@@ -46,12 +49,12 @@ Range_Block_Info::Range_Block_Info( bool is_unique, bool survives, std::pair<dou
       *ac_it = ( *kp_it == *pp_it );
   } 
   
-  print_vector( kill_pos, "kill_pos"); cout << "   " ; cout.flush(); print_vector( plus_pos, "plus_pos"); cout << "    "; cout.flush();
+ //print_vector( kill_pos, "kill_pos"); cout << "   " ; cout.flush(); print_vector( plus_pos, "plus_pos"); cout << "    "; cout.flush();
 
-  cout << "allowed contractions = [" ; cout.flush();
-  for ( bool ac : allowed_contractions_ )
-    cout << ac << " " ;
-  cout << "]" << endl; 
+ // cout << "allowed contractions = [" ; cout.flush();
+ // for ( bool ac : allowed_contractions_ )
+ //   cout << ac << " " ;
+ // cout << "]" << endl; 
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

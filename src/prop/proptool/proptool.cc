@@ -605,7 +605,12 @@ cout << "PropTool::PropTool::set_target_info" << endl;
                                  elec_range_map, hole_range_map ); 
     }
   } 
-   
+
+  cout << "range_prime_map" << endl;  
+  for ( auto& elem : *range_prime_map_ ) {
+    string rng = ""; rng.push_back(elem.first); cout << rng << " : " << elem.second << endl; 
+  }
+ 
   for ( auto& elem : targets_info_->civec_info_map_ ){ 
     elem.second->set_elec_hole_pnums( range_prime_map_ );
     cout << elem.second->name() << " elec_pnum = " << elem.second->elec_pnum() << " hole_pnum = " << elem.second->hole_pnum() << endl;  

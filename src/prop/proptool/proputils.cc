@@ -966,4 +966,29 @@ WickUtils::standardize_delta_ordering_generic( shared_ptr<pint_vec> deltas_pos, 
  }
   return new_deltas_pos;
 }
+//////////////////////////////////////////////////////////////////////////////////
+unsigned int WickUtils::range_to_prime(char range ) {
+//////////////////////////////////////////////////////////////////////////////////
+  switch (range){
+    case 'v' : return 2;
+    case 'V' : return 3;
+    case 'c' : return 5;
+    case 'C' : return 7;
+    case 'a' : return 11;
+    case 'A' : return 13;
+  }
+}
+//////////////////////////////////////////////////////////////////////////////////
+unsigned int WickUtils::range_to_prime_spinfree(char range ) {
+//////////////////////////////////////////////////////////////////////////////////
+  switch (range){
+    case 'v' : return 2;
+    case 'c' : return 3;
+    case 'a' : return 5;
+  }
+}
+
+   
+
+
 #endif

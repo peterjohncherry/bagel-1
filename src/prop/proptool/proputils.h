@@ -107,6 +107,8 @@ namespace WickUtils {
   std::shared_ptr<std::vector<std::pair<int,int>>> 
   standardize_delta_ordering_generic( std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos, std::shared_ptr<std::vector<std::string>> idxs );
 
+  unsigned int range_to_prime(char range );
+  unsigned int range_to_prime_spinfree(char range );
 
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
