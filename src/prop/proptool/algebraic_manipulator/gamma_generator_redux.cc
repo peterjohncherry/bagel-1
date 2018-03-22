@@ -78,7 +78,7 @@ cout << "GammaGeneratorRedux::get_standard_idx_order_init() " << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::add_gamma( shared_ptr<Range_Block_Info> block_info ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::add_gamma" << endl;
+  cout << "GammaGeneratorRedux::add_gamma" << endl;
 
   shared_ptr<vector<pair<int,int>>> deltas_pos_in = make_shared<vector<pair<int,int>>>(0);
   int my_sign_in = 1;
@@ -94,7 +94,7 @@ void GammaGeneratorRedux::add_gamma( shared_ptr<Range_Block_Info> block_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGeneratorRedux::generic_reorderer( string reordering_name, bool first_reordering, bool final_reordering ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::generic_reorderer" << endl; 
+  cout << "GammaGeneratorRedux::generic_reorderer" << endl; 
   
   int kk = 0;
   bool does_it_contribute = false;
@@ -108,25 +108,37 @@ bool GammaGeneratorRedux::generic_reorderer( string reordering_name, bool first_
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_name, string bra_name,
-                                                         string ket_name, bool final_reordering   ) {
+                                                              string ket_name, bool final_reordering   ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "GammaGeneratorRedux::generic_reorderer_different_sector" << endl;
+ cout << "GammaGeneratorRedux::generic_reorderer_different_sector" << endl;
 
+ if ( final_reordering ) { 
+   cout << "final_reordering !!!" << endl; 
+ } else { 
+   cout << "NOT final_reordering !!!" << endl; 
+ }
+ 
   shared_ptr<map<char,int>> bra_hole_map = target_states_->hole_range_map(bra_name);;
   shared_ptr<map<char,int>> bra_elec_map = target_states_->elec_range_map(bra_name);;
                                                                                     
   shared_ptr<map<char,int>> ket_hole_map = target_states_->hole_range_map(ket_name);;
   shared_ptr<map<char,int>> ket_elec_map = target_states_->elec_range_map(ket_name);;
-  
+ 
+  cout << "got names from maps" << endl; 
   if ( reordering_name == "normal order" ) {
+    cout << "doing normal order" << endl;
     
     int kk = 0;
+    cout << "kk = "; cout.flush();
     while ( kk != gamma_vec->size()) {
+      cout << kk << " "; cout.flush();
       if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){
         normal_order(kk);
       }
       kk++;
+      cout << endl;
     }
+    cout << "finished normal ordering" << endl;
     kk = 0;
     while ( kk != gamma_vec->size()){
       if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) && ( gamma_vec->at(kk)->ids_pos->size() != 0 ) ) { 
@@ -140,13 +152,16 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
     }
 
   } else if ( reordering_name == "anti-normal order" ) {
+    cout << "doing anti-normal order" << endl;
     int kk= 0 ;
     while ( kk != gamma_vec->size()){
-      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) { 
+      cout << "kk = " << kk << endl;
+      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) 
         anti_normal_order(kk);
-      }
+      
       kk++;
     }
+    
     kk = 0;
     while ( kk != gamma_vec->size()){
       if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) && ( gamma_vec->at(kk)->ids_pos->size() != 0 ) ) { 
@@ -159,11 +174,15 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
       kk++ ;
     } 
   } else if ( reordering_name == "alternating order" ) {
-
+    cout << "doing alternating ordering" << endl;
     int kk = 0;
-    while ( kk != gamma_vec->size())
-      alternating_order(kk++);
-
+    cout << "kk = "; cout.flush();
+    while ( kk != gamma_vec->size()) {
+      cout << kk << " "; cout.flush();
+      alternating_order(kk);
+      kk++;
+    } 
+    cout << endl << " done alternating ordering" << endl; 
     for ( shared_ptr<GammaIntermediateRedux>& gint : *gamma_vec ){
       if ( proj_onto_map( gint, *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){ 
         final_gamma_vec->push_back( gint );
@@ -175,13 +194,16 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
   bool does_it_contribute = (gamma_vec->size() > 0 );
 
   int kk = 0;
+   
+  cout << "gamma_vec->size() = " << gamma_vec->size() << endl; 
+  cout << "final_gamma_vec->size() = " << final_gamma_vec->size() << endl; 
   if ( final_reordering ) { 
+    cout << "final_gamma_vec->size() = " << final_gamma_vec->size() <<  endl;
     while ( kk != gamma_vec->size()){
       add_Acontrib_to_map( kk, bra_name, ket_name );
       kk++;
     } 
   }
-  
 
   return does_it_contribute;
 }
@@ -201,7 +223,7 @@ bool GammaGeneratorRedux::proj_onto_map( shared_ptr<GammaIntermediateRedux> gint
 //Grossly inefficient, but totally generic, should write seperate routines for normal and antinormal
 //ordering; consecutive operators means can just count.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::proj_onto_map" << endl;
+  cout << "GammaGeneratorRedux::proj_onto_map" << endl;
 
   shared_ptr<vector<int>> idxs_pos =  gint->ids_pos;
 
@@ -251,7 +273,7 @@ bool GammaGeneratorRedux::proj_onto_map( shared_ptr<GammaIntermediateRedux> gint
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::anti_normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::anti_normal_order" << endl;
+  cout << "GammaGeneratorRedux::anti_normal_order" << endl;
 
   shared_ptr<vector<int>> ids_pos  = gamma_vec->at(kk)->ids_pos;
   int num_kill = 0;
@@ -341,22 +363,27 @@ void GammaGeneratorRedux::alternating_order( int kk ) {  // e.g. +-+-+-+-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "GammaGeneratorRedux::alternating_order" << endl;
 //TODO change to use other optimized order routine
+    
+  cout << "Z0" << endl;
   shared_ptr<vector<int>>           ids_pos = gamma_vec->at(kk)->ids_pos;
   shared_ptr<const vector<string>>  full_id_ranges = gamma_vec->at(kk)->full_id_ranges;
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos;
 
+  cout << "Z1" << endl;
   vector<string> unc_ranged_idxs(full_id_ranges->size() - 2*deltas_pos->size());
   vector<string>::iterator unc_ranged_idxs_it = unc_ranged_idxs.begin();
   vector<bool> unc_aops(orig_aops_->size() - 2*deltas_pos->size());
 
+  cout << "Z2" << endl;
   vector<bool>::iterator unc_aops_it = unc_aops.begin();
   for (int pos : *ids_pos ) {
     *unc_ranged_idxs_it++ = orig_ids_->at(pos)+full_id_ranges->at(pos);
     *unc_aops_it++ = orig_aops_->at(pos);
   }
-
+  cout << "Z3" << endl;
   vector<int> standard_alt_order = get_standardized_alt_order( unc_ranged_idxs, unc_aops );
 
+  cout << "Z4" << endl;
   shared_ptr<vector<int>> new_ids_pos = reorder_vector( standard_alt_order, *ids_pos);
   for (int ii = ids_pos->size()-1 ; ii != -1; ii-- ){
     if (ids_pos->at(ii) == new_ids_pos->at(ii))
@@ -371,12 +398,13 @@ void GammaGeneratorRedux::alternating_order( int kk ) {  // e.g. +-+-+-+-
       }
     }
   }
+  cout << "Z5" << endl;
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string ket_name ){  // e.g. ++++----
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "void GammaGeneratorRedux::add_Acontrib_to_map" << endl;
+  cout << "void GammaGeneratorRedux::add_Acontrib_to_map" << endl;
 
   shared_ptr<GammaIntermediateRedux> gamma_int = gamma_vec->at(kk);
 
@@ -630,6 +658,7 @@ bool GammaGeneratorRedux::all_active_ranges(shared_ptr<GammaIntermediateRedux> g
 ///////////////////////////////////////////////////////////////////////////////////////
 vector<int> GammaGeneratorRedux::get_standard_order ( const vector<string>& rngs ) {
 ///////////////////////////////////////////////////////////////////////////////////////
+cout <<"GammaGeneratorRedux::get_standard_order" << endl;
 
   vector<string> new_rngs(rngs.size());
   vector<string>::iterator new_rngs_it = new_rngs.begin();
@@ -645,9 +674,9 @@ vector<int> GammaGeneratorRedux::get_standard_idx_order(const vector<string>&idx
   vector<int> pos(idxs.size());
   iota(pos.begin(), pos.end(), 0);
 
-  auto idx_order_tmp = idx_order_;
+  auto idx_order_tmp = standard_order_;
   sort(pos.begin(), pos.end(), [&idxs, &idx_order_tmp](int i1, int i2){
-                                   return (bool)( idx_order_tmp->at(idxs[i1]) < idx_order_tmp->at(idxs[i2]) );
+                                   return (bool)( idxs[i1] < idxs[i2] );
                                  }
                             );
   return pos;
@@ -681,8 +710,12 @@ vector<int> GammaGeneratorRedux::get_position_order(const vector<int> &ids_pos) 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 vector<int> GammaGeneratorRedux::get_standardized_alt_order ( const vector<string>& rngs ,const vector<bool>& aops ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "GammaGeneratorRedux::get_standardized_alt_order " << endl;
+   
+  print_vector( rngs, "rngs" ) ; cout << endl;
+  vector<int> standard_order = get_standard_idx_order(rngs) ;
+  print_vector(standard_order , "standard_order" ) ; cout << endl;
 
-  vector<int> standard_order = get_standard_order(rngs) ;
   vector<int> standard_order_plus(standard_order.size()/2);
   vector<int> standard_order_kill(standard_order.size()/2);
   vector<int>::iterator standard_order_plus_it = standard_order_plus.begin();

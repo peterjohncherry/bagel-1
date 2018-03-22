@@ -107,7 +107,6 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
       for (int ii = 0 ; ii != braket_info.op_list_.size() ; ii++ )  
         SubOps[ii] = MT_map_->at(braket_info.op_list_[ii]); 
 
-      cout << "set subops" << endl;
 
       shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info.multiop_name_, /*spinfree_ = */ true, SubOps, range_prime_map_ );
       multiop->get_ctrs_tens_ranges();
@@ -119,6 +118,10 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
     cout << "Pushed " <<  braket_info.multiop_name_ << " back into braket_name_list" << endl;
   }
   
+  cout << "Full CMTP map" << endl;
+  for ( auto& elem  : *CTP_map_) { 
+    cout <<  elem.first << endl;
+  } 
   return expression_type;
 }
 

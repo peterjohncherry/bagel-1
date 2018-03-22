@@ -1192,9 +1192,9 @@ vector<int> GammaGenerator::get_standard_idx_order(const vector<string>&idxs) {
   vector<int> pos(idxs.size());
   iota(pos.begin(), pos.end(), 0);
 
-  auto idx_order_tmp = idx_order_;
+  auto idx_order_tmp = op_order_;
   sort(pos.begin(), pos.end(), [&idxs, &idx_order_tmp](int i1, int i2){
-                                   return (bool)( idx_order_tmp->at(idxs[i1]) < idx_order_tmp->at(idxs[i2]) );
+                                   return (bool)( idx_order_tmp->at(idxs[i1][0]) < idx_order_tmp->at(idxs[i2][0]) );
                                  }
                             );
   return pos;

@@ -36,9 +36,9 @@ Range_Block_Info::Range_Block_Info( bool is_unique, bool survives, std::pair<dou
        ++kp_it;
     }
   }
-  print_vector( kill_pos, "kill_ranges" ) ; cout.flush();   
-  print_vector( plus_pos, "  plus_ranges" ) ; cout.flush();   
-  print_vector( *orig_block_, "  orig_block" ) ; cout.flush();   cout << "    kill_pnum_ = " << kill_pnum_ << "     plus_pnum_ = " << plus_pnum_ << endl;
+//  print_vector( kill_pos, "kill_ranges" ) ; cout.flush();   
+//  print_vector( plus_pos, "  plus_ranges" ) ; cout.flush();   
+//  print_vector( *orig_block_, "  orig_block" ) ; cout.flush();   cout << "    kill_pnum_ = " << kill_pnum_ << "     plus_pnum_ = " << plus_pnum_ << endl;
 
   // TODO this generates the contractions, should probably be replaced with arithmetical version
   allowed_contractions_ = vector<bool>(kill_pos.size() * plus_pos.size() ); 
@@ -115,7 +115,7 @@ SRBI_Helper::SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bloc
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool Split_Range_Block_Info::is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Split_Range_Block_Info::is_sparse" << endl;
+  //cout << "Split_Range_Block_Info::is_sparse" << endl;
 
   std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_iter =  range_blocks_->begin();
   for ( std::vector<std::vector<int>>::const_iterator si_iter = state_idxs->begin(); si_iter != state_idxs->end(); si_iter++ ){
