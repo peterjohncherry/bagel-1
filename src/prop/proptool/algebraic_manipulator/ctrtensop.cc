@@ -17,7 +17,7 @@ void CtrTensorPart_Base::get_name(){
     name_ += id[0];
 
   shared_ptr<vector<pair<int,int>>> ctrs_buff = make_shared<vector<pair<int,int>>>(*ctrs_pos_);
-  shared_ptr<vector<pair<int,int>>> ctrs_buff_standard = WickUtils::standardize_delta_ordering_generic(ctrs_buff, full_idxs_ ) ;
+  shared_ptr<vector<pair<int,int>>> ctrs_buff_standard = WickUtils::standardize_delta_ordering_generic(*ctrs_buff, *full_idxs_ ) ;
 
   if (ctrs_buff_standard->size() !=0){
     name_ +="_"; 
@@ -39,7 +39,7 @@ string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_c
     new_name += id[0];
 
   shared_ptr<vector<pair<int,int>>> ctrs_buff = make_shared<vector<pair<int,int>>>(*new_ctrs_pos);
-  shared_ptr<vector<pair<int,int>>> ctrs_buff_standard = WickUtils::standardize_delta_ordering_generic(ctrs_buff, full_idxs_ ) ;
+  shared_ptr<vector<pair<int,int>>> ctrs_buff_standard = WickUtils::standardize_delta_ordering_generic(*ctrs_buff, *full_idxs_ ) ;
 
   if (ctrs_buff_standard->size() !=0){
     new_name+="_"; 

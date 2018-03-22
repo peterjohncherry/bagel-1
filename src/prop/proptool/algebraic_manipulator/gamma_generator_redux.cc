@@ -595,7 +595,7 @@ void GammaGeneratorRedux::swap( int ii, int jj, int kk, shared_ptr<vector<shared
 
     pair<int,int> new_delta = orig_aops_->at(ids_pos->at(jj)) ? make_pair(ids_pos->at(jj), ids_pos->at(ii)) : make_pair(ids_pos->at(ii), ids_pos->at(jj));
     new_deltas_tmp->push_back(new_delta);
-    shared_ptr<pint_vec> new_deltas = standardize_delta_ordering_generic( new_deltas_tmp );
+    shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( *new_deltas_tmp,  *orig_ids_ );
     int new_sign = gamma_vec->at(kk)->my_sign;
 
     shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>();

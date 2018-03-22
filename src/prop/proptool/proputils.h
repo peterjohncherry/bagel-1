@@ -101,15 +101,9 @@ namespace WickUtils {
   bool RangeCheck(const std::vector<std::string>& id_ranges, const std::vector<bool>& aops ) ;
   
   std::shared_ptr<std::vector<std::pair<int,int>>>
-  standardize_delta_ordering_generic( std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos ) ;
-
-  std::shared_ptr<std::vector<std::pair<int,int>>>
-  standardize_delta_ordering_generic( const std::vector<std::pair<int,int>>& deltas_pos );
+  standardize_delta_ordering_generic( const std::vector<std::pair<int,int>>& deltas_pos, const std::vector<std::string>& idxs  );
 
   std::string get_ctp_name( const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges, const std::vector<std::pair<int,int>>& ctrs_pos ); 
-
-  std::shared_ptr<std::vector<std::pair<int,int>>> 
-  standardize_delta_ordering_generic( std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos, std::shared_ptr<std::vector<std::string>> idxs );
 
   unsigned int range_to_prime(char range );
   unsigned int range_to_prime_spinfree(char range );

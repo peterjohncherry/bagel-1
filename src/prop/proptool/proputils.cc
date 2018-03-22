@@ -878,56 +878,6 @@ bool WickUtils::RangeCheck(const vector<string>& id_ranges, const vector<bool>& 
 
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<pair<int,int>>>
-WickUtils::standardize_delta_ordering_generic(shared_ptr<vector<pair<int,int>>> deltas_pos ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "WickUtils::standardize_delta_ordering_generic" << endl;
- 
-  shared_ptr<vector<pair<int,int>>> new_deltas_pos;
- 
-  if (deltas_pos->size() > 1 ) {
-    new_deltas_pos =  make_shared <vector<pair<int,int>>>( deltas_pos->size());
-    vector<int> posvec(deltas_pos->size(),0);
-    for (int ii = 0 ; ii != deltas_pos->size() ; ii++) 
-      for (int jj = 0 ; jj != deltas_pos->size() ; jj++) 
-        if (deltas_pos->at(ii).first > deltas_pos->at(jj).first )
-          posvec[ii]++ ;      
-    
-    for (int ii = 0 ; ii != deltas_pos->size() ; ii++) 
-      new_deltas_pos->at(posvec[ii]) = deltas_pos->at(ii);
- 
-  } else { 
-    new_deltas_pos = deltas_pos;
-  }
-  return new_deltas_pos;   
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<pair<int,int>>>
-WickUtils::standardize_delta_ordering_generic( const vector<pair<int,int>>& deltas_pos ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "WickUtils::standardize_delta_ordering_generic" << endl;
- 
-  shared_ptr<vector<pair<int,int>>> new_deltas_pos;
- 
-  if (deltas_pos.size() > 1 ) {
-    new_deltas_pos =  make_shared <vector<pair<int,int>>>( deltas_pos.size());
-    vector<int> posvec(deltas_pos.size(),0);
-    for (int ii = 0 ; ii != deltas_pos.size() ; ii++) 
-      for (int jj = 0 ; jj != deltas_pos.size() ; jj++) 
-        if (deltas_pos[ii].first > deltas_pos[jj].first )
-          posvec[ii]++ ;      
-    
-    for (int ii = 0 ; ii != deltas_pos.size() ; ii++) 
-      new_deltas_pos->at(posvec[ii]) = deltas_pos.at(ii);
- 
-  } else { 
-    vector<pair<int,int>>deltas_pos_buff = deltas_pos;
-    new_deltas_pos = make_shared<vector<pair<int,int>>>(deltas_pos_buff);
-  }
-  return new_deltas_pos;   
-}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // get range for ctrtensorpart  
@@ -949,7 +899,7 @@ string WickUtils::get_ctp_name( const vector<string>& idxs, const vector<string>
   if (ctrs_pos.size() != 0 ){ 
     ctp_name += "_";
     vector<pair<int,int>> ctrs_buff =  ctrs_pos;
-    shared_ptr<vector<pair<int,int>>> ctrs_standard = standardize_delta_ordering_generic(ctrs_buff); 
+    shared_ptr<vector<pair<int,int>>> ctrs_standard = standardize_delta_ordering_generic(ctrs_buff, idxs); 
     for ( pair<int,int>& ctr : *ctrs_standard )  
       ctp_name += to_string(ctr.first)+to_string(ctr.second);
   }
@@ -959,7 +909,7 @@ string WickUtils::get_ctp_name( const vector<string>& idxs, const vector<string>
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<pair<int,int>>>
-WickUtils::standardize_delta_ordering_generic( shared_ptr<pint_vec> deltas_pos, shared_ptr<vector<string>> idxs  ) {
+WickUtils::standardize_delta_ordering_generic( const vector<pair<int,int>>& deltas_pos, const vector<string>& idxs  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "GammaGenerator::Standardize_delta_ordering_generic" << endl;
 //TODO must order by indexes, not just by initial position
@@ -970,19 +920,20 @@ WickUtils::standardize_delta_ordering_generic( shared_ptr<pint_vec> deltas_pos, 
 
  shared_ptr<vector<pair<int,int>>> new_deltas_pos;
 
- if (deltas_pos->size() > 1 ) {
-   new_deltas_pos =  make_shared <vector<pair<int,int>>>( deltas_pos->size());
-   vector<int> posvec(deltas_pos->size(),0);
-   for (int ii = 0 ; ii != deltas_pos->size() ; ii++)
-     for (int jj = 0 ; jj != deltas_pos->size() ; jj++)
-       if (idxs->at(deltas_pos->at(ii).first) > idxs->at(deltas_pos->at(jj).first) )
+ if (deltas_pos.size() > 1 ) {
+   new_deltas_pos =  make_shared <vector<pair<int,int>>>( deltas_pos.size());
+   vector<int> posvec(deltas_pos.size(),0);
+   for (int ii = 0 ; ii != deltas_pos.size() ; ii++)
+     for (int jj = 0 ; jj != deltas_pos.size() ; jj++)
+       if (idxs[deltas_pos[ii].first] > idxs[deltas_pos[jj].first] )
          posvec[ii]++;
 
-   for (int ii = 0 ; ii != deltas_pos->size() ; ii++)
-     new_deltas_pos->at(posvec[ii]) = deltas_pos->at(ii);
+   for (int ii = 0 ; ii != deltas_pos.size() ; ii++)
+     new_deltas_pos->at(posvec[ii]) = deltas_pos[ii];
 
  } else {
-   new_deltas_pos = deltas_pos;
+   vector<pair<int,int>> new_deltas_pos_raw(deltas_pos);
+   new_deltas_pos = make_shared<vector<pair<int,int>>>( new_deltas_pos_raw ) ;
 
  }
   return new_deltas_pos;
