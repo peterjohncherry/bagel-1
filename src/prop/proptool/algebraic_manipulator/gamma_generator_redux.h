@@ -42,23 +42,11 @@ class GammaGeneratorRedux{
 
   private : 
     std::shared_ptr<StatesInfo<double>> target_states_;
-    int Ket_num_;
-    int Bra_num_;
-    int orig_aops_half_size_;
+    std::shared_ptr<std::vector<std::string>> Bra_names_;
+    std::shared_ptr<std::vector<std::string>> Ket_names_;
 
     std::shared_ptr<const std::vector<bool>> orig_aops_ ;
     std::shared_ptr<const std::vector<std::string>> orig_ids_ ;
-
-    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> final_gamma_vec;
-
-    std::shared_ptr<std::map< char, int>>         op_order_ ;
-    std::shared_ptr<std::map< std::string, int>>  idx_order_ ;
-    std::vector<int> standardized_idx_order_;
-    std::vector<int> order_map_;
-
-    std::vector<int> standard_order_;
-
-    double bk_factor;
 
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
@@ -68,9 +56,16 @@ class GammaGeneratorRedux{
     // result : information used here and in compute routines
     std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> Gamma_map;
 
-    std::shared_ptr<std::vector<std::string>> Bra_names_;
-    std::shared_ptr<std::vector<std::string>> Ket_names_;
+    double bk_factor_;
+    int orig_aops_half_size_;
 
+    std::vector<int> standard_order_;
+    std::vector<int> orig_to_std_order_;
+    std::vector<std::string> standardized_full_ids_;
+    std::vector<std::string> standardized_full_id_ranges_;
+
+    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> final_gamma_vec;
+    
     // key    : name of A-tensor
     // result : list of reorderings which much be applied to this A-tensor before it is contracted with this gamma.
     //          second part of pair is factor associated with each reordering.
@@ -124,6 +119,8 @@ class GammaGeneratorRedux{
 
     std::shared_ptr<std::vector<std::pair<int,int>>>
     standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
+
+    void set_standardized_alt_order_unranged ( int kk , std::vector<int>& standard_alt_order);
 
     std::vector<int> get_standard_range_order(const std::vector<std::string> &rngs) ;
 

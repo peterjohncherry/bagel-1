@@ -149,7 +149,6 @@ class GammaGenerator{
 
     void alternating_order_unranged( int kk );
 
-
     void set_standardized_alt_order_unranged ( int kk, std::vector<int>& alt_order_unranged );
 
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
