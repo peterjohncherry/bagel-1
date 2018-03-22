@@ -91,6 +91,10 @@ namespace WickUtils {
   std::string get_gamma_name( std::shared_ptr<const std::vector<std::string>> full_idx_ranges,  std::shared_ptr<const std::vector<bool>> aops_vec,
                               std::shared_ptr<std::vector<int>> idxs_pos, std::string Bra_name, std::string Ket_name );
 
+  std::string get_gamma_name( const std::vector<std::string>& full_idx_ranges, const std::vector<bool>& aops_vec,
+                              const std::vector<int>& idxs_pos, std::string Bra_name, std::string Ket_name );
+
+
   std::shared_ptr<std::vector<pint_vec>>  
   get_cross_pairs( std::shared_ptr<std::vector<int>> vec1 , std::shared_ptr<std::vector<int>> vec2, std::shared_ptr<std::vector<std::string>> id_names );
 

@@ -344,10 +344,6 @@ void GammaGenerator::braket_survival_check_normal_order( shared_ptr<Range_Block_
     if ( skip )
       continue;   
  
-//   cout << "checking : " ; cout.flush();
-//   cout << WickUtils::get_gamma_name( block_info->unique_block(), block_info->orig_aops(), gint->ids_pos_, bra_info->name(), ket_info->name() );
-//   cout <<" : "; cout.flush(); 
-
     long unsigned int range_plus_num = block_info->plus_pnum_;
     long unsigned int range_kill_num = block_info->kill_pnum_;
     long unsigned int ket_elec_num = ket_info->elec_pnum();
@@ -388,7 +384,7 @@ void GammaGenerator::braket_survival_check_normal_order( shared_ptr<Range_Block_
       continue;
     } else { 
      //make the ranged gamma here
-     cout << WickUtils::get_gamma_name( block_info->unique_block(), block_info->orig_aops(), gint->ids_pos_, bra_info->name(), ket_info->name() );
+     //cout << WickUtils::get_gamma_name( *(gint->full_id_ranges), *(orig_aops_), *(gint->ids_pos_), bra_info->name(), ket_info->name() );
      cout << "   Survives!!! " << endl; 
     }
   }

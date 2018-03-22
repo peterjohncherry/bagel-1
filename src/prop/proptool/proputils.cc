@@ -748,10 +748,6 @@ string WickUtils::get_civec_name(const int state_num, const int norb, const int 
 string WickUtils::get_gamma_name( shared_ptr<const vector<string>> full_idx_ranges,  shared_ptr<const vector<bool>> aops_vec,
                                   shared_ptr<vector<int>> idxs_pos, string Bra_name, string Ket_name ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_WickUtils 
-cout << "WickUtils::get_gamma_name" << endl; 
-#endif 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "WickUtils::get_gamma_name" << endl; 
   string  name;
  
@@ -775,8 +771,33 @@ cout << "WickUtils::get_gamma_name" << endl;
   
   return name;
 };
-
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+string WickUtils::get_gamma_name( const vector<string>& full_idx_ranges,  const vector<bool>& aops_vec,
+                                  const vector<int>& idxs_pos, string Bra_name, string Ket_name ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//cout << "WickUtils::get_gamma_name" << endl; 
+  string  name;
+ 
+  if (idxs_pos.size() == 0 ) {
+     name = "ID" ;
+  } else {  
+    name = "<" + Bra_name + "|_(";
+    for (int pos : idxs_pos ) 
+      name+=full_idx_ranges[pos][0];
+    
+    name+='_';
+    for (int pos : idxs_pos ) {
+      if(aops_vec[pos]){ 
+        name += '1';
+      } else {
+        name += '0';
+      }
+    } 
+    name += ")_|" + Ket_name + ">";
+  }
+  
+  return name;
+};
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 string WickUtils::get_gamma_name( shared_ptr<vector<string>> full_idx_ranges,  shared_ptr<vector<bool>> aops_vec,
                                   shared_ptr<vector<int>> idxs_pos, string Bra_name, string Ket_name ){
