@@ -383,8 +383,8 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
     do {
 
       for ( int ii = 0 ; ii != forvec->size() ; ii++ ) {
-        if ( old_forvec->at(ii) != forvec->at(ii) ) {
-          if ( forvec->at(ii) == 0 ) {
+        if ( (*old_forvec)[ii] != (*forvec)[ii] ) {
+          if ( (*forvec)[ii] == 0 ) {
             rng_maps[ii] = sub_tensops_[ii]->all_ranges()->begin() ;
           } else {
             rng_maps[ii]++;

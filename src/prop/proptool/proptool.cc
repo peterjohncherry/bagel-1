@@ -465,7 +465,12 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
           op_idxs_ptrs->push_back( &( id_val_map->at(op_idxs.back()) ) ); 
         }
  
-        bk_ops->push_back(Op_Init( opname, op_idxs, op_idxs_ptrs ));
+        if ( op_def->get_child_optional( "transform" ) ) { //TODO sort get_optional properly; won't work now for some reason... 
+          string trans;
+          bk_ops->push_back(Op_Init( opname, op_idxs, op_idxs_ptrs, trans ));
+        } else {
+          bk_ops->push_back(Op_Init( opname, op_idxs, op_idxs_ptrs ));
+        }
       }
 
       string bra_index = braket_inp->get<string>("bra");

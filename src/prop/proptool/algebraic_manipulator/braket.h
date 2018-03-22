@@ -12,6 +12,7 @@ class BraKet{
 
      public :
        const std::vector<std::string> op_list_;
+       const std::vector<char> op_trans_list_;
        const std::shared_ptr<std::vector<std::vector<int>>> op_state_ids_;
        const DataType factor_;
        const int bra_num_;
@@ -25,9 +26,10 @@ class BraKet{
 
        std::shared_ptr<TensOp_Base> Total_Op_;
 
-       BraKet( std::vector<std::string>& op_list, DataType factor, int bra_num, int ket_num, 
+       BraKet( std::vector<std::string>& op_list, std::vector<char>& op_trans_list,
+               DataType factor, int bra_num, int ket_num, 
                std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type) :
-               op_list_(op_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
+               op_list_(op_list), op_trans_list_(op_trans_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
                op_state_ids_(op_state_ids), type_(type), 
                multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))),
                proj_op_(false) {
@@ -52,10 +54,10 @@ class BraKet{
                  projected_ket_ = false;
                }; 
 
-       BraKet( std::vector<std::string>& op_list, DataType factor, int bra_num, int ket_num, 
+       BraKet( std::vector<std::string>& op_list, std::vector<char>& op_trans_list, DataType factor, int bra_num, int ket_num, 
                std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type,
                std::string proj_op_name) :
-               op_list_(op_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
+               op_list_(op_list), op_trans_list_(op_trans_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
                op_state_ids_(op_state_ids), type_(type),
                multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))),
                proj_op_(true), proj_op_name_(proj_op_name) {

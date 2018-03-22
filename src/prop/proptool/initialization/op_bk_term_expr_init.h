@@ -14,10 +14,24 @@ class Op_Init {
     std::string alg_name_;
     int state_dep_ = 0;
     bool proj_op_;
-                                               
+    char trans_; // H or h : hermitian conjugate, T or t = transpose, C or c = complex conjugate, anything else : nothing                     
      
     Op_Init(std::string base_name, std::vector<std::string>& idxs, std::shared_ptr<std::vector<int*>> idx_ptrs ) :
-            name_(base_name), idxs_(idxs), idx_ptrs_(idx_ptrs), alg_name_(base_name) {
+            name_(base_name), idxs_(idxs), idx_ptrs_(idx_ptrs), alg_name_(base_name), trans_('0') {
+              if (idxs.front() != "none" ) {
+                alg_name_ += "_{";
+                for (std::string idx : idxs_ )
+                  alg_name_ += idx;
+                alg_name_ += "}";
+                state_dep_ = idxs_.size();
+              } else {
+                state_dep_ = 0;
+              }
+            };
+ 
+    Op_Init( std::string base_name, std::vector<std::string>& idxs, std::shared_ptr<std::vector<int*>> idx_ptrs,
+             std::string trans ) :
+             name_(base_name), idxs_(idxs), idx_ptrs_(idx_ptrs), alg_name_(base_name), trans_(trans[0]) {
               if (idxs.front() != "none" ) {
                 alg_name_ += "_{";
                 for (std::string idx : idxs_ )

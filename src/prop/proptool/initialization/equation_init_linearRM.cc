@@ -121,16 +121,18 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
           vector<string>::iterator bk_factors_it = term_init->braket_factors_->begin();
           for ( BraKet_Init bk_info : *(term_init->braket_list_) ) {
             vector<string> bk_op_list(bk_info.op_list_->size());
+            vector<char> bk_op_trans_list(bk_info.op_list_->size());
             auto op_state_ids = make_shared<vector<vector<int>>>(bk_info.op_list_->size());
             for ( int jj = 0 ; jj != bk_info.op_list_->size() ; jj++ ){
               bk_op_list[jj] = bk_info.op_list_->at(jj).name_;
+              bk_op_trans_list[jj] = bk_info.op_list_->at(jj).trans_;
               if ( bk_info.op_list_->at(jj).state_dep_ > 0 ){
                 op_state_ids->at(jj) = vector<int>(bk_info.op_list_->at(jj).state_dep_);
                 bk_info.op_list_->at(jj).get_op_idxs( op_state_ids->at(jj) );
               }
             }
          
-            braket_list.push_back(BraKet<DataType>( bk_op_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
+            braket_list.push_back(BraKet<DataType>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
           } 
     
         } while( fvec_cycle_skipper( fvec, maxs, mins ) );
@@ -234,16 +236,18 @@ void Equation_Init_LinearRM<DataType>::initialize_all_terms() {
         vector<string>::iterator bk_factors_it = term_init->braket_factors_->begin();
         for ( BraKet_Init bk_info : *(term_init->braket_list_) ) {
           vector<string> bk_op_list(bk_info.op_list_->size());
+          vector<char> bk_op_trans_list(bk_info.op_list_->size());
           auto op_state_ids = make_shared<vector<vector<int>>>(bk_info.op_list_->size());
           for ( int jj = 0 ; jj != bk_info.op_list_->size() ; jj++ ){
             bk_op_list[jj] = bk_info.op_list_->at(jj).name_;
+            bk_op_trans_list[jj] = bk_info.op_list_->at(jj).trans_;
             if ( bk_info.op_list_->at(jj).state_dep_ > 0 ){
               op_state_ids->at(jj) = vector<int>(bk_info.op_list_->at(jj).state_dep_);
               bk_info.op_list_->at(jj).get_op_idxs( op_state_ids->at(jj) );
             }
           }
         
-          braket_list.push_back(BraKet<DataType>( bk_op_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
+          braket_list.push_back(BraKet<DataType>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
         } 
         
         vector<pair<string,int>> fixed_id_vals; 

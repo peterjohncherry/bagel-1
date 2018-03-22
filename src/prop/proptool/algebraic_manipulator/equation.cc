@@ -99,11 +99,12 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
         CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());
         MT_map_->emplace( op_name, new_op );
       }
-    } 
+    }
 
     if( MT_map_->find( braket_info.multiop_name_ ) == MT_map_->end() ){
       cout << "could not find MT " << braket_info.multiop_name_ << " in map" <<endl;
       vector<shared_ptr<TensOp_Base>> SubOps(braket_info.op_list_.size());
+
       for (int ii = 0 ; ii != braket_info.op_list_.size() ; ii++ )  
         SubOps[ii] = MT_map_->at(braket_info.op_list_[ii]); 
 
