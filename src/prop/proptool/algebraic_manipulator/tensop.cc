@@ -25,6 +25,9 @@ cout << "Op_General_base::Op_General_base constructor"<< endl;
   
   split_ranges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info> >>();
 
+  //all_ranges_trans_ = make_shared< map< char, shared_ptr<const map< const vector<string>, shared_ptr<Range_Block_Info >>>();
+
+  all_ranges_trans_ = make_shared<map< char, shared_ptr<const map< const vector<string>,  shared_ptr<Range_Block_Info>>> >>();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
@@ -202,6 +205,93 @@ cout << "TensOp::generate_ranges" <<   endl;
   return tie ( all_ranges_ptr, unique_ranges_ptr );
               
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void TensOp::TensOp<DataType>::transform( char transformation ) {  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ cout << "Range_Block_Info::transform( bool is_unique, bool survives, std::pair<double,double> factors " << endl; 
+  //set up loop utils
+
+  vector<string> trans_orig_idxs = *idxs(); 
+  vector<bool> trans_orig_aops = *aops(); 
+  //apply_transformation( transformation ); 
+
+ 
+  int num_idxs = trans_orig_idxs.size();
+  vector< shared_ptr< const vector<string>> > unique_range_blocks;
+  map< const vector<string>, shared_ptr<Range_Block_Info> > all_ranges_tmp;
+  
+//  auto apply_symmetry = [ &trans_orig_idxs, &trans_orig_aops, this ]( const vector<string>& ranges_1,  const vector<string>& ranges_2 ) {
+//     const bool a_unique_range_block = true; //TODO put symmetry back in, should compare to original all ranges....
+//     if (a_unique_range_block) {
+//       const pair<int,int> fac(1,1);
+//       const pair<double,double> fac_new(1.0,1.0);
+
+//       const vector<string> unique_ranges_trans = ranges_2; 
+//       const vector<string> trans_idxs = trans_orig_idxs;
+//       bool survives = true;// WickUtils::RangeCheck( ranges_2, aops );
+
+//       const vector<bool> test_aops = trans_orig_aops; 
+//       const vector<string> test_idxs = trans_orig_idxs; 
+//       all_ranges_tmp.emplace(ranges_2, make_shared< Range_Block_Info >( a_unique_range_block, survives, fac_new, unique_ranges_trans, unique_ranges_trans, trans_orig_idxs, trans_idxs, test, range_prime_map ) );
+//     }
+//     return false;
+//  };
+
+//  shared_ptr<vector<int>> fvec = make_shared<vector<int>>( num_idxs, 0); 
+ // shared_ptr<vector<int>> maxs = make_shared<vector<int>>( num_idxs );
+//  int  num_cycles = 1;
+//  bool is_unique = true;
+//  pair<int,int> fac(1,1);
+//  pair<double,double> fac_new(1.0,1.0); //TODO set from trans;
+
+// auto trans_idx_ranges = *(idx_ranges());
+
+//  for( int ii = 0; ii != trans_idx_ranges.size(); ii++ ){
+//    maxs->at(ii) = ( trans_idx_ranges[ii].size()-1 );
+//    num_cycles *= trans_idx_ranges[ii].size();
+//  }
+
+  //generate all possible ranges
+//  vector<vector<string>> possible_ranges(0);
+//  for (int ii = 0 ; ii != num_cycles ; ii++){
+//    vector<string> new_range(trans_idx_ranges.size());
+//    for (auto jj = 0 ; jj != fvec->size() ; jj++ )
+//       new_range[jj] = trans_idx_ranges[jj][fvec->at(jj)];
+//    if(satisfies_constraints(new_range))
+//      possible_ranges.push_back(new_range);
+//    fvec_cycle( fvec, maxs );
+ // } 
+
+  // Initialize range maps and add in first range to start things off.
+//  const vector<string> init_range = possible_ranges[0];
+//  shared_ptr<const vector<string>> orig_range = make_shared<const vector<string>>(possible_ranges[0]);
+//  shared_ptr<const vector<string>> trans_range = trans_orig_range;
+//  shared_ptr<const vector<string>> trans_idxs = trans_orig_idxs;
+   
+//  bool survives = WickUtils::RangeCheck( trans_range, aops );
+//  shared_ptr<const vector<bool>> test = make_shared<const vector<bool>>(aops); 
+//  all_ranges_tmp.emplace(init_range, make_shared< Range_Block_Info >( is_unique, survives, fac_new, orig_range, trans_range, trans_orig_idxs, trans_idxs, test, range_prime_map ) );
+ 
+//  unique_range_blocks = vector< shared_ptr< const vector<string>>>(1, trans_range );
+  //Apply symmetry operations to remove unnecessary ranges 
+//  for (int ii = 1 ; ii!=possible_ranges.size(); ii++) {
+//    for (int kk = 0 ; kk != ii; kk++) {
+//      if( apply_symmetry(possible_ranges[kk], possible_ranges[ii]) ){ //note that this sets the elements of all_ranges_trans_
+//        break;
+//      }
+//      if(kk == ii-1){
+//        unique_range_blocks.push_back(make_shared<const vector<string>>(possible_ranges[ii]));
+//        break;
+//      }
+//    } 
+//  }
+
+
+//  all_ranges_trans_->emplace( transformation, make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> (all_ranges_tmp) );
+  return;
+  
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 bool TensOp::TensOp<DataType>::satisfies_constraints( vector<string>& ranges ){
@@ -330,7 +420,7 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
     idx_ranges.insert(  idx_ranges.end(), sub_tensops_[ii]->idx_ranges()->begin(), sub_tensops_[ii]->idx_ranges()->end() );
     idxs.insert( idxs.end(),sub_tensops_[ii]->idxs()->begin(), sub_tensops_[ii]->idxs()->end() );
     aops.insert( aops.end(),sub_tensops_[ii]->aops()->begin(), sub_tensops_[ii]->aops()->end() );
-  
+
     for ( int elem : *(sub_tensops_[ii]->plus_ops()) )
       plus_ops.push_back(elem + cmlsizevec[ii]);
   
@@ -347,6 +437,8 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
   
   Op_dense_ = make_shared<const MultiTensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, make_pair(1.0,1.0), cmlsizevec, unique_range_blocks, all_ranges_ptr ); 
   CTP_map_  = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
+
+  //split_ranges_trans_ = make_shared<map<vector<char>,shared_ptr<const map<const vector<string>,shared_ptr<Split_Range_Block_Info>>>>>();
    
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -363,7 +455,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
   vector<int> posvec( num_tensors_, 0 ); 
 
   map< const vector<string>, shared_ptr<Split_Range_Block_Info> > all_ranges;
-  shared_ptr< const map <const vector<string>, shared_ptr<Split_Range_Block_Info >>>  all_ranges_tmp_ptr;   
 
   // Such an ugly loop that this should be fixed when switch ranges to numbers
   // The reason for it is that maps can't map->begin()+ii , so must iterate
@@ -418,9 +509,8 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
       all_ranges.emplace( *(srbi->orig_block()), srbi ) ;
     }
   }
-  all_ranges_tmp_ptr =  make_shared< const map < const vector<string> , shared_ptr<Split_Range_Block_Info > > >( all_ranges );
-
-  return all_ranges_tmp_ptr ;
+   
+  return make_shared< const map < const vector<string> , shared_ptr<Split_Range_Block_Info > > >( all_ranges );
   
 }
 

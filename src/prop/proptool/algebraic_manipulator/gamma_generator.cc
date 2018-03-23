@@ -64,6 +64,7 @@ GammaGenerator::GammaGenerator( shared_ptr<StatesInfo<double>> target_states, in
 
   Bra_names_ = target_states_->civec_names( Bra_num_ );
   Ket_names_ = target_states_->civec_names( Ket_num_ );
+
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Reordering of the original ids; don't use the original order so we can 

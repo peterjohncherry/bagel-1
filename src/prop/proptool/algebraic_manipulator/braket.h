@@ -24,6 +24,7 @@ class BraKet{
        bool projected_bra_;
        bool projected_ket_;
 
+       std::vector<int> op_order_;
        std::shared_ptr<TensOp_Base> Total_Op_;
 
        BraKet( std::vector<std::string>& op_list, std::vector<char>& op_trans_list,
@@ -34,10 +35,10 @@ class BraKet{
                multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))),
                proj_op_(false) {
 
-               if (type_[0] == 'c' )// checking if derivative  
-                 name_ = "c_{I}"; 
- 
-               name_ = "<" + std::to_string(bra_num)+ "| ";
+                 if (type_[0] == 'c' )// checking if derivative  
+                   name_ = "c_{I}"; 
+                 
+                 name_ = "<" + std::to_string(bra_num)+ "| ";
                
                  for ( int ii = 0 ; ii != op_list_.size(); ii++ ) {
                    name_ += op_list_[ii] ;
@@ -49,7 +50,13 @@ class BraKet{
                    }
                  }
                  name_ += " |"+ std::to_string(ket_num) + ">";
-                  
+               
+                 op_order_ = std::vector<int>(op_list.size());
+                 iota( op_order_.begin(), op_order_.end(), 0);
+                 sort( op_order_.begin(), op_order_.end(), [ &op_list ] ( int i1, int i2) { return (bool)( op_list[i1] < op_list[i2]); });  
+                 WickUtils::print_vector( op_list, "op_list" ); std::cout << std::endl; 
+                 WickUtils::print_vector( op_order_, "op_order" ); std::cout << std::endl; 
+           
                  projected_bra_ = false;
                  projected_ket_ = false;
                }; 

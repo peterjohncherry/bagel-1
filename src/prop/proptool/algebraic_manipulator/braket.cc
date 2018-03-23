@@ -33,6 +33,11 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
     if ( id_name[0] == 'X' ) 
       has_orb_exc = true;
 
+//  auto srt_loc = Total_Op_->split_ranges_trans()->find( make_pair( op_trans_list_,  op_order_ ) ); 
+//  if ( srt_loc = Total_Op_->split_ranges_trans()->end()  ) { 
+//     cout << " hello " << endl; 
+//  }  
+
   for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
     if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
 

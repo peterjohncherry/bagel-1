@@ -135,7 +135,6 @@ void Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
   cout << "leaving Get_CMTP_compute_Terms" << endl;
   return;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Builds a list of the tensor blocks which are needed for evaluation of this expression.
 // This effectively occurs in other functions, but is useful to have seperately here for allocation purposes
@@ -184,7 +183,6 @@ void Expression<DataType>::necessary_tensor_blocks(){
   cout << "leaving Expression::necessary_tensor_blocks" << endl;
   return;
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Expression<double>;
 template class Expression_Full<double>;

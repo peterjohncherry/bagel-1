@@ -57,6 +57,7 @@ Range_Block_Info::Range_Block_Info( bool is_unique, bool survives, std::pair<dou
  // cout << "]" << endl; 
 
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SRBI_Helper::SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks ) :
                             range_blocks_(range_blocks), factors_(std::make_pair(1.0,1.0)) {
