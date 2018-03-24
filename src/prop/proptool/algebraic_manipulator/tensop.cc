@@ -1,8 +1,10 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/tensop.h>
+#include <src/prop/proptool/algebraic_manipulator/algebra_utils.h>
 
 using namespace std;
 using namespace WickUtils;
+using namespace Algebra_Utils;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
@@ -25,9 +27,10 @@ cout << "Op_General_base::Op_General_base constructor"<< endl;
   
   split_ranges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info> >>();
 
-  //all_ranges_trans_ = make_shared< map< char, shared_ptr<const map< const vector<string>, shared_ptr<Range_Block_Info >>>();
-
   all_ranges_trans_ = make_shared<map< char, shared_ptr<const map< const vector<string>,  shared_ptr<Range_Block_Info>>> >>();
+
+  split_ranges_trans_ = make_shared< map< pair<vector<char>, vector<int>>, shared_ptr<const map< const vector<string>,  shared_ptr<Split_Range_Block_Info>>> >>();
+
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
@@ -50,6 +53,9 @@ cout << "Op_General_base::Op_General_base constructor"<< endl;
 
   all_ranges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>() ; 
 
+  all_ranges_trans_ = make_shared<map< char, shared_ptr<const map< const vector<string>,  shared_ptr<Range_Block_Info>>> >>();
+
+  split_ranges_trans_ = make_shared< map< pair<vector<char>, vector<int>>, shared_ptr<const map< const vector<string>,  shared_ptr<Split_Range_Block_Info>>> >>();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TensOp_General::TensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
@@ -155,10 +161,10 @@ cout << "TensOp::generate_ranges" <<   endl;
 
   shared_ptr<vector<int>> fvec = make_shared<vector<int>>( num_idxs, 0); 
   shared_ptr<vector<int>> maxs = make_shared<vector<int>>( num_idxs );
-  int  num_cycles = 1;
   bool is_unique = true;
-  const pair<int,int> fac(1,1);
-  const pair<double,double> fac_new(1.0,1.0);
+  pair<int,int> fac(1,1);
+  pair<double,double> fac_new(1.0,1.0);
+  int  num_cycles = 1;
 
   for( int ii = 0; ii != idx_ranges.size(); ii++ ){
     maxs->at(ii) = ( idx_ranges[ii].size()-1 );
@@ -207,88 +213,73 @@ cout << "TensOp::generate_ranges" <<   endl;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void TensOp::TensOp<DataType>::transform( char transformation ) {  
+void TensOp::TensOp<DataType>::transform( char transformation,  shared_ptr<map< char , long unsigned int >> range_prime_map ) {  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This is not done in range_block_info as the symmetry functions are stored in here; note that the transformations performed by the symmetry functions
+// pertain to the transformations of the elements of the molecular orbital integral tensor. They *do not* transform the creation and annihilation 
+// operators. The operator transformations performed in this function *do* transform the creation and annihilation operators. 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  cout << "Range_Block_Info::transform( bool is_unique, bool survives, std::pair<double,double> factors " << endl; 
   //set up loop utils
 
   vector<string> trans_orig_idxs = *idxs(); 
   vector<bool> trans_orig_aops = *aops(); 
-  //apply_transformation( transformation ); 
-
+  transform_tens_vec( transformation, trans_orig_idxs ); 
+  transform_tens_vec( transformation, trans_orig_aops ); 
  
   int num_idxs = trans_orig_idxs.size();
   vector< shared_ptr< const vector<string>> > unique_range_blocks;
   map< const vector<string>, shared_ptr<Range_Block_Info> > all_ranges_tmp;
   
-//  auto apply_symmetry = [ &trans_orig_idxs, &trans_orig_aops, this ]( const vector<string>& ranges_1,  const vector<string>& ranges_2 ) {
-//     const bool a_unique_range_block = true; //TODO put symmetry back in, should compare to original all ranges....
-//     if (a_unique_range_block) {
-//       const pair<int,int> fac(1,1);
-//       const pair<double,double> fac_new(1.0,1.0);
+  auto apply_symmetry = [&all_ranges_tmp,  &trans_orig_idxs, &trans_orig_aops, &range_prime_map, this ]( const vector<string>& ranges_1,  const vector<string>& ranges_2 ) {
+     bool a_unique_range_block = true; //TODO put symmetry back in, should compare to original all ranges....
+     if (a_unique_range_block) {
+       pair<double,double> block_fac(1.0,1.0); // TODO set from transform
+       shared_ptr<const vector<string>> unique_ranges_trans = make_shared<const vector<string>>(ranges_2); 
+       shared_ptr<const vector<string>> trans_orig_idxs_ptr = make_shared<const vector<string>>(trans_orig_idxs);
+       bool survives = WickUtils::RangeCheck( ranges_2, trans_orig_aops );
+       shared_ptr<const vector<bool>> trans_orig_aops_ptr = make_shared<const vector<bool>>( trans_orig_aops ); 
+       all_ranges_tmp.emplace(ranges_2, make_shared< Range_Block_Info >( a_unique_range_block, survives, block_fac, unique_ranges_trans, unique_ranges_trans, trans_orig_idxs_ptr, trans_orig_idxs_ptr, trans_orig_aops_ptr, range_prime_map ) );
+     }
+     return false;
+  };
 
-//       const vector<string> unique_ranges_trans = ranges_2; 
-//       const vector<string> trans_idxs = trans_orig_idxs;
-//       bool survives = true;// WickUtils::RangeCheck( ranges_2, aops );
-
-//       const vector<bool> test_aops = trans_orig_aops; 
-//       const vector<string> test_idxs = trans_orig_idxs; 
-//       all_ranges_tmp.emplace(ranges_2, make_shared< Range_Block_Info >( a_unique_range_block, survives, fac_new, unique_ranges_trans, unique_ranges_trans, trans_orig_idxs, trans_idxs, test, range_prime_map ) );
-//     }
-//     return false;
-//  };
-
-//  shared_ptr<vector<int>> fvec = make_shared<vector<int>>( num_idxs, 0); 
- // shared_ptr<vector<int>> maxs = make_shared<vector<int>>( num_idxs );
-//  int  num_cycles = 1;
-//  bool is_unique = true;
-//  pair<int,int> fac(1,1);
-//  pair<double,double> fac_new(1.0,1.0); //TODO set from trans;
-
-// auto trans_idx_ranges = *(idx_ranges());
-
-//  for( int ii = 0; ii != trans_idx_ranges.size(); ii++ ){
-//    maxs->at(ii) = ( trans_idx_ranges[ii].size()-1 );
-//    num_cycles *= trans_idx_ranges[ii].size();
-//  }
+  shared_ptr<vector<int>> fvec = make_shared<vector<int>>( num_idxs, 0); 
+  shared_ptr<vector<int>> mins = make_shared<vector<int>>( num_idxs, 0); 
+  shared_ptr<vector<int>> maxs = make_shared<vector<int>>( num_idxs );
+  int  num_cycles = 1;
+  vector<vector<string>> trans_idx_ranges = *idx_ranges();
+  for( int ii = 0; ii != trans_idx_ranges.size(); ii++ ){
+    maxs->at(ii) = ( trans_idx_ranges[ii].size()-1 );
+    num_cycles *= trans_idx_ranges[ii].size();
+  }
 
   //generate all possible ranges
-//  vector<vector<string>> possible_ranges(0);
-//  for (int ii = 0 ; ii != num_cycles ; ii++){
-//    vector<string> new_range(trans_idx_ranges.size());
-//    for (auto jj = 0 ; jj != fvec->size() ; jj++ )
-//       new_range[jj] = trans_idx_ranges[jj][fvec->at(jj)];
-//    if(satisfies_constraints(new_range))
-//      possible_ranges.push_back(new_range);
-//    fvec_cycle( fvec, maxs );
- // } 
+  vector<vector<string>> possible_ranges(0);
+  for (int ii = 0 ; ii != num_cycles ; ii++){
+    vector<string> new_range(trans_idx_ranges.size());
+    for (auto jj = 0 ; jj != fvec->size() ; jj++ )
+       new_range[jj] = trans_idx_ranges[jj][fvec->at(jj)];
+    if(satisfies_constraints(new_range))
+      possible_ranges.push_back(new_range);
+    fvec_cycle_skipper( fvec, maxs, mins );
+  } 
 
-  // Initialize range maps and add in first range to start things off.
-//  const vector<string> init_range = possible_ranges[0];
-//  shared_ptr<const vector<string>> orig_range = make_shared<const vector<string>>(possible_ranges[0]);
-//  shared_ptr<const vector<string>> trans_range = trans_orig_range;
-//  shared_ptr<const vector<string>> trans_idxs = trans_orig_idxs;
-   
-//  bool survives = WickUtils::RangeCheck( trans_range, aops );
-//  shared_ptr<const vector<bool>> test = make_shared<const vector<bool>>(aops); 
-//  all_ranges_tmp.emplace(init_range, make_shared< Range_Block_Info >( is_unique, survives, fac_new, orig_range, trans_range, trans_orig_idxs, trans_idxs, test, range_prime_map ) );
- 
-//  unique_range_blocks = vector< shared_ptr< const vector<string>>>(1, trans_range );
   //Apply symmetry operations to remove unnecessary ranges 
-//  for (int ii = 1 ; ii!=possible_ranges.size(); ii++) {
-//    for (int kk = 0 ; kk != ii; kk++) {
-//      if( apply_symmetry(possible_ranges[kk], possible_ranges[ii]) ){ //note that this sets the elements of all_ranges_trans_
-//        break;
-//      }
-//      if(kk == ii-1){
-//        unique_range_blocks.push_back(make_shared<const vector<string>>(possible_ranges[ii]));
-//        break;
-//      }
-//    } 
-//  }
+  for (int ii = 0 ; ii!=possible_ranges.size(); ii++) {
+    for (int kk = 0 ; kk != ii; kk++) {
+      if( apply_symmetry(possible_ranges[kk], possible_ranges[ii]) ){ //note that this sets the elements of all_ranges_trans_
+        break;
+      }
+      if(kk == ii-1){
+        unique_range_blocks.push_back(make_shared<const vector<string>>(possible_ranges[ii]));
+        break;
+      }
+    } 
+  }
 
 
-//  all_ranges_trans_->emplace( transformation, make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> (all_ranges_tmp) );
+  Op_dense_->all_ranges_trans_->emplace( transformation, make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> (all_ranges_tmp) );
   return;
   
 }
@@ -438,8 +429,6 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
   Op_dense_ = make_shared<const MultiTensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, make_pair(1.0,1.0), cmlsizevec, unique_range_blocks, all_ranges_ptr ); 
   CTP_map_  = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
 
-  //split_ranges_trans_ = make_shared<map<vector<char>,shared_ptr<const map<const vector<string>,shared_ptr<Split_Range_Block_Info>>>>>();
-   
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
@@ -513,7 +502,113 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
   return make_shared< const map < const vector<string> , shared_ptr<Split_Range_Block_Info > > >( all_ranges );
   
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void MultiTensOp::MultiTensOp<DataType>::transform( const vector<char>& transformations,  const vector<int>& op_order, shared_ptr<map<char, long unsigned int>> range_prime_map  ) {  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// transformations pertain to the operators following reordering, e.g., if the origin multitensop is ABC, and the transformed version is B^{+} C A then
+// op_order = { 1, 2, 0 }
+// transformations = { 'H','0','0' }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "MultiTensOp::MultiTensOp<DataType>::transform" << endl;
 
+  int num_idxs = idxs()->size();
+  
+  //swap round sub_tensops_ vector so can use original routines.
+  vector<shared_ptr<TensOp_Base>> sub_tensops_trans = vector<shared_ptr<TensOp_Base>>(  sub_tensops_.size() );
+  {
+     vector<shared_ptr<TensOp_Base>>::iterator stt_it = sub_tensops_trans.begin();    
+     for ( vector<int>::const_iterator  oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++, ++stt_it ) 
+       *stt_it = sub_tensops_[*oo_it];
+  }
+ 
+  //getting transformed idxs and aops, and performing transformations on all_ranges for sub ops  
+  vector<string> trans_idxs(idxs()->size());
+  vector<bool> trans_aops(aops()->size());
+  {
+    vector<string>::iterator ti_it = trans_idxs.begin();
+    vector<bool>::iterator ta_it = trans_aops.begin();
+    
+    vector<char>::const_iterator t_it = transformations.begin(); 
+    for ( auto stt_it = sub_tensops_trans.begin(); stt_it != sub_tensops_trans.end(); ++stt_it, t_it++  ) {
+      if ( (*stt_it)->all_ranges_trans()->find(*t_it) == (*stt_it)->all_ranges_trans()->end() )
+        (*stt_it)->transform(*t_it, range_prime_map);
+     
+      vector<string> sub_trans_idxs = vector<string>(*((*stt_it)->idxs()));
+      transform_tens_vec( *t_it, sub_trans_idxs );
+      copy( sub_trans_idxs.begin(), sub_trans_idxs.end(), ti_it );
+      ti_it += sub_trans_idxs.size();
+     
+      vector<bool> sub_trans_aops = vector<bool>(*((*stt_it)->aops()));
+      transform_tens_vec( *t_it, sub_trans_aops );
+      copy( sub_trans_aops.begin(), sub_trans_aops.end(), ta_it );
+      ta_it += sub_trans_aops.size();
+    }
+  }
+
+  vector< map< const  vector<string>, shared_ptr< Range_Block_Info >>::const_iterator> rng_maps(num_tensors_);  
+  vector<int> posvec( num_tensors_, 0 ); 
+
+  map< const vector<string>, shared_ptr<Split_Range_Block_Info> > split_ranges_tmp;
+  if ( num_tensors_ > 1 ) { 
+    shared_ptr<vector<int>> forvec = make_shared<vector<int>>(num_tensors_, 0 ); 
+    shared_ptr<vector<int>> old_forvec = make_shared<vector<int>>(*forvec);
+
+    shared_ptr<vector<int>> mins   = make_shared<vector<int>>(num_tensors_, 0 );  
+    shared_ptr<vector<int>> maxs   = make_shared<vector<int>>(num_tensors_, 0 );  
+
+    for ( int ii = 0 ; ii != sub_tensops_trans.size() ; ii++ ){ 
+      maxs->at(ii) = sub_tensops_trans[ii]->all_ranges_trans()->at(transformations[ii])->size()-1;
+      rng_maps[ii] = sub_tensops_trans[ii]->all_ranges_trans()->at(transformations[ii])->begin() ; 
+    }
+
+    do {
+
+      for ( int ii = 0 ; ii != forvec->size() ; ii++ ) {
+        if ( (*old_forvec)[ii] != (*forvec)[ii] ) {
+          if ( (*forvec)[ii] == 0 ) {
+            rng_maps[ii] = sub_tensops_trans[ii]->all_ranges_trans()->at(transformations[ii])->begin() ;
+          } else {
+            rng_maps[ii]++;
+          }
+        }
+      }
+
+      old_forvec = make_shared<vector<int>>(*forvec);
+      shared_ptr< vector <shared_ptr<Range_Block_Info >>> split_block = make_shared< vector <shared_ptr<Range_Block_Info >>>(num_tensors_);
+      vector<shared_ptr<Range_Block_Info>>::iterator split_block_iter = split_block->begin();
+      for (int jj = 0 ; jj != num_tensors_ ; jj++) 
+        *split_block_iter++ = rng_maps[jj]->second;
+       
+      //TODO Must obtain from constraint functions 
+      shared_ptr<Split_Range_Block_Info> srbi;
+      {
+      SRBI_Helper helper(split_block);
+      srbi = make_shared<Split_Range_Block_Info>( helper, range_prime_map );
+      }
+      split_ranges_tmp.emplace( *(srbi->orig_block()), srbi ) ;
+ 
+    } while( fvec_cycle_skipper( forvec, maxs, mins ) );
+  
+
+  } else { 
+
+  //TODO  add constructor so can just have single tensor, need not be vector
+    if ( sub_tensops_.front()->all_ranges_trans()->find(transformations.front()) == sub_tensops_.front()->all_ranges_trans()->end() )
+      sub_tensops_.front()->transform(transformations.front(), range_prime_map);
+
+    for ( auto elem : *(sub_tensops_.front()->all_ranges_trans()->at(transformations.front())) )  {
+      SRBI_Helper helper( make_shared<vector<shared_ptr<Range_Block_Info >>>(1, elem.second));
+      shared_ptr<Split_Range_Block_Info> srbi = make_shared<Split_Range_Block_Info>(helper, range_prime_map);
+      split_ranges_tmp.emplace( *(srbi->orig_block()), srbi ) ;
+    }
+  }
+  
+  Op_dense_->split_ranges_trans()->emplace( make_pair( transformations, op_order ),  make_shared< const map < const vector<string> , shared_ptr<Split_Range_Block_Info > > >( split_ranges_tmp ) );
+  
+  return;
+
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //get contractions and range, looks totally inefficient, but generating everything and then checking in sequence
 //seems to work out faster; it's either check everything lots of times, or regenerate it lots of times. 
@@ -521,11 +616,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vecto
 template<typename DataType>
 void MultiTensOp::MultiTensOp<DataType>::get_ctrs_tens_ranges() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_TensOp 
-cout << "MultiTensOp get_ctrs_tens_ranges" << endl;
-#endif 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
+  cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
 
   //puts uncontracted ranges into map 
   shared_ptr<vector<pair<int,int>>> noctrs = make_shared<vector<pair<int,int>>>(0);
@@ -560,7 +651,7 @@ cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
         bool valid = true;
         //checks ranges for contractions match
         for (int ii = 0 ; ii != ctr_vec->size(); ii++){
-          if ( rng_it->first[ctr_vec->at(ii).first] != rng_it->first[ctr_vec->at(ii).second]){
+          if ( rng_it->first[(*ctr_vec)[ii].first] != rng_it->first[(*ctr_vec)[ii].second]){
             valid = false;
             break;
           }

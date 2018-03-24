@@ -32,13 +32,16 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
   for ( auto id_name : *idxs_buff ) 
     if ( id_name[0] == 'X' ) 
       has_orb_exc = true;
+  
+  vector<char> op_trans_list_dummy = { 'H', '0' };
+  auto trans_info = make_pair( op_trans_list_dummy,  op_order_ );
+  auto bob = Total_Op_->split_ranges_trans();
+  auto srt_loc = bob->find( trans_info ); 
+  if ( srt_loc == Total_Op_->split_ranges_trans()->end()  )  
+    Total_Op_->transform( op_trans_list_dummy, op_order_, target_states->range_prime_map_ ); 
 
-//  auto srt_loc = Total_Op_->split_ranges_trans()->find( make_pair( op_trans_list_,  op_order_ ) ); 
-//  if ( srt_loc = Total_Op_->split_ranges_trans()->end()  ) { 
-//     cout << " hello " << endl; 
-//  }  
 
-  for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
+  for ( auto range_map_it = Total_Op_->split_ranges_trans(trans_info)->begin(); range_map_it !=Total_Op_->split_ranges_trans(trans_info)->end(); range_map_it++ ){
     if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
 
       auto GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, idxs_buff, aops_buff, gamma_info_map, G_to_A_map, factor_ );

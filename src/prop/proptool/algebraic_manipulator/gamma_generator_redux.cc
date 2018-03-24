@@ -34,7 +34,11 @@ GammaGeneratorRedux::GammaGeneratorRedux( shared_ptr<StatesInfo<double>> target_
 
     orig_to_std_order_ = tmp_pos; 
   } 
-  
+
+
+  print_vector(*orig_ids_, "orig_ids"); cout << endl;
+  print_vector(*orig_aops_, "orig_aops"); cout << endl;
+
   standardized_full_ids_ = vector<string>(orig_ids_->size());
   vector<int>::iterator so_it = standard_order_.begin() ;
   int ii = 0 ;
