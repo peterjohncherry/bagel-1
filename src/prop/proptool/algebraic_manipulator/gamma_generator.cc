@@ -1181,8 +1181,7 @@ vector<int> GammaGenerator::get_standard_range_order(const vector<string> &rngs)
   vector<int> pos(rngs.size());
   iota(pos.begin(), pos.end(), 0);
   sort(pos.begin(), pos.end(), [&rngs](int i1, int i2){
-                                   return (bool)( rngs[i1] < rngs[i2] );
-});
+                                   return (bool)( rngs[i1] < rngs[i2] ); });
 
   return pos;
 }

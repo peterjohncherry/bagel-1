@@ -57,6 +57,23 @@ cout << "Op_General_base::Op_General_base constructor"<< endl;
 
   split_ranges_trans_ = make_shared< map< pair<vector<char>, vector<int>>, shared_ptr<const map< const vector<string>,  shared_ptr<Split_Range_Block_Info>>> >>();
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+TensOp_Base::TensOp_Base( std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp_Base>>& sub_tensops ) :
+             name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0), 
+             required_blocks_(std::make_shared<std::set<std::string>>()) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+      sub_tensops_ = sub_tensops;
+ 
+      sort( sub_tensops_.begin(), sub_tensops_.end(), [](shared_ptr<TensOp_Base> t1, shared_ptr<TensOp_Base> t2){ return (bool)( t1->name() < t2->name() );} );
+      cout << "sub_tensops_ = [ " ; cout.flush();
+      for ( auto t : sub_tensops_) { 
+         cout << t->name() << " " ; cout.flush();
+      }
+      cout << "]" << endl;
+
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TensOp_General::TensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
                                 std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
@@ -517,8 +534,8 @@ void MultiTensOp::MultiTensOp<DataType>::transform( const vector<char>& transfor
   //swap round sub_tensops_ vector so can use original routines.
   vector<shared_ptr<TensOp_Base>> sub_tensops_trans = vector<shared_ptr<TensOp_Base>>(  sub_tensops_.size() );
   {
-     vector<shared_ptr<TensOp_Base>>::iterator stt_it = sub_tensops_trans.begin();    
-     for ( vector<int>::const_iterator  oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++, ++stt_it ) 
+     vector<shared_ptr<TensOp_Base>>::iterator stt_it = sub_tensops_trans.begin();
+     for ( vector<int>::const_iterator  oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++, ++stt_it )
        *stt_it = sub_tensops_[*oo_it];
   }
  

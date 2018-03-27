@@ -60,7 +60,7 @@ class GammaGeneratorRedux{
     int orig_aops_half_size_;
 
     std::vector<int> standard_order_;
-    std::vector<int> orig_to_std_order_;
+    std::vector<int> block_to_std_order_;
     std::vector<std::string> standardized_full_ids_;
     std::vector<std::string> standardized_full_id_ranges_;
 

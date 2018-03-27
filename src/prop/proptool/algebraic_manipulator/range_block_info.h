@@ -11,6 +11,9 @@
 
 class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
 
+
+  // TODO Ultimately, this should contain a vector defining the reordering of the aops from the standard, and a vector defining the reordering of the idxs,
+  //      rather than the reordered vetors themselves.
   // all_ranges takes a possible rangeblock, and maps it to a unique rangeblock(1), a list of indexes(2)  and a factor(3)  resulting from the symmetry transformation
   protected :
       const  bool is_unique_;

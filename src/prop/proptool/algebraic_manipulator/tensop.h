@@ -188,9 +188,7 @@ class TensOp_Base {
      TensOp_Base( std::string name, bool spinfree ) : name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0), 
                                                       required_blocks_(std::make_shared<std::set<std::string>>())  {};
 
-     TensOp_Base( std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp_Base>>& sub_tensops ) :
-                  name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0), sub_tensops_(sub_tensops), 
-                  required_blocks_(std::make_shared<std::set<std::string>>()) {};
+     TensOp_Base( std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp_Base>>& sub_tensops );
 
      ~TensOp_Base(){};
 
