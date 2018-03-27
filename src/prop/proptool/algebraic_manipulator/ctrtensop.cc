@@ -1,9 +1,10 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/ctrtensop.h>
 #include <src/prop/proptool/proputils.h>
-#include <src/prop/proptool/algebraic_manipulator/gamma_generator.h>
 #include <cassert>
+
 using namespace std;
+
   
 ///////////////////////////////////////////////////////////////////////////
 void CtrTensorPart_Base::get_name(){

@@ -1,9 +1,10 @@
 #ifndef __SRC_PROP_PROPTOOL_BRAKET_H
 #define __SRC_PROP_PROPTOOL_BRAKET_H
 #include <src/prop/proptool/proputils.h>
-#include <src/prop/proptool/algebraic_manipulator/gamma_generator.h>
+#include <src/prop/proptool/algebraic_manipulator/gamma_info.h>
 #include <src/prop/proptool/algebraic_manipulator/tensop.h>
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
+#include <src/prop/proptool/algebraic_manipulator/a_contrib_info.h>
 
 template<typename DataType> 
 class BraKet{

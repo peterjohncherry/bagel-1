@@ -1,7 +1,6 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/braket.h>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_redux.h>
- //#include "braket.h"
 
 using namespace std;
 using namespace WickUtils;
@@ -29,21 +28,28 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 //  for ( auto id_name : *(Total_Op_->idxs_buff ) 
 //    if ( id_name[0] == 'X' ) 
 //      has_orb_exc = true;
-  
-  vector<char> op_trans_list_dummy = { 'H', '0' };
-  auto trans_info = make_pair( op_trans_list_dummy,  op_order_ );
-  auto bob = Total_Op_->split_ranges_trans();
-  auto srt_loc = bob->find( trans_info ); 
-  if ( srt_loc == Total_Op_->split_ranges_trans()->end()  )  
-    Total_Op_->transform( op_trans_list_dummy, op_order_, target_states->range_prime_map_ ); 
+
+  cout << "op_trans_list_printable = [ " ; cout.flush(); 
+  for ( auto elem : op_trans_list_ ) {
+     string cs = "" ;
+      cs += elem;
+     cout << cs << " " ; cout.flush();
+  }
+  cout << "]" << endl; 
+
+  print_vector( op_trans_list_ , "op_trans_list" ) ; cout << endl;
+ 
+  auto trans_info = make_pair( op_trans_list_,  op_order_ );
+  if ( Total_Op_->split_ranges_trans()->find( trans_info ) == Total_Op_->split_ranges_trans()->end()  )  
+    Total_Op_->transform( op_trans_list_, op_order_, target_states->range_prime_map_ ); 
 
   print_vector( *(Total_Op_->idxs()) , " *(Total_Op_->idxs()) " ); cout.flush();
   print_vector( *(Total_Op_->aops()) , "      *(Total_Op_->aops()) " ); cout << endl; 
 
+  auto GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_->idxs(), Total_Op_->aops(), gamma_info_map, G_to_A_map, factor_ );
   for ( auto range_map_it = Total_Op_->split_ranges_trans(trans_info)->begin(); range_map_it !=Total_Op_->split_ranges_trans(trans_info)->end(); range_map_it++ ){
     if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
 
-      auto GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_->idxs(), Total_Op_->aops(), gamma_info_map, G_to_A_map, factor_ );
       GGen->add_gamma( range_map_it->second );
       
       if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){

@@ -12,26 +12,14 @@ using namespace WickUtils;
 class GammaIntermediateRedux {
 
    public :
-     std::shared_ptr<const std::vector<std::string>> full_id_ranges;
      std::shared_ptr<std::vector<int>> ids_pos;
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos;
      int my_sign;
-     long unsigned int plus_pnum_;
-     long unsigned int kill_pnum_;
 
-     GammaIntermediateRedux( std::shared_ptr<const std::vector<std::string>> full_id_ranges_in,
-                        std::shared_ptr<std::vector<int>> ids_pos_in,
-                        std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
-                        int my_sign_in ) :
-     full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), 
-     my_sign(my_sign_in) {  };
-
-     GammaIntermediateRedux( std::shared_ptr<const std::vector<std::string>> full_id_ranges_in,
-                        std::shared_ptr<std::vector<int>> ids_pos_in,
-                        std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
-                        int my_sign_in, long unsigned int  plus_pnum, long unsigned int kill_pnum ) :
-     full_id_ranges(full_id_ranges_in), ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), 
-     my_sign(my_sign_in), plus_pnum_(plus_pnum), kill_pnum_(kill_pnum) {};
+     GammaIntermediateRedux( std::shared_ptr<std::vector<int>> ids_pos_in,
+                             std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
+                             int my_sign_in ) :
+     ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), my_sign(my_sign_in) {};
 
      ~GammaIntermediateRedux(){};
 
@@ -115,6 +103,8 @@ class GammaGeneratorRedux{
 
     bool Forbidden_Index( std::shared_ptr<const std::vector<std::string>> id_ranges, int position );
 
+    bool Forbidden_Index( const std::vector<std::string>& id_ranges, int position );
+
     bool all_active_ranges( std::shared_ptr<GammaIntermediateRedux> gint);
 
     std::shared_ptr<std::vector<std::pair<int,int>>>
@@ -146,6 +136,7 @@ class GammaGeneratorRedux{
                                     std::string bra_name, std::string ket_name );
 
  
+    void print_gamma_intermediate( std::shared_ptr<GammaIntermediateRedux> gint );
 
 };
 #endif

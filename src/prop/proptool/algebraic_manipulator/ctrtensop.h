@@ -1,8 +1,9 @@
 #ifndef __SRC_PROP_PROPTOOL_CtrTensOp_H
 #define __SRC_PROP_PROPTOOL_CtrTensOp_H
 
-#include <src/prop/proptool/proputils.h>
 #include <src/prop/proptool/task_translator/tensor_algop_info.h>
+#include <src/prop/proptool/algebraic_manipulator/a_contrib_info.h>
+#include <src/prop/proptool/proputils.h>
 #include <unordered_set>
 
 class CtrTensorPart_Base  {

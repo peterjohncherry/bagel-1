@@ -138,14 +138,13 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
   } else if ( op_name == "S" ) {  /* ---- T Tensor ----  */
 
     factor = (DataType) (1.0);
-    idxs = make_shared<vector<string>>(vector<string>{"S3", "S2", "S1", "S0"}  );
-    aops = make_shared<vector<bool>>  (vector<bool>  { false, false, true, true } );
-    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
+    idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
+    aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
+    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt, not_virt, not_core, not_core });
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = {  &Symmetry_Operations::NotAllAct };
     state_dep = 2;
-
 
   } else if ( op_name == "t" ) {  /* ---- T Tensor herm conj TODO  should find a better way fo dealing with this----  */
     cout << "getting t op " << endl;
@@ -156,7 +155,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = { &Symmetry_Operations::NotAllAct };
-    state_dep = 2;
+    state_dep = 0;
 
   } else if ( op_name == "X" ) {
 

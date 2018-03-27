@@ -10,7 +10,7 @@
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
 #include <src/prop/proptool/algebraic_manipulator/ctrtensop.h>
 #include <src/prop/proptool/task_translator/tensor_algop_info.h>
-#include <src/prop/proptool/algebraic_manipulator/gamma_generator.h>
+#include <src/prop/proptool/algebraic_manipulator/gamma_info.h>
 
 namespace bagel {
 

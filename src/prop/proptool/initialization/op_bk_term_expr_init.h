@@ -32,6 +32,8 @@ class Op_Init {
     Op_Init( std::string base_name, std::vector<std::string>& idxs, std::shared_ptr<std::vector<int*>> idx_ptrs,
              std::string trans ) :
              name_(base_name), idxs_(idxs), idx_ptrs_(idx_ptrs), alg_name_(base_name), trans_(trans[0]) {
+              std::cout << "trans = " << trans << std::endl;
+              std::cout << "trans_ = " << trans_ << std::endl;
               if (idxs.front() != "none" ) {
                 alg_name_ += "_{";
                 for (std::string idx : idxs_ )

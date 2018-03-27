@@ -466,7 +466,7 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
         }
  
         if ( op_def->get_child_optional( "transform" ) ) { //TODO sort get_optional properly; won't work now for some reason... 
-          string trans;
+          string trans = op_def->get<string>("transform");
           bk_ops->push_back(Op_Init( opname, op_idxs, op_idxs_ptrs, trans ));
         } else {
           bk_ops->push_back(Op_Init( opname, op_idxs, op_idxs_ptrs ));

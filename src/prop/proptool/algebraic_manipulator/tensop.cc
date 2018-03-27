@@ -534,9 +534,9 @@ void MultiTensOp::MultiTensOp<DataType>::transform( const vector<char>& transfor
   //swap round sub_tensops_ vector so can use original routines.
   vector<shared_ptr<TensOp_Base>> sub_tensops_trans = vector<shared_ptr<TensOp_Base>>(  sub_tensops_.size() );
   {
-     vector<shared_ptr<TensOp_Base>>::iterator stt_it = sub_tensops_trans.begin();
-     for ( vector<int>::const_iterator  oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++, ++stt_it )
-       *stt_it = sub_tensops_[*oo_it];
+    vector<shared_ptr<TensOp_Base>>::iterator stt_it = sub_tensops_trans.begin();
+    for ( vector<int>::const_iterator  oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++, ++stt_it )
+      *stt_it = sub_tensops_[*oo_it];
   }
  
   //getting transformed idxs and aops, and performing transformations on all_ranges for sub ops  
@@ -692,6 +692,7 @@ void MultiTensOp::MultiTensOp<DataType>::enter_cmtps_into_map(pint_vec ctr_pos_l
   vector<vector<pair<int,int>>> sameT_ctrs_pos( num_tensors_,  pint_vec(0));
   shared_ptr<vector<pair<int,int>>> no_ctrs =  make_shared<vector<pair<int,int>>>(0);
   shared_ptr<vector<pair<int,int>>> ReIm_factor_vec = make_shared<vector<pair<int,int>>>(1, ReIm_factors ) ; 
+
   //seperate contractions into those on the same tensor, and those between different tensors 
   // TODO tidy this up, e.g., use lambda to get cross pos
   for ( pair<int,int> ctr_pos : ctr_pos_list ) {

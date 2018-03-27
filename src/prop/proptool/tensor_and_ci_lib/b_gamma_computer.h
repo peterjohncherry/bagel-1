@@ -8,8 +8,7 @@
 #include <src/util/f77.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_sorter.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
-//#include <src/prop/proptool/algebraic_manipulator/states_info.h>
-#include <src/prop/proptool/algebraic_manipulator/gamma_generator.h>
+#include <src/prop/proptool/algebraic_manipulator/gamma_info.h>
 
 namespace bagel {
 

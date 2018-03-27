@@ -4,6 +4,12 @@
 //Classes for defining contraction operations
 //ctr_abs pos is the position of the contracted index in the totally uncontracted tensor
 //ctr_rel_pos is the position of the contracted index in the contracted tensor
+#include <string> 
+#include <vector> 
+#include <utility> 
+#include <memory>
+#include <map>
+
 class CtrOp_base {
   public : 
     const std::string Tout_name_;
