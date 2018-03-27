@@ -30,6 +30,9 @@ void GammaGeneratorRedux::add_gamma( shared_ptr<Range_Block_Info> block_info ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGeneratorRedux::add_gamma" << endl;
 
+  orig_aops_ = block_info->orig_aops(); 
+  print_vector(  *(block_info->transformed_idxs()), " *(block_info->transformed_idxs())" ) ; cout << endl;
+
   //Reordering of the original ids; don't use the original order so we can merge h.c. terms, e.g.,  f1f0x1x0 and x0x1f0f1 . 
   standard_order_ = vector<int>(orig_ids_->size());
   {
@@ -54,7 +57,6 @@ void GammaGeneratorRedux::add_gamma( shared_ptr<Range_Block_Info> block_info ) {
   }
 
   shared_ptr<vector<string>> id_ranges = make_shared<vector<string>>(*block_info->unique_block());
-
   standardized_full_id_ranges_ = vector<string>(*id_ranges);
   vector<int>::iterator otso_it = block_to_std_order_.begin() ;
   for ( vector<string>::iterator sfir_it = standardized_full_id_ranges_.begin() ; sfir_it != standardized_full_id_ranges_.end(); ++sfir_it, ++otso_it )
@@ -62,7 +64,7 @@ void GammaGeneratorRedux::add_gamma( shared_ptr<Range_Block_Info> block_info ) {
 
   shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
   int my_sign = 1; // TODO should be double from range_block
-  gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>( 1, make_shared<GammaIntermediateRedux>( make_shared<vector<int>>( standard_order_ ), deltas_pos, my_sign) );
+  gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>( 1, make_shared<GammaIntermediateRedux>( make_shared<vector<int>>( standard_order_ ), deltas_pos, my_sign ) );
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>(0);
 
   shared_ptr<GammaIntermediateRedux> gint = gamma_vec->front();
@@ -91,13 +93,13 @@ bool GammaGeneratorRedux::generic_reorderer( string reordering_name, bool first_
 bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_name, string bra_name,
                                                               string ket_name, bool final_reordering   ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "GammaGeneratorRedux::generic_reorderer_different_sector" << endl;
+  cout << "GammaGeneratorRedux::generic_reorderer_different_sector" << endl;
 
- if ( final_reordering ) { 
-   cout << "final_reordering !!!" << endl; 
- } else { 
-   cout << "NOT final_reordering !!!" << endl; 
- }
+  if ( final_reordering ) { 
+    cout << "final_reordering !!!" << endl; 
+  } else { 
+    cout << "NOT final_reordering !!!" << endl; 
+  }
  
   shared_ptr<map<char,int>> bra_hole_map = target_states_->hole_range_map(bra_name);;
   shared_ptr<map<char,int>> bra_elec_map = target_states_->elec_range_map(bra_name);;
@@ -136,11 +138,11 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
     kk = 0;
     while ( kk != gamma_vec->size()){
       if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) && ( gamma_vec->at(kk)->ids_pos->size() != 0 ) ) { 
-        if ( !all_active_ranges(gamma_vec->at(kk)) ) {  
-          Contract_remaining_indexes(kk);
-        } else {
-          final_gamma_vec->push_back( gamma_vec->at(kk ));
-        }
+//        if ( !all_active_ranges(gamma_vec->at(kk)) ) {  
+//          Contract_remaining_indexes(kk);
+//        } else {
+        final_gamma_vec->push_back( gamma_vec->at(kk ));
+//        }
       }
       kk++;
     }
@@ -234,10 +236,6 @@ bool GammaGeneratorRedux::proj_onto_map( shared_ptr<GammaIntermediateRedux> gint
   }
   }
   print_gamma_intermediate(gint); 
-
-  print_vector(*aops, "xint_aops" ); cout << endl;
-  print_vector( *id_ranges, "xint_rngs"); cout << endl;
-  print_vector(*ids, "xint_ids" ); cout << endl;
 
   vector<string>::reverse_iterator id_it = ids->rbegin();
   vector<bool>::reverse_iterator aops_it = aops->rbegin();
@@ -551,7 +549,8 @@ cout << "Z5" << endl;
     print_vector( *kill_ops_pos->at(ii), " make_ops_pos->at("+to_string(ii)+")" ); cout.flush(); 
     new_contractions[ii] = get_unique_pairs( make_ops_pos->at(ii), kill_ops_pos->at(ii), make_ops_pos->at(ii)->size() );
   }
-cout << "Z6" << endl;
+
+  cout << "Z6" << endl;
   shared_ptr<vector<int>> forvec = make_shared<vector<int>>(diff_rngs.size(),0) ;
   shared_ptr<vector<int>> min = make_shared<vector<int>>(diff_rngs.size(),0) ;
   shared_ptr<vector<int>> max = make_shared<vector<int>>(diff_rngs.size()) ;
@@ -559,7 +558,7 @@ cout << "Z6" << endl;
   for (int ii = 0; ii != max->size();  ii++)
     max->at(ii) = make_ops_pos->at(ii)->size()-1;
 
-cout << "Z7" << endl;
+  cout << "Z7" << endl;
   do {
 
     shared_ptr<vector<pair<int,int>>> new_deltas_pos_tmp = make_shared<vector<pair<int,int>>>(*deltas_pos);
@@ -573,7 +572,7 @@ cout << "Z7" << endl;
 
   } while ( fvec_cycle_skipper(forvec, max, min) ) ;
 
-cout << "Z8" << endl;
+  cout << "Z8" << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////

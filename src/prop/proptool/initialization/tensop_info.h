@@ -135,12 +135,12 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     constraints = {  &Symmetry_Operations::NotAllAct };
     state_dep = 2;
  
-  } else if ( op_name == "S" ) {  /* ---- T Tensor ----  */
+  } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
 
     factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
-    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt, not_virt, not_core, not_core });
+    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt  });
     time_symm = "none";
     symmfuncs = identity_only();
     constraints = {  &Symmetry_Operations::NotAllAct };

@@ -9,6 +9,61 @@
 #include <memory>
 #include <src/prop/proptool/proputils.h>
 
+class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info> {
+
+  protected :
+     std::pair<double,double> factors_; 
+     std::shared_ptr<const std::vector<std::string>> orig_idxs_;
+     std::shared_ptr<const std::vector<std::string>> orig_rngs_;
+     std::shared_ptr<const std::vector<bool>>   orig_aops_;
+     std::shared_ptr<std::vector<int>> idxs_trans_;
+     std::shared_ptr<std::vector<int>> aops_trans_;
+     std::shared_ptr<std::vector<int>> rngs_trans_;
+
+     int num_idxs_;                      
+     std::string orig_name_;
+     std::string transformed_name_;
+     std::string TensOp_name_;
+
+     std::set<std::vector<int>> sparsity_ ;
+
+  public :
+
+    std::vector<bool> allowed_contractions_;
+    long unsigned int plus_pnum_;
+    long unsigned int kill_pnum_;
+    bool no_transition_;
+
+    Range_BlockX_Info( std::shared_ptr<const std::vector<std::string>> orig_block,   
+                       std::shared_ptr<const std::vector<std::string>> orig_idxs,   
+                       std::shared_ptr<const std::vector<bool>> orig_aops, 
+                       std::shared_ptr<std::vector<int>> idxs_trans,
+                       std::shared_ptr<std::vector<int>> aops_trans,
+                       std::shared_ptr<std::vector<int>> rngs_trans,
+                       std::pair<double,double> factors  ); 
+
+    ~Range_BlockX_Info(){};
+    
+    std::pair<double,double> factors() const { return factors_; } 
+    double Re_factor() const { return factors_.first; } 
+    double Im_factor() const { return factors_.second; } 
+    
+    std::shared_ptr<const std::vector<std::string>> orig_block() const { return orig_rngs_; }
+//    std::shared_ptr<const std::vector<std::string>> unique_block() const { return unique_block_; }
+
+    std::shared_ptr<const std::vector<std::string>> orig_idxs() const { return orig_idxs_; }
+  //  std::shared_ptr<const std::vector<std::string>> transformed_idxs() const { return transformed_idxs_; }
+
+    std::shared_ptr<const std::vector<bool>> orig_aops() const { return orig_aops_; }
+    
+    void add_sparse( std::vector<int>& state_idxs ) { sparsity_.emplace(state_idxs); return; } // defines this range block as being sparse for input states 
+
+    int num_idxs() const { return num_idxs_; } 
+
+    std::string orig_name() const { return orig_name_; }
+
+};
+
 class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
 
   // TODO Ultimately, this should contain a vector defining the reordering of the aops from the standard, and a vector defining the reordering of the idxs,

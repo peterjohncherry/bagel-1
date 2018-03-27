@@ -119,10 +119,10 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
     cout << "Pushed " <<  braket_info.multiop_name_ << " back into braket_name_list" << endl;
   }
   
-  cout << "Full CMTP map" << endl;
-  for ( auto& elem  : *CTP_map_) { 
-    cout <<  elem.first << endl;
-  } 
+//  cout << "Full CMTP map" << endl;
+//  for ( auto& elem  : *CTP_map_) { 
+//   cout <<  elem.first << endl;
+//  } 
   return expression_type;
 }
 

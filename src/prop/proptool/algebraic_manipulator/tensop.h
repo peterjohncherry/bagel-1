@@ -41,6 +41,10 @@ class Op_General_base {
  
        // key: list of block transformations
        // result : transformed split range block
+       std::shared_ptr<std::map< char, std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr<Range_BlockX_Info>>> >> all_rangesX_trans_;
+ 
+       // key: list of block transformations
+       // result : transformed split range block
        std::shared_ptr< std::map< std::pair< std::vector<char>, std::vector<int> >, 
                         std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr<Split_Range_Block_Info>>> >> split_ranges_trans_;
 
@@ -282,7 +286,12 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
                                   std::shared_ptr<std::vector< std::shared_ptr< const std::vector<std::string> >>> >
      generate_ranges( std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges, std::vector<bool>& aops,
                       std::shared_ptr<std::map< char , long unsigned int>> range_prime_map );
-  
+ 
+     std::tuple< std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info> >>,
+            std::shared_ptr<std::vector<std::shared_ptr<const std::vector<std::string>>>> >
+     generate_rangesX( std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges, std::vector<bool>& aops );
+
+ 
      std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info > > > all_ranges() const  { return Op_dense_->all_ranges(); }
      std::shared_ptr< Range_Block_Info > all_ranges(const std::vector<std::string> range_block ) const  { return Op_dense_->all_ranges(range_block); }
 
