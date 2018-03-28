@@ -81,7 +81,6 @@ namespace PropTool {
     void set_ao_range_info();
     void set_ci_range_info();
 
-    void build_op_tensors( std::vector<std::string>& expression_list ) ;
     std::shared_ptr<std::vector<SMITH::IndexRange>> convert_to_indexrange( std::shared_ptr<const std::vector<std::string>> range_block_str ) ;
 
     void get_terms_init( std::shared_ptr<const PTree> expression_inp ); 

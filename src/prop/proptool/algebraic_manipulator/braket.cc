@@ -39,37 +39,37 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 
   print_vector( op_trans_list_ , "op_trans_list" ) ; cout << endl;
  
-  auto trans_info = make_pair( op_trans_list_,  op_order_ );
-  if ( Total_Op_->split_ranges_trans()->find( trans_info ) == Total_Op_->split_ranges_trans()->end()  )  
-    Total_Op_->transform( op_trans_list_, op_order_, target_states->range_prime_map_ ); 
+//  auto trans_info = make_pair( op_trans_list_,  op_order_ );
+//  if ( Total_Op_->split_ranges_trans()->find( trans_info ) == Total_Op_->split_ranges_trans()->end()  )  
+//    Total_Op_->transform( op_trans_list_, op_order_, target_states->range_prime_map_ ); 
 
   print_vector( *(Total_Op_->idxs()) , " *(Total_Op_->idxs()) " ); cout.flush();
   print_vector( *(Total_Op_->aops()) , "      *(Total_Op_->aops()) " ); cout << endl; 
 
-  auto GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_->idxs(), Total_Op_->aops(), gamma_info_map, G_to_A_map, factor_ );
-  for ( auto range_map_it = Total_Op_->split_ranges_trans(trans_info)->begin(); range_map_it !=Total_Op_->split_ranges_trans(trans_info)->end(); range_map_it++ ){
-    if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
-
-      GGen->add_gamma( range_map_it->second );
-      
-      if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){
-        if ( GGen->generic_reorderer( "normal order", false, false ) ) {
-          if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
-
-            cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
-            vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
-            int qq = 0 ;
-            for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){ 
-              cout << tens_block->orig_name()  << " " ; cout.flush(); cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
-              MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
-              required_blocks->emplace( tens_block->orig_name() );
-            }
-            cout << endl;
-          }
-        }
-      }
-    }
-  }
+//  auto GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_->idxs(), Total_Op_->aops(), gamma_info_map, G_to_A_map, factor_ );
+//  for ( auto range_map_it = Total_Op_->split_ranges_trans(trans_info)->begin(); range_map_it !=Total_Op_->split_ranges_trans(trans_info)->end(); range_map_it++ ){
+//    if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  
+//
+//      GGen->add_gamma( range_map_it->second );
+//      
+//      if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){
+//        if ( GGen->generic_reorderer( "normal order", false, false ) ) {
+//          if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
+//
+//            cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
+//            vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
+//            int qq = 0 ;
+//            for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){ 
+//              cout << tens_block->orig_name()  << " " ; cout.flush(); cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
+//              MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->orig_name() );
+//              required_blocks->emplace( tens_block->orig_name() );
+//            }
+//            cout << endl;
+//          }
+//        }
+//      }
+//    }
+//  }
 
   print_gamma_Atensor_contractions( G_to_A_map, false );
 

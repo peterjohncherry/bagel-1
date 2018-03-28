@@ -627,21 +627,6 @@ cout << "PropTool::PropTool::set_target_info" << endl;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void PropTool::PropTool::build_op_tensors( vector<string>& expression_list ) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "PropTool::PropTool::build_op_tensors" << endl;
-
-  // Creating tensors from existing matrices; seperate loop as must run through all states first to make proper use of symmetry
-  for (string expression_name : expression_list ) {
-    for ( auto tensop_it : *(sys_info_->MT_map()) ) {
-      vector< shared_ptr< const vector<string>>> unique_range_blocks = *(tensop_it.second->unique_range_blocks());
-      for ( shared_ptr<const vector<string>> range_block : unique_range_blocks ) {
-        shared_ptr<vector<SMITH::IndexRange>> range_block_bgl = convert_to_indexrange( range_block );
-      }
-    }
-  }
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<SMITH::IndexRange>> PropTool::PropTool::convert_to_indexrange( shared_ptr<const vector<string>> range_block_str ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "PropTool::PropTool::convert_to_indexrange" << endl;

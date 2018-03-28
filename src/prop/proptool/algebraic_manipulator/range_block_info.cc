@@ -47,65 +47,6 @@ Range_Block_Info::Range_Block_Info( bool is_unique, bool survives, std::pair<dou
   } 
   
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs,   
-                                      std::shared_ptr<const std::vector<bool>> orig_aops, std::shared_ptr<std::vector<int>> rngs_trans,
-                                      std::shared_ptr<std::vector<int>> idxs_trans, std::shared_ptr<std::vector<int>> aops_trans, 
-                                      std::pair<double,double> factors  ) :
-                                      orig_rngs_(orig_rngs), orig_idxs_(orig_idxs), orig_aops_(orig_aops),
-                                      rngs_trans_(rngs_trans), idxs_trans_(idxs_trans), aops_trans_(aops_trans), 
-                                      factors_(factors) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Range_BlockX_Info::Range_BlockX_Info" << endl;
- 
-  vector<bool> trans_aops_(orig_aops_->size());
-  vector<int>::iterator at_it = aops_trans_->begin();
-  for ( vector<bool>::iterator ta_it = trans_aops_.begin(); ta_it != trans_aops_.end(); ta_it++, at_it++ )
-    *ta_it = (*orig_aops_)[*at_it];
-
-  vector<string> trans_rngs_(orig_rngs_->size());
-  vector<int>::iterator rt_it = rngs_trans_->begin();
-  for ( vector<string>::iterator tr_it = trans_rngs_.begin(); tr_it != trans_rngs_.end(); tr_it++, rt_it++ )
-    *tr_it = (*orig_rngs_)[*rt_it];
-
-  plus_pnum_ = 1;
-  kill_pnum_ = 1;
-
-  vector<unsigned int> kill_pos(orig_aops_->size()/2);
-  vector<unsigned int> plus_pos(orig_aops_->size()/2);
-  vector<unsigned int>::iterator kp_it = kill_pos.begin();
-  vector<unsigned int>::iterator pp_it = plus_pos.begin(); 
-
-  std::vector<bool>::const_iterator ta_it = trans_aops_.begin();
-  for ( std::vector<std::string>::const_iterator tr_it = trans_rngs_.begin(); tr_it != trans_rngs_.end(); ++tr_it, ++ta_it ){
-    if (*ta_it) {
-      plus_pnum_ *= range_to_prime( (*tr_it)[0] );
-      *pp_it = range_to_prime( (*tr_it)[0] );
-      ++pp_it;
-    } else {
-      kill_pnum_ *= range_to_prime( (*tr_it)[0] );
-      *kp_it = range_to_prime( (*tr_it)[0] );
-      ++kp_it;
-    }
-  }
-
-  if ( plus_pnum_ - kill_pnum_ ) {
-    no_transition_ = false;
-  } else { 
-    no_transition_ = true;
-  }
-
-  // TODO this generates the list of allowed contractions, should probably be replaced with arithmetical version
-  allowed_contractions_ = vector<bool>( kill_pos.size() * plus_pos.size() );
-  pp_it = plus_pos.begin();
-  for ( vector<bool>::iterator ac_it = allowed_contractions_.begin(); ac_it != allowed_contractions_.end(); ++pp_it ){
-    kp_it = kill_pos.begin();
-    for( ; kp_it != kill_pos.end(); ++kp_it, ++ac_it )
-      *ac_it = ( *kp_it == *pp_it );
-  }
-
-}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SRBI_Helper::SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks ) :
                             range_blocks_(range_blocks), factors_(std::make_pair(1.0,1.0)) {
@@ -174,3 +115,141 @@ bool Split_Range_Block_Info::is_sparse( const std::shared_ptr<std::vector<std::v
   }
   return false; 
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs,   
+                                      std::shared_ptr<const std::vector<bool>> orig_aops, std::shared_ptr<std::vector<int>> rngs_trans,
+                                      std::shared_ptr<std::vector<int>> idxs_trans, std::shared_ptr<std::vector<int>> aops_trans, 
+                                      std::pair<double,double> factors  ) :
+                                      orig_rngs_(orig_rngs), orig_idxs_(orig_idxs), orig_aops_(orig_aops),
+                                      rngs_trans_(rngs_trans), idxs_trans_(idxs_trans), aops_trans_(aops_trans), 
+                                      factors_(factors) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Range_BlockX_Info::Range_BlockX_Info" << endl;
+ 
+  vector<bool> trans_aops_(orig_aops_->size());
+  vector<int>::iterator at_it = aops_trans_->begin();
+  for ( vector<bool>::iterator ta_it = trans_aops_.begin(); ta_it != trans_aops_.end(); ta_it++, at_it++ )
+    *ta_it = (*orig_aops_)[*at_it];
+
+  vector<string> trans_rngs_(orig_rngs_->size());
+  vector<int>::iterator rt_it = rngs_trans_->begin();
+  for ( vector<string>::iterator tr_it = trans_rngs_.begin(); tr_it != trans_rngs_.end(); tr_it++, rt_it++ )
+    *tr_it = (*orig_rngs_)[*rt_it];
+
+  plus_pnum_ = 1;
+  kill_pnum_ = 1;
+
+  vector<unsigned int> kill_pos(orig_aops_->size()/2);
+  vector<unsigned int> plus_pos(orig_aops_->size()/2);
+  vector<unsigned int>::iterator kp_it = kill_pos.begin();
+  vector<unsigned int>::iterator pp_it = plus_pos.begin(); 
+
+  std::vector<bool>::const_iterator ta_it = trans_aops_.begin();
+  for ( std::vector<std::string>::const_iterator tr_it = trans_rngs_.begin(); tr_it != trans_rngs_.end(); ++tr_it, ++ta_it ){
+    if (*ta_it) {
+      plus_pnum_ *= range_to_prime( (*tr_it)[0] );
+      *pp_it = range_to_prime( (*tr_it)[0] );
+      ++pp_it;
+    } else {
+      kill_pnum_ *= range_to_prime( (*tr_it)[0] );
+      *kp_it = range_to_prime( (*tr_it)[0] );
+      ++kp_it;
+    }
+  }
+
+  if ( plus_pnum_ - kill_pnum_ ) {
+    no_transition_ = false;
+  } else { 
+    no_transition_ = true;
+  }
+
+  // TODO this generates the list of allowed contractions, should probably be replaced with arithmetical version
+  allowed_contractions_ = vector<bool>( kill_pos.size() * plus_pos.size() );
+  pp_it = plus_pos.begin();
+  for ( vector<bool>::iterator ac_it = allowed_contractions_.begin(); ac_it != allowed_contractions_.end(); ++pp_it ){
+    kp_it = kill_pos.begin();
+    for( ; kp_it != kill_pos.end(); ++kp_it, ++ac_it )
+      *ac_it = ( *kp_it == *pp_it );
+  }
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> range_blocks ) :
+                            rxnge_blocks_(range_blocks), factors_(std::make_pair(1.0,1.0)) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ // cout << "SRBI_Helper::SRBI_Helper" << endl;
+
+  num_idxs_ = 0;
+  unique_   = true;
+
+  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  rxnge_blocks_->begin(); rb_iter != rxnge_blocks_->end();  rb_iter++ ){
+    num_idxs_  += (*rb_iter)->num_idxs(); } 
+
+  std::vector<std::string> orig_idxs(num_idxs_);
+  std::vector<std::string>::iterator oi_it = orig_idxs.begin();
+
+  std::vector<std::string> orig_rngs(num_idxs_);
+  std::vector<std::string>::iterator or_it = orig_rngs.begin();
+
+  std::vector<bool> orig_aops(num_idxs_);
+  std::vector<bool>::iterator oa_it = orig_aops.begin();
+
+  std::vector<int> idxs_trans(num_idxs_);
+  std::vector<int>::iterator it_it = idxs_trans.begin();
+
+  std::vector<int> rngs_trans(num_idxs_);
+  std::vector<int>::iterator rt_it = rngs_trans.begin();
+
+  std::vector<int> aops_trans(num_idxs_);
+  std::vector<int> ::iterator at_it = aops_trans.begin();
+
+  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  rxnge_blocks_->begin(); rb_iter != rxnge_blocks_->end();  rb_iter++ ){
+ 
+    double Re_buff = factors_.first;
+    double Im_buff = factors_.second;
+    factors_.first = Re_buff*(*rb_iter)->Re_factor() + Im_buff*(*rb_iter)->Im_factor();
+    factors_.second = Re_buff*(*rb_iter)->Im_factor() + Im_buff*(*rb_iter)->Re_factor();
+
+    copy_n( (*rb_iter)->orig_idxs()->begin(), (*rb_iter)->num_idxs(), oi_it );
+    copy_n( (*rb_iter)->orig_rngs()->begin(), (*rb_iter)->num_idxs(), or_it );
+    copy_n( (*rb_iter)->orig_aops()->begin(), (*rb_iter)->num_idxs(), oa_it );
+
+    copy_n( (*rb_iter)->idxs_trans()->begin(), (*rb_iter)->num_idxs(), it_it );
+    copy_n( (*rb_iter)->rngs_trans()->begin(), (*rb_iter)->num_idxs(), rt_it );
+    copy_n( (*rb_iter)->aops_trans()->begin(), (*rb_iter)->num_idxs(), at_it );
+
+    oi_it += (*rb_iter)->num_idxs();
+    or_it += (*rb_iter)->num_idxs();
+    oa_it += (*rb_iter)->num_idxs();
+ 
+    it_it += (*rb_iter)->num_idxs();
+    rt_it += (*rb_iter)->num_idxs();
+    at_it += (*rb_iter)->num_idxs();
+  }
+ 
+  orig_idxs_      = std::make_shared<const std::vector<std::string>>(orig_idxs);         
+  orig_rngs_      = std::make_shared<const std::vector<std::string>>(orig_rngs);        
+  orig_aops_      = std::make_shared<const std::vector<bool>>(orig_aops);         
+
+  idxs_trans_      = std::make_shared<std::vector<int>>(idxs_trans);         
+  rngs_trans_      = std::make_shared<std::vector<int>>(rngs_trans);        
+  aops_trans_      = std::make_shared<std::vector<int>>(aops_trans);         
+      
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool SplitX_Range_Block_Info::is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs ) { 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //cout << "Split_Range_Block_Info::is_sparse" << endl;
+
+  std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  range_blocks_->begin();
+  for ( std::vector<std::vector<int>>::const_iterator si_iter = state_idxs->begin(); si_iter != state_idxs->end(); si_iter++ ){
+     if ( (*rb_iter)->is_sparse(*si_iter) ) 
+       return true;      
+     rb_iter++;
+  }
+  return false; 
+}
+
+
