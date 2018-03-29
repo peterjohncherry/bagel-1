@@ -171,6 +171,31 @@ class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info>
     std::shared_ptr<std::vector<int>> aops_trans() const { return aops_trans_; }
     std::shared_ptr<std::vector<int>> rngs_trans() const { return rngs_trans_; }
 
+    std::shared_ptr<std::vector<std::string>> trans_idxs() { 
+       std::shared_ptr<std::vector<std::string>> transidxs = std::make_shared<std::vector<std::string>>(idxs_trans_->size());
+       std::vector<std::string>::const_iterator oi_it = orig_idxs_->begin();
+       for ( std::vector<int>::iterator it_it = idxs_trans_->begin() ; it_it != idxs_trans_->end(); it_it++, oi_it++ ) 
+         (*transidxs)[*it_it] = *oi_it;
+       return transidxs;
+    }
+
+    std::shared_ptr<std::vector<std::string>> trans_rngs() { 
+       std::shared_ptr<std::vector<std::string>> transrngs = std::make_shared<std::vector<std::string>>(rngs_trans_->size());
+       std::vector<std::string>::const_iterator or_it = orig_rngs_->begin();
+       for ( std::vector<int>::iterator rt_it = rngs_trans_->begin() ; rt_it != rngs_trans_->end(); rt_it++, or_it++ ) 
+         (*transrngs)[*rt_it] = *or_it;
+       return transrngs;
+    }
+
+    std::shared_ptr<std::vector<bool>> trans_aops() { 
+       std::shared_ptr<std::vector<bool>> transaops = std::make_shared<std::vector<bool>>(aops_trans_->size());
+       std::vector<bool>::const_iterator oa_it = orig_aops_->begin();
+       for ( std::vector<int>::iterator at_it = aops_trans_->begin() ; at_it != aops_trans_->end(); at_it++, oa_it++ ) 
+         (*transaops)[*at_it] = *oa_it;
+       return transaops;
+    }
+
+
     void add_sparse( std::vector<int>& state_idxs ) { sparsity_.emplace(state_idxs); return; } // defines this range block as being sparse for input states 
 
     int num_idxs() const { return num_idxs_; } 

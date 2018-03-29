@@ -26,6 +26,36 @@ GammaGeneratorRedux::GammaGeneratorRedux( shared_ptr<StatesInfo<double>> target_
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGeneratorRedux::add_gamma( shared_ptr<Range_BlockX_Info> block_info ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "GammaGeneratorRedux::add_gamma" << endl;
+
+  orig_aops_ = block_info->trans_aops(); 
+
+  standardized_full_id_ranges_ = *(block_info->orig_rngs()); 
+  standardized_full_ids_ = *(block_info->orig_idxs()); 
+
+  block_aops_ = block_info->trans_aops(); 
+  block_rngs_ = block_info->trans_rngs(); 
+  block_idxs_ = block_info->trans_idxs(); 
+  
+  standard_order_ = *(block_info->idxs_trans());
+
+  int ii = 0 ;
+  for ( vector<int>::iterator so_it = standard_order_.begin() ; so_it != standard_order_.end() ; ++so_it, ++ii ) 
+    block_to_std_order_[*so_it] = (ii);
+
+  shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( orig_ids_->size() );
+  iota( ids_pos->begin(), ids_pos->end(), 0 );
+
+  shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
+  int my_sign = 1; // TODO should be double from range_block
+  gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>( 1, make_shared<GammaIntermediateRedux>( ids_pos, deltas_pos, my_sign ) );
+  final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>(0);
+
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::add_gamma( shared_ptr<Range_Block_Info> block_info ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGeneratorRedux::add_gamma" << endl;
@@ -103,47 +133,30 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
  
   shared_ptr<map<char,int>> bra_hole_map = target_states_->hole_range_map(bra_name);;
   shared_ptr<map<char,int>> bra_elec_map = target_states_->elec_range_map(bra_name);;
-                                                                                    
   shared_ptr<map<char,int>> ket_hole_map = target_states_->hole_range_map(ket_name);;
   shared_ptr<map<char,int>> ket_elec_map = target_states_->elec_range_map(ket_name);;
 
-//  cout << "-------------bra_hole_map------------" << endl;
-//  for ( auto elem : *bra_hole_map ) { cout << elem.first << " = " << elem.second << endl;} 
-//  cout << endl;
-//  cout << "-------------bra_elec_map------------" << endl;
-//  for ( auto elem : *bra_elec_map ) { cout << elem.first << " = " << elem.second << endl;} 
-//  cout << endl;
-//  cout << "-------------ket_hole_map------------" << endl;
-//  for ( auto elem : *ket_hole_map ) { cout << elem.first << " = " << elem.second << endl;} 
-//  cout << endl;
-//  cout << "-------------ket_elec_map------------" << endl;
-//  for ( auto elem : *ket_elec_map ) { cout << elem.first << " = " << elem.second << endl;} 
-//  cout << endl;
-
+//  cout << "-------------bra_hole_map------------" << endl;  for ( auto elem : *bra_hole_map ) { cout << elem.first << " = " << elem.second << endl;} cout << endl;
+//  cout << "-------------bra_elec_map------------" << endl;  for ( auto elem : *bra_elec_map ) { cout << elem.first << " = " << elem.second << endl;} cout << endl;
+//  cout << "-------------ket_hole_map------------" << endl;  for ( auto elem : *ket_hole_map ) { cout << elem.first << " = " << elem.second << endl;} cout << endl;
+//  cout << "-------------ket_elec_map------------" << endl;  for ( auto elem : *ket_elec_map ) { cout << elem.first << " = " << elem.second << endl;} cout << endl;
  
   if ( reordering_name == "normal order" ) {
     cout << "doing normal order" << endl;
-    
     int kk = 0;
     cout << "kk = "; cout.flush();
     while ( kk != gamma_vec->size()) {
       cout << kk << " "; cout.flush();
-      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ){
+      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) )
         normal_order(kk);
-      }
       kk++;
       cout << endl;
     }
     cout << "finished normal ordering" << endl;
     kk = 0;
     while ( kk != gamma_vec->size()){
-      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) && ( gamma_vec->at(kk)->ids_pos->size() != 0 ) ) { 
-//        if ( !all_active_ranges(gamma_vec->at(kk)) ) {  
-//          Contract_remaining_indexes(kk);
-//        } else {
+      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) && ( gamma_vec->at(kk)->ids_pos->size() != 0 ) )
         final_gamma_vec->push_back( gamma_vec->at(kk ));
-//        }
-      }
       kk++;
     }
 
@@ -156,7 +169,6 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
         anti_normal_order(kk);
       kk++;
     }
-
     
     kk = 0;
     cout << "gamma_vec->size() = " << gamma_vec->size() << endl;

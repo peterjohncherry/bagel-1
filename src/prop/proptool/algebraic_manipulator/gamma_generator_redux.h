@@ -52,6 +52,10 @@ class GammaGeneratorRedux{
     std::vector<std::string> standardized_full_ids_;
     std::vector<std::string> standardized_full_id_ranges_;
 
+    std::shared_ptr<std::vector<bool>> block_aops_;
+    std::shared_ptr<std::vector<std::string>> block_idxs_;
+    std::shared_ptr<std::vector<std::string>> block_rngs_; 
+
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> final_gamma_vec;
     
     // key    : name of A-tensor
@@ -72,6 +76,7 @@ class GammaGeneratorRedux{
     ~GammaGeneratorRedux(){};
 
     void add_gamma(std::shared_ptr<Range_Block_Info> block_info );
+    void add_gamma(std::shared_ptr<Range_BlockX_Info> block_info );
 
     bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering );
 

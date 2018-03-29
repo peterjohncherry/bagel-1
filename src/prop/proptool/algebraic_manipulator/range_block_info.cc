@@ -126,6 +126,9 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
                                       factors_(factors) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Range_BlockX_Info::Range_BlockX_Info" << endl;
+
+   
+  num_idxs_ = orig_rngs->size();;
  
   vector<bool> trans_aops_(orig_aops_->size());
   vector<int>::iterator at_it = aops_trans_->begin();
@@ -178,34 +181,48 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
 SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> range_blocks ) :
                             rxnge_blocks_(range_blocks), factors_(std::make_pair(1.0,1.0)) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- // cout << "SRBI_Helper::SRBI_Helper" << endl;
+  cout << "SRBIX_Helper::SRBIX_Helper" << endl;
 
   num_idxs_ = 0;
   unique_   = true;
 
+  int counter = 0;
   for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  rxnge_blocks_->begin(); rb_iter != rxnge_blocks_->end();  rb_iter++ ){
-    num_idxs_  += (*rb_iter)->num_idxs(); } 
+    cout << "num_idxs_ = " << num_idxs_ <<  "    : " << counter++ <<  endl;
+    num_idxs_  += (*rb_iter)->num_idxs();
+  } 
 
+  cout << "T1" << endl;
+  cout << "num_idxs = " << num_idxs_ << endl;
   std::vector<std::string> orig_idxs(num_idxs_);
+  cout << "num_idxs = " << num_idxs_ << endl;
   std::vector<std::string>::iterator oi_it = orig_idxs.begin();
+  cout << "num_idxs = " << num_idxs_ << endl;
 
+  cout << "T2" << endl;
   std::vector<std::string> orig_rngs(num_idxs_);
   std::vector<std::string>::iterator or_it = orig_rngs.begin();
 
+  cout << "T3" << endl;
   std::vector<bool> orig_aops(num_idxs_);
   std::vector<bool>::iterator oa_it = orig_aops.begin();
 
+  cout << "T4" << endl;
   std::vector<int> idxs_trans(num_idxs_);
   std::vector<int>::iterator it_it = idxs_trans.begin();
 
+  cout << "T5" << endl;
   std::vector<int> rngs_trans(num_idxs_);
   std::vector<int>::iterator rt_it = rngs_trans.begin();
 
+  cout << "T6" << endl;
   std::vector<int> aops_trans(num_idxs_);
   std::vector<int> ::iterator at_it = aops_trans.begin();
-
+  cout << "T7" << endl;
+  
   for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  rxnge_blocks_->begin(); rb_iter != rxnge_blocks_->end();  rb_iter++ ){
  
+    cout << " counter = " << counter++ <<  endl;
     double Re_buff = factors_.first;
     double Im_buff = factors_.second;
     factors_.first = Re_buff*(*rb_iter)->Re_factor() + Im_buff*(*rb_iter)->Im_factor();
