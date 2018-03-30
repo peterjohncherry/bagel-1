@@ -57,7 +57,7 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     std::shared_ptr<const std::vector<std::string>> orig_block() const { return orig_block_; }
     std::shared_ptr<const std::vector<std::string>> unique_block() const { return unique_block_; }
 
-    std::shared_ptr<const std::vector<std::string>> orig_idxs()const { return orig_idxs_; }
+    std::shared_ptr<const std::vector<std::string>> orig_idxs() const { return orig_idxs_; }
     std::shared_ptr<const std::vector<std::string>> transformed_idxs() const { return transformed_idxs_; }
 
     std::shared_ptr<const std::vector<bool>> orig_aops() const { return orig_aops_; }
@@ -124,7 +124,14 @@ class Split_Range_Block_Info : public  Range_Block_Info {
     bool is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs );
 };
  
+class SRBIX_Helper; 
+class SplitX_Range_Block_Info; 
+
+
 class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info> {
+ 
+  friend SRBIX_Helper;
+  friend SplitX_Range_Block_Info;
 
   protected :
      std::pair<double,double> factors_; 
@@ -231,6 +238,8 @@ class SRBIX_Helper {
     std::shared_ptr<std::vector<int>> rngs_trans_;
                               
     SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> range_blocks );
+
+    void add_trans( std::shared_ptr<SplitX_Range_Block_Info> srbi, std::vector<int>&  op_order, std::vector<char> op_trans );
    ~SRBIX_Helper(){};
  
 };

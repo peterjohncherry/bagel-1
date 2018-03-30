@@ -1,2 +1,0 @@
-source /opt/intel/bin/compilervars.sh intel64; 
- ../configure CXXFLAGS=" -Wextra -Wno-strict-aliasing -Wno-deprecated-declarations -Wno-return-type -Wno-sign-compare -Wno-unused -Werror -mavx" --enable-mkl --with-mpi="intel" --disable-scalapack --with-include="-I/home/peter/UTILS/boost_1_66_0 -I/opt/intel/mkl/include" LDFLAGS="-L/home/peter/UTILS/boost_1_66_0/stage/lib -L/opt/intel/mkl/lib/intel64 -L/opt/intel/mkl/bin/ -L/opt/intel/lib/intel64/ -L/opt/intel/mkl/lib/intel64/ -L/opt/intel/impi/2018.1.163/intel64/lib" CXX="/usr/lib64/ccache/g++" CC="/usr/lib64/ccache/gcc"

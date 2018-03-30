@@ -55,6 +55,7 @@ void GammaGeneratorRedux::add_gamma( shared_ptr<Range_BlockX_Info> block_info ) 
 
   return;
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::add_gamma( shared_ptr<Range_Block_Info> block_info ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -76,12 +77,12 @@ void GammaGeneratorRedux::add_gamma( shared_ptr<Range_Block_Info> block_info ) {
     sort( standard_order_.begin(), standard_order_.end(), [&tmp_pos ] ( int i1, int i2) { return (bool)( tmp_pos[i1] < tmp_pos[i2]); });  
 
     block_to_std_order_ = tmp_pos; 
-  } 
+  }
 
   standardized_full_ids_ = vector<string>(orig_ids_->size());
   vector<int>::iterator so_it = standard_order_.begin() ;
   int ii = 0 ;
-  for ( vector<string>::const_iterator oi_it = orig_ids_->begin() ; oi_it != orig_ids_->end();  ++oi_it, ++so_it, ++ii ){
+  for ( vector<string>::const_iterator oi_it = orig_ids_->begin() ; oi_it != orig_ids_->end();  ++oi_it, ++so_it, ++ii ) {
     standardized_full_ids_[*so_it] = (*oi_it);
     block_to_std_order_[*so_it] = (ii);
   }
@@ -98,6 +99,7 @@ void GammaGeneratorRedux::add_gamma( shared_ptr<Range_Block_Info> block_info ) {
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>(0);
 
   shared_ptr<GammaIntermediateRedux> gint = gamma_vec->front();
+
   cout << "gint_aops = [ "; cout.flush();  for ( auto pos : *(gint->ids_pos) ) { cout << orig_aops_->at(pos) << " " ; cout.flush();  }  cout << "] " << endl;
   cout << "gint_rngs = [ "; cout.flush();  for ( auto pos : *(gint->ids_pos) ) { cout << standardized_full_id_ranges_[pos] << " " ; cout.flush();  }   cout << "]" << endl;
   cout << "gint_ids  = [ "; cout.flush();   for ( auto pos : *(gint->ids_pos) ) { cout << orig_ids_->at(pos) << " " ; cout.flush();  }   cout << "] " <<  endl;

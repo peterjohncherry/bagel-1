@@ -665,17 +665,23 @@ MultiTensOp::MultiTensOp<DataType>::generate_rangesX( vector<string>& idxs, vect
 
      old_forvec = make_shared<vector<int>>(*forvec);
      shared_ptr< vector <shared_ptr<Range_BlockX_Info >>> split_block = make_shared< vector <shared_ptr<Range_BlockX_Info >>>(num_tensors_);
-     vector<shared_ptr<Range_BlockX_Info>>::iterator split_block_iter = split_block->begin();
-     for (int jj = 0 ; jj != num_tensors_ ; jj++) 
-       *split_block_iter++ = rng_maps[jj]->second;
+     vector<shared_ptr<Range_BlockX_Info>>::iterator sb_it = split_block->begin();
+     for (int jj = 0 ; jj != num_tensors_ ; jj++, sb_it++ ) 
+       *sb_it = rng_maps[jj]->second;
       
-      //TODO Must obtain from constraint functions 
-      shared_ptr<SplitX_Range_Block_Info> srbi;
-      {
-      SRBIX_Helper helper(split_block);
-      srbi = make_shared<SplitX_Range_Block_Info>( helper );
-      }
-      split_rxnges.emplace( *(srbi->orig_rngs()), srbi ) ;
+     //TODO Must obtain from constraint functions 
+     shared_ptr<SplitX_Range_Block_Info> srbi;
+     {
+     SRBIX_Helper helper(split_block);
+     srbi = make_shared<SplitX_Range_Block_Info>( helper );
+     print_vector( *(helper.orig_rngs_) , "helper.orig_rngs_" ); cout.flush();
+     print_vector( *(helper.orig_aops_) , "      helper.orig_aops_" ); cout.flush();
+     print_vector( *(helper.orig_idxs_) , "      helper.orig_idxs_" ); cout << endl;
+     print_vector( *(helper.rngs_trans_) , "helper.rngs_trans_" ); cout.flush();
+     print_vector( *(helper.aops_trans_) , "      helper.aops_trans_" ); cout.flush();
+     print_vector( *(helper.idxs_trans_) , "      helper.idxs_trans_" ); cout << endl;
+     }
+     split_rxnges.emplace( *(srbi->orig_rngs()), srbi ) ;
 
    } while( fvec_cycle_skipper( forvec, maxs, mins ) );
 
@@ -766,9 +772,9 @@ void MultiTensOp::MultiTensOp<DataType>::transform( const vector<char>& transfor
 
       old_forvec = make_shared<vector<int>>(*forvec);
       shared_ptr< vector <shared_ptr<Range_Block_Info >>> split_block = make_shared< vector <shared_ptr<Range_Block_Info >>>(num_tensors_);
-      vector<shared_ptr<Range_Block_Info>>::iterator split_block_iter = split_block->begin();
-      for (int jj = 0 ; jj != num_tensors_ ; jj++) 
-        *split_block_iter++ = rng_maps[jj]->second;
+      vector<shared_ptr<Range_Block_Info>>::iterator sb_it = split_block->begin();
+      for (int jj = 0 ; jj != num_tensors_ ; jj++, sb_it++ ) 
+        *sb_it = rng_maps[jj]->second;
        
       //TODO Must obtain from constraint functions 
       shared_ptr<Split_Range_Block_Info> srbi;

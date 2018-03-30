@@ -33,14 +33,18 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
   print_vector( *(Total_Op_->idxs()) , " *(Total_Op_->idxs()) " ); cout.flush();
   print_vector( *(Total_Op_->aops()) , "      *(Total_Op_->aops()) " ); cout << endl; 
 
-  cout << "all_ranges original " <<endl;
+  cout << "============================================ all_ranges OLD ============================================== " <<endl;
   for ( auto elem : *(Total_Op_->split_ranges()) ) { 
     print_vector( *( elem.second->orig_idxs() ) , "orig_idxs" );  print_vector( *( elem.second->orig_aops() ) , "   orig_aops" );   print_vector( *( elem.second->orig_block() ) , "   orig_rngs" ); cout << endl;
+    print_vector( *( elem.second->transformed_idxs() ) , "trans_idxs" );  print_vector( *( elem.second->orig_aops() ) , "   trans_aops" );   print_vector( *( elem.second->unique_block() ) , "   trans_rngs" ); cout << endl << endl;
   } 
-  cout << "all_ranges update " <<endl;
+  cout << endl << endl;
+  cout << "============================================ all_ranges NEW ============================================== " <<endl;
   for ( auto elem : *(Total_Op_->split_rxnges()) ) { 
     print_vector( *( elem.second->orig_idxs() ) , "orig_idxs" );  print_vector( *( elem.second->orig_aops() ) , "   orig_aops" );   print_vector( *( elem.second->orig_rngs() ) , "   orig_rngs" ); cout << endl;
+    print_vector( *( elem.second->trans_idxs() ) , "trans_idxs" );  print_vector( *( elem.second->trans_aops() ) , "   trans_aops" );   print_vector( *( elem.second->trans_rngs() ) , "   trans_rngs" ); cout << endl << endl;
   } 
+
 //  auto GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_->idxs(), Total_Op_->aops(), gamma_info_map, G_to_A_map, factor_ );
 //  for ( auto range_map_it = Total_Op_->split_ranges_trans(trans_info)->begin(); range_map_it !=Total_Op_->split_ranges_trans(trans_info)->end(); range_map_it++ ){
 //    if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){  

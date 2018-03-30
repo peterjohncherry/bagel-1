@@ -1,8 +1,10 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/range_block_info.h>
+#include <src/prop/proptool/algebraic_manipulator/algebra_utils.h>
 
 using namespace std;
 using namespace WickUtils;
+using namespace Algebra_Utils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Range_Block_Info::Range_Block_Info( bool is_unique, bool survives, std::pair<double,double> factors, 
@@ -220,29 +222,30 @@ SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bl
   std::vector<int> ::iterator at_it = aops_trans.begin();
   cout << "T7" << endl;
   
-  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  rxnge_blocks_->begin(); rb_iter != rxnge_blocks_->end();  rb_iter++ ){
+  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_it =  rxnge_blocks_->begin(); rb_it != rxnge_blocks_->end();  rb_it++ ){
  
     cout << " counter = " << counter++ <<  endl;
     double Re_buff = factors_.first;
     double Im_buff = factors_.second;
-    factors_.first = Re_buff*(*rb_iter)->Re_factor() + Im_buff*(*rb_iter)->Im_factor();
-    factors_.second = Re_buff*(*rb_iter)->Im_factor() + Im_buff*(*rb_iter)->Re_factor();
+    factors_.first = Re_buff*(*rb_it)->Re_factor() + Im_buff*(*rb_it)->Im_factor();
+    factors_.second = Re_buff*(*rb_it)->Im_factor() + Im_buff*(*rb_it)->Re_factor();
 
-    copy_n( (*rb_iter)->orig_idxs()->begin(), (*rb_iter)->num_idxs(), oi_it );
-    copy_n( (*rb_iter)->orig_rngs()->begin(), (*rb_iter)->num_idxs(), or_it );
-    copy_n( (*rb_iter)->orig_aops()->begin(), (*rb_iter)->num_idxs(), oa_it );
+    copy_n( (*rb_it)->orig_idxs()->begin(), (*rb_it)->num_idxs(), oi_it );
+    copy_n( (*rb_it)->orig_rngs()->begin(), (*rb_it)->num_idxs(), or_it );
+    copy_n( (*rb_it)->orig_aops()->begin(), (*rb_it)->num_idxs(), oa_it );
 
-    copy_n( (*rb_iter)->idxs_trans()->begin(), (*rb_iter)->num_idxs(), it_it );
-    copy_n( (*rb_iter)->rngs_trans()->begin(), (*rb_iter)->num_idxs(), rt_it );
-    copy_n( (*rb_iter)->aops_trans()->begin(), (*rb_iter)->num_idxs(), at_it );
+    copy_n( (*rb_it)->idxs_trans()->begin(), (*rb_it)->num_idxs(), it_it );
+    copy_n( (*rb_it)->rngs_trans()->begin(), (*rb_it)->num_idxs(), rt_it );
+    copy_n( (*rb_it)->aops_trans()->begin(), (*rb_it)->num_idxs(), at_it );
 
-    oi_it += (*rb_iter)->num_idxs();
-    or_it += (*rb_iter)->num_idxs();
-    oa_it += (*rb_iter)->num_idxs();
+    oi_it += (*rb_it)->num_idxs();
+    or_it += (*rb_it)->num_idxs();
+    oa_it += (*rb_it)->num_idxs();
  
-    it_it += (*rb_iter)->num_idxs();
-    rt_it += (*rb_iter)->num_idxs();
-    at_it += (*rb_iter)->num_idxs();
+    it_it += (*rb_it)->num_idxs();
+    rt_it += (*rb_it)->num_idxs();
+    at_it += (*rb_it)->num_idxs();
+
   }
  
   orig_idxs_      = std::make_shared<const std::vector<std::string>>(orig_idxs);         
@@ -253,6 +256,47 @@ SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bl
   rngs_trans_      = std::make_shared<std::vector<int>>(rngs_trans);        
   aops_trans_      = std::make_shared<std::vector<int>>(aops_trans);         
       
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void
+SRBIX_Helper::add_trans( std::shared_ptr<SplitX_Range_Block_Info> srbi, vector<int>&  op_order, vector<char> op_trans ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "SRBIX_Helper::add_trans" << endl;
+
+  num_idxs_ = 0;
+  unique_   = true;
+  factors_  = make_pair(1.0,1.0);
+
+  rxnge_blocks_ = srbi->range_blocks() ; 
+
+  std::vector<std::string> orig_idxs = *(srbi->orig_idxs_) ;
+
+  int counter = 0;
+  vector<int> cml_sizes(op_order.size());
+  vector<int>::iterator cs_it = cml_sizes.begin();
+  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  rxnge_blocks_->begin(); rb_iter != rxnge_blocks_->end();  rb_iter++, cs_it++ ){
+    *cs_it += num_idxs_;
+     num_idxs_  += (*rb_iter)->num_idxs();
+  } 
+
+  vector<int> idxs_trans(num_idxs_);
+  vector<int> aops_trans(num_idxs_);
+  vector<int> rngs_trans(num_idxs_);
+  vector<int>::iterator it_it = idxs_trans.begin();
+
+  for( vector<int>::iterator oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++  ){
+
+    std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_it =  rxnge_blocks_->begin() + *oo_it;
+     
+    copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
+    
+    transform_tens_vec( op_trans[*oo_it], it_it, (*rb_it)->idxs_trans()->end() ); 
+
+    std::for_each( it_it, it_it+(*rb_it)->idxs_trans()->size() , [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
+
+    it_it += (*rb_it)->idxs_trans()->size();
+  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
