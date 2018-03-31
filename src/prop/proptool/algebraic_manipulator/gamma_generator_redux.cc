@@ -7,38 +7,50 @@ using namespace WickUtils;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaGeneratorRedux::GammaGeneratorRedux( shared_ptr<StatesInfo<double>> target_states, int Bra_num, int Ket_num,
-                                          shared_ptr<const vector<string>> orig_ids, shared_ptr<const vector<bool>> orig_aops,
+                                          shared_ptr<const vector<string>> std_ids, shared_ptr<const vector<bool>> std_aops,
                                           shared_ptr<map<string, shared_ptr<GammaInfo>>>& Gamma_map_in,
                                           shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo> >>>>& G_to_A_map_in,
                                           double bk_factor                                                           ):
                                           target_states_(target_states),
                                           Bra_names_(target_states_->civec_names( Bra_num )),
                                           Ket_names_(target_states_->civec_names( Ket_num )),
-                                          orig_ids_(orig_ids), orig_aops_(orig_aops),
+                                          std_ids_(std_ids), std_aops_(std_aops),
                                           G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in), bk_factor_(bk_factor),
-                                          orig_aops_half_size_( orig_aops_->size()/2 ) {
+                                          orig_aops_half_size_( std_aops_->size()/2 ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGeneratorRedux::GammaGeneratorRedux" << endl;
 
-  print_vector(*orig_aops_, "orig_aops"); cout << endl; // This should be constant for all range blocks, but this is not the same as the MT aops
-  print_vector(*orig_ids_, "orig_ids"); cout << endl; // ids are not (necessarily) be constant for all range blocks
+  print_vector(*std_aops_, "std_aops"); cout << endl; // This should be constant for all range blocks, but this is not the same as the MT aops
+  print_vector(*std_ids_, "std_ids"); cout << endl; // ids are not (necessarily) be constant for all range blocks
   
   return;
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GammaGeneratorRedux::add_gamma( shared_ptr<Range_BlockX_Info> block_info ) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGeneratorRedux::add_gamma( const shared_ptr<SplitX_Range_Block_Info> block_info,  const vector<string>& range_block ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGeneratorRedux::add_gamma" << endl;
 
-  orig_aops_ = block_info->trans_aops(); 
+  orig_aops_ = make_shared<vector<bool>>(std_aops_->size());
+  { 
+  vector<bool>::iterator oa_it = orig_aops_->begin();
+  for ( vector<int>::iterator at_it = block_info->aops_trans()->begin(); at_it != block_info->aops_trans()->end(); at_it++, oa_it++ )  
+    *oa_it =  (*std_aops_)[*at_it];
+  }
 
-  standardized_full_id_ranges_ = *(block_info->orig_rngs()); 
-  standardized_full_ids_ = *(block_info->orig_idxs()); 
+  orig_rngs_ = make_shared<vector<string>>(range_block.size());
+  {
+  vector<string>::iterator or_it = orig_rngs_->begin();
+  for ( vector<int>::iterator rt_it = block_info->rngs_trans()->begin(); rt_it != block_info->rngs_trans()->end(); rt_it++, or_it++ )  
+    *or_it =  range_block[*rt_it];
+  }
 
-  block_aops_ = block_info->trans_aops(); 
-  block_rngs_ = block_info->trans_rngs(); 
-  block_idxs_ = block_info->trans_idxs(); 
-  
+  orig_ids_ = make_shared<vector<string>>( std_ids_->size() );
+  {
+  vector<string>::iterator oi_it = orig_ids_->begin();
+  for ( vector<int>::iterator it_it = block_info->idxs_trans()->begin(); it_it != block_info->idxs_trans()->end(); it_it++, oi_it++ )  
+    *oi_it =  (*std_ids_)[*it_it];
+  }
+
   standard_order_ = *(block_info->idxs_trans());
 
   int ii = 0 ;
@@ -52,57 +64,6 @@ void GammaGeneratorRedux::add_gamma( shared_ptr<Range_BlockX_Info> block_info ) 
   int my_sign = 1; // TODO should be double from range_block
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>( 1, make_shared<GammaIntermediateRedux>( ids_pos, deltas_pos, my_sign ) );
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>(0);
-
-  return;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GammaGeneratorRedux::add_gamma( shared_ptr<Range_Block_Info> block_info ) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGeneratorRedux::add_gamma" << endl;
-
-  orig_aops_ = block_info->orig_aops(); 
-  print_vector(  *(block_info->transformed_idxs()), " *(block_info->transformed_idxs())" ) ; cout << endl;
-
-  //Reordering of the original ids; don't use the original order so we can merge h.c. terms, e.g.,  f1f0x1x0 and x0x1f0f1 . 
-  standard_order_ = vector<int>(orig_ids_->size());
-  {
-    vector<string> tmp_orig_ids = *(block_info->transformed_idxs());
-    vector<int> tmp_pos(tmp_orig_ids.size());
-
-    iota( tmp_pos.begin(), tmp_pos.end(), 0);
-    sort( tmp_pos.begin(), tmp_pos.end(), [ &tmp_orig_ids ] ( int i1, int i2) { return (bool)( tmp_orig_ids[i1] < tmp_orig_ids[i2]); });  
-   
-    iota( standard_order_.begin(), standard_order_.end(), 0);
-    sort( standard_order_.begin(), standard_order_.end(), [&tmp_pos ] ( int i1, int i2) { return (bool)( tmp_pos[i1] < tmp_pos[i2]); });  
-
-    block_to_std_order_ = tmp_pos; 
-  }
-
-  standardized_full_ids_ = vector<string>(orig_ids_->size());
-  vector<int>::iterator so_it = standard_order_.begin() ;
-  int ii = 0 ;
-  for ( vector<string>::const_iterator oi_it = orig_ids_->begin() ; oi_it != orig_ids_->end();  ++oi_it, ++so_it, ++ii ) {
-    standardized_full_ids_[*so_it] = (*oi_it);
-    block_to_std_order_[*so_it] = (ii);
-  }
-
-  shared_ptr<vector<string>> id_ranges = make_shared<vector<string>>(*block_info->unique_block());
-  standardized_full_id_ranges_ = vector<string>(*id_ranges);
-  vector<int>::iterator otso_it = block_to_std_order_.begin() ;
-  for ( vector<string>::iterator sfir_it = standardized_full_id_ranges_.begin() ; sfir_it != standardized_full_id_ranges_.end(); ++sfir_it, ++otso_it )
-    *sfir_it = (*id_ranges)[*otso_it]; 
-
-  shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
-  int my_sign = 1; // TODO should be double from range_block
-  gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>( 1, make_shared<GammaIntermediateRedux>( make_shared<vector<int>>( standard_order_ ), deltas_pos, my_sign ) );
-  final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>(0);
-
-  shared_ptr<GammaIntermediateRedux> gint = gamma_vec->front();
-
-  cout << "gint_aops = [ "; cout.flush();  for ( auto pos : *(gint->ids_pos) ) { cout << orig_aops_->at(pos) << " " ; cout.flush();  }  cout << "] " << endl;
-  cout << "gint_rngs = [ "; cout.flush();  for ( auto pos : *(gint->ids_pos) ) { cout << standardized_full_id_ranges_[pos] << " " ; cout.flush();  }   cout << "]" << endl;
-  cout << "gint_ids  = [ "; cout.flush();   for ( auto pos : *(gint->ids_pos) ) { cout << orig_ids_->at(pos) << " " ; cout.flush();  }   cout << "] " <<  endl;
 
   return;
 }
@@ -427,9 +388,9 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
     *sdp_it = make_pair ( block_to_std_order_[elem.first], block_to_std_order_[elem.second] );
     ++sdp_it;
   }
-  
-  string Aname_alt = get_Aname( standardized_full_ids_, standardized_full_id_ranges_, standardized_deltas_pos );
 
+  //  This should use standardized ordering...  
+  string Aname_alt = get_Aname( standardized_full_ids_, standardized_full_id_ranges_, standardized_deltas_pos );
 
   string Gname_alt = get_gamma_name( standardized_full_id_ranges_, *orig_aops_, *ids_pos, bra_name, ket_name );
 
@@ -752,6 +713,8 @@ vector<int> GammaGeneratorRedux::get_position_order(const vector<int> &ids_pos) 
 vector<int> GammaGeneratorRedux::get_standardized_alt_order ( const vector<string>& rngs ,const vector<bool>& aops ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGeneratorRedux::get_standardized_alt_order " << endl;
+  // TODO this should use standardized ordering 
+
    
   print_vector( rngs, "rngs" ) ; cout << endl;
   vector<int> standard_order = get_standard_idx_order(rngs) ;
@@ -784,6 +747,7 @@ vector<int> GammaGeneratorRedux::get_standardized_alt_order ( const vector<strin
 void GammaGeneratorRedux::set_standardized_alt_order_unranged ( int kk , vector<int>& standard_alt_order) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "GammaGenerator::set_standardized_alt_order_unranged" << endl;
+  // TODO this should use standardized ordering 
 
   shared_ptr<vector<int>>           ids_pos = gamma_vec->at(kk)->ids_pos;
   shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos; 

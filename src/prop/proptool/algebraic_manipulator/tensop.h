@@ -8,8 +8,10 @@
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
+class TensOp_Base;
 class Op_General_base { 
-
+     friend TensOp_Base;
+   
      protected:
        const std::vector<std::string> idxs_;
        const std::vector<bool> aops_;
@@ -54,6 +56,7 @@ class Op_General_base {
        // result : transformed split range block
        std::shared_ptr< std::map< std::pair< std::vector<char>, std::vector<int> >, 
                         std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr<SplitX_Range_Block_Info>>> >> split_rxnges_trans_;
+
 
 
       public :

@@ -33,8 +33,12 @@ class GammaGeneratorRedux{
     std::shared_ptr<std::vector<std::string>> Bra_names_;
     std::shared_ptr<std::vector<std::string>> Ket_names_;
 
-    std::shared_ptr<const std::vector<bool>> orig_aops_ ;
-    std::shared_ptr<const std::vector<std::string>> orig_ids_ ;
+    std::shared_ptr<std::vector<bool>> orig_aops_ ;
+    std::shared_ptr<std::vector<std::string>> orig_ids_ ;
+    std::shared_ptr<std::vector<std::string>> orig_rngs_ ;
+
+    std::shared_ptr<const std::vector<bool>> std_aops_ ;
+    std::shared_ptr<const std::vector<std::string>> std_ids_ ;
 
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
@@ -75,14 +79,12 @@ class GammaGeneratorRedux{
 
     ~GammaGeneratorRedux(){};
 
-    void add_gamma(std::shared_ptr<Range_Block_Info> block_info );
-    void add_gamma(std::shared_ptr<Range_BlockX_Info> block_info );
+    void add_gamma( const std::shared_ptr<SplitX_Range_Block_Info> block_info, const std::vector<std::string>& range_block );
 
     bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering );
 
     bool generic_reorderer_different_sector( std::string reordering_name, std::string bra_name,
                                              std::string ket_name, bool final_reordering );
-
     bool anti_norm_order();
 
     void normal_order( int kk );

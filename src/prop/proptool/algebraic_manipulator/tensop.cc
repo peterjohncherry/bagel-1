@@ -298,7 +298,7 @@ cout << "TensOp::generate_ranges" <<   endl;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info> >>
-TensOp::TensOp<DataType>::generate_rangesX( vector<string>& idxs,  vector<vector<string>>& idx_ranges, vector<bool>& aops ){
+TensOp::TensOp<DataType>::generate_rangesX( vector<string>& idxs,  vector<vector<string>>& idx_ranges, vector<bool>& aops ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp::TensOp<DataType>::generate_rangesX" <<   endl;
 
@@ -308,7 +308,7 @@ cout << "TensOp::TensOp<DataType>::generate_rangesX" <<   endl;
 
   map< const vector<string>, shared_ptr<Range_BlockX_Info> > all_ranges_tmp;
 
-  shared_ptr<vector<int>> fvec = make_shared<vector<int>>( orig_idxs->size(), 0); 
+  shared_ptr<vector<int>> fvec = make_shared<vector<int>>( orig_idxs->size(), 0);
   shared_ptr<vector<int>> maxs = make_shared<vector<int>>( orig_idxs->size() );
   pair<double,double> fac_new(1.0,1.0);
   int num_cycles = 1;
@@ -330,7 +330,7 @@ cout << "TensOp::TensOp<DataType>::generate_rangesX" <<   endl;
     if(satisfies_constraints(new_range))
       all_ranges_tmp.emplace( new_range,  make_shared< Range_BlockX_Info > ( make_shared<const vector<string>>(new_range), orig_idxs, orig_aops, no_trans, no_trans, no_trans, fac_new ) );
     fvec_cycle( fvec, maxs );
-  } 
+  }
 
   auto all_ranges_ptr = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info >>> (all_ranges_tmp);
   return all_ranges_ptr ;
@@ -661,37 +661,37 @@ MultiTensOp::MultiTensOp<DataType>::generate_rangesX( vector<string>& idxs, vect
             rng_maps[ii]++;
           }
         }
-      }
-
-     old_forvec = make_shared<vector<int>>(*forvec);
-     shared_ptr< vector <shared_ptr<Range_BlockX_Info >>> split_block = make_shared< vector <shared_ptr<Range_BlockX_Info >>>(num_tensors_);
-     vector<shared_ptr<Range_BlockX_Info>>::iterator sb_it = split_block->begin();
-     for (int jj = 0 ; jj != num_tensors_ ; jj++, sb_it++ ) 
-       *sb_it = rng_maps[jj]->second;
+       }
+     
+      old_forvec = make_shared<vector<int>>(*forvec);
+      shared_ptr< vector <shared_ptr<Range_BlockX_Info >>> split_block = make_shared< vector <shared_ptr<Range_BlockX_Info >>>( num_tensors_ );
+      vector<string> merged_ranges(num_idxs);
+      vector<string>::iterator mr_it = merged_ranges.begin();
       
-     //TODO Must obtain from constraint functions 
-     shared_ptr<SplitX_Range_Block_Info> srbi;
-     {
-     SRBIX_Helper helper(split_block);
-     srbi = make_shared<SplitX_Range_Block_Info>( helper );
-     print_vector( *(helper.orig_rngs_) , "helper.orig_rngs_" ); cout.flush();
-     print_vector( *(helper.orig_aops_) , "      helper.orig_aops_" ); cout.flush();
-     print_vector( *(helper.orig_idxs_) , "      helper.orig_idxs_" ); cout << endl;
-     print_vector( *(helper.rngs_trans_) , "helper.rngs_trans_" ); cout.flush();
-     print_vector( *(helper.aops_trans_) , "      helper.aops_trans_" ); cout.flush();
-     print_vector( *(helper.idxs_trans_) , "      helper.idxs_trans_" ); cout << endl;
-     }
-     split_rxnges.emplace( *(srbi->orig_rngs()), srbi ) ;
+      vector<shared_ptr<Range_BlockX_Info>>::iterator sb_it = split_block->begin();
+      for (auto  rm_it = rng_maps.begin(); rm_it != rng_maps.end(); rm_it++, sb_it++ ){  
+        *sb_it = (*rm_it)->second;
+         copy( (*rm_it)->first.begin(), (*rm_it)->first.begin(), mr_it ) ;
+         mr_it +=  (*rm_it)->first.size();  
+      } 
+      //TODO Must obtain from constraint functions 
+      shared_ptr<SplitX_Range_Block_Info> srbi;
+      {
+        SRBIX_Helper helper(split_block);
+        srbi = make_shared<SplitX_Range_Block_Info>( make_shared<vector<string>>(merged_ranges), make_shared<const vector<string>>(idxs),  
+                                                     make_shared<const vector<bool>>(aops), helper );
+      }
+      split_rxnges.emplace( merged_ranges, srbi ) ;
 
-   } while( fvec_cycle_skipper( forvec, maxs, mins ) );
+    } while( fvec_cycle_skipper( forvec, maxs, mins ) );
 
- }  else { 
+  } else { 
 
-    //TODO  add constructor so can just have single tensor, need not be vector
+    //TODO add constructor so can just have single tensor, need not be vector
     for ( auto elem : *(sub_tensops_[0]->all_rxnges()) )  {
       SRBIX_Helper helper( make_shared<vector<shared_ptr<Range_BlockX_Info >>>(1, elem.second));
-      shared_ptr<SplitX_Range_Block_Info> srbi = make_shared<SplitX_Range_Block_Info>(helper);
-      split_rxnges.emplace( *(srbi->orig_rngs()), srbi ) ;
+      shared_ptr<SplitX_Range_Block_Info> srbi = make_shared<SplitX_Range_Block_Info>( make_shared<vector<string>>( elem.first ), Op_dense_->idxs(), Op_dense_->aops(), helper);
+      split_rxnges.emplace( elem.first, srbi ) ;
     }
   }
    
