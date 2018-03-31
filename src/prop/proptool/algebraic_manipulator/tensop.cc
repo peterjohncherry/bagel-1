@@ -667,13 +667,13 @@ MultiTensOp::MultiTensOp<DataType>::generate_rangesX( vector<string>& idxs, vect
       shared_ptr< vector <shared_ptr<Range_BlockX_Info >>> split_block = make_shared< vector <shared_ptr<Range_BlockX_Info >>>( num_tensors_ );
       vector<string> merged_ranges(num_idxs);
       vector<string>::iterator mr_it = merged_ranges.begin();
-      
       vector<shared_ptr<Range_BlockX_Info>>::iterator sb_it = split_block->begin();
       for (auto  rm_it = rng_maps.begin(); rm_it != rng_maps.end(); rm_it++, sb_it++ ){  
         *sb_it = (*rm_it)->second;
-         copy( (*rm_it)->first.begin(), (*rm_it)->first.begin(), mr_it ) ;
+         copy( (*rm_it)->first.begin(), (*rm_it)->first.end(), mr_it ) ;
          mr_it +=  (*rm_it)->first.size();  
       } 
+
       //TODO Must obtain from constraint functions 
       shared_ptr<SplitX_Range_Block_Info> srbi;
       {

@@ -316,7 +316,6 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
  
      std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info> >>
      generate_rangesX( std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges, std::vector<bool>& aops );
-
  
      std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info > > > all_ranges() const  { return Op_dense_->all_ranges(); }
 

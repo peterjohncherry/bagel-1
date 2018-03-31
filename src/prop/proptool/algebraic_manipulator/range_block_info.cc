@@ -129,17 +129,30 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
   cout << "Range_BlockX_Info::Range_BlockX_Info" << endl;
    
   num_idxs_ = orig_rngs->size();
+
+  print_vector( *orig_rngs , " orig_rngs" ); cout << endl;
+  print_vector( *orig_aops , " orig_aops" ); cout << endl;
+
+  cout << "num_idxs_ = " << num_idxs_ << endl;
  
   vector<bool> trans_aops_(orig_aops->size());
   vector<int>::iterator at_it = aops_trans_->begin();
   for ( vector<bool>::iterator ta_it = trans_aops_.begin(); ta_it != trans_aops_.end(); ta_it++, at_it++ )
     *ta_it = (*orig_aops)[*at_it];
 
-  vector<string> trans_rngs_(orig_rngs->size());
+  cout << "T1 " << endl;
+  vector<string> trans_rngs_(num_idxs_);
+  cout << "Ta " << endl;
   vector<int>::iterator rt_it = rngs_trans_->begin();
+  print_vector( *rngs_trans_, "rngs_trans" ); cout << endl;
+  cout << "Tb " << endl;
   for ( vector<string>::iterator tr_it = trans_rngs_.begin(); tr_it != trans_rngs_.end(); tr_it++, rt_it++ )
     *tr_it = (*orig_rngs)[*rt_it];
+  cout << "Tc " << endl;
 
+  print_vector( trans_rngs_ , " trans_rngs" ); cout << endl;
+  print_vector( trans_aops_ , " trans_aops" ); cout << endl;
+  cout << "T2 " << endl;
   plus_pnum_ = 1;
   kill_pnum_ = 1;
 
@@ -148,6 +161,7 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
   vector<unsigned int>::iterator kp_it = kill_pos.begin();
   vector<unsigned int>::iterator pp_it = plus_pos.begin(); 
 
+  cout << "T3 " << endl;
   std::vector<bool>::const_iterator ta_it = trans_aops_.begin();
   for ( std::vector<std::string>::const_iterator tr_it = trans_rngs_.begin(); tr_it != trans_rngs_.end(); ++tr_it, ++ta_it ){
     if (*ta_it) {
@@ -161,12 +175,14 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
     }
   }
 
+  cout << "T4 " << endl;
   if ( plus_pnum_ - kill_pnum_ ) {
     no_transition_ = false;
   } else { 
     no_transition_ = true;
   }
 
+  cout << "T5 " << endl;
   // TODO this generates the list of allowed contractions, should probably be replaced with arithmetical version
   allowed_contractions_ = vector<bool>( kill_pos.size() * plus_pos.size() );
   pp_it = plus_pos.begin();
@@ -176,6 +192,7 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
       *ac_it = ( *kp_it == *pp_it );
   }
 
+  cout << "T6 " << endl;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> range_blocks ) :
@@ -225,7 +242,7 @@ std::shared_ptr<Range_BlockX_Info>
 SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_ptr<const vector<string>> orig_idxs, shared_ptr<const vector<bool>> orig_aops,
                                     vector<int>&  op_order, vector<char> op_trans ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "SRBIX_Helper::add_trans" << endl;
+  cout << "SplitX_Range_Block_Info::transform" << endl;
 
   vector<int> cml_sizes(op_order.size());
   vector<int>::iterator cs_it = cml_sizes.begin();
