@@ -27,11 +27,25 @@ namespace Algebra_Utils {
   void transform_tens_vec( char transformation, IterType begin_it, IterType end_it  ) { 
      switch( transformation ) {
        case 'n' : return;
+       case 'o' : return;
+       case 'p' : return;
        case '0' : return;
-       case 'h' : std::reverse( begin_it, end_it ); return;
-       case 'H' : std::reverse( begin_it, end_it ); return;
+       case '1' : return;
+       case '2' : return;
+
+       case 'h' : return;
+       case 'H' : return;
+       case 'i' : return;
+       case 'I' : return;
+       case 'j' : std::reverse( begin_it, end_it ); return;
+       case 'J' : std::reverse( begin_it, end_it ); return;
+
        case 't' : std::reverse( begin_it, end_it ); return;
-       case 'T' : std::reverse( begin_it, end_it ); return;
+       case 'T' : std::reverse( begin_it, end_it ); return; 
+       case 'u' : std::reverse( begin_it, end_it ); return; 
+       case 'U' : std::reverse( begin_it, end_it ); return;
+       case 'v' : return; 
+       case 'V' : return;
        default: 
            std::cout << "do not have transformation " << transformation << "implemented; please check the braket specification in the input file." << std::endl;
            throw std::logic_error( " Aborting!!" );

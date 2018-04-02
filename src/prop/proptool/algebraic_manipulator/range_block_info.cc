@@ -130,29 +130,16 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
    
   num_idxs_ = orig_rngs->size();
 
-  print_vector( *orig_rngs , " orig_rngs" ); cout << endl;
-  print_vector( *orig_aops , " orig_aops" ); cout << endl;
-
-  cout << "num_idxs_ = " << num_idxs_ << endl;
- 
   vector<bool> trans_aops_(orig_aops->size());
   vector<int>::iterator at_it = aops_trans_->begin();
   for ( vector<bool>::iterator ta_it = trans_aops_.begin(); ta_it != trans_aops_.end(); ta_it++, at_it++ )
     *ta_it = (*orig_aops)[*at_it];
 
-  cout << "T1 " << endl;
   vector<string> trans_rngs_(num_idxs_);
-  cout << "Ta " << endl;
   vector<int>::iterator rt_it = rngs_trans_->begin();
-  print_vector( *rngs_trans_, "rngs_trans" ); cout << endl;
-  cout << "Tb " << endl;
   for ( vector<string>::iterator tr_it = trans_rngs_.begin(); tr_it != trans_rngs_.end(); tr_it++, rt_it++ )
     *tr_it = (*orig_rngs)[*rt_it];
-  cout << "Tc " << endl;
 
-  print_vector( trans_rngs_ , " trans_rngs" ); cout << endl;
-  print_vector( trans_aops_ , " trans_aops" ); cout << endl;
-  cout << "T2 " << endl;
   plus_pnum_ = 1;
   kill_pnum_ = 1;
 
@@ -161,7 +148,6 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
   vector<unsigned int>::iterator kp_it = kill_pos.begin();
   vector<unsigned int>::iterator pp_it = plus_pos.begin(); 
 
-  cout << "T3 " << endl;
   std::vector<bool>::const_iterator ta_it = trans_aops_.begin();
   for ( std::vector<std::string>::const_iterator tr_it = trans_rngs_.begin(); tr_it != trans_rngs_.end(); ++tr_it, ++ta_it ){
     if (*ta_it) {
@@ -175,14 +161,12 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
     }
   }
 
-  cout << "T4 " << endl;
   if ( plus_pnum_ - kill_pnum_ ) {
     no_transition_ = false;
   } else { 
     no_transition_ = true;
   }
 
-  cout << "T5 " << endl;
   // TODO this generates the list of allowed contractions, should probably be replaced with arithmetical version
   allowed_contractions_ = vector<bool>( kill_pos.size() * plus_pos.size() );
   pp_it = plus_pos.begin();
@@ -192,7 +176,6 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
       *ac_it = ( *kp_it == *pp_it );
   }
 
-  cout << "T6 " << endl;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> range_blocks ) :
@@ -239,10 +222,6 @@ SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bl
     rt_it += (*rb_it)->num_idxs_;
   }
 
-  print_vector(rngs_trans , " rngs_trans " ) ; cout << endl;
-  print_vector(idxs_trans , " idxs_trans " ) ; cout << endl;
-  print_vector(aops_trans , " aops_trans " ) ; cout << endl;
-
   idxs_trans_      = std::make_shared<std::vector<int>>(idxs_trans);         
   rngs_trans_      = std::make_shared<std::vector<int>>(rngs_trans);        
   aops_trans_      = std::make_shared<std::vector<int>>(aops_trans);         
@@ -253,7 +232,7 @@ std::shared_ptr<Range_BlockX_Info>
 SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_ptr<const vector<string>> orig_idxs, shared_ptr<const vector<bool>> orig_aops,
                                     vector<int>&  op_order, vector<char> op_trans ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "SplitX_Range_Block_Info::transform" << endl;
+ // cout << "SplitX_Range_Block_Info::transform" << endl;
 
   vector<int> cml_sizes(op_order.size());
   vector<int>::iterator cs_it = cml_sizes.begin(); 
@@ -263,7 +242,13 @@ SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, 
      cml_size += (*rb_iter)->num_idxs_;
   }
 
-  print_vector( cml_sizes , "cml_sizes" ) ; cout << endl;
+  cout << "op_trans = [ " ; cout.flush();
+  for ( auto elem : op_trans ) { 
+     string trans_op  = "" ; trans_op+= elem; cout << trans_op << " " ; cout.flush();
+  }
+  cout << "]" << endl;
+
+  print_vector(op_order , " op_order" ); cout << endl;
 
   vector<int> idxs_trans(num_idxs_);
   vector<int> aops_trans(num_idxs_);
@@ -272,28 +257,33 @@ SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, 
   vector<int>::iterator at_it = aops_trans.begin();
   vector<int>::iterator rt_it = rngs_trans.begin();
 
-  for( vector<int>::iterator oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++  ) {
+  vector<char>::iterator ot_it = op_trans.begin();
+ 
+  // note, transformations impact are handled differently depending on the blocks, hence shifting the characters
+  for( vector<int>::iterator oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++, ot_it++ ) {
 
     std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_it =  range_blocks_->begin() + *oo_it;
      
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
-    transform_tens_vec( op_trans[*oo_it], it_it, (*rb_it)->idxs_trans()->end() ); 
+    transform_tens_vec( (*ot_it), it_it, it_it + (*rb_it)->idxs_trans()->size() ); 
     std::for_each( it_it, it_it+(*rb_it)->idxs_trans()->size() , [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
-    
-    copy( (*rb_it)->aops_trans()->begin(), (*rb_it)->aops_trans()->end(), at_it );
-    transform_tens_vec( op_trans[*oo_it], at_it, (*rb_it)->aops_trans()->end() ); 
-    std::for_each( at_it, at_it+(*rb_it)->idxs_trans()->size() , [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
 
     copy( (*rb_it)->rngs_trans()->begin(), (*rb_it)->rngs_trans()->end(), rt_it );
-    transform_tens_vec( op_trans[*oo_it], rt_it, (*rb_it)->rngs_trans()->end() ); 
+    transform_tens_vec( (*ot_it + 1), rt_it, rt_it + (*rb_it)->idxs_trans()->size() ); 
     std::for_each( rt_it, rt_it+(*rb_it)->idxs_trans()->size() , [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
 
+    copy( (*rb_it)->aops_trans()->begin(), (*rb_it)->aops_trans()->end(), at_it );
+    transform_tens_vec( (*ot_it + 2), at_it,  at_it + (*rb_it)->idxs_trans()->size() ); 
+    std::for_each( at_it, at_it+(*rb_it)->idxs_trans()->size() , [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
+
     it_it += (*rb_it)->num_idxs_;
-    at_it += (*rb_it)->num_idxs_;
     rt_it += (*rb_it)->num_idxs_;
+    at_it += (*rb_it)->num_idxs_;
   }
 
-  return  make_shared<Range_BlockX_Info>( orig_rngs, orig_idxs, orig_aops, make_shared<vector<int>>(rngs_trans), make_shared<vector<int>>(idxs_trans), make_shared<vector<int>>(aops_trans), factors_  );
+  print_vector( idxs_trans, "idxs_trans" ) ; cout.flush(); print_vector( aops_trans, "   aops_trans" ) ; cout.flush(); print_vector( rngs_trans, "    rngs_trans" ) ; cout << endl;
+
+  return make_shared<Range_BlockX_Info>( orig_rngs, orig_idxs, orig_aops, make_shared<vector<int>>(rngs_trans), make_shared<vector<int>>(idxs_trans), make_shared<vector<int>>(aops_trans), factors_  );
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

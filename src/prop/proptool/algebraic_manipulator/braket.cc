@@ -27,21 +27,12 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
   print_vector( op_trans_list_ , "op_trans_list" ) ; cout << endl;
  
   auto trans_info = make_pair( op_trans_list_,  op_order_ );
-  cout << "============================================ all_ranges NEW ============================================== " <<endl;
-  for ( auto elem : *(Total_Op_->split_rxnges()) ) { 
-    print_vector( elem.first, "orig_rngs" ); cout << endl;
-    // print_vector( *( elem.second->orig_idxs() ) , "orig_idxs" );  print_vector( *( elem.second->orig_aops() ) , "   orig_aops" );   print_vector( *( elem.second->orig_rngs() ) , "   orig_rngs" ); cout << endl;
-    // print_vector( *( elem.second->trans_idxs() ) , "trans_idxs" );  print_vector( *( elem.second->trans_aops() ) , "   trans_aops" );   print_vector( *( elem.second->trans_rngs() ) , "   trans_rngs" ); cout << endl << endl;
-  }
-
   auto GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_->idxs(), Total_Op_->aops(), gamma_info_map, G_to_A_map, factor_ );
-//  for ( auto range_map_it = Total_Op_->split_rxnges_trans(trans_info)->begin(); range_map_it !=Total_Op_->split_rxnges_trans(trans_info)->end(); range_map_it++ ){
   for ( auto range_map_it = Total_Op_->split_rxnges()->begin(); range_map_it !=Total_Op_->split_rxnges()->end(); range_map_it++ ){
-    shared_ptr<const vector<string>> trans_rngs =  make_shared<const vector<string>>( range_map_it->first );  
-    shared_ptr<Range_BlockX_Info>  trans_block = range_map_it->second->transform( trans_rngs, Total_Op_->idxs(), Total_Op_->aops(), op_order_, op_trans_list_ );
+    shared_ptr<Range_BlockX_Info>  trans_block = range_map_it->second->transform( make_shared<const vector<string>>(range_map_it->first), Total_Op_->idxs(), Total_Op_->aops(), op_order_, op_trans_list_ );
    // if ( range_map_it->second->survives() && !range_map_it->second->is_sparse( op_state_ids_ ) ){    
       
-       //GGen->add_gamma( trans_block , range_map_it->first );
+      GGen->add_gamma( trans_block , range_map_it->first );
       
 //      if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){
 //        if ( GGen->generic_reorderer( "normal order", false, false ) ) {
