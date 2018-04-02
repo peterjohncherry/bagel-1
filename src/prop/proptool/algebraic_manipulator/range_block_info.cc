@@ -126,7 +126,7 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
                                       rngs_trans_(rngs_trans), idxs_trans_(idxs_trans), aops_trans_(aops_trans), 
                                       factors_(factors) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Range_BlockX_Info::Range_BlockX_Info" << endl;
+//  cout << "Range_BlockX_Info::Range_BlockX_Info" << endl;
    
   num_idxs_ = orig_rngs->size();
 
@@ -242,14 +242,6 @@ SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, 
      cml_size += (*rb_iter)->num_idxs_;
   }
 
-  cout << "op_trans = [ " ; cout.flush();
-  for ( auto elem : op_trans ) { 
-     string trans_op  = "" ; trans_op+= elem; cout << trans_op << " " ; cout.flush();
-  }
-  cout << "]" << endl;
-
-  print_vector(op_order , " op_order" ); cout << endl;
-
   vector<int> idxs_trans(num_idxs_);
   vector<int> aops_trans(num_idxs_);
   vector<int> rngs_trans(num_idxs_);
@@ -280,8 +272,6 @@ SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, 
     rt_it += (*rb_it)->num_idxs_;
     at_it += (*rb_it)->num_idxs_;
   }
-
-  print_vector( idxs_trans, "idxs_trans" ) ; cout.flush(); print_vector( aops_trans, "   aops_trans" ) ; cout.flush(); print_vector( rngs_trans, "    rngs_trans" ) ; cout << endl;
 
   return make_shared<Range_BlockX_Info>( orig_rngs, orig_idxs, orig_aops, make_shared<vector<int>>(rngs_trans), make_shared<vector<int>>(idxs_trans), make_shared<vector<int>>(aops_trans), factors_  );
 

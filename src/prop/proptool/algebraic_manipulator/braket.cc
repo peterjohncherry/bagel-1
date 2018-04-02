@@ -34,9 +34,9 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       
       GGen->add_gamma( trans_block , range_map_it->first );
       
-//      if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){
-//        if ( GGen->generic_reorderer( "normal order", false, false ) ) {
-//          if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
+      if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){
+        if ( GGen->generic_reorderer( "normal order", false, false ) ) {
+          if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
 //
 //            cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
 //            vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
@@ -48,9 +48,10 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 //            }
 //            cout << endl;
 //          }
-//        }
-//      }
-//   }
+          cout << "got a thing" << endl;   
+        }
+      }
+    }
   }
 
   print_gamma_Atensor_contractions( G_to_A_map, false );
