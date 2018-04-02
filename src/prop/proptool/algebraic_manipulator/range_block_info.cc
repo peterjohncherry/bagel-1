@@ -203,34 +203,45 @@ SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bl
   int num_idxs_ = 0;
   unique_   = true;
 
-  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  rxnge_blocks_->begin(); rb_iter != rxnge_blocks_->end();  rb_iter++ )
-    num_idxs_  += (*rb_iter)->num_idxs_;
+  vector<int> cml_sizes(range_blocks->size());
+  vector<int>::iterator cs_it = cml_sizes.begin();
+  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  range_blocks->begin(); rb_iter != range_blocks->end();  rb_iter++, cs_it++ ){
+    *cs_it += num_idxs_;
+     num_idxs_  += (*rb_iter)->num_idxs_;
+  } 
 
-  std::vector<int> idxs_trans(num_idxs_);
-  std::vector<int>::iterator it_it = idxs_trans.begin();
+  vector<int> idxs_trans(num_idxs_);
+  vector<int> aops_trans(num_idxs_);
+  vector<int> rngs_trans(num_idxs_);
+  vector<int>::iterator it_it = idxs_trans.begin();
+  vector<int>::iterator at_it = aops_trans.begin();
+  vector<int>::iterator rt_it = rngs_trans.begin();
 
-  std::vector<int> rngs_trans(num_idxs_);
-  std::vector<int>::iterator rt_it = rngs_trans.begin();
-
-  std::vector<int> aops_trans(num_idxs_);
-  std::vector<int> ::iterator at_it = aops_trans.begin();
-  
-  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_it =  rxnge_blocks_->begin(); rb_it != rxnge_blocks_->end();  rb_it++ ){
+  cs_it = cml_sizes.begin();
+  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_it =  range_blocks->begin() ; rb_it != range_blocks->end(); rb_it++, cs_it++) {
  
     double Re_buff = factors_.first;
     double Im_buff = factors_.second;
     factors_.first = Re_buff*(*rb_it)->Re_factor() + Im_buff*(*rb_it)->Im_factor();
     factors_.second = Re_buff*(*rb_it)->Im_factor() + Im_buff*(*rb_it)->Re_factor();
+    
+    copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
+    std::for_each( it_it, it_it+(*rb_it)->idxs_trans()->size() , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
+    
+    copy( (*rb_it)->aops_trans()->begin(), (*rb_it)->aops_trans()->end(), at_it );
+    std::for_each( at_it, at_it+(*rb_it)->idxs_trans()->size() , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
 
-    copy_n( (*rb_it)->idxs_trans()->begin(), (*rb_it)->num_idxs_, it_it );
-    copy_n( (*rb_it)->rngs_trans()->begin(), (*rb_it)->num_idxs_, rt_it );
-    copy_n( (*rb_it)->aops_trans()->begin(), (*rb_it)->num_idxs_, at_it );
- 
+    copy( (*rb_it)->rngs_trans()->begin(), (*rb_it)->rngs_trans()->end(), rt_it );
+    std::for_each( rt_it, rt_it+(*rb_it)->idxs_trans()->size() , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
+
     it_it += (*rb_it)->num_idxs_;
-    rt_it += (*rb_it)->num_idxs_;
     at_it += (*rb_it)->num_idxs_;
-
+    rt_it += (*rb_it)->num_idxs_;
   }
+
+  print_vector(rngs_trans , " rngs_trans " ) ; cout << endl;
+  print_vector(idxs_trans , " idxs_trans " ) ; cout << endl;
+  print_vector(aops_trans , " aops_trans " ) ; cout << endl;
 
   idxs_trans_      = std::make_shared<std::vector<int>>(idxs_trans);         
   rngs_trans_      = std::make_shared<std::vector<int>>(rngs_trans);        
@@ -245,11 +256,14 @@ SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, 
   cout << "SplitX_Range_Block_Info::transform" << endl;
 
   vector<int> cml_sizes(op_order.size());
-  vector<int>::iterator cs_it = cml_sizes.begin();
+  vector<int>::iterator cs_it = cml_sizes.begin(); 
+  int cml_size = 0 ;
   for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  range_blocks_->begin(); rb_iter != range_blocks_->end();  rb_iter++, cs_it++ ){
-    *cs_it += num_idxs_;
-     num_idxs_  += (*rb_iter)->num_idxs_;
-  } 
+    *cs_it += cml_size;
+     cml_size += (*rb_iter)->num_idxs_;
+  }
+
+  print_vector( cml_sizes , "cml_sizes" ) ; cout << endl;
 
   vector<int> idxs_trans(num_idxs_);
   vector<int> aops_trans(num_idxs_);
