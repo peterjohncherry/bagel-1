@@ -200,6 +200,7 @@ SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bl
   vector<int>::iterator at_it = aops_trans.begin();
   vector<int>::iterator rt_it = rngs_trans.begin();
 
+  //DQ : I feel like there should be a nicer way to do this; a lot of iterators, should I add braces to throw the iterators out?
   cs_it = cml_sizes.begin();
   for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_it =  range_blocks->begin() ; rb_it != range_blocks->end(); rb_it++, cs_it++) {
  
@@ -209,7 +210,7 @@ SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bl
     factors_.second = Re_buff*(*rb_it)->Im_factor() + Im_buff*(*rb_it)->Re_factor();
     
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
-    std::for_each( it_it, it_it+(*rb_it)->idxs_trans()->size() , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
+    std::for_each( it_it, it_it+(*rb_it)->idxs_trans()->size() , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } ); // these are lambdas 
     
     copy( (*rb_it)->aops_trans()->begin(), (*rb_it)->aops_trans()->end(), at_it );
     std::for_each( at_it, at_it+(*rb_it)->idxs_trans()->size() , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
@@ -250,7 +251,8 @@ SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, 
   vector<int>::iterator rt_it = rngs_trans.begin();
 
   vector<char>::iterator ot_it = op_trans.begin();
- 
+   
+  // DQ : is it better to pass by reference to a void function, or have a function return a reference? 
   // note, transformations impact are handled differently depending on the blocks, hence shifting the characters
   for( vector<int>::iterator oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++, ot_it++ ) {
 

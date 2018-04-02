@@ -107,8 +107,8 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
     cout << "doing normal order" << endl;
     int kk = 0;
     while ( kk != gamma_vec->size()) {
-      cout << kk << " "; cout.flush();
-      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) )
+      cout << kk << " "; cout.flush(); // DQ : is deferencing something so I can pass it's reference to a function stupid? Note * is overloaded here; member of shared pointer.
+      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) 
         normal_order(kk);
       kk++;
     }
@@ -353,12 +353,20 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
   double my_sign = bk_factor_*gamma_int->my_sign;
   shared_ptr<vector<pair<int,int>>> deltas_pos     = gamma_int->deltas_pos;
   shared_ptr<vector<int>> ids_pos        = gamma_int->ids_pos;
+  
 
- 
+  // DQ : Should I do this using iterators like this instead of with (*ids_pos)[ii]? It looks like I am creating
+  //      more variables witht he iterators, or are the iterators (pointers) created anyway and I just don't see it?
+  vector<int> standardized_ids_pos( ids_pos->size() ); 
+  {
+  vector<int>::iterator si_it = standardized_ids_pos.begin();
+  for ( int& pos : *ids_pos ) 
+    *si_it = standard_order_[pos];
+  } 
   //Must use standard id ordering here, to match up with entries in CTP_map, and avoid duplication
   //TODO should standardize deltas pos when building gamma intermediate so as to avoid repeated transformation
   vector<pair<int,int>> standardized_deltas_pos(deltas_pos->size());
-  vector<pair<int,int>>::iterator sdp_it = standardized_deltas_pos.begin(); 
+  vector<pair<int,int>>::iterator sdp_it = standardized_deltas_pos.begin();  // DQ : is defining lots of iterators sensible?
   for ( pair<int,int>& elem : *deltas_pos ){ 
     *sdp_it = make_pair ( standard_order_[elem.first], standard_order_[elem.second] );
     ++sdp_it;
@@ -372,8 +380,8 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
     G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo>>>() );
 
-  //TODO do this reordering w.r.t. standardized orders
-  vector<int> Aid_order_new = get_Aid_order ( *ids_pos ) ;
+  //TODO do this reordering w.r.t. standardized orders DQ : Is this ok? 
+  vector<int> Aid_order_new = get_Aid_order ( standardized_ids_pos ) ;
   pair<double,double> new_fac = make_pair(my_sign, my_sign); 
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
@@ -398,6 +406,12 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
   
   Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
                                                          orig_aops_, orig_rngs_, ids_pos, Gamma_map) );
+
+  // DQ : is it better to have more of global variables or arguments?
+  // DQ : If a class has a field which is never assigned, how bad is this (have inheritance heirachies where this is an issue)
+  // DQ : How big should a function be in a header file?
+  // DQ : Is it better to have a sequence of ifs defined in the function body, or a call to a funtion which has a switch statement
+  // DQ : Would it be worth while making a  switch statement for specific reorderings ?
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -544,6 +558,8 @@ bool GammaGeneratorRedux::Forbidden_Index( shared_ptr<const vector<string>> full
 bool GammaGeneratorRedux::Forbidden_Index( const vector<string>& full_id_ranges,  int position ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "GammaGeneratorRedux::Forbidden_Index" << endl;
+//DQ : Should this kind of thing be in a seperate function? 
+
 
   if ( full_id_ranges[position][0] != 'a' && full_id_ranges[position][0] != 'A'){
     return true;
