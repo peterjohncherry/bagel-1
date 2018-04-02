@@ -181,7 +181,7 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
 SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> range_blocks ) :
                             rxnge_blocks_(range_blocks), factors_(std::make_pair(1.0,1.0)) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "SRBIX_Helper::SRBIX_Helper" << endl;
+//  cout << "SRBIX_Helper::SRBIX_Helper" << endl;
 
   int num_idxs_ = 0;
   unique_   = true;

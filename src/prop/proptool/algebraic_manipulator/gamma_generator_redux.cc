@@ -360,7 +360,7 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
   vector<pair<int,int>> standardized_deltas_pos(deltas_pos->size());
   vector<pair<int,int>>::iterator sdp_it = standardized_deltas_pos.begin(); 
   for ( pair<int,int>& elem : *deltas_pos ){ 
-    *sdp_it = make_pair ( block_to_std_order_[elem.first], block_to_std_order_[elem.second] );
+    *sdp_it = make_pair ( standard_order_[elem.first], standard_order_[elem.second] );
     ++sdp_it;
   }
 
@@ -395,11 +395,9 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
       }
     }
   }
-  cout << "Z8" << endl;
   
   Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
                                                          orig_aops_, orig_rngs_, ids_pos, Gamma_map) );
-  cout << "Z9" << endl;
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -629,7 +627,7 @@ GammaGeneratorRedux::standardize_delta_ordering_generic( shared_ptr<pint_vec> de
 ////////////////////////////////////////////////////////////////////////////////////
 //Returns false if gamma contains anything which isn't active alpha (a) or beta (A) 
 ////////////////////////////////////////////////////////////////////////////////////
-bool GammaGeneratorRedux::all_active_ranges(shared_ptr<GammaIntermediateRedux> gint) {
+bool GammaGeneratorRedux::all_active_ranges( shared_ptr<GammaIntermediateRedux> gint) {
 ////////////////////////////////////////////////////////////////////////////////////
 //cout << "GammaGeneratorRedux::all_active_ranges" << endl;
 
