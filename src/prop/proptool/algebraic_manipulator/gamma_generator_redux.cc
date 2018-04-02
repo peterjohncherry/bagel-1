@@ -32,8 +32,11 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_BlockX_Info> block_i
   //NOTE: the reason for building the transformed ranges is that this way we can use the same ids_pos  for aops, rngs and idxs, 
   //      when in principal, these can all have different transformations  (if we want to take full advantage of symmetry).
 
-  standardized_full_id_ranges_ = range_block;
+  std_rngs_ = range_block;
   orig_aops_ = make_shared<vector<bool>>(std_aops_->size());
+  aops_trans_ = block_info->aops_trans(); 
+  rngs_trans_ = block_info->rngs_trans(); 
+  idxs_trans_ = block_info->idxs_trans(); 
   { 
   vector<bool>::iterator oa_it = orig_aops_->begin();
   for ( vector<int>::iterator at_it = block_info->aops_trans()->begin(); at_it != block_info->aops_trans()->end(); at_it++, oa_it++ )  
@@ -107,8 +110,8 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
     cout << "doing normal order" << endl;
     int kk = 0;
     while ( kk != gamma_vec->size()) {
-      cout << kk << " "; cout.flush();
-      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) )
+      cout << kk << " "; cout.flush(); // DQ : is deferencing something so I can pass it's reference to a function stupid? Note * is overloaded here; member of shared pointer.
+      if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) 
         normal_order(kk);
       kk++;
     }
@@ -353,27 +356,74 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
   double my_sign = bk_factor_*gamma_int->my_sign;
   shared_ptr<vector<pair<int,int>>> deltas_pos     = gamma_int->deltas_pos;
   shared_ptr<vector<int>> ids_pos        = gamma_int->ids_pos;
+  
 
- 
-  //Must use standard id ordering here, to match up with entries in CTP_map, and avoid duplication
-  //TODO should standardize deltas pos when building gamma intermediate so as to avoid repeated transformation
-  vector<pair<int,int>> standardized_deltas_pos(deltas_pos->size());
-  vector<pair<int,int>>::iterator sdp_it = standardized_deltas_pos.begin(); 
-  for ( pair<int,int>& elem : *deltas_pos ){ 
-    *sdp_it = make_pair ( standard_order_[elem.first], standard_order_[elem.second] );
-    ++sdp_it;
-  }
+  // DQ : Should I do this using iterators like this instead of with (*ids_pos)[ii]? It looks like I am creating
+  //      more variables witht he iterators, or are the iterators (pointers) created anyway and I just don't see it?
+  vector<int> standardized_ids_pos( ids_pos->size() ); 
+  {
+  vector<int>::iterator si_it = standardized_ids_pos.begin();
+  for ( int& pos : *ids_pos ) 
+    *si_it = standard_order_[pos];
+  } 
 
   //  This should use standardized ordering...  
-  string Aname_alt = get_Aname( *std_ids_, standardized_full_id_ranges_, standardized_deltas_pos );
+
+  cout << "disordered Aname = " <<  get_Aname( *orig_ids_, *orig_rngs_, *deltas_pos ) << endl;
+
+  cout << " deltas = [ " ;cout.flush();
+  for ( pair<int,int>& delta : *deltas_pos ) { 
+    cout << "(" << orig_ids_->at(delta.first) << ":";
+    cout << orig_rngs_->at(delta.first) << ":";
+    cout << orig_aops_->at(delta.first) <<  " , ";
+    cout << orig_ids_->at(delta.second) << ":";
+    cout << orig_rngs_->at(delta.second) << ":";
+    cout << orig_aops_->at(delta.second) << ") ";
+  } 
+  cout << "]" << endl;
+
+  //Must use standard id ordering here, to match up with entries in CTP_map, and avoid duplication
+  //TODO should standardize deltas pos when building gamma intermediate so as to avoid repeated transformation
+  vector<pair<int,int>> idxs_deltas_pos(deltas_pos->size());
+  vector<pair<int,int>> aops_deltas_pos(deltas_pos->size());
+  vector<pair<int,int>> rngs_deltas_pos(deltas_pos->size());
+
+  {
+  vector<pair<int,int>>::iterator  idp_it = idxs_deltas_pos.begin();
+  vector<pair<int,int>>::iterator  adp_it = aops_deltas_pos.begin();
+  vector<pair<int,int>>::iterator  rdp_it = rngs_deltas_pos.begin();
+  for ( vector<pair<int,int>>::iterator dp_it = deltas_pos->begin(); dp_it != deltas_pos->end(); dp_it++, adp_it++, idp_it++ , rdp_it++ ) { 
+    *adp_it = make_pair( (*aops_trans_)[dp_it->first], (*aops_trans_)[dp_it->second]) ;  
+    *rdp_it = make_pair( (*rngs_trans_)[dp_it->first], (*rngs_trans_)[dp_it->second]) ;  
+    *idp_it = make_pair( (*idxs_trans_)[dp_it->first], (*idxs_trans_)[dp_it->second]) ;  
+  } 
+
+  cout << " std_deltas = [ " ;cout.flush();
+  for ( int ii = 0 ; ii != idxs_deltas_pos.size() ; ii++ ) { 
+    cout << "(" << (*std_ids_)[rngs_deltas_pos[ii].first] << ":" << std_rngs_[rngs_deltas_pos[ii].first] << ":" << (*std_aops_)[aops_deltas_pos[ii].first] <<  " , ";
+    cout << (*std_ids_)[rngs_deltas_pos[ii].second] << ":" << std_rngs_[rngs_deltas_pos[ii].second] << ":" << (*std_aops_)[aops_deltas_pos[ii].second] << ") "; cout.flush();
+  } 
+  cout << "]" << endl;
+  }
+
+  shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( rngs_deltas_pos, *std_ids_ );
+
+  print_vector( std_rngs_, "std_rngs_" );
+  print_vector( *orig_rngs_, "   orig_rngs_" ); 
+  print_vector( *rngs_trans_, "   rngs_trans_" ); cout << endl;
+  print_vector( *idxs_trans_, "   idxs_trans_" ); print_vector( *aops_trans_, "   aops_trans_" ); cout << endl;
+
+  string Aname_alt = get_Aname( *std_ids_, std_rngs_, rngs_deltas_pos );
+ 
+  cout << "standardized Aname = " << Aname_alt << endl;
 
   string Gname_alt = get_gamma_name( *orig_rngs_, *orig_aops_, *ids_pos, bra_name, ket_name );
 
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
     G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo>>>() );
 
-  //TODO do this reordering w.r.t. standardized orders
-  vector<int> Aid_order_new = get_Aid_order ( *ids_pos ) ;
+  //TODO do this reordering w.r.t. standardized orders DQ : Is this ok? 
+  vector<int> Aid_order_new = get_Aid_order ( standardized_ids_pos ) ;
   pair<double,double> new_fac = make_pair(my_sign, my_sign); 
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
@@ -398,6 +448,12 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
   
   Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
                                                          orig_aops_, orig_rngs_, ids_pos, Gamma_map) );
+
+  // DQ : is it better to have more of global variables or arguments?
+  // DQ : If a class has a field which is never assigned, how bad is this (have inheritance heirachies where this is an issue)
+  // DQ : How big should a function be in a header file?
+  // DQ : Is it better to have a sequence of ifs defined in the function body, or a call to a funtion which has a switch statement
+  // DQ : Would it be worth while making a  switch statement for specific reorderings ?
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -418,9 +474,9 @@ void GammaGeneratorRedux::print_gamma_contributions( shared_ptr<vector<shared_pt
   cout << "-----------------------------------------------------" << endl;
 
   for ( shared_ptr<GammaIntermediateRedux> gint : *final_gamma_vec ) {
-    string Gname_tmp = WickUtils::get_gamma_name( standardized_full_id_ranges_, *(orig_aops_),  *(gint->ids_pos), bra_name, ket_name) ;
+    string Gname_tmp = WickUtils::get_gamma_name( *orig_rngs_, *(orig_aops_),  *(gint->ids_pos), bra_name, ket_name) ;
     cout <<Gname_tmp <<  "   ("<< gint->my_sign <<","<< gint->my_sign << ")       " ;
-    cout << get_Aname( *(orig_ids_), standardized_full_id_ranges_, *(gint->deltas_pos) ) << endl;
+    cout << get_Aname( *(std_ids_), std_rngs_, *(gint->deltas_pos) ) << endl;
   }
   cout << "-----------------------------------------------------" << endl;
 
@@ -438,7 +494,7 @@ cout << " GammaGeneratorRedux::Contract_remaining_indexes" << endl;
 
 
   print_vector( *ids_pos , " ids_pos" ); cout.flush();
-  print_vector( standardized_full_id_ranges_ , " standardized_full_id_ranges" ); cout.flush();
+  print_vector( std_rngs_ , " std_rngs_" ); cout.flush();
 
   //vector of different index ranges, and vectors containing list of index positions
   //associated with each of these ranges
@@ -448,7 +504,7 @@ cout << " GammaGeneratorRedux::Contract_remaining_indexes" << endl;
 
   int start_pos = 0;
   while( start_pos!= ids_pos->size()  ){
-    if ( Forbidden_Index(standardized_full_id_ranges_, ids_pos->at(start_pos)) )
+    if ( Forbidden_Index(std_rngs_, ids_pos->at(start_pos)) )
       break;
     start_pos++;
   }
@@ -457,8 +513,8 @@ cout << " GammaGeneratorRedux::Contract_remaining_indexes" << endl;
   // each different range
   for ( int jj = start_pos;  jj != ids_pos->size() ; jj++){
     int ii = 0;
-    string rng = standardized_full_id_ranges_[ids_pos->at(jj)];
-    if ( Forbidden_Index(standardized_full_id_ranges_, ids_pos->at(jj) ) ) {
+    string rng = std_rngs_[ids_pos->at(jj)];
+    if ( Forbidden_Index(std_rngs_, ids_pos->at(jj) ) ) {
       do  {
         if( jj != start_pos  &&  rng == diff_rngs[ii] ){
           if ( orig_aops_->at(ids_pos->at(jj)) ){
@@ -544,6 +600,8 @@ bool GammaGeneratorRedux::Forbidden_Index( shared_ptr<const vector<string>> full
 bool GammaGeneratorRedux::Forbidden_Index( const vector<string>& full_id_ranges,  int position ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 //cout << "GammaGeneratorRedux::Forbidden_Index" << endl;
+//DQ : Should this kind of thing be in a seperate function? 
+
 
   if ( full_id_ranges[position][0] != 'a' && full_id_ranges[position][0] != 'A'){
     return true;
@@ -573,7 +631,7 @@ void GammaGeneratorRedux::swap( int ii, int jj, int kk, shared_ptr<vector<shared
        (*orig_aops_)[ (*ids_pos)[ii] ] != (*orig_aops_)[ (*ids_pos)[jj] ] ){
 
     shared_ptr<pint_vec> new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);
-
+    
     pair<int,int> new_delta = (*orig_aops_)[ (*ids_pos)[jj] ]  ? make_pair( (*ids_pos)[jj], (*ids_pos)[ii] ): make_pair( (*ids_pos)[ii], (*ids_pos)[jj] );
     new_deltas_tmp->push_back(new_delta);
     shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( *new_deltas_tmp, *orig_ids_ );

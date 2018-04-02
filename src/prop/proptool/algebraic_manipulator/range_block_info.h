@@ -165,6 +165,12 @@ class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info>
     std::shared_ptr<std::vector<int>> aops_trans() const { return aops_trans_; }
     std::shared_ptr<std::vector<int>> rngs_trans() const { return rngs_trans_; }
 
+    virtual
+    std::shared_ptr<Range_BlockX_Info> 
+    transform( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs, std::shared_ptr<const std::vector<bool>> orig_aops,
+               std::vector<int>&  op_order, std::vector<char> op_trans ); 
+
+
 };
 
 

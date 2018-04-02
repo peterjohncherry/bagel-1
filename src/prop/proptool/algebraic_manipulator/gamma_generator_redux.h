@@ -39,6 +39,7 @@ class GammaGeneratorRedux{
 
     std::shared_ptr<const std::vector<bool>> std_aops_ ;
     std::shared_ptr<const std::vector<std::string>> std_ids_ ;
+    std::vector<std::string> std_rngs_ ;
 
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
@@ -59,6 +60,10 @@ class GammaGeneratorRedux{
     std::shared_ptr<std::vector<bool>> block_aops_;
     std::shared_ptr<std::vector<std::string>> block_idxs_;
     std::shared_ptr<std::vector<std::string>> block_rngs_; 
+
+    std::shared_ptr<std::vector<int>> aops_trans_;
+    std::shared_ptr<std::vector<int>> rngs_trans_;
+    std::shared_ptr<std::vector<int>> idxs_trans_;
 
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> final_gamma_vec;
     

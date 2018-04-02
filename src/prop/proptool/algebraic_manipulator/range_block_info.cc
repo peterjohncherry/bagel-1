@@ -178,6 +178,38 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<Range_BlockX_Info> 
+Range_BlockX_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_ptr<const vector<string>> orig_idxs, shared_ptr<const vector<bool>> orig_aops,
+                                    vector<int>&  op_order, vector<char> op_trans ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Range_BlockX_Info::transform" << endl;
+
+  if ( (op_order.size() > 1)  || (op_trans.size() > 1) ) {
+    cout << "This is a single Range_BlockX_Info, and you are applying transformations for Split_Range_BlockX_Info to it! Aborting!!" << endl;
+    assert( (op_order.size() > 1)  || (op_trans.size() > 1) ); 
+  } 
+  
+  char trans = op_trans.front(); 
+
+  vector<int> new_aops_trans  = *aops_trans_; 
+  vector<int> new_idxs_trans  = *idxs_trans_; 
+  vector<int> new_rngs_trans  = *rngs_trans_; 
+  
+  
+  assert( trans > -1 && trans < 127 ) ;
+  
+  transform_tens_vec( trans, new_aops_trans ); 
+  transform_tens_vec( trans, new_idxs_trans ); 
+  transform_tens_vec( trans, new_rngs_trans ); 
+  
+  pair<double,double> new_factors = factors_; 
+  if ( trans == 'H' || trans == 'h' )
+    new_factors.second *= -1.0 ; 
+
+  return make_shared<Range_BlockX_Info>( orig_rngs, orig_idxs, orig_aops, make_shared<vector<int>>(new_rngs_trans), make_shared<vector<int>>(new_idxs_trans), make_shared<vector<int>>(new_aops_trans), new_factors  );
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> range_blocks ) :
                             rxnge_blocks_(range_blocks), factors_(std::make_pair(1.0,1.0)) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -200,6 +232,7 @@ SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bl
   vector<int>::iterator at_it = aops_trans.begin();
   vector<int>::iterator rt_it = rngs_trans.begin();
 
+  //DQ : I feel like there should be a nicer way to do this; a lot of iterators, should I add braces to throw the iterators out?
   cs_it = cml_sizes.begin();
   for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_it =  range_blocks->begin() ; rb_it != range_blocks->end(); rb_it++, cs_it++) {
  
@@ -209,7 +242,7 @@ SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bl
     factors_.second = Re_buff*(*rb_it)->Im_factor() + Im_buff*(*rb_it)->Re_factor();
     
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
-    std::for_each( it_it, it_it+(*rb_it)->idxs_trans()->size() , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
+    std::for_each( it_it, it_it+(*rb_it)->idxs_trans()->size() , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } ); // these are lambdas 
     
     copy( (*rb_it)->aops_trans()->begin(), (*rb_it)->aops_trans()->end(), at_it );
     std::for_each( at_it, at_it+(*rb_it)->idxs_trans()->size() , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
@@ -250,23 +283,24 @@ SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, 
   vector<int>::iterator rt_it = rngs_trans.begin();
 
   vector<char>::iterator ot_it = op_trans.begin();
- 
+   
+  // DQ : is it better to pass by reference to a void function, or have a function return a reference? 
   // note, transformations impact are handled differently depending on the blocks, hence shifting the characters
   for( vector<int>::iterator oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++, ot_it++ ) {
 
     std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_it =  range_blocks_->begin() + *oo_it;
      
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
-    transform_tens_vec( (*ot_it), it_it, it_it + (*rb_it)->idxs_trans()->size() ); 
-    std::for_each( it_it, it_it+(*rb_it)->idxs_trans()->size() , [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
+    transform_tens_vec( (*ot_it+2), it_it, it_it + (*rb_it)->num_idxs_ ); 
+    std::for_each( it_it, it_it+(*rb_it)->num_idxs_, [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
 
     copy( (*rb_it)->rngs_trans()->begin(), (*rb_it)->rngs_trans()->end(), rt_it );
-    transform_tens_vec( (*ot_it + 1), rt_it, rt_it + (*rb_it)->idxs_trans()->size() ); 
-    std::for_each( rt_it, rt_it+(*rb_it)->idxs_trans()->size() , [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
+    transform_tens_vec( (*ot_it)+1, rt_it, rt_it + (*rb_it)->num_idxs_ ); 
+    std::for_each( rt_it, rt_it+(*rb_it)->num_idxs_, [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
 
     copy( (*rb_it)->aops_trans()->begin(), (*rb_it)->aops_trans()->end(), at_it );
-    transform_tens_vec( (*ot_it + 2), at_it,  at_it + (*rb_it)->idxs_trans()->size() ); 
-    std::for_each( at_it, at_it+(*rb_it)->idxs_trans()->size() , [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
+    transform_tens_vec( (*ot_it)+2, at_it,  at_it + (*rb_it)->num_idxs_ ); 
+    std::for_each( at_it, at_it+(*rb_it)->num_idxs_, [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
 
     it_it += (*rb_it)->num_idxs_;
     rt_it += (*rb_it)->num_idxs_;
