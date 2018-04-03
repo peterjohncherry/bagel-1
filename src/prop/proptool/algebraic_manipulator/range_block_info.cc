@@ -143,21 +143,12 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
   plus_pnum_ = 1;
   kill_pnum_ = 1;
 
-  vector<unsigned int> kill_pos(orig_aops->size()/2);
-  vector<unsigned int> plus_pos(orig_aops->size()/2);
-  vector<unsigned int>::iterator kp_it = kill_pos.begin();
-  vector<unsigned int>::iterator pp_it = plus_pos.begin(); 
-
   std::vector<bool>::const_iterator ta_it = trans_aops_.begin();
   for ( std::vector<std::string>::const_iterator tr_it = trans_rngs_.begin(); tr_it != trans_rngs_.end(); ++tr_it, ++ta_it ){
     if (*ta_it) {
       plus_pnum_ *= range_to_prime( (*tr_it)[0] );
-      *pp_it = range_to_prime( (*tr_it)[0] );
-      ++pp_it;
     } else {
       kill_pnum_ *= range_to_prime( (*tr_it)[0] );
-      *kp_it = range_to_prime( (*tr_it)[0] );
-      ++kp_it;
     }
   }
 
@@ -165,15 +156,6 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
     no_transition_ = false;
   } else { 
     no_transition_ = true;
-  }
-
-  // TODO this generates the list of allowed contractions, should probably be replaced with arithmetical version
-  allowed_contractions_ = vector<bool>( kill_pos.size() * plus_pos.size() );
-  pp_it = plus_pos.begin();
-  for ( vector<bool>::iterator ac_it = allowed_contractions_.begin(); ac_it != allowed_contractions_.end(); ++pp_it ){
-    kp_it = kill_pos.begin();
-    for( ; kp_it != kill_pos.end(); ++kp_it, ++ac_it )
-      *ac_it = ( *kp_it == *pp_it );
   }
 
 }

@@ -2,6 +2,7 @@
 #define __SRC_PROP_PROPTOOL_Gamma_Generator_Redux_H
 
 #include <src/prop/proptool/proputils.h>
+#include <src/prop/proptool/algebraic_manipulator/tensop.h>
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
 #include <src/prop/proptool/algebraic_manipulator/range_block_info.h>
 #include <src/prop/proptool/algebraic_manipulator/gamma_info.h>
@@ -49,6 +50,8 @@ class GammaGeneratorRedux{
     // result : information used here and in compute routines
     std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> Gamma_map;
 
+    std::shared_ptr<TensOp_Base> total_op_;
+
     double bk_factor_;
     int orig_aops_half_size_;
 
@@ -77,10 +80,10 @@ class GammaGeneratorRedux{
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> gamma_vec;
 
     GammaGeneratorRedux( std::shared_ptr<StatesInfo<double>> target_states_, int Ket_num, int Bra_num,
-                    std::shared_ptr<const std::vector<std::string>> orig_ids, std::shared_ptr< const std::vector<bool>> orig_aops,
-                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>>& Gamma_map_in,
-                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo>  >>>>& G_to_A_map_in,
-                    double bk_factor );
+                         std::shared_ptr<TensOp_Base> multitensop, 
+                         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>>& Gamma_map_in,
+                         std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo>  >>>>& G_to_A_map_in,
+                         double bk_factor );
 
     ~GammaGeneratorRedux(){};
 
@@ -100,38 +103,26 @@ class GammaGeneratorRedux{
 
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
-    void braket_survival_check_normal_order( std::shared_ptr<Range_Block_Info> block_info, 
-                                             std::shared_ptr<CIVecInfo<double>> bra_info, std::shared_ptr<CIVecInfo<double>> ket_info );
-    
-    //TODO Replace this
+    //TODO Replace this, but keep for now as very clear, if slow.
     bool proj_onto_map( std::shared_ptr<GammaIntermediateRedux> gint,
                         std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
                         std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
 
-    //This should not be needed if anti-normal and normal are done.
-    void Contract_remaining_indexes(int kk);
-
     void swap( int ii, int jj, int kk, std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> gamma_vec );
-
-    bool Forbidden_Index( std::shared_ptr<const std::vector<std::string>> id_ranges, int position );
-
-    bool Forbidden_Index( const std::vector<std::string>& id_ranges, int position );
-
-    bool all_active_ranges( std::shared_ptr<GammaIntermediateRedux> gint);
 
     std::shared_ptr<std::vector<std::pair<int,int>>>
     standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
 
     void set_standardized_alt_order_unranged ( int kk , std::vector<int>& standard_alt_order);
 
+    //routines for reorderings
+    std::vector<int> get_standard_order (const std::vector<std::string>& rngs );
+
     std::vector<int> get_standard_range_order(const std::vector<std::string> &rngs) ;
 
     std::vector<int> get_position_order(const std::vector<int> &positions) ;
 
     std::vector<int> get_Aid_order( const std::vector<int>& id_pos );
-
-    //routines for reorderings
-    std::vector<int> get_standard_order (const std::vector<std::string>& rngs );
 
     //reordering of initial idxs
     void get_standard_idx_order_init();
@@ -140,8 +131,6 @@ class GammaGeneratorRedux{
     std::vector<int> get_standard_idx_order(const std::vector<std::string>& idxs) ;
 
     std::vector<int> get_standardized_alt_order( const std::vector<std::string>& rngs ,const std::vector<bool>& aops ) ;
-
-    std::shared_ptr<pint_vec> Standardize_delta_ordering(std::shared_ptr<pint_vec> deltas_pos );
 
     void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> final_gamma_vec, std::string name );
     void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> final_gamma_vec, std::string name,

@@ -7,16 +7,16 @@ using namespace WickUtils;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GammaGeneratorRedux::GammaGeneratorRedux( shared_ptr<StatesInfo<double>> target_states, int Bra_num, int Ket_num,
-                                          shared_ptr<const vector<string>> std_ids, shared_ptr<const vector<bool>> std_aops,
+                                          shared_ptr<TensOp_Base> total_op,
                                           shared_ptr<map<string, shared_ptr<GammaInfo>>>& Gamma_map_in,
                                           shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo> >>>>& G_to_A_map_in,
                                           double bk_factor                                                           ):
                                           target_states_(target_states),
                                           Bra_names_(target_states_->civec_names( Bra_num )),
                                           Ket_names_(target_states_->civec_names( Ket_num )),
-                                          std_ids_(std_ids), std_aops_(std_aops),
-                                          G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in), bk_factor_(bk_factor),
-                                          orig_aops_half_size_( std_aops_->size()/2 ) {
+                                          total_op_(total_op), std_ids_(total_op->idxs()), std_aops_(total_op->aops()),
+                                          G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in), 
+                                          bk_factor_(bk_factor), orig_aops_half_size_( std_aops_->size()/2 ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGeneratorRedux::GammaGeneratorRedux" << endl;
 
@@ -172,14 +172,6 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
 
   return does_it_contribute;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GammaGeneratorRedux::braket_survival_check_normal_order( shared_ptr<Range_Block_Info> block_info, 
-                                                         shared_ptr<CIVecInfo<double>> bra_info, shared_ptr<CIVecInfo<double>> ket_info ) { 
-////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << endl << endl << " GammaGeneratorRedux::braket_survival_check" << endl;
-
-  return;
-}  
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGeneratorRedux::proj_onto_map( shared_ptr<GammaIntermediateRedux> gint, 
                                     map<char,int> bra_hole_map, map<char,int> bra_elec_map,
@@ -373,12 +365,8 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
 
   cout << " deltas = [ " ;cout.flush();
   for ( pair<int,int>& delta : *deltas_pos ) { 
-    cout << "(" << orig_ids_->at(delta.first) << ":";
-    cout << orig_rngs_->at(delta.first) << ":";
-    cout << orig_aops_->at(delta.first) <<  " , ";
-    cout << orig_ids_->at(delta.second) << ":";
-    cout << orig_rngs_->at(delta.second) << ":";
-    cout << orig_aops_->at(delta.second) << ") ";
+    cout << "(" << orig_ids_->at(delta.first) << ":" << orig_rngs_->at(delta.first) << ":" << orig_aops_->at(delta.first) <<  " , ";
+    cout << orig_ids_->at(delta.second) << ":" << orig_rngs_->at(delta.second) << ":" << orig_aops_->at(delta.second) << ") "; cout.flush();
   } 
   cout << "]" << endl;
 
@@ -408,10 +396,8 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
 
   shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( rngs_deltas_pos, *std_ids_ );
 
-  print_vector( std_rngs_, "std_rngs_" );
-  print_vector( *orig_rngs_, "   orig_rngs_" ); 
-  print_vector( *rngs_trans_, "   rngs_trans_" ); cout << endl;
-  print_vector( *idxs_trans_, "   idxs_trans_" ); print_vector( *aops_trans_, "   aops_trans_" ); cout << endl;
+  pair<double,double> ctp_factor = make_pair(1.0, 1.0);
+  total_op_->enter_cmtps_into_map(rngs_deltas_pos, ctp_factor, std_rngs_ );
 
   string Aname_alt = get_Aname( *std_ids_, std_rngs_, rngs_deltas_pos );
  
@@ -456,159 +442,6 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
   // DQ : Would it be worth while making a  switch statement for specific reorderings ?
   return;
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GammaGeneratorRedux::print_gamma_contributions( shared_ptr<vector<shared_ptr<GammaIntermediateRedux>>> final_gamma_vec, string name) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  print_gamma_contributions( final_gamma_vec, name, Bra_names_->at(0), Ket_names_->at(0) );
-  return;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GammaGeneratorRedux::print_gamma_contributions( shared_ptr<vector<shared_ptr<GammaIntermediateRedux>>> final_gamma_vec,
-                                                string name,  string bra_name, string ket_name ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- // cout << "GammaGeneratorRedux::print_gamma_contributions" << endl;
-  
-  cout << endl;
-  cout << "-----------------------------------------------------" << endl;
-  cout << "     LIST OF GAMMAS FOLLOWING " << name;  cout << "N = " << final_gamma_vec->size() << endl;
-  cout << "-----------------------------------------------------" << endl;
-
-  for ( shared_ptr<GammaIntermediateRedux> gint : *final_gamma_vec ) {
-    string Gname_tmp = WickUtils::get_gamma_name( *orig_rngs_, *(orig_aops_),  *(gint->ids_pos), bra_name, ket_name) ;
-    cout <<Gname_tmp <<  "   ("<< gint->my_sign <<","<< gint->my_sign << ")       " ;
-    cout << get_Aname( *(std_ids_), std_rngs_, *(gint->deltas_pos) ) << endl;
-  }
-  cout << "-----------------------------------------------------" << endl;
-
-  return;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////
-void GammaGeneratorRedux::Contract_remaining_indexes( int kk ){
-//////////////////////////////////////////////////////////////////////////////////////
-cout << " GammaGeneratorRedux::Contract_remaining_indexes" << endl;
-  
-  shared_ptr<vector<int>>           ids_pos = gamma_vec->at(kk)->ids_pos;
-  shared_ptr<vector<pair<int,int>>> deltas_pos = gamma_vec->at(kk)->deltas_pos;
-  int my_sign = gamma_vec->at(kk)->my_sign;
-
-
-  print_vector( *ids_pos , " ids_pos" ); cout.flush();
-  print_vector( std_rngs_ , " std_rngs_" ); cout.flush();
-
-  //vector of different index ranges, and vectors containing list of index positions
-  //associated with each of these ranges
-  vector<string> diff_rngs(0);
-  shared_ptr<vector<shared_ptr<vector<int>>>> make_ops_pos =  make_shared<vector<shared_ptr<vector<int>>>>(0);
-  shared_ptr<vector<shared_ptr<vector<int>>>> kill_ops_pos =  make_shared<vector<shared_ptr<vector<int>>>>(0);
-
-  int start_pos = 0;
-  while( start_pos!= ids_pos->size()  ){
-    if ( Forbidden_Index(std_rngs_, ids_pos->at(start_pos)) )
-      break;
-    start_pos++;
-  }
-
-  // get the positions of the creation and annihilation operators associated with
-  // each different range
-  for ( int jj = start_pos;  jj != ids_pos->size() ; jj++){
-    int ii = 0;
-    string rng = std_rngs_[ids_pos->at(jj)];
-    if ( Forbidden_Index(std_rngs_, ids_pos->at(jj) ) ) {
-      do  {
-        if( jj != start_pos  &&  rng == diff_rngs[ii] ){
-          if ( orig_aops_->at(ids_pos->at(jj)) ){
-            make_ops_pos->at(ii)->push_back(ids_pos->at(jj));
-          } else {
-            kill_ops_pos->at(ii)->push_back(ids_pos->at(jj));
-          }
-          break;
-        }
-
-        if (jj == start_pos || ii == diff_rngs.size()-1 ){
-          diff_rngs.push_back(rng);
-          shared_ptr<vector<int>> init_vec1_ = make_shared<vector<int>>(1,ids_pos->at(jj));
-          shared_ptr<vector<int>> init_vec2_ = make_shared<vector<int>>(0);
-          if ( orig_aops_->at(ids_pos->at(jj)) ){
-            make_ops_pos->push_back(init_vec1_);
-            kill_ops_pos->push_back(init_vec2_);
-          } else {
-            make_ops_pos->push_back(init_vec2_);
-            kill_ops_pos->push_back(init_vec1_);
-          }
-          break;
-        }
-        ii++;
-      } while (ii != diff_rngs.size());
-    }
-  }
-
-cout << "Z5" << endl;
-  // first index  = range.
-  // second index = pair vector defining possible way of contracting indexes with that range.
-  // third index  = pair defining contraction of indexes with the same range.
-  vector<shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>> new_contractions(diff_rngs.size());
-
-  cout << " new_contractions.size() = " << new_contractions.size() << endl;
-  for (int ii =0 ; ii != new_contractions.size(); ii++){
-    print_vector( *make_ops_pos->at(ii), " make_ops_pos->at(" + to_string(ii)+")" ); cout.flush(); 
-    print_vector( *kill_ops_pos->at(ii), " make_ops_pos->at("+to_string(ii)+")" ); cout.flush(); 
-    new_contractions[ii] = get_unique_pairs( make_ops_pos->at(ii), kill_ops_pos->at(ii), make_ops_pos->at(ii)->size() );
-  }
-
-  cout << "Z6" << endl;
-  shared_ptr<vector<int>> forvec = make_shared<vector<int>>(diff_rngs.size(),0) ;
-  shared_ptr<vector<int>> min = make_shared<vector<int>>(diff_rngs.size(),0) ;
-  shared_ptr<vector<int>> max = make_shared<vector<int>>(diff_rngs.size()) ;
-
-  for (int ii = 0; ii != max->size();  ii++)
-    max->at(ii) = make_ops_pos->at(ii)->size()-1;
-
-  cout << "Z7" << endl;
-  do {
-
-    shared_ptr<vector<pair<int,int>>> new_deltas_pos_tmp = make_shared<vector<pair<int,int>>>(*deltas_pos);
-    for ( int qq = 0; qq != forvec->size(); qq++)
-      new_deltas_pos_tmp->insert(new_deltas_pos_tmp->end(), new_contractions[qq]->at(forvec->at(qq))->begin(), new_contractions[qq]->at(forvec->at(qq))->end());
-
-    //TODO check this is OK now that you've updated standardize delta ordering generic
-    shared_ptr<vector<pair<int,int>>> new_deltas_pos = standardize_delta_ordering_generic( new_deltas_pos_tmp ) ;
-    shared_ptr<vector<int>> new_ids_pos =  get_unc_ids_from_deltas_ids_comparison( ids_pos , new_deltas_pos );
-    final_gamma_vec->push_back(make_shared<GammaIntermediateRedux>( new_ids_pos, new_deltas_pos, my_sign));
-
-  } while ( fvec_cycle_skipper(forvec, max, min) ) ;
-
-  cout << "Z8" << endl;
-  return;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Replace this with something more sophisticated which uses constraint functions.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool GammaGeneratorRedux::Forbidden_Index( shared_ptr<const vector<string>> full_id_ranges,  int position ){
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-//cout << "GammaGeneratorRedux::Forbidden_Index" << endl;
-
-  if ( (*full_id_ranges)[position][0] != 'a' && (*full_id_ranges)[position][0] != 'A'){
-    return true;
-  } else {
-    return false;
-  }
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Replace this with something more sophisticated which uses constraint functions.
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool GammaGeneratorRedux::Forbidden_Index( const vector<string>& full_id_ranges,  int position ){
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-//cout << "GammaGeneratorRedux::Forbidden_Index" << endl;
-//DQ : Should this kind of thing be in a seperate function? 
-
-
-  if ( full_id_ranges[position][0] != 'a' && full_id_ranges[position][0] != 'A'){
-    return true;
-  } else {
-    return false;
-  }
-}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Swaps indexes round, flips sign, and if ranges are the same puts new density matrix in the list.
 // CAREFUL : always keep creation operator as the left index in the contraction .
@@ -618,14 +451,10 @@ void GammaGeneratorRedux::swap( int ii, int jj, int kk, shared_ptr<vector<shared
 //  cout << "GammaGeneratorRedux::swap" << endl;
   shared_ptr<vector<int>>  ids_pos             = (*gamma_vec)[kk]->ids_pos;
   shared_ptr<vector<pair<int,int>>> deltas_pos = (*gamma_vec)[kk]->deltas_pos;
- 
-//  print_vector( *ids_pos , " ids_pos" ); cout << endl;
-//  print_vector( (*(*gamma_vec)[kk]->ids_pos) , " (*gamma_vec)[" + to_string(kk) + "]->ids_pos" ); cout << endl;
 
-  int idx_buff = (*ids_pos)[ii];  // cout << "idx_buff = (*ids_pos)["<<ii<<"] : " << idx_buff << " = " <<  (*ids_pos)[ii] << endl;
-  (*ids_pos)[ii] = (*ids_pos)[jj];// cout << "ids_pos["<< ii << "] = (*ids_pos)["<< ii<<"] : " << (*ids_pos)[ii] << " = " <<  (*ids_pos)[jj] << endl;
-  (*ids_pos)[jj] = idx_buff;      // cout << "ids_pos["<< jj << "] = idx_buff : " << (*ids_pos)[jj] << " = " <<  idx_buff << endl;
-
+  int idx_buff = (*ids_pos)[ii];  
+  (*ids_pos)[ii] = (*ids_pos)[jj];
+  (*ids_pos)[jj] = idx_buff;      
 
   if ( ( (*orig_rngs_)[ (*ids_pos)[jj] ] == (*orig_rngs_)[ (*ids_pos)[ii] ]) &&
        (*orig_aops_)[ (*ids_pos)[ii] ] != (*orig_aops_)[ (*ids_pos)[jj] ] ){
@@ -645,9 +474,6 @@ void GammaGeneratorRedux::swap( int ii, int jj, int kk, shared_ptr<vector<shared
     gamma_vec->push_back(new_gamma);
 
   }
-//  print_vector( *ids_pos , " ids_pos" ); cout << endl;
-//  print_vector( (*(*gamma_vec)[kk]->ids_pos) , " (*gamma_vec)[" + to_string(kk) + "]->ids_pos" ); cout << endl;
-//  cout << endl << endl;
   (*gamma_vec)[kk]->my_sign *= -1;
 
   return;
@@ -681,32 +507,6 @@ GammaGeneratorRedux::standardize_delta_ordering_generic( shared_ptr<pint_vec> de
  
   }
   return new_deltas_pos;
-}
-////////////////////////////////////////////////////////////////////////////////////
-//Returns false if gamma contains anything which isn't active alpha (a) or beta (A) 
-////////////////////////////////////////////////////////////////////////////////////
-bool GammaGeneratorRedux::all_active_ranges( shared_ptr<GammaIntermediateRedux> gint) {
-////////////////////////////////////////////////////////////////////////////////////
-//cout << "GammaGeneratorRedux::all_active_ranges" << endl;
-
- for ( vector<int>::iterator ip_it = gint->ids_pos->begin() ; ip_it != gint->ids_pos->end(); ip_it++ )
-   if ( (*orig_rngs_)[*ip_it][0] != 'a' && (*orig_rngs_)[*ip_it][0] != 'A')
-     return false;
-
- return true;
-
-}
-///////////////////////////////////////////////////////////////////////////////////////
-vector<int> GammaGeneratorRedux::get_standard_order ( const vector<string>& rngs ) {
-///////////////////////////////////////////////////////////////////////////////////////
-cout <<"GammaGeneratorRedux::get_standard_order" << endl;
-
-  vector<string> new_rngs(rngs.size());
-  vector<string>::iterator new_rngs_it = new_rngs.begin();
-  vector<int> new_order = get_standard_idx_order(rngs) ;
-
-  for ( int pos : new_order ) { *new_rngs_it++ = rngs[pos] ; }
-  return new_order;
 }
 //////////////////////////////////////////////////////////////////////////////
 vector<int> GammaGeneratorRedux::get_standard_idx_order(const vector<string>&idxs) {

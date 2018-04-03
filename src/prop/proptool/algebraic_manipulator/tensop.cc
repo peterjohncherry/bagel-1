@@ -419,6 +419,7 @@ bool TensOp::TensOp<DataType>::satisfies_constraints( vector<string>& ranges ){
       return false;
   return true;
 }; 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //get contractions and ranges; note this is done by TensOp not TensOp gen as the contractions needed will be 
 //dependent on the sparsity associated with the relevant state
@@ -864,7 +865,7 @@ void MultiTensOp::MultiTensOp<DataType>::get_ctrs_tens_ranges() {
 template<typename DataType>
 void MultiTensOp::MultiTensOp<DataType>::enter_cmtps_into_map(pint_vec ctr_pos_list, pair<int,int> ReIm_factors, const vector<string>& id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- // cout << "MultiTensOp::enter_into_CTP_map" << endl;
+  // cout << "MultiTensOp::enter_into_CTP_map" << endl;
 
   shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart_Base> >> (num_tensors_); 
   vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
