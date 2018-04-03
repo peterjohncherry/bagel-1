@@ -192,6 +192,8 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
   cout << "TensOp::TensOp" <<   endl;
           
   CTP_map_ = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
+
+
    
   std::vector<int> plus_ops;
   std::vector<int> kill_ops;
@@ -209,6 +211,11 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
 
   pair<double,double> orig_factor_tmp =  make_pair(1.0, 1.0);
 
+  //TODO fix this hack; only call get_ctrs_tens_ranges after a shared pointer has been created elsewhere, and get_ctrs_tens_ranges
+  //     has to be called before anything can happen to the TensOp, so this is basically safe, just totally illogical.
+  sub_tensops_ = vector<shared_ptr<TensOp_Base>>(1 , this->shared_from_this());
+
+  generate_uncontracted_ctps();
   Op_dense_ = make_shared<const TensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, orig_factor_tmp, all_ranges, all_rxnges );
 
   return;
@@ -425,6 +432,32 @@ bool TensOp::TensOp<DataType>::satisfies_constraints( vector<string>& ranges ){
 //dependent on the sparsity associated with the relevant state
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
+void TensOp::TensOp<DataType>::generate_uncontracted_ctps() {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp::TensOp<DataType> generate_uncontracted_ctps" /* << name_*/ << endl;
+
+  //TODO fix this hack; only call get_ctrs_tens_ranges after a shared pointer has been created elsewhere, and get_ctrs_tens_ranges
+  //     has to be called before anything can happen to the TensOp, so this is basically safe, just totally illogical.
+  sub_tensops_ = vector<shared_ptr<TensOp_Base>>(1 , this->shared_from_this());
+
+  //puts uncontracted ranges into map 
+  shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
+  shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
+  for (auto rng_it = all_rxnges()->begin(); rng_it != all_rxnges()->end(); rng_it++) {
+    shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, rng_it->second->factors()); 
+    shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
+ 
+    shared_ptr<CtrTensorPart<DataType>>  CTP = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors ); 
+    cout << "CTP->name() = " << CTP->name() << " is going into CTP_map" <<  endl;
+    CTP_map_->emplace(CTP->name(), CTP); //maybe should be addded in with ctr_idxs
+  }
+  return;
+} 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//get contractions and ranges; note this is done by TensOp not TensOp gen as the contractions needed will be 
+//dependent on the sparsity associated with the relevant state
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
 void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef DBG_TensOp 
@@ -433,9 +466,6 @@ void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
 //////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp<DataType> get_ctrs_tens_ranges" /* << name_*/ << endl;
 
-  //TODO fix this hack; only call get_ctrs_tens_ranges after a shared pointer has been created elsewhere, and get_ctrs_tens_ranges
-  //     has to be called before anything can happen to the TensOp, so this is basically safe, just totally illogical.
-  sub_tensops_ = vector<shared_ptr<TensOp_Base>>(1 , this->shared_from_this());
 
   //puts uncontracted ranges into map 
   shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
@@ -552,6 +582,8 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
 
   Op_dense_ = make_shared<const MultiTensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, make_pair(1.0,1.0), cmlsizevec, all_ranges_ptr, all_rxnges_ptr ); 
   CTP_map_  = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
+  generate_uncontracted_ctps();
+
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -805,6 +837,18 @@ void MultiTensOp::MultiTensOp<DataType>::transform( const vector<char>& transfor
   
   return;
 
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void MultiTensOp::MultiTensOp<DataType>::generate_uncontracted_ctps() {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "MultiTensOp::generate_uncontracted_ctps " <<  endl;
+
+  shared_ptr<vector<pair<int,int>>> noctrs = make_shared<vector<pair<int,int>>>(0);
+  for (auto rng_it = Op_dense_->split_rxnges()->begin(); rng_it != Op_dense_->split_rxnges()->end(); rng_it++) 
+    enter_cmtps_into_map(*noctrs, rng_it->second->factors(), rng_it->first );
+  
+  return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //get contractions and range, looks totally inefficient, but generating everything and then checking in sequence

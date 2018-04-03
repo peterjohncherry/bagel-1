@@ -5,6 +5,30 @@
 #include <src/prop/proptool/algebraic_manipulator/range_block_info.h>
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
 
+
+// TODO : FIX THIS STUPID STRUCTURE; I SUGGEST THE FOLLOWING:
+//DQ : class A {//stuff      } 
+//     class B : A { // more stuff }   
+//     class C { A name }
+//     class D : C {  B name }
+//     c.f. Op_Dense. Would prefer to this without having function in D. 
+
+//     Following solution looks OK:
+
+//     class X<param>;
+//     template specialization 
+//     
+//     class X<C> = A, class  X<D> = B;
+//     class Y<C> = C, class  Y<D> = D;
+//
+//     class Y<C> { X<C> name } 
+//     class Y<D> { X<D> name } 
+
+// Instead of having a parent and load of virtuals, you have a base class, and specializations for the relevant templates.
+// Is this way better? Presumably one has an advantage...
+// It doesn't look it to me; you still end up with a four classes, and then a templated map, which you probably want to factor out.... so six again :(
+// However, whilst you do technically have the same number of classes, you can at least have it so 
+
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
@@ -248,6 +272,7 @@ class TensOp_Base {
 
      std::shared_ptr< const std::vector<int>> kill_ops(){ return Op_dense_->kill_ops();}
      int kill_ops(int ii){ return Op_dense_->kill_ops(ii);}
+
     
      void add_required_block( std::string block_name ) { required_blocks_->emplace( block_name ); } 
      std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { return required_blocks_; } 
@@ -274,6 +299,8 @@ class TensOp_Base {
      virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info > > > all_rxnges() const  { return Op_dense_->all_rxnges(); }
 
      virtual void get_ctrs_tens_ranges() = 0;
+
+     virtual void generate_uncontracted_ctps() = 0;
 
      virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info > > > split_ranges() const = 0 ;  
      virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<SplitX_Range_Block_Info > > > split_rxnges() const = 0 ;  
@@ -307,6 +334,8 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
      ~TensOp(){};
 
      void get_ctrs_tens_ranges();
+     
+     void generate_uncontracted_ctps();
 
      void get_ctp_idxs_ranges( std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos, std::shared_ptr<Range_Block_Info> block_info );
 
@@ -372,6 +401,8 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
 
     void get_ctrs_tens_ranges(); 
  
+    void generate_uncontracted_ctps();
+
     void get_cmtp( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>>  ctp_vec, 
                    std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>>>> ccp_vec );
 
