@@ -170,12 +170,12 @@ int counter = 0 ;
     } else  {  
       ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name_ << "'s Acompute_list"<<  endl;
     }
-    cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done_->back().first << ","<< ctrs_done_->back().second << ") to get " << CTP_out_name ; cout.flush();
+    cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done_->back().first << ","<< ctrs_done_->back().second << ") to get " << CTP_out_name ; cout.flush(); 
 
     shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list_out =  make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list);
     ACompute_map->emplace(CTP_out_name, ACompute_list_out);
 
-    cout << "Acompute_list->size() =" << ACompute_list->size() << endl;
+    cout << endl <<  "Acompute_list->size() =" << ACompute_list->size() << endl;
     dependencies_.emplace(CTP_in_name);
   } 
   ACompute_map->emplace(name_, ACompute_list);

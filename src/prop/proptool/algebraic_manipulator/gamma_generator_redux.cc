@@ -396,12 +396,14 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
 
   shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( rngs_deltas_pos, *std_ids_ );
 
-  pair<double,double> ctp_factor = make_pair(1.0, 1.0);
-  total_op_->enter_cmtps_into_map(rngs_deltas_pos, ctp_factor, std_rngs_ );
-
-  string Aname_alt = get_Aname( *std_ids_, std_rngs_, rngs_deltas_pos );
+  string Aname_alt = get_Aname( *std_ids_, std_rngs_, idxs_deltas_pos );
  
   cout << "standardized Aname = " << Aname_alt << endl;
+
+  if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) { 
+    pair<double,double> ctp_factor = make_pair(1.0, 1.0);
+    total_op_->enter_cmtps_into_map(idxs_deltas_pos, ctp_factor, std_rngs_ );
+  }
 
   string Gname_alt = get_gamma_name( *orig_rngs_, *orig_aops_, *ids_pos, bra_name, ket_name );
 

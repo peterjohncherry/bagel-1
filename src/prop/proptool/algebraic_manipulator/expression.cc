@@ -45,7 +45,9 @@ void Expression_Full<DataType>::generate_algebraic_task_list(){
   // two functions as this will gives more control over merging together of different BraKets' G_to_A_maps.
   required_blocks_ = make_shared<set<string>>();
   for ( BraKet<DataType>& braket : *braket_list_ )
-    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_,  required_blocks_ );
+    braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_, required_blocks_, CTP_map_ );
+   
+ 
   this->get_gamma_Atensor_contraction_list();
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +66,7 @@ void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list(){
     string exc_block_name = exc_ctp_map_it.first;
     auto  exc_block_G_to_A_map = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>>();
     for ( BraKet<DataType>& braket : *braket_list_ )
-      braket.generate_gamma_Atensor_contractions( MT_map_, exc_block_G_to_A_map, gamma_info_map_, states_info_,  required_blocks_ );
+      braket.generate_gamma_Atensor_contractions( MT_map_, exc_block_G_to_A_map, gamma_info_map_, states_info_,  required_blocks_, CTP_map_ );
     this->get_gamma_Atensor_contraction_list( exc_block_G_to_A_map );
     target_to_G_to_A_map_->emplace( exc_block_name, exc_block_G_to_A_map);
   }

@@ -13,7 +13,8 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
                                                             shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>> G_to_A_map,
                                                             shared_ptr<map<string, shared_ptr< GammaInfo >>> gamma_info_map,
                                                             shared_ptr<StatesInfo<DataType>> target_states,
-                                                            shared_ptr<set<string>> required_blocks ) {  
+                                                            shared_ptr<set<string>> required_blocks,
+                                                            shared_ptr<map<string, shared_ptr<CtrTensorPart_Base>>> ctp_map  ) {  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::generate_gamma_Atensor_contractions : " << name_ << endl; 
 
@@ -53,6 +54,8 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       }
     }
   }
+
+  ctp_map->insert( Total_Op_->CTP_map()->begin(), Total_Op_->CTP_map()->end() );
 
   print_gamma_Atensor_contractions( G_to_A_map, false );
 
