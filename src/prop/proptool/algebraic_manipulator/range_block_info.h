@@ -139,6 +139,8 @@ class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info>
 
      std::set<std::vector<int>> sparsity_ ;
 
+     std::string name_;
+
   public :
 
     std::vector<bool> allowed_contractions_;
@@ -160,7 +162,9 @@ class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info>
     std::pair<double,double> factors() const { return factors_; } 
     double Re_factor() const { return factors_.first; } 
     double Im_factor() const { return factors_.second; } 
-   
+  
+    std::string name() const { return name_; } 
+ 
     std::shared_ptr<std::vector<int>> idxs_trans() const { return idxs_trans_; }
     std::shared_ptr<std::vector<int>> aops_trans() const { return aops_trans_; }
     std::shared_ptr<std::vector<int>> rngs_trans() const { return rngs_trans_; }
@@ -169,7 +173,6 @@ class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info>
     std::shared_ptr<Range_BlockX_Info> 
     transform( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs, std::shared_ptr<const std::vector<bool>> orig_aops,
                std::vector<int>&  op_order, std::vector<char> op_trans ); 
-
 
 };
 

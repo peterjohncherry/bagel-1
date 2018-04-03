@@ -400,7 +400,7 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
  
   cout << "standardized Aname = " << Aname_alt << endl;
 
-  if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) { 
+  if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) {
     pair<double,double> ctp_factor = make_pair(1.0, 1.0);
     total_op_->enter_cmtps_into_map(idxs_deltas_pos, ctp_factor, std_rngs_ );
   }
@@ -411,8 +411,8 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
     G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo>>>() );
 
   //TODO do this reordering w.r.t. standardized orders DQ : Is this ok? 
-  vector<int> Aid_order_new = get_Aid_order ( standardized_ids_pos ) ;
-  pair<double,double> new_fac = make_pair(my_sign, my_sign); 
+  vector<int> Aid_order_new = get_Aid_order( standardized_ids_pos );
+  pair<double,double> new_fac = make_pair(my_sign, my_sign);
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
     auto AInfo = make_shared<AContribInfo_Full>( Aname_alt, Aid_order_new, new_fac );
@@ -433,7 +433,7 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
       }
     }
   }
-  
+
   Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
                                                          orig_aops_, orig_rngs_, ids_pos, Gamma_map) );
 

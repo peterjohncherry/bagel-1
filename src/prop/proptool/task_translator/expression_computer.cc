@@ -63,7 +63,7 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
 
   auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_);
  
-  TensOp_Machine->get_block_Tensor_test( expression->required_blocks_ );
+  TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
 
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
@@ -99,7 +99,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 
   auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_);
  
-  TensOp_Machine->get_block_Tensor_test( expression->required_blocks_ );
+  TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
 
   DataType result = 0.0;
   map< string, DataType > g_result_map;

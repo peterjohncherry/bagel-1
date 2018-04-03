@@ -130,6 +130,8 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
    
   num_idxs_ = orig_rngs->size();
 
+  name_  = WickUtils::get_ctp_name( *orig_idxs, *orig_rngs );
+
   vector<bool> trans_aops_(orig_aops->size());
   vector<int>::iterator at_it = aops_trans_->begin();
   for ( vector<bool>::iterator ta_it = trans_aops_.begin(); ta_it != trans_aops_.end(); ta_it++, at_it++ )
@@ -273,7 +275,7 @@ SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, 
     std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_it =  range_blocks_->begin() + *oo_it;
      
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
-    transform_tens_vec( (*ot_it+2), it_it, it_it + (*rb_it)->num_idxs_ ); 
+    transform_tens_vec( (*ot_it), it_it, it_it + (*rb_it)->num_idxs_ ); 
     std::for_each( it_it, it_it+(*rb_it)->num_idxs_, [  &cml_sizes, &oo_it ] ( int &pos ) { pos += cml_sizes[*oo_it] ; } );
 
     copy( (*rb_it)->rngs_trans()->begin(), (*rb_it)->rngs_trans()->end(), rt_it );

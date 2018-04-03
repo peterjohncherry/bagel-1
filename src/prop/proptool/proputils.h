@@ -105,6 +105,8 @@ namespace WickUtils {
 
   std::string get_ctp_name( const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges, const std::vector<std::pair<int,int>>& ctrs_pos ); 
 
+  std::string get_ctp_name( const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges );
+
   unsigned int range_to_prime(char range );
   unsigned int range_to_prime_spinfree(char range );
 

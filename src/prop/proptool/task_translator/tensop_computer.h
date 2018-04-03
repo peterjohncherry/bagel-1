@@ -52,7 +52,7 @@ class TensOp_Computer {
 
     std::shared_ptr<SMITH::Tensor_<DataType>> get_block_Tensor(std::string Tname);
 
-    void get_block_Tensor_test(std::shared_ptr<std::set<std::string>> required_blocks );
+    void get_tensor_data_blocks(std::shared_ptr<std::set<std::string>> required_blocks );
   
     std::shared_ptr<SMITH::Tensor_<DataType>> get_uniform_Tensor(std::shared_ptr<std::vector<std::string>> unc_ranges, DataType XX );
 

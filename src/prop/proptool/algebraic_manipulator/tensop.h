@@ -29,12 +29,18 @@
 // It doesn't look it to me; you still end up with a four classes, and then a templated map, which you probably want to factor out.... so six again :(
 // However, whilst you do technically have the same number of classes, you can at least have it so 
 
+namespace TensOp {  template<typename DataType> class TensOp; } 
+namespace MultiTensOp { template<typename DataType> class MultiTensOp; } 
+
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
 class TensOp_Base;
 class Op_General_base { 
-     friend TensOp_Base;
+     friend TensOp::TensOp<double>;
+     friend TensOp::TensOp<std::complex<double>>;
+     friend MultiTensOp::MultiTensOp<double>;
+     friend MultiTensOp::MultiTensOp<std::complex<double>>;
    
      protected:
        const std::vector<std::string> idxs_;

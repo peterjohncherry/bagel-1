@@ -200,7 +200,8 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   shared_ptr<TensOp::TensOp<DataType>> new_tens =  make_shared<TensOp::TensOp<DataType>>( op_name, *idxs, *idx_ranges, *aops,
                                                                                           factor, symmfuncs, constraints, time_symm, state_dep, range_prime_map);
-  new_tens->get_ctrs_tens_ranges();
+  //new_tens->get_ctrs_tens_ranges();
+  new_tens->generate_uncontracted_ctps();
 
   return new_tens;
 }

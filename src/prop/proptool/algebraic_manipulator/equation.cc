@@ -110,7 +110,7 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
 
 
       shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info.multiop_name_, /*spinfree_ = */ true, SubOps, range_prime_map_ );
-//      multiop->get_ctrs_tens_ranges();
+      multiop->generate_uncontracted_ctps();
       CTP_map_->insert( multiop->CTP_map()->begin(), multiop->CTP_map()->end());
       MT_map_->emplace(braket_info.multiop_name_, multiop );
     } 

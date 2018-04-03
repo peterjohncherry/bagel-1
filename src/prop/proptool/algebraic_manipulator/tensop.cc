@@ -207,15 +207,13 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
 
   auto all_ranges = generate_ranges( idxs, idx_ranges, aops, range_prime_map );
 
-  auto all_rxnges = generate_rangesX( idxs, idx_ranges, aops );
+  auto all_rxnges = generate_rangesX( idxs, idx_ranges, aops ); cout << "left T::generate_rangesX" << endl;
 
   pair<double,double> orig_factor_tmp =  make_pair(1.0, 1.0);
 
   //TODO fix this hack; only call get_ctrs_tens_ranges after a shared pointer has been created elsewhere, and get_ctrs_tens_ranges
   //     has to be called before anything can happen to the TensOp, so this is basically safe, just totally illogical.
-  sub_tensops_ = vector<shared_ptr<TensOp_Base>>(1 , this->shared_from_this());
 
-  generate_uncontracted_ctps();
   Op_dense_ = make_shared<const TensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, orig_factor_tmp, all_ranges, all_rxnges );
 
   return;
@@ -441,7 +439,7 @@ void TensOp::TensOp<DataType>::generate_uncontracted_ctps() {
   sub_tensops_ = vector<shared_ptr<TensOp_Base>>(1 , this->shared_from_this());
 
   //puts uncontracted ranges into map 
-  shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
+  shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( Op_dense_->idxs_); // change this to not a const here or to a const in ctp;
   shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
   for (auto rng_it = all_rxnges()->begin(); rng_it != all_rxnges()->end(); rng_it++) {
     shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, rng_it->second->factors()); 
@@ -578,11 +576,10 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
     num_idxs += sub_tensops_[ii]->num_idxs();
   } 
   shared_ptr<const map < const vector<string> , shared_ptr<Split_Range_Block_Info > > >  all_ranges_ptr = generate_ranges( idxs, aops, cmlsizevec, range_prime_map );
-  shared_ptr<const map < const vector<string> , shared_ptr<SplitX_Range_Block_Info > > >  all_rxnges_ptr = generate_rangesX( idxs, aops, cmlsizevec );
+  shared_ptr<const map < const vector<string> , shared_ptr<SplitX_Range_Block_Info > > >  all_rxnges_ptr = generate_rangesX( idxs, aops, cmlsizevec ); cout << "left MT:generate_rangesX" << endl; 
 
   Op_dense_ = make_shared<const MultiTensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, make_pair(1.0,1.0), cmlsizevec, all_ranges_ptr, all_rxnges_ptr ); 
   CTP_map_  = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
-  generate_uncontracted_ctps();
 
 
 }
