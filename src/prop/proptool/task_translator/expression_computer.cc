@@ -93,6 +93,11 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     cout << block_name << endl;
   cout << endl << endl;
 
+//  cout << "tensop_data_map_->size() = " << tensop_data_map_->size() << endl;
+//  cout << " contents of tensop_data_map : " <<endl;
+//  for ( auto& elem : *tensop_data_map_ )
+//    cout << elem.first << endl;
+
   bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
   if ( !new_result )  
     cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;

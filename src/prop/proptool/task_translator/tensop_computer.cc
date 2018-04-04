@@ -29,16 +29,11 @@ TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo& AInfo )
 
   if (ACompute_map->at(A_contrib)->size() == 0 )
     cout << "THIS COMPUTE LIST IS EMPTY" << endl;
-
-  cout << "tensop_data_map_->size() = " << tensop_data_map_->size() << endl;
-  cout << " contents of tensop_data_map : " <<endl;
-  for ( auto& elem : *tensop_data_map_ )
-    cout << elem.first << endl;
-
   for (shared_ptr<CtrOp_base> ctr_op : *(ACompute_map->at(A_contrib))){ cout << "getting " <<  ctr_op->Tout_name() << endl;
    
     // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
-    if( tensop_data_map_->find(ctr_op->Tout_name()) == tensop_data_map_->end() ) { cout << A_contrib << " not in data_map, must calculate it " << endl;
+    if( tensop_data_map_->find(ctr_op->Tout_name()) == tensop_data_map_->end() ) {
+       cout << A_contrib << " not in data_map, must calculate it " << endl;
        shared_ptr<Tensor_<DataType>>  New_Tdata; 
  
       if ( ctr_op->ctr_type()[0] == 'g'){  cout << " : no contraction, fetch this tensor part" << endl; 
@@ -61,6 +56,7 @@ TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo& AInfo )
         New_Tdata = reorder_block_Tensor( ctr_op->T1name(), ctr_op->new_order() ); 
         tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
         cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
+
       } else { 
         throw std::runtime_error(" unknown contraction type : " + ctr_op->ctr_type() ) ;
       }
@@ -149,7 +145,7 @@ void TensOp_Computer::TensOp_Computer<DataType>::get_tensor_data_blocks(shared_p
      
          cout << Tname<< "->norm() = " << tens->norm() << endl; 
      
-       } else if ( Tname[0] == 'X' || Tname[0] == 'T' || Tname[0] == 't' ) {  
+       } else if ( Tname[0] == 'X' || Tname[0] == 'T' || Tname[0] == 't' || Tname[0] == 'S'  ) {  
          cout << "new tensor block : " << Tname << " is being initialized to 1.0,  for exciations" << endl; 
          tens = make_shared<Tensor_<DataType>>(*id_block);
          tens->allocate();

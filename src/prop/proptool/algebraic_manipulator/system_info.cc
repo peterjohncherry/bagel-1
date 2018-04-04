@@ -77,9 +77,10 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
   shared_ptr<TensOp::TensOp<DataType>> new_op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
                                                                                         tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, state_dep, range_prime_map_);
   
-  // change to be state specific
+ 
+  // change to be expression specific
   cout << "getting  ctr tens ranges for New_Op : " << op_name << endl;
-  new_op->get_ctrs_tens_ranges();
+  new_op->generate_uncontracted_ctps();
   CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());
   cout << "got ctr tens ranges for new_op : " << op_name << endl;
 
