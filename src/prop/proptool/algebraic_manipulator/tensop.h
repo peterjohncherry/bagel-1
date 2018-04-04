@@ -64,6 +64,7 @@ class Op_General_base {
        std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr<Range_BlockX_Info>>> all_rxnges_;
 
        std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr<SplitX_Range_Block_Info>>> split_rxnges_;
+
  
       public :
 
