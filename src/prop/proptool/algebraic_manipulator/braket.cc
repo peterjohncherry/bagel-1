@@ -27,12 +27,24 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 
   auto trans_info = make_pair( op_trans_list_,  op_order_ );
 
+  cout << " op_trans = [ "; 
+  for ( char x : op_trans_list_  ) { 
+//   string bob = ""; bob += x; 
+   cout << x << " " ; cout.flush();
+  }
+  cout << "]" << endl;
+
+  shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( op_order_,  op_trans_list_ );  
+  print_vector(*trans_aops , " trans_aops" ) ; cout << endl;
+ 
   auto GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
 
 
   for ( auto range_map_it = Total_Op_->split_rxnges()->begin(); range_map_it !=Total_Op_->split_rxnges()->end(); range_map_it++ ){
+     // get transformed range block;
+      
+     
     shared_ptr<Range_BlockX_Info>  trans_block = range_map_it->second->transform( make_shared<const vector<string>>(range_map_it->first), Total_Op_->idxs(), Total_Op_->aops(), op_order_, op_trans_list_ );
-    
     GGen->add_gamma( trans_block , range_map_it->first );
     
     if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){

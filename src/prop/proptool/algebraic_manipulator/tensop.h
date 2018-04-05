@@ -254,10 +254,13 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
 
     std::vector<std::shared_ptr<TensOp_Base>> sub_tensops(){  std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_ ; return sub_tensops_; } 
    
-    std::shared_ptr<std::vector<bool>>  transform_aops( const char trans ); 
+    std::shared_ptr<std::vector<bool>> transform_aops( const char trans ); 
 
-    std::shared_ptr<std::vector<bool>>  transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ); 
+    std::shared_ptr<std::vector<bool>> transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ); 
 
+    std::shared_ptr<Range_BlockX_Info> transform_block_rngs( const std::vector<char>& rngs, const char op_trans_in );
+
+    void transform_aop_rngs( std::vector<char>& rngs, std::pair<double,double>& factor, const char op_trans_in ); 
 
 };
 }

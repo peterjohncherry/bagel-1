@@ -205,8 +205,8 @@ SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bl
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Range_BlockX_Info> 
-SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_ptr<const vector<string>> orig_idxs, shared_ptr<const vector<bool>> orig_aops,
-                                    vector<int>&  op_order, vector<char> op_trans ) {
+SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_ptr<const vector<string>> orig_idxs,
+                                    shared_ptr<const vector<bool>> orig_aops, vector<int>&  op_order, vector<char> op_trans ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  // cout << "SplitX_Range_Block_Info::transform" << endl;
 

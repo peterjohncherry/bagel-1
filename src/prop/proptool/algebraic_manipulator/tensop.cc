@@ -135,15 +135,18 @@ TensOp::TensOp<DataType>::transform_aops( const char op_trans ) {
   cout << "TensOp::TensOp<DataType>::transform_aops " << endl;
 
   vector<bool> aops = Op_dense_->aops_; 
+  char bob = tolower(op_trans);
 
-  switch ( op_trans ) { 
+  print_vector( aops , "aops original " ) ; cout << endl;
+
+  switch ( bob ) { 
 
     case 'i' : // inverse
-      for_each( aops.begin(), aops.end(), [] ( bool aop ) { return !aop; } ); 
+      for_each( aops.begin(), aops.end(), [] ( decltype(aops)::reference aop ) { aop = !aop; } ); 
       break;
 
     case 'h' : // hconj
-      for_each( aops.begin(), aops.end(), [] ( bool aop ) { return !aop; } ); 
+      for_each( aops.begin(), aops.end(), [] ( decltype(aops)::reference aop ) { aop = !aop; } ); 
       break;
 
     case 't' : // time reversal
@@ -152,11 +155,91 @@ TensOp::TensOp<DataType>::transform_aops( const char op_trans ) {
     default : 
       string trans_str = "" ; trans_str += op_trans;
       std::cout << "do not have transformation " << trans_str << "implemented; please check the braket specification in the input file." << std::endl;
-      throw std::logic_error( " Aborting!!" );
-
+      break;
   } 
+  print_vector( aops , "aops after trans " ) ; cout << endl;
+
 
   return make_shared<vector<bool>>(aops);
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+shared_ptr<Range_BlockX_Info>
+TensOp::TensOp<DataType>::transform_block_rngs( const vector<char>& rngs, const char op_trans_in ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp::TensOp<DataType>::transform_aops " << endl;
+
+  char op_trans = tolower(op_trans_in);
+
+  pair<double,double> trans_factor;
+
+  vector<char> rngs_tmp = rngs;
+
+  switch ( op_trans ) { 
+
+    case 'i' : // inverse
+      reverse( rngs_tmp.begin(), rngs_tmp.end() ); // TODO potentially different for different ops 
+      break;
+
+    case 'h' : // hconj
+      reverse( rngs_tmp.begin(), rngs_tmp.end() ); 
+      break;
+
+    case 't' : // time reversal
+      std::cout << " Why are you time reversing block ranges? Do you mean to time reverse aops_rngs? " << std::endl;
+      assert(false);
+      break;
+
+    default : 
+      string trans_str = "" ; trans_str += op_trans;
+      std::cout << "do not have transformation " << trans_str << "implemented; please check the braket specification in the input file." << std::endl;
+      break;
+  } 
+  print_vector( rngs_tmp , "rngs_tmp after trans " ) ; cout << endl;
+
+  vector<string> test(4); 
+  return  Op_dense_->all_rxnges_->at( test );
+
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void
+TensOp::TensOp<DataType>::transform_aop_rngs( vector<char>& rngs, pair<double,double>& factor, const char op_trans_in ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp::TensOp<DataType>::transform_aops " << endl;
+
+  char op_trans = tolower(op_trans_in);
+
+  pair<double,double> trans_factor;
+
+  print_vector( rngs, "aops rngs before trans " ) ; cout << endl;
+  switch ( op_trans ) { 
+
+    case 'i' : // inverse
+      trans_factor = make_pair( 1.0, -1.0);
+      break;
+
+    case 'h' : // hconj
+      reverse( rngs.begin(), rngs.end() ); 
+      trans_factor = make_pair( 1.0 , -1.0);
+      break;
+
+    case 't' : // time reversal
+      for_each( rngs.begin(), rngs.end(), [] ( char& rng ) { if ( rng > 'Z' ) { rng -= 32; } else { rng += 32; } } ); 
+      trans_factor = make_pair( -1.0, 1.0 ); // determine this from Tsymm of op;
+      break;
+
+    default : 
+      string trans_str = "" ; trans_str += op_trans;
+      std::cout << "do not have transformation " << trans_str << "implemented; please check the braket specification in the input file." << std::endl;
+      break;
+  } 
+  print_vector( rngs, "aops rngs after trans " ) ; cout << endl;
+ 
+  vector<string> test(4); 
+  shared_ptr<Range_BlockX_Info> new_block = Op_dense_->all_rxnges_->at( test );
+
+  return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
