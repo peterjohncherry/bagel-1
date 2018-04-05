@@ -33,6 +33,16 @@ class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info>
     long unsigned int kill_pnum_;
     bool no_transition_;
     int num_idxs_;
+    
+    std::shared_ptr<const std::vector<std::string>> unique_block_;
+
+    Range_BlockX_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs,
+                       std::shared_ptr<const std::vector<std::string>> orig_idxs,
+                       std::shared_ptr<const std::vector<bool>> orig_aops,
+                       std::shared_ptr<const std::vector<std::string>> unique_block,  
+                       std::shared_ptr<std::vector<int>> idxs_trans,            
+                       std::pair<double,double> factors);
+
 
     Range_BlockX_Info( std::shared_ptr<const std::vector<std::string>> orig_block,   
                        std::shared_ptr<const std::vector<std::string>> orig_idxs,   
@@ -59,6 +69,7 @@ class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info>
     transform( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs, std::shared_ptr<const std::vector<bool>> orig_aops,
                std::vector<int>&  op_order, std::vector<char> op_trans ); 
 
+    void transform_aops_rngs ( std::vector<bool>& aops, std::vector<char>& aops_rngs,  std::pair<double,double>& factors , char transformation );
 };
 
 

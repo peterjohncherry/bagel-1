@@ -25,12 +25,12 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
     if ( tens->is_projector() ) 
       projector_names.push_back(tens->name()[0]);
 
-  print_vector( op_trans_list_ , "op_trans_list" ) ; cout << endl;
- 
   auto trans_info = make_pair( op_trans_list_,  op_order_ );
+
   auto GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
+
+
   for ( auto range_map_it = Total_Op_->split_rxnges()->begin(); range_map_it !=Total_Op_->split_rxnges()->end(); range_map_it++ ){
-//  if ( !range_map_it->second->is_sparse( op_state_ids_ ) ){    
     shared_ptr<Range_BlockX_Info>  trans_block = range_map_it->second->transform( make_shared<const vector<string>>(range_map_it->first), Total_Op_->idxs(), Total_Op_->aops(), op_order_, op_trans_list_ );
     
     GGen->add_gamma( trans_block , range_map_it->first );

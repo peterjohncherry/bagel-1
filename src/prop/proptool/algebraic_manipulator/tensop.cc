@@ -111,7 +111,8 @@ cout << "TensOp::TensOp<DataType>::generate_rangesX" <<   endl;
   shared_ptr<vector<int>> no_trans = make_shared<vector<int>>(idxs.size());
   iota( no_trans->begin(), no_trans->end(), 0 );
 
-  //generate all possible ranges
+  // do all symm test ; loop through ranges , try to transform into another..., if fail,  then add as unique range.
+  // generate all possible ranges
   vector<vector<string>> possible_ranges(0);
   for (int ii = 0 ; ii != num_cycles ; ii++){
     vector<string> new_range(idx_ranges.size());
@@ -126,7 +127,81 @@ cout << "TensOp::TensOp<DataType>::generate_rangesX" <<   endl;
   return all_ranges_ptr ;
               
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+std::shared_ptr<std::vector<bool>> 
+TensOp::TensOp<DataType>::transform_aops( const char op_trans ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp::TensOp<DataType>::transform_aops " << endl;
 
+  vector<bool> aops = Op_dense_->aops_; 
+
+  switch ( op_trans ) { 
+
+    case 'i' : // inverse
+      for_each( aops.begin(), aops.end(), [] ( bool aop ) { return !aop; } ); 
+      break;
+
+    case 'h' : // hconj
+      for_each( aops.begin(), aops.end(), [] ( bool aop ) { return !aop; } ); 
+      break;
+
+    case 't' : // time reversal
+      break;
+
+    default : 
+      string trans_str = "" ; trans_str += op_trans;
+      std::cout << "do not have transformation " << trans_str << "implemented; please check the braket specification in the input file." << std::endl;
+      throw std::logic_error( " Aborting!!" );
+
+  } 
+
+  return make_shared<vector<bool>>(aops);
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+std::shared_ptr<std::vector<bool>> 
+MultiTensOp::MultiTensOp<DataType>::transform_aops( const char trans ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "MultiTensOp::MultiTensOp<DataType>::transform_aops"  << endl;
+
+  vector<bool> trans_aops( Op_dense_->num_idxs_, false );
+  return make_shared<vector<bool>>(trans_aops);
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+std::shared_ptr<std::vector<bool>> 
+TensOp::TensOp<DataType>::transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp::TensOp<DataType>::transform_aops"  << endl;
+
+  vector<bool> trans_aops( Op_dense_->num_idxs_, false );
+  return make_shared<vector<bool>>(trans_aops);
+  //return this->transform_aops( op_trans[0] );
+
+}  
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+std::shared_ptr<std::vector<bool>> 
+MultiTensOp::MultiTensOp<DataType>::transform_aops( const vector<int>& op_order , const vector<char>& op_trans ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "MultiTensOp::MultiTensOp<DataType>::transform_aops " << endl;
+
+  vector<bool> trans_aops( Op_dense_->num_idxs_ );
+  vector<bool>::iterator ta_it = trans_aops.begin();
+  vector<int>::const_iterator oo_it = op_order.begin(); 
+ 
+  for ( vector<char>::const_iterator ot_it = op_trans.begin(); ot_it != op_trans.end(); ot_it++, oo_it++  ) {
+
+   shared_ptr<vector<bool>> trans_aops_part = sub_tensops_[*oo_it]->transform_aops( *ot_it );
+
+   ta_it = move( trans_aops_part->begin(), trans_aops_part->end(), ta_it);
+
+  } 
+    
+  return make_shared<vector<bool>>(trans_aops);
+
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 bool TensOp::TensOp<DataType>::satisfies_constraints( vector<string>& ranges ){

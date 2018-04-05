@@ -7,6 +7,78 @@ using namespace WickUtils;
 using namespace Algebra_Utils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs,
+                                      std::shared_ptr<const std::vector<std::string>> orig_idxs,
+                                      std::shared_ptr<const std::vector<bool>> orig_aops,
+                                      std::shared_ptr<const std::vector<std::string>> unique_block,  // new ranges (in new order);
+                                      std::shared_ptr<std::vector<int>> idxs_trans,             // new order 
+                                      std::pair<double,double> factors  ) :
+                                      unique_block_(unique_block), idxs_trans_(idxs_trans), factors_(factors) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "Range_BlockX_Info::Range_BlockX_Info" << endl;
+   
+  num_idxs_ = orig_rngs->size();
+  name_  = WickUtils::get_ctp_name( *orig_idxs, *orig_rngs );
+
+  plus_pnum_ = 1;
+  kill_pnum_ = 1;
+  //NOTE : the ci-sector transition associated with this block is determined from the _original_ block ranges and aops.
+  std::vector<bool>::const_iterator oa_it = orig_aops->begin();
+  for ( std::vector<std::string>::const_iterator tr_it = orig_rngs->begin(); tr_it != orig_rngs->end(); ++tr_it, ++oa_it ){
+    if (*oa_it) {
+      plus_pnum_ *= range_to_prime( (*tr_it)[0] );
+    } else {
+      kill_pnum_ *= range_to_prime( (*tr_it)[0] );
+    }
+  }
+
+  if ( plus_pnum_ - kill_pnum_ ) {
+    no_transition_ = false;
+  } else { 
+    no_transition_ = true;
+  }
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This is for dealing with time reversal symmetry as applied to the Ket or Bra; we want to keep the relevant MO integrals the same, but the ranges
+// of the creation and annihilation operators need to be transformed.
+// Note that the aops_rngs corresponds to the ranges on which the creation and annhiliation operators act, not the block.
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void
+Range_BlockX_Info::transform_aops_rngs ( std::vector<bool>& aops, std::vector<char>& aops_rngs,  std::pair<double,double>& factors , char transformation ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Range_BlockX_Info::transform aops " << endl;
+
+  transformation = tolower(transformation); 
+ 
+  switch ( transformation ) { 
+
+    case 'i' : // inverse
+      for_each( aops.begin(), aops.end(), [] ( bool aop ) { return !aop; } ); 
+      factors.second *= -1.0;
+      return;
+
+    case 'h' : // hconj
+      for_each( aops.begin(), aops.end(), [] ( bool aop ) { return !aop; } ); 
+      std::reverse( aops_rngs.begin(), aops_rngs.end() ) ;
+      factors.second *= -1.0;
+      return;
+
+    case 't' : // time reversal
+      for_each( aops_rngs.begin(), aops_rngs.end(), [] ( char rng ) { if ( rng > 'Z' ){ return toupper(rng);} else {return tolower(rng);}}); 
+      factors.first *= -1.0;
+      return;
+
+    default : 
+      string trans_str = "" ; trans_str += transformation;
+      std::cout << "do not have transformation " << trans_str << "implemented; please check the braket specification in the input file." << std::endl;
+      throw std::logic_error( " Aborting!!" );
+
+  } 
+
+  return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs,   
                                       std::shared_ptr<const std::vector<bool>> orig_aops, std::shared_ptr<std::vector<int>> rngs_trans,
                                       std::shared_ptr<std::vector<int>> idxs_trans, std::shared_ptr<std::vector<int>> aops_trans, 
@@ -17,7 +89,6 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
 //  cout << "Range_BlockX_Info::Range_BlockX_Info" << endl;
    
   num_idxs_ = orig_rngs->size();
-
   name_  = WickUtils::get_ctp_name( *orig_idxs, *orig_rngs );
 
   vector<bool> trans_aops_(orig_aops->size());

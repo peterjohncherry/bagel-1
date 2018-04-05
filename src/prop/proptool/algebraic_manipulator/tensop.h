@@ -61,10 +61,9 @@ class Op_General_base {
        
        std::shared_ptr<const std::vector<std::vector<std::string>>> idx_ranges_ptr_;
 
-       std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr<Range_BlockX_Info>>> all_rxnges_;
+       std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info>>> all_rxnges_;
 
-       std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr<SplitX_Range_Block_Info>>> split_rxnges_;
-
+       std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<SplitX_Range_Block_Info>>> split_rxnges_;
  
       public :
 
@@ -205,6 +204,10 @@ class TensOp_Base {
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base> >> CTP_map() { return CTP_map_; } 
 
+     virtual std::shared_ptr<std::vector<bool>> transform_aops( const char op_trans ) = 0;
+
+     virtual std::shared_ptr<std::vector<bool>> transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ) = 0;
+
      virtual bool is_projector(){ return false ; } 
 
      virtual std::shared_ptr< const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info > > > all_rxnges() const  { return Op_dense_->all_rxnges(); }
@@ -250,6 +253,11 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
         throw std::logic_error( "TensOp::TensOp<DataType> should cannot call enter_into_CTP_map form this class!! Aborting!!" ); } 
 
     std::vector<std::shared_ptr<TensOp_Base>> sub_tensops(){  std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_ ; return sub_tensops_; } 
+   
+    std::shared_ptr<std::vector<bool>>  transform_aops( const char trans ); 
+
+    std::shared_ptr<std::vector<bool>>  transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ); 
+
 
 };
 }
@@ -289,6 +297,10 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
     std::shared_ptr<const std::map<const std::vector<std::string>, std::shared_ptr<SplitX_Range_Block_Info>>> split_rxnges() const{return Op_dense_->split_rxnges(); } 
 
     void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges );
+
+    std::shared_ptr<std::vector<bool>>  transform_aops( const char trans ); 
+
+    std::shared_ptr<std::vector<bool>>  transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ); 
 
 };
 }
