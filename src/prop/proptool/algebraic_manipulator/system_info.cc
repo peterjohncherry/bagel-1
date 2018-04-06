@@ -27,21 +27,21 @@ System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info
 
   if (spinfree_ /*TODO like this for testing; obviously must put back*/ || !spinfree_ ) { 
     cout << " setting spinfree ranges" << endl;
-    free     = {"cor", "act", "vir"};
-    not_core = {"act", "vir"};
-    not_act  = {"cor", "vir"};
-    not_virt = {"cor", "act"};
-    core     = {"cor"};
-    act      = {"act"};
-    virt     = {"vir"};
+    free     = {"c", "a", "v"};
+    not_core = {"a", "v"};
+    not_act  = {"c", "v"};
+    not_virt = {"c", "a"};
+    core     = {"c"};
+    act      = {"a"};
+    virt     = {"v"};
   } else { 
-    free     = {"corA", "actA", "virA", "corB", "actB", "virB"};
-    not_core = {"actA", "virA", "actB", "virB"};
-    not_act  = {"corA", "virA", "corB", "virB"};
-    not_virt = {"corA", "actA", "corB", "actB"};
-    core     = {"corA", "corB"};
-    act      = {"actA", "actB"};
-    virt     = {"virA", "virB"};
+    free     = {"c", "a", "v", "C", "A", "V"};
+    not_core = {"a", "v", "A", "V"};
+    not_act  = {"c", "v", "C", "V"};
+    not_virt = {"c", "a", "C", "A"};
+    core     = {"c", "C"};
+    act      = {"a", "A"};
+    virt     = {"v", "V"};
   }
 }
 

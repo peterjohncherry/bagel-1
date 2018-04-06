@@ -44,7 +44,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
      // get transformed range block;
       
      
-    shared_ptr<Range_BlockX_Info>  trans_block = range_map_it->second->transform( make_shared<const vector<string>>(range_map_it->first), Total_Op_->idxs(), Total_Op_->aops(), op_order_, op_trans_list_ );
+    shared_ptr<Range_Block_Info>  trans_block = range_map_it->second->transform( make_shared<const vector<string>>(range_map_it->first), Total_Op_->idxs(), Total_Op_->aops(), op_order_, op_trans_list_ );
     GGen->add_gamma( trans_block , range_map_it->first );
     
     if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){

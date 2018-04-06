@@ -7,7 +7,7 @@ using namespace WickUtils;
 using namespace Algebra_Utils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs,
+Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs,
                                       std::shared_ptr<const std::vector<std::string>> orig_idxs,
                                       std::shared_ptr<const std::vector<bool>> orig_aops,
                                       std::shared_ptr<const std::vector<std::string>> unique_block,  // new ranges (in new order);
@@ -15,7 +15,7 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
                                       std::pair<double,double> factors  ) :
                                       unique_block_(unique_block), idxs_trans_(idxs_trans), factors_(factors) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Range_BlockX_Info::Range_BlockX_Info" << endl;
+//  cout << "Range_Block_Info::Range_Block_Info" << endl;
    
   num_idxs_ = orig_rngs->size();
   name_  = WickUtils::get_ctp_name( *orig_idxs, *orig_rngs );
@@ -45,9 +45,9 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
 // Note that the aops_rngs corresponds to the ranges on which the creation and annhiliation operators act, not the block.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void
-Range_BlockX_Info::transform_aops_rngs ( std::vector<bool>& aops, std::vector<char>& aops_rngs,  std::pair<double,double>& factors , char transformation ) {
+Range_Block_Info::transform_aops_rngs ( std::vector<bool>& aops, std::vector<char>& aops_rngs,  std::pair<double,double>& factors , char transformation ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Range_BlockX_Info::transform aops " << endl;
+  cout << "Range_Block_Info::transform aops " << endl;
 
   transformation = tolower(transformation); 
  
@@ -65,7 +65,7 @@ Range_BlockX_Info::transform_aops_rngs ( std::vector<bool>& aops, std::vector<ch
       return;
 
     case 't' : // time reversal
-      for_each( aops_rngs.begin(), aops_rngs.end(), [] ( char rng ) { if ( rng > 'Z' ){ return toupper(rng);} else {return tolower(rng);}}); 
+      for_each( aops_rngs.begin(), aops_rngs.end(), [] ( char rng ) { if ( rng > 'Z' ){ rng -=32;} else { rng += 32;}}); 
       factors.first *= -1.0;
       return;
 
@@ -79,14 +79,14 @@ Range_BlockX_Info::transform_aops_rngs ( std::vector<bool>& aops, std::vector<ch
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs,   
+Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs,   
                                       std::shared_ptr<const std::vector<bool>> orig_aops, std::shared_ptr<std::vector<int>> rngs_trans,
                                       std::shared_ptr<std::vector<int>> idxs_trans, std::shared_ptr<std::vector<int>> aops_trans, 
                                       std::pair<double,double> factors  ) :
                                       rngs_trans_(rngs_trans), idxs_trans_(idxs_trans), aops_trans_(aops_trans), 
                                       factors_(factors) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Range_BlockX_Info::Range_BlockX_Info" << endl;
+//  cout << "Range_Block_Info::Range_Block_Info" << endl;
    
   num_idxs_ = orig_rngs->size();
   name_  = WickUtils::get_ctp_name( *orig_idxs, *orig_rngs );
@@ -121,14 +121,14 @@ Range_BlockX_Info::Range_BlockX_Info( std::shared_ptr<const std::vector<std::str
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Range_BlockX_Info> 
-Range_BlockX_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_ptr<const vector<string>> orig_idxs, shared_ptr<const vector<bool>> orig_aops,
+std::shared_ptr<Range_Block_Info> 
+Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_ptr<const vector<string>> orig_idxs, shared_ptr<const vector<bool>> orig_aops,
                                     vector<int>&  op_order, vector<char> op_trans ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Range_BlockX_Info::transform" << endl;
+  cout << "Range_Block_Info::transform" << endl;
 
   if ( (op_order.size() > 1)  || (op_trans.size() > 1) ) {
-    cout << "This is a single Range_BlockX_Info, and you are applying transformations for Split_Range_BlockX_Info to it! Aborting!!" << endl;
+    cout << "This is a single Range_Block_Info, and you are applying transformations for Split_Range_Block_Info to it! Aborting!!" << endl;
     assert( (op_order.size() > 1)  || (op_trans.size() > 1) ); 
   } 
   
@@ -149,21 +149,21 @@ Range_BlockX_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared
   if ( trans == 'H' || trans == 'h' )
     new_factors.second *= -1.0 ; 
 
-  return make_shared<Range_BlockX_Info>( orig_rngs, orig_idxs, orig_aops, make_shared<vector<int>>(new_rngs_trans), make_shared<vector<int>>(new_idxs_trans), make_shared<vector<int>>(new_aops_trans), new_factors  );
+  return make_shared<Range_Block_Info>( orig_rngs, orig_idxs, orig_aops, make_shared<vector<int>>(new_rngs_trans), make_shared<vector<int>>(new_idxs_trans), make_shared<vector<int>>(new_aops_trans), new_factors  );
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> range_blocks ) :
+SRBI_Helper::SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks ) :
                             rxnge_blocks_(range_blocks), factors_(std::make_pair(1.0,1.0)) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "SRBIX_Helper::SRBIX_Helper" << endl;
+//  cout << "SRBI_Helper::SRBI_Helper" << endl;
 
   int num_idxs_ = 0;
   unique_   = true;
 
   vector<int> cml_sizes(range_blocks->size());
   vector<int>::iterator cs_it = cml_sizes.begin();
-  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  range_blocks->begin(); rb_iter != range_blocks->end();  rb_iter++, cs_it++ ){
+  for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_iter =  range_blocks->begin(); rb_iter != range_blocks->end();  rb_iter++, cs_it++ ){
     *cs_it += num_idxs_;
      num_idxs_  += (*rb_iter)->num_idxs_;
   } 
@@ -177,7 +177,7 @@ SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bl
 
   //DQ : I feel like there should be a nicer way to do this; a lot of iterators, should I add braces to throw the iterators out?
   cs_it = cml_sizes.begin();
-  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_it =  range_blocks->begin() ; rb_it != range_blocks->end(); rb_it++, cs_it++) {
+  for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks->begin() ; rb_it != range_blocks->end(); rb_it++, cs_it++) {
  
     double Re_buff = factors_.first;
     double Im_buff = factors_.second;
@@ -204,16 +204,16 @@ SRBIX_Helper::SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bl
       
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-std::shared_ptr<Range_BlockX_Info> 
-SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_ptr<const vector<string>> orig_idxs,
+std::shared_ptr<Range_Block_Info> 
+Split_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_ptr<const vector<string>> orig_idxs,
                                     shared_ptr<const vector<bool>> orig_aops, vector<int>&  op_order, vector<char> op_trans ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- // cout << "SplitX_Range_Block_Info::transform" << endl;
+ // cout << "Split_Range_Block_Info::transform" << endl;
 
   vector<int> cml_sizes(op_order.size());
   vector<int>::iterator cs_it = cml_sizes.begin(); 
   int cml_size = 0 ;
-  for ( std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  range_blocks_->begin(); rb_iter != range_blocks_->end();  rb_iter++, cs_it++ ){
+  for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_iter =  range_blocks_->begin(); rb_iter != range_blocks_->end();  rb_iter++, cs_it++ ){
     *cs_it += cml_size;
      cml_size += (*rb_iter)->num_idxs_;
   }
@@ -231,7 +231,7 @@ SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, 
   // note, transformations impact are handled differently depending on the blocks, hence shifting the characters
   for( vector<int>::iterator oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++, ot_it++ ) {
 
-    std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_it =  range_blocks_->begin() + *oo_it;
+    std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks_->begin() + *oo_it;
      
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
     transform_tens_vec( (*ot_it), it_it, it_it + (*rb_it)->num_idxs_ ); 
@@ -250,15 +250,15 @@ SplitX_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, 
     at_it += (*rb_it)->num_idxs_;
   }
 
-  return make_shared<Range_BlockX_Info>( orig_rngs, orig_idxs, orig_aops, make_shared<vector<int>>(rngs_trans), make_shared<vector<int>>(idxs_trans), make_shared<vector<int>>(aops_trans), factors_  );
+  return make_shared<Range_Block_Info>( orig_rngs, orig_idxs, orig_aops, make_shared<vector<int>>(rngs_trans), make_shared<vector<int>>(idxs_trans), make_shared<vector<int>>(aops_trans), factors_  );
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool SplitX_Range_Block_Info::is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs ) { 
+bool Split_Range_Block_Info::is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //cout << "SplitX_Range_Block_Info::is_sparse" << endl;
+  //cout << "Split_Range_Block_Info::is_sparse" << endl;
 
-  std::vector<std::shared_ptr<Range_BlockX_Info>>::iterator rb_iter =  range_blocks_->begin();
+  std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_iter =  range_blocks_->begin();
   for ( std::vector<std::vector<int>>::const_iterator si_iter = state_idxs->begin(); si_iter != state_idxs->end(); si_iter++ ){
      //if ( (*rb_iter)->is_sparse(*si_iter) ) 
        return true;      

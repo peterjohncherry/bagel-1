@@ -127,7 +127,7 @@ void System_Computer::System_Computer<DataType>::calculate_mo_integrals() {
 
   cout << "getting mo integrals " <<  endl;
   vector<string> free4 = { "free", "free", "free", "free" };
-  vector<string> act4 = { "act", "act", "act", "act" };
+  vector<string> act4 = { "a", "a", "a", "a" };
   vector<string> free2 = { "free", "free" };
 
   f1_ =  moint_computer_->get_fock( free2, false ) ;
@@ -143,11 +143,11 @@ void System_Computer::System_Computer<DataType>::calculate_mo_integrals() {
   //tensop_data_map_->emplace( "X" , moint_computer_->get_test_tensor( free4 ) );
   DataType one = (DataType)(1.0); //TODO find a better way;
   SMITH::IndexRange fs = *(range_conversion_map_->at("free"));
-  SMITH::IndexRange nvs = *(range_conversion_map_->at("cor"));
-  nvs.merge(*(range_conversion_map_->at("act")));
+  SMITH::IndexRange nvs = *(range_conversion_map_->at("c"));
+  nvs.merge(*(range_conversion_map_->at("a")));
 
-  SMITH::IndexRange ncs = *(range_conversion_map_->at("act"));
-  ncs.merge(*(range_conversion_map_->at("vir")));
+  SMITH::IndexRange ncs = *(range_conversion_map_->at("a"));
+  ncs.merge(*(range_conversion_map_->at("v")));
 
   shared_ptr<vector<SMITH::IndexRange>> fs4 = make_shared<vector<SMITH::IndexRange>>(vector<SMITH::IndexRange> { ncs, ncs, nvs, nvs } );   
   shared_ptr<SMITH::Tensor_<DataType>> XTens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor( fs4, one ); 

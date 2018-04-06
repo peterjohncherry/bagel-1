@@ -238,9 +238,9 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
 
   // keep this so you don't have to get names correct, needs modification for spin case
   auto conv_to_range = []( string rng ) {
-           if( rng[0] == 'c' ) return "cor";
-           if( rng[0] == 'a' ) return "act";
-           if( rng[0] == 'v' ) return "vir";
+           if( rng[0] == 'c' ) return "c";
+           if( rng[0] == 'a' ) return "a";
+           if( rng[0] == 'v' ) return "v";
       };
 
   //TODO  add in user defined ranges (not just on the operators; actual range extents using orbital numbers
@@ -514,9 +514,9 @@ cout << "PropTool::PropTool::set_ao_range_info" << endl;
   not_active_rng_  = make_shared<SMITH::IndexRange>(*closed_rng_); not_active_rng_->merge(*virtual_rng_);
   not_virtual_rng_ = make_shared<SMITH::IndexRange>(*closed_rng_); not_virtual_rng_->merge(*active_rng_);
 
-  range_conversion_map_->emplace("cor", closed_rng_); 
-  range_conversion_map_->emplace("act", active_rng_);
-  range_conversion_map_->emplace("vir", virtual_rng_);
+  range_conversion_map_->emplace("c", closed_rng_); 
+  range_conversion_map_->emplace("a", active_rng_);
+  range_conversion_map_->emplace("v", virtual_rng_);
   range_conversion_map_->emplace("free", free_rng_);
  
   range_conversion_map_->emplace("notcor", not_closed_rng_);

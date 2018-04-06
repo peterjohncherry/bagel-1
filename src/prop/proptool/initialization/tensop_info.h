@@ -17,13 +17,13 @@ shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( string op_name, 
 /////////////////////////////////////////////////////////////////////////////////
 cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info" << endl;
 
-  vector<string> free     = {"cor", "act", "vir"};
-  vector<string> not_core = {"act", "vir"};
-  vector<string> not_act  = {"cor", "vir"};
-  vector<string> not_virt = {"cor", "act"};
-  vector<string> core     = {"cor"};
-  vector<string> act      = {"act"};
-  vector<string> virt     = {"vir"};
+  vector<string> free     = {"c", "a", "v"};
+  vector<string> not_core = {"a", "v"};
+  vector<string> not_act  = {"c", "v"};
+  vector<string> not_virt = {"c", "a"};
+  vector<string> core     = {"c"};
+  vector<string> act      = {"a"};
+  vector<string> virt     = {"v"};
 
   DataType                           factor;
   shared_ptr<vector<string>>         idxs;

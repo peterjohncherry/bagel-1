@@ -9,7 +9,7 @@ using namespace Algebra_Utils;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
                                   std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
-                                  std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr< Range_BlockX_Info> >> all_rxnges ):
+                                  std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr< Range_Block_Info> >> all_rxnges ):
                                   idxs_(idxs),  aops_(aops), plus_ops_(plus_ops), kill_ops_(kill_ops), idx_ranges_(idx_ranges),
                                   orig_factor_(factor), num_idxs_(idxs.size()), all_rxnges_(all_rxnges) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -22,13 +22,13 @@ cout << "Op_General_base::Op_General_base constructor"<< endl;
   plus_ops_ptr_ = make_shared<const vector<int>>(plus_ops);
   kill_ops_ptr_ = make_shared<const vector<int>>(kill_ops);
 
-  split_rxnges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<SplitX_Range_Block_Info> >>();
+  split_rxnges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info> >>();
 
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
                                   std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
-                                  std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<SplitX_Range_Block_Info> >> split_rxnges ) : 
+                                  std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info> >> split_rxnges ) : 
                                   idxs_(idxs),  aops_(aops), plus_ops_(plus_ops), kill_ops_(kill_ops), idx_ranges_(idx_ranges), orig_factor_(factor), num_idxs_(idxs.size()),
                                   split_rxnges_(split_rxnges) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ cout << "Op_General_base::Op_General_base constructor"<< endl;
   plus_ops_ptr_ = make_shared<const vector<int>>(plus_ops);
   kill_ops_ptr_ = make_shared<const vector<int>>(kill_ops);
 
-  all_rxnges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info> >>() ; 
+  all_rxnges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>() ; 
 
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +87,7 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info> >>
+std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>
 TensOp::TensOp<DataType>::generate_rangesX( vector<string>& idxs,  vector<vector<string>>& idx_ranges, vector<bool>& aops ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp::TensOp<DataType>::generate_rangesX" <<   endl;
@@ -96,7 +96,7 @@ cout << "TensOp::TensOp<DataType>::generate_rangesX" <<   endl;
   shared_ptr<const vector<string>> orig_idxs = make_shared<const vector<string>>(idxs);
   shared_ptr<const vector<bool>> orig_aops = make_shared<const vector<bool>>(aops);
 
-  map< const vector<string>, shared_ptr<Range_BlockX_Info> > all_ranges_tmp;
+  map< const vector<string>, shared_ptr<Range_Block_Info> > all_ranges_tmp;
 
   shared_ptr<vector<int>> fvec = make_shared<vector<int>>( orig_idxs->size(), 0);
   shared_ptr<vector<int>> maxs = make_shared<vector<int>>( orig_idxs->size() );
@@ -119,11 +119,11 @@ cout << "TensOp::TensOp<DataType>::generate_rangesX" <<   endl;
     for (auto jj = 0 ; jj != fvec->size() ; jj++ )
        new_range[jj] = idx_ranges[jj][fvec->at(jj)];
     if(satisfies_constraints(new_range))
-      all_ranges_tmp.emplace( new_range,  make_shared< Range_BlockX_Info > ( make_shared<const vector<string>>(new_range), orig_idxs, orig_aops, no_trans, no_trans, no_trans, fac_new ) );
+      all_ranges_tmp.emplace( new_range,  make_shared< Range_Block_Info > ( make_shared<const vector<string>>(new_range), orig_idxs, orig_aops, no_trans, no_trans, no_trans, fac_new ) );
     fvec_cycle( fvec, maxs );
   }
 
-  auto all_ranges_ptr = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info >>> (all_ranges_tmp);
+  auto all_ranges_ptr = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> (all_ranges_tmp);
   return all_ranges_ptr ;
               
 }
@@ -164,7 +164,7 @@ TensOp::TensOp<DataType>::transform_aops( const char op_trans ) {
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-shared_ptr<Range_BlockX_Info>
+shared_ptr<Range_Block_Info>
 TensOp::TensOp<DataType>::transform_block_rngs( const vector<char>& rngs, const char op_trans_in ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp<DataType>::transform_aops " << endl;
@@ -202,9 +202,8 @@ TensOp::TensOp<DataType>::transform_block_rngs( const vector<char>& rngs, const 
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
 void
-TensOp::TensOp<DataType>::transform_aop_rngs( vector<char>& rngs, pair<double,double>& factor, const char op_trans_in ) {
+TensOp_Base::TensOp_Base::transform_aops_rngs( vector<char>& rngs, pair<double,double>& factor, const char op_trans_in ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp<DataType>::transform_aops " << endl;
 
@@ -237,7 +236,7 @@ TensOp::TensOp<DataType>::transform_aop_rngs( vector<char>& rngs, pair<double,do
   print_vector( rngs, "aops rngs after trans " ) ; cout << endl;
  
   vector<string> test(4); 
-  shared_ptr<Range_BlockX_Info> new_block = Op_dense_->all_rxnges_->at( test );
+  shared_ptr<Range_Block_Info> new_block = Op_dense_->all_rxnges_->at( test );
 
   return;
 }
@@ -284,6 +283,32 @@ MultiTensOp::MultiTensOp<DataType>::transform_aops( const vector<int>& op_order 
     
   return make_shared<vector<bool>>(trans_aops);
 
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+std::shared_ptr<std::vector<char>> 
+MultiTensOp::MultiTensOp<DataType>::transform_aops_rngs( shared_ptr<Split_Range_Block_Info> block, 
+                                                         const vector<int>& op_order , const vector<char>& op_trans ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "MultiTensOp::MultiTensOp<DataType>::transform_aops " << endl;
+
+  vector<char> trans_aops_rngs( block->num_idxs_ );
+  vector<char>::iterator tar_it = trans_aops_rngs.begin();
+  vector<int>::const_iterator oo_it = op_order.begin(); 
+
+  pair<double,double> factor = make_pair(1.0, 1.0);
+ 
+  for ( vector<char>::const_iterator ot_it = op_trans.begin(); ot_it != op_trans.end(); ot_it++, oo_it++  ) {
+
+   vector<char> trans_aops_rngs_part = strvec_to_chrvec( *((*block->range_blocks())[*oo_it]->orig_rngs_) );
+
+   sub_tensops_[*oo_it]->transform_aops_rngs( trans_aops_rngs_part, factor, *ot_it );
+
+   tar_it = move( trans_aops_rngs_part.begin(), trans_aops_rngs_part.end(), tar_it);
+
+  } 
+
+  return make_shared<vector<char>>(trans_aops_rngs);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
@@ -355,7 +380,7 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
   
     num_idxs += sub_tensops_[ii]->num_idxs();
   } 
-  shared_ptr<const map < const vector<string> , shared_ptr<SplitX_Range_Block_Info > > >  all_rxnges_ptr = generate_rangesX( idxs, aops, cmlsizevec ); cout << "left MT:generate_rangesX" << endl; 
+  shared_ptr<const map < const vector<string> , shared_ptr<Split_Range_Block_Info > > >  all_rxnges_ptr = generate_rangesX( idxs, aops, cmlsizevec ); cout << "left MT:generate_rangesX" << endl; 
 
   Op_dense_ = make_shared<const MultiTensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, make_pair(1.0,1.0), cmlsizevec, all_rxnges_ptr ); 
   CTP_map_  = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
@@ -363,17 +388,17 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-shared_ptr< const map< const vector<string>, shared_ptr<SplitX_Range_Block_Info> >>
+shared_ptr< const map< const vector<string>, shared_ptr<Split_Range_Block_Info> >>
 MultiTensOp::MultiTensOp<DataType>::generate_rangesX( vector<string>& idxs, vector<bool>& aops, vector<int>& cmlsizevec  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "MultiTensOp::generate_rangesX()" << endl;
  
   int num_idxs = idxs.size();
   shared_ptr<const vector<string>> orig_idxs = make_shared<const vector<string>>(idxs);
-  vector< map< const  vector<string>, shared_ptr< Range_BlockX_Info >>::const_iterator> rng_maps(num_tensors_);  
+  vector< map< const  vector<string>, shared_ptr< Range_Block_Info >>::const_iterator> rng_maps(num_tensors_);  
   vector<int> posvec( num_tensors_, 0 ); 
 
-  map< const vector<string>, shared_ptr<SplitX_Range_Block_Info> > split_rxnges;
+  map< const vector<string>, shared_ptr<Split_Range_Block_Info> > split_rxnges;
 
   if ( num_tensors_ > 1 ) { 
     shared_ptr<vector<int>> forvec = make_shared<vector<int>>(num_tensors_, 0 ); 
@@ -400,10 +425,10 @@ MultiTensOp::MultiTensOp<DataType>::generate_rangesX( vector<string>& idxs, vect
        }
      
       old_forvec = make_shared<vector<int>>(*forvec);
-      shared_ptr< vector <shared_ptr<Range_BlockX_Info >>> split_block = make_shared< vector <shared_ptr<Range_BlockX_Info >>>( num_tensors_ );
+      shared_ptr< vector <shared_ptr<Range_Block_Info >>> split_block = make_shared< vector <shared_ptr<Range_Block_Info >>>( num_tensors_ );
       vector<string> merged_ranges(num_idxs);
       vector<string>::iterator mr_it = merged_ranges.begin();
-      vector<shared_ptr<Range_BlockX_Info>>::iterator sb_it = split_block->begin();
+      vector<shared_ptr<Range_Block_Info>>::iterator sb_it = split_block->begin();
       for (auto  rm_it = rng_maps.begin(); rm_it != rng_maps.end(); rm_it++, sb_it++ ){  
         *sb_it = (*rm_it)->second;
          copy( (*rm_it)->first.begin(), (*rm_it)->first.end(), mr_it ) ;
@@ -411,10 +436,10 @@ MultiTensOp::MultiTensOp<DataType>::generate_rangesX( vector<string>& idxs, vect
       } 
 
       //TODO Must obtain from constraint functions 
-      shared_ptr<SplitX_Range_Block_Info> srbi;
+      shared_ptr<Split_Range_Block_Info> srbi;
       {
-        SRBIX_Helper helper(split_block);
-        srbi = make_shared<SplitX_Range_Block_Info>( make_shared<vector<string>>(merged_ranges), make_shared<const vector<string>>(idxs),  
+        SRBI_Helper helper(split_block);
+        srbi = make_shared<Split_Range_Block_Info>( make_shared<vector<string>>(merged_ranges), make_shared<const vector<string>>(idxs),  
                                                      make_shared<const vector<bool>>(aops), helper );
       }
       split_rxnges.emplace( merged_ranges, srbi ) ;
@@ -425,13 +450,13 @@ MultiTensOp::MultiTensOp<DataType>::generate_rangesX( vector<string>& idxs, vect
 
     //TODO add constructor so can just have single tensor, need not be vector
     for ( auto elem : *(sub_tensops_[0]->all_rxnges()) )  {
-      SRBIX_Helper helper( make_shared<vector<shared_ptr<Range_BlockX_Info >>>(1, elem.second));
-      shared_ptr<SplitX_Range_Block_Info> srbi = make_shared<SplitX_Range_Block_Info>( make_shared<vector<string>>( elem.first ), Op_dense_->idxs(), Op_dense_->aops(), helper);
+      SRBI_Helper helper( make_shared<vector<shared_ptr<Range_Block_Info >>>(1, elem.second));
+      shared_ptr<Split_Range_Block_Info> srbi = make_shared<Split_Range_Block_Info>( make_shared<vector<string>>( elem.first ), Op_dense_->idxs(), Op_dense_->aops(), helper);
       split_rxnges.emplace( elem.first, srbi ) ;
     }
   }
    
-  return make_shared< const map < const vector<string> , shared_ptr<SplitX_Range_Block_Info > > >( split_rxnges );
+  return make_shared< const map < const vector<string> , shared_ptr<Split_Range_Block_Info > > >( split_rxnges );
   
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -58,7 +58,7 @@ class Equation_Computer_Base {
 
      Equation_Computer_Base( std::shared_ptr<Equation_Base<DataType>> equation,
                              std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map ) : 
-                             name_(equation->name()+"computer"), type_("Base"), equation_(equation),
+                             name_( equation->name()+"computer" ), type_( "Base" ), equation_(equation),
                              range_conversion_map_(range_conversion_map){} ; 
 
     ~Equation_Computer_Base(){};

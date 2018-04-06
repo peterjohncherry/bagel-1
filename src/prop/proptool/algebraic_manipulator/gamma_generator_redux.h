@@ -87,7 +87,7 @@ class GammaGeneratorRedux{
 
     ~GammaGeneratorRedux(){};
 
-    void add_gamma( const std::shared_ptr<Range_BlockX_Info> block_info, const std::vector<std::string>& range_block );
+    void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, const std::vector<std::string>& range_block );
 
     bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering );
 

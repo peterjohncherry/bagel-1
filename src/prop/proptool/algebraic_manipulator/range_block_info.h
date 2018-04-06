@@ -9,18 +9,19 @@
 #include <memory>
 #include <src/prop/proptool/proputils.h>
  
-class SRBIX_Helper; 
-class SplitX_Range_Block_Info; 
-class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info> {
+class SRBI_Helper; 
+class Split_Range_Block_Info; 
+class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
  
-  friend SRBIX_Helper;
-  friend SplitX_Range_Block_Info;
+  friend SRBI_Helper;
+  friend Split_Range_Block_Info;
 
   protected :
      std::pair<double,double> factors_; 
      std::shared_ptr<std::vector<int>> idxs_trans_;
      std::shared_ptr<std::vector<int>> aops_trans_;
      std::shared_ptr<std::vector<int>> rngs_trans_;
+     
 
      std::set<std::vector<int>> sparsity_ ;
 
@@ -35,16 +36,17 @@ class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info>
     int num_idxs_;
     
     std::shared_ptr<const std::vector<std::string>> unique_block_;
+    std::shared_ptr<const std::vector<std::string>> orig_rngs_;
 
-    Range_BlockX_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs,
-                       std::shared_ptr<const std::vector<std::string>> orig_idxs,
-                       std::shared_ptr<const std::vector<bool>> orig_aops,
-                       std::shared_ptr<const std::vector<std::string>> unique_block,  
-                       std::shared_ptr<std::vector<int>> idxs_trans,            
-                       std::pair<double,double> factors);
+    Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs,
+                      std::shared_ptr<const std::vector<std::string>> orig_idxs,
+                      std::shared_ptr<const std::vector<bool>> orig_aops,
+                      std::shared_ptr<const std::vector<std::string>> unique_block,  
+                      std::shared_ptr<std::vector<int>> idxs_trans,            
+                      std::pair<double,double> factors );
 
 
-    Range_BlockX_Info( std::shared_ptr<const std::vector<std::string>> orig_block,   
+    Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_block,   
                        std::shared_ptr<const std::vector<std::string>> orig_idxs,   
                        std::shared_ptr<const std::vector<bool>> orig_aops, 
                        std::shared_ptr<std::vector<int>> idxs_trans,
@@ -52,7 +54,7 @@ class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info>
                        std::shared_ptr<std::vector<int>> rngs_trans,
                        std::pair<double,double> factors  ); 
 
-    ~Range_BlockX_Info(){};
+    ~Range_Block_Info(){};
     
     std::pair<double,double> factors() const { return factors_; } 
     double Re_factor() const { return factors_.first; } 
@@ -65,7 +67,7 @@ class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info>
     std::shared_ptr<std::vector<int>> rngs_trans() const { return rngs_trans_; }
 
     virtual
-    std::shared_ptr<Range_BlockX_Info> 
+    std::shared_ptr<Range_Block_Info> 
     transform( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs, std::shared_ptr<const std::vector<bool>> orig_aops,
                std::vector<int>&  op_order, std::vector<char> op_trans ); 
 
@@ -73,14 +75,14 @@ class Range_BlockX_Info : public std::enable_shared_from_this<Range_BlockX_Info>
 };
 
 
-class SRBIX_Helper { 
+class SRBI_Helper { 
 
   public :
     bool unique_;
     bool survives_;
     std::pair<double,double> factors_; 
     int num_idxs_; 
-    std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> rxnge_blocks_;
+    std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> rxnge_blocks_;
  
     std::shared_ptr<const std::vector<std::string>> orig_rngs_;
     std::shared_ptr<const std::vector<std::string>> orig_idxs_;
@@ -90,38 +92,36 @@ class SRBIX_Helper {
     std::shared_ptr<std::vector<int>> aops_trans_;
     std::shared_ptr<std::vector<int>> rngs_trans_;
                               
-    SRBIX_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> range_blocks );
+    SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks );
 
-    void add_trans( std::shared_ptr<SplitX_Range_Block_Info> srbi, std::vector<int>&  op_order, std::vector<char> op_trans );
-   ~SRBIX_Helper(){};
+    void add_trans( std::shared_ptr<Split_Range_Block_Info> srbi, std::vector<int>&  op_order, std::vector<char> op_trans );
+   ~SRBI_Helper(){};
  
 };
  
 
-class SplitX_Range_Block_Info : public  Range_BlockX_Info { 
+class Split_Range_Block_Info : public  Range_Block_Info { 
 
   private : 
-    std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> range_blocks_;
+    std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks_;
 
   public :
 
-    SplitX_Range_Block_Info(  std::shared_ptr<std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs,
-                              std::shared_ptr<const std::vector<bool>> orig_aops, SRBIX_Helper& helper ) : 
-                              Range_BlockX_Info( orig_rngs, orig_idxs, orig_aops, helper.idxs_trans_, helper.aops_trans_, helper.rngs_trans_, helper.factors_ ), 
+    Split_Range_Block_Info(  std::shared_ptr<std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs,
+                              std::shared_ptr<const std::vector<bool>> orig_aops, SRBI_Helper& helper ) : 
+                              Range_Block_Info( orig_rngs, orig_idxs, orig_aops, helper.idxs_trans_, helper.aops_trans_, helper.rngs_trans_, helper.factors_ ), 
                               range_blocks_(helper.rxnge_blocks_) {} 
                      
-   ~SplitX_Range_Block_Info(){};
+   ~Split_Range_Block_Info(){};
 
-    std::shared_ptr<std::vector<std::shared_ptr<Range_BlockX_Info>>> range_blocks(){ return range_blocks_ ;} 
-    std::shared_ptr<Range_BlockX_Info> range_blocks(int ii){ return range_blocks_->at(ii) ;} 
+    std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks(){ return range_blocks_ ;} 
+    std::shared_ptr<Range_Block_Info> range_blocks(int ii){ return range_blocks_->at(ii) ;} 
 
-    std::shared_ptr<Range_BlockX_Info> 
+    std::shared_ptr<Range_Block_Info> 
     transform( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs, std::shared_ptr<const std::vector<bool>> orig_aops,
                std::vector<int>&  op_order, std::vector<char> op_trans );
 
     bool is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs );
 };
-
-
 
 #endif

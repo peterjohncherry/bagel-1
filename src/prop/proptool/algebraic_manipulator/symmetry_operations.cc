@@ -100,7 +100,7 @@ std::shared_ptr<std::vector<std::string>> Symmetry_Operations::identity(std::sha
 bool Symmetry_Operations::NotAllAct(shared_ptr<vector<string>> ranges){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   for (auto  elem : *ranges) 
-    if ( elem != "act")
+    if ( elem[0] != 'a' && elem[0] != 'A' )
       return true;
   return false;
 }

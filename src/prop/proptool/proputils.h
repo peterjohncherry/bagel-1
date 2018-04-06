@@ -110,6 +110,10 @@ namespace WickUtils {
   unsigned int range_to_prime(char range );
   unsigned int range_to_prime_spinfree(char range );
 
+  std::vector<char> strvec_to_chrvec( const std::vector<std::string>& strvec );
+ 
+  std::vector<std::string> chrvec_to_strvec( const std::vector<char>& chrvec );
+
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
     if (name != "" ) 
@@ -187,6 +191,20 @@ namespace WickUtils {
     return dereffed_vec;
   }
 
+  struct CI_Sector_Hasher
+  {
+    const size_t max_ao_range_prime = 1029; // to ensure no CI range is givent the same number as a orbital range, set after ops read in, but leave this for now
+
+    std::size_t operator()(std::string const& ci_sector_name) const noexcept
+    {
+         std::size_t ci_sector_hash = 0;
+         do { 
+           ci_sector_hash = std::hash<std::string>{}( ci_sector_name );
+         } while ( ci_sector_hash < max_ao_range_prime ); 
+
+        return ci_sector_hash;
+    }
+  }; 
 
 }
 

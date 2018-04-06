@@ -25,9 +25,8 @@ GammaGeneratorRedux::GammaGeneratorRedux( shared_ptr<StatesInfo<double>> target_
   
   return;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_BlockX_Info> block_info, const vector<string>& range_block ) {
+void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_info, const vector<string>& range_block ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "GammaGeneratorRedux::add_gamma" << endl;
   //NOTE: the reason for building the transformed ranges is that this way we can use the same ids_pos  for aops, rngs and idxs, 
@@ -361,8 +360,7 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
   } 
 
   //  This should use standardized ordering...  
-
-  cout << "disordered Aname = " <<  get_Aname( *orig_ids_, *orig_rngs_, *deltas_pos ) << endl;
+  cout << "disordered Aname = " <<  get_ctp_name( *orig_ids_, *orig_rngs_, *deltas_pos ) << endl;
 
   cout << " deltas = [ " ;cout.flush();
   for ( pair<int,int>& delta : *deltas_pos ) { 
@@ -397,7 +395,7 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
 
   shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( rngs_deltas_pos, *std_ids_ );
 
-  string Aname_alt = get_Aname( *std_ids_, std_rngs_, idxs_deltas_pos );
+  string Aname_alt = get_ctp_name( *std_ids_, std_rngs_, idxs_deltas_pos );
  
   cout << "standardized Aname = " << Aname_alt << endl;
 
