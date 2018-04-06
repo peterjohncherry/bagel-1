@@ -123,8 +123,7 @@ cout << "TensOp::TensOp<DataType>::generate_rangesX" <<   endl;
     fvec_cycle( fvec, maxs );
   }
 
-  auto all_ranges_ptr = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> (all_ranges_tmp);
-  return all_ranges_ptr ;
+  return make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> (all_ranges_tmp);;
               
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -197,15 +196,16 @@ TensOp::TensOp<DataType>::transform_block_rngs( const vector<char>& rngs, const 
   } 
   print_vector( rngs_tmp , "rngs_tmp after trans " ) ; cout << endl;
 
-  vector<string> test(4); 
-  return  Op_dense_->all_rxnges_->at( test );
+  return  Op_dense_->all_rxnges_->at( chrvec_to_strvec( rngs_tmp ) );
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void
 TensOp_Base::TensOp_Base::transform_aops_rngs( vector<char>& rngs, pair<double,double>& factor, const char op_trans_in ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp<DataType>::transform_aops " << endl;
+  cout << "TensOp::TensOp<DataType>::transform_aops_rngs " << endl;
+ 
+  cout << op_trans_in << endl;
 
   char op_trans = tolower(op_trans_in);
 
@@ -235,8 +235,7 @@ TensOp_Base::TensOp_Base::transform_aops_rngs( vector<char>& rngs, pair<double,d
   } 
   print_vector( rngs, "aops rngs after trans " ) ; cout << endl;
  
-  vector<string> test(4); 
-  shared_ptr<Range_Block_Info> new_block = Op_dense_->all_rxnges_->at( test );
+  shared_ptr<Range_Block_Info> new_block = Op_dense_->all_rxnges_->at( chrvec_to_strvec( rngs ) );
 
   return;
 }
@@ -275,9 +274,9 @@ MultiTensOp::MultiTensOp<DataType>::transform_aops( const vector<int>& op_order 
  
   for ( vector<char>::const_iterator ot_it = op_trans.begin(); ot_it != op_trans.end(); ot_it++, oo_it++  ) {
 
-   shared_ptr<vector<bool>> trans_aops_part = sub_tensops_[*oo_it]->transform_aops( *ot_it );
-
-   ta_it = move( trans_aops_part->begin(), trans_aops_part->end(), ta_it);
+    shared_ptr<vector<bool>> trans_aops_part = sub_tensops_[*oo_it]->transform_aops( *ot_it );
+ 
+    ta_it = move( trans_aops_part->begin(), trans_aops_part->end(), ta_it);
 
   } 
     
@@ -287,24 +286,29 @@ MultiTensOp::MultiTensOp<DataType>::transform_aops( const vector<int>& op_order 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 std::shared_ptr<std::vector<char>> 
-MultiTensOp::MultiTensOp<DataType>::transform_aops_rngs( shared_ptr<Split_Range_Block_Info> block, 
+MultiTensOp::MultiTensOp<DataType>::transform_aops_rngs( shared_ptr<Split_Range_Block_Info> block, pair<double,double>& factor,
                                                          const vector<int>& op_order , const vector<char>& op_trans ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::MultiTensOp<DataType>::transform_aops " << endl;
+  cout << "MultiTensOp::MultiTensOp<DataType>::transform_aops_rngs" << endl;
 
   vector<char> trans_aops_rngs( block->num_idxs_ );
   vector<char>::iterator tar_it = trans_aops_rngs.begin();
   vector<int>::const_iterator oo_it = op_order.begin(); 
 
-  pair<double,double> factor = make_pair(1.0, 1.0);
- 
+  cout << "hello " << endl; 
   for ( vector<char>::const_iterator ot_it = op_trans.begin(); ot_it != op_trans.end(); ot_it++, oo_it++  ) {
 
-   vector<char> trans_aops_rngs_part = strvec_to_chrvec( *((*block->range_blocks())[*oo_it]->orig_rngs_) );
+   cout << "*ot_it = " << *ot_it << endl;
+   print_vector( *((*block->range_blocks())[*oo_it]->orig_rngs()) , "orig_rngs" ) ; cout << endl;
+   vector<char> trans_aops_rngs_part = strvec_to_chrvec( *((*block->range_blocks())[*oo_it]->orig_rngs()) );
 
+   cout << "XXX" << *ot_it << endl;
    sub_tensops_[*oo_it]->transform_aops_rngs( trans_aops_rngs_part, factor, *ot_it );
 
+   cout << "11" << *ot_it << endl;
    tar_it = move( trans_aops_rngs_part.begin(), trans_aops_rngs_part.end(), tar_it);
+
+   cout << "22" << *ot_it << endl;
 
   } 
 
