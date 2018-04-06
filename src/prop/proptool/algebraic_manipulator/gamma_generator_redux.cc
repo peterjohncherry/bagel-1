@@ -25,6 +25,36 @@ GammaGeneratorRedux::GammaGeneratorRedux( shared_ptr<StatesInfo<double>> target_
   
   return;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_info,
+                                     shared_ptr<vector<char>> trans_aops_rngs, shared_ptr<vector<bool>> trans_aops ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "void GammaGeneratorRedux::add_gamma " << endl;
+
+  block_aops_ = trans_aops;
+  block_aops_rngs_ = trans_aops_rngs;
+ 
+  std_rngs_ = *block_info->unique_block_;
+ 
+  standard_order_ = *(block_info->idxs_trans());
+
+  int ii = 0 ;
+  block_to_std_order_ = vector<int>(standard_order_.size());
+  for ( vector<int>::iterator so_it = standard_order_.begin() ; so_it != standard_order_.end() ; ++so_it, ++ii ) 
+    block_to_std_order_[*so_it] = (ii);
+
+  shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( orig_ids_->size() );
+  iota( ids_pos->begin(), ids_pos->end(), 0 );
+
+  shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
+  int my_sign = 1; // TODO should be double from range_block
+
+  gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>( 1, make_shared<GammaIntermediateRedux>( ids_pos, deltas_pos, my_sign ) );
+  final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>(0);
+
+  return;
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_info, const vector<string>& range_block ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
