@@ -77,7 +77,7 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGeneratorRedux::generic_reorderer( string reordering_name, bool first_reordering, bool final_reordering ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::generic_reorderer" << endl; 
+  cout << "GammaGeneratorRedux::generic_reorderer" << endl; 
   
   int kk = 0;
   bool does_it_contribute = false;
@@ -110,7 +110,7 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
     cout << "doing normal order" << endl;
     int kk = 0;
     while ( kk != gamma_vec->size()) {
-      cout << kk << " "; cout.flush(); // DQ : is deferencing something so I can pass it's reference to a function stupid? Note * is overloaded here; member of shared pointer.
+      cout << kk << " "; cout.flush(); 
       if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) 
         normal_order(kk);
       kk++;
@@ -350,8 +350,6 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
   shared_ptr<vector<int>> ids_pos        = gamma_int->ids_pos;
   
 
-  // DQ : Should I do this using iterators like this instead of with (*ids_pos)[ii]? It looks like I am creating
-  //      more variables witht he iterators, or are the iterators (pointers) created anyway and I just don't see it?
   vector<int> standardized_ids_pos( ids_pos->size() ); 
   {
   vector<int>::iterator si_it = standardized_ids_pos.begin();
@@ -362,38 +360,12 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
   //  This should use standardized ordering...  
   cout << "disordered Aname = " <<  get_ctp_name( *orig_ids_, *orig_rngs_, *deltas_pos ) << endl;
 
-  cout << " deltas = [ " ;cout.flush();
-  for ( pair<int,int>& delta : *deltas_pos ) { 
-    cout << "(" << orig_ids_->at(delta.first) << ":" << orig_rngs_->at(delta.first) << ":" << orig_aops_->at(delta.first) <<  " , ";
-    cout << orig_ids_->at(delta.second) << ":" << orig_rngs_->at(delta.second) << ":" << orig_aops_->at(delta.second) << ") "; cout.flush();
-  } 
-  cout << "]" << endl;
-
-  //Must use standard id ordering here, to match up with entries in CTP_map, and avoid duplication
   //TODO should standardize deltas pos when building gamma intermediate so as to avoid repeated transformation
   vector<pair<int,int>> idxs_deltas_pos(deltas_pos->size());
-  vector<pair<int,int>> aops_deltas_pos(deltas_pos->size());
-  vector<pair<int,int>> rngs_deltas_pos(deltas_pos->size());
-
-  {
   vector<pair<int,int>>::iterator  idp_it = idxs_deltas_pos.begin();
-  vector<pair<int,int>>::iterator  adp_it = aops_deltas_pos.begin();
-  vector<pair<int,int>>::iterator  rdp_it = rngs_deltas_pos.begin();
-  for ( vector<pair<int,int>>::iterator dp_it = deltas_pos->begin(); dp_it != deltas_pos->end(); dp_it++, adp_it++, idp_it++ , rdp_it++ ) { 
-    *adp_it = make_pair( (*aops_trans_)[dp_it->first], (*aops_trans_)[dp_it->second]) ;  
-    *rdp_it = make_pair( (*rngs_trans_)[dp_it->first], (*rngs_trans_)[dp_it->second]) ;  
+  for ( vector<pair<int,int>>::iterator dp_it = deltas_pos->begin(); dp_it != deltas_pos->end(); dp_it++, idp_it++ ) { 
     *idp_it = make_pair( (*idxs_trans_)[dp_it->first], (*idxs_trans_)[dp_it->second]) ;  
   } 
-
-  cout << " std_deltas = [ " ;cout.flush();
-  for ( int ii = 0 ; ii != idxs_deltas_pos.size() ; ii++ ) { 
-    cout << "(" << (*std_ids_)[rngs_deltas_pos[ii].first] << ":" << std_rngs_[rngs_deltas_pos[ii].first] << ":" << (*std_aops_)[aops_deltas_pos[ii].first] <<  " , ";
-    cout << (*std_ids_)[rngs_deltas_pos[ii].second] << ":" << std_rngs_[rngs_deltas_pos[ii].second] << ":" << (*std_aops_)[aops_deltas_pos[ii].second] << ") "; cout.flush();
-  } 
-  cout << "]" << endl;
-  }
-
-  shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( rngs_deltas_pos, *std_ids_ );
 
   string Aname_alt = get_ctp_name( *std_ids_, std_rngs_, idxs_deltas_pos );
  
@@ -435,12 +407,6 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
 
   Gamma_map->emplace( Gname_alt, make_shared<GammaInfo>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
                                                          orig_aops_, orig_rngs_, ids_pos, Gamma_map) );
-
-  // DQ : is it better to have more of global variables or arguments?
-  // DQ : If a class has a field which is never assigned, how bad is this (have inheritance heirachies where this is an issue)
-  // DQ : How big should a function be in a header file?
-  // DQ : Is it better to have a sequence of ifs defined in the function body, or a call to a funtion which has a switch statement
-  // DQ : Would it be worth while making a  switch statement for specific reorderings ?
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -653,3 +619,10 @@ GammaGeneratorRedux::print_gamma_intermediate( shared_ptr<GammaIntermediateRedux
      cout << "gint_ids  = [ "; cout.flush();   for ( auto pos : *(gint->ids_pos) ) { cout << orig_ids_->at(pos) << " " ; cout.flush();  }   cout << "] " <<  endl;
     return;
 }
+  // DQ : is it better to have more of global variables or arguments?
+  // DQ : If a class has a field which is never assigned, how bad is this (have inheritance heirachies where this is an issue)
+  // DQ : How big should a function be in a header file?
+  // DQ : Is it better to have a sequence of ifs defined in the function body, or a call to a funtion which has a switch statement
+  // DQ : Would it be worth while making a  switch statement for specific reorderings ?
+  // DQ : Should I do this using iterators like this instead of with (*ids_pos)[ii]? It looks like I am creating
+  //      more variables witht he iterators, or are the iterators (pointers) created anyway and I just don't see it?

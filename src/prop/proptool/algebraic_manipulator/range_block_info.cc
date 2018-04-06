@@ -140,7 +140,6 @@ Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_
   vector<int> new_idxs_trans  = *idxs_trans_; 
   vector<int> new_rngs_trans  = *rngs_trans_; 
   
-  
   assert( trans > -1 && trans < 127 ) ;
   
   transform_tens_vec( trans, new_aops_trans ); 

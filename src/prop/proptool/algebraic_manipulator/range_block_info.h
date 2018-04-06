@@ -22,7 +22,6 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
      std::shared_ptr<std::vector<int>> aops_trans_;
      std::shared_ptr<std::vector<int>> rngs_trans_;
 
-
      std::shared_ptr<const std::vector<std::string>> orig_rngs_;
 
      std::set<std::vector<int>> sparsity_ ;
@@ -54,6 +53,14 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
                       std::shared_ptr<std::vector<int>> aops_trans,
                       std::shared_ptr<std::vector<int>> rngs_trans,
                       std::pair<double,double> factors  ); 
+
+    Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs,   
+                      std::shared_ptr<const std::vector<std::string>> orig_idxs,   
+                      std::shared_ptr<std::vector<int>> idxs_trans,
+                      std::shared_ptr<std::vector<int>> rngs_trans,
+                      std::pair<double,double> factors  ); 
+
+
 
     ~Range_Block_Info(){};
     

@@ -216,7 +216,16 @@ class TensOp_Base {
        std::shared_ptr<std::vector<char>> dummy;
        return dummy;
      } 
-        
+           
+     std::shared_ptr<Range_Block_Info> transform_block_rngs( const std::vector<char>& rngs, const char op_trans_in );
+
+     virtual  
+     std::shared_ptr<Split_Range_Block_Info> 
+     transform_block_rngs( std::shared_ptr<Split_Range_Block_Info> block, const std::vector<int>& op_order, const std::vector<char>& op_trans ){
+       throw  std::logic_error( " should not be in split transform aops_rngs in base class " );
+       return block;
+     } 
+
      virtual std::shared_ptr<std::vector<bool>> transform_aops( const char op_trans ) = 0;
 
      virtual std::shared_ptr<std::vector<bool>> transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ) = 0;
@@ -271,8 +280,6 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
 
     std::shared_ptr<std::vector<bool>> transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ); 
 
-    std::shared_ptr<Range_Block_Info> transform_block_rngs( const std::vector<char>& rngs, const char op_trans_in );
-
     void transform_aops_rngs( std::vector<char>& rngs, std::pair<double,double>& factor, const char op_trans_in ); 
   
     std::shared_ptr<std::vector<char>>
@@ -323,6 +330,10 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
 
     std::shared_ptr<std::vector<char>> transform_aops_rngs( std::shared_ptr<Split_Range_Block_Info> block, std::pair<double, double>& factors,
                                                             const std::vector<int>& op_order, const std::vector<char>& op_trans );
+
+    std::shared_ptr<Split_Range_Block_Info> 
+    transform_block_rngs( std::shared_ptr<Split_Range_Block_Info> block, const std::vector<int>& op_order, const std::vector<char>& op_trans ); 
+
 };
 }
 #endif
