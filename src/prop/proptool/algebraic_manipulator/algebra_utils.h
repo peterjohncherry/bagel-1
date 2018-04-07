@@ -16,8 +16,10 @@ namespace Algebra_Utils {
        case 'H' : std::reverse( invec.begin(), invec.end() ); return;
        case 't' : std::reverse( invec.begin(), invec.end() ); return;
        case 'T' : std::reverse( invec.begin(), invec.end() ); return;
+       case 'i' : return;
+       case 'I' : return;
        default: 
-           std::cout << "do not have transformation " << transformation << "implemented; please check the braket specification in the input file." << std::endl;
+           std::cout << "do not have transformation " << transformation << " implemented; please check the braket specification in the input file. Algebra_Utils" << std::endl;
            throw std::logic_error( " Aborting!!" );
      } 
    }
@@ -47,7 +49,7 @@ namespace Algebra_Utils {
        case 'v' : return; 
        case 'V' : return;
        default: 
-           std::cout << "do not have transformation " << transformation << "implemented; please check the braket specification in the input file." << std::endl;
+           std::cout << "do not have transformation " << transformation << " implemented; please check the braket specification in the input file. Algebra_Utils" << std::endl;
            throw std::logic_error( " Aborting!!" );
      } 
   }

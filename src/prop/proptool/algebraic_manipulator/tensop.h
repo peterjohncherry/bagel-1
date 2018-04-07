@@ -29,14 +29,15 @@
 // It doesn't look it to me; you still end up with a four classes, and then a templated map, which you probably want to factor out.... so six again :(
 // However, whilst you do technically have the same number of classes, you can at least have it so 
 
+class TensOp_Base;
 namespace TensOp {  template<typename DataType> class TensOp; } 
 namespace MultiTensOp { template<typename DataType> class MultiTensOp; } 
 
 using pint_vec = std::vector<std::pair<int,int>>;
 using pstr_vec = std::vector<std::pair<std::string,std::string>>;
 
-class TensOp_Base;
 class Op_General_base { 
+     friend TensOp_Base;
      friend TensOp::TensOp<double>;
      friend TensOp::TensOp<std::complex<double>>;
      friend MultiTensOp::MultiTensOp<double>;
@@ -50,6 +51,9 @@ class Op_General_base {
        const std::vector<std::vector<std::string>> idx_ranges_;
        const std::pair<double,double> orig_factor_;
        const int num_idxs_;
+     
+       const bool hermitian_ =  true; //TODO have this set, although should default to true.
+       const bool hermitian_inverse_ =  true; //TODO have this set, although should default to false; true for projectors.
 
      public:
      
@@ -95,6 +99,8 @@ class Op_General_base {
        
         std::shared_ptr<const std::vector<int>> kill_ops() const{ return kill_ops_ptr_;}
         int kill_ops(int ii ) const { return kill_ops_[ii] ;}
+
+        bool hermitian() { return hermitian_; }  
 
         // add in more virtual functions for range blocks and state dependence
         std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>> all_rxnges() const  {return  all_rxnges_; }
@@ -153,7 +159,9 @@ class MultiTensOp_General : public  Op_General_base {
 
 class TensOp_Base {
 
+
    protected :
+
      const std::string name_;
      const bool spinfree_;
      std::string Tsymm_;
@@ -163,6 +171,9 @@ class TensOp_Base {
      std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart_Base> > > CTP_map_;
      std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_; 
      bool projector_; 
+
+     std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>> hconj_ranges_;
+
 
    public:
  
@@ -199,15 +210,18 @@ class TensOp_Base {
      std::shared_ptr< const std::vector<int>> kill_ops(){ return Op_dense_->kill_ops();}
      int kill_ops(int ii){ return Op_dense_->kill_ops(ii);}
 
+     virtual 
+     bool satisfies_constraints( std::vector<std::string>& ranges ) { return true ; } 
     
      void add_required_block( std::string block_name ) { required_blocks_->emplace( block_name ); } 
      std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { return required_blocks_; } 
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base> >> CTP_map() { return CTP_map_; } 
 
-
      void transform_aops_rngs( std::vector<char>& rngs, std::pair<double,double>& factor, const char op_trans_in ); 
   
+     void generate_transformed_ranges( char transformation );
+
      virtual
      std::shared_ptr<std::vector<char>>
      transform_aops_rngs( std::shared_ptr<Split_Range_Block_Info> block, std::pair<double, double>& factor, 
@@ -217,7 +231,7 @@ class TensOp_Base {
        return dummy;
      } 
            
-     std::shared_ptr<Range_Block_Info> transform_block_rngs( const std::vector<char>& rngs, const char op_trans_in );
+    std::shared_ptr<Range_Block_Info> transform_block_rngs( const std::vector<char>& rngs, const char op_trans_in );
 
      virtual  
      std::shared_ptr<Split_Range_Block_Info> 
@@ -246,14 +260,10 @@ class TensOp_Base {
 namespace TensOp {
 template<typename DataType>
 class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<DataType>> {
+
    private :
      std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs_; 
      std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) > constraints_;
-
-     bool satisfies_constraints( std::vector<std::string>& ranges );
-
-//   protected : 
-//     std::map< std::vector<int>, std::vector<std::shared_ptr<const std::vector<std::string> > >  > state_sparsity_map_; 
 
    public:
 
@@ -285,6 +295,7 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
     std::shared_ptr<std::vector<char>>
     transform_aops_rngs( std::shared_ptr<Split_Range_Block_Info> block, const std::vector<int>& op_order , const std::vector<char>& op_trans );
 
+    bool satisfies_constraints( std::vector<std::string>& ranges ); 
 };
 }
 

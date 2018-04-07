@@ -27,24 +27,26 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 
   auto trans_info = make_pair( op_trans_list_,  op_order_ );
 
-  cout << " op_trans = [ "; 
-  for ( char x : op_trans_list_  ) { 
-//   string bob = ""; bob += x; 
-   cout << x << " " ; cout.flush();
-  }
-  cout << "]" << endl;
+  print_vector( op_trans_list_, "op_trans_list_"); cout << endl;
+
+  vector<char>::const_iterator otl_it = op_trans_list_.begin();
+  for ( vector<int>::iterator oo_it = op_order_.begin();  oo_it != op_order_.end();  oo_it++, otl_it++ )
+    Total_Op_->sub_tensops()[*oo_it]->generate_transformed_ranges(*otl_it);
 
   shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( op_order_,  op_trans_list_ );  
-  print_vector(*trans_aops , " trans_aops" ) ; cout << endl;
+  print_vector(*trans_aops, " trans_aops" ) ; cout << endl;
  
   auto GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
 
-
   for ( auto range_map_it = Total_Op_->split_rxnges()->begin(); range_map_it !=Total_Op_->split_rxnges()->end(); range_map_it++ ){
-    print_vector( range_map_it->first , "range_map_it.first") ; cout << endl;
+    print_vector( range_map_it->first , "range_map_it->first") ; cout << endl;
+
     // get transformed range blocks;
     pair<double, double> block_factor = make_pair( factor_, factor_ );
+
     Total_Op_->transform_aops_rngs( range_map_it->second, block_factor, op_order_, op_trans_list_ ) ;
+ 
+    std::shared_ptr<Split_Range_Block_Info> trans_block =  Total_Op_->transform_block_rngs( range_map_it->second, op_order_ , op_trans_list_ );
 
 //    GGen->add_gamma( trans_block , range_map_it->first );
     

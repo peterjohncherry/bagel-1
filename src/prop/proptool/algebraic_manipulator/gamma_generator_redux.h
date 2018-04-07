@@ -61,8 +61,9 @@ class GammaGeneratorRedux{
     std::vector<std::string> standardized_full_id_ranges_;
 
     std::shared_ptr<std::vector<bool>> block_aops_;
-    std::shared_ptr<std::vector<std::string>> block_idxs_;
-    std::shared_ptr<std::vector<std::string>> block_rngs_; 
+    std::shared_ptr<std::vector<char>> block_aops_rngs_;
+    std::vector<int> block_ids_pos_;
+    std::vector<std::string> block_rngs_; 
 
     std::shared_ptr<std::vector<int>> aops_trans_;
     std::shared_ptr<std::vector<int>> rngs_trans_;
@@ -86,6 +87,10 @@ class GammaGeneratorRedux{
                          double bk_factor );
 
     ~GammaGeneratorRedux(){};
+
+
+    void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<char>>  trans_aops_rngs,
+                    std::shared_ptr<std::vector<bool>> trans_aops );
 
     void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, const std::vector<std::string>& range_block );
 

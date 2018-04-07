@@ -25,7 +25,6 @@ GammaGeneratorRedux::GammaGeneratorRedux( shared_ptr<StatesInfo<double>> target_
   
   return;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_info,
                                      shared_ptr<vector<char>> trans_aops_rngs, shared_ptr<vector<bool>> trans_aops ) {

@@ -82,7 +82,45 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
   }
 
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<bool>> orig_aops,
+                                    std::shared_ptr<std::vector<int>> rngs_trans, std::shared_ptr<std::vector<int>> aops_trans,
+                                    std::pair<double,double> factors  ) :
+                                    rngs_trans_(rngs_trans), aops_trans_(aops_trans), orig_rngs_(orig_rngs), factors_(factors) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "Range_Block_Info::Range_Block_Info" << endl;
+   
+  num_idxs_ = orig_rngs->size();
 
+  vector<bool> trans_aops_(orig_aops->size());
+  vector<int>::iterator at_it = aops_trans_->begin();
+  for ( vector<bool>::iterator ta_it = trans_aops_.begin(); ta_it != trans_aops_.end(); ta_it++, at_it++ )
+    *ta_it = (*orig_aops)[*at_it];
+
+  vector<string> trans_rngs_(num_idxs_);
+  vector<int>::iterator rt_it = rngs_trans_->begin();
+  for ( vector<string>::iterator tr_it = trans_rngs_.begin(); tr_it != trans_rngs_.end(); tr_it++, rt_it++ )
+    *tr_it = (*orig_rngs)[*rt_it];
+
+  plus_pnum_ = 1;
+  kill_pnum_ = 1;
+
+  std::vector<bool>::const_iterator ta_it = trans_aops_.begin();
+  for ( std::vector<std::string>::const_iterator tr_it = trans_rngs_.begin(); tr_it != trans_rngs_.end(); ++tr_it, ++ta_it ){
+    if (*ta_it) {
+      plus_pnum_ *= range_to_prime( (*tr_it)[0] );
+    } else {
+      kill_pnum_ *= range_to_prime( (*tr_it)[0] );
+    }
+  }
+
+  if ( plus_pnum_ - kill_pnum_ ) {
+    no_transition_ = false;
+  } else { 
+    no_transition_ = true;
+  }
+
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This is for dealing with time reversal symmetry as applied to the Ket or Bra; we want to keep the relevant MO integrals the same, but the ranges
 // of the creation and annihilation operators need to be transformed.
@@ -121,6 +159,29 @@ Range_Block_Info::transform_aops_rngs( std::vector<bool>& aops, std::vector<char
   } 
 
   return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<Range_Block_Info> 
+Range_Block_Info::get_transformed_block( char op_trans ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Range_Block_Info::get_transformed_block" << endl;
+
+  char trans = tolower(op_trans) ;
+
+  vector<int> new_aops_trans  = *aops_trans_; 
+  vector<int> new_rngs_trans  = *rngs_trans_; 
+  
+  assert( trans > -1 && trans < 127 ) ;
+  
+  transform_tens_vec( trans, new_aops_trans ); 
+  transform_tens_vec( trans, new_rngs_trans ); 
+  
+  pair<double,double> new_factors = factors_; 
+  if ( trans == 'H' || trans == 'h' )
+    new_factors.second *= -1.0 ; 
+
+  return make_shared<Range_Block_Info>( orig_rngs_, orig_aops_, make_shared<vector<int>>(new_rngs_trans), make_shared<vector<int>>(new_aops_trans), new_factors );
+
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Range_Block_Info> 

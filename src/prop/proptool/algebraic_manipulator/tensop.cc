@@ -49,7 +49,7 @@ TensOp_Base::TensOp_Base( std::string name, bool spinfree, std::vector<std::shar
                           name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0), 
                           required_blocks_(std::make_shared<std::set<std::string>>()), sub_tensops_(sub_tensops) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- 
+     
   sort( sub_tensops_.begin(), sub_tensops_.end(), [](shared_ptr<TensOp_Base> t1, shared_ptr<TensOp_Base> t2){ return (bool)( t1->name() < t2->name() );} );
   cout << "sub_tensops_ = [ " ; cout.flush();  for ( auto& t : sub_tensops_)    cout << t->name() << " ";  cout << "]" << endl;
 
@@ -126,6 +126,90 @@ cout << "TensOp::TensOp<DataType>::generate_rangesX" <<   endl;
   return make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> (all_ranges_tmp);;
               
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This is only generated if the indexes of the operator does not range over the same orbitals 
+// _not_ have s symmetric ranges, i.e., projection operators. If the operator is (anit-)Hermitian, the results of the map
+//  of the map will be obtained from the original all ranges 
+//  Only built when needed ( as not necessary for most operators ).
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void TensOp_Base::TensOp_Base::generate_transformed_ranges( char transformation ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp::TensOp<DataType>::generate_transformed_ranges" <<   endl;
+
+//  shared_ptr<const vector<string>> orig_idxs = make_shared<const vector<string>>(idxs);
+//  shared_ptr<const vector<bool>> orig_aops = make_shared<const vector<bool>>(aops);
+
+  char trans = tolower(transformation);
+  std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info>> trans_ranges_tmp;
+
+  for ( auto& elem : *(Op_dense_->all_rxnges_) ) { 
+    vector<string> new_range = elem.first;
+    transform_tens_vec( trans, new_range );
+    if(satisfies_constraints(new_range))
+       trans_ranges_tmp.emplace ( new_range,  elem.second->get_transformed_block( trans ) ) ; 
+  }
+
+  if ( trans == 'h' ||  trans == 'i' ) 
+    hconj_ranges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> (trans_ranges_tmp);
+             
+  return; 
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<Range_Block_Info>
+TensOp_Base::TensOp_Base::transform_block_rngs( const vector<char>& rngs, const char op_trans_in ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp_Base::TensOp_Base::transform_block_rngs " << endl;
+
+  char op_trans = tolower(op_trans_in);
+ 
+  pair<double,double> trans_factor;
+
+  vector<char> rngs_tmp = rngs;
+
+  shared_ptr<Range_Block_Info> trans_block; 
+
+  print_vector( rngs_tmp, "rngs_tmp"); cout << endl;
+
+  switch ( op_trans ) { 
+
+    case '0' : 
+      break;
+
+    case 'n' : 
+      break;
+
+    case 'i' : // inverse
+        if ( Op_dense_->hermitian_inverse_ ) {
+          reverse( rngs_tmp.begin(), rngs_tmp.end() );  
+          cout << " hello" << endl;
+          trans_block = hconj_ranges_->at( chrvec_to_strvec( rngs_tmp ) );
+          cout << " hello2" << endl;
+        } else {
+          throw logic_error("inverse not defined... aborting!! " ); 
+        }
+      break;
+
+    case 'h' : // hconj
+        reverse( rngs_tmp.begin(), rngs_tmp.end() ); 
+        trans_block = hconj_ranges_->at( chrvec_to_strvec( rngs_tmp ) );
+      break;
+
+    case 't' : // time reversal
+      std::cout << " Why are you time reversing block ranges? Do you mean to time reverse aops_rngs? " << std::endl;
+      assert(false);
+      break;
+
+    default : 
+      string trans_str = "" ; trans_str += op_trans;
+      std::cout << "do not have transformation " << trans_str << " implemented; please check the braket specification in the input file. TensOp_Base::transform_block_rngs" << std::endl;
+      assert(false);
+      break;
+  } 
+  print_vector( rngs_tmp , "rngs_tmp after trans " ) ; cout << endl;
+
+  return trans_block;
+
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 std::shared_ptr<std::vector<bool>> 
@@ -153,59 +237,20 @@ TensOp::TensOp<DataType>::transform_aops( const char op_trans ) {
 
     default : 
       string trans_str = "" ; trans_str += op_trans;
-      std::cout << "do not have transformation " << trans_str << "implemented; please check the braket specification in the input file." << std::endl;
+      std::cout << "do not have transformation " << trans_str << " implemented; please check the braket specification in the input file. TensOp::transform_aops" << std::endl;
       break;
   } 
   print_vector( aops , "aops after trans " ) ; cout << endl;
 
-
   return make_shared<vector<bool>>(aops);
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<Range_Block_Info>
-TensOp_Base::TensOp_Base::transform_block_rngs( const vector<char>& rngs, const char op_trans_in ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp<DataType>::transform_aops " << endl;
 
-  char op_trans = tolower(op_trans_in);
-
-  pair<double,double> trans_factor;
-
-  vector<char> rngs_tmp = rngs;
-
-  switch ( op_trans ) { 
-
-    case 'i' : // inverse
-      reverse( rngs_tmp.begin(), rngs_tmp.end() ); // TODO potentially different for different ops 
-      break;
-
-    case 'h' : // hconj
-      reverse( rngs_tmp.begin(), rngs_tmp.end() ); 
-      break;
-
-    case 't' : // time reversal
-      std::cout << " Why are you time reversing block ranges? Do you mean to time reverse aops_rngs? " << std::endl;
-      assert(false);
-      break;
-
-    default : 
-      string trans_str = "" ; trans_str += op_trans;
-      std::cout << "do not have transformation " << trans_str << "implemented; please check the braket specification in the input file." << std::endl;
-      break;
-  } 
-  print_vector( rngs_tmp , "rngs_tmp after trans " ) ; cout << endl;
-
-  return  Op_dense_->all_rxnges_->at( chrvec_to_strvec( rngs_tmp ) );
-
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void
 TensOp_Base::TensOp_Base::transform_aops_rngs( vector<char>& rngs, pair<double,double>& factor, const char op_trans_in ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp<DataType>::transform_aops_rngs " << endl;
+cout << "TensOp_Base::TensOp_Base::transform_aops_rngs " << endl;
  
-  cout << op_trans_in << endl;
-
   char op_trans = tolower(op_trans_in);
 
   pair<double,double> trans_factor;
@@ -229,12 +274,10 @@ TensOp_Base::TensOp_Base::transform_aops_rngs( vector<char>& rngs, pair<double,d
 
     default : 
       string trans_str = "" ; trans_str += op_trans;
-      std::cout << "do not have transformation " << trans_str << "implemented; please check the braket specification in the input file." << std::endl;
+      std::cout << "do not have transformation " << trans_str << "implemented; please check the braket specification in the input file. TensOp_Base::Transform_aops_rngs" << std::endl;
       break;
-  } 
+  }
   print_vector( rngs, "aops rngs after trans " ) ; cout << endl;
- 
-  shared_ptr<Range_Block_Info> new_block = Op_dense_->all_rxnges_->at( chrvec_to_strvec( rngs ) );
 
   return;
 }
@@ -257,7 +300,6 @@ TensOp::TensOp<DataType>::transform_aops( const std::vector<int>& op_order , con
 
   vector<bool> trans_aops( Op_dense_->num_idxs_, false );
   return make_shared<vector<bool>>(trans_aops);
-  //return this->transform_aops( op_trans[0] );
 
 }  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -314,7 +356,7 @@ std::shared_ptr<Split_Range_Block_Info>
 MultiTensOp::MultiTensOp<DataType>::transform_block_rngs( shared_ptr<Split_Range_Block_Info> block,
                                                           const vector<int>& op_order , const vector<char>& op_trans ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::MultiTensOp<DataType>::transform_aops_rngs" << endl;
+  cout << "MultiTensOp::MultiTensOp<DataType>::transform_block_rngs" << endl;
 
   vector<char> trans_block_rngs( block->num_idxs_ );
   vector<char>::iterator tbr_it = trans_block_rngs.begin();
@@ -332,7 +374,9 @@ MultiTensOp::MultiTensOp<DataType>::transform_block_rngs( shared_ptr<Split_Range
 
   } 
 
-  return block ; // TODO tmp, fix with proper, should redo range def
+  print_vector( trans_block_rngs, "trans_block_rngs" ) ; cout << endl; 
+ 
+  return Op_dense_->split_rxnges_->at( chrvec_to_strvec(trans_block_rngs) );
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
@@ -535,7 +579,7 @@ void MultiTensOp::MultiTensOp<DataType>::enter_cmtps_into_map(pint_vec ctr_pos_l
 
   //get_ranges for individual tensors
   for (int ii = 0 ; ii !=num_tensors_; ii++ ){ 
-    shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(id_ranges.begin()+Op_dense_->cmlsizevec(ii), id_ranges.begin()+cmlsizevec(ii)+sub_tensops_[ii]->num_idxs());
+    shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(id_ranges.begin() + Op_dense_->cmlsizevec(ii), id_ranges.begin()+cmlsizevec(ii)+sub_tensops_[ii]->num_idxs());
     shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *(sub_tensops_[ii]->idxs()) );
    
     if( sameT_ctrs_pos[ii].size() != 0 ) {
