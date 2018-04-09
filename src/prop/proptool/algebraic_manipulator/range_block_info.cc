@@ -7,40 +7,6 @@ using namespace WickUtils;
 using namespace Algebra_Utils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs,
-                                      std::shared_ptr<const std::vector<std::string>> orig_idxs,
-                                      std::shared_ptr<const std::vector<bool>> orig_aops,
-                                      std::shared_ptr<const std::vector<std::string>> unique_block,  // new ranges (in new order);
-                                      std::shared_ptr<std::vector<int>> idxs_trans,             // new order 
-                                      std::pair<double,double> factors  ) :
-                                      unique_block_(unique_block), idxs_trans_(idxs_trans), factors_(factors), orig_rngs_(orig_rngs) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Range_Block_Info::Range_Block_Info" << endl;
-   
-  num_idxs_ = orig_rngs->size();
-  name_  = WickUtils::get_ctp_name( *orig_idxs, *orig_rngs );
-
-  plus_pnum_ = 1;
-  kill_pnum_ = 1;
-
-  //NOTE : the ci-sector transition associated with this block is determined from the _original_ block ranges and aops.
-  std::vector<bool>::const_iterator oa_it = orig_aops->begin();
-  for ( std::vector<std::string>::const_iterator tr_it = orig_rngs->begin(); tr_it != orig_rngs->end(); ++tr_it, ++oa_it ){
-    if (*oa_it) {
-      plus_pnum_ *= range_to_prime( (*tr_it)[0] );
-    } else {
-      kill_pnum_ *= range_to_prime( (*tr_it)[0] );
-    }
-  }
-
-  if ( plus_pnum_ - kill_pnum_ ) {
-    no_transition_ = false;
-  } else { 
-    no_transition_ = true;
-  }
-
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs,   
                                     std::shared_ptr<const std::vector<bool>> orig_aops, std::shared_ptr<std::vector<int>> rngs_trans,
                                     std::shared_ptr<std::vector<int>> idxs_trans, std::shared_ptr<std::vector<int>> aops_trans, 
@@ -88,14 +54,17 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
                                     std::pair<double,double> factors  ) :
                                     rngs_trans_(rngs_trans), aops_trans_(aops_trans), orig_rngs_(orig_rngs), factors_(factors) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Range_Block_Info::Range_Block_Info" << endl;
+  cout << "Range_Block_Info::Range_Block_Info 3" << endl;
    
   num_idxs_ = orig_rngs->size();
 
+  print_vector( *orig_aops , "orig_aops" ); cout << endl;
+  print_vector( *aops_trans, "aops_trans" ) ; cout << endl;
   vector<bool> trans_aops_(orig_aops->size());
   vector<int>::iterator at_it = aops_trans_->begin();
   for ( vector<bool>::iterator ta_it = trans_aops_.begin(); ta_it != trans_aops_.end(); ta_it++, at_it++ )
     *ta_it = (*orig_aops)[*at_it];
+
 
   vector<string> trans_rngs_(num_idxs_);
   vector<int>::iterator rt_it = rngs_trans_->begin();
@@ -162,7 +131,7 @@ Range_Block_Info::transform_aops_rngs( std::vector<bool>& aops, std::vector<char
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Range_Block_Info> 
-Range_Block_Info::get_transformed_block( char op_trans ) {
+Range_Block_Info::get_transformed_block( char op_trans, shared_ptr<const vector<bool>> aops ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Range_Block_Info::get_transformed_block" << endl;
 
@@ -170,9 +139,7 @@ Range_Block_Info::get_transformed_block( char op_trans ) {
 
   vector<int> new_aops_trans  = *aops_trans_; 
   vector<int> new_rngs_trans  = *rngs_trans_; 
-  
-  assert( trans > -1 && trans < 127 ) ;
-  
+ 
   transform_tens_vec( trans, new_aops_trans ); 
   transform_tens_vec( trans, new_rngs_trans ); 
   
@@ -180,7 +147,7 @@ Range_Block_Info::get_transformed_block( char op_trans ) {
   if ( trans == 'H' || trans == 'h' )
     new_factors.second *= -1.0 ; 
 
-  return make_shared<Range_Block_Info>( orig_rngs_, orig_aops_, make_shared<vector<int>>(new_rngs_trans), make_shared<vector<int>>(new_aops_trans), new_factors );
+  return make_shared<Range_Block_Info>( orig_rngs_, aops, make_shared<vector<int>>(new_rngs_trans), make_shared<vector<int>>(new_aops_trans), new_factors );
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

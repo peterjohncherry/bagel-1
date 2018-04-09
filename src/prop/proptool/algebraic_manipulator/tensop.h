@@ -231,7 +231,7 @@ class TensOp_Base {
        return dummy;
      } 
            
-    std::shared_ptr<Range_Block_Info> transform_block_rngs( const std::vector<char>& rngs, const char op_trans_in );
+     std::shared_ptr<Range_Block_Info> transform_block_rngs( const std::vector<char>& rngs, const char op_trans_in );
 
      virtual  
      std::shared_ptr<Split_Range_Block_Info> 
@@ -265,6 +265,11 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
      std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs_; 
      std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) > constraints_;
 
+     void add_to_range_block_map( std::vector<std::string>& idx_ranges );
+
+     std::shared_ptr<const std::vector<std::string>> 
+     apply_symmetry( std::vector<int>& idxs_trans, const std::vector<std::string>& new_block, std::pair<double,double>& fac_new );
+ 
    public:
 
      TensOp( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,

@@ -33,12 +33,22 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
 
   block_aops_ = trans_aops;
   block_aops_rngs_ = trans_aops_rngs;
+
+  cout << " GGR::ag1" << endl;
  
-  std_rngs_ = *block_info->unique_block_;
+  std_rngs_ = *block_info->unique_block_; // This still needs to be transformed... 
  
-  standard_order_ = *(block_info->idxs_trans());
+  cout << " GGR::ag2" << endl;
+
+  standard_order_ = *(block_info->rngs_trans()); // Note that we should only have block_trans, not range trans; rng_trans does not
+                                                 // necessarily transform unique block into the original block (e.g.,  aabb -> bbaa requires no reordering ) 
+
+  print_vector( standard_order_ , "standard_order_"); cout << endl;
+  print_vector( *block_aops_, "block_aops_"); cout << endl;
+  print_vector( *block_aops_rngs_, "block_aops_rngs_"); cout << endl;
 
   int ii = 0 ;
+
   block_to_std_order_ = vector<int>(standard_order_.size());
   for ( vector<int>::iterator so_it = standard_order_.begin() ; so_it != standard_order_.end() ; ++so_it, ++ii ) 
     block_to_std_order_[*so_it] = (ii);
@@ -57,7 +67,7 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_info, const vector<string>& range_block ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::add_gamma" << endl;
+  //  cout << "GammaGeneratorRedux::add_gamma" << endl;
   //NOTE: the reason for building the transformed ranges is that this way we can use the same ids_pos  for aops, rngs and idxs, 
   //      when in principal, these can all have different transformations  (if we want to take full advantage of symmetry).
 
@@ -647,11 +657,4 @@ GammaGeneratorRedux::print_gamma_intermediate( shared_ptr<GammaIntermediateRedux
      cout << "gint_rngs = [ "; cout.flush();  for ( auto pos : *(gint->ids_pos) ) { cout << orig_rngs_->at(pos) << " " ; cout.flush();  }   cout << "]" << endl;
      cout << "gint_ids  = [ "; cout.flush();   for ( auto pos : *(gint->ids_pos) ) { cout << orig_ids_->at(pos) << " " ; cout.flush();  }   cout << "] " <<  endl;
     return;
-}
-  // DQ : is it better to have more of global variables or arguments?
-  // DQ : If a class has a field which is never assigned, how bad is this (have inheritance heirachies where this is an issue)
-  // DQ : How big should a function be in a header file?
-  // DQ : Is it better to have a sequence of ifs defined in the function body, or a call to a funtion which has a switch statement
-  // DQ : Would it be worth while making a  switch statement for specific reorderings ?
-  // DQ : Should I do this using iterators like this instead of with (*ids_pos)[ii]? It looks like I am creating
-  //      more variables witht he iterators, or are the iterators (pointers) created anyway and I just don't see it?
+} 
