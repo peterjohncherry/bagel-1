@@ -89,8 +89,7 @@ class GammaGeneratorRedux{
     ~GammaGeneratorRedux(){};
 
 
-    void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<char>>  trans_aops_rngs,
-                    std::shared_ptr<std::vector<bool>> trans_aops );
+    void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops );
 
     void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, const std::vector<std::string>& range_block );
 

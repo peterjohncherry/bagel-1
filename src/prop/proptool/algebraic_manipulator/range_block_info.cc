@@ -61,6 +61,7 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
   print_vector( *orig_aops , "orig_aops" ); cout << endl;
   print_vector( *aops_trans, "aops_trans" ) ; cout << endl;
   vector<bool> trans_aops_(orig_aops->size());
+
   vector<int>::iterator at_it = aops_trans_->begin();
   for ( vector<bool>::iterator ta_it = trans_aops_.begin(); ta_it != trans_aops_.end(); ta_it++, at_it++ )
     *ta_it = (*orig_aops)[*at_it];
@@ -80,6 +81,41 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
       plus_pnum_ *= range_to_prime( (*tr_it)[0] );
     } else {
       kill_pnum_ *= range_to_prime( (*tr_it)[0] );
+    }
+  }
+
+  if ( plus_pnum_ - kill_pnum_ ) {
+    no_transition_ = false;
+  } else { 
+    no_transition_ = true;
+  }
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_block, std::shared_ptr<const std::vector<std::string>> unique_block, 
+                                    std::shared_ptr<std::vector<int>> idxs_trans,  std::pair<double,double> factors,
+                                    const std::vector<bool>& aops ) :
+                                    orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(idxs_trans), factors_(factors) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Range_Block_Info::Range_Block_Info 4" << endl;
+   
+  num_idxs_ = orig_rngs_->size();
+
+  orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) ); 
+
+  print_vector( aops , "aops" ); cout << endl;
+  print_vector( *orig_rngs_, "orig_rngs" ) ; cout << endl;
+  print_vector( *unique_block, "unique_block" ) ; cout << endl;
+
+  plus_pnum_ = 1;
+  kill_pnum_ = 1;
+
+  std::vector<bool>::const_iterator a_it = aops.begin();
+  for ( std::vector<std::string>::const_iterator or_it = orig_rngs_->begin(); or_it != orig_rngs_->end(); ++or_it, ++a_it ){
+    if (*a_it) {
+      plus_pnum_ *= range_to_prime( (*or_it)[0] );
+    } else {
+      kill_pnum_ *= range_to_prime( (*or_it)[0] );
     }
   }
 
@@ -131,23 +167,21 @@ Range_Block_Info::transform_aops_rngs( std::vector<bool>& aops, std::vector<char
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Range_Block_Info> 
-Range_Block_Info::get_transformed_block( char op_trans, shared_ptr<const vector<bool>> aops ) {
+Range_Block_Info::get_transformed_block( shared_ptr<const vector<string> > trans_block, shared_ptr<const vector<string>> unique_block,
+                                         char op_trans, vector<bool>& aops ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Range_Block_Info::get_transformed_block" << endl;
 
   char trans = tolower(op_trans) ;
 
-  vector<int> new_aops_trans  = *aops_trans_; 
-  vector<int> new_rngs_trans  = *rngs_trans_; 
- 
-  transform_tens_vec( trans, new_aops_trans ); 
-  transform_tens_vec( trans, new_rngs_trans ); 
-  
+  shared_ptr<vector<int>> new_idxs_trans  = make_shared<vector<int>>(*idxs_trans_); 
+  transform_tens_vec( trans, *new_idxs_trans ); 
+
   pair<double,double> new_factors = factors_; 
   if ( trans == 'H' || trans == 'h' )
     new_factors.second *= -1.0 ; 
 
-  return make_shared<Range_Block_Info>( orig_rngs_, aops, make_shared<vector<int>>(new_rngs_trans), make_shared<vector<int>>(new_aops_trans), new_factors );
+  return make_shared<Range_Block_Info>( trans_block, unique_block, new_idxs_trans, new_factors, aops );
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -167,8 +201,6 @@ Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_
   vector<int> new_aops_trans  = *aops_trans_; 
   vector<int> new_idxs_trans  = *idxs_trans_; 
   vector<int> new_rngs_trans  = *rngs_trans_; 
-  
-  assert( trans > -1 && trans < 127 ) ;
   
   transform_tens_vec( trans, new_aops_trans ); 
   transform_tens_vec( trans, new_idxs_trans ); 
@@ -233,11 +265,62 @@ SRBI_Helper::SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bloc
       
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_blocks ) :
+                          rxnge_blocks_(std::make_shared<std::vector<std::shared_ptr<Range_Block_Info>>>( range_blocks )) , factors_(std::make_pair(1.0,1.0)) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "SRBI_Helper::SRBI_Helper" << endl;
+
+  int num_idxs_ = 0;
+  unique_   = true;
+
+  vector<int> cml_sizes(range_blocks.size());
+  vector<int>::iterator cs_it = cml_sizes.begin();
+  for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_iter =  range_blocks.begin(); rb_iter != range_blocks.end();  rb_iter++, cs_it++ ){
+    *cs_it += num_idxs_;
+     num_idxs_  += (*rb_iter)->num_idxs_;
+  } 
+
+  vector<int> idxs_trans(num_idxs_);
+  vector<int>::iterator it_it = idxs_trans.begin();
+
+  vector<string> unique_block(num_idxs_);
+  vector<string>::iterator ub_it = unique_block.begin();
+
+  vector<string> orig_rngs( num_idxs_ );
+  vector<string>::iterator or_it = orig_rngs.begin();
+
+  //DQ : I feel like there should be a nicer way to do this; a lot of iterators, should I add braces to throw the iterators out?
+  cs_it = cml_sizes.begin();
+  for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks.begin() ; rb_it != range_blocks.end(); rb_it++, cs_it++) {
+ 
+    double Re_buff = factors_.first;
+    double Im_buff = factors_.second;
+    factors_.first = Re_buff*(*rb_it)->Re_factor() + Im_buff*(*rb_it)->Im_factor();
+    factors_.second = Re_buff*(*rb_it)->Im_factor() + Im_buff*(*rb_it)->Re_factor();
+    
+    copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
+    std::for_each( it_it, it_it+(*rb_it)->idxs_trans()->size() , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } ); // these are lambdas 
+
+    copy( (*rb_it)->unique_block_->begin(), (*rb_it)->unique_block_->end(), ub_it );
+
+    copy( (*rb_it)->orig_rngs()->begin(), (*rb_it)->orig_rngs()->end(), or_it );
+
+    it_it += (*rb_it)->num_idxs_;
+    ub_it += (*rb_it)->num_idxs_;
+    or_it += (*rb_it)->num_idxs_;
+  }
+
+  idxs_trans_   = std::make_shared<std::vector<int>>(idxs_trans);         
+  unique_block_ = std::make_shared<const std::vector<string>>(unique_block);         
+  orig_rngs_ = std::make_shared<const std::vector<string>>(orig_rngs);         
+      
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Range_Block_Info> 
 Split_Range_Block_Info::transform( shared_ptr<const vector<string>> orig_rngs, shared_ptr<const vector<string>> orig_idxs,
-                                    shared_ptr<const vector<bool>> orig_aops, vector<int>&  op_order, vector<char> op_trans ) {
+                                   shared_ptr<const vector<bool>> orig_aops, vector<int>&  op_order, vector<char> op_trans ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- // cout << "Split_Range_Block_Info::transform" << endl;
+ cout << "Split_Range_Block_Info::transform XXXXXXXXXXXXXXX" << endl;
 
   vector<int> cml_sizes(op_order.size());
   vector<int>::iterator cs_it = cml_sizes.begin(); 

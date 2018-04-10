@@ -235,7 +235,8 @@ class TensOp_Base {
 
      virtual  
      std::shared_ptr<Split_Range_Block_Info> 
-     transform_block_rngs( std::shared_ptr<Split_Range_Block_Info> block, const std::vector<int>& op_order, const std::vector<char>& op_trans ){
+     transform_block_rngs( std::shared_ptr<Split_Range_Block_Info> block, std::shared_ptr<std::vector<bool>> trans_aops,
+                           const std::vector<int>& op_order, const std::vector<char>& op_trans ){
        throw  std::logic_error( " should not be in split transform aops_rngs in base class " );
        return block;
      } 
@@ -348,7 +349,8 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
                                                             const std::vector<int>& op_order, const std::vector<char>& op_trans );
 
     std::shared_ptr<Split_Range_Block_Info> 
-    transform_block_rngs( std::shared_ptr<Split_Range_Block_Info> block, const std::vector<int>& op_order, const std::vector<char>& op_trans ); 
+    transform_block_rngs( std::shared_ptr<Split_Range_Block_Info> block, std::shared_ptr<std::vector<bool>> trans_aops, 
+                          const std::vector<int>& op_order, const std::vector<char>& op_trans ); 
 
 };
 }

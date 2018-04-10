@@ -26,22 +26,28 @@ GammaGeneratorRedux::GammaGeneratorRedux( shared_ptr<StatesInfo<double>> target_
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_info,
-                                     shared_ptr<vector<char>> trans_aops_rngs, shared_ptr<vector<bool>> trans_aops ) {
+void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_info, shared_ptr<vector<bool>> trans_aops ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "void GammaGeneratorRedux::add_gamma " << endl;
 
-  block_aops_ = trans_aops;
-  block_aops_rngs_ = trans_aops_rngs;
+  orig_ids_ = make_shared<vector<string>>( *std_ids_ );  // TODO get this with reordering
 
-  cout << " GGR::ag1" << endl;
+  block_aops_ = trans_aops;
+  block_aops_rngs_ = block_info->orig_rngs_ch();
+  print_vector(*block_aops_rngs_ , " block_aops_rngs"); cout <<endl;
  
-  std_rngs_ = *block_info->unique_block_; // This still needs to be transformed... 
+  orig_rngs_ = make_shared<vector<string>>( *(block_info->orig_rngs() ) );
+  print_vector ( *orig_rngs_ , "orig_rngs_" ) ; cout << endl;
+
+  orig_aops_ = trans_aops;
+  
+  std_rngs_ = *(block_info->unique_block_); // This still needs to be transformed...
  
+  print_vector( std_rngs_ , " std_rngs_"); cout <<endl;
   cout << " GGR::ag2" << endl;
 
-  standard_order_ = *(block_info->rngs_trans()); // Note that we should only have block_trans, not range trans; rng_trans does not
-                                                 // necessarily transform unique block into the original block (e.g.,  aabb -> bbaa requires no reordering ) 
+  standard_order_ = *(block_info->idxs_trans()); // Note that we should only have block_trans, not range trans; rng_trans does not
+                                                 // necessarily transform unique block into the original block (e.g.,  aabb -> bbaa requires no reordering )
 
   print_vector( standard_order_ , "standard_order_"); cout << endl;
   print_vector( *block_aops_, "block_aops_"); cout << endl;
@@ -53,7 +59,8 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
   for ( vector<int>::iterator so_it = standard_order_.begin() ; so_it != standard_order_.end() ; ++so_it, ++ii ) 
     block_to_std_order_[*so_it] = (ii);
 
-  shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( orig_ids_->size() );
+  print_vector( block_to_std_order_ , " block_to_std_order_" ); cout << endl;
+  shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( std_rngs_.size() );
   iota( ids_pos->begin(), ids_pos->end(), 0 );
 
   shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
@@ -61,56 +68,7 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
 
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>( 1, make_shared<GammaIntermediateRedux>( ids_pos, deltas_pos, my_sign ) );
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>(0);
-
-  return;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_info, const vector<string>& range_block ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //  cout << "GammaGeneratorRedux::add_gamma" << endl;
-  //NOTE: the reason for building the transformed ranges is that this way we can use the same ids_pos  for aops, rngs and idxs, 
-  //      when in principal, these can all have different transformations  (if we want to take full advantage of symmetry).
-
-  std_rngs_ = range_block;
-  orig_aops_ = make_shared<vector<bool>>(std_aops_->size());
-  aops_trans_ = block_info->aops_trans(); 
-  rngs_trans_ = block_info->rngs_trans(); 
-  idxs_trans_ = block_info->idxs_trans(); 
-  { 
-  vector<bool>::iterator oa_it = orig_aops_->begin();
-  for ( vector<int>::iterator at_it = block_info->aops_trans()->begin(); at_it != block_info->aops_trans()->end(); at_it++, oa_it++ )  
-    *oa_it =  (*std_aops_)[*at_it];
-  }
-
-  orig_rngs_ = make_shared<vector<string>>(range_block.size());
-  {
-  vector<string>::iterator or_it = orig_rngs_->begin();
-  for ( vector<int>::iterator rt_it = block_info->rngs_trans()->begin(); rt_it != block_info->rngs_trans()->end(); rt_it++, or_it++ )  
-    *or_it =  range_block[*rt_it];
-  }
-
-  orig_ids_ = make_shared<vector<string>>( std_ids_->size() );
-  {
-  vector<string>::iterator oi_it = orig_ids_->begin();
-  for ( vector<int>::iterator it_it = block_info->idxs_trans()->begin(); it_it != block_info->idxs_trans()->end(); it_it++, oi_it++ )  
-    *oi_it =  (*std_ids_)[*it_it];
-  }
-
-  standard_order_ = *(block_info->idxs_trans());
-
-  int ii = 0 ;
-  block_to_std_order_ = vector<int>(standard_order_.size());
-  for ( vector<int>::iterator so_it = standard_order_.begin() ; so_it != standard_order_.end() ; ++so_it, ++ii ) 
-    block_to_std_order_[*so_it] = (ii);
-
-  shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( orig_ids_->size() );
-  iota( ids_pos->begin(), ids_pos->end(), 0 );
-
-  shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
-  int my_sign = 1; // TODO should be double from range_block
-  gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>( 1, make_shared<GammaIntermediateRedux>( ids_pos, deltas_pos, my_sign ) );
-  final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>(0);
-
+  cout << " leaving add_gamma" << endl;
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,7 +90,7 @@ bool GammaGeneratorRedux::generic_reorderer( string reordering_name, bool first_
 bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_name, string bra_name,
                                                               string ket_name, bool final_reordering   ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::generic_reorderer_different_sector" << endl;
+  cout << "GammaGeneratorRedux::generic_reorderer_different_sector" << endl;
 
 //  if ( final_reordering ) { 
 //    cout << "final_reordering !!!" << endl; 
@@ -162,6 +120,7 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
     }
 
   } else if ( reordering_name == "anti-normal order" ) {
+    cout << "doing anti-normal order" << endl;
     int kk= 0 ;
     while ( kk != gamma_vec->size()){
       if ( proj_onto_map( gamma_vec->at(kk), *bra_hole_map, *bra_elec_map, *ket_hole_map, *ket_elec_map ) ) 
@@ -213,18 +172,23 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGeneratorRedux::proj_onto_map( shared_ptr<GammaIntermediateRedux> gint, 
-                                    map<char,int> bra_hole_map, map<char,int> bra_elec_map,
-                                    map<char,int> ket_hole_map, map<char,int> ket_elec_map  ){
+                                         map<char,int> bra_hole_map, map<char,int> bra_elec_map,
+                                         map<char,int> ket_hole_map, map<char,int> ket_elec_map  ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Grossly inefficient, but totally generic, should write seperate routines for normal and antinormal
 //ordering; consecutive operators means can just count.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::proj_onto_map" << endl;
+  cout << "GammaGeneratorRedux::proj_onto_map" << endl;
 
+  print_vector( *(gint->ids_pos) , " gint->ids_pos " ) ; cout << endl;
   shared_ptr<vector<int>> idxs_pos =  gint->ids_pos;
-
+ 
   for ( vector<int>::reverse_iterator ip_it = gint->ids_pos->rbegin(); ip_it !=  gint->ids_pos->rend(); ip_it++ ) {
     char rng = (*orig_rngs_)[*ip_it][0];  
+    cout << " rng = " << rng << endl;
+    
+    cout << "(*orig_aops_)[ " << *ip_it << " ] = " ; cout.flush(); cout << (*orig_aops_)[  *ip_it ]  << endl;
+
     if( ! ( (*orig_aops_)[*ip_it] ) ){
       auto ket_elec_map_loc = ket_elec_map.find( rng );
       if ( ket_elec_map_loc == ket_elec_map.end() ) {
@@ -263,13 +227,15 @@ bool GammaGeneratorRedux::proj_onto_map( shared_ptr<GammaIntermediateRedux> gint
     if ( elem.second != bra_hole_map.at(elem.first) )
        return false;     
 
+  cout << "proj_onto_map ggr " << endl;
   return true;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::anti_normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::anti_normal_order" << endl;
+  cout << "GammaGeneratorRedux::anti_normal_order" << endl;
 
+  print_vector( *gamma_vec->at(kk)->ids_pos , " gamma_vec->at(kk)->ids_pos " ) ; cout << endl;
   shared_ptr<vector<int>> ids_pos  = gamma_vec->at(kk)->ids_pos;
   int num_kill = 0;
   for ( int pos : *ids_pos )
@@ -277,7 +243,12 @@ void GammaGeneratorRedux::anti_normal_order( int kk ) {
       num_kill++; 
 
   num_kill--; 
- 
+
+  cout << "ggr _ano " << endl;
+
+  cout << ids_pos->size() <<  ids_pos->size() << endl; 
+  print_vector( *orig_aops_ , "orig_aops_" ); cout << endl;
+
   for (int ii = ids_pos->size()-1 ; ii != -1; ii--){
 
     if ( ii > num_kill ) {
@@ -307,6 +278,7 @@ void GammaGeneratorRedux::anti_normal_order( int kk ) {
       }
     }
   }
+  cout << " leaving ggr::ano" << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -454,7 +426,8 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::swap( int ii, int jj, int kk, shared_ptr<vector<shared_ptr<GammaIntermediateRedux>>> gamma_vec  ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::swap" << endl;
+  cout << "GammaGeneratorRedux::swap" << endl;
+
   shared_ptr<vector<int>>  ids_pos             = (*gamma_vec)[kk]->ids_pos;
   shared_ptr<vector<pair<int,int>>> deltas_pos = (*gamma_vec)[kk]->deltas_pos;
 
@@ -469,7 +442,7 @@ void GammaGeneratorRedux::swap( int ii, int jj, int kk, shared_ptr<vector<shared
     
     pair<int,int> new_delta = (*orig_aops_)[ (*ids_pos)[jj] ]  ? make_pair( (*ids_pos)[jj], (*ids_pos)[ii] ): make_pair( (*ids_pos)[ii], (*ids_pos)[jj] );
     new_deltas_tmp->push_back(new_delta);
-    shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( *new_deltas_tmp, *orig_ids_ );
+    shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( *new_deltas_tmp, *orig_ids_ ); // TODO
 
     shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>();
     for( int qq = 0 ; qq !=ids_pos->size() ; qq++)

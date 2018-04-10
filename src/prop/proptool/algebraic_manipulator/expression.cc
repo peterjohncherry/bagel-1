@@ -76,9 +76,9 @@ template<class DataType>
 void Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>> exc_block_G_to_A_map  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression_Orb_Exc_Deriv::get_gamma_Atensor_contraction_list" << endl;
-  cout << "entire CTP map" << endl;
-  for ( auto  elem :  *CTP_map_ ) 
-    cout << elem.first << endl;
+//  cout << "entire CTP map" << endl;
+//  for ( auto  elem :  *CTP_map_ ) 
+//    cout << elem.first << endl;
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto G2A_mapit = exc_block_G_to_A_map->begin(); G2A_mapit != exc_block_G_to_A_map->end(); G2A_mapit++) {
@@ -114,9 +114,10 @@ void Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression_Full::get_gamma_Atensor_contraction_list" << endl;
 
-  cout << "entire CTP map" << endl;
-  for ( auto  elem :  *CTP_map_ ) 
-    cout << elem.first << endl;
+//  cout << "entire CTP map" << endl;
+//  for ( auto  elem :  *CTP_map_ ) 
+//    cout << elem.first << endl;
+  
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto G2A_mapit = G_to_A_map_->begin(); G2A_mapit != G_to_A_map_->end(); G2A_mapit++) {

@@ -16,13 +16,13 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
                                                             shared_ptr<set<string>> required_blocks,
                                                             shared_ptr<map<string, shared_ptr<CtrTensorPart_Base>>> ctp_map  ) {  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "BraKet::generate_gamma_Atensor_contractions : " << name_ << endl; 
+  cout << "BraKet::generate_gamma_Atensor_contractions : " << name_ << endl;
 
-  Total_Op_ = MT_map->at(multiop_name_);
+  Total_Op_ = MT_map->at( multiop_name_ );
 
-  vector<char> projector_names; 
-  for ( auto& tens : Total_Op_->sub_tensops() ) 
-    if ( tens->is_projector() ) 
+  vector<char> projector_names;
+  for ( auto& tens : Total_Op_->sub_tensops() )
+    if ( tens->is_projector() )
       projector_names.push_back(tens->name()[0]);
 
   auto trans_info = make_pair( op_trans_list_,  op_order_ );
@@ -31,12 +31,15 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 
   vector<char>::const_iterator otl_it = op_trans_list_.begin();
   for ( vector<int>::iterator oo_it = op_order_.begin();  oo_it != op_order_.end();  oo_it++, otl_it++ )
-    Total_Op_->sub_tensops()[*oo_it]->generate_transformed_ranges(*otl_it);
+    if ( *otl_it != '0' )
+      Total_Op_->sub_tensops()[*oo_it]->generate_transformed_ranges(*otl_it);
 
-  shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( op_order_,  op_trans_list_ );  
-  print_vector(*trans_aops, " trans_aops" ) ; cout << endl;
+  shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( op_order_,  op_trans_list_ );
+  print_vector( *trans_aops, " trans_aops" ) ; cout << endl;
  
-  auto GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
+  shared_ptr<GammaGeneratorRedux> GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
+
+  cout << "Total_Op_->split_rxnges()->size() = " << Total_Op_->split_rxnges()->size() << endl;
 
   for ( auto range_map_it = Total_Op_->split_rxnges()->begin(); range_map_it !=Total_Op_->split_rxnges()->end(); range_map_it++ ){
     print_vector( range_map_it->first , "range_map_it->first") ; cout << endl;
@@ -46,19 +49,18 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 
     Total_Op_->transform_aops_rngs( range_map_it->second, block_factor, op_order_, op_trans_list_ ) ;
  
-    std::shared_ptr<Split_Range_Block_Info> trans_block =  Total_Op_->transform_block_rngs( range_map_it->second, op_order_ , op_trans_list_ );
+    std::shared_ptr<Split_Range_Block_Info> trans_block =  Total_Op_->transform_block_rngs( range_map_it->second, trans_aops, op_order_ , op_trans_list_ );
 
-    auto trans_aops_rngs = make_shared<vector<char>>(trans_aops->size());    
-    GGen->add_gamma( trans_block, trans_aops_rngs, trans_aops ); 
+    GGen->add_gamma( trans_block, trans_aops );
 
     if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){
       if ( GGen->generic_reorderer( "normal order", false, false ) ) {
-        if ( GGen->generic_reorderer( "alternating order", false, true ) ){  
+        if ( GGen->generic_reorderer( "alternating order", false, true ) ){
 
-          cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl; 
+          cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl;
           vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
           int qq = 0 ;
-          for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){ 
+          for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){
             cout << tens_block->name()  << " " ; cout.flush(); cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
             MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->name() );
             required_blocks->emplace( tens_block->name() );
@@ -68,7 +70,6 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
         cout << "got a thing" << endl;   
       }
     }
-//  }
   }
 
   ctp_map->insert( Total_Op_->CTP_map()->begin(), Total_Op_->CTP_map()->end() );

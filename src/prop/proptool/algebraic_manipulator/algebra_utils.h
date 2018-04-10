@@ -23,7 +23,27 @@ namespace Algebra_Utils {
            throw std::logic_error( " Aborting!!" );
      } 
    }
+   
+
+  template<typename DataType>
+  void transform_aops_vec( char transformation, std::vector<DataType>& invec  ) { 
+     switch( transformation ) {
+       case 'n' : return;
+       case '0' : return;
+       case 'h' : std::reverse( invec.begin(), invec.end() ); return;
+       case 'H' : std::reverse( invec.begin(), invec.end() ); return;
+       case 't' : return;
+       case 'T' : return;
+       case 'i' : std::reverse( invec.begin(), invec.end() ); return;
+       case 'I' : std::reverse( invec.begin(), invec.end() ); return;
+       default: 
+           std::cout << "do not have transformation " << transformation << " implemented; please check the braket specification in the input file. Algebra_Utils" << std::endl;
+           throw std::logic_error( " Aborting!!" );
+     } 
+   }
   
+
+ 
 
   template<typename IterType>
   void transform_tens_vec( char transformation, IterType begin_it, IterType end_it  ) { 

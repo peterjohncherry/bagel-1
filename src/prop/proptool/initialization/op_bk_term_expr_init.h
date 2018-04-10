@@ -17,7 +17,7 @@ class Op_Init {
     char trans_; // H or h : hermitian conjugate, T or t = transpose, C or c = complex conjugate, anything else : nothing                     
      
     Op_Init(std::string base_name, std::vector<std::string>& idxs, std::shared_ptr<std::vector<int*>> idx_ptrs ) :
-            name_(base_name), idxs_(idxs), idx_ptrs_(idx_ptrs), alg_name_(base_name), trans_('0') {
+            name_(base_name), idxs_(idxs), idx_ptrs_(idx_ptrs), alg_name_(base_name), trans_('n') {
               if (idxs.front() != "none" ) {
                 alg_name_ += "_{";
                 for (std::string idx : idxs_ )
