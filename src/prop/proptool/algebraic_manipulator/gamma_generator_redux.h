@@ -62,8 +62,10 @@ class GammaGeneratorRedux{
 
     std::shared_ptr<std::vector<bool>> block_aops_;
     std::shared_ptr<std::vector<char>> block_aops_rngs_;
+    std::shared_ptr<const std::vector<std::string>> block_rngs_; 
     std::vector<int> block_ids_pos_;
-    std::vector<std::string> block_rngs_; 
+    
+    std::vector<std::string> block_idxs_;
 
     std::shared_ptr<std::vector<int>> aops_trans_;
     std::shared_ptr<std::vector<int>> rngs_trans_;
