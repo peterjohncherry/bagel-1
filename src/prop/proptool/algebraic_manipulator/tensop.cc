@@ -565,7 +565,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_rangesX( vector<string>& idxs, vect
     //TODO add constructor so can just have single tensor, need not be vector
     for ( auto elem : *(sub_tensops_[0]->all_rxnges()) )  {
       SRBI_Helper helper( make_shared<vector<shared_ptr<Range_Block_Info >>>(1, elem.second));
-      shared_ptr<Split_Range_Block_Info> srbi = make_shared<Split_Range_Block_Info>( make_shared<vector<string>>( elem.first ), Op_dense_->idxs(), Op_dense_->aops(), helper);
+      shared_ptr<Split_Range_Block_Info> srbi = make_shared<Split_Range_Block_Info>( Op_dense_->aops(), helper );
       split_rxnges.emplace( elem.first, srbi ) ;
     }
   }

@@ -47,7 +47,6 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
 
   idxs_trans_ = block_info->idxs_trans();
 
-
   std_rngs_ = *(block_info->unique_block_); // This still needs to be transformed... NO IT DOESN'T
  
   print_vector( std_rngs_ , " std_rngs_"); cout <<endl;

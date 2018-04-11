@@ -17,41 +17,26 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
   friend Split_Range_Block_Info;
 
   protected :
-     std::pair<double,double> factors_; 
-     std::shared_ptr<std::vector<int>> idxs_trans_;
-     std::shared_ptr<std::vector<int>> aops_trans_;
-     std::shared_ptr<std::vector<int>> rngs_trans_;
+    std::pair<double,double> factors_; 
+    std::shared_ptr<std::vector<int>> idxs_trans_;
+    std::shared_ptr<std::vector<int>> aops_trans_;
+    std::shared_ptr<std::vector<int>> rngs_trans_;
 
-     std::shared_ptr<const std::vector<std::string>> orig_rngs_;
-     std::shared_ptr<std::vector<char>> orig_rngs_ch_;
-     std::shared_ptr<const std::vector<bool>> orig_aops_;
+    std::shared_ptr<const std::vector<std::string>> orig_rngs_;
+    std::shared_ptr<std::vector<char>> orig_rngs_ch_;
+    std::shared_ptr<const std::vector<bool>> orig_aops_;
 
-     std::set<std::vector<int>> sparsity_ ;
-     std::string name_;
+    std::set<std::vector<int>> sparsity_ ;
+    std::string name_;
 
   public :
 
-    std::vector<bool> allowed_contractions_;
     long unsigned int plus_pnum_;
     long unsigned int kill_pnum_;
     bool no_transition_;
     int num_idxs_;
     
     std::shared_ptr<const std::vector<std::string>> unique_block_;
-
-    Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs,   
-                      std::shared_ptr<const std::vector<std::string>> orig_idxs,   
-                      std::shared_ptr<const std::vector<bool>> orig_aops, 
-                      std::shared_ptr<std::vector<int>> idxs_trans,
-                      std::shared_ptr<std::vector<int>> aops_trans,
-                      std::shared_ptr<std::vector<int>> rngs_trans,
-                      std::pair<double,double> factors  ); 
-
-    Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_rngs,   
-                      std::shared_ptr<const std::vector<bool>> orig_aops, 
-                      std::shared_ptr<std::vector<int>> rngs_trans,
-                      std::shared_ptr<std::vector<int>> aops_trans,
-                      std::pair<double,double> factors  ); 
 
     Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_block, std::shared_ptr<const std::vector<std::string>> unique_block, 
                       std::shared_ptr<std::vector<int>> idxs_trans,  std::pair<double,double> factors, const std::vector<bool>& aops );
@@ -71,11 +56,6 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     std::shared_ptr<std::vector<int>> idxs_trans() const { return idxs_trans_; }
     std::shared_ptr<std::vector<int>> aops_trans() const { return aops_trans_; }
     std::shared_ptr<std::vector<int>> rngs_trans() const { return rngs_trans_; }
-
-    virtual
-    std::shared_ptr<Range_Block_Info> 
-    transform( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs, std::shared_ptr<const std::vector<bool>> orig_aops,
-               std::vector<int>&  op_order, std::vector<char> op_trans ); 
 
     void transform_aops_rngs ( std::vector<bool>& aops, std::vector<char>& aops_rngs,  std::pair<double,double>& factors , char transformation );
     
@@ -121,15 +101,6 @@ class Split_Range_Block_Info : public  Range_Block_Info {
 
   public :
 
-    Split_Range_Block_Info(  std::shared_ptr<std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs,
-                              std::shared_ptr<const std::vector<bool>> orig_aops, SRBI_Helper& helper ) : 
-                              Range_Block_Info( orig_rngs, orig_idxs, orig_aops, helper.idxs_trans_, helper.aops_trans_, helper.rngs_trans_, helper.factors_ ), 
-                              range_blocks_(helper.rxnge_blocks_) {} 
-                     
-    Split_Range_Block_Info(  std::shared_ptr<std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<bool>> orig_aops, SRBI_Helper& helper ) : 
-                             Range_Block_Info( orig_rngs, orig_aops, helper.aops_trans_, helper.rngs_trans_, helper.factors_ ), 
-                             range_blocks_(helper.rxnge_blocks_) {} 
-
     Split_Range_Block_Info(  std::shared_ptr<const std::vector<bool>> orig_aops, SRBI_Helper& helper ) : 
                              Range_Block_Info( helper.orig_rngs_, helper.unique_block_, helper.idxs_trans_, helper.factors_, *orig_aops ),
                              range_blocks_(helper.rxnge_blocks_) {} 
@@ -138,10 +109,6 @@ class Split_Range_Block_Info : public  Range_Block_Info {
 
     std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks(){ return range_blocks_ ;} 
     std::shared_ptr<Range_Block_Info> range_blocks(int ii){ return range_blocks_->at(ii) ;} 
-
-    std::shared_ptr<Range_Block_Info> 
-    transform( std::shared_ptr<const std::vector<std::string>> orig_rngs, std::shared_ptr<const std::vector<std::string>> orig_idxs, std::shared_ptr<const std::vector<bool>> orig_aops,
-               std::vector<int>&  op_order, std::vector<char> op_trans );
 
     bool is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs );
 };
