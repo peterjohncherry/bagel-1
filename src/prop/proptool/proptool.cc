@@ -276,8 +276,8 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
     string                             TimeSymm = op_def_inp->get<string>( "TimeSymm", "none" );
     bool                               hconj = conv_to_bool(op_def_inp->get<int>( "HermConj", false ));
       
-    vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> symmfuncs =  Symmetry_Operations::identity_only() ; // TODO define this by list of pairs of vectors
-    vector<bool(*)(shared_ptr<vector<string>>)> constraints = { &Symmetry_Operations::always_true };  // TODO define this by list of vectors 
+    vector<function<void( vector<string>& )>> symmfuncs(0);
+    vector<function<bool( vector<string>& )>> constraints(0);
     
     cout << "user defined op name : " << op_name << endl;
     shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp( op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep); 
@@ -309,7 +309,6 @@ void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_de
   }
   return;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_equation_init_Value( shared_ptr<const PTree> equation_inp ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

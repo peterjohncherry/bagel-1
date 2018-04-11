@@ -7,6 +7,7 @@
 
 using namespace std;
 using namespace Symmetry_Operations;
+
 namespace  TensOp_Info_Init {
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -30,10 +31,16 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
   shared_ptr<vector<bool>>           aops;
   shared_ptr<vector<vector<string>>> idx_ranges;
   string                             time_symm;
-  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> symmfuncs;
-  vector<bool(*)(shared_ptr<vector<string>>)>  constraints;
+  vector<function<void( vector<string>& )>> symmfuncs;
+  vector<function<bool( vector<string>& )>> constraints;
   int state_dep;
 
+
+  function<void( vector<string>& )> tpose = Symmetry_Operations::hermitian; 
+  function<void( vector<string>& )> sflip = Symmetry_Operations::spin_flip;
+
+  symmfuncs = vector<function<void( vector<string>& )>>(0); 
+  constraints = vector<function<bool( vector<string>& )>>(0); 
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
@@ -42,8 +49,8 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false});//TODO check this ordering is correct
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free });
    time_symm = "none";
-   symmfuncs = identity_only();
-   constraints = {  &Symmetry_Operations::always_true };
+   symmfuncs = vector<function<void( vector<string>&  )>>(1, tpose); 
+   constraints = vector<function<bool( vector<string>& )>>(0); 
    state_dep = 0;
 
   } else if ( op_name == "h" ) {  /* ---- h Tensor ( 1 electron Hamiltonian ) ----  */
@@ -53,8 +60,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    aops = make_shared<vector<bool>>(vector<bool>  {true, false});
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free });
    time_symm = "none";
-   symmfuncs = identity_only(); //set_1el_symmfuncs();
-   constraints = {  &Symmetry_Operations::always_true };
    state_dep = 0;
   
   } else if ( op_name == "Q" ) {  /* ---- test six index ----  */
@@ -64,8 +69,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core,  not_core, not_core, not_virt, not_virt, not_virt });
    time_symm = "none";
-   symmfuncs = identity_only();
-   constraints = {  &Symmetry_Operations::always_true };
    state_dep = 0;
  
   } else if ( op_name == "R" ) {  /* ---- test six index ----  */
@@ -75,8 +78,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt,  virt, act, act, core, core });
    time_symm = "none";
-   symmfuncs = identity_only();
-   constraints = {  &Symmetry_Operations::always_true };
    state_dep = 0;
 
   } else if ( op_name == "f" ) {  /* ---- state averaged fock operator ----  */
@@ -86,8 +87,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    aops = make_shared<vector<bool>>(vector<bool>  {true, false});
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free });
    time_symm = "none";
-   symmfuncs = set_1el_symmfuncs();
-   constraints = {  &Symmetry_Operations::always_true };
    state_dep = 0;
 
   } else if ( op_name == "L" ) {  /* ---- L Tensor ----  */
@@ -97,8 +96,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true });
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, not_virt });
     time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = { &Symmetry_Operations::NotAllAct };
     state_dep = 2;
     
       
@@ -109,8 +106,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false });
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, core, core });
     time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = { &Symmetry_Operations::NotAllAct };
     state_dep = 2;
  
   } else if ( op_name == "N" ) {  /* ---- N Tensor ----  */
@@ -120,8 +115,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false });
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act });
     time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = { &Symmetry_Operations::always_true  };
     state_dep = 0;
     
   } else if ( op_name == "T" ) {  /* ---- T Tensor ----  */
@@ -131,8 +124,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} );
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
     time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = {  &Symmetry_Operations::NotAllAct };
     state_dep = 2;
  
   } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
@@ -142,8 +133,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt  });
     time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = {  &Symmetry_Operations::NotAllAct };
     state_dep = 2;
 
   } else if ( op_name == "t" ) {  /* ---- T Tensor herm conj TODO  should find a better way fo dealing with this----  */
@@ -153,8 +142,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>  (vector<bool>  {false, false, true, true } );
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
     time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = { &Symmetry_Operations::NotAllAct };
     state_dep = 0;
 
   } else if ( op_name == "X" ) {
@@ -164,9 +151,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt } );
     time_symm = "none";
-    symmfuncs = identity_only();
-   //constraints = {  &Symmetry_Operations::always_true };
-    constraints = { &Symmetry_Operations::NotAllAct };
     state_dep = 0;
 
   } else if ( op_name == "x" ) {
@@ -176,9 +160,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>( vector<bool> { false, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act } );
     time_symm = "none";
-    symmfuncs = identity_only();
-   //constraints = {  &Symmetry_Operations::always_true };
-    constraints = { &Symmetry_Operations::NotAllAct };
+    constraints = vector<function<bool( vector<string>& )>>(0); 
     state_dep = 2;
 
    } else if ( op_name == "Z" ) { /* 2el test op */
@@ -188,8 +170,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>( vector<bool>  { false, false, true, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act } );
     time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = {  &Symmetry_Operations::always_true };
     state_dep = 0;
 
   } else {

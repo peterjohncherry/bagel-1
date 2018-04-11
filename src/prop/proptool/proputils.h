@@ -18,6 +18,8 @@
 #include <numeric>
 #include <complex> 
 #include <cassert>
+#include <functional>
+#include <cctype>
 namespace WickUtils {  
 
   using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
@@ -113,6 +115,8 @@ namespace WickUtils {
   std::vector<char> strvec_to_chrvec( const std::vector<std::string>& strvec );
  
   std::vector<std::string> chrvec_to_strvec( const std::vector<char>& chrvec );
+
+  unsigned int get_block_hash( const std::vector<std::string>&  block  );
 
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){

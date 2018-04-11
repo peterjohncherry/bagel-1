@@ -66,8 +66,8 @@ System_Info<DataType>::Build_TensOp( string op_name,
                                      shared_ptr<vector<string>> op_idxs,
                                      shared_ptr<vector<bool>> op_aops, 
                                      shared_ptr<vector<vector<string>>> op_idx_ranges,
-                                     vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> Symmetry_Funcs,
-                                     vector<bool(*)(shared_ptr<vector<string>>)> Constraint_Funcs,
+                                     std::vector<std::function<void( std::vector<std::string>& )>>& symmfuncs,
+                                     std::vector<std::function<bool( std::vector<std::string>& )>>& constraints,
                                      DataType factor, string Tsymmetry, bool hconj,  int state_dep  ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
@@ -75,7 +75,7 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
   //NOTE: change to use proper factor
   int tmpfac = 1;
   shared_ptr<TensOp::TensOp<DataType>> new_op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
-                                                                                        tmpfac,  Symmetry_Funcs, Constraint_Funcs, Tsymmetry, state_dep, range_prime_map_);
+                                                                                        tmpfac, symmfuncs, constraints, Tsymmetry, state_dep, range_prime_map_);
   
  
   // change to be expression specific

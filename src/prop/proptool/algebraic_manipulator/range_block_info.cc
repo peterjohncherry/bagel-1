@@ -12,11 +12,13 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
                                     const std::vector<bool>& aops ) :
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(idxs_trans), factors_(factors) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Range_Block_Info::Range_Block_Info SSSS" << endl;
+//  cout << "Range_Block_Info::Range_Block_Info SSSS" << endl;
    
   num_idxs_ = orig_rngs_->size();
 
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) ); 
+
+  unsigned int block_hash = WickUtils::get_block_hash( *orig_block ); // TODO block hashes should be used in original construction.. 
 
   plus_pnum_ = 1;
   kill_pnum_ = 1;

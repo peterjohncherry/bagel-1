@@ -79,8 +79,8 @@ class System_Info {
                                                                 std::shared_ptr<std::vector<std::string>> op_idxs,
                                                                 std::shared_ptr<std::vector<bool>> op_aops, 
                                                                 std::shared_ptr<std::vector<std::vector<std::string>>> op_idx_ranges,
-                                                                std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>),int,int >> Symmetry_Funcs,
-                                                                std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>)> Constraint_Funcs,
+                                                                std::vector<std::function<void( std::vector<std::string>& )>>& symmfuncs,
+                                                                std::vector<std::function<bool( std::vector<std::string>& )>>& constraints,
                                                                 DataType factor, std::string Tsymmetry, bool hconj, int state_dependence ) ;
        
         void  create_equation( std::string name, std::string type, 

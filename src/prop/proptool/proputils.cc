@@ -852,6 +852,8 @@ unsigned int WickUtils::range_to_prime(char range ) {
     case 'C' : return 7;
     case 'a' : return 11;
     case 'A' : return 13;
+    default : 
+      throw std::logic_error( " unknown range " ); return 9999999;
   }
 }
 //////////////////////////////////////////////////////////////////////////////////
@@ -861,9 +863,24 @@ unsigned int WickUtils::range_to_prime_spinfree(char range ) {
     case 'v' : return 2;
     case 'c' : return 3;
     case 'a' : return 5;
+    default : 
+      throw std::logic_error( " unknown range " ); return 9999999;
   }
 }
+//////////////////////////////////////////////////////////////////////////////////
+unsigned int WickUtils::get_block_hash( const std::vector<std::string>& block  ) {
+//////////////////////////////////////////////////////////////////////////////////
+ 
+  int max_range_num = 13; // should set this in main proptool
+  int range_id = 0;
+  int ii = 0;
+  for ( vector<string>::const_reverse_iterator b_it = block.crbegin() ; b_it != block.crend() ;  b_it++, ii++ ) 
+     range_id += range_to_prime( (*b_it)[0] ) * pow( max_range_num, ii ); 
+ 
+  assert( range_id >  -1 );
 
+  return range_id; 
+}
 //////////////////////////////////////////////////////////////////////////////////////
 vector<char> WickUtils::strvec_to_chrvec( const vector<string>& strvec ) {
 //////////////////////////////////////////////////////////////////////////////////////

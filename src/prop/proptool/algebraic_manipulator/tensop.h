@@ -263,20 +263,25 @@ template<typename DataType>
 class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<DataType>> {
 
    private :
-     std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > > symmfuncs_; 
-     std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) > constraints_;
+     
+     std::vector<std::function<void( std::vector<std::string>& )>> symmfuncs_;
+     std::vector<std::function<bool( std::vector<std::string>& )>> constraints_;
 
      void add_to_range_block_map( std::vector<std::string>& idx_ranges );
 
+     std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >  all_ranges_tmp_;
+
      std::shared_ptr<const std::vector<std::string>> 
      apply_symmetry( std::vector<int>& idxs_trans, const std::vector<std::string>& new_block, std::pair<double,double>& fac_new );
+
+
  
    public:
 
      TensOp( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
              std::vector<bool>& aops, DataType orig_factor,
-             std::vector< std::tuple< std::shared_ptr<std::vector<std::string>>(*)(std::shared_ptr<std::vector<std::string>>), int, int > >& symmfuncs, 
-             std::vector<bool(*)(std::shared_ptr<std::vector<std::string>>) >& constraints,
+             std::vector<std::function<void( std::vector<std::string>& )>>& symmfuncs_,
+             std::vector<std::function<bool( std::vector<std::string>& )>>& constraints_,
              std::string& Tsymm, int state_dep, std::shared_ptr<std::map<char, long unsigned int>> range_prime_map  );
      ~TensOp(){};
 
