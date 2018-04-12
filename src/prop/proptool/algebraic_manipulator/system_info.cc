@@ -66,8 +66,8 @@ System_Info<DataType>::Build_TensOp( string op_name,
                                      shared_ptr<vector<string>> op_idxs,
                                      shared_ptr<vector<bool>> op_aops, 
                                      shared_ptr<vector<vector<string>>> op_idx_ranges,
-                                     std::vector<std::function<void( std::vector<std::string>& )>>& symmfuncs,
-                                     std::vector<std::function<bool( std::vector<std::string>& )>>& constraints,
+                                     std::vector<std::shared_ptr<Transformation>>& symmfuncs,
+                                     std::vector<std::shared_ptr<Constraint>>& constraints,
                                      DataType factor, string Tsymmetry, bool hconj,  int state_dep  ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;

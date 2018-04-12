@@ -41,7 +41,6 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_block, std::shared_ptr<const std::vector<std::string>> unique_block, 
                       std::shared_ptr<std::vector<int>> idxs_trans,  std::pair<double,double> factors, const std::vector<bool>& aops );
 
-
     ~Range_Block_Info(){};
     
     std::pair<double,double> factors() const { return factors_; } 
@@ -63,7 +62,6 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     get_transformed_block( std::shared_ptr<const std::vector<std::string> > trans_block, std::shared_ptr<const std::vector<std::string>> unique_block,
                            char op_trans, std::vector<bool>& aops );
 };
-
 
 class SRBI_Helper { 
 

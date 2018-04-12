@@ -3,7 +3,6 @@
 
 using namespace std;
 using namespace bagel;
-using namespace Symmetry_Operations;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, shared_ptr<const Reference> r): 
@@ -276,11 +275,11 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
     string                             TimeSymm = op_def_inp->get<string>( "TimeSymm", "none" );
     bool                               hconj = conv_to_bool(op_def_inp->get<int>( "HermConj", false ));
       
-    vector<function<void( vector<string>& )>> symmfuncs(0);
-    vector<function<bool( vector<string>& )>> constraints(0);
+    vector<shared_ptr<Transformation>> symmfuncs(0);
+    vector<shared_ptr<Constraint>> constraints(0);
     
     cout << "user defined op name : " << op_name << endl;
-    shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp( op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep); 
+    shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp(op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep);
     sys_info_->MT_map()->emplace( op_name, new_op );
 
   }

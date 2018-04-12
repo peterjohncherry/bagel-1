@@ -4,7 +4,8 @@
 #include <src/prop/proptool/algebraic_manipulator/ctrtensop.h>
 #include <src/prop/proptool/algebraic_manipulator/range_block_info.h>
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
-
+#include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
+#include <src/prop/proptool/algebraic_manipulator/constraints.h>
 
 // TODO : FIX THIS STUPID STRUCTURE; I SUGGEST THE FOLLOWING:
 //DQ : class A {//stuff      } 
@@ -43,7 +44,7 @@ class Op_General_base {
      friend MultiTensOp::MultiTensOp<double>;
      friend MultiTensOp::MultiTensOp<std::complex<double>>;
    
-     protected:
+     public:
        const std::vector<std::string> idxs_;
        const std::vector<bool> aops_;
        const std::vector<int> plus_ops_;
@@ -55,7 +56,6 @@ class Op_General_base {
        const bool hermitian_ =  true; //TODO have this set, although should default to true.
        const bool hermitian_inverse_ =  true; //TODO have this set, although should default to false; true for projectors.
 
-     public:
      
        std::shared_ptr<const std::vector<std::string>> idxs_ptr_;
        std::shared_ptr<const std::vector<bool>> aops_ptr_;
@@ -264,15 +264,14 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
 
    private :
      
-     std::vector<std::function<void( std::vector<std::string>& )>> symmfuncs_;
-     std::vector<std::function<bool( std::vector<std::string>& )>> constraints_;
+     std::vector<std::shared_ptr<Transformation>> symmfuncs_;
+     std::vector<std::shared_ptr<Constraint>> constraints_;
 
      void add_to_range_block_map( std::vector<std::string>& idx_ranges );
 
      std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >  all_ranges_tmp_;
 
-     std::shared_ptr<const std::vector<std::string>> 
-     apply_symmetry( std::vector<int>& idxs_trans, const std::vector<std::string>& new_block, std::pair<double,double>& fac_new );
+     void  apply_symmetry( const std::vector<std::string>& new_block, std::vector<bool>& aops );
 
 
  
@@ -280,8 +279,8 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
 
      TensOp( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
              std::vector<bool>& aops, DataType orig_factor,
-             std::vector<std::function<void( std::vector<std::string>& )>>& symmfuncs_,
-             std::vector<std::function<bool( std::vector<std::string>& )>>& constraints_,
+             std::vector<std::shared_ptr<Transformation>>& symmfuncs,
+             std::vector<std::shared_ptr<Constraint>>& constraints,
              std::string& Tsymm, int state_dep, std::shared_ptr<std::map<char, long unsigned int>> range_prime_map  );
      ~TensOp(){};
 
@@ -346,9 +345,9 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
 
     void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges );
 
-    std::shared_ptr<std::vector<bool>>  transform_aops( const char trans ); 
+    std::shared_ptr<std::vector<bool>> transform_aops( const char trans ); 
 
-    std::shared_ptr<std::vector<bool>>  transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ); 
+    std::shared_ptr<std::vector<bool>> transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ); 
 
     std::shared_ptr<std::vector<char>> transform_aops_rngs( std::shared_ptr<Split_Range_Block_Info> block, std::pair<double, double>& factors,
                                                             const std::vector<int>& op_order, const std::vector<char>& op_trans );

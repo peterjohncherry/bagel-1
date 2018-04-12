@@ -3,58 +3,58 @@
 #include <algorithm>
 using namespace std;
 
-void Symmetry_Operations::hermitian( std::vector<std::string>& rngs) { 
-  std::reverse( rngs.begin(), rngs.end());
-  return;
+std::vector<std::string> 
+Transformation_Hermitian::transform( const std::vector<std::string>& rngs) { 
+  vector<std::string> rngs_new = rngs;
+  std::reverse( rngs_new.begin(), rngs_new.end());
+  return rngs_new;
 }
 
-void Symmetry_Operations::spin_flip( std::vector<std::string>& rngs ) { 
-  for ( std::vector<std::string>::iterator r_it = rngs.begin(); r_it != rngs.end(); r_it++ ) {
-    if ( (*r_it)[0] > 'Z' ) { 
-      *r_it = toupper((*r_it)[0]);
+std::vector<std::string> 
+Transformation_Spinflip::transform( const std::vector<std::string>& rngs ) { 
+  vector<string> rngs_new = rngs;
+  for ( std::vector<std::string>::iterator rn_it = rngs_new.begin(); rn_it != rngs_new.end(); rn_it++ ) {
+    if ( (*rn_it)[0] > 'Z' ) { 
+      *rn_it = toupper((*rn_it)[0]);
     } else {                     
-      *r_it = tolower((*r_it)[0]);
+      *rn_it = tolower((*rn_it)[0]);
     } 
   }
-  return;
+  return rngs_new;
 }
+
 std::vector<std::string> 
-Symmetry_Operations::f_1032( std::vector<std::string>& rngs ) { 
+Transformation_1032::transform( const std::vector<std::string>& rngs ) { 
   vector<std::string> rngs_new = { rngs[1], rngs[0] , rngs[3], rngs[2] };
   return rngs_new;
 }
 
 std::vector<std::string> 
-Symmetry_Operations::f_2143( std::vector<std::string>& rngs ) { 
-  vector<std::string> rngs_new = { rngs[2], rngs[1] , rngs[4], rngs[3] };
-  return rngs_new;
-}
-
-std::vector<std::string> 
-Symmetry_Operations::f_2301( std::vector<std::string>& rngs ) { 
-  vector<std::string> rngs_new = { rngs[2], rngs[3] , rngs[0], rngs[1] };
-  return rngs_new;
-}
-
-std::vector<std::string> 
-Symmetry_Operations::f_2103( std::vector<std::string>& rngs ) { 
+Transformation_2103::transform( const std::vector<std::string>& rngs ) { 
   vector<std::string> rngs_new = { rngs[2], rngs[1] , rngs[0], rngs[3] };
   return rngs_new;
 }
 
 std::vector<std::string> 
-Symmetry_Operations::f_3012( std::vector<std::string>& rngs ) { 
+Transformation_2301::transform( const std::vector<std::string>& rngs ) { 
+  vector<std::string> rngs_new = { rngs[2], rngs[3] , rngs[0], rngs[1] };
+  return rngs_new;
+}
+
+std::vector<std::string> 
+Transformation_3012::transform( const std::vector<std::string>& rngs ) { 
   vector<std::string> rngs_new = { rngs[3], rngs[0] , rngs[1], rngs[2] };
   return rngs_new;
 }
 
 std::vector<std::string> 
-Symmetry_Operations::f_0321( std::vector<std::string>& rngs ) { 
+Transformation_0321::transform( const std::vector<std::string>& rngs ) { 
   vector<std::string> rngs_new = { rngs[0], rngs[3] , rngs[2], rngs[1] };
   return rngs_new;
 }
+
 std::vector<std::string> 
-Symmetry_Operations::f_1230( std::vector<std::string>& rngs ) { 
+Transformation_1230::transform( const std::vector<std::string>& rngs ) { 
   vector<std::string> rngs_new = { rngs[1], rngs[2] , rngs[3], rngs[0] };
   return rngs_new;
 }

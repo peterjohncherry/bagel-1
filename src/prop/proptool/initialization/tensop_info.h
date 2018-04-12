@@ -2,11 +2,11 @@
 #define __SRC_PROPTOOL_TENSOP_INFO_INIT
 #include <src/global.h>
 #include <bagel_config.h>
-#include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
 #include <src/prop/proptool/algebraic_manipulator/tensop.h>
+#include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
+#include <src/prop/proptool/algebraic_manipulator/constraints.h>
 
 using namespace std;
-using namespace Symmetry_Operations;
 
 namespace  TensOp_Info_Init {
 
@@ -31,16 +31,23 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
   shared_ptr<vector<bool>>           aops;
   shared_ptr<vector<vector<string>>> idx_ranges;
   string                             time_symm;
-  vector<function<void( vector<string>& )>> symmfuncs;
-  vector<function<bool( vector<string>& )>> constraints;
+  vector<shared_ptr<Transformation>> symmfuncs;
+  vector<shared_ptr<Constraint>> constraints;
   int state_dep;
 
+  static shared_ptr<Transformation_Hermitian> hconj = make_shared<Transformation_Hermitian>( "hconj" );  
+  static shared_ptr<Transformation_Spinflip>  spinflip = make_shared<Transformation_Spinflip>( "spinflip" );
+  static shared_ptr<Transformation_1032>  perm_1032 = make_shared<Transformation_1032>( "1032" ); 
+  static shared_ptr<Transformation_2301>  perm_2301 = make_shared<Transformation_2301>( "2301" );
+  static shared_ptr<Transformation_2103>  perm_2103 = make_shared<Transformation_2103>( "2103" );
+  static shared_ptr<Transformation_3012>  perm_3012 = make_shared<Transformation_3012>( "3012" );
+  static shared_ptr<Transformation_0321>  perm_0321 = make_shared<Transformation_0321>( "0321" );
+  static shared_ptr<Transformation_1230>  perm_1230 = make_shared<Transformation_1230>( "1230" );
+  static shared_ptr<Constraint_NotAllAct>  not_all_act = make_shared<Constraint_NotAllAct>( "NotAllAct" );
 
-  function<void( vector<string>& )> tpose = Symmetry_Operations::hermitian; 
-  function<void( vector<string>& )> sflip = Symmetry_Operations::spin_flip;
-
-  symmfuncs = vector<function<void( vector<string>& )>>(0); 
-  constraints = vector<function<bool( vector<string>& )>>(0); 
+  symmfuncs = { hconj, perm_1032, perm_2301, perm_2103, perm_3012, perm_0321, perm_1230 }; 
+  //symmfuncs = { hconj , perm_1032, perm_2103, perm_2301}; 
+  constraints = { not_all_act }; 
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
@@ -49,8 +56,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false});//TODO check this ordering is correct
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free });
    time_symm = "none";
-   symmfuncs = vector<function<void( vector<string>&  )>>(1, tpose); 
-   constraints = vector<function<bool( vector<string>& )>>(0); 
    state_dep = 0;
 
   } else if ( op_name == "h" ) {  /* ---- h Tensor ( 1 electron Hamiltonian ) ----  */
@@ -160,7 +165,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     aops = make_shared<vector<bool>>( vector<bool> { false, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act } );
     time_symm = "none";
-    constraints = vector<function<bool( vector<string>& )>>(0); 
     state_dep = 2;
 
    } else if ( op_name == "Z" ) { /* 2el test op */
