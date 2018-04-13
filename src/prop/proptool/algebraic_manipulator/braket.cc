@@ -4,6 +4,76 @@
 
 using namespace std;
 using namespace WickUtils;
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& op_trans_list,
+                          DataType factor, int bra_num, int ket_num, 
+                          std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type) :
+                          op_list_(op_list), op_trans_list_(op_trans_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
+                          op_state_ids_(op_state_ids), type_(type), multiop_name_(std::accumulate(op_list_.begin(),
+                          op_list_.end(), std::string(""))), proj_op_(false) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "BraKet::BraKet" << endl;
+
+  //get state name first
+  string multiop_state_name = "";
+  shared_ptr<vector<shared_ptr<vector<int>>>> state_id_list =  make_shared<vector<shared_ptr<vector<int>>>>();
+
+  cout << "BraKet::BraKet 1" << endl;
+  shared_ptr<vector<shared_ptr<Op_Info>>> multiop_info_list = make_shared<vector<shared_ptr<Op_Info>>>( op_list.size());
+  vector<shared_ptr<Op_Info>>::iterator mil_it = multiop_info_list->begin();
+
+  cout << "BraKet::BraKet 2" << endl;
+  for ( int ii = 0 ; ii != op_list_.size(); ii++, mil_it++ ) {
+    string op_state_name = "";
+    op_state_name += op_list_[ii] ;
+    if (op_state_ids_->at(ii).size() > 0 ) {
+      op_state_name +=  "_{"; 
+      for( int jj = 0; jj != op_state_ids_->at(ii).size(); jj++ ) 
+        op_state_name += to_string(op_state_ids_->at(ii)[jj]); 
+      op_state_name += "}"; 
+    }
+
+  cout << "BraKet::BraKet 3" << endl;
+    if (op_trans_list.size() > 0 ) {
+      op_state_name +=  "^{"; 
+      op_state_name += op_trans_list[ii]; 
+      op_state_name += "}"; 
+    }
+
+    cout << "BraKet::BraKet 4" << endl;
+    cout << "op_state_ids_->size() = " << op_state_ids_->size() << endl;
+    
+    print_vector( op_state_ids_->at(ii) , " op_state_ids_->(" + to_string(ii) + ")");cout << endl; 
+    cout << "op_state_name = " << op_state_name << endl;
+    multiop_state_name += op_state_name;
+    cout << "op_state_name = " << op_state_name << endl;
+    print_vector( op_trans_list , "op_trans_list"); cout << endl; 
+    *mil_it = make_shared<Op_Info>( op_state_name, make_shared<vector<int>> (op_state_ids_->at(ii)), op_trans_list[ii] ); 
+    cout << "BraKet::BraKet 5" << endl;
+  }
+ 
+  cout << "multiop_state_name = " << multiop_state_name << endl;
+  multiop_info_ = make_shared<MultiOp_Info>( multiop_state_name , multiop_info_list );  
+  
+  if (type_[0] == 'c' )// checking if derivative  
+    name_ = "c_{I}"; 
+
+  // Getting the BraKet name 
+  name_ = "<" + std::to_string(bra_num)+ "| ";   name_ += multiop_state_name;   name_ += " |"+ std::to_string(ket_num) + ">";
+
+  op_order_ = std::vector<int>(op_list.size());
+  iota( op_order_.begin(), op_order_.end(), 0);
+  sort( op_order_.begin(), op_order_.end(), [ &op_list ] ( int i1, int i2) { return (bool)( op_list[i1] < op_list[i2]); });  
+
+  WickUtils::print_vector( op_list, "op_list" ); std::cout << std::endl; 
+  WickUtils::print_vector( op_order_, "op_order" ); std::cout << std::endl; 
+  
+  projected_bra_ = false;
+  projected_ket_ = false;
+} 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Following restructuing this class is starting to look more redundant, however I think it is still useful for
 //merging, symmetry checking and sparsity. As well as controlling the reordering 
@@ -26,23 +96,16 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       projector_names.push_back(tens->name()[0]);
 
   auto trans_info = make_pair( op_trans_list_,  op_order_ );
-
-  print_vector( op_trans_list_, "op_trans_list_"); cout << endl;
-
   vector<char>::const_iterator otl_it = op_trans_list_.begin();
   for ( vector<int>::iterator oo_it = op_order_.begin();  oo_it != op_order_.end();  oo_it++, otl_it++ )
     if ( *otl_it != '0' )
       Total_Op_->sub_tensops()[*oo_it]->generate_transformed_ranges(*otl_it);
 
   shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( op_order_,  op_trans_list_ );
-  print_vector( *trans_aops, " trans_aops" ) ; cout << endl;
  
   shared_ptr<GammaGeneratorRedux> GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
 
-  cout << "Total_Op_->split_rxnges()->size() = " << Total_Op_->split_rxnges()->size() << endl;
-
-  for ( auto range_map_it = Total_Op_->split_rxnges()->begin(); range_map_it !=Total_Op_->split_rxnges()->end(); range_map_it++ ){
-    print_vector( range_map_it->first , "range_map_it->first") ; cout << endl;
+  for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
 
     // get transformed range blocks;
     pair<double, double> block_factor = make_pair( factor_, factor_ );

@@ -72,15 +72,15 @@ System_Info<DataType>::Build_TensOp( string op_name,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
 
-  //NOTE: change to use proper factor
-  int tmpfac = 1;
+  //NOTE: change to use proper factor ( the factor is the factor by which the Re/Im parts of the Tensop are multiplied, not the Re/Im parts of the factor itself) 
+  pair<double,double> tmp_fac = make_pair(1.0 , 1.0 );
+
   shared_ptr<TensOp::TensOp<DataType>> new_op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
-                                                                                        tmpfac, symmfuncs, constraints, Tsymmetry, state_dep, range_prime_map_);
+                                                                                        tmp_fac, symmfuncs, constraints, Tsymmetry, state_dep, range_prime_map_);
   
- 
   // change to be expression specific
   cout << "getting  ctr tens ranges for New_Op : " << op_name << endl;
-  new_op->generate_uncontracted_ctps();
+//  new_op->generate_uncontracted_ctps();
   CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());
   cout << "got ctr tens ranges for new_op : " << op_name << endl;
 

@@ -16,7 +16,7 @@ namespace  TensOp_Info_Init {
 template<class DataType>
 shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( string op_name, shared_ptr<map<char, long unsigned int>> range_prime_map ) {
 /////////////////////////////////////////////////////////////////////////////////
-cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info" << endl;
+cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << endl;
 
   vector<string> free     = {"c", "a", "v"};
   vector<string> not_core = {"a", "v"};
@@ -26,7 +26,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
   vector<string> act      = {"a"};
   vector<string> virt     = {"v"};
 
-  DataType                           factor;
+  pair<double,double>                factor = make_pair(1.0, 1.0);
   shared_ptr<vector<string>>         idxs;
   shared_ptr<vector<bool>>           aops;
   shared_ptr<vector<vector<string>>> idx_ranges;
@@ -51,7 +51,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
-   factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"H0", "H1", "H2", "H3"});
    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false});//TODO check this ordering is correct
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free });
@@ -60,7 +59,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   } else if ( op_name == "h" ) {  /* ---- h Tensor ( 1 electron Hamiltonian ) ----  */
 
-   factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"h0", "h1"});
    aops = make_shared<vector<bool>>(vector<bool>  {true, false});
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free });
@@ -69,7 +67,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
   
   } else if ( op_name == "Q" ) {  /* ---- test six index ----  */
 
-   factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5" });
    aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core,  not_core, not_core, not_virt, not_virt, not_virt });
@@ -78,7 +75,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
  
   } else if ( op_name == "R" ) {  /* ---- test six index ----  */
 
-   factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"R0", "R1", "R2", "R3", "R4", "R5" });
    aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt,  virt, act, act, core, core });
@@ -87,7 +83,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   } else if ( op_name == "f" ) {  /* ---- state averaged fock operator ----  */
 
-   factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"f0", "f1"});
    aops = make_shared<vector<bool>>(vector<bool>  {true, false});
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free });
@@ -96,7 +91,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   } else if ( op_name == "L" ) {  /* ---- L Tensor ----  */
 
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string> {"L0", "L1", "L2", "L3"});
     aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true });
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, not_virt });
@@ -106,7 +100,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
       
   } else if ( op_name == "M" ) {  /* ---- M Tensor ----  */
 
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string> {"M0", "M1", "M2", "M3"});
     aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false });
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, core, core });
@@ -115,7 +108,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
  
   } else if ( op_name == "N" ) {  /* ---- N Tensor ----  */
 
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string> {"N0", "N1", "N2", "N3"});
     aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false });
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act });
@@ -124,7 +116,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
     
   } else if ( op_name == "T" ) {  /* ---- T Tensor ----  */
 
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} );
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
@@ -133,7 +124,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
  
   } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
 
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt  });
@@ -142,7 +132,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   } else if ( op_name == "t" ) {  /* ---- T Tensor herm conj TODO  should find a better way fo dealing with this----  */
     cout << "getting t op " << endl;
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string>{"t0", "t1", "t2", "t3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  {false, false, true, true } );
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
@@ -151,7 +140,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   } else if ( op_name == "X" ) {
 
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>( vector<string> {"X3", "X2", "X1", "X0"} );
     aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt } );
@@ -160,7 +148,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   } else if ( op_name == "x" ) {
 
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>( vector<string> {"X0", "X1"} );
     aops = make_shared<vector<bool>>( vector<bool> { false, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act } );
@@ -169,7 +156,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
    } else if ( op_name == "Z" ) { /* 2el test op */
 
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>( vector<string> { "Z0", "Z1", "Z2", "Z3" } );
     aops = make_shared<vector<bool>>( vector<bool>  { false, false, true, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act } );
@@ -182,11 +168,9 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   }
 
+  cout << "initializing tensop" << endl;
   shared_ptr<TensOp::TensOp<DataType>> new_tens =  make_shared<TensOp::TensOp<DataType>>( op_name, *idxs, *idx_ranges, *aops,
                                                                                           factor, symmfuncs, constraints, time_symm, state_dep, range_prime_map);
-  //new_tens->get_ctrs_tens_ranges();
-  new_tens->generate_uncontracted_ctps();
-
   return new_tens;
 }
 }

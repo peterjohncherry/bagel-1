@@ -88,22 +88,35 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
   for ( BraKet<DataType>& braket_info : *expr_bk_list ) {
 
     std::vector<std::vector<int>>::const_iterator osi_it =  braket_info.op_state_ids_->begin();
-    for (std::vector<string>::const_iterator ol_it = braket_info.op_list_.begin(); ol_it != braket_info.op_list_.end(); ol_it++ , osi_it++ ) {  
 
-      shared_ptr<Op_Info> op_info = make_shared<Op_Info>( *ol_it , *osi_it ); 
+    int ii = 0;
+    for (std::vector<string>::const_iterator ol_it = braket_info.op_list_.begin(); ol_it != braket_info.op_list_.end(); ol_it++ , osi_it++, ii++ ) {  
 
       cout << MT_map_->size();
+      
       auto T_loc = MT_map_->find(*ol_it);
       if( T_loc == MT_map_->end() ){ 
         cout << "Adding " << *ol_it << endl;
+
         shared_ptr<TensOp::TensOp<DataType>> new_op = TensOp_Info_Init::Initialize_Tensor_Op_Info<DataType>( *ol_it, range_prime_map_ );
-        new_op->add_state_ids( op_info);
+        new_op->add_state_ids( (*(braket_info.multiop_info_->op_info_vec_))[ii] );
+        new_op->generate_uncontracted_ctps( (*(braket_info.multiop_info_->op_info_vec_))[ii] );  
+
         CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());
         MT_map_->emplace( *ol_it, new_op );
+
       } else { 
-        T_loc->second->add_state_ids( op_info  );
+        T_loc->second->add_state_ids( (*(braket_info.multiop_info_->op_info_vec_))[ii] );
+        T_loc->second->generate_uncontracted_ctps( (*(braket_info.multiop_info_->op_info_vec_))[ii] );  
       }
+      
+      for ( shared_ptr<Op_Info> op_info : *( MT_map_->at(*ol_it)->state_ids() ) ) {
+        //cout << op_info->name_ << " "; cout.flush(); print_vector( *(op_info->state_ids() ) , "" ); cout.flush();
+        cout << "ham" << endl;
+      } cout << " EB::BE "<< endl;
+
     }
+
 
     if( MT_map_->find( braket_info.multiop_name_ ) == MT_map_->end() ){
       cout << "could not find MT " << braket_info.multiop_name_ << " in map" <<endl;
@@ -113,7 +126,7 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
         SubOps[ii] = MT_map_->at(braket_info.op_list_[ii]); 
 
       shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info.multiop_name_, /*spinfree_ = */ true, SubOps, range_prime_map_ );
-      multiop->generate_uncontracted_ctps();
+      multiop->generate_uncontracted_ctps( braket_info.multiop_info_ );
       CTP_map_->insert( multiop->CTP_map()->begin(), multiop->CTP_map()->end());
       MT_map_->emplace(braket_info.multiop_name_, multiop );
     } 

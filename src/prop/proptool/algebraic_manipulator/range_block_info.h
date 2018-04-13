@@ -111,9 +111,9 @@ class Split_Range_Block_Info : public  Range_Block_Info {
 
   public :
 
-    Split_Range_Block_Info(  std::shared_ptr<const std::vector<bool>> orig_aops, SRBI_Helper& helper ) : 
-                             Range_Block_Info( helper.orig_rngs_, helper.unique_block_, helper.idxs_trans_, helper.factors_, *orig_aops ),
-                             range_blocks_(helper.rxnge_blocks_) {} 
+    Split_Range_Block_Info( const std::vector<bool>& aops, SRBI_Helper& helper ) : 
+                            Range_Block_Info( helper.orig_rngs_, helper.unique_block_, helper.idxs_trans_, helper.factors_, aops ),
+                            range_blocks_(helper.rxnge_blocks_) {} 
                      
    ~Split_Range_Block_Info(){};
 
