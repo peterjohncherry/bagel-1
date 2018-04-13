@@ -54,7 +54,7 @@ Transformation_0321::transform( const std::vector<std::string>& rngs ) {
 }
 
 std::vector<std::string> 
-Transformation_1230::transform( const std::vector<std::string>& rngs ) { 
+Transformation_1230::transform( const std::vector<std::string>& rngs ) {
   vector<std::string> rngs_new = { rngs[1], rngs[2] , rngs[3], rngs[0] };
   return rngs_new;
 }

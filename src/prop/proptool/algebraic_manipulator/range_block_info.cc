@@ -13,10 +13,10 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(idxs_trans), factors_(factors) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "Range_Block_Info::Range_Block_Info SSSS" << endl;
-   
+
   num_idxs_ = orig_rngs_->size();
 
-  orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) ); 
+  orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
 
   unsigned int block_hash = WickUtils::get_block_hash( *orig_block ); // TODO block hashes should be used in original construction.. 
 
@@ -34,7 +34,41 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
 
   if ( plus_pnum_ - kill_pnum_ ) {
     no_transition_ = false;
-  } else { 
+  } else {
+    no_transition_ = true;
+  }
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_block, std::shared_ptr<const std::vector<std::string>> unique_block, 
+                                    std::shared_ptr<Transformation> transform,  std::pair<double,double> factors,
+                                    const std::vector<bool>& aops, std::shared_ptr<Op_Info>& op_info) :
+                                    orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(transform->idxs_trans(*orig_block)), factors_(factors),
+                                    transform_(transform) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "Range_Block_Info::Range_Block_Info SSSS" << endl;
+
+  num_idxs_ = orig_rngs_->size();
+
+  orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
+
+  unsigned int block_hash = WickUtils::get_block_hash( *orig_block ); // TODO block hashes should be used in original construction.. 
+
+  plus_pnum_ = 1;
+  kill_pnum_ = 1;
+
+  std::vector<bool>::const_iterator a_it = aops.begin();
+  for ( std::vector<std::string>::const_iterator or_it = orig_rngs_->begin(); or_it != orig_rngs_->end(); ++or_it, ++a_it ){
+    if (*a_it) {
+      plus_pnum_ *= range_to_prime( (*or_it)[0] );
+    } else {
+      kill_pnum_ *= range_to_prime( (*or_it)[0] );
+    }
+  }
+
+  if ( plus_pnum_ - kill_pnum_ ) {
+    no_transition_ = false;
+  } else {
     no_transition_ = true;
   }
 

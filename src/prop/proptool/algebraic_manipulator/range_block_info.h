@@ -8,6 +8,8 @@
 #include <vector>
 #include <memory>
 #include <src/prop/proptool/proputils.h>
+#include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
+#include <src/prop/proptool/algebraic_manipulator/op_info.h>
  
 class SRBI_Helper; 
 class Split_Range_Block_Info; 
@@ -15,6 +17,10 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
  
   friend SRBI_Helper;
   friend Split_Range_Block_Info;
+
+  private :
+    std::string full_op_name_;
+    std::shared_ptr<std::vector<int>> state_ids_; 
 
   protected :
     std::pair<double,double> factors_; 
@@ -35,11 +41,17 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     long unsigned int kill_pnum_;
     bool no_transition_;
     int num_idxs_;
+    std::shared_ptr<Transformation> transform_;
     
     std::shared_ptr<const std::vector<std::string>> unique_block_;
 
+
     Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_block, std::shared_ptr<const std::vector<std::string>> unique_block, 
                       std::shared_ptr<std::vector<int>> idxs_trans,  std::pair<double,double> factors, const std::vector<bool>& aops );
+
+    Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_block, std::shared_ptr<const std::vector<std::string>> unique_block, 
+                      std::shared_ptr<Transformation> transform,  std::pair<double,double> factors, const std::vector<bool>& aops,
+                      std::shared_ptr<Op_Info>& op_info );
 
     ~Range_Block_Info(){};
     

@@ -1,4 +1,5 @@
 #include <src/prop/proptool/algebraic_manipulator/equation.h>
+#include <src/prop/proptool/algebraic_manipulator/op_info.h>
 
 using namespace std;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,28 +76,32 @@ void Equation_Base<DataType>::add_expression( string expression_name ) {
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This is looping over states; op sparsity depends on states, should replace with term_info_map, and
+// have double loop, outer for ket state, inner for brastate
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Base<DataType>::Build_Expression bk input" << endl;
   shared_ptr< vector<pair<string, DataType>> > braKet_name_list = make_shared<vector<pair< string, DataType >>>(0);
 
-  string expression_type = "full"; 
-  // This is looping over states; op sparsity depends on states, should replace with term_info_map, and
-  // have double loop, outer for ket state, inner for brastate
   for ( BraKet<DataType>& braket_info : *expr_bk_list ) {
 
-    for (string op_name : braket_info.op_list_ ) { // TODO should loop  over states defined in term_info, 
+    std::vector<std::vector<int>>::const_iterator osi_it =  braket_info.op_state_ids_->begin();
+    for (std::vector<string>::const_iterator ol_it = braket_info.op_list_.begin(); ol_it != braket_info.op_list_.end(); ol_it++ , osi_it++ ) {  
 
-      if (op_name == "X" ) 
-        expression_type = "orbital_excitation_derivative";
+      shared_ptr<Op_Info> op_info = make_shared<Op_Info>( *ol_it , *osi_it ); 
 
       cout << MT_map_->size();
-      auto T_loc = MT_map_->find(op_name);
+      auto T_loc = MT_map_->find(*ol_it);
       if( T_loc == MT_map_->end() ){ 
-        shared_ptr<TensOp::TensOp<DataType>> new_op = TensOp_Info_Init::Initialize_Tensor_Op_Info<DataType>( op_name, range_prime_map_ );
+        cout << "Adding " << *ol_it << endl;
+        shared_ptr<TensOp::TensOp<DataType>> new_op = TensOp_Info_Init::Initialize_Tensor_Op_Info<DataType>( *ol_it, range_prime_map_ );
+        new_op->add_state_ids( op_info);
         CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());
-        MT_map_->emplace( op_name, new_op );
+        MT_map_->emplace( *ol_it, new_op );
+      } else { 
+        T_loc->second->add_state_ids( op_info  );
       }
     }
 
@@ -106,7 +111,6 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
 
       for (int ii = 0 ; ii != braket_info.op_list_.size() ; ii++ )  
         SubOps[ii] = MT_map_->at(braket_info.op_list_[ii]); 
-
 
       shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info.multiop_name_, /*spinfree_ = */ true, SubOps, range_prime_map_ );
       multiop->generate_uncontracted_ctps();
@@ -118,10 +122,7 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
     cout << "Pushed " <<  braket_info.multiop_name_ << " back into braket_name_list" << endl;
   }
   
-//  cout << "Full CMTP map" << endl;
-//  for ( auto& elem  : *CTP_map_) { 
-//   cout <<  elem.first << endl;
-//  } 
+  string expression_type = "full";  // TODO remove this fudge
   return expression_type;
 }
 

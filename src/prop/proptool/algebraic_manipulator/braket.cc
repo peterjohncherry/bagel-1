@@ -61,7 +61,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
           vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
           int qq = 0 ;
           for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){
-            cout << tens_block->name()  << " " ; cout.flush(); cout << "sub_tensops[" << qq<< " ]->name() = "; cout.flush(); cout << sub_tensops[qq]->name() << endl;
+            cout << tens_block->name()  << " from" ; cout.flush(); cout << " is a required block " << endl;
             MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->name() );
             required_blocks->emplace( tens_block->name() );
           }

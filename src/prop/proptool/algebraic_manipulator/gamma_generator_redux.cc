@@ -357,10 +357,10 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
 
   shared_ptr<GammaIntermediateRedux> gamma_int = gamma_vec->at(kk);
   print_gamma_intermediate( gamma_int ) ;
+
   double my_sign = bk_factor_*gamma_int->my_sign;
   shared_ptr<vector<pair<int,int>>> deltas_pos     = gamma_int->deltas_pos;
   shared_ptr<vector<int>> ids_pos        = gamma_int->ids_pos;
-  
 
   vector<int> standardized_ids_pos( ids_pos->size() ); 
   {

@@ -222,6 +222,8 @@ class TensOp_Base {
   
      void generate_transformed_ranges( char transformation );
 
+     virtual void add_state_ids( std::shared_ptr<Op_Info>& op_info ) { throw std::logic_error("should not call from anything but TensOp"); } 
+
      virtual
      std::shared_ptr<std::vector<char>>
      transform_aops_rngs( std::shared_ptr<Split_Range_Block_Info> block, std::pair<double, double>& factor, 
@@ -266,33 +268,33 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
      
      std::vector<std::shared_ptr<Transformation>> symmfuncs_;
      std::vector<std::shared_ptr<Constraint>> constraints_;
-
      void add_to_range_block_map( std::vector<std::string>& idx_ranges );
 
-     std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >  all_ranges_tmp_;
+     std::shared_ptr<std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>  all_ranges_tmp_;
 
-     void  apply_symmetry( const std::vector<std::string>& new_block, std::vector<bool>& aops );
+     std::map < std::vector<int> , std::shared_ptr<std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>>  all_ranges_state_specific_;
 
+     void apply_symmetry( const std::vector<std::string>& new_block, std::vector<bool>& aops, std::shared_ptr<Op_Info> op_info );
 
+     std::set<std::shared_ptr<Op_Info>> state_ids_;
  
    public:
 
-     TensOp( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
-             std::vector<bool>& aops, DataType orig_factor,
-             std::vector<std::shared_ptr<Transformation>>& symmfuncs,
-             std::vector<std::shared_ptr<Constraint>>& constraints,
-             std::string& Tsymm, int state_dep, std::shared_ptr<std::map<char, long unsigned int>> range_prime_map  );
-     ~TensOp(){};
+    TensOp( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
+            std::vector<bool>& aops, DataType orig_factor,
+            std::vector<std::shared_ptr<Transformation>>& symmfuncs,
+            std::vector<std::shared_ptr<Constraint>>& constraints,
+            std::string& Tsymm, int state_dep, std::shared_ptr<std::map<char, long unsigned int>> range_prime_map  );
+    ~TensOp(){};
 
-     void generate_uncontracted_ctps();
+    void generate_uncontracted_ctps();
 
-     std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>
-     generate_rangesX( std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges, std::vector<bool>& aops );
+    void generate_rangesX( std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges, std::vector<bool>& aops );
 
     std::shared_ptr<const std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_rxnges() const{return Op_dense_->split_rxnges(); } 
 
-     void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges ) { 
-        throw std::logic_error( "TensOp::TensOp<DataType> should cannot call enter_into_CTP_map form this class!! Aborting!!" ); } 
+    void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges ) { 
+      throw std::logic_error( "TensOp::TensOp<DataType> should cannot call enter_into_CTP_map form this class!! Aborting!!" ); } 
 
     std::vector<std::shared_ptr<TensOp_Base>> sub_tensops(){  std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_ ; return sub_tensops_; } 
    
@@ -306,6 +308,8 @@ class TensOp :  public TensOp_Base , public std::enable_shared_from_this<TensOp<
     transform_aops_rngs( std::shared_ptr<Split_Range_Block_Info> block, const std::vector<int>& op_order , const std::vector<char>& op_trans );
 
     bool satisfies_constraints( std::vector<std::string>& ranges ); 
+
+    void add_state_ids (  std::shared_ptr<Op_Info>& op_info ) { state_ids_.emplace(op_info); return; }
 };
 }
 

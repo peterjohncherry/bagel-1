@@ -118,6 +118,8 @@ namespace WickUtils {
 
   unsigned int get_block_hash( const std::vector<std::string>&  block  );
 
+  void pair_fac_mult( const std::pair<double,double>& factor_fixed , std::pair<double,double>& factor_changing );
+ 
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
     if (name != "" ) 

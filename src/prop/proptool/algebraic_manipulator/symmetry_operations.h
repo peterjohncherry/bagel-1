@@ -106,24 +106,6 @@ class Transformation_1032 : public Transformation {
 
 };
        
-class Transformation_2143 : public Transformation {
-  public :
-
-    const std::pair<double,double> factor_ = {1.0, 1.0};
-    std::vector<int> idxs_trans_ = { 2, 1, 4, 3}; 
- 
-    Transformation_2143( const std::string name ): Transformation( name ) {}
-    ~Transformation_2143(){}
-
-    std::vector<std::string> transform( const std::vector<std::string>& rngs ); 
-
-    std::pair<double,double> factor( const std::vector<std::string>& ranges ) { return factor_; }
-
-    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return std::make_shared<std::vector<int>>(idxs_trans_);} 
-
-};
- 
-
 class Transformation_2301 : public Transformation {
   public :
 

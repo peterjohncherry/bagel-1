@@ -32,7 +32,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
   shared_ptr<vector<vector<string>>> idx_ranges;
   string                             time_symm;
   vector<shared_ptr<Transformation>> symmfuncs;
-  vector<shared_ptr<Constraint>> constraints;
+  vector<shared_ptr<Constraint>> constraints = vector<shared_ptr<Constraint>>(0);
   int state_dep;
 
   static shared_ptr<Transformation_Hermitian> hconj = make_shared<Transformation_Hermitian>( "hconj" );  
@@ -46,7 +46,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
   static shared_ptr<Constraint_NotAllAct>  not_all_act = make_shared<Constraint_NotAllAct>( "NotAllAct" );
 
   symmfuncs = { hconj, perm_1032, perm_2301, perm_2103, perm_3012, perm_0321, perm_1230 }; 
-  //symmfuncs = { hconj , perm_1032, perm_2103, perm_2301}; 
+//  symmfuncs = { hconj , perm_1032, perm_2103, perm_2301}; 
   constraints = { not_all_act }; 
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
