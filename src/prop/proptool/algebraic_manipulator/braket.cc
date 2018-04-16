@@ -21,11 +21,9 @@ BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& 
   string multiop_state_name = "";
   shared_ptr<vector<shared_ptr<vector<int>>>> state_id_list =  make_shared<vector<shared_ptr<vector<int>>>>();
 
-  cout << "BraKet::BraKet 1" << endl;
   shared_ptr<vector<shared_ptr<Op_Info>>> multiop_info_list = make_shared<vector<shared_ptr<Op_Info>>>( op_list.size());
   vector<shared_ptr<Op_Info>>::iterator mil_it = multiop_info_list->begin();
 
-  cout << "BraKet::BraKet 2" << endl;
   for ( int ii = 0 ; ii != op_list_.size(); ii++, mil_it++ ) {
     string op_state_name = "";
     op_state_name += op_list_[ii] ;
@@ -36,26 +34,16 @@ BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& 
       op_state_name += "}"; 
     }
 
-  cout << "BraKet::BraKet 3" << endl;
     if (op_trans_list.size() > 0 ) {
       op_state_name +=  "^{"; 
       op_state_name += op_trans_list[ii]; 
       op_state_name += "}"; 
     }
 
-    cout << "BraKet::BraKet 4" << endl;
-    cout << "op_state_ids_->size() = " << op_state_ids_->size() << endl;
-    
-    print_vector( op_state_ids_->at(ii) , " op_state_ids_->(" + to_string(ii) + ")");cout << endl; 
-    cout << "op_state_name = " << op_state_name << endl;
     multiop_state_name += op_state_name;
-    cout << "op_state_name = " << op_state_name << endl;
-    print_vector( op_trans_list , "op_trans_list"); cout << endl; 
     *mil_it = make_shared<Op_Info>( op_state_name, make_shared<vector<int>> (op_state_ids_->at(ii)), op_trans_list[ii] ); 
-    cout << "BraKet::BraKet 5" << endl;
   }
  
-  cout << "multiop_state_name = " << multiop_state_name << endl;
   multiop_info_ = make_shared<MultiOp_Info>( multiop_state_name , multiop_info_list );  
   
   if (type_[0] == 'c' )// checking if derivative  
@@ -102,15 +90,24 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
       Total_Op_->sub_tensops()[*oo_it]->generate_transformed_ranges(*otl_it);
 
   shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( op_order_,  op_trans_list_ );
+
+  print_vector(*trans_aops , " got transformed aops" ); cout <<endl;
  
   shared_ptr<GammaGeneratorRedux> GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
 
-  for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
+  for ( auto op_info : *(multiop_info_->op_info_vec_) ) { cout << "op_info->name_ = " <<  op_info->name_ << endl;} 
+
+  Total_Op_->generate_ranges( multiop_info_ ); 
+
+  auto split_ranges = Total_Op_->state_specific_split_ranges_->at( multiop_info_->name_ ); 
+
+//  for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
+  for ( auto range_map_it = split_ranges->begin(); range_map_it != split_ranges->end(); range_map_it++ ){
 
     // get transformed range blocks;
     pair<double, double> block_factor = make_pair( factor_, factor_ );
 
-    Total_Op_->transform_aops_rngs( range_map_it->second, block_factor, op_order_, op_trans_list_ ) ;
+    Total_Op_->transform_aops_rngs( range_map_it->second, block_factor, op_order_, op_trans_list_ );
  
     std::shared_ptr<Split_Range_Block_Info> trans_block =  Total_Op_->transform_block_rngs( range_map_it->second, trans_aops, op_order_ , op_trans_list_ );
 

@@ -51,6 +51,10 @@ namespace WickUtils {
   bool fvec_cycle_skipper_f2b(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max,
                               std::shared_ptr<std::vector<int>> min ) ;
 
+  bool fvec_cycle_skipper( std::vector<int>& forvec, std::vector<int>& max, std::vector<int>& min ); 
+
+  bool fvec_cycle_skipper( std::vector<int>& forvec, std::vector<int>::reverse_iterator max_it, std::vector<int>::reverse_iterator min_it ); 
+
   template<class T1>
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<T1>>>> combgen( std::shared_ptr<std::vector<T1>> invec);
 

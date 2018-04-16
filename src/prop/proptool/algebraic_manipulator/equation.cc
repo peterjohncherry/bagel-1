@@ -126,8 +126,8 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
         SubOps[ii] = MT_map_->at(braket_info.op_list_[ii]); 
 
       shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info.multiop_name_, /*spinfree_ = */ true, SubOps, range_prime_map_ );
-      multiop->generate_uncontracted_ctps( braket_info.multiop_info_ );
-      CTP_map_->insert( multiop->CTP_map()->begin(), multiop->CTP_map()->end());
+//      multiop->generate_uncontracted_ctps( braket_info.multiop_info_ );
+//      CTP_map_->insert( multiop->CTP_map()->begin(), multiop->CTP_map()->end());
       MT_map_->emplace(braket_info.multiop_name_, multiop );
     } 
     

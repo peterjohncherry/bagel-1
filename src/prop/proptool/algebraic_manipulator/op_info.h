@@ -13,7 +13,7 @@
 
 class MultiOp_Info;
 
-class Op_Info { 
+class Op_Info : public std::enable_shared_from_this<Op_Info>  { 
   friend MultiOp_Info;
  
   private : 
@@ -29,6 +29,10 @@ class Op_Info {
      name_(name), state_ids_(state_ids), transformation_(transformation) {}
      Op_Info( std::string name ) : name_(name) {}; 
     ~Op_Info(){} 
+
+//    virtual std::shared_ptr<std::vector<int>> state_ids(int ii){ assert( ii == 0 ); return *state_ids_; };
+//    virtual char transformations( int ii ) { assert( ii == 0 ); return transformation;  };
+    virtual std::shared_ptr<Op_Info> op_info( int ii ) { assert( ii == 0 );  return shared_from_this(); }
 
 };
 
@@ -49,17 +53,19 @@ class MultiOp_Info : public Op_Info {
       state_ids_ = std::make_shared<std::vector<std::shared_ptr<std::vector<int>>>>(num_ops_);    
       transformations_ = std::make_shared<std::vector<char>>(num_ops_);    
 
-//      std::vector<std::vector<int>>::iterator si_it = state_ids_->begin();
-//      std::vector<char>::iterator t_it =  transformations_->begin();
+    } 
+    ~MultiOp_Info(){}; 
+
+//     std::vector<std::vector<int>>::iterator si_it = state_ids_->begin();
+//     std::vector<char>::iterator t_it =  transformations_->begin();
 //     for ( std::vector<std::shared_ptr<Op_Info>>::iterator oi_it = op_info_vec->begin(); oi_it != op_info_vec->end(); oi_it++, si_it++, t_it++ ) { 
 //        *t_it = (*oi_it)->transformation_;
 //        *si_it =  (*oi_it)->state_ids_;
 //      }
 
-    } 
-
-   ~MultiOp_Info(){}; 
-
+//    std::shared_ptr<std::vector<int>> state_ids(int ii){ assert( ii == 0 ); return (*state_ids_)[ii]; };
+//    char transformations( int ii ) { assert( ii == 0 ); return transformation;  };
+    std::shared_ptr<Op_Info> op_info( int ii ) { return (*op_info_vec_)[ii]; }
 };
 
 

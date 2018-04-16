@@ -587,6 +587,49 @@ bool WickUtils::fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<ve
   }
   return true;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
+//NO SHARED PTR VERSION, SHOULD BE BETTER THAN SHARED POINTERS
+//same as fvec_cycle, but allows skipping. Should be included everywhere to guard against max==min problem};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool WickUtils::fvec_cycle_skipper( vector<int>& forvec, vector<int>& max, vector<int>& min ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  for(int ii = forvec.size()-1; ii!=-1 ; ii--) {
+    if ( max[ii] == min[ii] ) {
+      if ( ii == 0 )
+        return false;
+    } else if (forvec[ii] == max[ii]) {
+      if (ii == 0) 
+        return false;    
+      forvec[ii] = min[ii];
+    } else {
+      forvec[ii] = forvec[ii]+ 1;
+      break;
+    }
+  }
+  return true;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
+//REVERSE ITERATOR VERSION, SHOULD BE FASTEST, BUT CHECK 
+//TODO TEMPLATE (AND MAYBE MODIFY) SO IT WORKS FOR DIFFERENT TYPES OF CONTAINER
+//same as fvec_cycle, but allows skipping. Should be included everywhere to guard against max==min problem};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool WickUtils::fvec_cycle_skipper( vector<int>& forvec, vector<int>::reverse_iterator max_it, vector<int>::reverse_iterator min_it ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  for(vector<int>::reverse_iterator f_it = forvec.rbegin(); f_it !=forvec.rend(); f_it++,  max_it++, min_it++ ) {
+    if ( *max_it == *min_it ) {
+      if ( f_it == (forvec.rend()-1) )
+        return false;
+    } else if (*f_it == *max_it ) {
+      if ( f_it == (forvec.rend()-1) )
+        return false;    
+      *f_it = *min_it;
+    } else {
+      (*f_it) += 1;
+      break;
+    }
+  }
+  return true;
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //same as normal fvec_cycle, but will not iterate the index at fixed_index_position
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

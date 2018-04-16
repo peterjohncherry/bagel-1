@@ -59,9 +59,9 @@ class TensOp_Base {
      // fields determined in constructor, which should not change during lifetime of class instance
      int num_idxs_;
 
-     std::shared_ptr< std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>> all_ranges_;
+     std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>> all_ranges_;
 
-     std::shared_ptr< std::map< std::string, std::shared_ptr<CtrTensorPart_Base> > > CTP_map_;
+     std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> CTP_map_;
  
      // TensOp specfic, but should be obtainable for MultiTensOp (with warning)
      std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>> hconj_ranges_;
@@ -72,6 +72,10 @@ class TensOp_Base {
      std::shared_ptr< std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_ranges_;
 
    public:
+
+     std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>>>> all_ranges_state_specific_;
+    
+     std::shared_ptr<std::map<std::string,std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>>>> state_specific_split_ranges_; 
  
      TensOp_Base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name), spinfree_(spinfree), Tsymm_(Tsymm), state_dep_(state_dep),
                                                                                         required_blocks_(std::make_shared<std::set<std::string>>()) {};
@@ -112,6 +116,10 @@ class TensOp_Base {
   
      void generate_transformed_ranges( char transformation );
 
+     std::shared_ptr<Range_Block_Info> transform_block_rngs( const std::vector<char>& rngs, const char op_trans_in );
+
+     virtual void generate_ranges( std::shared_ptr<Op_Info> op_info ) = 0;
+
      virtual void add_state_ids( std::shared_ptr<Op_Info> op_info ) { throw std::logic_error("should not call from anything but TensOp"); } 
 
      virtual std::shared_ptr<std::set<std::shared_ptr<Op_Info>>> state_ids() {
@@ -127,8 +135,6 @@ class TensOp_Base {
        std::shared_ptr<std::vector<char>> dummy;
        return dummy;
      } 
-           
-     std::shared_ptr<Range_Block_Info> transform_block_rngs( const std::vector<char>& rngs, const char op_trans_in );
 
      virtual  
      std::shared_ptr<Split_Range_Block_Info> 
@@ -171,8 +177,6 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
     std::vector<std::vector<std::string>> block_list_;
   
     std::shared_ptr<std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>  all_ranges_tmp_;
-
-    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>>>> all_ranges_state_specific_;
 
     std::shared_ptr<std::set<std::shared_ptr<Op_Info>>> state_ids_;
 
@@ -234,7 +238,9 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
 
     ~MultiTensOp(){};
 
-    void generate_ranges( std::shared_ptr<MultiOp_Info> op_info ); 
+    void generate_ranges( std::shared_ptr<Op_Info> op_info ); 
+
+//    void generate_ranges_new( std::shared_ptr<Op_Info> op_info ); 
 
     std::shared_ptr<const std::vector<int>> cmlsizevec() const  {  return cmlsizevec_; } ;
     int cmlsizevec(int ii ) const { return (*cmlsizevec_)[ii]; };
@@ -251,8 +257,6 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
                                  std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >>& ccp_vec  );
 
     std::shared_ptr< std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_ranges() const { return split_ranges_; } 
- 
-    std::shared_ptr<std::map<std::string,std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>>>> state_specific_split_ranges_; 
 
     void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges );
 
