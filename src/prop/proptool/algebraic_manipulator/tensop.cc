@@ -18,45 +18,6 @@ cout << "TensOp_Base::TensOp_Base (MT constructor) " << endl;
   cout << "sub_tensops_ = [ " ; cout.flush();  for ( auto& t : sub_tensops_)    cout << t->name() << " ";  cout << "]" << endl;
 
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// This is only generated if the indexes of the operator does not range over the same orbitals 
-// _not_ have s symmetric ranges, i.e., projection operators. If the operator is (anit-)Hermitian, the results of the map
-//  of the map will be obtained from the original all ranges 
-//  Only built when needed ( as not necessary for most operators ).
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void TensOp_Base::TensOp_Base::generate_transformed_ranges( char transformation ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "TensOp::TensOp<DataType>::generate_transformed_ranges" <<   endl;
-//
-//  shared_ptr<const vector<string>> orig_idxs = make_shared<const vector<string>>(idxs);
-//  shared_ptr<const vector<bool>> orig_aops = make_shared<const vector<bool>>(aops);
-//
-//  char trans = tolower(transformation);
-//  shared_ptr<std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>> trans_ranges_tmp
-//  = make_shared<std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>>();
-//
-//  string bob = ""; bob += trans;
-//
-//  vector<bool> trans_aops = *aops_;
-//  transform_aops_vec( trans, trans_aops );
-//  print_vector( trans_aops, "trans_aops" ); cout << endl;
-//
-//   
-//  for ( auto& elem : *(all_ranges_) ) { 
-//    vector<string> new_range = elem.first;
-//    transform_tens_vec( trans, new_range );
-//    if(satisfies_constraints(new_range)){
-//      shared_ptr<const vector<string>> new_range_c = make_shared<const vector<string>>(new_range); 
-//      trans_ranges_tmp->emplace ( *new_range_c,  elem.second->get_transformed_block( new_range_c, make_shared<const vector<string>>(elem.first),
-//                                                                                   trans, trans_aops ) ) ; 
-//    }
-//  }
-//
-//  if ( trans == 'h' ||  trans == 'i' ) 
-//    hconj_ranges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> (trans_ranges_tmp);
-//             
-//  return; 
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void
 TensOp_Base::TensOp_Base::transform_aops_rngs( vector<char>& rngs, pair<double,double>& factor, const char op_trans_in ) {
@@ -105,6 +66,7 @@ TensOp_Base::TensOp_Base::transform_block_rngs( const vector<char>& rngs, const 
 
   shared_ptr<Range_Block_Info> trans_block; 
 
+  cout << "TB::TB::tbr 1" << endl;
   switch ( op_trans ) { 
 
     case '0' : 
@@ -138,7 +100,8 @@ TensOp_Base::TensOp_Base::transform_block_rngs( const vector<char>& rngs, const 
       cout << "do not have transformation " << trans_str << " implemented; please check the braket specification in the input file. TensOp_Base::transform_block_rngs" << std::endl;
       assert(false);
       break;
-  } 
+  }
+  cout << "TB::TB::tbr 2" << endl;
 
   return trans_block;
 
@@ -275,27 +238,21 @@ void TensOp::TensOp<DataType>::apply_symmetry( const vector<string>& new_block, 
   shared_ptr<vector<int>> order = make_shared<vector<int>>( aops.size() );
   std::iota( order->begin(), order->end(), 0 );
 
-  cout << "T:T:as 1" << endl;
- 
   shared_ptr<const vector<string>> new_block_c =  make_shared<const vector<string>>(new_block);
 
-  cout << "T:T:as 2" << endl;
   pair<double,double> new_fac = factor_; 
 
-  cout << "T:T:as 3" << endl;
   for ( auto& func : symmfuncs_ ) { 
     auto art_loc = all_ranges_tmp_->find(func->transform( *new_block_c )) ; // TODO transform should take symmetry transformation from state switching
 
     if( art_loc != all_ranges_tmp_->end() ){
       WickUtils::pair_fac_mult(  func->factor( *new_block_c ), new_fac );
       all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, art_loc->second->unique_block_, func, new_fac, aops , op_info ));  
-      break;
+      return;
     }
   }
-  cout << "T:T:as 4" << endl;
   all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, new_block_c, order, new_fac, aops ));  
 
-  cout << "T:T:as 5" << endl;
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -432,6 +389,7 @@ MultiTensOp::MultiTensOp<DataType>::transform_block_rngs( shared_ptr<Split_Range
     *tsb_it = sub_tensops_[*oo_it]->transform_block_rngs( trans_block_rngs_part, *ot_it );
     
     tbr_it = move( trans_block_rngs_part.begin(), trans_block_rngs_part.end(), tbr_it);
+
   } 
   SRBI_Helper helper( trans_split_block );
 

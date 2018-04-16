@@ -83,11 +83,11 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
     if ( tens->is_projector() )
       projector_names.push_back(tens->name()[0]);
 
-  auto trans_info = make_pair( op_trans_list_,  op_order_ );
-  vector<char>::const_iterator otl_it = op_trans_list_.begin();
-  for ( vector<int>::iterator oo_it = op_order_.begin();  oo_it != op_order_.end();  oo_it++, otl_it++ )
-    if ( *otl_it != '0' )
-      Total_Op_->sub_tensops()[*oo_it]->generate_transformed_ranges(*otl_it);
+//  auto trans_info = make_pair( op_trans_list_,  op_order_ );
+//  vector<char>::const_iterator otl_it = op_trans_list_.begin();
+//  for ( vector<int>::iterator oo_it = op_order_.begin();  oo_it != op_order_.end();  oo_it++, otl_it++ )
+//    if ( *otl_it != '0' )
+//      Total_Op_->sub_tensops()[*oo_it]->generate_transformed_ranges(*otl_it);
 
   shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( op_order_,  op_trans_list_ );
 
@@ -107,11 +107,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
     // get transformed range blocks;
     pair<double, double> block_factor = make_pair( factor_, factor_ );
 
-    Total_Op_->transform_aops_rngs( range_map_it->second, block_factor, op_order_, op_trans_list_ );
- 
-    std::shared_ptr<Split_Range_Block_Info> trans_block =  Total_Op_->transform_block_rngs( range_map_it->second, trans_aops, op_order_ , op_trans_list_ );
-
-    GGen->add_gamma( trans_block, trans_aops );
+    GGen->add_gamma( range_map_it->second, trans_aops );
 
     if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){
       if ( GGen->generic_reorderer( "normal order", false, false ) ) {
