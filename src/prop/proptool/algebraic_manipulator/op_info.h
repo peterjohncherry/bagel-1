@@ -18,7 +18,6 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
  
   private : 
     std::shared_ptr<std::vector<int>> state_ids_;
-    std::shared_ptr<std::vector<int>> state_ids(){ return state_ids_; }
     char transformation_;
 
   public :  
@@ -32,12 +31,16 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
      Op_Info( std::string name ) : name_(name), op_name_(name.substr(0,1)){}; 
     ~Op_Info(){} 
 
-//    virtual std::shared_ptr<std::vector<int>> state_ids(int ii){ assert( ii == 0 ); return *state_ids_; };
-//    virtual char transformations( int ii ) { assert( ii == 0 ); return transformation;  };
+    virtual std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info() {
+      assert( false ); 
+      std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> dummy; 
+      return dummy;
+    }
+
     virtual std::shared_ptr<Op_Info> op_info( int ii ) { assert( ii == 0 );  return shared_from_this(); }
     virtual int op_order( int ii ) { assert( ii == 0 );  return  0; }
+    virtual std::shared_ptr<std::vector<int>> op_order() { std::shared_ptr<std::vector<int>> oo = std::make_shared<std::vector<int>>(1,0); return oo ; }
     virtual char transformation() { return transformation_; } 
-    
 
 };
 
@@ -61,6 +64,18 @@ class MultiOp_Info : public Op_Info {
     } 
     ~MultiOp_Info(){}; 
 
+    std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info() { return op_info_vec_; }
+    std::shared_ptr<Op_Info> op_info( int ii ) { return (*op_info_vec_)[ii]; }
+
+    std::shared_ptr<std::vector<int>> op_order() { return op_order_; }
+    int op_order( int ii ) { return (*op_order_)[ii]; }
+
+    char transformation() { throw std::logic_error("Should not try to transform MultiOp all as one! Aborting!! "); return 'X'; } 
+};
+
+#endif
+
+
 //     std::vector<std::vector<int>>::iterator si_it = state_ids_->begin();
 //     std::vector<char>::iterator t_it =  transformations_->begin();
 //     for ( std::vector<std::shared_ptr<Op_Info>>::iterator oi_it = op_info_vec->begin(); oi_it != op_info_vec->end(); oi_it++, si_it++, t_it++ ) { 
@@ -70,10 +85,3 @@ class MultiOp_Info : public Op_Info {
 
 //    std::shared_ptr<std::vector<int>> state_ids(int ii){ assert( ii == 0 ); return (*state_ids_)[ii]; };
 //    char transformations( int ii ) { assert( ii == 0 ); return transformation;  };
-    std::shared_ptr<Op_Info> op_info( int ii ) { return (*op_info_vec_)[ii]; }
-    int op_order( int ii ) { return (*op_order_)[ii]; }
-    char transformation() { throw std::logic_error("Should not try to transform MultiOp all as one! Aborting!! "); return 'X'; } 
-};
-
-
-#endif

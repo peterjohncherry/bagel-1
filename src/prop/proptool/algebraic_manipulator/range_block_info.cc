@@ -7,9 +7,9 @@ using namespace WickUtils;
 using namespace Algebra_Utils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_block, std::shared_ptr<const std::vector<std::string>> unique_block, 
-                                    std::shared_ptr<std::vector<int>> idxs_trans,  std::pair<double,double> factors,
-                                    const std::vector<bool>& aops ) :
+Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block, shared_ptr<const vector<string>> unique_block, 
+                                    shared_ptr<vector<int>> idxs_trans,  pair<double,double> factors,
+                                    const vector<bool>& aops, shared_ptr<Op_Info>& op_info ) :
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(idxs_trans), factors_(factors) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "Range_Block_Info::Range_Block_Info SSSS" << endl;
@@ -18,13 +18,21 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
 
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
 
-  unsigned int block_hash = WickUtils::get_block_hash( *orig_block ); // TODO block hashes should be used in original construction.. 
+  { // TODO replace this with normal name_, just keep until ctp fixed
+  vector<string> idxs(unique_block->size());
+  int pos = 0;
+  for (auto& elem : idxs ) 
+    elem = op_info->op_name_ + to_string(pos++);
+  name_ = get_ctp_name( idxs, *unique_block );
+  }
+
+  full_op_name_ = op_info->op_name_;
 
   plus_pnum_ = 1;
   kill_pnum_ = 1;
 
-  std::vector<bool>::const_iterator a_it = aops.begin();
-  for ( std::vector<std::string>::const_iterator or_it = orig_rngs_->begin(); or_it != orig_rngs_->end(); ++or_it, ++a_it ){
+  vector<bool>::const_iterator a_it = aops.begin();
+  for ( vector<string>::const_iterator or_it = orig_rngs_->begin(); or_it != orig_rngs_->end(); ++or_it, ++a_it ){
     if (*a_it) {
       plus_pnum_ *= range_to_prime( (*or_it)[0] );
     } else {
@@ -40,9 +48,9 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_block, std::shared_ptr<const std::vector<std::string>> unique_block, 
-                                    std::shared_ptr<Transformation> transform,  std::pair<double,double> factors,
-                                    const std::vector<bool>& aops, std::shared_ptr<Op_Info>& op_info) :
+Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block, shared_ptr<const vector<string>> unique_block, 
+                                    shared_ptr<Transformation> transform,  pair<double,double> factors,
+                                    const vector<bool>& aops, shared_ptr<Op_Info>& op_info) :
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(transform->idxs_trans(*orig_block)), factors_(factors),
                                     transform_(transform) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,8 +59,6 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
   num_idxs_ = orig_rngs_->size();
 
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
-
-  unsigned int block_hash = WickUtils::get_block_hash( *orig_block ); // TODO block hashes should be used in original construction.. 
 
   { // TODO replace this with normal name_, just keep until ctp fixed
   vector<string> idxs(unique_block->size());
@@ -65,8 +71,8 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
   plus_pnum_ = 1;
   kill_pnum_ = 1;
 
-  std::vector<bool>::const_iterator a_it = aops.begin();
-  for ( std::vector<std::string>::const_iterator or_it = orig_rngs_->begin(); or_it != orig_rngs_->end(); ++or_it, ++a_it ){
+  vector<bool>::const_iterator a_it = aops.begin();
+  for ( vector<string>::const_iterator or_it = orig_rngs_->begin(); or_it != orig_rngs_->end(); ++or_it, ++a_it ){
     if (*a_it) {
       plus_pnum_ *= range_to_prime( (*or_it)[0] );
     } else {
@@ -124,11 +130,11 @@ Range_Block_Info::transform_aops_rngs( std::vector<bool>& aops, std::vector<char
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 std::shared_ptr<Range_Block_Info> 
 Range_Block_Info::get_transformed_block( shared_ptr<const vector<string> > trans_block, shared_ptr<const vector<string>> unique_block,
-                                         char op_trans, vector<bool>& aops ) {
+                                         vector<bool>& aops, shared_ptr<Op_Info> op_info ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "Range_Block_Info::get_transformed_block" << endl;
 
-  char trans = tolower(op_trans) ;
+  char trans = tolower(op_info->transformation()) ;
 
   shared_ptr<vector<int>> new_idxs_trans  = make_shared<vector<int>>(*idxs_trans_); 
   transform_tens_vec( trans, *new_idxs_trans ); 
@@ -137,7 +143,7 @@ Range_Block_Info::get_transformed_block( shared_ptr<const vector<string> > trans
   if ( trans == 'H' || trans == 'h' )
     new_factors.second *= -1.0 ; 
 
-  return make_shared<Range_Block_Info>( trans_block, unique_block, new_idxs_trans, new_factors, aops );
+  return make_shared<Range_Block_Info>( trans_block, unique_block, new_idxs_trans, new_factors, aops, op_info );
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
