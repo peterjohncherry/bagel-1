@@ -43,8 +43,6 @@ BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& 
     multiop_state_name += op_state_name;
     *mil_it = make_shared<Op_Info>( op_state_name, make_shared<vector<int>> (op_state_ids_->at(ii)), op_trans_list[ii] ); 
   }
- 
-  multiop_info_ = make_shared<MultiOp_Info>( multiop_state_name , multiop_info_list );  
   
   if (type_[0] == 'c' )// checking if derivative  
     name_ = "c_{I}"; 
@@ -55,6 +53,8 @@ BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& 
   op_order_ = std::vector<int>(op_list.size());
   iota( op_order_.begin(), op_order_.end(), 0);
   sort( op_order_.begin(), op_order_.end(), [ &op_list ] ( int i1, int i2) { return (bool)( op_list[i1] < op_list[i2]); });  
+
+  multiop_info_ = make_shared<MultiOp_Info>( multiop_state_name , multiop_info_list, op_order_ );  
 
   WickUtils::print_vector( op_list, "op_list" ); std::cout << std::endl; 
   WickUtils::print_vector( op_order_, "op_order" ); std::cout << std::endl; 
@@ -101,7 +101,6 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 
   auto split_ranges = Total_Op_->state_specific_split_ranges_->at( multiop_info_->name_ ); 
 
-//  for ( auto range_map_it = Total_Op_->split_ranges()->begin(); range_map_it !=Total_Op_->split_ranges()->end(); range_map_it++ ){
   for ( auto range_map_it = split_ranges->begin(); range_map_it != split_ranges->end(); range_map_it++ ){
 
     // get transformed range blocks;
@@ -117,13 +116,12 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
           vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
           int qq = 0 ;
           for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){
-            cout << tens_block->name()  << " from" ; cout.flush(); cout << " is a required block " << endl;
+            cout << tens_block->name()  << " from" ; cout.flush(); cout << tens_block->full_op_name() <<  " is a required block " << endl;
             MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->name() );
             required_blocks->emplace( tens_block->name() );
           }
           cout << endl;
         }
-        cout << "got a thing" << endl;   
       }
     }
   }

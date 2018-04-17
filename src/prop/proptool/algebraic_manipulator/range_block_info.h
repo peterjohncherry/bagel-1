@@ -19,7 +19,6 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
   friend Split_Range_Block_Info;
 
   private :
-    std::string full_op_name_;
     std::shared_ptr<std::vector<int>> state_ids_; 
 
   protected :
@@ -33,6 +32,7 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     std::shared_ptr<const std::vector<bool>> orig_aops_;
 
     std::set<std::vector<int>> sparsity_ ;
+    std::string full_op_name_;
     std::string name_;
 
   public :
@@ -60,6 +60,7 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     double Im_factor() const { return factors_.second; } 
   
     std::string name() const { return name_; } 
+    std::string full_op_name() const { return full_op_name_; } 
      
     std::shared_ptr<const std::vector<std::string>> orig_rngs() { return orig_rngs_; } 
     std::shared_ptr< std::vector<char>> orig_rngs_ch() { return orig_rngs_ch_; } 
@@ -96,7 +97,7 @@ class SRBI_Helper {
 
     SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks );
 
-    SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_blocks );
+    SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_blocks, std::vector<int>& cml_sizes );
 
     void add_trans( std::shared_ptr<Split_Range_Block_Info> srbi, std::vector<int>&  op_order, std::vector<char> op_trans );
    ~SRBI_Helper(){};

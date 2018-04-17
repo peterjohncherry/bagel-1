@@ -114,11 +114,11 @@ class TensOp_Base {
 
      void transform_aops_rngs( std::vector<char>& rngs, std::pair<double,double>& factor, const char op_trans_in ); 
   
-     void generate_transformed_ranges( char transformation );
-
      std::shared_ptr<Range_Block_Info> transform_block_rngs( const std::vector<char>& rngs, const char op_trans_in );
 
      virtual void generate_ranges( std::shared_ptr<Op_Info> op_info ) = 0;
+
+     virtual void generate_transformed_ranges( std::shared_ptr<Op_Info> op_info ) { throw std::logic_error("should not call from anything but TensOp"); }
 
      virtual void add_state_ids( std::shared_ptr<Op_Info> op_info ) { throw std::logic_error("should not call from anything but TensOp"); } 
 
@@ -184,6 +184,10 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
 
     void add_to_range_block_map( std::vector<std::string>& idx_ranges );
  
+    std::shared_ptr< std::map< char, std::tuple< std::pair<double,double>, std::shared_ptr<std::vector<std::vector<std::string>>> >>>   idx_ranges_map_;
+
+    void generate_idx_ranges_map();
+
   public:
 
    TensOp( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,
@@ -198,6 +202,8 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
    void generate_blocks();
 
    void generate_ranges( std::shared_ptr<Op_Info> op_info );
+   
+   void generate_transformed_ranges( std::shared_ptr<Op_Info> op_info );
 
    std::shared_ptr< std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_ranges() const{ return split_ranges_; } 
 
@@ -240,6 +246,7 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
 
     void generate_ranges( std::shared_ptr<Op_Info> op_info ); 
 
+
 //    void generate_ranges_new( std::shared_ptr<Op_Info> op_info ); 
 
     std::shared_ptr<const std::vector<int>> cmlsizevec() const  {  return cmlsizevec_; } ;
@@ -266,6 +273,8 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
 
     std::shared_ptr<std::vector<char>> transform_aops_rngs( std::shared_ptr<Split_Range_Block_Info> block, std::pair<double, double>& factors,
                                                             const std::vector<int>& op_order, const std::vector<char>& op_trans );
+
+    virtual void generate_transformed_ranges( std::shared_ptr<Op_Info> op_info ) { throw std::logic_error("should not call from anything but TensOp"); }
 
     std::shared_ptr<Split_Range_Block_Info> 
     transform_block_rngs( std::shared_ptr<Split_Range_Block_Info> block, std::shared_ptr<std::vector<bool>> trans_aops, 

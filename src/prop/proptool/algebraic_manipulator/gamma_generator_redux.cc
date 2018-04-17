@@ -32,29 +32,32 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
 
   block_idxs_ = vector<string>( std_ids_->size() );  // TODO get this with reordering
   
+  print_vector( *(block_info->idxs_trans() ) , "block_info->idxs_trans() " ); cout <<endl;
+
   {
   vector<int>::iterator it_it = block_info->idxs_trans()->begin();
-  for (  vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ ) {
+  for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ ) {
     *bi_it = (*std_ids_)[ *it_it ];
   }
   }
-  print_vector( block_idxs_, "block_idxs" ); cout << endl; // TODO should be defined in initialization or outside 
+
 
   block_aops_ = trans_aops;
   block_aops_rngs_ = block_info->orig_rngs_ch();
   block_rngs_ = block_info->orig_rngs();
-  print_vector(*block_aops_rngs_ , " block_aops_rngs"); cout <<endl;
+
 
   idxs_trans_ = block_info->idxs_trans();
 
-  std_rngs_ = *(block_info->unique_block_); // This still needs to be transformed... NO IT DOESN'T
- 
-  print_vector( std_rngs_ , " std_rngs_"); cout <<endl;
-  cout << " GGR::ag2" << endl;
+  std_rngs_ = *(block_info->unique_block_); // This still needs to be transformed... 
 
   standard_order_ = *(block_info->idxs_trans()); // Note that we should only have block_trans, not range trans; rng_trans does not
                                                  // necessarily transform unique block into the original block (e.g.,  aabb -> bbaa requires no reordering )
 
+  print_vector(*block_aops_rngs_ , " block_aops_rngs"); cout <<endl;
+  print_vector( block_idxs_ , " block_idxs_" ); cout << endl;
+  print_vector( *idxs_trans_ , " idxs_trans_"); cout <<endl;
+  print_vector( std_rngs_ , " std_rngs_"); cout <<endl;
   print_vector( standard_order_ , "standard_order_"); cout << endl;
   print_vector( *block_aops_, "block_aops_"); cout << endl;
   print_vector( *block_aops_rngs_, "block_aops_rngs_"); cout << endl;
@@ -65,7 +68,6 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
   for ( vector<int>::iterator so_it = standard_order_.begin() ; so_it != standard_order_.end() ; ++so_it, ++ii ) 
     block_to_std_order_[*so_it] = (ii);
 
-  print_vector( block_to_std_order_ , " block_to_std_order_" ); cout << endl;
   shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( std_rngs_.size() );
   iota( ids_pos->begin(), ids_pos->end(), 0 );
 
@@ -369,13 +371,6 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
     *si_it = standard_order_[pos];
   } 
 
-  // This should use standardized ordering for deltas and idxs; block_rngs may not be permutation of std_rngs   
-  print_vector( block_idxs_ , "block_idxs" ); cout << endl;
-  print_vector( *block_rngs_ , "block_rngs" ); cout << endl;
-  print_pair_vector( *deltas_pos , "deltas_pos" ); cout << endl;
-
-  cout << "disordered Aname = " <<  get_ctp_name( block_idxs_, *block_rngs_, *deltas_pos ) << endl;
-
   //TODO should standardize deltas pos when building gamma intermediate so as to avoid repeated transformation
   vector<pair<int,int>> idxs_deltas_pos(deltas_pos->size());
   vector<pair<int,int>>::iterator  idp_it = idxs_deltas_pos.begin();
@@ -383,14 +378,8 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
     *idp_it = make_pair( (*idxs_trans_)[dp_it->first], (*idxs_trans_)[dp_it->second]) ;  
   } 
 
-  print_vector( *std_ids_ , "std_ids" ); cout << endl;
-  print_vector( std_rngs_ , "std_rngs" ); cout << endl;
-  print_pair_vector( idxs_deltas_pos , "idxs_deltas_pos" ); cout << endl;
-
   string Aname_alt = get_ctp_name( *std_ids_, std_rngs_, idxs_deltas_pos );
  
-  cout << "standardized Aname = " << Aname_alt << endl;
-
   if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) {
     pair<double,double> ctp_factor = make_pair(1.0, 1.0);
     total_op_->enter_cmtps_into_map(idxs_deltas_pos, ctp_factor, std_rngs_ );

@@ -54,6 +54,14 @@ Range_Block_Info::Range_Block_Info( std::shared_ptr<const std::vector<std::strin
 
   unsigned int block_hash = WickUtils::get_block_hash( *orig_block ); // TODO block hashes should be used in original construction.. 
 
+  { // TODO replace this with normal name_, just keep until ctp fixed
+  vector<string> idxs(unique_block->size());
+  int pos = 0;
+  for (auto& elem : idxs ) 
+    elem = op_info->op_name_ + to_string(pos++);
+  name_ = get_ctp_name( idxs, *unique_block );
+  }
+
   plus_pnum_ = 1;
   kill_pnum_ = 1;
 
@@ -184,23 +192,19 @@ SRBI_Helper::SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Bloc
       
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_blocks ) :
+SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_blocks, std::vector<int>& cml_sizes ) :
                           rxnge_blocks_(std::make_shared<std::vector<std::shared_ptr<Range_Block_Info>>>( range_blocks )) , factors_(std::make_pair(1.0,1.0)) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "SRBI_Helper::SRBI_Helper" << endl;
 
-  int num_idxs_ = 0;
+  num_idxs_ = 0;
+  for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  rxnge_blocks_->begin() ; rb_it != rxnge_blocks_->end(); rb_it++) 
+    num_idxs_ += (*rb_it)->num_idxs_; 
+
   unique_   = true;
 
-  vector<int> cml_sizes(range_blocks.size());
-  vector<int>::iterator cs_it = cml_sizes.begin();
-  for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_iter =  range_blocks.begin(); rb_iter != range_blocks.end();  rb_iter++, cs_it++ ){
-    *cs_it += num_idxs_;
-     num_idxs_  += (*rb_iter)->num_idxs_;
-  } 
-
-  vector<int> idxs_trans(num_idxs_);
-  vector<int>::iterator it_it = idxs_trans.begin();
+  idxs_trans_ = make_shared<vector<int>>(num_idxs_); 
+  vector<int>::iterator it_it = idxs_trans_->begin();
 
   vector<string> unique_block(num_idxs_);
   vector<string>::iterator ub_it = unique_block.begin();
@@ -209,8 +213,9 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
   vector<string>::iterator or_it = orig_rngs.begin();
 
   //DQ : I feel like there should be a nicer way to do this; a lot of iterators, should I add braces to throw the iterators out?
-  cs_it = cml_sizes.begin();
-  for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks.begin() ; rb_it != range_blocks.end(); rb_it++, cs_it++) {
+  vector<int>::iterator cs_it = cml_sizes.begin();
+  
+  for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  rxnge_blocks_->begin() ; rb_it != rxnge_blocks_->end(); rb_it++, cs_it++) {
  
     double Re_buff = factors_.first;
     double Im_buff = factors_.second;
@@ -229,7 +234,6 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
     or_it += (*rb_it)->num_idxs_;
   }
 
-  idxs_trans_   = std::make_shared<std::vector<int>>(idxs_trans);         
   unique_block_ = std::make_shared<const std::vector<string>>(unique_block);         
   orig_rngs_ = std::make_shared<const std::vector<string>>(orig_rngs);         
       
