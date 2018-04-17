@@ -50,7 +50,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
    idxs = make_shared<vector<string>>(vector<string> {"H0", "H1", "H2", "H3"});
    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false});//TODO check this ordering is correct
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free });
-   symmfuncs = { hconj, perm_1032, perm_2301, perm_2103, perm_3012, perm_0321, perm_1230 }; 
+//   symmfuncs = { hconj, perm_1032, perm_2301, perm_2103, perm_3012, perm_0321, perm_1230 }; 
    time_symm = "none";
    state_dep = 0;
 
@@ -123,7 +123,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
 
     idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
-    symmfuncs = { hconj }; 
+ //   symmfuncs = { hconj }; 
     constraints = { not_all_act }; 
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt  });
     time_symm = "none";

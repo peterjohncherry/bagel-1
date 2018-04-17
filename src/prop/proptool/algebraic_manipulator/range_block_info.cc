@@ -231,12 +231,12 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
     std::for_each( it_it, it_it+(*rb_it)->idxs_trans()->size() , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } ); // these are lambdas 
 
-    copy( (*rb_it)->unique_block_->begin(), (*rb_it)->unique_block_->end(), ub_it );
+    copy( (*rb_it)->unique_block_->begin(), (*rb_it)->unique_block_->end(), ub_it+(*cs_it) );
 
     copy( (*rb_it)->orig_rngs()->begin(), (*rb_it)->orig_rngs()->end(), or_it );
 
     it_it += (*rb_it)->num_idxs_;
-    ub_it += (*rb_it)->num_idxs_;
+//    ub_it += (*rb_it)->num_idxs_;
     or_it += (*rb_it)->num_idxs_;
   }
 
