@@ -39,25 +39,41 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
   }
   }
 
-
   block_aops_ = trans_aops;
   block_aops_rngs_ = block_info->orig_rngs_ch();
 
   block_rngs_ = block_info->orig_rngs();
   idxs_trans_ = block_info->idxs_trans();
+  shared_ptr<vector<int>>  idxs_trans_inverse_ = block_info->idxs_trans_inverse();
 
   std_rngs_ = *(block_info->unique_block_); // This still needs to be transformed... 
 
   standard_order_ = *(block_info->idxs_trans()); // Note that we should only have block_trans, not range trans; rng_trans does not
                                                  // necessarily transform unique block into the original block (e.g.,  aabb -> bbaa requires no reordering )
 
-  print_vector(*block_aops_rngs_ , " block_aops_rngs"); cout <<endl;
-  print_vector( block_idxs_ , " block_idxs_" ); cout << endl;
-  print_vector( *idxs_trans_ , " idxs_trans_"); cout <<endl;
-  print_vector( std_rngs_ , " std_rngs_"); cout <<endl;
-  print_vector( standard_order_ , "standard_order_"); cout << endl;
-  print_vector( *block_aops_, "block_aops_"); cout << endl;
+  cout << endl;
+  cout << "--------------- gamma def -------------------" << endl;
+  print_vector( std_rngs_ ,        " unique_block_      "); cout <<endl;
+  print_vector( standard_order_ ,  " range_reordering   "); cout << endl;
+  print_vector(*block_rngs_ ,      " orig_rngs          "); cout <<endl;
+  cout << endl;
 
+  { // TEST for transformations
+  vector<string> unique_block_dupe( std_rngs_.size());
+//  vector<string>::iterator ubd_it = unique_block_dupe.begin();
+  vector<string>::const_iterator br_it = block_rngs_->begin();
+  for ( vector<int>::iterator it_it = idxs_trans_->begin() ;  it_it != idxs_trans_->end() ; it_it++ ) { 
+    unique_block_dupe[*it_it]  = *br_it;
+//    *ubd_it = (*block_rngs_)[*iti_it];
+    //ubd_it++;
+    br_it++;
+  }
+  if ( unique_block_dupe != std_rngs_ ) { 
+    print_vector(unique_block_dupe, "unique_block_dupe" ) ;
+    print_vector(std_rngs_, " != std_rngs_" ) ;
+    throw logic_error( " reordering is broken " ) ;
+  }
+  }
   int ii = 0 ;
 
   block_to_std_order_ = vector<int>(standard_order_.size());
@@ -412,7 +428,7 @@ void GammaGeneratorRedux::swap( int ii, int jj, int kk, shared_ptr<vector<shared
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGeneratorRedux::swap" << endl;
 
-  shared_ptr<vector<int>>  ids_pos             = (*gamma_vec)[kk]->ids_pos;
+  shared_ptr<vector<int>> ids_pos              = (*gamma_vec)[kk]->ids_pos;
   shared_ptr<vector<pair<int,int>>> deltas_pos = (*gamma_vec)[kk]->deltas_pos;
 
   int idx_buff = (*ids_pos)[ii];  
@@ -424,16 +440,17 @@ void GammaGeneratorRedux::swap( int ii, int jj, int kk, shared_ptr<vector<shared
 
     shared_ptr<pint_vec> new_deltas_tmp = make_shared<pint_vec>(*deltas_pos);
     
+    //this choice (based on creation/annihilation and the reordering may be irrelevant in new scheme; reordering has to be redone at end anyhow
     pair<int,int> new_delta = (*block_aops_)[ (*ids_pos)[jj] ]  ? make_pair( (*ids_pos)[jj], (*ids_pos)[ii] ): make_pair( (*ids_pos)[ii], (*ids_pos)[jj] );
     new_deltas_tmp->push_back(new_delta);
-    shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( *new_deltas_tmp, block_idxs_ ); // TODO
-
+//    shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( *new_deltas_tmp, block_idxs_ );
+                                                                                           
     shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>();
     for( int qq = 0 ; qq !=ids_pos->size() ; qq++)
       if ( (qq !=ii) && (qq!=jj))
         new_ids_pos->push_back( (*ids_pos)[qq] );
 
-    shared_ptr<GammaIntermediateRedux> new_gamma = make_shared<GammaIntermediateRedux>( new_ids_pos, new_deltas, (*gamma_vec)[kk]->my_sign );
+    shared_ptr<GammaIntermediateRedux> new_gamma = make_shared<GammaIntermediateRedux>( new_ids_pos, new_deltas_tmp, (*gamma_vec)[kk]->my_sign );
     gamma_vec->push_back(new_gamma);
 
   }
@@ -511,7 +528,13 @@ vector<int> GammaGeneratorRedux::get_position_order(const vector<int> &ids_pos) 
 
   return pos;
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This is preferable for ci-derivative terms; the derivative gamma matrices are by far the largest object, so 
+// we want the ordering which minimizes the number of distinct gamma matrices, even if this means increasing the number of
+// MO-tensor index transpositions we have to do. Consequently, we order into a canonical range sequence, by
+// range, rather than by operator index. 
+// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 vector<int> GammaGeneratorRedux::get_standardized_alt_order ( const vector<string>& rngs ,const vector<bool>& aops ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGeneratorRedux::get_standardized_alt_order " << endl;
@@ -542,6 +565,9 @@ vector<int> GammaGeneratorRedux::get_standardized_alt_order ( const vector<strin
 
   return standard_alt_order;
 };
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This final ordering is preferable for orbital excitation derivative terms; it ensures that the indexes of the
+// perturbation tensor are always in the same order, which makes combining terms easier. 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::set_standardized_alt_order_unranged ( int kk , vector<int>& standard_alt_order) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

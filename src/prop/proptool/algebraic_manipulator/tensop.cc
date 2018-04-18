@@ -53,59 +53,6 @@ cout << "TensOp_Base::TensOp_Base::transform_aops_rngs " << name_ << " " << op_t
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<Range_Block_Info>
-TensOp_Base::TensOp_Base::transform_block_rngs( const vector<char>& rngs, std::shared_ptr<Op_Info> op_info ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp_Base::TensOp_Base::transform_block_rngs " << name_ <<  " " << op_info->transformation() <<  endl;
-
-  char op_trans = tolower(op_info->transformation());
- 
-  pair<double,double> trans_factor;
-
-  vector<char> rngs_tmp = rngs;
-
-  shared_ptr<Range_Block_Info> trans_block; 
-
-
-  switch ( op_trans ) { 
-
-    case '0' : 
-      trans_block = all_ranges_->at( chrvec_to_strvec( rngs_tmp ) );
-      break;
-
-    case 'n' : 
-      trans_block = all_ranges_->at( chrvec_to_strvec( rngs_tmp ) );
-      break;
-
-    case 'i' : // inverse
-        if ( hermitian_inverse_ ) {
-          trans_block = hconj_ranges_->at( chrvec_to_strvec( rngs_tmp ) );
-        } else {
-          throw logic_error("inverse not defined... aborting!! " ); 
-        }
-      break;
-
-    case 'h' : // hconj
-        reverse( rngs_tmp.begin(), rngs_tmp.end() ); 
-        trans_block = hconj_ranges_->at( chrvec_to_strvec( rngs_tmp ) );
-      break;
-
-    case 't' : // time reversal
-      std::cout << " Why are you time reversing block ranges? Do you mean to time reverse aops_rngs? " << std::endl;
-      assert(false);
-      break;
-
-    default : 
-      string trans_str = "" ; trans_str += op_trans;
-      cout << "do not have transformation " << trans_str << " implemented; please check the braket specification in the input file. TensOp_Base::transform_block_rngs" << std::endl;
-      assert(false);
-      break;
-  }
-
-  return trans_block;
-
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vector<string>>& idx_ranges,
                                   vector<bool>& aops, std::pair<double, double>& factor,
@@ -447,47 +394,6 @@ MultiTensOp::MultiTensOp<DataType>::transform_aops_rngs( shared_ptr<Split_Range_
 
   return make_shared<vector<char>>(trans_aops_rngs);
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-std::shared_ptr<Split_Range_Block_Info>
-MultiTensOp::MultiTensOp<DataType>::transform_block_rngs( shared_ptr<Split_Range_Block_Info> block,
-                                                          shared_ptr<vector<bool>> trans_aops,
-                                                          shared_ptr<MultiOp_Info> op_info ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::MultiTensOp<DataType>::transform_block_rngs" << endl;
-
-  vector<int> op_order = *op_info->op_order();
-
-  vector<char> trans_block_rngs( block->num_idxs_ );
-  vector<char>::iterator tbr_it = trans_block_rngs.begin();
-  vector<int>::const_iterator oo_it = op_order.begin(); 
-
-  vector<shared_ptr<Range_Block_Info>> trans_split_block(sub_tensops_.size());
-  vector<shared_ptr<Range_Block_Info>>::iterator tsb_it = trans_split_block.begin();
-
-  vector<int> rngs_trans_merged( block->num_idxs_);
-
-  vector<int> trans_cml_sizes( op_order.size() );
-  int trans_cml_size = 0;
-  vector<int>::iterator tcs_it = trans_cml_sizes.begin();
-//  for ( vector<char>::const_iterator ot_it = op_trans.begin(); ot_it != op_trans.end(); ot_it++, oo_it++ , tsb_it++, tcs_it++ ) {
-//
-//    vector<char> trans_block_rngs_part = strvec_to_chrvec( *((*block->range_blocks())[*oo_it]->orig_rngs()) );
-//    
-//    *tsb_it = sub_tensops_[*oo_it]->transform_block_rngs( trans_block_rngs_part, *ot_it );
-//    
-//    tbr_it = move( trans_block_rngs_part.begin(), trans_block_rngs_part.end(), tbr_it);
-//
-//    *tcs_it = trans_cml_size;
-//    trans_cml_size += sub_tensops_[*oo_it]->num_idxs();
-//  }
-  SRBI_Helper helper( trans_split_block, trans_cml_sizes );
-
-  auto srbi = make_shared<Split_Range_Block_Info>( *trans_aops, helper, op_info );
- 
-  return srbi; 
-}
- 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree,
