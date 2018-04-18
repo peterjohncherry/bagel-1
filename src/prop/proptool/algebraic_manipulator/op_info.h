@@ -26,7 +26,7 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
 
     // should also include symmetry information
      Op_Info( std::string name, std::shared_ptr<std::vector<int>> state_ids, char transformation ) :  
-     name_(name), op_name_(name.substr(0,1)),  state_ids_(state_ids), transformation_(transformation){}
+     name_(name), op_name_(name.substr(0,1)),  state_ids_(state_ids), transformation_(tolower(transformation)){}
 
      Op_Info( std::string name ) : name_(name), op_name_(name.substr(0,1)){}; 
     ~Op_Info(){} 

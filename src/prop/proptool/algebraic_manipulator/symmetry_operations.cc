@@ -58,3 +58,39 @@ Transformation_1230::transform( const std::vector<std::string>& rngs ) {
   vector<std::string> rngs_new = { rngs[1], rngs[2] , rngs[3], rngs[0] };
   return rngs_new;
 }
+
+std::vector<std::string> 
+Transformation_1032::inverse_transform( const std::vector<std::string>& rngs ) { 
+  vector<std::string> rngs_new = { rngs[1], rngs[0] , rngs[3], rngs[2] };
+  return rngs_new;
+}
+
+std::vector<std::string> 
+Transformation_2103::inverse_transform( const std::vector<std::string>& rngs ) { 
+  vector<std::string> rngs_new = { rngs[2], rngs[1] , rngs[0], rngs[3] };
+  return rngs_new;
+}
+
+std::vector<std::string> 
+Transformation_2301::inverse_transform( const std::vector<std::string>& rngs ) { 
+  vector<std::string> rngs_new = { rngs[2], rngs[3] , rngs[0], rngs[1] };
+  return rngs_new;
+}
+
+std::vector<std::string> 
+Transformation_3012::inverse_transform( const std::vector<std::string>& rngs ) { 
+  vector<std::string> rngs_new = { rngs[1], rngs[2] , rngs[3], rngs[0] };
+  return rngs_new;
+}
+
+std::vector<std::string> 
+Transformation_0321::inverse_transform( const std::vector<std::string>& rngs ) { 
+  vector<std::string> rngs_new = { rngs[0], rngs[3] , rngs[2], rngs[1] };
+  return rngs_new;
+}
+
+std::vector<std::string> 
+Transformation_1230::inverse_transform( const std::vector<std::string>& rngs ) {
+  vector<std::string> rngs_new = { rngs[3], rngs[0] , rngs[1], rngs[2] };
+  return rngs_new;
+}

@@ -34,11 +34,11 @@ BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& 
       op_state_name += "}"; 
     }
 
-    if (op_trans_list.size() > 0 ) {
-      op_state_name +=  "^{"; 
-      op_state_name += op_trans_list[ii]; 
-      op_state_name += "}"; 
-    }
+//    if (op_trans_list.size() > 0 ) {
+//      op_state_name +=  "^{"; 
+//      op_state_name += op_trans_list[ii]; 
+//      op_state_name += "}"; 
+//    }
 
     multiop_state_name += op_state_name;
     *mil_it = make_shared<Op_Info>( op_state_name, make_shared<vector<int>> (op_state_ids_->at(ii)), op_trans_list[ii] ); 

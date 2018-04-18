@@ -236,11 +236,7 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
 
     void generate_ranges( std::shared_ptr<Op_Info> op_info ); 
 
-
-//    void generate_ranges_new( std::shared_ptr<Op_Info> op_info ); 
-
     std::shared_ptr<const std::vector<int>> cmlsizevec() const  {  return cmlsizevec_; } ;
-    int cmlsizevec(int ii ) const { return (*cmlsizevec_)[ii]; };
 
     std::vector<std::shared_ptr<TensOp_Base>> sub_tensops(){ return sub_tensops_; } 
  

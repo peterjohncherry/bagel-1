@@ -22,10 +22,11 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
 
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
+
   {
   vector<int>::iterator it_it = idxs_trans_->begin();
   for ( int ii = 0 ; ii != num_idxs_; ii++, it_it++ ) 
-    (*idxs_trans_inverse_)[ *it_it ] = ii;
+    (*idxs_trans_inverse_)[ *it_it ] = *it_it;
   }
 
 
@@ -72,6 +73,14 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   num_idxs_ = orig_rngs_->size();
 
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
+
+  if ( op_info->transformation() == 'h' ||  op_info->transformation() == 'i' ) {
+    cout << endl;
+    print_vector( *idxs_trans_, "idxs_trans" ) ;
+    reverse(idxs_trans_->begin(), idxs_trans_->end());
+    print_vector( *idxs_trans_, "reversed idxs_trans" ) ; cout << endl;
+  }
+
   {
   vector<int>::iterator it_it = idxs_trans_->begin();
   for ( int ii = 0 ; ii != num_idxs_; ii++, it_it++ ) 
@@ -106,97 +115,6 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
     no_transition_ = true;
   }
 
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// This is for dealing with time reversal symmetry as applied to the Ket or Bra; we want to keep the relevant MO integrals the same, but the ranges
-// of the creation and annihilation operators need to be transformed.
-// Note that the aops_rngs corresponds to the ranges on which the creation and annhiliation operators act, not the block.
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void
-Range_Block_Info::transform_aops_rngs( std::vector<bool>& aops, std::vector<char>& aops_rngs,  std::pair<double,double>& factors , char transformation ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Range_Block_Info::transform_aops_rngs " << endl;
-
-  transformation = tolower(transformation); 
- 
-  switch ( transformation ) { 
-
-    case 'i' : // inverse
-      for_each( aops.begin(), aops.end(), [] ( bool aop ) { return !aop; } ); 
-      factors.second *= -1.0;
-      return;
-
-    case 'h' : // hconj
-      for_each( aops.begin(), aops.end(), [] ( bool aop ) { return !aop; } ); 
-      std::reverse( aops_rngs.begin(), aops_rngs.end() ) ;
-      factors.second *= -1.0;
-      return;
-
-    case 't' : // time reversal
-      for_each( aops_rngs.begin(), aops_rngs.end(), [] ( char rng ) { if ( rng > 'Z' ){ rng -=32;} else { rng += 32;}}); 
-      factors.first *= -1.0;
-      return;
-
-    default : 
-      string trans_str = "" ; trans_str += transformation;
-      std::cout << "do not have transformation " << trans_str << "implemented; please check the braket specification in the input file." << std::endl;
-      throw std::logic_error( " Aborting!!" );
-
-  } 
-
-  throw std::logic_error( " transform_aops_rngs in rng block Aborting!!" );
-  return;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-SRBI_Helper::SRBI_Helper( std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks ) :
-                            range_blocks_(range_blocks), factors_(std::make_pair(1.0,1.0)) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "SRBI_Helper::SRBI_Helper 1" << endl;
-
-  int num_idxs_ = 0;
-  unique_   = true;
-
-  vector<int> cml_sizes(range_blocks->size());
-  vector<int>::iterator cs_it = cml_sizes.begin();
-  for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_iter =  range_blocks->begin(); rb_iter != range_blocks->end();  rb_iter++, cs_it++ ){
-    *cs_it += num_idxs_;
-     num_idxs_  += (*rb_iter)->num_idxs_;
-  } 
-
-  vector<int> idxs_trans(num_idxs_);
-  vector<int> aops_trans(num_idxs_);
-  vector<int> rngs_trans(num_idxs_);
-  vector<int>::iterator it_it = idxs_trans.begin();
-  vector<int>::iterator at_it = aops_trans.begin();
-  vector<int>::iterator rt_it = rngs_trans.begin();
-
-  //DQ : I feel like there should be a nicer way to do this; a lot of iterators, should I add braces to throw the iterators out?
-  cs_it = cml_sizes.begin();
-  for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks->begin() ; rb_it != range_blocks->end(); rb_it++, cs_it++) {
- 
-    double Re_buff = factors_.first;
-    double Im_buff = factors_.second;
-    factors_.first = Re_buff*(*rb_it)->Re_factor() + Im_buff*(*rb_it)->Im_factor();
-    factors_.second = Re_buff*(*rb_it)->Im_factor() + Im_buff*(*rb_it)->Re_factor();
-    
-    copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
-    std::for_each( it_it, it_it+(*rb_it)->num_idxs_ , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } ); // these are lambdas 
-    
-    copy( (*rb_it)->aops_trans()->begin(), (*rb_it)->aops_trans()->end(), at_it );
-    std::for_each( at_it, at_it+(*rb_it)->num_idxs_, [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
-
-    copy( (*rb_it)->rngs_trans()->begin(), (*rb_it)->rngs_trans()->end(), rt_it );
-    std::for_each( rt_it, rt_it+(*rb_it)->num_idxs_ , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
-
-    it_it += (*rb_it)->num_idxs_;
-    at_it += (*rb_it)->num_idxs_;
-    rt_it += (*rb_it)->num_idxs_;
-  }
-
-  idxs_trans_      = std::make_shared<std::vector<int>>(idxs_trans);         
-  rngs_trans_      = std::make_shared<std::vector<int>>(rngs_trans);        
-  aops_trans_      = std::make_shared<std::vector<int>>(aops_trans);         
-      
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_blocks, std::vector<int>& cml_sizes ) :

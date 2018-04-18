@@ -54,6 +54,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
   static shared_ptr<Transformation_3012>  perm_3012 = make_shared<Transformation_3012>( "3012" );
   static shared_ptr<Transformation_0321>  perm_0321 = make_shared<Transformation_0321>( "0321" );
   static shared_ptr<Transformation_1230>  perm_1230 = make_shared<Transformation_1230>( "1230" );
+  static shared_ptr<Transformation_ID>  identity = make_shared<Transformation_ID>( "Id" );
   static shared_ptr<Constraint_NotAllAct>  not_all_act = make_shared<Constraint_NotAllAct>( "NotAllAct" );
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */

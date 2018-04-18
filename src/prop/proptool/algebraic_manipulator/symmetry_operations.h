@@ -26,6 +26,30 @@ class Transformation {
     virtual std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& ranges ) = 0 ;
 
 };
+  
+
+//For testing purposes; does nothing
+class Transformation_ID : public Transformation {
+  public :
+
+    const std::pair<double,double> factor_ = {1.0, 1.0};
+    std::shared_ptr<std::vector<int>> idxs_trans_; 
+    std::shared_ptr<std::vector<int>> idxs_trans_inverse_; 
+ 
+    Transformation_ID( const std::string name ): Transformation( name ),
+           idxs_trans_( std::make_shared<std::vector<int>>( std::vector<int> { 0, 1, 2, 3} ) ), 
+           idxs_trans_inverse_( std::make_shared<std::vector<int>>( std::vector<int> { 0, 1, 2, 3} ) ) {} 
+
+    ~Transformation_ID(){}
+
+    std::vector<std::string> transform( const std::vector<std::string>& rngs ) { std::vector<std::string> rngs_new = rngs; return rngs_new; } ; 
+    std::vector<std::string> inverse_transform( const std::vector<std::string>& rngs ) { std::vector<std::string> rngs_new = rngs; return rngs_new; } ; 
+
+    std::pair<double,double> factor( const std::vector<std::string>& ranges ) { return factor_; }
+
+    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return idxs_trans_;} 
+
+};
  
 class Transformation_UserDefined : public  Transformation {
   public : 
@@ -93,16 +117,21 @@ class Transformation_1032 : public Transformation {
   public :
 
     const std::pair<double,double> factor_ = {1.0, 1.0};
-    std::vector<int> idxs_trans_ = { 1, 0, 3, 2}; 
+    std::shared_ptr<std::vector<int>> idxs_trans_; 
+    std::shared_ptr<std::vector<int>> idxs_trans_inverse_; 
  
-    Transformation_1032( const std::string name ): Transformation( name ) {}
+    Transformation_1032( const std::string name ): Transformation( name ),
+           idxs_trans_( std::make_shared<std::vector<int>>( std::vector<int> { 1, 0, 3, 2} ) ), 
+           idxs_trans_inverse_( std::make_shared<std::vector<int>>( std::vector<int> { 1, 0, 3, 2} ) ) {} 
+
     ~Transformation_1032(){}
 
     std::vector<std::string> transform( const std::vector<std::string>& rngs ); 
+    std::vector<std::string> inverse_transform( const std::vector<std::string>& rngs ); 
 
     std::pair<double,double> factor( const std::vector<std::string>& ranges ) { return factor_; }
 
-    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return std::make_shared<std::vector<int>>(idxs_trans_);} 
+    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return idxs_trans_;} 
 
 };
        
@@ -110,16 +139,20 @@ class Transformation_2301 : public Transformation {
   public :
 
     const std::pair<double,double> factor_ = {1.0, 1.0};
-    std::vector<int> idxs_trans_ = { 2, 3, 0, 1}; 
+    std::shared_ptr<std::vector<int>> idxs_trans_; 
+    std::shared_ptr<std::vector<int>> idxs_trans_inverse_; 
  
-    Transformation_2301( const std::string name ): Transformation( name ) {}
+    Transformation_2301( const std::string name ): Transformation( name ),
+           idxs_trans_( std::make_shared<std::vector<int>>( std::vector<int> { 2, 3, 0, 1 } ) ),
+           idxs_trans_inverse_( std::make_shared<std::vector<int>>( std::vector<int> { 2, 3, 0, 1 } ) ) {} 
     ~Transformation_2301(){}
 
     std::vector<std::string> transform( const std::vector<std::string>& rngs ); 
+    std::vector<std::string> inverse_transform( const std::vector<std::string>& rngs ); 
 
     std::pair<double,double> factor( const std::vector<std::string>& ranges ) { return factor_; }
 
-    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return std::make_shared<std::vector<int>>(idxs_trans_);} 
+    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return idxs_trans_;} 
 
 };
  
@@ -127,16 +160,21 @@ class Transformation_2103 : public Transformation {
   public :
 
     const std::pair<double,double> factor_ = {1.0, 1.0};
-    std::vector<int> idxs_trans_ = { 2, 1, 0, 3}; 
+    std::shared_ptr<std::vector<int>> idxs_trans_; 
+    std::shared_ptr<std::vector<int>> idxs_trans_inverse_; 
  
-    Transformation_2103( const std::string name ): Transformation( name ) {}
+    Transformation_2103( const std::string name ): Transformation( name ),
+           idxs_trans_( std::make_shared<std::vector<int>>( std::vector<int> { 2, 1, 0, 3 } ) ),
+           idxs_trans_inverse_( std::make_shared<std::vector<int>>( std::vector<int> { 2, 1, 0, 3 } ) ) {} 
+
     ~Transformation_2103(){}
 
     std::vector<std::string> transform( const std::vector<std::string>& rngs ); 
+    std::vector<std::string> inverse_transform( const std::vector<std::string>& rngs ); 
 
     std::pair<double,double> factor( const std::vector<std::string>& ranges ) { return factor_; }
 
-    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return std::make_shared<std::vector<int>>(idxs_trans_);} 
+    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return idxs_trans_;} 
 
 };
  
@@ -145,16 +183,21 @@ class Transformation_3012 : public Transformation {
   public :
 
     const std::pair<double,double> factor_ = {1.0, -1.0};
-    std::vector<int> idxs_trans_ = { 3, 0, 1, 2 }; 
+    std::shared_ptr<std::vector<int>> idxs_trans_; 
+    std::shared_ptr<std::vector<int>> idxs_trans_inverse_; 
  
-    Transformation_3012( const std::string name ): Transformation( name ) {}
+    Transformation_3012( const std::string name ): Transformation( name ) ,
+           idxs_trans_( std::make_shared<std::vector<int>>( std::vector<int> { 3, 0, 1, 2 } ) ) ,
+           idxs_trans_inverse_( std::make_shared<std::vector<int>>( std::vector<int> { 1, 2, 3, 0 } ) ) {} 
+
     ~Transformation_3012(){}
 
     std::vector<std::string> transform( const std::vector<std::string>& rngs ); 
+    std::vector<std::string> inverse_transform( const std::vector<std::string>& rngs ); 
 
     std::pair<double,double> factor( const std::vector<std::string>& ranges ) { return factor_; }
 
-    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return std::make_shared<std::vector<int>>(idxs_trans_);} 
+    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return idxs_trans_;} 
 
 };
  
@@ -163,16 +206,21 @@ class Transformation_0321 : public Transformation {
   public :
 
     const std::pair<double,double> factor_ = {1.0, -1.0};
-    std::vector<int> idxs_trans_ = { 0, 3, 2, 1 }; 
+    std::shared_ptr<std::vector<int>> idxs_trans_; 
+    std::shared_ptr<std::vector<int>> idxs_trans_inverse_; 
  
-    Transformation_0321( const std::string name ): Transformation( name ) {}
+    Transformation_0321( const std::string name ): Transformation( name ) ,
+           idxs_trans_( std::make_shared<std::vector<int>>( std::vector<int> { 0, 3, 2, 1} ) ),
+           idxs_trans_inverse_( std::make_shared<std::vector<int>>( std::vector<int> { 0, 3, 2, 1} ) ) {} 
+
     ~Transformation_0321(){}
 
     std::vector<std::string> transform( const std::vector<std::string>& rngs ); 
+    std::vector<std::string> inverse_transform( const std::vector<std::string>& rngs ); 
 
     std::pair<double,double> factor( const std::vector<std::string>& ranges ) { return factor_; }
 
-    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return std::make_shared<std::vector<int>>(idxs_trans_);} 
+    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return idxs_trans_;} 
 
 };
 
@@ -180,16 +228,21 @@ class Transformation_1230 : public Transformation {
   public :
 
     const std::pair<double,double> factor_ = {1.0, -1.0};
-    std::vector<int> idxs_trans_ = { 1, 2, 3, 0}; 
+    std::shared_ptr<std::vector<int>> idxs_trans_; 
+    std::shared_ptr<std::vector<int>> idxs_trans_inverse_; 
  
-    Transformation_1230( const std::string name ): Transformation( name ) {}
+    Transformation_1230( const std::string name ): Transformation( name ) ,
+           idxs_trans_( std::make_shared<std::vector<int>>( std::vector<int> { 1, 2, 3, 0 } ) ) ,
+           idxs_trans_inverse_( std::make_shared<std::vector<int>>( std::vector<int> { 3, 0, 1, 2 } ) ) {} 
+
     ~Transformation_1230(){}
 
     std::vector<std::string> transform( const std::vector<std::string>& rngs ); 
+    std::vector<std::string> inverse_transform( const std::vector<std::string>& rngs ); 
 
     std::pair<double,double> factor( const std::vector<std::string>& ranges ) { return factor_; }
 
-    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return std::make_shared<std::vector<int>>(idxs_trans_);} 
+    std::shared_ptr<std::vector<int>> idxs_trans( const std::vector<std::string>& rngs ) { return idxs_trans_;} 
 
 };
 

@@ -272,22 +272,22 @@ void TensOp::TensOp<DataType>::apply_symmetry( const vector<string>& new_block, 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "TensOp::TensOp<DataType>::apply_symmetry" << endl; 
 
-  shared_ptr<vector<int>> order = make_shared<vector<int>>( aops.size() );
-  std::iota( order->begin(), order->end(), 0 );
 
   shared_ptr<const vector<string>> new_block_c =  make_shared<const vector<string>>(new_block);
 
   pair<double,double> new_fac = factor_; 
-
   for ( auto& func : symmfuncs_ ) { 
     auto art_loc = all_ranges_tmp_->find(func->transform( *new_block_c )) ; // TODO transform should take symmetry transformation from state switching
     if( art_loc != all_ranges_tmp_->end() ){
+      cout << endl;
+      print_vector( art_loc->first , "art_loc->first" ); print_vector( func->transform( *new_block_c ) , func->name_ + "transformed_new_block_c" );  print_vector( *new_block_c , "new_block_c" );  cout << endl; 
       WickUtils::pair_fac_mult( func->factor( *new_block_c ), new_fac );
       all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, art_loc->second->unique_block_, func, new_fac, aops , op_info ));  
       return;
     }
   }
-  all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, new_block_c, order, new_fac, aops, op_info ));  
+  shared_ptr<Transformation_ID>  identity = make_shared<Transformation_ID>( "Id" );
+  all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, new_block_c, identity , new_fac, aops , op_info ) );  
 
   return;
 }
@@ -452,6 +452,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( shared_ptr<Op_Info> multiop
 
       maxs->at(ii) = sub_tensops_[multiop_info->op_order(ii)]->all_ranges_state_specific_->at( multiop_info->op_info(ii)->name_ )->size()-1;
       rng_maps[ii] = sub_tensops_[multiop_info->op_order(ii)]->all_ranges_state_specific_->at( multiop_info->op_info(ii)->name_ )->begin();
+      cout << " multiop_info->op_info(ii)->name_ = " << multiop_info->op_info(ii)->name_ <<  endl;
 
       trans_cml_sizes[ii] = (*cmlsizevec_)[multiop_info->op_order(ii)];
     }
@@ -469,11 +470,15 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( shared_ptr<Op_Info> multiop
         }
       }
  
+      cout << "range_block_trans" << endl;
       old_forvec = make_shared<vector<int>>(*forvec);
       shared_ptr< vector <shared_ptr<Range_Block_Info >>> split_block = make_shared< vector <shared_ptr<Range_Block_Info >>>( num_tensors_ );
       vector<shared_ptr<Range_Block_Info>>::iterator sb_it = split_block->begin();
-      for (auto  rm_it = rng_maps.begin(); rm_it != rng_maps.end(); rm_it++, sb_it++ )
+      for (auto  rm_it = rng_maps.begin(); rm_it != rng_maps.end(); rm_it++, sb_it++ ){
         *sb_it = (*rm_it)->second;
+        print_vector( *( (*rm_it)->second->idxs_trans()), "(*rm_it)->second->idxs_trans()" ); 
+      } 
+      cout << endl << endl;
 
       //TODO Must obtain from constraint functions 
       shared_ptr<Split_Range_Block_Info> srbi;

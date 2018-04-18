@@ -60,22 +60,19 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
 
   { // TEST for transformations
   vector<string> unique_block_dupe( std_rngs_.size());
-//  vector<string>::iterator ubd_it = unique_block_dupe.begin();
   vector<string>::const_iterator br_it = block_rngs_->begin();
-  for ( vector<int>::iterator it_it = idxs_trans_->begin() ;  it_it != idxs_trans_->end() ; it_it++ ) { 
+  for ( vector<int>::iterator it_it = idxs_trans_->begin() ;  it_it != idxs_trans_->end() ; it_it++, br_it++ ) { 
     unique_block_dupe[*it_it]  = *br_it;
-//    *ubd_it = (*block_rngs_)[*iti_it];
-    //ubd_it++;
-    br_it++;
   }
+
   if ( unique_block_dupe != std_rngs_ ) { 
     print_vector(unique_block_dupe, "unique_block_dupe" ) ;
     print_vector(std_rngs_, " != std_rngs_" ) ;
     throw logic_error( " reordering is broken " ) ;
   }
   }
-  int ii = 0 ;
 
+  int ii = 0 ;
   block_to_std_order_ = vector<int>(standard_order_.size());
   for ( vector<int>::iterator so_it = standard_order_.begin() ; so_it != standard_order_.end() ; ++so_it, ++ii ) 
     block_to_std_order_[*so_it] = (ii);
