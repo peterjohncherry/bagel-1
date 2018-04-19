@@ -423,7 +423,7 @@ void GammaGeneratorRedux::add_Acontrib_to_map( int kk, string bra_name, string k
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::swap( int ii, int jj, int kk, shared_ptr<vector<shared_ptr<GammaIntermediateRedux>>> gamma_vec  ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGeneratorRedux::swap" << endl;
+//  cout << "GammaGeneratorRedux::swap" << endl;
 
   shared_ptr<vector<int>> ids_pos              = (*gamma_vec)[kk]->ids_pos;
   shared_ptr<vector<pair<int,int>>> deltas_pos = (*gamma_vec)[kk]->deltas_pos;
@@ -439,8 +439,8 @@ void GammaGeneratorRedux::swap( int ii, int jj, int kk, shared_ptr<vector<shared
     
     //this choice (based on creation/annihilation and the reordering may be irrelevant in new scheme; reordering has to be redone at end anyhow
     pair<int,int> new_delta = (*block_aops_)[ (*ids_pos)[jj] ]  ? make_pair( (*ids_pos)[jj], (*ids_pos)[ii] ): make_pair( (*ids_pos)[ii], (*ids_pos)[jj] );
-    new_deltas_tmp->push_back(new_delta);
-//    shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( *new_deltas_tmp, block_idxs_ );
+    new_deltas_tmp->push_back( new_delta );
+//  shared_ptr<pint_vec> new_deltas = WickUtils::standardize_delta_ordering_generic( *new_deltas_tmp, block_idxs_ );
                                                                                            
     shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>();
     for( int qq = 0 ; qq !=ids_pos->size() ; qq++)

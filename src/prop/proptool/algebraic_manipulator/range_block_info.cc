@@ -16,13 +16,11 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     const vector<bool>& aops, shared_ptr<Op_Info>& op_info ) :
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(idxs_trans), factors_(factors) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Range_Block_Info::Range_Block_Info 1" << endl;
+  // cout << "Range_Block_Info::Range_Block_Info 1" << endl;
 
   num_idxs_ = orig_rngs_->size();
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
-
-  print_vector( *orig_rngs_ , "orig_block " ) ;  print_vector( *unique_block_ , "unique_block " ) ;   print_vector( *idxs_trans_ , "idxs_trans " ) ;  cout << endl;
 
   {
   vector<int>::iterator it_it = idxs_trans_->begin();
@@ -69,7 +67,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(transform->idxs_trans(*orig_block)), factors_(factors),
                                     transform_(transform) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Range_Block_Info::Range_Block_Info 2" << endl;
+ // cout << "Range_Block_Info::Range_Block_Info 2" << endl;
 
   num_idxs_ = orig_rngs_->size();
 
@@ -144,11 +142,6 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
     double Im_buff = factors_.second;
     factors_.first = Re_buff*(*rb_it)->Re_factor() + Im_buff*(*rb_it)->Im_factor();
     factors_.second = Re_buff*(*rb_it)->Im_factor() + Im_buff*(*rb_it)->Re_factor();
-
-    cout <<  (*rb_it)->full_op_name()  << " : " ; cout.flush(); 
-    print_vector( *((*rb_it)->idxs_trans()) , "" ) ; 
-    print_vector( *((*rb_it)->orig_rngs()) , "" ) ; 
-    print_vector( *((*rb_it)->unique_block_) , "" )  ; cout << endl; 
     
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
     std::for_each( it_it, it_it+(*rb_it)->num_idxs_, [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );

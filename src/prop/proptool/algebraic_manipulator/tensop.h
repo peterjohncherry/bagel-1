@@ -164,7 +164,7 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
 
     std::vector<std::shared_ptr<Constraint>> constraints_;
 
-    std::vector<std::vector<std::string>> block_list_;
+    std::vector<std::shared_ptr<std::vector<std::string>>> block_list_;
   
     std::shared_ptr<std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>  all_ranges_tmp_;
 
