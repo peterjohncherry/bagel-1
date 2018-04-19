@@ -159,66 +159,100 @@ void TensOp::TensOp<DataType>::generate_uncontracted_ctps( std::shared_ptr<Op_In
   return;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void TensOp::TensOp<DataType>::generate_transformed_ranges( shared_ptr<Op_Info> op_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// NOTE: Surprisingly, it seems to be better (and certainly more straightforward) to transform the original
-// idx_ranges and build a completely new block list and all_ranges, than to use the old ones.
-// Mainly because building the block list is fast, and doing it this way avoids the confusion (i.e. mistakes I make)
-// from needing to double invert transform the aop ranges ( additional one for state symmetry, on top of original
-// transformation ).
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp<DataType>::generate_transformed_ranges" <<  name_ <<  endl;
-  
-  pair<double, double> factor;
-  shared_ptr<vector<vector<string>>> trans_idx_ranges;
+  cout << "TensOp::TensOp<DataType>::generate_transformed_ranges_new : " <<  name_ <<  endl;
 
-  tie( factor, trans_idx_ranges ) =  idx_ranges_map_->at( tolower(op_info->transformation()) );
-
-  shared_ptr<vector<int>> fvec = make_shared<vector<int>>( num_idxs_, 0 );
-  shared_ptr<vector<int>> mins = make_shared<vector<int>>( num_idxs_, 0 );
-  shared_ptr<vector<int>> maxs = make_shared<vector<int>>( num_idxs_ );
-  int num_blocks = 1;
-
-  for( int ii = 0; ii != num_idxs_; ii++ ){
-    maxs->at(ii) = ( (*trans_idx_ranges)[ii].size()-1 );
-    num_blocks *= ( (*trans_idx_ranges)[ii].size());
+  shared_ptr<map<const vector<string>, shared_ptr<Range_Block_Info>>> all_ranges_ref;
+  auto arss_loc = all_ranges_state_specific_->find( op_info->op_state_name_ );
+  if (arss_loc == all_ranges_state_specific_->end() ) { 
+    cout << "generate, do not have ranges for untransformed : " << op_info->op_state_name_ << endl;
+    generate_ranges( op_info ); 
+    all_ranges_ref = all_ranges_state_specific_->at( op_info->op_state_name_ );
+  } else {
+     cout << "do not generate, already have ranges for untransformed : " << op_info->op_state_name_ << endl;
+    all_ranges_ref = arss_loc->second;
   }
 
-  vector<vector<string>> trans_block_list = vector<vector<string>>(num_blocks);
-  vector<vector<string>>::iterator tbl_it = trans_block_list.begin();
+  shared_ptr<map<const vector<string>, shared_ptr<Range_Block_Info>>> all_ranges_new =
+  make_shared<map<const vector<string>, shared_ptr<Range_Block_Info>>>();
 
-  do { 
+  for (auto& elem : *all_ranges_ref ) {
+    shared_ptr<Range_Block_Info>  new_block = get_transformed_range_block( op_info, elem.second );
+    all_ranges_new->emplace( *(new_block->orig_rngs() ), new_block);
+    print_vector( *(new_block->orig_rngs() ), op_info->op_full_name_ + " new_block->orig_rngs() " ); 
+    print_vector( *(new_block->unique_block_), " new_block->unique_block_ " ); cout << endl;
+  } 
 
-    vector<string> new_block(num_idxs_);
-    for (auto jj = 0 ; jj != fvec->size() ; jj++ )
-      new_block[jj] = (*trans_idx_ranges)[jj][(*fvec)[jj]];
-
-    if( satisfies_constraints( new_block ) ){
-      *tbl_it = new_block; 
-      ++tbl_it;
-    }
-
-  } while( fvec_cycle_skipper( fvec, maxs, mins ) );
-
-  all_ranges_tmp_ = make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ();
-  for ( vector<vector<string>>::iterator tbl_it = trans_block_list.begin(); tbl_it != trans_block_list.end() ; tbl_it++ )
-    apply_symmetry( *tbl_it, *aops_, op_info );
-
-  // TODO curerntly need to create new map, this seems awkward, so find a way around, maybe move.
-  shared_ptr< map< const vector<string>, shared_ptr<Range_Block_Info> > > all_ranges_new = 
-            make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ( *all_ranges_tmp_ );
-
-  all_ranges_state_specific_->emplace( op_info->name_, all_ranges_new ) ;
-  cout << " leaving TensOp::TensOp<DataType>::generate_transformed_ranges" << name_ <<    endl;
+  all_ranges_state_specific_->emplace( op_info->op_full_name_, all_ranges_new ) ;
+  cout << " leaving TensOp::TensOp<DataType>::generate_transformed_ranges_new" << name_ <<    endl;
   return;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+shared_ptr<Range_Block_Info>  
+TensOp::TensOp<DataType>::get_transformed_range_block( std::shared_ptr<Op_Info> op_info, std::shared_ptr<Range_Block_Info>& block ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp::TensOp<DataType>::get_transformed_range_block : " <<  name_ <<  endl;
+
+  shared_ptr<vector<string>> new_orig_rngs = make_shared<vector<string>>(*(block->unique_block_));
+  pair<double,double> new_factors = block->factors();
+  char op_transformation = tolower(op_info->transformation());
+
+  shared_ptr<vector<int>> new_idxs_trans = make_shared<vector<int>>(block->num_idxs_); 
+  iota( new_idxs_trans->begin(), new_idxs_trans->end(), 0 );
+
+  vector<bool> new_aops = *aops_;
+ 
+  switch ( op_transformation ) { 
+
+    case 'i' : // inverse
+      for_each( new_aops.begin(), new_aops.end(), [] ( bool aop ) { return !aop; } ); 
+      assert ( hermitian_inverse_ ); // TODO in principal, this should go to an op specific function.
+      new_factors.second *= -1.0;
+      break;
+
+    case 'h' : // hconj
+      for_each( new_aops.begin(), new_aops.end(), [] ( bool aop ) { return !aop; } ); 
+      std::reverse( new_orig_rngs->begin(), new_orig_rngs->end() );
+      std::reverse( new_idxs_trans->begin(), new_idxs_trans->end() );
+      new_factors.second *= -1.0;
+      break;
+
+    case 't' : // time reversal
+      for_each( new_orig_rngs->begin(), new_orig_rngs->end(), [] ( string& rng ) { if ( rng[0] > 'Z' ){ rng[0] -=32;} else { rng[0] += 32;}}); 
+      new_factors.first *= -1.0;
+      break;
+
+    case '0' : // do nothing
+      break;
+
+    case 'n' : // do nothing
+      break;
+
+    default : 
+      std::cout << "do not have transformation " << op_transformation << " implemented; please check the braket specification in the input file." << std::endl;
+      throw std::logic_error( " Aborting!!" );
+  } 
+
+  vector<int> id_trans = *(block->idxs_trans());
+
+  reorder_vector_inplace( id_trans, *new_orig_rngs );
+  reorder_vector_inplace( id_trans, *new_idxs_trans );
+
+  shared_ptr<const vector<string>> new_orig_rngs_c = std::const_pointer_cast<const vector<string>>(new_orig_rngs);
+
+  return  make_shared<Range_Block_Info>( new_orig_rngs_c, block->unique_block_, new_idxs_trans, new_factors, new_aops, op_info );
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void TensOp::TensOp<DataType>::generate_blocks() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp::TensOp<DataType>::generate_blocks" <<   endl;
+// cout << "TensOp::TensOp<DataType>::generate_blocks" <<   endl;
   
   vector<int> fvec( num_idxs_, 0 );
   vector<int> mins( num_idxs_, 0 );
@@ -254,7 +288,7 @@ cout << "TensOp::TensOp<DataType>::generate_blocks" <<   endl;
 template<typename DataType>
 void TensOp::TensOp<DataType>::generate_ranges( std::shared_ptr<Op_Info> op_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp::TensOp<DataType>::generate_ranges" <<   endl;
+//cout << "TensOp::TensOp<DataType>::generate_ranges : " << name_ <<   endl;
 
   all_ranges_tmp_ = make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ();
 
@@ -262,7 +296,10 @@ cout << "TensOp::TensOp<DataType>::generate_ranges" <<   endl;
   for ( bl_it = block_list_.begin(); bl_it != block_list_.end() ; bl_it++ )
     apply_symmetry( *bl_it, *aops_, op_info ) ;  
 
-  all_ranges_state_specific_->emplace( op_info->name_, all_ranges_tmp_ );
+  shared_ptr< map< const vector<string>, shared_ptr<Range_Block_Info> > > all_ranges_new = 
+            make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ( *all_ranges_tmp_ );
+
+  all_ranges_state_specific_->emplace( op_info->op_state_name_, all_ranges_new );
   
   return;
 }
@@ -270,24 +307,26 @@ cout << "TensOp::TensOp<DataType>::generate_ranges" <<   endl;
 template<typename DataType>
 void TensOp::TensOp<DataType>::apply_symmetry( const vector<string>& new_block, const vector<bool>& aops, shared_ptr<Op_Info> op_info ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "TensOp::TensOp<DataType>::apply_symmetry" << endl; 
-
+//   cout << "TensOp::TensOp<DataType>::apply_symmetry : " << op_info->name_ <<  endl; 
 
   shared_ptr<const vector<string>> new_block_c =  make_shared<const vector<string>>(new_block);
 
   pair<double,double> new_fac = factor_; 
   for ( auto& func : symmfuncs_ ) { 
-    auto art_loc = all_ranges_tmp_->find(func->transform( *new_block_c )) ; // TODO transform should take symmetry transformation from state switching
+    auto art_loc = all_ranges_tmp_->find(func->transform( *new_block_c )) ;
+
     if( art_loc != all_ranges_tmp_->end() ){
-      cout << endl;
-      print_vector( art_loc->first , "art_loc->first" ); print_vector( func->transform( *new_block_c ) , func->name_ + "transformed_new_block_c" );  print_vector( *new_block_c , "new_block_c" );  cout << endl; 
       WickUtils::pair_fac_mult( func->factor( *new_block_c ), new_fac );
       all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, art_loc->second->unique_block_, func, new_fac, aops , op_info ));  
       return;
     }
   }
-  shared_ptr<Transformation_ID>  identity = make_shared<Transformation_ID>( "Id" );
-  all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, new_block_c, identity , new_fac, aops , op_info ) );  
+  
+  shared_ptr<vector<int>> idxs_trans = make_shared<vector<int>>(new_block.size()); 
+  iota( idxs_trans->begin(), idxs_trans->end(), 0 ); 
+
+  new_block_c =  make_shared<const vector<string>>(new_block);
+  all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, new_block_c, idxs_trans, new_fac, aops , op_info ) );  
 
   return;
 }
@@ -452,7 +491,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( shared_ptr<Op_Info> multiop
 
       maxs->at(ii) = sub_tensops_[multiop_info->op_order(ii)]->all_ranges_state_specific_->at( multiop_info->op_info(ii)->name_ )->size()-1;
       rng_maps[ii] = sub_tensops_[multiop_info->op_order(ii)]->all_ranges_state_specific_->at( multiop_info->op_info(ii)->name_ )->begin();
-      cout << " multiop_info->op_info(ii)->name_ = " << multiop_info->op_info(ii)->name_ <<  endl;
+      cout << " multiop_info->op_info("<<ii<<")->name_ = " << multiop_info->op_info(ii)->name_ <<  endl;
 
       trans_cml_sizes[ii] = (*cmlsizevec_)[multiop_info->op_order(ii)];
     }
@@ -470,15 +509,12 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( shared_ptr<Op_Info> multiop
         }
       }
  
-      cout << "range_block_trans" << endl;
       old_forvec = make_shared<vector<int>>(*forvec);
       shared_ptr< vector <shared_ptr<Range_Block_Info >>> split_block = make_shared< vector <shared_ptr<Range_Block_Info >>>( num_tensors_ );
       vector<shared_ptr<Range_Block_Info>>::iterator sb_it = split_block->begin();
-      for (auto  rm_it = rng_maps.begin(); rm_it != rng_maps.end(); rm_it++, sb_it++ ){
+      for (auto  rm_it = rng_maps.begin(); rm_it != rng_maps.end(); rm_it++, sb_it++ )
         *sb_it = (*rm_it)->second;
-        print_vector( *( (*rm_it)->second->idxs_trans()), "(*rm_it)->second->idxs_trans()" ); 
-      } 
-      cout << endl << endl;
+       
 
       //TODO Must obtain from constraint functions 
       shared_ptr<Split_Range_Block_Info> srbi;

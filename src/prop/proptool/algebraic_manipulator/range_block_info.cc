@@ -20,8 +20,9 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 
   num_idxs_ = orig_rngs_->size();
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
-
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
+
+  print_vector( *orig_rngs_ , "orig_block " ) ;  print_vector( *unique_block_ , "unique_block " ) ;   print_vector( *idxs_trans_ , "idxs_trans " ) ;  cout << endl;
 
   {
   vector<int>::iterator it_it = idxs_trans_->begin();
@@ -38,7 +39,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   name_ = get_ctp_name( idxs, *unique_block );
   }
 
-  full_op_name_ = op_info->op_name_;
+  full_op_name_ = op_info->op_full_name_;
 
   plus_pnum_ = 1;
   kill_pnum_ = 1;
@@ -73,13 +74,6 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   num_idxs_ = orig_rngs_->size();
 
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
-
-  if ( op_info->transformation() == 'h' ||  op_info->transformation() == 'i' ) {
-    cout << endl;
-    print_vector( *idxs_trans_, "idxs_trans" ) ;
-    reverse(idxs_trans_->begin(), idxs_trans_->end());
-    print_vector( *idxs_trans_, "reversed idxs_trans" ) ; cout << endl;
-  }
 
   {
   vector<int>::iterator it_it = idxs_trans_->begin();
@@ -143,12 +137,18 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
   //DQ : I feel like there should be a nicer way to do this; a lot of iterators, should I add braces to throw the iterators out?
   vector<int>::iterator cs_it = cml_sizes.begin();
   
+  cout << endl << endl;
   for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks_->begin() ; rb_it != range_blocks_->end(); rb_it++, cs_it++) {
  
     double Re_buff = factors_.first;
     double Im_buff = factors_.second;
     factors_.first = Re_buff*(*rb_it)->Re_factor() + Im_buff*(*rb_it)->Im_factor();
     factors_.second = Re_buff*(*rb_it)->Im_factor() + Im_buff*(*rb_it)->Re_factor();
+
+    cout <<  (*rb_it)->full_op_name()  << " : " ; cout.flush(); 
+    print_vector( *((*rb_it)->idxs_trans()) , "" ) ; 
+    print_vector( *((*rb_it)->orig_rngs()) , "" ) ; 
+    print_vector( *((*rb_it)->unique_block_) , "" )  ; cout << endl; 
     
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
     std::for_each( it_it, it_it+(*rb_it)->num_idxs_, [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
@@ -164,6 +164,8 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
     iti_it += (*rb_it)->num_idxs_;
     or_it += (*rb_it)->num_idxs_;
   }
+  
+  cout << endl << endl;
 
   unique_block_ = std::make_shared<const std::vector<string>>(unique_block);         
   orig_rngs_ = std::make_shared<const std::vector<string>>(orig_rngs);         

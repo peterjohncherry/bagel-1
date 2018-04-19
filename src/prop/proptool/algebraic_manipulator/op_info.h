@@ -18,17 +18,20 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
  
   private : 
     std::shared_ptr<std::vector<int>> state_ids_;
+     
     char transformation_;
 
   public :  
+    std::string op_name_;
+    std::string op_state_name_;
+    std::string op_full_name_;
     std::string name_;
-    std::string op_name_; //TODO temporary hack for CTP names, ctp names should be changed to use state dependent name_
 
     // should also include symmetry information
-     Op_Info( std::string name, std::shared_ptr<std::vector<int>> state_ids, char transformation ) :  
-     name_(name), op_name_(name.substr(0,1)),  state_ids_(state_ids), transformation_(tolower(transformation)){}
+     Op_Info( std::string op_name,  std::string op_state_name, std::string op_full_name, std::shared_ptr<std::vector<int>> state_ids, char transformation ) :  
+     op_name_(op_name), op_state_name_(op_state_name), op_full_name_(op_full_name), name_(op_full_name), state_ids_(state_ids), transformation_(tolower(transformation)){}
 
-     Op_Info( std::string name ) : name_(name), op_name_(name.substr(0,1)){}; 
+     Op_Info( std::string op_name, std::string op_state_name, std::string op_full_name ) : op_name_(op_name), op_state_name_( op_state_name ), op_full_name_( op_full_name ), name_( op_full_name ) {}; 
     ~Op_Info(){} 
 
     virtual std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info() {
@@ -54,8 +57,9 @@ class MultiOp_Info : public Op_Info {
     std::shared_ptr<std::vector<int>> op_order_;
 
     // should also include symmetry information
-    MultiOp_Info( std::string name, std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info_vec, const std::vector<int>& op_order ) : 
-                   Op_Info( name ), op_info_vec_(op_info_vec), op_order_(std::make_shared<std::vector<int>>(op_order)) {   
+    MultiOp_Info( std::string op_name, std::string op_state_name, std::string op_full_name, 
+                  std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info_vec, const std::vector<int>& op_order ) : 
+                   Op_Info( op_name, op_state_name, op_full_name ), op_info_vec_(op_info_vec), op_order_(std::make_shared<std::vector<int>>(op_order)) {   
 
       num_ops_ = op_info_vec->size();  
       state_ids_ = std::make_shared<std::vector<std::shared_ptr<std::vector<int>>>>(num_ops_);    

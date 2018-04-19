@@ -123,7 +123,23 @@ namespace WickUtils {
   unsigned int get_block_hash( const std::vector<std::string>&  block  );
 
   void pair_fac_mult( const std::pair<double,double>& factor_fixed , std::pair<double,double>& factor_changing );
- 
+
+  template<class DataType>  
+  void reorder_vector_inplace(const std::vector<int>& new_order, std::vector<DataType>& orig_vec ){
+
+  std::vector<DataType> reordered_vec(orig_vec.size());
+  auto rv_it = reordered_vec.begin();
+
+  for( std::vector<int>::const_iterator no_it = new_order.begin(); no_it != new_order.end(); no_it++, rv_it++ )
+     *rv_it = orig_vec[*no_it];
+
+  orig_vec =  std::move(reordered_vec); 
+
+  return;
+  }
+
+
+
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
     if (name != "" ) 

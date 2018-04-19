@@ -19,42 +19,51 @@ BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& 
 
   //get state name first
   string multiop_state_name = "";
+  string multiop_full_name = "";
+  string multiop_name = "";
   shared_ptr<vector<shared_ptr<vector<int>>>> state_id_list =  make_shared<vector<shared_ptr<vector<int>>>>();
 
-  shared_ptr<vector<shared_ptr<Op_Info>>> multiop_info_list = make_shared<vector<shared_ptr<Op_Info>>>( op_list.size());
+  shared_ptr<vector<shared_ptr<Op_Info>>> multiop_info_list = make_shared<vector<shared_ptr<Op_Info>>>( op_list.size() );
   vector<shared_ptr<Op_Info>>::iterator mil_it = multiop_info_list->begin();
 
   for ( int ii = 0 ; ii != op_list_.size(); ii++, mil_it++ ) {
     string op_state_name = "";
     op_state_name += op_list_[ii] ;
+    string op_name = op_state_name;
+
     if (op_state_ids_->at(ii).size() > 0 ) {
       op_state_name +=  "_{"; 
-      for( int jj = 0; jj != op_state_ids_->at(ii).size(); jj++ ) 
+      for( int jj = 0; jj != op_state_ids_->at(ii).size(); jj++ ) {
         op_state_name += to_string(op_state_ids_->at(ii)[jj]); 
+      }
       op_state_name += "}"; 
     }
+    string op_full_name = op_state_name;
 
-//    if (op_trans_list.size() > 0 ) {
-//      op_state_name +=  "^{"; 
-//      op_state_name += op_trans_list[ii]; 
-//      op_state_name += "}"; 
-//    }
+   if (op_trans_list.size() > 0 ) {
+      op_full_name +=  "^{"; 
+      op_full_name += op_trans_list[ii]; 
+      op_full_name += "}"; 
+    }
 
+    *mil_it = make_shared<Op_Info>( op_name, op_state_name, op_full_name,  make_shared<vector<int>> (op_state_ids_->at(ii)), op_trans_list[ii] ); 
+
+    multiop_name += op_name;
     multiop_state_name += op_state_name;
-    *mil_it = make_shared<Op_Info>( op_state_name, make_shared<vector<int>> (op_state_ids_->at(ii)), op_trans_list[ii] ); 
+    multiop_full_name += op_full_name;
   }
   
   if (type_[0] == 'c' )// checking if derivative  
     name_ = "c_{I}"; 
 
   // Getting the BraKet name 
-  name_ = "<" + std::to_string(bra_num)+ "| ";   name_ += multiop_state_name;   name_ += " |"+ std::to_string(ket_num) + ">";
+  name_ = "<" + std::to_string(bra_num)+ "| ";   name_ += multiop_full_name;   name_ += " |"+ std::to_string(ket_num) + ">";
 
   op_order_ = std::vector<int>(op_list.size());
   iota( op_order_.begin(), op_order_.end(), 0);
   sort( op_order_.begin(), op_order_.end(), [ &op_list ] ( int i1, int i2) { return (bool)( op_list[i1] < op_list[i2]); });  
 
-  multiop_info_ = make_shared<MultiOp_Info>( multiop_state_name , multiop_info_list, op_order_ );  
+  multiop_info_ = make_shared<MultiOp_Info>(multiop_name, multiop_state_name, multiop_full_name, multiop_info_list, op_order_ );  
 
   WickUtils::print_vector( op_list, "op_list" ); std::cout << std::endl; 
   WickUtils::print_vector( op_order_, "op_order" ); std::cout << std::endl; 
@@ -65,15 +74,15 @@ BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Following restructuing this class is starting to look more redundant, however I think it is still useful for
 //merging, symmetry checking and sparsity. As well as controlling the reordering 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<TensOp_Base>>> MT_map,                
+void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<TensOp_Base>>> MT_map,
                                                             shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>> G_to_A_map,
                                                             shared_ptr<map<string, shared_ptr< GammaInfo >>> gamma_info_map,
                                                             shared_ptr<StatesInfo<DataType>> target_states,
                                                             shared_ptr<set<string>> required_blocks,
-                                                            shared_ptr<map<string, shared_ptr<CtrTensorPart_Base>>> ctp_map  ) {  
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                                                            shared_ptr<map<string, shared_ptr<CtrTensorPart_Base>>> ctp_map  ){
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::generate_gamma_Atensor_contractions : " << name_ << endl;
 
   Total_Op_ = MT_map->at( multiop_name_ );
@@ -95,11 +104,11 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
  
   shared_ptr<GammaGeneratorRedux> GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
 
-  for ( auto op_info : *(multiop_info_->op_info_vec_) ) { cout << "op_info->name_ = " <<  op_info->name_ << endl;} 
+  for ( auto op_info : *(multiop_info_->op_info_vec_) ) { cout << "op_info->name_ = " <<  op_info->name_ << endl;}
 
-  Total_Op_->generate_ranges( multiop_info_ ); 
+  Total_Op_->generate_ranges( multiop_info_ );
 
-  auto split_ranges = Total_Op_->state_specific_split_ranges_->at( multiop_info_->name_ ); 
+  auto split_ranges = Total_Op_->state_specific_split_ranges_->at( multiop_info_->name_ );
 
   for ( auto range_map_it = split_ranges->begin(); range_map_it != split_ranges->end(); range_map_it++ ){
 

@@ -192,8 +192,11 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
    void generate_blocks();
 
    void generate_ranges( std::shared_ptr<Op_Info> op_info );
-   
+
    void generate_transformed_ranges( std::shared_ptr<Op_Info> op_info );
+
+   std::shared_ptr<Range_Block_Info> 
+   get_transformed_range_block( std::shared_ptr<Op_Info> op_info, std::shared_ptr<Range_Block_Info>& block );
 
    std::shared_ptr< std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_ranges() const{ return split_ranges_; } 
 
