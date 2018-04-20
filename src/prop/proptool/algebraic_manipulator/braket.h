@@ -44,6 +44,9 @@ class BraKet{
     std::string name() { return name_ ; } 
     DataType factor() const { return factor_ ; } 
 
+    std::shared_ptr<std::vector<int>> op_order() { return multiop_info_->op_order_; };
+    std::shared_ptr<std::vector<char>> op_trans_list(){ return multiop_info_->transformations_; };
+    std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> op_state_ids() { return multiop_info_->state_ids_; };
    // void add_required_tens_block( std::string block_name ) { required_blocks.emplace( block_name ); } 
    // std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { required_blocks.emplace( block_name ); } 
 

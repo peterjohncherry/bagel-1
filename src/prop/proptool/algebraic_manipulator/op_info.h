@@ -73,7 +73,7 @@ class MultiOp_Info : public Op_Info {
     } 
     ~MultiOp_Info(){}; 
 
-    std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info() { return op_info_vec_; }
+    std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info_vec() { return op_info_vec_; }
     std::shared_ptr<Op_Info> op_info( int ii ) { return (*op_info_vec_)[ii]; }
 
     std::shared_ptr<std::vector<int>> op_order() { return op_order_; }
