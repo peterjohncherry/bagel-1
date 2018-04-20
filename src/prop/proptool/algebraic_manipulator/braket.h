@@ -12,16 +12,17 @@ class BraKet{
     std::string name_;
 
   public :
-    const std::vector<std::string> op_list_;
-    const std::vector<char> op_trans_list_;
-    const std::shared_ptr<std::vector<std::vector<int>>> op_state_ids_;
-    const DataType factor_;
-    const int bra_num_;
-    const int ket_num_;
-    const std::string type_ ; // should be "ci_deriv" or "full" 
-    const std::string multiop_name_;
-    const std::string proj_op_name_;        
-    const bool proj_op_;        
+    std::vector<std::string> op_list_;
+    std::vector<char> op_trans_list_;
+    std::shared_ptr<std::vector<std::vector<int>>> op_state_ids_;
+    DataType factor_;
+    std::pair<double,double> ReIm_factors_;
+    int bra_num_;
+    int ket_num_;
+    std::string type_ ; // should be "ci_deriv" or "full" 
+    std::string multiop_name_;
+    std::string proj_op_name_;        
+    bool proj_op_;        
     bool projected_bra_;
     bool projected_ket_;
 
@@ -30,39 +31,11 @@ class BraKet{
 
     std::shared_ptr<MultiOp_Info> multiop_info_;
 
+    BraKet( std::shared_ptr<MultiOp_Info> multiop_info, std::pair<double,double> factor, int bra_num, int ket_num, std::string type);
+
     BraKet( std::vector<std::string>& op_list, std::vector<char>& op_trans_list,
             DataType factor, int bra_num, int ket_num, 
             std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type); 
-
-    BraKet( std::vector<std::string>& op_list, std::vector<char>& op_trans_list, DataType factor, int bra_num, int ket_num, 
-            std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type,
-            std::string proj_op_name) :
-            op_list_(op_list), op_trans_list_(op_trans_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
-            op_state_ids_(op_state_ids), type_(type),
-            multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))),
-            proj_op_(true), proj_op_name_(proj_op_name) {
-                
-
-            if (type_[0] == 'c' )// checking if derivative  
-              name_ = "c_{I}"; 
- 
-            name_ = "<" + std::to_string(bra_num)+ "| ";
-            
-              for ( int ii = 0 ; ii != op_list_.size(); ii++ ) {
-                WickUtils::print_vector(op_state_ids_->at(ii), "op_state_ids->at("+std::to_string(ii)+")" ); std::cout << std::endl;
-                name_ += op_list_[ii] ;
-                if (op_state_ids_->at(ii).size() > 0 ) {
-                  name_ +=  "^{"; 
-                  for( int jj = 0; jj != op_state_ids_->at(ii).size(); jj++ ) 
-                    name_ += std::to_string(op_state_ids_->at(ii)[jj]); 
-                  name_ += "}"; 
-                }
-              }
-              name_ += " |"+ std::to_string(ket_num) + ">";
-               
-              projected_bra_ = false;
-              projected_ket_ = false;
-            }; 
 
    ~BraKet(){};
 

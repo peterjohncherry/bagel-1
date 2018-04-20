@@ -328,7 +328,7 @@ void
 TensOp::TensOp<DataType>::apply_direct_range_transformation( shared_ptr<const vector<string>>& block, pair<double,double>& new_fac, 
                                                              shared_ptr<Op_Info>& op_info ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp<DataType>::apply_direct_range_transformation : " << op_info->name_ <<  endl; 
+//  cout << "TensOp::TensOp<DataType>::apply_direct_range_transformation : " << op_info->name_ <<  endl; 
 
   // TODO should be in seperate function
   // transform to alpha
@@ -506,7 +506,6 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( shared_ptr<Op_Info> multiop
 
       maxs->at(ii) = sub_tensops_[multiop_info->op_order(ii)]->all_ranges_state_specific_->at( multiop_info->op_info(ii)->name_ )->size()-1;
       rng_maps[ii] = sub_tensops_[multiop_info->op_order(ii)]->all_ranges_state_specific_->at( multiop_info->op_info(ii)->name_ )->begin();
-      cout << " multiop_info->op_info("<<ii<<")->name_ = " << multiop_info->op_info(ii)->name_ <<  endl;
 
       trans_cml_sizes[ii] = (*cmlsizevec_)[multiop_info->op_order(ii)];
     }

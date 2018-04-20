@@ -37,9 +37,11 @@ class Equation_Init_Base {
                          name_(name), type_(type),  master_expression_list_(master_expression_list),
                          range_map_(range_map) {};
 
-
      ~Equation_Init_Base(){};
 
+     std::shared_ptr<MultiOp_Info>
+     get_operator_info( std::vector<std::string>& op_list, std::vector<char>& op_trans_list,
+                        std::shared_ptr<std::vector<std::vector<int>>> op_state_ids );
 
      virtual void initialize_expressions() = 0;
      virtual void build() = 0;

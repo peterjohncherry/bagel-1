@@ -4,16 +4,31 @@
 
 using namespace std;
 using namespace WickUtils;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+BraKet<DataType>::BraKet( std::shared_ptr<MultiOp_Info> multiop_info, 
+                          std::pair<double,double> factor, int bra_num, int ket_num,  std::string type) :
+                          multiop_info_(multiop_info), ReIm_factors_(factor), bra_num_(bra_num), ket_num_(ket_num),
+                          type_(type) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "BraKet::BraKet" << endl;
 
+  if (type_[0] == 'c' ) {
+    name_ = "c_{I}"; 
+  } else {
+    name_ = ""; 
+  }
 
+  name_ += "<" + std::to_string(bra_num)+ "| ";   name_ += multiop_info->name_;   name_ += " |"+ std::to_string(ket_num) + ">";
+
+} 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& op_trans_list,
                           DataType factor, int bra_num, int ket_num, 
                           std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type) :
                           op_list_(op_list), op_trans_list_(op_trans_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
-                          op_state_ids_(op_state_ids), type_(type), multiop_name_(std::accumulate(op_list_.begin(),
-                          op_list_.end(), std::string(""))), proj_op_(false) {
+                          op_state_ids_(op_state_ids), type_(type), proj_op_(false) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::BraKet" << endl;
 
@@ -33,8 +48,8 @@ BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& 
 
     if (op_state_ids_->at(ii).size() > 0 ) {
       op_state_name +=  "_{"; 
-      for( int jj = 0; jj != op_state_ids_->at(ii).size(); jj++ ) {
-        op_state_name += to_string(op_state_ids_->at(ii)[jj]); 
+      for( int jj = 0; jj != (*op_state_ids_)[ii].size(); jj++ ) {
+        op_state_name += to_string((*op_state_ids_)[ii][jj]); 
       }
       op_state_name += "}"; 
     }

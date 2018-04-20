@@ -2,6 +2,62 @@
 #include <src/prop/proptool/initialization/equation_init.h>
 using namespace std;
 using namespace bagel;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::shared_ptr<MultiOp_Info>
+Equation_Init_Base::get_operator_info( std::vector<std::string>& op_list, std::vector<char>& op_trans_list,
+                                       std::shared_ptr<std::vector<std::vector<int>>> op_state_ids ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Equation_Init_Base::get_operator_info" << endl;
+
+  //get state name first
+  string multiop_state_name = "";
+  string multiop_full_name = "";
+  string multiop_name = "";
+  shared_ptr<vector<shared_ptr<vector<int>>>> state_id_list =  make_shared<vector<shared_ptr<vector<int>>>>();
+
+  shared_ptr<vector<shared_ptr<Op_Info>>> multiop_info_list = make_shared<vector<shared_ptr<Op_Info>>>( op_list.size() );
+  vector<shared_ptr<Op_Info>>::iterator mil_it = multiop_info_list->begin();
+
+  string op_name;
+  string op_state_name;
+  string op_full_name;
+  for ( int ii = 0 ; ii != op_list.size(); ii++, mil_it++ ) {
+    op_full_name = "";
+    op_full_name += op_list[ii] ;
+
+    op_name = op_full_name;
+
+    if (op_state_ids->at(ii).size() > 0 ) {
+      op_state_name +=  "_{"; 
+      for( int jj = 0; jj != (*op_state_ids)[ii].size(); jj++ ) {
+        op_state_name += to_string((*op_state_ids)[ii][jj]); 
+      }
+      op_state_name += "}"; 
+    }
+
+    op_state_name = op_full_name;
+
+   if (op_trans_list.size() > 0 ) {
+      op_full_name +=  "^{"; 
+      op_full_name += op_trans_list[ii]; 
+      op_full_name += "}"; 
+    }
+
+    *mil_it = make_shared<Op_Info>( op_name, op_state_name, op_full_name,  make_shared<vector<int>> (op_state_ids->at(ii)), op_trans_list[ii] ); 
+
+    multiop_name += op_name;
+    multiop_state_name += op_state_name;
+    multiop_full_name += op_full_name;
+  }
+  
+
+  std::vector<int> op_order(op_list.size());
+  iota( op_order.begin(), op_order.end(), 0);
+  sort( op_order.begin(), op_order.end(), [ &op_list ] ( int i1, int i2) { return (bool)( op_list[i1] < op_list[i2]); });  
+
+  return make_shared<MultiOp_Info>(multiop_name, multiop_state_name, multiop_full_name, multiop_info_list, op_order );  
+  
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void Equation_Init_Value<DataType>::initialize_expressions() {
@@ -17,6 +73,7 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
   }
   cout << endl;
   
+  pair<double,double> bk_factor_dummy  = make_pair( 1.0, 1.0);
   //TODO The looping through the terms should be on the inside, and the summation on the outside,
   //     but switching these loops round is headache, and I doubt it is significant speed wise  
   for ( int ii = 0 ; ii != master_expression_->term_list_->size(); ii++  ){
@@ -130,12 +187,9 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
             }
           }
 
-          if  ( !term_init->orbital_projector_ ){  
-            braket_list.push_back(BraKet<DataType>( bk_op_list, bk_op_trans_list,  factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
-          } else { 
-            braket_list.push_back(BraKet<DataType>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_,
-                                                    term_init->proj_op_name_ )); 
-          }
+          // factor = factor_map_->at(*bk_factors_ita+)
+          braket_list.push_back(BraKet<DataType>( get_operator_info( bk_op_list, bk_op_trans_list, op_state_ids ), bk_factor_dummy,
+                                                  bk_info.bra_index(), bk_info.ket_index(), term_init->type_));
 
         } 
 

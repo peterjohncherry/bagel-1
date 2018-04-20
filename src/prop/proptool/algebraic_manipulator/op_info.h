@@ -26,6 +26,8 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
     std::string op_state_name_;
     std::string op_full_name_;
     std::string name_;
+ 
+    std::shared_ptr< std::vector<std::pair<std::vector<int>,std::shared_ptr<Transformation>>> > equivalent_operators_list_; 
 
     bool spin_symm_;
     std::pair<double,double> spin_flip_factor_ ;

@@ -9,7 +9,6 @@ PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geo
                    idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "PropTool::PropTool::PropTool" << endl;
-  cout << " std::numeric_limits<unsigned long>::max() =  " <<  std::numeric_limits<unsigned long>::max() <<  endl;
 
   // sort out how to determine datatype!!
   inp_factor_map_ = make_shared<map<string, double>>();
@@ -85,18 +84,14 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
 
   system_computer_ = make_shared<System_Computer::System_Computer<double>>(sys_info_, moint_computer, range_conversion_map_, gamma_computer );
 
-  cout << "initialized sys_info" << endl;
   shared_ptr< const PTree > ops_def_tree = idata_->get_child_optional( "operators" ) ;
   if (ops_def_tree)
     get_new_ops_init( ops_def_tree ); 
-  cout << "got ops_init" << endl;
 
   // Getting info about target expression (this includes which states are relevant)
   get_terms_init( idata_->get_child( "terms" ) ); 
-  cout << "got terms_init" << endl;
 
   get_equations_init( idata_->get_child( "equations" ) );
-  cout << "got equations_init" << endl;
 
   return;
 }
@@ -110,6 +105,7 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
 
   //Initializing range sizes either from idate or reference wfn 
   maxtile_   = idata_->get<int>("maxtile", 10);
+
   //cimaxtile_ = idata_->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
   cimaxtile_ = 100000; //TODO fix this so it uses the above statement, issue in b_gamma_computer means must use large cimaxblock for now
 
@@ -121,9 +117,9 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   if (nfrozenvirt_)
     cout << "    * freezing " << nfrozenvirt_ << " orbital" << (nfrozenvirt_^1 ? "s" : "") << " (virtual)" << endl;
 
-  nclosed_  = idata_->get<int>( "nclosed" , ref_->nclosed()); cout << " nclosed_ = " <<  nclosed_  << endl;
-  nact_     = idata_->get<int>( "nact"  , ref_->nact());      cout << " nact_    = " <<  nact_  << endl;
-  nvirt_    = idata_->get<int>( "nvirt" , ref_->nvirt());     cout << " nvirt_   = " <<  nvirt_  << endl;
+  nclosed_  = idata_->get<int>( "nclosed" , ref_->nclosed());
+  nact_     = idata_->get<int>( "nact"  , ref_->nact());
+  nvirt_    = idata_->get<int>( "nvirt" , ref_->nvirt());
   nocc_     = nclosed_ + nact_; 
   nfrozenvirt_ = idata_->get<int>( "nfrozenvirt", 0 );
 
@@ -557,6 +553,28 @@ cout << "PropTool::PropTool::set_ci_range_info" << endl;
 
  return;
  
+}
+//////////////////////////////////////////////////////////////////////////////////////////////
+void  PropTool::PropTool::identify_degeneracies( const vector<double>& energies ) {
+//////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "void PropTool::PropTool::set_target_state_info()" << endl;
+
+  int state_num = 0;
+  double energy_buff = energies.front();
+  degenerate_states_ = vector<vector<int>>(0);
+ 
+  if ( energies.size() > 1 ) {
+    vector<int> degenerate_set(0); 
+    for ( vector<double>::const_iterator e_it = (energies.begin()+1) ; e_it != energies.end(); e_it++, state_num++ ) {
+      if ( ( abs(energy_buff - *e_it) > 0.0000001 ) || ( e_it == energies.end() ) ) {
+        degenerate_states_.push_back(degenerate_set);
+        degenerate_set = vector<int>(0); 
+      } else {
+        degenerate_states_.push_back( degenerate_set );
+      }
+    }
+  }
+  return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::set_target_state_info() {
