@@ -18,24 +18,30 @@ shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( string op_name, 
 /////////////////////////////////////////////////////////////////////////////////
 cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << endl;
 
-  vector<string> free     = {"c", "a", "v"};
-  vector<string> not_core = {"a", "v"};
-  vector<string> not_act  = {"c", "v"};
-  vector<string> not_virt = {"c", "a"};
-  vector<string> core     = {"c"};
-  vector<string> act      = {"a"};
-  vector<string> virt     = {"v"};
 
-  vector<string> free_b     = {"C", "A", "V"};
-  vector<string> not_core_b = {"A", "V"};
-  vector<string> not_act_b  = {"C", "V"};
-  vector<string> not_virt_b = {"C", "A"};
-  vector<string> core_b     = {"C"};
-  vector<string> act_b      = {"A"};
-  vector<string> virt_b     = {"V"};
-
-
-
+  static vector<string> free     = {"c", "C", "a", "A", "v", "V"};
+  static vector<string> not_core = {"a", "A", "v", "V"};
+  static vector<string> not_act  = {"c", "C", "v", "V"};
+  static vector<string> not_virt = {"c", "C", "a", "A"};
+  static vector<string> core     = {"c", "C"};
+  static vector<string> act      = {"a", "A"};
+  static vector<string> virt     = {"v", "V"};
+ 
+  static vector<string> free_a     = {"c", "a", "v"};
+  static vector<string> not_core_a = {"a", "v"};
+  static vector<string> not_act_a  = {"c", "v"};
+  static vector<string> not_virt_a = {"c", "a"};
+  static vector<string> core_a     = {"c"};
+  static vector<string> act_a      = {"a"};
+  static vector<string> virt_a     = {"v"};
+ 
+  static vector<string> free_b     = {"C", "A", "V"};
+  static vector<string> not_core_b = {"A", "V"};
+  static vector<string> not_act_b  = {"C", "V"};
+  static vector<string> not_virt_b = {"C", "A"};
+  static vector<string> core_b     = {"C"};
+  static vector<string> act_b      = {"A"};
+  static vector<string> virt_b     = {"V"};
 
   pair<double,double>                factor = make_pair(1.0, 1.0);
   shared_ptr<vector<string>>         idxs;
@@ -55,7 +61,10 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
   static shared_ptr<Transformation_0321>  perm_0321 = make_shared<Transformation_0321>( "0321" );
   static shared_ptr<Transformation_1230>  perm_1230 = make_shared<Transformation_1230>( "1230" );
   static shared_ptr<Transformation_ID>  identity = make_shared<Transformation_ID>( "Id" );
-  static shared_ptr<Constraint_NotAllAct>  not_all_act = make_shared<Constraint_NotAllAct>( "NotAllAct" );
+
+  static shared_ptr<Constraint_NotAllAct>  not_all_act = make_shared<Constraint_NotAllAct>();
+  static shared_ptr<Constraint_Spin_Neutral_Normal_Order>  spin_neutral = make_shared<Constraint_Spin_Neutral_Normal_Order>();
+  static shared_ptr<Constraint_All_Same_Spin>  all_same_spin = make_shared<Constraint_All_Same_Spin>();
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
@@ -64,6 +73,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free });
 //   symmfuncs = { hconj, perm_2301 }; 
    symmfuncs = { hconj, perm_1032, perm_2301, perm_2103, perm_3012, perm_0321, perm_1230 }; 
+   constraints = { all_same_spin }; 
    time_symm = "none";
    state_dep = 0;
 
@@ -137,7 +147,8 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
     idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
     symmfuncs = { hconj }; 
-    constraints = { not_all_act }; 
+    //constraints = { spin_neutral, not_all_act }; 
+    constraints = { all_same_spin }; 
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt  });
     //idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_b, not_core_b, not_virt_b, not_virt_b  });
     time_symm = "none";

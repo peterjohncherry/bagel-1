@@ -22,22 +22,18 @@
 #include <cctype>
 namespace WickUtils {  
 
-  using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
-  using delta_strs = std::vector<std::vector<std::pair<std::string,std::string>>>;
-  using delta_bools = std::vector<std::vector<std::pair<bool,bool>>>;
-
-  using vv_ints  = std::vector< std::vector<int> >;
-  using vv_strs  = std::vector< std::vector<std::string> >;
-  using vv_bools = std::vector< std::vector<bool> >;
-
   using pint_vec = std::vector<std::pair<int,int>>;
   using pstr_vec = std::vector<std::pair<std::string,std::string>>;
   using pbool_vec = std::vector<std::pair<bool,bool>>;
  
-  //routines for mimicking for loop of arbitrary depth
+  // routines for mimicking for loop of arbitrary depth
+  // TODO TRIM THIS DOWN !!! you can't need all of these
   void fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max ) ;
+
   bool fvec_cycle_test(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max ) ;
+
   bool fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max , std::shared_ptr<std::vector<int>> min) ;
+
   bool constrained_fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max) ;
  
   bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max,
@@ -59,6 +55,7 @@ namespace WickUtils {
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<T1>>>> combgen( std::shared_ptr<std::vector<T1>> invec);
 
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<std::vector<int>> vec1, int NN );
+
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<const std::vector<int>> vec1, int NN );
  
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
@@ -70,8 +67,6 @@ namespace WickUtils {
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
   get_unique_pairs(std::shared_ptr< const std::vector<int>> ids1 , std::shared_ptr< const std::vector<int>> ids2 , int num_pairs);
   std::shared_ptr<std::vector<int>> reorder_vector(std::vector<int>& neworder , const std::vector<int>& origvec ) ;
-
-  void print_pvec (pint_vec pvec) ;
 
   std::shared_ptr<std::vector<int>> get_unc_ids_from_deltas_ids_comparison(std::shared_ptr<std::vector<int>> ids , std::shared_ptr<std::vector<std::pair<int,int>>> deltas );
 

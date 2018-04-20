@@ -4,14 +4,6 @@
  // #include "wickutils.h"
 using namespace std;
 
-  using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
-  using delta_strs = std::vector<std::vector<std::pair<std::string,std::string>>>;
-  using delta_bools = std::vector<std::vector<std::pair<bool,bool>>>;
-
-  using vv_ints  = std::vector< std::vector<int> >;
-  using vv_strs  = std::vector< std::vector<std::string> >;
-  using vv_bools = std::vector< std::vector<bool> >;
-
   using pint_vec = std::vector<std::pair<int,int>>;
   using pstr_vec = std::vector<std::pair<std::string,std::string>>;
   using pbool_vec = std::vector<std::pair<bool,bool>>;
@@ -384,27 +376,12 @@ cout << "get_N_in_M_combsX" << endl;
  
   return N_in_M_combs;
 } 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Prints out a vector of pairs
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void WickUtils::print_pvec (pint_vec pvec) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#if defined DBG_WickUtils || defined DBG_all 
-cout << "print_pvec" << endl;
-#endif
-//////////////////////////////////////////////////////////////////////////////////////////////
-  cout << " [ ";
-  for (auto elem : pvec)
-    cout << "[" << to_string(elem.first)  << "," << to_string(elem.second) << "] ";
-  cout << "]"<< endl;
-  return;
-}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Because always want to keep real and imaginary factors seperate
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void WickUtils::pair_fac_mult( const std::pair<double,double>& factor_fixed , std::pair<double,double>& factor_changing  ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "WickUtils::pair_fac_mult" << endl;
+//  cout << "WickUtils::pair_fac_mult" << endl;
 
   double re_buff = factor_changing.first;
   double im_buff = factor_changing.second; // don't need two buffers, but for clarities sake...

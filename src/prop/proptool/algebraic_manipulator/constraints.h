@@ -3,9 +3,7 @@
 
 #include <memory>
 #include <vector>
-#include <tuple>
 #include <string>
-#include <map> 
 #include <numeric> 
 #include <algorithm>
 #include <functional>
@@ -37,15 +35,38 @@ class Constraint_Dynamic : public Constraint {
 
 }; 
 
-
 class Constraint_NotAllAct : public Constraint { 
 
   public : 
-
-   Constraint_NotAllAct( std::string name ) : Constraint(name) {}  
+   
+   Constraint_NotAllAct() : Constraint("Not_All_Act") {}  
    ~Constraint_NotAllAct(){}
    
    bool apply_constraint( const std::vector<std::string>& rngs );  
 
 };
+
+class Constraint_Spin_Neutral_Normal_Order : public Constraint { 
+
+  public : 
+
+   Constraint_Spin_Neutral_Normal_Order() : Constraint("Spin_Neutral_Normal_Order") {}  
+   ~Constraint_Spin_Neutral_Normal_Order(){}
+   
+   bool apply_constraint( const std::vector<std::string>& rngs );  
+
+};
+
+class Constraint_All_Same_Spin : public Constraint { 
+
+  public : 
+
+   Constraint_All_Same_Spin() : Constraint("All_Same_Spin") {}  
+   ~Constraint_All_Same_Spin(){}
+   
+   bool apply_constraint( const std::vector<std::string>& rngs );  
+
+};
+
+
 #endif

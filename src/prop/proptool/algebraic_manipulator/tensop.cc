@@ -118,11 +118,13 @@ void TensOp::TensOp<DataType>::generate_idx_ranges_map() {
 template<typename DataType>
 bool TensOp::TensOp<DataType>::satisfies_constraints( vector<string>& ranges ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout <<  " TensOp::TensOp<DataType>::satisfies_constraints" << endl;
+//  cout <<  " TensOp::TensOp<DataType>::satisfies_constraints" << endl;
   
   for (auto& cstr : constraints_) 
-    if(!(cstr->apply_constraint( ranges )) )
+    if(!(cstr->apply_constraint( ranges )) ) {
+      print_vector(ranges, "" ); cout.flush(); cout << "failed constraint : " << cstr->name_ << endl;
       return false;
+    }
   
   return true;
 } 
@@ -133,28 +135,21 @@ bool TensOp::TensOp<DataType>::satisfies_constraints( vector<string>& ranges ){
 template<typename DataType>
 void TensOp::TensOp<DataType>::generate_uncontracted_ctps( std::shared_ptr<Op_Info> op_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp<DataType> generate_uncontracted_ctps : "  << name_ << endl;
+  //cout << "TensOp::TensOp<DataType> generate_uncontracted_ctps : "  << name_ << endl;
 
-  //puts _all_ ctps  corresponding to uncontracted ranges into the map
   shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *idxs_ );
   shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
   shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, factor_); 
  
-  cout << "block_list_.size() = " << block_list_.size() << endl; 
 
   for ( vector<shared_ptr<vector<string>>>::iterator bl_it = block_list_.begin(); bl_it != block_list_.end(); bl_it++ ) {
     shared_ptr<vector<string>> full_ranges = *bl_it;
-    print_vector( *full_ranges , " full_ranges" ); cout << endl;
     shared_ptr<CtrTensorPart<DataType>>  CTP = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors ); 
-    cout << "hello" << endl;
     CTP_map_->emplace(CTP->name(), CTP);
   }
 
-  cout << "leaving TensOp::TensOp<DataType> generate_uncontracted_ctps" /* << name_*/ << endl;
   return;
 }
-
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void TensOp::TensOp<DataType>::generate_transformed_ranges( shared_ptr<Op_Info> op_info ) {
@@ -178,12 +173,9 @@ void TensOp::TensOp<DataType>::generate_transformed_ranges( shared_ptr<Op_Info> 
   for (auto& elem : *all_ranges_ref ) {
     shared_ptr<Range_Block_Info>  new_block = get_transformed_range_block( op_info, elem.second );
     all_ranges_new->emplace( *(new_block->orig_rngs() ), new_block);
-    print_vector( *(new_block->orig_rngs() ), op_info->op_full_name_ + " new_block->orig_rngs() " ); 
-    print_vector( *(new_block->unique_block_), " new_block->unique_block_ " ); cout << endl;
   } 
 
   all_ranges_state_specific_->emplace( op_info->op_full_name_, all_ranges_new ) ;
-  cout << " leaving TensOp::TensOp<DataType>::generate_transformed_ranges_new" << name_ <<    endl;
   return;
 }
 
@@ -308,12 +300,13 @@ void TensOp::TensOp<DataType>::apply_symmetry( const vector<string>& new_block, 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   cout << "TensOp::TensOp<DataType>::apply_symmetry : " << op_info->name_ <<  endl; 
 
-  shared_ptr<const vector<string>> new_block_c =  make_shared<const vector<string>>(new_block);
+  shared_ptr<const vector<string>> new_block_c  =  make_shared<const vector<string>>(new_block);
 
   pair<double,double> new_fac = factor_; 
+  apply_direct_range_transformation( new_block_c, new_fac, op_info  ); 
+
   for ( auto& func : symmfuncs_ ) { 
     auto art_loc = all_ranges_tmp_->find(func->transform( *new_block_c )) ;
-
     if( art_loc != all_ranges_tmp_->end() ){
       WickUtils::pair_fac_mult( func->factor( *new_block_c ), new_fac );
       all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, art_loc->second->unique_block_, func, new_fac, aops , op_info ));  
@@ -329,12 +322,35 @@ void TensOp::TensOp<DataType>::apply_symmetry( const vector<string>& new_block, 
 
   return;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void
+TensOp::TensOp<DataType>::apply_direct_range_transformation( shared_ptr<const vector<string>>& block, pair<double,double>& new_fac, 
+                                                             shared_ptr<Op_Info>& op_info ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp::TensOp<DataType>::apply_direct_range_transformation : " << op_info->name_ <<  endl; 
+
+  // TODO should be in seperate function
+  // transform to alpha
+  vector<string> block_buff = *block;
+  if ( block_buff.front()[0] < ('Z'+1) ) {
+    vector<string>::const_iterator ob_it = block->begin();
+    for ( vector<string>::iterator bb_it = block_buff.begin() ; bb_it != block_buff.end() ; bb_it++ , ob_it++ )
+       (*bb_it)[0]  = tolower( (*ob_it)[0] );   
+
+    WickUtils::pair_fac_mult( op_info->spin_flip_factor_, new_fac );
+  } 
+
+  block = make_shared<const vector<string>>( block_buff ); 
+
+  return;
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 std::shared_ptr<std::vector<bool>> 
 TensOp::TensOp<DataType>::transform_aops( const char op_trans ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp<DataType>::transform_aops " << name_ << endl;
+//  cout << "TensOp::TensOp<DataType>::transform_aops " << name_ << endl;
 
   vector<bool> aops = *aops_; 
   char bob = tolower(op_trans);

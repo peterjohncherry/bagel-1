@@ -25,7 +25,7 @@ System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info
   ACompute_map   = make_shared< map <string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>();
   Gamma_map      = make_shared< map <string, shared_ptr<GammaInfo> > >();
 
-  if (spinfree_ /*TODO like this for testing; obviously must put back*/ || !spinfree_ ) { 
+  if (spinfree_ ) { 
     cout << " setting spinfree ranges" << endl;
     free     = {"c", "a", "v"};
     not_core = {"a", "v"};
@@ -35,10 +35,10 @@ System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info
     act      = {"a"};
     virt     = {"v"};
   } else { 
-    free     = {"c", "a", "v", "C", "A", "V"};
-    not_core = {"a", "v", "A", "V"};
-    not_act  = {"c", "v", "C", "V"};
-    not_virt = {"c", "a", "C", "A"};
+    free     = {"c", "C", "a", "A", "v", "V" };
+    not_core = {"a", "A", "v", "V"};
+    not_act  = {"c", "C", "v", "V"};
+    not_virt = {"c", "C", "a", "A"};
     core     = {"c", "C"};
     act      = {"a", "A"};
     virt     = {"v", "V"};

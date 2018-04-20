@@ -39,7 +39,7 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
 
     long unsigned int plus_pnum_;
     long unsigned int kill_pnum_;
-    bool no_transition_;
+    bool ci_sector_transition_;
     int num_idxs_;
     std::shared_ptr<Transformation> transform_;
     

@@ -52,9 +52,9 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   }
 
   if ( plus_pnum_ - kill_pnum_ ) {
-    no_transition_ = false;
+    ci_sector_transition_ = false;
   } else {
-    no_transition_ = true;
+    ci_sector_transition_ = true;
   }
 
 }
@@ -102,9 +102,9 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   }
 
   if ( plus_pnum_ - kill_pnum_ ) {
-    no_transition_ = false;
+    ci_sector_transition_ = false;
   } else {
-    no_transition_ = true;
+    ci_sector_transition_ = true;
   }
 
 }
@@ -112,7 +112,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_blocks, std::vector<int>& cml_sizes ) :
                           range_blocks_(std::make_shared<std::vector<std::shared_ptr<Range_Block_Info>>>( range_blocks )) , factors_(std::make_pair(1.0,1.0)) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "SRBI_Helper::SRBI_Helper 2" << endl;
+//  cout << "SRBI_Helper::SRBI_Helper" << endl;
 
   num_idxs_ = 0;
   for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks_->begin() ; rb_it != range_blocks_->end(); rb_it++) 

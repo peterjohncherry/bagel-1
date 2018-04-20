@@ -219,6 +219,9 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
    void add_state_ids( std::shared_ptr<Op_Info> op_info ) { state_ids_->emplace(op_info); return; }
 
    std::shared_ptr<std::set<std::shared_ptr<Op_Info>>> state_ids() { return state_ids_; } 
+
+   void apply_direct_range_transformation( std::shared_ptr<const std::vector<std::string>>& block, std::pair<double,double>& factor,
+                                           std::shared_ptr<Op_Info>& op_info  );
 };
 }
 

@@ -83,6 +83,7 @@ template<class DataType>
 string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Base<DataType>::Build_Expression bk input" << endl;
+  
   shared_ptr< vector<pair<string, DataType>> > braKet_name_list = make_shared<vector<pair< string, DataType >>>(0);
 
   for ( BraKet<DataType>& braket_info : *expr_bk_list ) {
@@ -125,7 +126,8 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
       for (int ii = 0 ; ii != braket_info.op_list_.size() ; ii++ )  
         SubOps[ii] = MT_map_->at(braket_info.op_list_[ii]); 
 
-      shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info.multiop_name_, /*spinfree_ = */ true, SubOps, range_prime_map_ );
+      bool spinfree = false;
+      shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info.multiop_name_, spinfree, SubOps, range_prime_map_ );
 //      multiop->generate_uncontracted_ctps( braket_info.multiop_info_ );
 //      CTP_map_->insert( multiop->CTP_map()->begin(), multiop->CTP_map()->end());
       MT_map_->emplace(braket_info.multiop_name_, multiop );
