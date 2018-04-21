@@ -42,6 +42,14 @@ class GammaGeneratorRedux{
     std::shared_ptr<const std::vector<std::string>> std_ids_ ;
     std::vector<std::string> std_rngs_ ;
 
+    std::string bra_name_;
+    std::string ket_name_;
+
+    std::shared_ptr<std::map<char,int>> bra_hole_map_;
+    std::shared_ptr<std::map<char,int>> ket_hole_map_;
+    std::shared_ptr<std::map<char,int>> bra_elec_map_;
+    std::shared_ptr<std::map<char,int>> ket_elec_map_;
+
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
     std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo>>> >> G_to_A_map;
@@ -97,15 +105,13 @@ class GammaGeneratorRedux{
 
     bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering );
 
-    bool generic_reorderer_different_sector( std::string reordering_name, std::string bra_name,
-                                             std::string ket_name, bool final_reordering );
-    bool anti_norm_order();
+    bool generic_reorderer_different_sector( std::string reordering_name, bool final_reordering );
 
-    void normal_order( int kk );
+    void normal_order();
 
-    void anti_normal_order( int kk );
+    void anti_normal_order();
 
-    void alternating_order( int kk );
+    void alternating_order();
 
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
@@ -114,12 +120,12 @@ class GammaGeneratorRedux{
                         std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
                         std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
 
-    void swap( int ii, int jj, int kk, std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> gamma_vec );
+    void swap( int ii, int jj, std::shared_ptr<GammaIntermediateRedux> gint );
 
     std::shared_ptr<std::vector<std::pair<int,int>>>
     standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
 
-    void set_standardized_alt_order_unranged ( int kk , std::vector<int>& standard_alt_order);
+    void set_standardized_alt_order_unranged ( std::shared_ptr<GammaIntermediateRedux>& gint , std::vector<int>& standard_alt_order);
 
     //routines for reorderings
     std::vector<int> get_standard_order (const std::vector<std::string>& rngs );
