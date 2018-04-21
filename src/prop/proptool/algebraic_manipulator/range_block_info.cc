@@ -42,6 +42,9 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   plus_pnum_ = 1;
   kill_pnum_ = 1;
 
+  cout << "op_info->name_ = " <<   op_info->name_  ;cout.flush();
+  print_vector( *orig_rngs_,  "orig_ranges" ); cout << "   " ; cout.flush();   print_vector( aops,  "aops" ); cout << endl;
+
   vector<bool>::const_iterator a_it = aops.begin();
   for ( vector<string>::const_iterator or_it = orig_rngs_->begin(); or_it != orig_rngs_->end(); ++or_it, ++a_it ){
     if (*a_it) {
@@ -50,12 +53,13 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
       kill_pnum_ *= range_to_prime( (*or_it)[0] );
     }
   }
-
-  if ( plus_pnum_ - kill_pnum_ ) {
-    ci_sector_transition_ = false;
-  } else {
+  if ( (plus_pnum_ - kill_pnum_) != 0) {
     ci_sector_transition_ = true;
+  } else {
+    ci_sector_transition_ = false;
   }
+  cout << " plus_pnum_ : " << plus_pnum_ << "  kill_pnum_ : " <<   kill_pnum_ ; cout.flush();
+  if ( ci_sector_transition_ )  { cout << " --> transition " << endl; } else { cout << " : no transition " << endl; } 
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,10 +105,10 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
     }
   }
 
-  if ( plus_pnum_ - kill_pnum_ ) {
-    ci_sector_transition_ = false;
-  } else {
+  if ( (plus_pnum_ - kill_pnum_)  != 0 ) {
     ci_sector_transition_ = true;
+  } else {
+    ci_sector_transition_ = false;
   }
 
 }
@@ -135,7 +139,6 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
   //DQ : I feel like there should be a nicer way to do this; a lot of iterators, should I add braces to throw the iterators out?
   vector<int>::iterator cs_it = cml_sizes.begin();
   
-  cout << endl << endl;
   for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks_->begin() ; rb_it != range_blocks_->end(); rb_it++, cs_it++) {
  
     double Re_buff = factors_.first;
@@ -158,8 +161,6 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
     or_it += (*rb_it)->num_idxs_;
   }
   
-  cout << endl << endl;
-
   unique_block_ = std::make_shared<const std::vector<string>>(unique_block);         
   orig_rngs_ = std::make_shared<const std::vector<string>>(orig_rngs);         
       

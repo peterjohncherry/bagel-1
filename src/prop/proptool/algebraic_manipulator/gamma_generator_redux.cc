@@ -30,13 +30,11 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "void GammaGeneratorRedux::add_gamma " << endl;
 
-  block_idxs_ = vector<string>( std_ids_->size() );  // TODO get this with reordering
-
+  block_idxs_ = vector<string>( std_ids_->size() );
   {
   vector<int>::iterator it_it = block_info->idxs_trans()->begin();
-  for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ ) {
+  for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ ) 
     *bi_it = (*std_ids_)[ *it_it ];
-  }
   }
 
   block_aops_ = trans_aops;
@@ -46,10 +44,8 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
   idxs_trans_ = block_info->idxs_trans();
   shared_ptr<vector<int>>  idxs_trans_inverse_ = block_info->idxs_trans_inverse();
 
-  std_rngs_ = *(block_info->unique_block_); // This still needs to be transformed... 
-
-  standard_order_ = *(block_info->idxs_trans()); // Note that we should only have block_trans, not range trans; rng_trans does not
-                                                 // necessarily transform unique block into the original block (e.g.,  aabb -> bbaa requires no reordering )
+  std_rngs_ = *(block_info->unique_block_);
+  standard_order_ = *(block_info->idxs_trans());
 
   cout << endl;
   cout << "--------------- gamma def -------------------" << endl;
@@ -57,20 +53,6 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
   print_vector( standard_order_ ,  " range_reordering   "); cout << endl;
   print_vector(*block_rngs_ ,      " orig_rngs          "); cout <<endl;
   cout << endl;
-
-  { // TEST for transformations
-  vector<string> unique_block_dupe( std_rngs_.size());
-  vector<string>::const_iterator br_it = block_rngs_->begin();
-  for ( vector<int>::iterator it_it = idxs_trans_->begin() ;  it_it != idxs_trans_->end() ; it_it++, br_it++ ) { 
-    unique_block_dupe[*it_it]  = *br_it;
-  }
-
-  if ( unique_block_dupe != std_rngs_ ) { 
-    print_vector(unique_block_dupe, "unique_block_dupe" ) ;
-    print_vector(std_rngs_, " != std_rngs_" ) ;
-    throw logic_error( " reordering is broken " ) ;
-  }
-  }
 
   int ii = 0 ;
   block_to_std_order_ = vector<int>(standard_order_.size());
@@ -85,7 +67,6 @@ void GammaGeneratorRedux::add_gamma( const shared_ptr<Range_Block_Info> block_in
 
   gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>( 1, make_shared<GammaIntermediateRedux>( ids_pos, deltas_pos, my_sign ) );
   final_gamma_vec = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>(0);
-  cout << " leaving add_gamma" << endl;
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -108,12 +89,6 @@ bool GammaGeneratorRedux::generic_reorderer_different_sector( string reordering_
                                                               string ket_name, bool final_reordering   ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGeneratorRedux::generic_reorderer_different_sector" << endl;
-//
-//  if ( final_reordering ) { 
-//    cout << "final_reordering !!!" << endl; 
-//  } else { 
-//    cout << "NOT final_reordering !!!" << endl; 
-//  }
  
   shared_ptr<map<char,int>> bra_hole_map = target_states_->hole_range_map(bra_name);;
   shared_ptr<map<char,int>> bra_elec_map = target_states_->elec_range_map(bra_name);;
@@ -187,12 +162,13 @@ bool GammaGeneratorRedux::proj_onto_map( shared_ptr<GammaIntermediateRedux> gint
 //Grossly inefficient, but totally generic, should write seperate routines for normal and antinormal
 //ordering; consecutive operators means can just count.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::proj_onto_map" << endl;
+  cout << "GammaGeneratorRedux::proj_onto_map" << endl;
 
   shared_ptr<vector<int>> idxs_pos =  gint->ids_pos;
- 
+
   for ( vector<int>::reverse_iterator ip_it = gint->ids_pos->rbegin(); ip_it !=  gint->ids_pos->rend(); ip_it++ ) {
     char rng = (*block_aops_rngs_)[*ip_it];  
+
     if( ! ( (*block_aops_)[*ip_it] ) ){
       auto ket_elec_map_loc = ket_elec_map.find( rng );
       if ( ket_elec_map_loc == ket_elec_map.end() ) {
@@ -201,11 +177,13 @@ bool GammaGeneratorRedux::proj_onto_map( shared_ptr<GammaIntermediateRedux> gint
         return false;
       }
       auto ket_hole_map_loc = ket_hole_map.find( rng );
+
       if ( ket_hole_map_loc == ket_hole_map.end() ) {
         ket_hole_map.emplace( rng, 1 );
       } else {
         ket_hole_map_loc->second += 1;
       }
+      cout << "added [" << rng << "] hole " << endl;
 
     } else {
       auto ket_hole_map_loc = ket_hole_map.find( rng );
@@ -214,6 +192,7 @@ bool GammaGeneratorRedux::proj_onto_map( shared_ptr<GammaIntermediateRedux> gint
       } else if ( (ket_hole_map_loc->second -= 1 ) == -1  ) {
         return false;
       }
+      
       auto ket_elec_map_loc = ket_elec_map.find( rng );
       if ( ket_elec_map_loc == ket_elec_map.end() ) {
         ket_elec_map.emplace( rng, 1 );
@@ -223,13 +202,16 @@ bool GammaGeneratorRedux::proj_onto_map( shared_ptr<GammaIntermediateRedux> gint
     }
   }
 
-  for ( auto elem : ket_elec_map )  
-    if ( elem.second != bra_elec_map.at(elem.first) )
-       return false;     
+  // TODO  may have problems if bra and ket involve different ranges, but not relevant for now.
+  for ( auto& elem : ket_elec_map )  
+    if ( elem.second != bra_elec_map.at(elem.first) ) 
+      return false;     
+    
 
-  for ( auto elem : ket_hole_map )  
+  for ( auto& elem : ket_hole_map )                     
     if ( elem.second != bra_hole_map.at(elem.first) )
-       return false;     
+      return false;     
+    
 
   return true;
 }
@@ -274,13 +256,14 @@ void GammaGeneratorRedux::anti_normal_order( int kk ) {
         }
       }
     }
+
   }
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGeneratorRedux::normal_order( int kk ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGeneratorRedux::normal_order" << endl;
+  cout << "GammaGeneratorRedux::normal_order" << endl;
 
   shared_ptr<vector<int>> ids_pos  = gamma_vec->at(kk)->ids_pos;
   int num_plus = 0;
@@ -635,3 +618,18 @@ GammaGeneratorRedux::print_gamma_intermediate( shared_ptr<GammaIntermediateRedux
      cout << "gint_ids  = [ "; cout.flush();   for ( auto pos : *(gint->ids_pos) ) { cout << block_idxs_[pos] << " " ; cout.flush();  }   cout << "] " <<  endl;
     return;
 } 
+
+ // { // TEST for transformations
+ // vector<string> unique_block_dupe( std_rngs_.size());
+ // vector<string>::const_iterator br_it = block_rngs_->begin();
+ // for ( vector<int>::iterator it_it = idxs_trans_->begin() ;  it_it != idxs_trans_->end() ; it_it++, br_it++ ) { 
+ //   unique_block_dupe[*it_it]  = *br_it;
+ // }
+
+ //  if ( unique_block_dupe != std_rngs_ ) { 
+ //    print_vector(unique_block_dupe, "unique_block_dupe" ) ;
+ //    print_vector(std_rngs_, " != std_rngs_" ) ;
+ //    throw logic_error( " reordering is broken " ) ;
+ //  }
+ // }
+

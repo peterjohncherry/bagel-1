@@ -220,8 +220,10 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
 
    std::shared_ptr<std::set<std::shared_ptr<Op_Info>>> state_ids() { return state_ids_; } 
 
-   void apply_direct_range_transformation( std::shared_ptr<const std::vector<std::string>>& block, std::pair<double,double>& factor,
-                                           std::shared_ptr<Op_Info>& op_info  );
+   std::shared_ptr<const std::vector<std::string>>
+   apply_direct_range_transformation( const std::vector<std::string>& block, std::pair<double,double>& factor,
+                                      std::shared_ptr<Op_Info>& op_info  );
+
 };
 }
 

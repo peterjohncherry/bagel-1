@@ -582,50 +582,26 @@ void PropTool::PropTool::set_target_state_info() {
 cout << "PropTool::PropTool::set_target_info" << endl;
   targets_info_ = make_shared<StatesInfo<double>> ( target_states_ ) ;
 
-  bool spinfree = false;
-  if (!spinfree ) {
+  for ( int state_num : target_states_ ){ 
+     shared_ptr<map<char,int>> elec_range_map = make_shared<map<char,int>>(); 
+     elec_range_map->emplace('c', nclosed_ - ncore_);
+     elec_range_map->emplace('C', nclosed_ - ncore_);
+     elec_range_map->emplace('A', civectors_->data(state_num)->det()->nelea());
+     elec_range_map->emplace('a', civectors_->data(state_num)->det()->neleb());
+     elec_range_map->emplace('v', 0 );
+     elec_range_map->emplace('V', 0 );
+  
+     shared_ptr<map<char,int>> hole_range_map = make_shared<map<char,int>>(); 
+     hole_range_map->emplace('c', 0);
+     hole_range_map->emplace('C', 0);
+     hole_range_map->emplace('a', nact_ - civectors_->data(state_num)->det()->nelea() );
+     hole_range_map->emplace('A', nact_ - civectors_->data(state_num)->det()->neleb() );
+     hole_range_map->emplace('v', 100 ); // TODO this is almost certainly always OK, but should be set properly...
+     hole_range_map->emplace('V', 100 );
 
-    for ( int state_num : target_states_ ){ 
-       shared_ptr<map<char,int>> elec_range_map = make_shared<map<char,int>>(); 
-       elec_range_map->emplace('c', nclosed_ - ncore_);
-       elec_range_map->emplace('C', nclosed_ - ncore_);
-       elec_range_map->emplace('A', civectors_->data(state_num)->det()->nelea());
-       elec_range_map->emplace('a', civectors_->data(state_num)->det()->neleb());
-       elec_range_map->emplace('v', 0 );
-       elec_range_map->emplace('V', 0 );
-    
-       shared_ptr<map<char,int>> hole_range_map = make_shared<map<char,int>>(); 
-       hole_range_map->emplace('c', 0);
-       hole_range_map->emplace('C', 0);
-       hole_range_map->emplace('a', nact_ - civectors_->data(state_num)->det()->nelea() );
-       hole_range_map->emplace('A', nact_ - civectors_->data(state_num)->det()->neleb() );
-       hole_range_map->emplace('v', 100 ); // TODO this is almost certainly always OK, but should be set properly...
-       hole_range_map->emplace('V', 100 );
-
-       targets_info_->add_state( nact_, civectors_->data(state_num)->det()->nelea() + civectors_->data(state_num)->det()->neleb(), state_num,
-                                 elec_range_map, hole_range_map); 
-    }
-
-  } else {
-
-    for ( int state_num : target_states_ ){ 
-       shared_ptr<map<char,int>> elec_range_map = make_shared<map<char,int>>(); 
-       elec_range_map->emplace('c', nclosed_ - ncore_);
-       elec_range_map->emplace('a', civectors_->data(state_num)->det()->nelea());
-       elec_range_map->emplace('A', civectors_->data(state_num)->det()->neleb());
-       elec_range_map->emplace('v', 0 );
-    
-       shared_ptr<map<char,int>> hole_range_map = make_shared<map<char,int>>(); 
-       hole_range_map->emplace('c', 0);
-       hole_range_map->emplace('a', nact_ - civectors_->data(state_num)->det()->nelea() );
-       hole_range_map->emplace('A', nact_ - civectors_->data(state_num)->det()->neleb() );
-       hole_range_map->emplace('v', 1000 ); // TODO this is almost certainly always OK, but should be set properly...
-      
-
-       targets_info_->add_state( nact_, civectors_->data(state_num)->det()->nelea() + civectors_->data(state_num)->det()->neleb(), state_num,
-                                 elec_range_map, hole_range_map ); 
-    }
-  } 
+     targets_info_->add_state( nact_, civectors_->data(state_num)->det()->nelea() + civectors_->data(state_num)->det()->neleb(), state_num,
+                               elec_range_map, hole_range_map); 
+  }
 
   cout << "range_prime_map" << endl;  
   for ( auto& elem : *range_prime_map_ ) {

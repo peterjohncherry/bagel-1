@@ -30,6 +30,7 @@ BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& 
                           op_list_(op_list), op_trans_list_(op_trans_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
                           op_state_ids_(op_state_ids), type_(type), proj_op_(false) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  assert(false);
   cout << "BraKet::BraKet" << endl;
 
   //get state name first
@@ -100,28 +101,18 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::generate_gamma_Atensor_contractions : " << name_ << endl;
 
-  Total_Op_ = MT_map->at( multiop_name_ );
+  Total_Op_ = MT_map->at( multiop_info_->op_name_ );
 
   vector<char> projector_names;
   for ( auto& tens : Total_Op_->sub_tensops() )
     if ( tens->is_projector() )
       projector_names.push_back(tens->name()[0]);
 
-//  auto trans_info = make_pair( op_trans_list_,  op_order_ );
-//  vector<char>::const_iterator otl_it = op_trans_list_.begin();
-//  for ( vector<int>::iterator oo_it = op_order_.begin();  oo_it != op_order_.end();  oo_it++, otl_it++ )
-//    if ( *otl_it != '0' )
-//      Total_Op_->sub_tensops()[*oo_it]->generate_transformed_ranges(*otl_it);
-
-  shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( op_order_,  op_trans_list_ );
-
-  print_vector(*trans_aops , " got transformed aops" ); cout <<endl;
+  shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( *(multiop_info_->op_order_),  *(multiop_info_->transformations_) );
  
-  shared_ptr<GammaGeneratorRedux> GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
-
-  for ( auto op_info : *(multiop_info_->op_info_vec_) ) { cout << "op_info->name_ = " <<  op_info->name_ << endl;}
-
   Total_Op_->generate_ranges( multiop_info_ );
+
+  shared_ptr<GammaGeneratorRedux> GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
 
   auto split_ranges = Total_Op_->state_specific_split_ranges_->at( multiop_info_->name_ );
 
@@ -132,7 +123,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 
       GGen->add_gamma( range_map_it->second, trans_aops );
 
-      if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){
+      if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
         if ( GGen->generic_reorderer( "normal order", false, false ) ) {
           if ( GGen->generic_reorderer( "alternating order", false, true ) ){
       

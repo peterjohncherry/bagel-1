@@ -49,6 +49,10 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
     virtual int op_order( int ii ) { assert( ii == 0 );  return  0; }
     virtual std::shared_ptr<std::vector<int>> op_order() { std::shared_ptr<std::vector<int>> oo = std::make_shared<std::vector<int>>(1,0); return oo ; }
     virtual char transformation() { return transformation_; } 
+    virtual std::shared_ptr<std::vector<char>> transformations() {
+       throw std::logic_error (" should only be called from Multiop_Info " ); 
+       return std::make_shared<std::vector<char>>( 1, transformation_);
+    } 
 
 };
 
@@ -68,7 +72,11 @@ class MultiOp_Info : public Op_Info {
 
       num_ops_ = op_info_vec->size();  
       state_ids_ = std::make_shared<std::vector<std::shared_ptr<std::vector<int>>>>(num_ops_);    
+
       transformations_ = std::make_shared<std::vector<char>>(num_ops_);    
+      std::vector<char>::iterator t_it = transformations_->begin(); 
+      for ( std::vector<std::shared_ptr<Op_Info>>::iterator oi_it = op_info_vec_->begin(); oi_it != op_info_vec_->end(); oi_it++ , t_it++ )
+        *t_it = (*oi_it)->transformation_; 
 
     } 
     ~MultiOp_Info(){}; 
@@ -80,6 +88,8 @@ class MultiOp_Info : public Op_Info {
     int op_order( int ii ) { return (*op_order_)[ii]; }
 
     char transformation() { throw std::logic_error("Should not try to transform MultiOp all as one! Aborting!! "); return 'X'; } 
+
+    std::shared_ptr<std::vector<char>> transformations() { return transformations_; } 
 };
 
 #endif

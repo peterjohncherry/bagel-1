@@ -9,6 +9,8 @@ Equation_Init_Base::get_operator_info( std::vector<std::string>& op_list, std::v
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Init_Base::get_operator_info" << endl;
 
+  print_vector( op_trans_list , " op_trans_list" ); cout << endl;
+
   //get state name first
   string multiop_state_name = "";
   string multiop_full_name = "";
@@ -42,7 +44,7 @@ Equation_Init_Base::get_operator_info( std::vector<std::string>& op_list, std::v
       op_full_name += op_trans_list[ii]; 
       op_full_name += "}"; 
     }
-
+    print_vector( op_trans_list , "op_trans_list"  ) ; cout << endl;
     *mil_it = make_shared<Op_Info>( op_name, op_state_name, op_full_name,  make_shared<vector<int>> (op_state_ids->at(ii)), op_trans_list[ii] ); 
 
     multiop_name += op_name;
@@ -188,6 +190,7 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
           }
 
           // factor = factor_map_->at(*bk_factors_ita+)
+          print_vector( bk_op_trans_list, " bk_op_trans_list " ); cout << endl;
           braket_list.push_back(BraKet<DataType>( get_operator_info( bk_op_list, bk_op_trans_list, op_state_ids ), bk_factor_dummy,
                                                   bk_info.bra_index(), bk_info.ket_index(), term_init->type_));
 

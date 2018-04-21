@@ -68,12 +68,11 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
-   idxs = make_shared<vector<string>>(vector<string> {"H0", "H1", "H2", "H3"});
-   aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false});//TODO check this ordering is correct
+   idxs = make_shared<vector<string>>(vector<string> { "H0", "H1", "H2", "H3" } );
+   aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false } );//TODO check this ordering is correct
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free });
-//   symmfuncs = { hconj, perm_2301 }; 
-   symmfuncs = { hconj, perm_1032, perm_2301, perm_2103, perm_3012, perm_0321, perm_1230 }; 
-   constraints = { all_same_spin }; 
+   symmfuncs = { hconj, perm_1032, perm_2301, perm_2103, perm_3012, perm_0321, perm_1230 };
+   constraints = { all_same_spin };
    time_symm = "none";
    state_dep = 0;
 
@@ -85,22 +84,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
    time_symm = "none";
    state_dep = 0;
   
-  } else if ( op_name == "Q" ) {  /* ---- test six index ----  */
-
-   idxs = make_shared<vector<string>>(vector<string> {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5" });
-   aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
-   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core,  not_core, not_core, not_virt, not_virt, not_virt });
-   time_symm = "none";
-   state_dep = 0;
- 
-  } else if ( op_name == "R" ) {  /* ---- test six index ----  */
-
-   idxs = make_shared<vector<string>>(vector<string> {"R0", "R1", "R2", "R3", "R4", "R5" });
-   aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
-   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt,  virt, act, act, core, core });
-   time_symm = "none";
-   state_dep = 0;
-
   } else if ( op_name == "f" ) {  /* ---- state averaged fock operator ----  */
 
    idxs = make_shared<vector<string>>(vector<string> {"f0", "f1"});
@@ -109,31 +92,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
    time_symm = "none";
    state_dep = 0;
 
-  } else if ( op_name == "L" ) {  /* ---- L Tensor ----  */
-
-    idxs = make_shared<vector<string>>(vector<string> {"L0", "L1", "L2", "L3"});
-    aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true });
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, not_virt });
-    time_symm = "none";
-    state_dep = 2;
-    
-      
-  } else if ( op_name == "M" ) {  /* ---- M Tensor ----  */
-
-    idxs = make_shared<vector<string>>(vector<string> {"M0", "M1", "M2", "M3"});
-    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false });
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, core, core });
-    time_symm = "none";
-    state_dep = 2;
- 
-  } else if ( op_name == "N" ) {  /* ---- N Tensor ----  */
-
-    idxs = make_shared<vector<string>>(vector<string> {"N0", "N1", "N2", "N3"});
-    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false });
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act });
-    time_symm = "none";
-    state_dep = 0;
-    
   } else if ( op_name == "T" ) {  /* ---- T Tensor ----  */
 
     idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
@@ -147,10 +105,11 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
     idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
     symmfuncs = { hconj }; 
-    //constraints = { spin_neutral, not_all_act }; 
-    constraints = { all_same_spin }; 
+    constraints = { spin_neutral, not_all_act }; 
+//    constraints = { all_same_spin }; 
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt  });
-    //idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_b, not_core_b, not_virt_b, not_virt_b  });
+//    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_b, not_core_b, not_virt_b, not_virt_b  });
+//    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_a, not_core_a, not_virt_a, not_virt_a  });
     time_symm = "none";
     state_dep = 2;
 
@@ -167,22 +126,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
     idxs = make_shared<vector<string>>( vector<string> {"X3", "X2", "X1", "X0"} );
     aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt } );
-    time_symm = "none";
-    state_dep = 0;
-
-  } else if ( op_name == "x" ) {
-
-    idxs = make_shared<vector<string>>( vector<string> {"X0", "X1"} );
-    aops = make_shared<vector<bool>>( vector<bool> { false, true } );
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act } );
-    time_symm = "none";
-    state_dep = 2;
-
-   } else if ( op_name == "Z" ) { /* 2el test op */
-
-    idxs = make_shared<vector<string>>( vector<string> { "Z0", "Z1", "Z2", "Z3" } );
-    aops = make_shared<vector<bool>>( vector<bool>  { false, false, true, true } );
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act } );
     time_symm = "none";
     state_dep = 0;
 
