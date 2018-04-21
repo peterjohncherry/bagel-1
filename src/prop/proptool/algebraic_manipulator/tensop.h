@@ -46,7 +46,6 @@ class TensOp_Base {
      std::shared_ptr<const std::vector<std::string>> idxs_;
      std::shared_ptr<const std::vector<bool>> aops_;
      std::shared_ptr<const std::vector<std::vector<std::string>>> idx_ranges_;
-     std::pair<double,double> factor_;
 
      //TODO keep like this for now
      const bool projector_ = false;
@@ -73,11 +72,14 @@ class TensOp_Base {
 
    public:
 
+     std::pair<double,double> factor_;
+
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>>>> all_ranges_state_specific_;
     
      std::shared_ptr<std::map<std::string,std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>>>> state_specific_split_ranges_; 
  
-     TensOp_Base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name), spinfree_(spinfree), Tsymm_(Tsymm), state_dep_(state_dep),
+     TensOp_Base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name),  factor_(std::make_pair(1.0,1.0)), spinfree_(spinfree),
+                                                                                        Tsymm_(Tsymm), state_dep_(state_dep),
                                                                                         required_blocks_(std::make_shared<std::set<std::string>>()) {};
 
      TensOp_Base( std::string name, std::pair<double,double>& factor, bool spinfree ) : name_(name), factor_(factor), spinfree_(spinfree), Tsymm_("none"),

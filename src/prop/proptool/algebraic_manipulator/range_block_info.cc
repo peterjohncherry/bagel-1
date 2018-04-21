@@ -18,6 +18,9 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // cout << "Range_Block_Info::Range_Block_Info 1" << endl;
 
+  print_vector(*orig_block , " orig_block" );
+  cout << " factors_ (" << factors_.first <<"," << factors_.second << ")" << "    factors (" << factors.first <<"," << factors.second << ")" << endl;
+
   num_idxs_ = orig_rngs_->size();
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
@@ -42,9 +45,6 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   plus_pnum_ = 1;
   kill_pnum_ = 1;
 
-  cout << "op_info->name_ = " <<   op_info->name_  ;cout.flush();
-  print_vector( *orig_rngs_,  "orig_ranges" ); cout << "   " ; cout.flush();   print_vector( aops,  "aops" ); cout << endl;
-
   vector<bool>::const_iterator a_it = aops.begin();
   for ( vector<string>::const_iterator or_it = orig_rngs_->begin(); or_it != orig_rngs_->end(); ++or_it, ++a_it ){
     if (*a_it) {
@@ -58,8 +58,6 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   } else {
     ci_sector_transition_ = false;
   }
-  cout << " plus_pnum_ : " << plus_pnum_ << "  kill_pnum_ : " <<   kill_pnum_ ; cout.flush();
-  if ( ci_sector_transition_ )  { cout << " --> transition " << endl; } else { cout << " : no transition " << endl; } 
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -73,8 +71,10 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  // cout << "Range_Block_Info::Range_Block_Info 2" << endl;
 
-  num_idxs_ = orig_rngs_->size();
+  print_vector(*orig_block , " orig_block" );
+  cout << " factors_ (" << factors_.first <<"," << factors_.second << ")" << "       factors (" << factors.first <<"," << factors.second << ")" << endl;
 
+  num_idxs_ = orig_rngs_->size();
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
 
   {
@@ -143,7 +143,7 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
  
     double Re_buff = factors_.first;
     double Im_buff = factors_.second;
-    factors_.first = Re_buff*(*rb_it)->Re_factor() + Im_buff*(*rb_it)->Im_factor();
+    factors_.first = Re_buff*(*rb_it)->Re_factor() - Im_buff*(*rb_it)->Im_factor();
     factors_.second = Re_buff*(*rb_it)->Im_factor() + Im_buff*(*rb_it)->Re_factor();
     
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );

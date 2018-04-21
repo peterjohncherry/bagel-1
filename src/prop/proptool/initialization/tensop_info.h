@@ -43,7 +43,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
   static vector<string> act_b      = {"A"};
   static vector<string> virt_b     = {"V"};
 
-  pair<double,double>                factor = make_pair(1.0, 1.0);
+  pair<double,double>                factor = make_pair(1.0, 0.0);
   shared_ptr<vector<string>>         idxs;
   shared_ptr<vector<bool>>           aops;
   shared_ptr<vector<vector<string>>> idx_ranges;
@@ -114,7 +114,6 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
     state_dep = 2;
 
   } else if ( op_name == "t" ) {  /* ---- T Tensor herm conj TODO  should find a better way fo dealing with this----  */
-    cout << "getting t op " << endl;
     idxs = make_shared<vector<string>>(vector<string>{"t0", "t1", "t2", "t3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  {false, false, true, true } );
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });

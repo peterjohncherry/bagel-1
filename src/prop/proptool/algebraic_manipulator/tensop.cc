@@ -62,6 +62,8 @@ TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vect
                                   TensOp_Base( name, factor, true ), symmfuncs_(symmfuncs), constraints_(constraints)   {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp" <<   endl;
+
+  cout << "factor_ = (" << factor_.first << "," << factor_.second << ")" << endl;
              
   num_idxs_ = idxs.size();
 
@@ -307,13 +309,19 @@ void TensOp::TensOp<DataType>::apply_symmetry( const vector<string>& new_block, 
 //   cout << "TensOp::TensOp<DataType>::apply_symmetry : " << op_info->name_ <<  endl; 
 
   pair<double,double> new_fac = factor_;
+  cout << "APPLY SYMMETRY factor = (" << new_fac.first << "," << new_fac.second << ")" << endl;
   shared_ptr<const vector<string>> new_block_c = apply_direct_range_transformation( new_block, new_fac, op_info  );
+  cout << "APPLY SYMMETRY direct trans factor = (" << new_fac.first << "," << new_fac.second << ")" << endl;
   print_vector( *new_block_c , "spin trans new_block_c" ) ; cout << endl;
 
   for ( auto& func : symmfuncs_ ) {
     auto art_loc = all_ranges_tmp_->find(func->transform( *new_block_c ));
     if( art_loc != all_ranges_tmp_->end() ){
+      cout << "APPLY SYMMETRY PRE MULT factor  = (" << new_fac.first << "," << new_fac.second << ")" << endl;
       WickUtils::pair_fac_mult( func->factor( *new_block_c ), new_fac );
+      pair<double,double> symm_fac = func->factor( *new_block_c );
+      cout << "SYMMETRY factor = (" << symm_fac.first << "," << symm_fac.second << ")" << endl;
+      cout << "APPLY SYMMETRY POST MULT factor = (" << new_fac.first << "," << new_fac.second << ")" << endl;
       all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, art_loc->second->unique_block_, func, new_fac, aops , op_info ));
       return;
     }
@@ -323,6 +331,7 @@ void TensOp::TensOp<DataType>::apply_symmetry( const vector<string>& new_block, 
   iota( idxs_trans->begin(), idxs_trans->end(), 0 );
 
   new_block_c =  make_shared<const vector<string>>(*new_block_c);
+  cout << "APPLY SYMMETRY into map factor = (" << new_fac.first << "," << new_fac.second << ")" << endl;
   all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, new_block_c, idxs_trans, new_fac, aops , op_info ) );  
 
   return;
@@ -335,6 +344,9 @@ TensOp::TensOp<DataType>::apply_direct_range_transformation( const vector<string
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp<DataType>::apply_direct_range_transformation : " << op_info->name_ <<  endl;
 
+
+  cout << "ADRT factor = (" << new_fac.first << "," << new_fac.second << ")" << endl;
+
   // TODO should be in seperate function
   vector<string> block_buff = block ;
   vector<string>::const_iterator b_it = block.begin();
@@ -345,6 +357,7 @@ TensOp::TensOp<DataType>::apply_direct_range_transformation( const vector<string
 
   WickUtils::pair_fac_mult( op_info->spin_flip_factor_, new_fac );
 
+  cout << "ADRT factor = (" << new_fac.first << "," << new_fac.second << ")" << endl;
   return make_shared<const vector<string>>( block_buff );
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -464,12 +477,14 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
   CTP_map_  = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
   { 
     num_idxs_ = 0;
+    factor_ = make_pair(1.0,1.0);
     vector<string> idxs;
     vector<vector<string>> idx_ranges;
     vector<bool> aops;
     vector<int> cmlsizevec(num_tensors_);
     for ( int ii = 0;  ii != sub_tensops_.size() ; ii++ ) {
     
+      WickUtils::pair_fac_mult( sub_tensops_[ii]->factor_ , factor_ );
       idx_ranges.insert(  idx_ranges.end(), sub_tensops_[ii]->idx_ranges()->begin(), sub_tensops_[ii]->idx_ranges()->end() );
       idxs.insert( idxs.end(),sub_tensops_[ii]->idxs()->begin(), sub_tensops_[ii]->idxs()->end() );
       aops.insert( aops.end(),sub_tensops_[ii]->aops()->begin(), sub_tensops_[ii]->aops()->end() );

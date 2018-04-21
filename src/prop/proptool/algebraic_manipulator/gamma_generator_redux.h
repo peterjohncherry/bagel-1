@@ -13,14 +13,14 @@ using namespace WickUtils;
 class GammaIntermediateRedux {
 
    public :
-     std::shared_ptr<std::vector<int>> ids_pos;
-     std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos;
-     int my_sign;
+     std::shared_ptr<std::vector<int>> ids_pos_;
+     std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_;
+     std::pair<double,double> factors_;
 
-     GammaIntermediateRedux( std::shared_ptr<std::vector<int>> ids_pos_in,
-                             std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_in,
-                             int my_sign_in ) :
-     ids_pos(ids_pos_in), deltas_pos(deltas_pos_in), my_sign(my_sign_in) {};
+     GammaIntermediateRedux( std::shared_ptr<std::vector<int>> ids_pos,
+                             std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos,
+                             std::pair<double,double> factors ) :
+     ids_pos_(ids_pos), deltas_pos_(deltas_pos), factors_(factors) {};
 
      ~GammaIntermediateRedux(){};
 
@@ -79,7 +79,7 @@ class GammaGeneratorRedux{
     std::shared_ptr<std::vector<int>> rngs_trans_;
     std::shared_ptr<std::vector<int>> idxs_trans_;
 
-    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> final_gamma_vec;
+    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> final_gamma_vec_;
     
     // key    : name of A-tensor
     // result : list of reorderings which much be applied to this A-tensor before it is contracted with this gamma.
@@ -88,7 +88,7 @@ class GammaGeneratorRedux{
 
   public :
     //TODO make this private again when finished testing!!!
-    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> gamma_vec;
+    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> gamma_vec_;
 
     GammaGeneratorRedux( std::shared_ptr<StatesInfo<double>> target_states_, int Ket_num, int Bra_num,
                          std::shared_ptr<TensOp_Base> multitensop, 
@@ -120,7 +120,11 @@ class GammaGeneratorRedux{
                         std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
                         std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
 
-    void swap( int ii, int jj, std::shared_ptr<GammaIntermediateRedux> gint );
+    void swap( int ii, int jj, std::vector<std::shared_ptr<GammaIntermediateRedux>>::iterator gint );
+
+    void swap( int ii, int jj, std::shared_ptr<GammaIntermediateRedux>& gint );
+
+    void swap( int ii, int jj, int kk );
 
     std::shared_ptr<std::vector<std::pair<int,int>>>
     standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
