@@ -26,11 +26,12 @@ class GammaIntermediateRedux {
 
 };
 
+template<typename DataType> 
 class GammaGeneratorRedux{
-  friend GammaInfo;
+  friend GammaInfo<DataType>;
 
   private : 
-    std::shared_ptr<StatesInfo<double>> target_states_;
+    std::shared_ptr<StatesInfo<DataType>> target_states_;
     std::shared_ptr<std::vector<std::string>> Bra_names_;
     std::shared_ptr<std::vector<std::string>> Ket_names_;
 
@@ -56,7 +57,7 @@ class GammaGeneratorRedux{
 
     // key    : name of this gamma
     // result : information used here and in compute routines
-    std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> Gamma_map;
+    std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo<DataType> >>> Gamma_map;
 
     std::shared_ptr<TensOp_Base> total_op_;
 
@@ -90,13 +91,13 @@ class GammaGeneratorRedux{
     //TODO make this private again when finished testing!!!
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> gamma_vec_;
 
-    GammaGeneratorRedux( std::shared_ptr<StatesInfo<double>> target_states_, int Ket_num, int Bra_num,
+    GammaGeneratorRedux<DataType>( std::shared_ptr<StatesInfo<DataType>> target_states_, int Ket_num, int Bra_num,
                          std::shared_ptr<TensOp_Base> multitensop, 
-                         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo>>>& Gamma_map_in,
+                         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo<DataType>>>>& Gamma_map_in,
                          std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo>  >>>>& G_to_A_map_in,
                          double bk_factor );
 
-    ~GammaGeneratorRedux(){};
+    ~GammaGeneratorRedux<DataType>(){};
 
 
     void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops );

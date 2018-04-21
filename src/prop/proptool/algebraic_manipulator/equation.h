@@ -20,7 +20,7 @@ class Equation_Base {
      std::shared_ptr< std::map <std::string, std::shared_ptr< Expression<DataType>>>> expression_map_;
 
      // Maps are not defined in constructor so that equations can be independent,  needed for building of expression_map_
-     std::shared_ptr< std::map <std::string, std::shared_ptr< GammaInfo >>> gamma_info_map_;
+     std::shared_ptr< std::map <std::string, std::shared_ptr< GammaInfo<DataType> >>> gamma_info_map_;
      std::shared_ptr< std::map <std::string, std::shared_ptr< BraKet<DataType>>>> braket_map_;
      std::shared_ptr< std::map <std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map_;
 
@@ -68,7 +68,7 @@ class Equation_Base {
     ~Equation_Base(){};
 
      void set_maps( std::shared_ptr< std::map <std::string, std::shared_ptr< Expression<DataType>>>> expression_map,
-                    std::shared_ptr< std::map<std::string, std::shared_ptr< GammaInfo >>> gamma_info_map,
+                    std::shared_ptr< std::map<std::string, std::shared_ptr< GammaInfo<DataType> >>> gamma_info_map,
                     std::shared_ptr< std::map<std::string, std::shared_ptr< std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map,
                     std::shared_ptr< std::map<std::string, std::shared_ptr< TensOp_Base>>> MT_map,
                     std::shared_ptr< std::map<std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map,
@@ -80,7 +80,7 @@ class Equation_Base {
      void add_expression(std::string expression_name ) ;
      std::string add_expression_info( std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list );
 
-     std::shared_ptr< std::map <std::string, std::shared_ptr< GammaInfo >>> gamma_info_map() { return gamma_info_map_; }
+     std::shared_ptr< std::map <std::string, std::shared_ptr< GammaInfo<DataType> >>> gamma_info_map() { return gamma_info_map_; }
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base>>> CTP_map() { return CTP_map_; }      
      std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp_Base >>> MT_map() { return MT_map_    ; }      

@@ -23,7 +23,7 @@ System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info
   MT_map_         = make_shared< map <string, shared_ptr<TensOp_Base>>>();
   CTP_map_        = make_shared< map <string, shared_ptr<CtrTensorPart_Base>>>();
   ACompute_map   = make_shared< map <string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>();
-  Gamma_map      = make_shared< map <string, shared_ptr<GammaInfo> > >();
+  Gamma_map      = make_shared< map <string, shared_ptr<GammaInfo<DataType>> > >();
 
   if (spinfree_ ) { 
     cout << " setting spinfree ranges" << endl;

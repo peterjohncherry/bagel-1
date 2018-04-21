@@ -7,15 +7,16 @@
 
 using namespace WickUtils;
 
+template< typename DataType> 
 class GammaInfo {
 
    private :
      int order_ ;
 
      //Follows convention : <I | i j | K > < K | .........| J >
-     std::shared_ptr<CIVecInfo<double>> Bra_info_;      // < I |
-     std::shared_ptr<CIVecInfo<double>> Ket_info_;      // | J >
-     std::shared_ptr<CIVecInfo<double>> prev_Bra_info_; // < K |
+     std::shared_ptr<CIVecInfo<DataType>> Bra_info_;      // < I |
+     std::shared_ptr<CIVecInfo<DataType>> Ket_info_;      // | J >
+     std::shared_ptr<CIVecInfo<DataType>> prev_Bra_info_; // < K |
 
      std::shared_ptr<std::vector<std::string>> id_ranges_ ;
      std::shared_ptr<std::vector<std::string>> sigma_id_ranges_ ;
@@ -30,11 +31,11 @@ class GammaInfo {
      std::vector<std::string> prev_sigmas_;
 
    public :
-     GammaInfo( std::shared_ptr<CIVecInfo<double>> Bra_info, std::shared_ptr<CIVecInfo<double>> Ket_info,
+     GammaInfo( std::shared_ptr<CIVecInfo<DataType>> Bra_info, std::shared_ptr<CIVecInfo<DataType>> Ket_info,
                 std::shared_ptr<const std::vector<bool>> full_aops_vec, std::shared_ptr<const std::vector<std::string>> full_idx_ranges,
-                std::shared_ptr<std::vector<int>> idxs_pos, std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>>& Gamma_map_in );
+                std::shared_ptr<std::vector<int>> idxs_pos, std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo<DataType>>>>& Gamma_map_in );
      GammaInfo(){};
-     ~GammaInfo(){};
+    ~GammaInfo(){};
 
      int order() { return order_ ; };
 
@@ -56,9 +57,9 @@ class GammaInfo {
      std::string Ket_name() { return Ket_info_->name(); };
      std::string Prev_Bra_name() { return prev_Bra_info_->name(); };
 
-     std::shared_ptr<CIVecInfo<double>> Bra_info() {return  Bra_info_; };
-     std::shared_ptr<CIVecInfo<double>> prev_Bra_info(){ return prev_Bra_info_; };
-     std::shared_ptr<CIVecInfo<double>> Ket_info() { return Ket_info_; };
+     std::shared_ptr<CIVecInfo<DataType>> Bra_info() {return  Bra_info_; };
+     std::shared_ptr<CIVecInfo<DataType>> prev_Bra_info(){ return prev_Bra_info_; };
+     std::shared_ptr<CIVecInfo<DataType>> Ket_info() { return Ket_info_; };
 
      int Bra_nalpha() const {return  Bra_info_->nalpha(); };
      int prev_Bra_nalpha() const { return prev_Bra_info_->nalpha(); };

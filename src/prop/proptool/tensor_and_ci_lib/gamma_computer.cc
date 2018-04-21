@@ -10,14 +10,15 @@ using namespace Tensor_Arithmetic_Utils;
 using namespace WickUtils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_ptr<GammaInfo>>>          Gamma_info_map_in,
-                                                shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    CIvec_data_map_in,
-                                                shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    sigma_data_map,
-                                                shared_ptr< map< string, shared_ptr<Tensor_<double>>>>    gamma_data_map,
+template<typename DataType>
+Gamma_Computer<DataType>::Gamma_Computer( shared_ptr< map< string, shared_ptr<GammaInfo<DataType>>>>          Gamma_info_map_in,
+                                                shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>>    CIvec_data_map_in,
+                                                shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>>    sigma_data_map,
+                                                shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>>    gamma_data_map,
                                                 shared_ptr< map< string, shared_ptr<const Determinants>>> Determinants_map_in,
 						shared_ptr< map< string, shared_ptr<IndexRange>>>         range_conversion_map_in ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Gamma_Computer::Gamma_Computer::Gamma_Computer" << endl;
+  cout << "Gamma_Computer<DataType>::Gamma_Computer" << endl;
   maxtile  = 10000;
 
   Gamma_info_map       = Gamma_info_map_in;       cout << "set Gamma_info_map      " << endl; 
@@ -29,16 +30,17 @@ Gamma_Computer::Gamma_Computer::Gamma_Computer( shared_ptr< map< string, shared_
 
   Determinants_map_new = make_shared< map < string, shared_ptr<Determinants> >>();     cout << "building Determinants_map_new    "<< endl; 
 
-  Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
+  Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets the gammas in tensor format. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
+template<typename DataType>
+void Gamma_Computer<DataType>::get_gamma_tensor( string gamma_name ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Gamma_Computer::Gamma_Computer::get_gamma_tensor_test : " << gamma_name << endl;
+  cout << "Gamma_Computer<DataType>::get_gamma_tensor_test : " << gamma_name << endl;
 
   if ( gamma_name == "ID" ) { 
  
@@ -50,7 +52,7 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
 
   } else { 
     
-    shared_ptr<GammaInfo> gamma_info = Gamma_info_map->at(gamma_name) ;
+    shared_ptr<GammaInfo<DataType>> gamma_info = Gamma_info_map->at(gamma_name) ;
     int order = gamma_info->order();
     if ( order == 2 ) { 
       build_gamma2_tensor( gamma_info );
@@ -65,7 +67,8 @@ void Gamma_Computer::Gamma_Computer::get_gamma_tensor( string gamma_name ) {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::build_gamma2_tensor( shared_ptr<GammaInfo> gamma2_info )  {
+template<typename DataType>
+void Gamma_Computer<DataType>::build_gamma2_tensor( shared_ptr<GammaInfo<DataType>> gamma2_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Gamma_Computer::build_gamma2_tensor : " << gamma2_info->name() << endl;
   
@@ -76,8 +79,8 @@ cout << "Gamma_Computer::build_gamma2_tensor : " << gamma2_info->name() << endl;
      build_sigma2_tensor(gamma2_info);
    }
 
-   shared_ptr<Tensor_<double>> gamma2 =
-   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( sigma_data_map_->at(gamma2_info->sigma_name()),
+   shared_ptr<Tensor_<DataType>> gamma2 =
+   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_tensor_with_vector( sigma_data_map_->at(gamma2_info->sigma_name()),
                                                                               CIvec_data_map->at(gamma2_info->Bra_name()), 0 );
 
    gamma_data_map_->emplace(gamma2_info->name(), gamma2); 
@@ -85,7 +88,8 @@ cout << "Gamma_Computer::build_gamma2_tensor : " << gamma2_info->name() << endl;
    return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::build_sigma2_tensor( shared_ptr<GammaInfo> gamma2_info )  {
+template<typename DataType>
+void Gamma_Computer<DataType>::build_sigma2_tensor( shared_ptr<GammaInfo<DataType>> gamma2_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::build_sigma2_tensor : " << gamma2_info->sigma_name() << endl;
  
@@ -93,7 +97,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor( shared_ptr<GammaInfo> 
   build_detspace( gamma2_info->Bra_info() );
   build_detspace( gamma2_info->Ket_info() );
 
-  shared_ptr<Tensor_<double>> Ket = CIvec_data_map->at( gamma2_info->Ket_name() );  
+  shared_ptr<Tensor_<DataType>> Ket = CIvec_data_map->at( gamma2_info->Ket_name() );  
   shared_ptr<Determinants>    Ket_det = Determinants_map_new->at( gamma2_info->Ket_name() ); 
   IndexRange                  Ket_range = Ket->indexrange()[0];
 
@@ -101,7 +105,7 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor( shared_ptr<GammaInfo> 
 
   shared_ptr<vector<IndexRange>> ranges = Get_Bagel_IndexRanges( gamma2_info->sigma_id_ranges() ) ;
 
-  shared_ptr<Tensor_<double>> sigma2 = make_shared<Tensor_<double>>( *ranges );
+  shared_ptr<Tensor_<DataType>> sigma2 = make_shared<Tensor_<DataType>>( *ranges );
   sigma2->allocate();
   sigma2->zero();
   sigma_data_map_->emplace( sigma2_name, sigma2 );
@@ -122,13 +126,13 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor( shared_ptr<GammaInfo> 
     vector<int> sigma2_block_sizes = { (int)sigma2_id_blocks[0].size(), (int)sigma2_id_blocks[1].size(), (int)sigma2_id_blocks[2].size() };
     size_t sigma2_block_size = sigma2_block_sizes[0]*sigma2_block_sizes[1]*sigma2_block_sizes[2];
 
-    unique_ptr<double[]> sigma2_block( new double[sigma2_block_size] ) ;
+    unique_ptr<DataType[]> sigma2_block( new DataType[sigma2_block_size] ) ;
     std::fill_n(sigma2_block.get(), sigma2_block_size, 0.0);
     
     int Ket_offset = 0 ;
     for ( Index Ket_id_block : Ket_range ) { 
 
-      unique_ptr<double[]> Ket_block = Ket->get_block( (vector<Index>({Ket_id_block}) ) );
+      unique_ptr<DataType[]> Ket_block = Ket->get_block( (vector<Index>({Ket_id_block}) ) );
       
       sigma_2a1( Ket_block.get(), sigma2_block.get(), Ket_det,
                  Ket_offset, sigma2_id_offsets, Ket_id_block.size(), sigma2_block_sizes );
@@ -145,16 +149,17 @@ void Gamma_Computer::Gamma_Computer::build_sigma2_tensor( shared_ptr<GammaInfo> 
   } while (fvec_cycle( block_pos, range_lengths, mins ));
  
   vector<Index> id_block = { ranges->at(0).range(0), ranges->at(1).range(0), ranges->at(2).range(0) };
-  unique_ptr<double[]> sigma2_block = sigma2->get_block(id_block);
+  unique_ptr<DataType[]> sigma2_block = sigma2->get_block(id_block);
 
-  shared_ptr<Tensor_<double>> gamma2 =
-  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( sigma2, CIvec_data_map->at(gamma2_info->Bra_name()), 0 );
+  shared_ptr<Tensor_<DataType>> gamma2 =
+  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_tensor_with_vector( sigma2, CIvec_data_map->at(gamma2_info->Bra_name()), 0 );
 
   return;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::build_gammaN_tensor(shared_ptr<GammaInfo> gammaN_info )  {
+template<typename DataType>
+void Gamma_Computer<DataType>::build_gammaN_tensor(shared_ptr<GammaInfo<DataType>> gammaN_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Gamma_Computer::build_gammaN_tensor" << endl;
   
@@ -163,8 +168,8 @@ void Gamma_Computer::Gamma_Computer::build_gammaN_tensor(shared_ptr<GammaInfo> g
 
    build_sigmaN_tensor(gammaN_info);
    
-   shared_ptr<Tensor_<double>> gammaN =
-   Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_tensor_with_vector( sigma_data_map_->at(gammaN_info->sigma_name()),
+   shared_ptr<Tensor_<DataType>> gammaN =
+   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_tensor_with_vector( sigma_data_map_->at(gammaN_info->sigma_name()),
                                                                               CIvec_data_map->at(gammaN_info->Bra_name()), 0 );
  
    gamma_data_map_->emplace(gammaN_info->name(), gammaN); 
@@ -174,7 +179,8 @@ void Gamma_Computer::Gamma_Computer::build_gammaN_tensor(shared_ptr<GammaInfo> g
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor( shared_ptr<GammaInfo> gammaN_info )  {
+template<typename DataType>
+void Gamma_Computer<DataType>::build_sigmaN_tensor( shared_ptr<GammaInfo<DataType>> gammaN_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // sn  :  sigmaN   ,  ps : prev_sigma    
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -187,13 +193,13 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor( shared_ptr<GammaInfo> 
 
   shared_ptr<vector<IndexRange>> ranges_sn = Get_Bagel_IndexRanges( gammaN_info->sigma_id_ranges() ) ;
 
-  shared_ptr<Tensor_<double>> sigmaN = make_shared<Tensor_<double>>( *ranges_sn );
+  shared_ptr<Tensor_<DataType>> sigmaN = make_shared<Tensor_<DataType>>( *ranges_sn );
   sigmaN->allocate();
   sigmaN->zero();
   sigma_data_map_->emplace( sigmaN_name , sigmaN );
 
-  shared_ptr<Tensor_<double>> prev_sigma = sigma_data_map_->at( prev_sigma_name );
-  shared_ptr<GammaInfo>       prev_gamma_info = Gamma_info_map->at( gammaN_info->prev_gamma_name() );
+  shared_ptr<Tensor_<DataType>> prev_sigma = sigma_data_map_->at( prev_sigma_name );
+  shared_ptr<GammaInfo<DataType>>       prev_gamma_info = Gamma_info_map->at( gammaN_info->prev_gamma_name() );
 
   shared_ptr<vector<IndexRange>>  ranges_ps = Get_Bagel_IndexRanges( prev_gamma_info->sigma_id_ranges() ) ;
   shared_ptr<vector<vector<int>>> block_offsets_ps = get_block_offsets( *ranges_ps ) ;
@@ -233,8 +239,9 @@ void Gamma_Computer::Gamma_Computer::build_sigmaN_tensor( shared_ptr<GammaInfo> 
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
 void
-Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vector<Index>& id_blocks_ps, vector<int>& offsets_ps,
+Gamma_Computer<DataType>::build_sigmaN_block( string sigmaN_name,     vector<Index>& id_blocks_ps, vector<int>& offsets_ps,
                                                     string prev_sigma_name, vector<Index>& id_blocks_Iij, vector<int>& offsets_Iij ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::build_sigmaN_block" << endl;
@@ -243,10 +250,10 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
   //if ( Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info()->name()  == Gamma_info_map->at(prev_sigma_name.substr(2))->Ket_info()->name() ){//fix for rel case
   if ( Gamma_info_map->at(sigmaN_name.substr(2))->Bra_nalpha()  == Gamma_info_map->at(prev_sigma_name.substr(2))->Ket_nalpha() ){//fix for rel case
    
-    shared_ptr<Tensor_<double>> sigmaN      = sigma_data_map_->at(sigmaN_name);
-    shared_ptr<Tensor_<double>> prev_sigma  = sigma_data_map_->at(prev_sigma_name);
+    shared_ptr<Tensor_<DataType>> sigmaN      = sigma_data_map_->at(sigmaN_name);
+    shared_ptr<Tensor_<DataType>> prev_sigma  = sigma_data_map_->at(prev_sigma_name);
 
-    unique_ptr<double[]> prev_sigma_block = prev_sigma->get_block( id_blocks_ps );
+    unique_ptr<DataType[]> prev_sigma_block = prev_sigma->get_block( id_blocks_ps );
 
     vector<int> Iij_block_sizes = { (int)id_blocks_Iij[0].size(), (int)id_blocks_Iij[1].size(), (int)id_blocks_Iij[2].size() };
     int Iij_block_size  = Iij_block_sizes[0]*Iij_block_sizes[1]*Iij_block_sizes[2]; 
@@ -254,7 +261,7 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
     int Ket_block_size  = id_blocks_ps.back().size();
     int ps_orb_block_size  = get_block_size( id_blocks_ps.begin(), id_blocks_ps.end()-1 ); 
 
-    unique_ptr<double[]> sigmaN_block( new double[Iij_block_size*ps_orb_block_size] );
+    unique_ptr<DataType[]> sigmaN_block( new DataType[Iij_block_size*ps_orb_block_size] );
     fill_n( sigmaN_block.get(), Iij_block_size*ps_orb_block_size, 0.0 );
 
     shared_ptr<Determinants> Ket_det = Determinants_map_new->at(Gamma_info_map->at(sigmaN_name.substr(2))->Bra_info()->name()); 
@@ -283,7 +290,8 @@ Gamma_Computer::Gamma_Computer::build_sigmaN_block( string sigmaN_name,     vect
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::sigma_2a1(double* cvec_ptr, double* sigma_ptr, shared_ptr<const Determinants> dets,
+template<typename DataType>
+void Gamma_Computer<DataType>::sigma_2a1(DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<const Determinants> dets,
                                                int cvec_offset, vector<int>& sigma_offsets, 
                                                int cvec_block_size, vector<int>& sigma_block_sizes ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                               
@@ -292,10 +300,10 @@ void Gamma_Computer::Gamma_Computer::sigma_2a1(double* cvec_ptr, double* sigma_p
   const int ij = dets->norb()*dets->norb();                                                                               
                                                                                                                           
   for (int ip = 0; ip != ij; ++ip) {                                                                                      
-    double* target_base = sigma_ptr+dets->size()*ip;                                                                              
+    DataType* target_base = sigma_ptr+dets->size()*ip;                                                                              
     for (auto& iter : dets->phia(ip)) {                                                                                   
-      const double sign = static_cast<double>(iter.sign);                                                                 
-      double* const target_array = target_base + iter.source*lb;                                                          
+      const DataType sign = static_cast<DataType>(iter.sign);                                                                 
+      DataType* const target_array = target_base + iter.source*lb;                                                          
       blas::ax_plus_y_n(sign, cvec_ptr + iter.target*lb, lb, target_array);                                               
     }                                                                                                                     
   }
@@ -303,7 +311,8 @@ void Gamma_Computer::Gamma_Computer::sigma_2a1(double* cvec_ptr, double* sigma_p
 }                                                                                                                         
                                                                                                                           
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                             
-void Gamma_Computer::Gamma_Computer::sigma_2a2( double* cvec_ptr, double* sigma_ptr, shared_ptr<const Determinants> dets, 
+template<typename DataType>
+void Gamma_Computer<DataType>::sigma_2a2( DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<const Determinants> dets, 
                                                int cvec_offset, vector<int>& sigma_offsets, 
                                                int cvec_block_size, vector<int>& sigma_block_sizes ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                             
@@ -313,13 +322,13 @@ void Gamma_Computer::Gamma_Computer::sigma_2a2( double* cvec_ptr, double* sigma_
   const int ij = dets->norb()*dets->norb();
 
   for (int i = 0; i < la; ++i) {
-    double* source_array0 = cvec_ptr+i*lb;
+    DataType* source_array0 = cvec_ptr+i*lb;
 
     for (int ip = 0; ip != ij; ++ip) {
-      double* target_array0 = sigma_ptr + (ip * dets->size()) + i*lb;
+      DataType* target_array0 = sigma_ptr + (ip * dets->size()) + i*lb;
 
       for (auto& iter : dets->phib(ip)) {
-        const double sign = static_cast<double>(iter.sign);
+        const DataType sign = static_cast<DataType>(iter.sign);
         target_array0[iter.source] += sign * source_array0[iter.target];
       }
     }
@@ -328,7 +337,8 @@ void Gamma_Computer::Gamma_Computer::sigma_2a2( double* cvec_ptr, double* sigma_
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<IndexRange>> Gamma_Computer::Gamma_Computer::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
+template<typename DataType>
+shared_ptr<vector<IndexRange>> Gamma_Computer<DataType>::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Gamma_Computer::Get_Bagel_IndexRanges 1arg" << endl;
 
@@ -340,8 +350,9 @@ cout << "Gamma_Computer::Get_Bagel_IndexRanges 1arg" << endl;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<Tensor_<double>> 
-Gamma_Computer::Gamma_Computer::convert_civec_to_tensor( shared_ptr<const Civec> civector, int state_num ) const {
+template<typename DataType>
+shared_ptr<Tensor_<DataType>> 
+Gamma_Computer<DataType>::convert_civec_to_tensor( shared_ptr<const Civec> civector, int state_num ) const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::convert_civec_to_tensor" << endl;
 
@@ -349,13 +360,13 @@ Gamma_Computer::Gamma_Computer::convert_civec_to_tensor( shared_ptr<const Civec>
   string civec_name = get_civec_name(state_num, civector->det()->norb(), civector->det()->nelea(), civector->det()->neleb());  
   vector<IndexRange> civec_idxrng(1, *(range_conversion_map->at(civec_name)) );  
 
-  shared_ptr<Tensor_<double>> civec_tensor = make_shared<Tensor_<double>>( civec_idxrng );
+  shared_ptr<Tensor_<DataType>> civec_tensor = make_shared<Tensor_<DataType>>( civec_idxrng );
   civec_tensor->allocate();
   civec_tensor->zero();
 
   size_t idx_position = 0;
   for ( Index idx_block : civec_idxrng[0].range() ){
-    unique_ptr<double[]> civec_block(new double[idx_block.size()]);
+    unique_ptr<DataType[]> civec_block(new DataType[idx_block.size()]);
     std::fill_n(civec_block.get(), idx_block.size(), 0.0);
     copy_n( civector->data() + idx_position, idx_block.size(), civec_block.get());
     civec_tensor->add_block(civec_block, vector<Index>({ idx_block })) ;  
@@ -373,7 +384,8 @@ Gamma_Computer::Gamma_Computer::convert_civec_to_tensor( shared_ptr<const Civec>
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Tests 2idx gamma matrix by taking trace  and checking symmetry. Non-rel only.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool Gamma_Computer::Gamma_Computer::gamma_2idx_contract_test( string gamma_name ) {
+template<typename DataType>
+bool Gamma_Computer<DataType>::gamma_2idx_contract_test( string gamma_name ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
    bool passed = true;
@@ -384,15 +396,15 @@ bool Gamma_Computer::Gamma_Computer::gamma_2idx_contract_test( string gamma_name
    cout << "gamma_data_map_->at("<<gamma_name<<")->norm() = "<< gamma_data_map_->at(gamma_name)->norm() <<  endl;  
    cout << "gamma_data_map_->at("<<gamma_name<<")->rms()  = "<< gamma_data_map_->at(gamma_name)->rms() <<  endl; 
 
-   shared_ptr<Tensor_<double>> gamma_2idx_trace  =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( gamma_data_map_->at(gamma_name),  make_pair(0,1) );
+   shared_ptr<Tensor_<DataType>> gamma_2idx_trace  =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( gamma_data_map_->at(gamma_name),  make_pair(0,1) );
    cout << "------------------------------------------------------------------------------------------------------" << endl; 
    cout << "gamma_2idx_trace->rms() = "<< gamma_2idx_trace->rms() << endl;
    cout << "------------------------------------------------------------------------------------------------------" << endl; 
 
    shared_ptr<vector<int>>     new_order = make_shared<vector<int>>(vector<int> { 1, 0} ); 
 
-   shared_ptr<Tensor_<double>> gamma_2idx_orig_order = make_shared<Tensor_<double>>( *(gamma_data_map_->at(gamma_name)) );
-   shared_ptr<Tensor_<double>> gamma_2idx_transposed = Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_block_Tensor( gamma_2idx_orig_order, new_order);
+   shared_ptr<Tensor_<DataType>> gamma_2idx_orig_order = make_shared<Tensor_<DataType>>( *(gamma_data_map_->at(gamma_name)) );
+   shared_ptr<Tensor_<DataType>> gamma_2idx_transposed = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( gamma_2idx_orig_order, new_order);
 
    gamma_2idx_transposed->ax_plus_y(-1, gamma_2idx_orig_order) ;
 
@@ -406,7 +418,8 @@ bool Gamma_Computer::Gamma_Computer::gamma_2idx_contract_test( string gamma_name
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Tests 4idx gamma matrix by contracting in different ways and compairing with 2idx gamma matrices.  Only set up for non-rel at present.
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool Gamma_Computer::Gamma_Computer::gamma_4idx_contract_test( string gamma_name ) {
+template<typename DataType>
+bool Gamma_Computer<DataType>::gamma_4idx_contract_test( string gamma_name ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
@@ -415,7 +428,7 @@ bool Gamma_Computer::Gamma_Computer::gamma_4idx_contract_test( string gamma_name
    cout << "gamma_data_map_->at("<<gamma_name<<")->norm() = "<< gamma_data_map_->at(gamma_name)->norm() <<  endl;  
    cout << "gamma_data_map_->at("<<gamma_name<<")->rms()  = "<< gamma_data_map_->at(gamma_name)->rms() <<  endl; 
 
-   shared_ptr<Tensor_<double>> gamma_2idx_from_4idx_A  =  Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( gamma_data_map_->at(gamma_name),  make_pair(2,3) );
+   shared_ptr<Tensor_<DataType>> gamma_2idx_from_4idx_A  =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( gamma_data_map_->at(gamma_name),  make_pair(2,3) );
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
    Print_Tensor(gamma_2idx_from_4idx_A, "gamma_2idx_from_4idx" ); 
    cout << endl << "------------------------------------------------------------------------------------------------------" << endl; 
@@ -424,7 +437,7 @@ bool Gamma_Computer::Gamma_Computer::gamma_4idx_contract_test( string gamma_name
    cout << "------------------------------------------------------------------------------------------------------" << endl; 
 
    vector<int> ctrs_pos = {0,1,2,3};
-   shared_ptr<Tensor_<double>> gamma_2idx_from_4idx_B = Tensor_Arithmetic::Tensor_Arithmetic<double>::contract_on_same_tensor( gamma_data_map_->at(gamma_name),  make_pair(0,1) );
+   shared_ptr<Tensor_<DataType>> gamma_2idx_from_4idx_B = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( gamma_data_map_->at(gamma_name),  make_pair(0,1) );
    cout << " gamma_2idx_from_4idx_B->norm() = " << gamma_2idx_from_4idx_B->norm()  << endl; 
    cout << " gamma_2idx_from_4idx_B->rms()  = " << gamma_2idx_from_4idx_B->rms()  << endl; 
 
@@ -439,13 +452,14 @@ bool Gamma_Computer::Gamma_Computer::gamma_4idx_contract_test( string gamma_name
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Consistency tests for building up gamma 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool Gamma_Computer::Gamma_Computer::build_sigma_4idx_tensor_tests(shared_ptr<GammaInfo> gamma_4idx_info ) { 
+template<typename DataType>
+bool Gamma_Computer<DataType>::build_sigma_4idx_tensor_tests(shared_ptr<GammaInfo<DataType>> gamma_4idx_info ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   bool passed = true;
 
-  shared_ptr<GammaInfo> sigma_2idx_KJ_info = Gamma_info_map->at( gamma_4idx_info->prev_gammas(1) );
-  shared_ptr<GammaInfo> sigma_2idx_IK_info = Gamma_info_map->at( gamma_4idx_info->prev_gammas(0) );
+  shared_ptr<GammaInfo<DataType>> sigma_2idx_KJ_info = Gamma_info_map->at( gamma_4idx_info->prev_gammas(1) );
+  shared_ptr<GammaInfo<DataType>> sigma_2idx_IK_info = Gamma_info_map->at( gamma_4idx_info->prev_gammas(0) );
 
   string IJ_Bra_name = gamma_4idx_info->Bra_info()->name();
   string IJ_Ket_name = gamma_4idx_info->Ket_info()->name();
@@ -471,7 +485,8 @@ bool Gamma_Computer::Gamma_Computer::build_sigma_4idx_tensor_tests(shared_ptr<Ga
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Gamma_Computer::Gamma_Computer::build_detspace(shared_ptr<CIVecInfo<double>>  Psi_info ) {
+template<typename DataType>
+void Gamma_Computer<DataType>::build_detspace(shared_ptr<CIVecInfo<DataType>>  Psi_info ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
    if (Determinants_map_new->find( Psi_info->name() ) ==  Determinants_map_new->end() ) 
@@ -480,4 +495,9 @@ void Gamma_Computer::Gamma_Computer::build_detspace(shared_ptr<CIVecInfo<double>
    return;
 
 }
+
+//////////////////////////////////////////////////////////////////////////
+template class Gamma_Computer<double>;
+template class Gamma_Computer<std::complex<double>>;
+/////////////////////////////////////////////////////////////////////////
 #endif

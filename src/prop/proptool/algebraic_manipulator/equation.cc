@@ -5,7 +5,7 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string, std::shared_ptr< Expression<DataType>>>> expression_map,
-                                         shared_ptr< map <string, shared_ptr< GammaInfo >>> gamma_info_map,
+                                         shared_ptr< map <string, shared_ptr< GammaInfo<DataType> >>> gamma_info_map,
                                          shared_ptr< map <string, shared_ptr< vector<shared_ptr<CtrOp_base>>>>> ACompute_map,
                                          shared_ptr< map< string, shared_ptr< TensOp_Base >>> MT_map,
                                          shared_ptr< map< string, shared_ptr< CtrTensorPart_Base>>> CTP_map,

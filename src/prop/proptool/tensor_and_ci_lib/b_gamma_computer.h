@@ -19,7 +19,7 @@ class B_Gamma_Computer {
     private: 
 
       std::shared_ptr<const Dvec> cc_; 
-      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> Gamma_info_map;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo<DataType>>>> Gamma_info_map;
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map_;
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map_;
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map_;
@@ -38,7 +38,7 @@ class B_Gamma_Computer {
       ~B_Gamma_Computer(){};
       
       void set_maps( std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_in,
-                     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> Gamma_info_map_in,
+                     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo<DataType>>>> Gamma_info_map_in,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map,  
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map );
@@ -49,13 +49,13 @@ class B_Gamma_Computer {
       
       void get_wfn_data( std::shared_ptr<CIVecInfo<DataType>>  cvec_info );
       
-      void compute_sigma2( std::shared_ptr<GammaInfo> gamma_info );
+      void compute_sigma2( std::shared_ptr<GammaInfo<DataType>> gamma_info );
       
-      void compute_sigmaN( std::shared_ptr<GammaInfo> gamma_info );
+      void compute_sigmaN( std::shared_ptr<GammaInfo<DataType>> gamma_info );
       
-      void get_gamma2_from_sigma2( std::shared_ptr<GammaInfo> gamma_info );
+      void get_gamma2_from_sigma2( std::shared_ptr<GammaInfo<DataType>> gamma_info );
       
-      void get_gammaN_from_sigmaN( std::shared_ptr<GammaInfo> gammaN_info );
+      void get_gammaN_from_sigmaN( std::shared_ptr<GammaInfo<DataType>> gammaN_info );
       
       void sigma_2a1( DataType* cvec_ptr, DataType* sigma_ptr, std::shared_ptr<Determinants> dets );
       
@@ -65,13 +65,13 @@ class B_Gamma_Computer {
       
       std::shared_ptr<std::vector<SMITH::IndexRange>>  Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
       
-      void convert_Dvec_sigma_to_tensor( std::shared_ptr<GammaInfo> gammaN_info );
+      void convert_Dvec_sigma_to_tensor( std::shared_ptr<GammaInfo<DataType>> gammaN_info );
       
       void convert_civec_to_tensor( std::string civec_name ) ;
       
       /////////// Varaible access /////////////////////////
       
-      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> gamma_info_map() { return Gamma_info_map ; };
+      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo<DataType>>>> gamma_info_map() { return Gamma_info_map ; };
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map() {return gamma_data_map_; }
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map() {return sigma_data_map_; }
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map() {return civec_data_map_; }

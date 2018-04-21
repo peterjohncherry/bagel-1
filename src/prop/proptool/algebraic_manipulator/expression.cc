@@ -12,7 +12,7 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
                                   shared_ptr<map< string, shared_ptr<TensOp_Base>>>  MT_map,
                                   shared_ptr<map< string, shared_ptr<CtrTensorPart_Base> >>            CTP_map,
                                   shared_ptr<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>     ACompute_map,
-                                  shared_ptr<map< string, shared_ptr<GammaInfo> > >                         gamma_info_map,
+                                  shared_ptr<map< string, shared_ptr<GammaInfo<DataType>> > >                         gamma_info_map,
                                   string expression_type ):
                                   braket_list_(braket_list), states_info_(states_info), MT_map_(MT_map), CTP_map_(CTP_map),
                                   ACompute_map_(ACompute_map), gamma_info_map_(gamma_info_map), type_(expression_type) {

@@ -35,7 +35,7 @@ B_Gamma_Computer::B_Gamma_Computer::TensOp_Data_Init( std::shared_ptr<const Dvec
 // Assumes that cimaxblock is _larger_ than the length of the civec. 
 // With cimaxblock = 10,000 this is OK up to (8,8), so big enough for lanthanides
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_ptr<GammaInfo> gamma_info ){
+void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_ptr<GammaInfo<DataType>> gamma_info ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::Convert_to_sigma_dvec_tensor :" << gamma_info->sigma_name() <<  endl;
 
@@ -91,7 +91,7 @@ void B_Gamma_Computer::B_Gamma_Computer::convert_Dvec_sigma_to_tensor( shared_pt
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<GammaInfo> gammaN_info ){
+void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<GammaInfo<DataType>> gammaN_info ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::get_gammaN_from_sigmaN : " << gammaN_info->name() <<  endl;
   
@@ -149,7 +149,7 @@ void B_Gamma_Computer::B_Gamma_Computer::get_gammaN_from_sigmaN( shared_ptr<Gamm
 // This assumes all orbitals have the same size of range, OK for alpha beta spins, not OK 
 //if different active spaces.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::compute_sigmaN( shared_ptr<GammaInfo> gammaN_info )  {
+void B_Gamma_Computer::B_Gamma_Computer::compute_sigmaN( shared_ptr<GammaInfo<DataType>> gammaN_info )  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::compute_sigmaN : " << gammaN_info->sigma_name() ;
 
@@ -192,7 +192,7 @@ void B_Gamma_Computer::B_Gamma_Computer::compute_sigmaN( shared_ptr<GammaInfo> g
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::get_gamma2_from_sigma2( shared_ptr<GammaInfo> gamma2_info ){
+void B_Gamma_Computer::B_Gamma_Computer::get_gamma2_from_sigma2( shared_ptr<GammaInfo<DataType>> gamma2_info ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl; 
 
@@ -208,7 +208,7 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2_and_civec" << endl;
   return; 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void B_Gamma_Computer::B_Gamma_Computer::compute_sigma2( shared_ptr<GammaInfo> gamma2_info )  {
+void B_Gamma_Computer::B_Gamma_Computer::compute_sigma2( shared_ptr<GammaInfo<DataType>> gamma2_info )  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
 

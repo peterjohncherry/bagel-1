@@ -63,8 +63,8 @@ class System_Info {
         std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map;
         
         // ket : name of Gamma
-        // result : GammaInfo
-        std::shared_ptr< std::map <std::string, std::shared_ptr<GammaInfo>>> Gamma_map;
+        // result : GammaInfo<DataType>
+        std::shared_ptr< std::map <std::string, std::shared_ptr<GammaInfo<DataType>>>> Gamma_map;
         
         /////CONSTRUCTOR and DESTRUCTOR/////
         System_Info(std::shared_ptr<StatesInfo<DataType>> states_info, bool spinfree);

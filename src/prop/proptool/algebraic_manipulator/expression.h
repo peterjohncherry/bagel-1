@@ -32,7 +32,7 @@ class Expression {
         
         // key : name of gammas
         // result : gamma_info, also contains sigma info,  includes lists of gammas which must be calculated first.
-        std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo> > > gamma_info_map_;
+        std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo<DataType>> > > gamma_info_map_;
         
         // key: name of gamma (or sigma)
         // result :  name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors.
@@ -50,7 +50,7 @@ class Expression {
                     std::shared_ptr<std::map< std::string, std::shared_ptr<TensOp_Base>>>  MT_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base> >>            CTP_map,
                     std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
-                    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > >                         gamma_info_map,
+                    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo<DataType>> > >                         gamma_info_map,
                     std::string expression_type );
         ~Expression(){};
         
@@ -66,7 +66,7 @@ class Expression {
         std::shared_ptr< std::map< std::string, std::shared_ptr< TensOp_Base >>> MT_map(){ return  MT_map_;}
         std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map(){ return  CTP_map_;}
         std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map(){ return  ACompute_map_;}
-        std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo> > > gamma_info_map(){ return  gamma_info_map_;}
+        std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo<DataType>> > > gamma_info_map(){ return  gamma_info_map_;}
         std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> > >>> G_to_A_map(){ return  G_to_A_map_;} //TODO should be private
         std::shared_ptr<std::set<std::string>> required_blocks()  { return  required_blocks_; } 
 
@@ -95,7 +95,7 @@ class Expression_Full : public Expression<DataType>   {
                       std::shared_ptr<std::map< std::string, std::shared_ptr<TensOp_Base>>>  MT_map,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > > gamma_info_map,
+                      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo<DataType>> > > gamma_info_map,
                       std::string expression_type ) :
                       Expression<DataType>( braket_list, states_info, MT_map, CTP_map, ACompute_map, gamma_info_map, expression_type ){};
      ~Expression_Full(){};
@@ -127,7 +127,7 @@ class Expression_Orb_Exc_Deriv : public Expression<DataType>   {
                              std::shared_ptr<std::map< std::string, std::shared_ptr<TensOp_Base>>>  MT_map,
                              std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
                              std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
-                             std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo> > > gamma_info_map,
+                             std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo<DataType>> > > gamma_info_map,
                              std::string expression_type ) :
                              Expression<DataType>( braket_list, states_info, MT_map, CTP_map, ACompute_map, gamma_info_map, expression_type ){} 
    ~Expression_Orb_Exc_Deriv(){};

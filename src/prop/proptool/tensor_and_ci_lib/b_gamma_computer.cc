@@ -29,7 +29,7 @@ B_Gamma_Computer::B_Gamma_Computer<DataType>::B_Gamma_Computer( std::shared_ptr<
 template<typename DataType>
 void
 B_Gamma_Computer::B_Gamma_Computer<DataType>::set_maps( std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
-                                              std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo>>> Gamma_info_map_in,
+                                              std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo<DataType>>>> Gamma_info_map_in,
                                               std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> gamma_data_map,
                                               std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> sigma_data_map,  
                                               std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> civec_data_map ){
@@ -55,7 +55,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gamma( string gamma_name 
 
   if ( gamma_data_map_->find( gamma_name ) == gamma_data_map_->end()) {
 
-    shared_ptr<GammaInfo> gamma_info = Gamma_info_map->at(gamma_name);
+    shared_ptr<GammaInfo<DataType>> gamma_info = Gamma_info_map->at(gamma_name);
 
     //note this has reverse iterators!
     if (gamma_info->order() > 2 ) { 
@@ -84,7 +84,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gamma( string gamma_name 
 // With cimaxblock = 10,000 this is OK up to (8,8), so big enough for lanthanides
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void B_Gamma_Computer::B_Gamma_Computer<DataType>::convert_Dvec_sigma_to_tensor( shared_ptr<GammaInfo> gamma_info ){
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::convert_Dvec_sigma_to_tensor( shared_ptr<GammaInfo<DataType>> gamma_info ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::Convert_to_sigma_dvec_tensor :" << gamma_info->sigma_name() <<  endl;
 
@@ -147,7 +147,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::convert_Dvec_sigma_to_tensor(
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gammaN_from_sigmaN( shared_ptr<GammaInfo> gammaN_info ){
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gammaN_from_sigmaN( shared_ptr<GammaInfo<DataType>> gammaN_info ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::get_gammaN_from_sigmaN : " << gammaN_info->name() <<  endl;
   
@@ -208,7 +208,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gammaN_from_sigmaN( share
 //if different active spaces.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigmaN( shared_ptr<GammaInfo> gammaN_info )  {
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigmaN( shared_ptr<GammaInfo<DataType>> gammaN_info )  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "B_Gamma_Computer::compute_sigmaN : " << gammaN_info->sigma_name() ;
 
@@ -252,7 +252,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigmaN( shared_ptr<Ga
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gamma2_from_sigma2( shared_ptr<GammaInfo> gamma2_info ){
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gamma2_from_sigma2( shared_ptr<GammaInfo<DataType>> gamma2_info ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "B_Gamma_Computer::get_gamma2_from_sigma2" << endl; 
 
@@ -270,7 +270,7 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2" << endl;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<GammaInfo> gamma2_info )  {
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<GammaInfo<DataType>> gamma2_info )  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
 

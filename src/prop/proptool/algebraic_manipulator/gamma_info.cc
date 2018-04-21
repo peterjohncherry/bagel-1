@@ -9,13 +9,14 @@ using namespace WickUtils;
 //TODO extend for rel case (Bra and Ket can vary,  prev gammas and
 // prev_Bra_info should be constructed from idxs_pos, full_idxs_ranges, full_aops and Ket.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-GammaInfo::GammaInfo ( shared_ptr<CIVecInfo<double>> Bra_info, shared_ptr<CIVecInfo<double>> Ket_info,
-                       shared_ptr<const vector<bool>> full_aops_vec, shared_ptr<const vector<string>> full_idx_ranges,
-                       shared_ptr<vector<int>> idxs_pos  ,
-                       shared_ptr<map<string, shared_ptr<GammaInfo>>>& Gamma_map ) :
-                       order_(idxs_pos->size()), Bra_info_(Bra_info), Ket_info_(Ket_info) {
+template<typename  DataType>
+GammaInfo<DataType>::GammaInfo ( shared_ptr<CIVecInfo<DataType>> Bra_info, shared_ptr<CIVecInfo<DataType>> Ket_info,
+                                 shared_ptr<const vector<bool>> full_aops_vec, shared_ptr<const vector<string>> full_idx_ranges,
+                                 shared_ptr<vector<int>> idxs_pos  ,
+                                 shared_ptr<map<string, shared_ptr<GammaInfo<DataType>>>>& Gamma_map ) :
+                                 order_(idxs_pos->size()), Bra_info_(Bra_info), Ket_info_(Ket_info) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "GammaInfo:GammaInfo" << endl;
+// cout << "GammaInfo<DataType>:GammaInfo" << endl;
   id_ranges_ = make_shared<vector<string>>(idxs_pos->size());
   aops_      = make_shared<vector<bool>>(idxs_pos->size());
   for (int ii = 0 ; ii != idxs_pos->size(); ii++ ){
@@ -43,7 +44,7 @@ GammaInfo::GammaInfo ( shared_ptr<CIVecInfo<double>> Bra_info, shared_ptr<CIVecI
       prev_sigmas_[(ii/2)-1] = "S_"+prev_gammas_[(ii/2)-1];
 
       if ( Gamma_map->find( prev_gammas_[(ii/2)-1] )  == Gamma_map->end() ){ //TODO fix Bra_info for rel case
-        shared_ptr<GammaInfo> prev_gamma_ = make_shared<GammaInfo>( Bra_info_, Ket_info_, full_aops_vec, full_idx_ranges, prev_gamma_idxs_pos, Gamma_map );
+        shared_ptr<GammaInfo<DataType>> prev_gamma_ = make_shared<GammaInfo<DataType>>( Bra_info_, Ket_info_, full_aops_vec, full_idx_ranges, prev_gamma_idxs_pos, Gamma_map );
         Gamma_map->emplace( prev_gammas_[(ii/2)-1], prev_gamma_ );
       }
 
@@ -55,3 +56,8 @@ GammaInfo::GammaInfo ( shared_ptr<CIVecInfo<double>> Bra_info, shared_ptr<CIVecI
   }
 
 }
+
+//////////////////////////////////////////////////////////////////////////
+template class GammaInfo<double>;
+template class GammaInfo<std::complex<double>>;
+/////////////////////////////////////////////////////////////////////////

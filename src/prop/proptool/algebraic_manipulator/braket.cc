@@ -94,7 +94,7 @@ BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& 
 template<typename DataType>
 void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<TensOp_Base>>> MT_map,
                                                             shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>> G_to_A_map,
-                                                            shared_ptr<map<string, shared_ptr< GammaInfo >>> gamma_info_map,
+                                                            shared_ptr<map<string, shared_ptr< GammaInfo<DataType> >>> gamma_info_map,
                                                             shared_ptr<StatesInfo<DataType>> target_states,
                                                             shared_ptr<set<string>> required_blocks,
                                                             shared_ptr<map<string, shared_ptr<CtrTensorPart_Base>>> ctp_map  ){
@@ -112,7 +112,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
  
   Total_Op_->generate_ranges( multiop_info_ );
 
-  shared_ptr<GammaGeneratorRedux> GGen = make_shared<GammaGeneratorRedux>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
+  shared_ptr<GammaGeneratorRedux<DataType>> GGen = make_shared<GammaGeneratorRedux<DataType>>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
 
   auto split_ranges = Total_Op_->state_specific_split_ranges_->at( multiop_info_->name_ );
 
