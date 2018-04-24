@@ -20,18 +20,22 @@ template<class DataType>
 class TensOp_Computer { 
 
     public: 
-    TensOp_Computer( std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map_in,
+    TensOp_Computer( std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map,
-                     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map_in );
+                     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map):
+                     ACompute_map_(ACompute_map), CTP_map_(CTP_map), tensop_data_map_(tensop_data_map),
+                     range_conversion_map_(range_conversion_map), 
+                     Tensor_Calc_(std::make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>()){}
+
     ~TensOp_Computer(){};
   
-    std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base>>> CTP_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map_;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base>>> CTP_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map_;
 
-    std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<DataType>> Tensor_Calc;
+    std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<DataType>> Tensor_Calc_;
 
     /////////// Tensor contraction routines /////////////////////////
 

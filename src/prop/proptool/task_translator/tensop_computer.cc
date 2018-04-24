@@ -9,17 +9,6 @@ using namespace bagel::Tensor_Arithmetic_Utils;
 using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-TensOp_Computer::TensOp_Computer<DataType>::TensOp_Computer( shared_ptr< map< string, shared_ptr<vector<shared_ptr<CtrOp_base>>>>> ACompute_map_in,
-                                                             shared_ptr< map< string, shared_ptr<CtrTensorPart_Base>>> CTP_map_in,
-                                                             shared_ptr< map< string, shared_ptr<IndexRange>>> range_conversion_map,
-                                                             shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>> tensop_data_map ):
-                                                             ACompute_map(ACompute_map_in), CTP_map(CTP_map_in), tensop_data_map_(tensop_data_map),
-                                                             range_conversion_map_(range_conversion_map), 
-                                                             Tensor_Calc(make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>()){}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
 void
 TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo<DataType>& AInfo ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -27,9 +16,9 @@ TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo<DataType
 
   string A_contrib = AInfo.name_;
 
-  if (ACompute_map->at(A_contrib)->size() == 0 )
+  if (ACompute_map_->at(A_contrib)->size() == 0 )
     cout << "THIS COMPUTE LIST IS EMPTY" << endl;
-  for (shared_ptr<CtrOp_base> ctr_op : *(ACompute_map->at(A_contrib))){ cout << "getting " <<  ctr_op->Tout_name() << endl;
+  for (shared_ptr<CtrOp_base> ctr_op : *(ACompute_map_->at(A_contrib))){ cout << "getting " <<  ctr_op->Tout_name() << endl;
    
     // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
     if( tensop_data_map_->find(ctr_op->Tout_name()) == tensop_data_map_->end() ) {
@@ -75,7 +64,7 @@ shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::divide
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << " TensOp_Computer::TensOp_Computer::divide_tensors " << endl;
  
-   return Tensor_Calc->divide_tensors( find_or_get_CTP_data(T1_name),  find_or_get_CTP_data(T2_name)); 
+   return Tensor_Calc_->divide_tensors( find_or_get_CTP_data(T1_name),  find_or_get_CTP_data(T2_name)); 
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +75,7 @@ void TensOp_Computer::TensOp_Computer<DataType>::divide_tensors_in_place(string 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << " TensOp_Computer::TensOp_Computer::divide_tensors_in_place" << endl;
  
-  Tensor_Calc->divide_tensors_in_place( find_or_get_CTP_data(T1_name),  find_or_get_CTP_data(T2_name)); 
+  Tensor_Calc_->divide_tensors_in_place( find_or_get_CTP_data(T1_name),  find_or_get_CTP_data(T2_name)); 
 
   return;
 }
@@ -106,7 +95,7 @@ shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_bl
    } else {
      cout <<"not in map ... " <<  Tname << "must be formed from direct product tensor" << endl; 
      vector<string> sub_tens_names(0);
-     for ( shared_ptr<CtrTensorPart_Base>& ctp : *(CTP_map->at(Tname)->CTP_vec())){ 
+     for ( shared_ptr<CtrTensorPart_Base>& ctp : *(CTP_map_->at(Tname)->CTP_vec())){ 
        
        sub_tens_names.push_back(ctp->name());
        cout << " ctp->name() " << endl;
@@ -135,12 +124,12 @@ void TensOp_Computer::TensOp_Computer<DataType>::get_tensor_data_blocks(shared_p
        tens = tensop_data_map_->at(Tname);
      
      } else {
-       shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map->at(Tname)->unc_id_ranges() ) ;
+       shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map_->at(Tname)->unc_id_ranges() ) ;
      
        if(  tensop_data_map_->find(Tname.substr(0,1)) != tensop_data_map_->end()){
          cout << "initializing uncontracted tensor block " << Tname << " using data from parent tensor \"" << Tname.substr(0,1) << "\"" << endl;
         
-         print_vector( *(CTP_map->at(Tname)->unc_id_ranges()) , "unc_id_ranges" ) ; cout <<endl;  
+         print_vector( *(CTP_map_->at(Tname)->unc_id_ranges()) , "unc_id_ranges" ) ; cout <<endl;  
          tens = get_sub_tensor( tensop_data_map_->at(Tname.substr(0,1)), *id_block );
      
          cout << Tname<< "->norm() = " << tens->norm() << endl; 
@@ -174,7 +163,7 @@ TensOp_Computer::TensOp_Computer<DataType>::get_uniform_Tensor(shared_ptr<vector
 
    shared_ptr<vector<IndexRange>> T_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
 
-   return Tensor_Calc->get_uniform_Tensor(T_id_ranges, XX);
+   return Tensor_Calc_->get_uniform_Tensor(T_id_ranges, XX);
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +173,7 @@ TensOp_Computer::TensOp_Computer<DataType>::contract_on_same_tensor( std::string
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "TensOp_Computer::TensOp_Computer::contract_on_same_tensor "; cout.flush();
    cout << ": "  << T_in_name << " over (" << ctr_todo.first << ", " << ctr_todo.second << ") to get " << T_out_name <<  endl;
-   return Tensor_Calc->contract_on_same_tensor( find_or_get_CTP_data(T_in_name), ctr_todo  ); 
+   return Tensor_Calc_->contract_on_same_tensor( find_or_get_CTP_data(T_in_name), ctr_todo  ); 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
@@ -192,7 +181,7 @@ shared_ptr<Tensor_<DataType>>
 TensOp_Computer::TensOp_Computer<DataType>::contract_on_same_tensor( string T_in_name, shared_ptr<vector<int>> ctrs_pos) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "TensOp_Computer::TensOp_Computer::contract_on_same_tensor" << ": "  << T_in_name << " over "; print_vector( *ctrs_pos) ; cout << endl;
-   return Tensor_Calc->contract_on_same_tensor( find_or_get_CTP_data(T_in_name), *ctrs_pos  ); 
+   return Tensor_Calc_->contract_on_same_tensor( find_or_get_CTP_data(T_in_name), *ctrs_pos  ); 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
@@ -204,7 +193,7 @@ cout << "TensOp_Computer::contract_on_different_tensor" << ": "  << T1_in_name <
  
   shared_ptr<Tensor_<DataType>> Tens1_in = find_or_get_CTP_data(T1_in_name);
   shared_ptr<Tensor_<DataType>> Tens2_in = find_or_get_CTP_data(T2_in_name);
-  return Tensor_Calc->contract_different_tensors(Tens1_in, Tens2_in, ctr_todo );
+  return Tensor_Calc_->contract_different_tensors(Tens1_in, Tens2_in, ctr_todo );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +207,7 @@ TensOp_Computer::TensOp_Computer<DataType>::contract_different_tensors( std::str
   shared_ptr<Tensor_<DataType>> Tens1_in = find_or_get_CTP_data(T1_in_name);
   shared_ptr<Tensor_<DataType>> Tens2_in = find_or_get_CTP_data(T2_in_name);
 
-  return Tensor_Calc->contract_different_tensors(Tens1_in, Tens2_in, ctrs_todo );
+  return Tensor_Calc_->contract_different_tensors(Tens1_in, Tens2_in, ctrs_todo );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +256,7 @@ TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string T_in_nam
     T_part = tensop_data_map_loc->second; 
   }
 
-  return Tensor_Calc->reorder_block_Tensor( T_part , new_order );
+  return Tensor_Calc_->reorder_block_Tensor( T_part , new_order );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
