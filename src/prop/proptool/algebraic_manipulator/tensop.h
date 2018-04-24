@@ -114,8 +114,6 @@ class TensOp_Base {
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base> >> CTP_map() { return CTP_map_; } 
 
-     void transform_aops_rngs( std::vector<char>& rngs, std::pair<double,double>& factor, const char op_trans_in ); 
-  
      virtual void generate_ranges( std::shared_ptr<Op_Info> op_info ) = 0;
 
      virtual void generate_transformed_ranges( std::shared_ptr<Op_Info> op_info ) { throw std::logic_error("should not call from anything but TensOp"); }
@@ -126,15 +124,6 @@ class TensOp_Base {
                 throw std::logic_error("should not call from anything but TensOp");
                 std::shared_ptr<std::set<std::shared_ptr<Op_Info>>> dummy;
                 return dummy; } 
-
-     virtual
-     std::shared_ptr<std::vector<char>>
-     transform_aops_rngs( std::shared_ptr<Split_Range_Block_Info> block, std::pair<double, double>& factor, 
-                          const std::vector<int>& op_order , const std::vector<char>& op_trans ) {
-       throw  std::logic_error( " should not be in split transform aops_rngs in base class " );
-       std::shared_ptr<std::vector<char>> dummy;
-       return dummy;
-     } 
 
      virtual std::shared_ptr<std::vector<bool>> transform_aops( const char op_trans ) = 0;
 
@@ -150,7 +139,7 @@ class TensOp_Base {
 
      virtual void generate_uncontracted_ctps( std::vector<std::vector<int>>& state_ids ) {} ;
 
-     virtual void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges ) = 0 ; 
+     virtual void enter_cmtps_into_map(pint_vec ctr_pos_list, const std::vector<std::string>& id_ranges ) = 0 ; 
 
      virtual std::vector<std::shared_ptr<TensOp_Base>> sub_tensops() = 0;
  
@@ -202,7 +191,7 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
 
    std::shared_ptr< std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_ranges() const{ return split_ranges_; } 
 
-   void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges ) { 
+   void enter_cmtps_into_map(pint_vec ctr_pos_list, const std::vector<std::string>& id_ranges ) { 
      throw std::logic_error( "TensOp::TensOp<DataType> should cannot call enter_into_CTP_map form this class!! Aborting!!" ); } 
 
    std::vector<std::shared_ptr<TensOp_Base>> sub_tensops(){  std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_ ; return sub_tensops_; } 
@@ -210,11 +199,6 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
    std::shared_ptr<std::vector<bool>> transform_aops( const char trans ); 
 
    std::shared_ptr<std::vector<bool>> transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ); 
-
-   void transform_aops_rngs( std::vector<char>& rngs, std::pair<double,double>& factor, const char op_trans_in ); 
-  
-   std::shared_ptr<std::vector<char>>
-   transform_aops_rngs( std::shared_ptr<Split_Range_Block_Info> block, const std::vector<int>& op_order , const std::vector<char>& op_trans );
 
    bool satisfies_constraints( std::vector<std::string>& ranges ); 
 
@@ -261,14 +245,11 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
 
     std::shared_ptr< std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_ranges() const { return split_ranges_; } 
 
-    void enter_cmtps_into_map(pint_vec ctr_pos_list, std::pair<int,int> ReIm_factors, const std::vector<std::string>& id_ranges );
+    void enter_cmtps_into_map(pint_vec ctr_pos_list, const std::vector<std::string>& id_ranges );
 
     std::shared_ptr<std::vector<bool>> transform_aops( const char trans ); 
 
     std::shared_ptr<std::vector<bool>> transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ); 
-
-    std::shared_ptr<std::vector<char>> transform_aops_rngs( std::shared_ptr<Split_Range_Block_Info> block, std::pair<double, double>& factors,
-                                                            const std::vector<int>& op_order, const std::vector<char>& op_trans );
 
     virtual void generate_transformed_ranges( std::shared_ptr<Op_Info> op_info ) { throw std::logic_error("should not call from anything but TensOp"); }
 

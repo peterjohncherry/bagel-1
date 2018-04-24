@@ -22,7 +22,7 @@ class GammaInfo {
      std::shared_ptr<std::vector<std::string>> sigma_id_ranges_ ;
 
      std::shared_ptr<std::vector<bool>> aops_ ;
-     std::pair<int,int> factor_ ;
+     std::pair<DataType, DataType> factor_ ;
 
      std::string name_;
      std::string sigma_name_;

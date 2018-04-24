@@ -46,7 +46,7 @@ void Equation_Base<DataType>::add_expression( string expression_name ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Base<DataType>::add_Expression : " << expression_name << " hey!" <<  endl;
  
-  shared_ptr<vector<pair<double, string>>> term_name_list = expression_term_map_->at(expression_name);
+  shared_ptr<vector<pair<DataType, string>>> term_name_list = expression_term_map_->at(expression_name);
   cout << "term_name_list->at(0).second = "; cout.flush(); cout << (*term_name_list)[0].second << endl;
   shared_ptr<vector<BraKet<DataType>>> bk_list = term_braket_map_->at( (*term_name_list)[0].second ); //term_info.second);
 
@@ -90,7 +90,7 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
   bool spinfree = false;
   string expression_type = "full";
 
-  shared_ptr< vector<pair<string, DataType>> > braKet_name_list = make_shared<vector<pair< string, DataType >>>(0);
+//  shared_ptr< vector<pair<string, DataType>> > braKet_name_list = make_shared<vector<pair< string, DataType >>>(0);
 
   for ( BraKet<DataType>& braket_info : *expr_bk_list ) {
 
@@ -130,13 +130,15 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
       MT_map_->emplace(braket_info.multiop_info_->op_name_, multiop );
     } 
     
-    braKet_name_list->push_back( make_pair( braket_info.name(), braket_info.factor_ ) );
-    cout << "Pushed " <<  braket_info.multiop_info_->name_ << " back into braket_name_list" << endl;
+//    braKet_name_list->push_back( make_pair( braket_info.name(), braket_info.factor_ ) );
+//    cout << "Pushed " <<  braket_info.multiop_info_->name_ << " back into braket_name_list" << endl;
   }
   
   return expression_type;
 }
 //////////////////////////////////////////////////////////////////////////
 template class Equation_Base<double>;
+template class Equation_Base<std::complex<double>>;
 template class Equation_Value<double>;
+template class Equation_Value<std::complex<double>>;
 /////////////////////////////////////////////////////////////////////////

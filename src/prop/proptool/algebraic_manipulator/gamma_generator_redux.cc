@@ -10,8 +10,8 @@ template<typename DataType>
 GammaGeneratorRedux<DataType>::GammaGeneratorRedux( shared_ptr<StatesInfo<DataType>> target_states, int Bra_num, int Ket_num,
                                                     shared_ptr<TensOp_Base> total_op,
                                                     shared_ptr<map<string, shared_ptr<GammaInfo<DataType>>>>& Gamma_map_in,
-                                                    shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo> >>>>& G_to_A_map_in,
-                                                    double bk_factor                                                           ):
+                                                    shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo<DataType>> >>>>& G_to_A_map_in,
+                                                    DataType bk_factor                                                           ):
                                                     target_states_(target_states),
                                                     Bra_names_(target_states_->civec_names( Bra_num )),
                                                     Ket_names_(target_states_->civec_names( Ket_num )),
@@ -66,11 +66,11 @@ void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info
 
   shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
   
-  pair<double,double>  factors = block_info->factors();
+  pair<DataType, DataType>  factors = block_info->factors();
   cout << "factors = (" << factors.first << "," << factors.second << ")" << endl;
 
-  gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>( 1, make_shared<GammaIntermediateRedux>( ids_pos, deltas_pos, factors ) );
-  final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>(0);
+  gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediateRedux<DataType>>>>( 1, make_shared<GammaIntermediateRedux<DataType>>( ids_pos, deltas_pos, factors ) );
+  final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediateRedux<DataType>>>>(0);
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -81,7 +81,7 @@ bool GammaGeneratorRedux<DataType>::generic_reorderer( string reordering_name, b
   
   int kk = 0;
   bool does_it_contribute = false;
-  final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediateRedux>>>(0);
+  final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediateRedux<DataType>>>>(0);
   for ( string bra_name : *Bra_names_ ) {
     for ( string ket_name : *Ket_names_ ) {
       bra_name_ = bra_name;
@@ -99,19 +99,21 @@ bool GammaGeneratorRedux<DataType>::generic_reorderer( string reordering_name, b
 template<typename DataType> 
 bool GammaGeneratorRedux<DataType>::generic_reorderer_different_sector( string reordering_name, bool final_reordering ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGeneratorRedux<DataType>::generic_reorderer_different_sector" << endl;
+//  cout << "GammaGeneratorRedux<DataType>::generic_reorderer_different_sector" << endl;
 
   if ( reordering_name == "normal order" ) {
     normal_order();
-    for ( vector<shared_ptr<GammaIntermediateRedux>>::iterator gv_it = gamma_vec_->begin(); gv_it != gamma_vec_->end(); gv_it++ ) {
+    typename vector<shared_ptr<GammaIntermediateRedux<DataType>>>::iterator gv_it = gamma_vec_->begin();
+    while ( gv_it != gamma_vec_->end() ) {
       if ( proj_onto_map( *gv_it, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ) ) 
         final_gamma_vec_->push_back( *gv_it );
+      gv_it++;
     }
 
   } else if ( reordering_name == "anti-normal order" ) {
     anti_normal_order();
 
-    vector<shared_ptr<GammaIntermediateRedux>>::iterator gv_it = gamma_vec_->begin();
+    typename vector<shared_ptr<GammaIntermediateRedux<DataType>>>::iterator gv_it = gamma_vec_->begin();
     while ( gv_it != gamma_vec_->end() ) {
       if ( proj_onto_map( *gv_it, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ) )
         final_gamma_vec_->push_back( *gv_it );
@@ -120,9 +122,11 @@ bool GammaGeneratorRedux<DataType>::generic_reorderer_different_sector( string r
 
   } else if ( reordering_name == "alternating order" ) {
     alternating_order();
-    for ( vector<shared_ptr<GammaIntermediateRedux>>::iterator gv_it = gamma_vec_->begin(); gv_it != gamma_vec_->end(); gv_it++ ) {
+    typename vector<shared_ptr<GammaIntermediateRedux<DataType>>>::iterator gv_it = gamma_vec_->begin();
+    while ( gv_it != gamma_vec_->end() ) {
       if ( proj_onto_map( *gv_it, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ) )
         final_gamma_vec_->push_back( *gv_it );
+      gv_it++;
     }
   }
 
@@ -146,14 +150,14 @@ bool GammaGeneratorRedux<DataType>::generic_reorderer_different_sector( string r
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
-bool GammaGeneratorRedux<DataType>::proj_onto_map( shared_ptr<GammaIntermediateRedux> gint, 
+bool GammaGeneratorRedux<DataType>::proj_onto_map( shared_ptr<GammaIntermediateRedux<DataType>> gint, 
                                          map<char,int> bra_hole_map, map<char,int> bra_elec_map,
                                          map<char,int> ket_hole_map, map<char,int> ket_elec_map  ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Grossly inefficient, but totally generic, should write seperate routines for normal and antinormal
 //ordering; consecutive operators means can just count.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGeneratorRedux<DataType>::proj_onto_map" << endl;
+//  cout << "GammaGeneratorRedux<DataType>::proj_onto_map" << endl;
 
   shared_ptr<vector<int>> idxs_pos =  gint->ids_pos_;
 
@@ -162,9 +166,9 @@ bool GammaGeneratorRedux<DataType>::proj_onto_map( shared_ptr<GammaIntermediateR
 
     if( !((*block_aops_)[*ip_it]) ){
       auto ket_elec_map_loc = ket_elec_map.find( rng );
-      if ( ket_elec_map_loc == ket_elec_map.end() ) { cout << "failed  proj_onto_map 1" << endl;
+      if ( ket_elec_map_loc == ket_elec_map.end() ) {
         return false;
-      } else if ( (ket_elec_map_loc->second -= 1 ) == -1  ) {cout << "failed proj_onto_map 2" << endl;
+      } else if ( (ket_elec_map_loc->second -= 1 ) == -1  ) {
         return false;
       }
       auto ket_hole_map_loc = ket_hole_map.find( rng );
@@ -175,13 +179,12 @@ bool GammaGeneratorRedux<DataType>::proj_onto_map( shared_ptr<GammaIntermediateR
       } else {
         ket_hole_map_loc->second += 1;
       }
-      cout << "added [" << rng << "] hole " << endl;
 
     } else {
       auto ket_hole_map_loc = ket_hole_map.find( rng );
-      if ( ket_hole_map_loc == ket_hole_map.end() ) { cout << "failed_proj_onto_map 3" << endl;
+      if ( ket_hole_map_loc == ket_hole_map.end() ) {
         return false;
-      } else if ( (ket_hole_map_loc->second -= 1 ) == -1  ) { cout << "failed proj_onto_map 4" << endl;
+      } else if ( (ket_hole_map_loc->second -= 1 ) == -1  ) {
         return false;
       }
       
@@ -204,14 +207,13 @@ bool GammaGeneratorRedux<DataType>::proj_onto_map( shared_ptr<GammaIntermediateR
     if ( elem.second != bra_hole_map.at(elem.first) )
       return false;     
     
-  cout << " passed proj_onto_map " << endl;
   return true;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::normal_order() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGeneratorRedux<DataType>::normal_order" << endl;
+//  cout << "GammaGeneratorRedux<DataType>::normal_order" << endl;
  
   int kk = 0;
   while ( kk != gamma_vec_->size() ) {
@@ -264,10 +266,9 @@ void GammaGeneratorRedux<DataType>::normal_order() {
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::anti_normal_order() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGeneratorRedux<DataType>::anti_normal_order" << endl;
+//  cout << "GammaGeneratorRedux<DataType>::anti_normal_order" << endl;
  
   int kk = 0;
-  cout <<" gamma_vec_->size() = " << gamma_vec_->size() << " kk = " << kk << endl; 
   while ( kk != gamma_vec_->size() ) {
     if ( proj_onto_map( gamma_vec_->at(kk), *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ) ){ 
      
@@ -286,14 +287,12 @@ void GammaGeneratorRedux<DataType>::anti_normal_order() {
           while( !(*block_aops_)[(*ids_pos)[ii]] ){
             for ( int jj = (ii-1); jj != -1 ; jj--) {
               if ( (*block_aops_)[(*ids_pos)[jj]] ){
-                cout << "2kk  = " << kk<< endl;
                 swap( jj, jj+1, kk );
                 break;
               }
             }
           }
       
-      cout << "3kk = " << kk << endl;
         } else if (ii <= num_kill) {
           if (!(*block_aops_)[(*ids_pos)[ii]] )
             continue;
@@ -301,8 +300,6 @@ void GammaGeneratorRedux<DataType>::anti_normal_order() {
           while((*block_aops_)[(*ids_pos)[ii]] ){
             for ( int jj = (ii-1); jj != -1 ; jj--) {
               if(!(*block_aops_)[(*ids_pos)[jj]] ) {
-                cout << "4kk = " << kk << endl;
-                print_vector( *(gamma_vec_->at(kk)->ids_pos_) , " gv_it->ids_pos"); cout << endl;
                 swap( jj, jj+1, kk );
                 break;
               }
@@ -311,9 +308,8 @@ void GammaGeneratorRedux<DataType>::anti_normal_order() {
         }
       }
     }
-    cout << "end kk = " << kk++ << endl;
+    kk++;
   }
-  cout << "leaving anti-normal order " << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -325,7 +321,7 @@ void GammaGeneratorRedux<DataType>::alternating_order() {  // e.g. +-+-+-+-
 //  for ( vector<shared_ptr<GammaIntermediateRedux>>::iterator gv_it = gamma_vec_->begin(); gv_it != gamma_vec_->end(); gv_it++ ) {
   int kk = 0;
   while ( kk != gamma_vec_->size() ) {
-    shared_ptr<GammaIntermediateRedux> gint = gamma_vec_->at(kk);
+    shared_ptr<GammaIntermediateRedux<DataType>> gint = gamma_vec_->at(kk);
     if ( proj_onto_map( gint, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ) ){ 
       shared_ptr<vector<int>> ids_pos = gint->ids_pos_; 
 
@@ -354,9 +350,9 @@ void GammaGeneratorRedux<DataType>::alternating_order() {  // e.g. +-+-+-+-
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name, string ket_name ){  // e.g. ++++----
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
+//  cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
 
-  shared_ptr<GammaIntermediateRedux> gint = gamma_vec_->at(kk);
+  shared_ptr<GammaIntermediateRedux<DataType>> gint = gamma_vec_->at(kk);
 
   shared_ptr<vector<pair<int,int>>> deltas_pos     = gint->deltas_pos_;
   shared_ptr<vector<int>> ids_pos        = gint->ids_pos_;
@@ -368,43 +364,34 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
     *si_it = standard_order_[*ip_it];
   } 
 
-  print_vector( *ids_pos,  "ids_pos" ) ; cout << endl;
-  print_vector( standardized_ids_pos,  "standardized_ids_pos" ) ; cout << endl;
-  print_vector( standard_order_,  "standard_order" ) ; cout << endl;
-
   //TODO should standardize deltas pos when building gamma intermediate so as to avoid repeated transformation
   vector<pair<int,int>> idxs_deltas_pos(deltas_pos->size());
   vector<pair<int,int>>::iterator  idp_it = idxs_deltas_pos.begin();
-  for ( vector<pair<int,int>>::iterator dp_it = deltas_pos->begin(); dp_it != deltas_pos->end(); dp_it++, idp_it++ ) { 
-    *idp_it = make_pair( (*idxs_trans_)[dp_it->first], (*idxs_trans_)[dp_it->second]) ;  
-  } 
-  print_pair_vector( *deltas_pos, "deltas_pos"); cout <<endl;
-  print_pair_vector( idxs_deltas_pos, "idxs_deltas_pos"); cout <<endl;
+  for ( vector<pair<int,int>>::iterator dp_it = deltas_pos->begin(); dp_it != deltas_pos->end(); dp_it++, idp_it++ ) 
+    *idp_it = make_pair( (*idxs_trans_)[dp_it->first], (*idxs_trans_)[dp_it->second]);
 
   string Aname_alt = get_ctp_name( *std_ids_, std_rngs_, idxs_deltas_pos );
-  cout << "Aname_alt = " << Aname_alt << endl;
    
-  if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) {
-    pair<double,double> ctp_factor = gint->factors_; // should be my_sign/my_factor from gint
-    total_op_->enter_cmtps_into_map(idxs_deltas_pos, ctp_factor, std_rngs_ );
-  }
+  if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() )
+    total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_ );
+  
 
   string Gname_alt = get_gamma_name( chrvec_to_strvec(*block_aops_rngs_), *block_aops_, *ids_pos, bra_name, ket_name );
 
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
-    G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo>>>() );
+    G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo<DataType>>>>() );
 
   //TODO do this reordering w.r.t. standardized orders DQ : Is this ok? 
   vector<int> Aid_order_new = get_Aid_order( standardized_ids_pos );
-  pair<double,double> new_fac = make_pair( bk_factor_*gint->factors_.first , bk_factor_*gint->factors_.second );  
+  pair<DataType,DataType> new_fac = make_pair( bk_factor_*gint->factors_.first , bk_factor_*gint->factors_.second );  
 
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
-    auto AInfo = make_shared<AContribInfo_Full>( Aname_alt, Aid_order_new, new_fac );
+    auto AInfo = make_shared<AContribInfo_Full<DataType>>( Aname_alt, Aid_order_new, new_fac );
     G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
 
   } else {
-    shared_ptr<AContribInfo> AInfo = AInfo_loc->second;
+    shared_ptr<AContribInfo<DataType>> AInfo = AInfo_loc->second;
     for ( int qq = 0 ; qq != AInfo->id_orders().size(); qq++ ) {
       if( Aid_order_new == AInfo->id_order(qq) ){
         AInfo->combine_factors( qq, new_fac );
@@ -424,91 +411,6 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType> 
-void GammaGeneratorRedux<DataType>::swap( int ii, int jj, shared_ptr<GammaIntermediateRedux>& gint  ){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGeneratorRedux<DataType>::swap ii = " << ii << " jj = " << jj << endl;
-
-  int idx_buff = (*(gint->ids_pos_))[ii];  
- (*(gint->ids_pos_))[ii] = (*(gint->ids_pos_))[jj];
- (*(gint->ids_pos_))[jj] = idx_buff;      
-
-  if ( ( (*block_aops_rngs_)[ (*(gint->ids_pos_))[jj] ] == (*block_aops_rngs_)[ (*(gint->ids_pos_))[ii] ]) &&
-       (*block_aops_)[ (*(gint->ids_pos_))[ii] ] != (*block_aops_)[(*(gint->ids_pos_))[jj] ] ){
-
-    shared_ptr<pint_vec> new_deltas_tmp = make_shared<pint_vec>( *(gint->deltas_pos_) );
-    pair<int,int> new_delta = (*block_aops_)[ ( *(gint->ids_pos_))[jj] ]  ?
-                               make_pair( (*(gint->ids_pos_))[jj], ( *(gint->ids_pos_))[ii] ): make_pair((*(gint->ids_pos_))[ii],(*(gint->ids_pos_))[jj]);
-
-    new_deltas_tmp->push_back( new_delta );
-
-    shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>( gint->ids_pos_->size()-2);
-    vector<int>::iterator nip_it = new_ids_pos->begin();
-    for( int qq = 0 ; qq != gint->ids_pos_->size() ; qq++) {
-      if ( (qq != ii) && (qq != jj)){
-       *nip_it = (*(gint->ids_pos_))[qq];
-        ++nip_it;
-      }
-    }
-
-    shared_ptr<GammaIntermediateRedux> new_gamma = make_shared<GammaIntermediateRedux>( new_ids_pos, new_deltas_tmp, gint->factors_ );
-
-    print_vector( *(gint->ids_pos_) , " after_new_gamma gint->ids_pos "); cout << endl;
-    gamma_vec_->push_back(new_gamma);
-    cout << " gint->factors_ = ("<<   gint->factors_.first << "," <<  gint->factors_.second << ")" << endl;
-    print_pair_vector( *(gint->deltas_pos_) , " after push_back gint->ids_pos "); cout << endl;
-    print_vector( *(gint->ids_pos_) , " after push_back gint->ids_pos "); cout << endl;
-
-  }
-  pair<double,double> anti_herm_fac = make_pair( -1.0 , 1.0 );
-  WickUtils::pair_fac_mult( anti_herm_fac, gint->factors_  );
-
-  return;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Cannot pass shared_ptr to gammaintermediate, as push back can potentially result in the vector being moved,
-// which messes up the pointer inside the shared_ptr.
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType> 
-void GammaGeneratorRedux<DataType>::swap( int ii, int jj, vector<shared_ptr<GammaIntermediateRedux>>::iterator gv_it  ){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGeneratorRedux<DataType>::swap ii = " << ii << " jj = " << jj << endl;
-
-  int idx_buff = (*((*gv_it)->ids_pos_))[ii];  
- (*((*gv_it)->ids_pos_))[ii] = (*((*gv_it)->ids_pos_))[jj];
- (*((*gv_it)->ids_pos_))[jj] = idx_buff;      
-
-  if ( ( (*block_aops_rngs_)[ (*((*gv_it)->ids_pos_))[jj] ] == (*block_aops_rngs_)[ (*((*gv_it)->ids_pos_))[ii] ]) &&
-       (*block_aops_)[ (*((*gv_it)->ids_pos_))[ii] ] != (*block_aops_)[(*((*gv_it)->ids_pos_))[jj] ] ){
-
-    shared_ptr<pint_vec> new_deltas_tmp = make_shared<pint_vec>( *((*gv_it)->deltas_pos_) );
-    pair<int,int> new_delta = (*block_aops_)[ ( *((*gv_it)->ids_pos_))[jj] ]  ?
-                               make_pair( (*((*gv_it)->ids_pos_))[jj], ( *((*gv_it)->ids_pos_))[ii] ): make_pair((*((*gv_it)->ids_pos_))[ii],(*((*gv_it)->ids_pos_))[jj]);
-
-    new_deltas_tmp->push_back( new_delta );
-
-    shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>( (*gv_it)->ids_pos_->size()-2);
-    vector<int>::iterator nip_it = new_ids_pos->begin();
-    for( int qq = 0 ; qq != (*gv_it)->ids_pos_->size() ; qq++) {
-      if ( (qq != ii) && (qq != jj)){
-       *nip_it = (*((*gv_it)->ids_pos_))[qq];
-        ++nip_it;
-      }
-    }
-
-    shared_ptr<GammaIntermediateRedux> new_gamma = make_shared<GammaIntermediateRedux>( new_ids_pos, new_deltas_tmp, (*gv_it)->factors_ );
-
-    print_vector( *((*gv_it)->ids_pos_) , " after_new_gamma (*gv_it)->ids_pos "); cout << endl;
-    gamma_vec_->push_back(new_gamma);
-    print_vector( *((*gv_it)->ids_pos_) , " after push_back (*gv_it)->ids_pos "); cout << endl;
-
-  }
-  pair<double,double> anti_herm_fac = make_pair( -1.0 , 1.0 );
-  WickUtils::pair_fac_mult( anti_herm_fac, (*gv_it)->factors_  );
-
-  return;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Cannot pass shared_ptr to gammaintermediate, as push back can potentially result in the vector being moved,
 // which messes up the pointer inside the shared_ptr.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -517,7 +419,7 @@ void GammaGeneratorRedux<DataType>::swap( int ii, int jj, int kk ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGeneratorRedux<DataType>::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
 
-  shared_ptr<GammaIntermediateRedux> gint =  gamma_vec_->at(kk); 
+  shared_ptr<GammaIntermediateRedux<DataType>> gint =  gamma_vec_->at(kk); 
 
   int idx_buff = (*((gint)->ids_pos_))[ii];  
  (*((gint)->ids_pos_))[ii] = (*((gint)->ids_pos_))[jj];
@@ -541,16 +443,13 @@ void GammaGeneratorRedux<DataType>::swap( int ii, int jj, int kk ){
       }
     }
 
-    shared_ptr<GammaIntermediateRedux> new_gamma = make_shared<GammaIntermediateRedux>( new_ids_pos, new_deltas_tmp, (gint)->factors_ );
+    shared_ptr<GammaIntermediateRedux<DataType>> new_gamma = make_shared<GammaIntermediateRedux<DataType>>( new_ids_pos, new_deltas_tmp, (gint)->factors_ );
 
-    print_vector( *((gint)->ids_pos_) , " after_new_gamma (gint)->ids_pos "); cout << endl;
     gamma_vec_->push_back(new_gamma);
-    print_vector( *(gamma_vec_->at(kk)->ids_pos_) , " after push_back (gamma_vec_->at(" +to_string(kk) +")->ids_pos) "); cout << endl;
-    print_vector( *((gint)->ids_pos_) , " after push_back (gint)->ids_pos "); cout << endl;
 
   }
-  pair<double,double> anti_herm_fac = make_pair( -1.0 , 1.0 );
-  WickUtils::pair_fac_mult( anti_herm_fac, (gint)->factors_  );
+//  pair<double,double> anti_herm_fac = make_pair( -1.0 , 1.0 );
+//  WickUtils::pair_fac_mult( anti_herm_fac, (gint)->factors_  );
 
   return;
 }
@@ -671,7 +570,7 @@ vector<int> GammaGeneratorRedux<DataType>::get_standardized_alt_order ( const ve
 // perturbation tensor are always in the same order, which makes combining terms easier. 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
-void GammaGeneratorRedux<DataType>::set_standardized_alt_order_unranged ( shared_ptr<GammaIntermediateRedux>& gint,
+void GammaGeneratorRedux<DataType>::set_standardized_alt_order_unranged ( shared_ptr<GammaIntermediateRedux<DataType>>& gint,
                                                                 vector<int>& standard_alt_order ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGenerator::set_standardized_alt_order_unranged" << endl;
@@ -734,7 +633,7 @@ void GammaGeneratorRedux<DataType>::set_standardized_alt_order_unranged ( shared
 /////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void
-GammaGeneratorRedux<DataType>::print_gamma_intermediate( shared_ptr<GammaIntermediateRedux> gint ) { 
+GammaGeneratorRedux<DataType>::print_gamma_intermediate( shared_ptr<GammaIntermediateRedux<DataType>> gint ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////
      print_vector( *(gint->ids_pos_), "gint_ids_pos" ); cout  << endl;
      cout << "gint_aops = [ "; cout.flush();  for ( auto pos : *(gint->ids_pos_) ) { cout << block_aops_->at(pos) << " " ; cout.flush();  }  cout << "] " << endl;

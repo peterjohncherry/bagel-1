@@ -129,9 +129,8 @@ int counter = 0 ;
     shared_ptr<CtrTensorPart_Base> CTP_in;
     if ( Tmap->find(CTP_in_name) == Tmap->end()) {
       shared_ptr<vector<pair<int,int>>> new_ctrs_pos = make_shared<vector<pair<int,int>>>(*ctrs_todo_);
-      shared_ptr<vector<pair<int,int>>> new_ReIm_factors = make_shared<vector<pair<int,int>>>(1, make_pair(1,1));
 
-      CTP_in = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos, new_ReIm_factors );
+      CTP_in = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos );
       Tmap->emplace(CTP_in->name(),  CTP_in);
     } else {
       CTP_in = Tmap->at(CTP_in_name);
@@ -151,8 +150,7 @@ int counter = 0 ;
     if ( Tmap->find(CTP_out_name) == Tmap->end()) {
 
       shared_ptr<vector<pair<int,int>>> new_ctrs_pos = make_shared<vector<pair<int,int>>>(*ctrs_done_);
-      shared_ptr<vector<pair<int,int>>> new_ReIm_factors = make_shared<vector<pair<int,int>>>(1, make_pair(1,1));
-      CTP_out = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos, new_ReIm_factors );
+      CTP_out = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos );
       Tmap->emplace(CTP_out_name,  CTP_out); 
 
     } else {
@@ -298,7 +296,7 @@ cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors" << endl;
    int T1_ctr_rel_pos = T1->unc_rel_pos_->at(T1ctr);
    int T2_ctr_rel_pos = T2->unc_rel_pos_->at(T2ctr);
 
-   shared_ptr<CtrTensorPart<DataType>> CTP_new = make_shared< CtrTensorPart<DataType> >(full_idxs_, full_id_ranges_, full_ctrs, make_shared<vector<pair<int,int>>>(1, abs_ctr ) ); 
+   shared_ptr<CtrTensorPart<DataType>> CTP_new = make_shared< CtrTensorPart<DataType> >(full_idxs_, full_id_ranges_, full_ctrs ); 
    CTP_new->ctrs_todo_ = ctrs_todo_;
    CTP_new->ctrs_done_ = ctrs_done_;
    Tmap->emplace(CTP_new->name_, CTP_new);
@@ -320,7 +318,7 @@ cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors" << endl;
    ACompute_map->emplace( CTP_new->get_next_name(CTP_new->ctrs_done_), make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list));
    
    //Add intermediate compute list into map seperately
-   shared_ptr<CtrTensorPart<DataType>> CTP_intermediate = make_shared< CtrTensorPart<DataType> >(full_idxs_, full_id_ranges_, ctrs_done_, make_shared<vector<pair<int,int>>>( 1, abs_ctr )); 
+   shared_ptr<CtrTensorPart<DataType>> CTP_intermediate = make_shared< CtrTensorPart<DataType> >(full_idxs_, full_id_ranges_, ctrs_done_ ); 
    Tmap->emplace(CTP_intermediate->name_, CTP_intermediate); 
     
    cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << abs_ctr.first << "," << abs_ctr.second << ") to get " << get_next_name(CTP_new->ctrs_done_) << endl;

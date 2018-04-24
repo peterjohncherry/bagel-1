@@ -130,7 +130,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
       for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
       
         string  A_contrib_name = A_contrib_map_elem.first;    
-        shared_ptr<AContribInfo> A_contrib = A_contrib_map_elem.second;    
+        shared_ptr<AContribInfo<DataType>> A_contrib = A_contrib_map_elem.second;    
 
         if (check_AContrib_factors(*A_contrib))
           continue;
@@ -279,7 +279,7 @@ cout << "Expression_Computer::print_AContraction_list" << endl;
  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
-bool Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors(AContribInfo& AC_info ) {
+bool Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors(AContribInfo<DataType>& AC_info ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   bool  skip = false;

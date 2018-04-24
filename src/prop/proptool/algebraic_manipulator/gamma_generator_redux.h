@@ -10,21 +10,25 @@
 
 using namespace WickUtils;
 
+template<typename DataType> 
 class GammaIntermediateRedux {
 
    public :
      std::shared_ptr<std::vector<int>> ids_pos_;
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_;
-     std::pair<double,double> factors_;
+     std::pair<DataType,DataType> factors_;
 
      GammaIntermediateRedux( std::shared_ptr<std::vector<int>> ids_pos,
                              std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos,
-                             std::pair<double,double> factors ) :
+                             std::pair<DataType,DataType> factors ) :
      ids_pos_(ids_pos), deltas_pos_(deltas_pos), factors_(factors) {};
 
      ~GammaIntermediateRedux(){};
 
 };
+
+template class GammaIntermediateRedux<double>;
+template class GammaIntermediateRedux<std::complex<double>>;
 
 template<typename DataType> 
 class GammaGeneratorRedux{
@@ -53,7 +57,7 @@ class GammaGeneratorRedux{
 
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
-    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo>>> >> G_to_A_map;
+    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo<DataType>>>> >> G_to_A_map;
 
     // key    : name of this gamma
     // result : information used here and in compute routines
@@ -61,7 +65,7 @@ class GammaGeneratorRedux{
 
     std::shared_ptr<TensOp_Base> total_op_;
 
-    double bk_factor_;
+    DataType bk_factor_;
     int orig_aops_half_size_;
 
     std::vector<int> standard_order_;
@@ -80,7 +84,7 @@ class GammaGeneratorRedux{
     std::shared_ptr<std::vector<int>> rngs_trans_;
     std::shared_ptr<std::vector<int>> idxs_trans_;
 
-    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> final_gamma_vec_;
+    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux<DataType>>>> final_gamma_vec_;
     
     // key    : name of A-tensor
     // result : list of reorderings which much be applied to this A-tensor before it is contracted with this gamma.
@@ -89,13 +93,13 @@ class GammaGeneratorRedux{
 
   public :
     //TODO make this private again when finished testing!!!
-    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> gamma_vec_;
+    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux<DataType>>>> gamma_vec_;
 
     GammaGeneratorRedux<DataType>( std::shared_ptr<StatesInfo<DataType>> target_states_, int Ket_num, int Bra_num,
-                         std::shared_ptr<TensOp_Base> multitensop, 
-                         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo<DataType>>>>& Gamma_map_in,
-                         std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo>  >>>>& G_to_A_map_in,
-                         double bk_factor );
+                                   std::shared_ptr<TensOp_Base> multitensop, 
+                                   std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo<DataType>>>>& Gamma_map_in,
+                                   std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo<DataType>>  >>>>& G_to_A_map_in,
+                                   DataType bk_factor );
 
     ~GammaGeneratorRedux<DataType>(){};
 
@@ -117,20 +121,16 @@ class GammaGeneratorRedux{
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
     //TODO Replace this, but keep for now as very clear, if slow.
-    bool proj_onto_map( std::shared_ptr<GammaIntermediateRedux> gint,
+    bool proj_onto_map( std::shared_ptr<GammaIntermediateRedux<DataType>> gint,
                         std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
                         std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
-
-    void swap( int ii, int jj, std::vector<std::shared_ptr<GammaIntermediateRedux>>::iterator gint );
-
-    void swap( int ii, int jj, std::shared_ptr<GammaIntermediateRedux>& gint );
 
     void swap( int ii, int jj, int kk );
 
     std::shared_ptr<std::vector<std::pair<int,int>>>
     standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
 
-    void set_standardized_alt_order_unranged ( std::shared_ptr<GammaIntermediateRedux>& gint , std::vector<int>& standard_alt_order);
+    void set_standardized_alt_order_unranged ( std::shared_ptr<GammaIntermediateRedux<DataType>>& gint , std::vector<int>& standard_alt_order);
 
     //routines for reorderings
     std::vector<int> get_standard_order (const std::vector<std::string>& rngs );
@@ -149,12 +149,12 @@ class GammaGeneratorRedux{
 
     std::vector<int> get_standardized_alt_order( const std::vector<std::string>& rngs ,const std::vector<bool>& aops ) ;
 
-    void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> final_gamma_vec, std::string name );
-    void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux>>> final_gamma_vec, std::string name,
+    void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux<DataType>>>> final_gamma_vec, std::string name );
+    void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux<DataType>>>> final_gamma_vec, std::string name,
                                     std::string bra_name, std::string ket_name );
 
  
-    void print_gamma_intermediate( std::shared_ptr<GammaIntermediateRedux> gint );
+    void print_gamma_intermediate( std::shared_ptr<GammaIntermediateRedux<DataType>> gint );
 
 };
 #endif

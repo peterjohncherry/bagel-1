@@ -36,11 +36,11 @@ class Expression {
         
         // key: name of gamma (or sigma)
         // result :  name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors.
-        std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> > >>> G_to_A_map_; //TODO should be private
+        std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType>> > >>> G_to_A_map_; //TODO should be private
      
         // key: name of block of target tensor
         // result :  G_to_A_map for this target tensor block 
-        std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> > >>> >> target_to_G_to_A_map_; //TODO should be private
+        std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType>> > >>> >> target_to_G_to_A_map_; //TODO should be private
       
         // names of the range blocks of the original input tensors which are needed to compute this expression
         std::shared_ptr<std::set<std::string>> required_blocks_;
@@ -58,7 +58,7 @@ class Expression {
 
         virtual void get_gamma_Atensor_contraction_list() { assert( false); };
         virtual void generate_algebraic_task_list(){ assert(false); };
-        virtual void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map<std::string,std::shared_ptr<std::map<std::string,std::shared_ptr<AContribInfo>>>>> exc_block_G_to_A_map ){ assert(false);};
+        virtual void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map<std::string,std::shared_ptr<std::map<std::string,std::shared_ptr<AContribInfo<DataType>>>>>> exc_block_G_to_A_map ){ assert(false);};
    
         std::string name() {return name_; }
         std::shared_ptr<std::vector< BraKet<DataType>>> braket_list(){ return  braket_list_;}
@@ -67,7 +67,7 @@ class Expression {
         std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map(){ return  CTP_map_;}
         std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map(){ return  ACompute_map_;}
         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo<DataType>> > > gamma_info_map(){ return  gamma_info_map_;}
-        std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> > >>> G_to_A_map(){ return  G_to_A_map_;} //TODO should be private
+        std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType> >> >>> G_to_A_map(){ return  G_to_A_map_;} //TODO should be private
         std::shared_ptr<std::set<std::string>> required_blocks()  { return  required_blocks_; } 
 
 };
@@ -102,7 +102,7 @@ class Expression_Full : public Expression<DataType>   {
              
      void generate_algebraic_task_list(); 
      void get_gamma_Atensor_contraction_list();
-     void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> >>>>  exc_block_G_to_A_map ){ assert(false);};
+     void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType>> >>>>  exc_block_G_to_A_map ){ assert(false);};
 };
 
 template<typename DataType>
@@ -134,7 +134,7 @@ class Expression_Orb_Exc_Deriv : public Expression<DataType>   {
 
    void generate_algebraic_task_list(); 
    void get_gamma_Atensor_contraction_list( ) { assert(false);} 
-   void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> >>>>  exc_block_G_to_A_map );
+   void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType> >>>>>  exc_block_G_to_A_map );
 
 
 };

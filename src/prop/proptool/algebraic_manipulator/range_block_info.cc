@@ -13,13 +13,12 @@ using namespace Algebra_Utils;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block, shared_ptr<const vector<string>> unique_block, 
                                     shared_ptr<vector<int>> idxs_trans,  pair<double,double> factors,
+                                    pair<double,double> ReIm_factors,
                                     const vector<bool>& aops, shared_ptr<Op_Info>& op_info ) :
-                                    orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(idxs_trans), factors_(factors) {
+                                    orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(idxs_trans), factors_(factors), 
+                                    ReIm_factors_(ReIm_factors)  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // cout << "Range_Block_Info::Range_Block_Info 1" << endl;
-
-  print_vector(*orig_block , " orig_block" );
-  cout << " factors_ (" << factors_.first <<"," << factors_.second << ")" << "    factors (" << factors.first <<"," << factors.second << ")" << endl;
 
   num_idxs_ = orig_rngs_->size();
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
@@ -64,15 +63,12 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 //Constructor for use only when building from single operators (otherwise we will have problems with the inverse transformation)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block, shared_ptr<const vector<string>> unique_block, 
-                                    shared_ptr<Transformation> transform,  pair<double,double> factors,
+                                    shared_ptr<Transformation> transform,  pair<double,double> factors, pair<double,double> ReIm_factors,
                                     const vector<bool>& aops, shared_ptr<Op_Info>& op_info) :
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(transform->idxs_trans(*orig_block)), factors_(factors),
-                                    transform_(transform) {
+                                    ReIm_factors_(ReIm_factors), transform_(transform) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  // cout << "Range_Block_Info::Range_Block_Info 2" << endl;
-
-  print_vector(*orig_block , " orig_block" );
-  cout << " factors_ (" << factors_.first <<"," << factors_.second << ")" << "       factors (" << factors.first <<"," << factors.second << ")" << endl;
 
   num_idxs_ = orig_rngs_->size();
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
@@ -114,7 +110,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_blocks, std::vector<int>& cml_sizes ) :
-                          range_blocks_(std::make_shared<std::vector<std::shared_ptr<Range_Block_Info>>>( range_blocks )) , factors_(std::make_pair(1.0,1.0)) {
+                          range_blocks_(std::make_shared<std::vector<std::shared_ptr<Range_Block_Info>>>( range_blocks )) , factors_(std::make_pair(1.0,0.0)) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "SRBI_Helper::SRBI_Helper" << endl;
 
@@ -143,8 +139,8 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
  
     double Re_buff = factors_.first;
     double Im_buff = factors_.second;
-    factors_.first = Re_buff*(*rb_it)->Re_factor() - Im_buff*(*rb_it)->Im_factor();
-    factors_.second = Re_buff*(*rb_it)->Im_factor() + Im_buff*(*rb_it)->Re_factor();
+    factors_.first =  (Re_buff*(*rb_it)->factors_.first   - Im_buff*(*rb_it)->factors_.second)*(*rb_it)->ReIm_factors_.first;
+    factors_.second = (Re_buff*(*rb_it)->factors_.second  + Im_buff*(*rb_it)->factors_.first )*(*rb_it)->ReIm_factors_.second;
     
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
     std::for_each( it_it, it_it+(*rb_it)->num_idxs_, [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );

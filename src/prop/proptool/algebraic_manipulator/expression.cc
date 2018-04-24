@@ -20,14 +20,14 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
   cout << "Expression<DataType>::Expression (new constructor) " << endl;
 
   //Note that this G_to_A_map_ is expression specific
-  G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>>();
-  target_to_G_to_A_map_ = make_shared<map<string, shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo> > >>> >>();
+  G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo<DataType> >>>>>();
+  target_to_G_to_A_map_ = make_shared<map<string, shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo<DataType>> > >>> >>();
 
   name_ = "";
   cout << "braket_list_->size() = " << braket_list_->size() << endl;
   for ( BraKet<DataType>& bk : *braket_list_ ) {
     if (bk.factor() != 0.0 )
-      name_ += "(" + to_string(bk.factor()) + ")" + bk.name() + " + ";
+      name_ += "(" + to_string(abs(bk.factor())) + ")" + bk.name() + " + ";
   }
   name_.pop_back();
   name_.pop_back();
@@ -64,7 +64,7 @@ void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list(){
   auto exc_op = MT_map_->at(exc_op_name);
   for ( auto& exc_ctp_map_it : *(exc_op->CTP_map()) ) {
     string exc_block_name = exc_ctp_map_it.first;
-    auto  exc_block_G_to_A_map = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>>();
+    auto  exc_block_G_to_A_map = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo<DataType>> >>>>();
     for ( BraKet<DataType>& braket : *braket_list_ )
       braket.generate_gamma_Atensor_contractions( MT_map_, exc_block_G_to_A_map, gamma_info_map_, states_info_,  required_blocks_, CTP_map_ );
     this->get_gamma_Atensor_contraction_list( exc_block_G_to_A_map );
@@ -73,7 +73,7 @@ void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list(){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>> exc_block_G_to_A_map  ){
+void Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo<DataType> >>>>> exc_block_G_to_A_map  ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression_Orb_Exc_Deriv::get_gamma_Atensor_contraction_list" << endl;
 //  cout << "entire CTP map" << endl;
@@ -197,4 +197,8 @@ void Expression<DataType>::necessary_tensor_blocks(){
 template class Expression<double>;
 template class Expression_Full<double>;
 template class Expression_Orb_Exc_Deriv<double>;
+template class Expression<std::complex<double>>;
+template class Expression_Full<std::complex<double>>;
+template class Expression_Orb_Exc_Deriv<std::complex<double>>;
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////

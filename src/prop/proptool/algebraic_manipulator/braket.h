@@ -16,7 +16,7 @@ class BraKet{
     std::vector<char> op_trans_list_;
     std::shared_ptr<std::vector<std::vector<int>>> op_state_ids_;
     DataType factor_;
-    std::pair<double,double> ReIm_factors_;
+    std::pair<DataType,DataType> ReIm_factors_;
     int bra_num_;
     int ket_num_;
     std::string type_ ; // should be "ci_deriv" or "full" 
@@ -31,7 +31,7 @@ class BraKet{
 
     std::shared_ptr<MultiOp_Info> multiop_info_;
 
-    BraKet( std::shared_ptr<MultiOp_Info> multiop_info, std::pair<double,double> factor, int bra_num, int ket_num, std::string type);
+    BraKet( std::shared_ptr<MultiOp_Info> multiop_info, std::pair<DataType,DataType> factor, int bra_num, int ket_num, std::string type);
 
     BraKet( std::vector<std::string>& op_list, std::vector<char>& op_trans_list,
             DataType factor, int bra_num, int ket_num, 
@@ -51,13 +51,13 @@ class BraKet{
    // std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { required_blocks.emplace( block_name ); } 
 
     void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<TensOp_Base>>> MT_map,                
-                                              std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> >>>> G_to_A_map,
+                                              std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType>> >>>> G_to_A_map,
                                               std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo<DataType> >>> gamma_info_map,
                                               std::shared_ptr<StatesInfo<DataType>> target_states,
                                               std::shared_ptr<std::set<std::string>> required_blocks,
                                               std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map );         
     
-   void print_gamma_Atensor_contractions(std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> >>>> G_to_A_map,
+   void print_gamma_Atensor_contractions(std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType>> >>>> G_to_A_map,
 		                                        bool has_orb_exc );
 
 };

@@ -7,8 +7,8 @@ using namespace WickUtils;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 BraKet<DataType>::BraKet( std::shared_ptr<MultiOp_Info> multiop_info, 
-                          std::pair<double,double> factor, int bra_num, int ket_num,  std::string type) :
-                          multiop_info_(multiop_info), ReIm_factors_(factor), bra_num_(bra_num), ket_num_(ket_num),
+                          std::pair<DataType, DataType> ReIm_factors, int bra_num, int ket_num,  std::string type) :
+                          multiop_info_(multiop_info), ReIm_factors_(ReIm_factors), bra_num_(bra_num), ket_num_(ket_num),
                           type_(type) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::BraKet" << endl;
@@ -93,7 +93,7 @@ BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<TensOp_Base>>> MT_map,
-                                                            shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>> G_to_A_map,
+                                                            shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo<DataType>> >>>> G_to_A_map,
                                                             shared_ptr<map<string, shared_ptr< GammaInfo<DataType> >>> gamma_info_map,
                                                             shared_ptr<StatesInfo<DataType>> target_states,
                                                             shared_ptr<set<string>> required_blocks,
@@ -150,7 +150,7 @@ void BraKet<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<strin
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void BraKet<DataType>::print_gamma_Atensor_contractions(shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo> >>>> G_to_A_map,
+void BraKet<DataType>::print_gamma_Atensor_contractions(shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo<DataType>> >>>> G_to_A_map,
 		                                        bool has_orb_exc ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  cout <<  "BraKet<DataType>::print_gamma_Atensor_contractions()" << endl; 
@@ -216,5 +216,5 @@ void BraKet<DataType>::print_gamma_Atensor_contractions(shared_ptr<map<string, s
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class BraKet<double>;
-//template class BraKet<std::complex<double>>;
+template class BraKet<std::complex<double>>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

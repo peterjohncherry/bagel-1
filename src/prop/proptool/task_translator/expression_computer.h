@@ -41,7 +41,7 @@ class Expression_Computer {
 
     void print_AContraction_list(std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>> ACompute_list, std::string A_Contrib_name );
 
-    bool check_AContrib_factors(AContribInfo& AC_info );
+    bool check_AContrib_factors(AContribInfo<DataType>& AC_info );
    
     void set_gamma_maps( std::string expression_name,
                          std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map,
