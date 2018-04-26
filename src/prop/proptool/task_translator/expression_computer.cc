@@ -65,11 +65,15 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
  
   TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
 
-  //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
+  // define seperate generic name for each of the required blocks in the target tensor.
+  // Copy the results from the contractions into these places in the data map.
+  // Perhaps have seperate field in expression which is map of these blocks; can be removed when we a finished, and helps seperate updates from actual tensor
+
   for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
-    string gamma_name = AG_contrib.first;  cout << " gamma_name  = " << gamma_name << endl; 
+
+    string gamma_name = AG_contrib.first; 
+
     shared_ptr<Tensor_<DataType>> A_combined_data;
-    // Build A_tensor to hold sums of different A-tensors.
     if ( gamma_name != "ID" ) {
       A_combined_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(expression->gamma_info_map_->at(gamma_name)->id_ranges())) );
     } else {
@@ -77,7 +81,74 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
     }  
     A_combined_data->allocate();
     A_combined_data->zero(); 
+ 
+    auto A_contrib_loc = expression->G_to_A_map_->find( gamma_name );
+    if ( (A_contrib_loc != expression->G_to_A_map_->end()) &&  (A_contrib_loc->second->size() != 0) ) {
+      for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
+      
+        string  A_contrib_name = A_contrib_map_elem.first;    
+        shared_ptr<AContribInfo<DataType>> A_contrib = A_contrib_map_elem.second;    
+
+        if (check_AContrib_factors(*A_contrib))
+          continue;
+     
+        //Should be OK; same method is used 
+        TensOp_Machine->Calculate_CTP( *A_contrib );
+
+        if ( gamma_name != "ID" ) {
+          if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) {
+            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
+              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
+              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
+            }
+
+         } else { // if ( Acontrib_name in map )
+                  
+           for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
+              shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
+              vector<string> sub_tensor_names(CTP_vec->size()); 
+
+              vector<string>::iterator stn_it = sub_tensor_names.begin();
+              for ( vector<shared_ptr<CtrTensorPart_Base>>::iterator cv_it = CTP_vec->begin(); cv_it != CTP_vec->end(); ++cv_it, ++stn_it )
+                *stn_it = (*cv_it)->name();
+
+              shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
+              tensop_data_map_->emplace( A_contrib_name, A_contrib_data );
+              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
+              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered ); 
+
+            }
+          }
+        } else { // if ( gamma_name == "ID" ) {
+  
+          if ( tensop_data_map_->find(A_contrib_name) == tensop_data_map_->end() ) {
+            shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
+            vector<string> sub_tensor_names(CTP_vec->size()); 
+            for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
+              sub_tensor_names[rr] = CTP_vec->at(rr)->name();
+            
+            shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
+            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++)
+              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_data );
+             
+          } else {
+
+            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++)
+              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), tensop_data_map_->at(A_contrib_name) );
+
+          }
+        }
+      }
+    
+      // This final contraction with gamma needs to be changed; do not contract over indexes defined in AContrib_OrbExc 
+      if ( gamma_name != "ID" ) {
+
+      } else {
+
+      }
+    }
   }
+
   return;  
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,11 +164,6 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     cout << block_name << endl;
   cout << endl << endl;
 
-//  cout << "tensop_data_map_->size() = " << tensop_data_map_->size() << endl;
-//  cout << " contents of tensop_data_map : " <<endl;
-//  for ( auto& elem : *tensop_data_map_ )
-//    cout << elem.first << endl;
-
   bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
   if ( !new_result )  
     cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
@@ -112,7 +178,8 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
 
-    string gamma_name = AG_contrib.first;  cout << " gamma_name  = " << gamma_name << endl; 
+    string gamma_name = AG_contrib.first; 
+    cout << " gamma_name  = " << gamma_name << endl; 
 
     shared_ptr<Tensor_<DataType>> A_combined_data;
     // Build A_tensor to hold sums of different A-tensors.
@@ -139,18 +206,20 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
         TensOp_Machine->Calculate_CTP( *A_contrib );
 
         if ( gamma_name != "ID" ) {
-          if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) { cout << A_contrib_name << " found in map" << endl;
+          if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) {
 
             for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
               shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
               A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
+
 	      cout << " A_contrib->factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
 	      cout <<  A_contrib->factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
               cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
             }
 
-         } else { cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO is a way to avoid this, implement it
-            
+         } else {
+
+           cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO is a way to avoid this, implement it
            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
 
               shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
@@ -167,7 +236,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
               shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );//TODO fix so uses piecewise contraction where possible 
               tensop_data_map_->emplace( A_contrib_name, A_contrib_data );
               shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
-              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
+              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered ); //TODO replace with interface function in tensop_computer
 
               cout << " A_contrib->factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
 	      cout <<  A_contrib->factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;

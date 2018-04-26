@@ -26,7 +26,6 @@ class GammaIntermediateRedux {
      ~GammaIntermediateRedux(){};
 
 };
-
 template class GammaIntermediateRedux<double>;
 template class GammaIntermediateRedux<std::complex<double>>;
 
@@ -103,10 +102,7 @@ class GammaGeneratorRedux{
 
     ~GammaGeneratorRedux<DataType>(){};
 
-
     void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops );
-
-    void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, const std::vector<std::string>& range_block );
 
     bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering );
 
@@ -132,22 +128,9 @@ class GammaGeneratorRedux{
 
     void set_standardized_alt_order_unranged ( std::shared_ptr<GammaIntermediateRedux<DataType>>& gint , std::vector<int>& standard_alt_order);
 
-    //routines for reorderings
-    std::vector<int> get_standard_order (const std::vector<std::string>& rngs );
-
-    std::vector<int> get_standard_range_order(const std::vector<std::string> &rngs) ;
-
-    std::vector<int> get_position_order(const std::vector<int> &positions) ;
-
     std::vector<int> get_Aid_order( const std::vector<int>& id_pos );
 
-    //reordering of initial idxs
-    void get_standard_idx_order_init();
-
-    //reorders with respect to the range obtained in the above 
-    std::vector<int> get_standard_idx_order(const std::vector<std::string>& idxs) ;
-
-    std::vector<int> get_standardized_alt_order( const std::vector<std::string>& rngs ,const std::vector<bool>& aops ) ;
+    std::vector<int> get_position_order(const std::vector<int> &positions) ;
 
     void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux<DataType>>>> final_gamma_vec, std::string name );
     void print_gamma_contributions( std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediateRedux<DataType>>>> final_gamma_vec, std::string name,

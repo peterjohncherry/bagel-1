@@ -139,8 +139,8 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
  
     double Re_buff = factors_.first;
     double Im_buff = factors_.second;
-    factors_.first =  (Re_buff*(*rb_it)->factors_.first   - Im_buff*(*rb_it)->factors_.second)*(*rb_it)->ReIm_factors_.first;
-    factors_.second = (Re_buff*(*rb_it)->factors_.second  + Im_buff*(*rb_it)->factors_.first )*(*rb_it)->ReIm_factors_.second;
+    factors_.first =  (Re_buff*(*rb_it)->factors_.first   - Im_buff*(*rb_it)->factors_.second);
+    factors_.second = (Re_buff*(*rb_it)->factors_.second  + Im_buff*(*rb_it)->factors_.first );
     
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
     std::for_each( it_it, it_it+(*rb_it)->num_idxs_, [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );

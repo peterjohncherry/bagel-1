@@ -4,6 +4,8 @@ using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 
+//TODO Several routines here should be changed so that they use the OpInfo or MultiOpInfo class. 
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void Equation_Computer_Base<DataType>::set_computers( std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> gamma_computer ) {

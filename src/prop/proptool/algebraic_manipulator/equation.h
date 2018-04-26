@@ -2,7 +2,8 @@
 #define __SRC_PROP_PROPTOOL_AlGMAN_EQUATION_H
 #include <src/prop/proptool/proputils.h>
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>  
-#include <src/prop/proptool/algebraic_manipulator/expression.h>
+#include <src/prop/proptool/algebraic_manipulator/expression_full.h>
+#include <src/prop/proptool/algebraic_manipulator/expression_orb_exc_deriv.h>
 #include <src/prop/proptool/algebraic_manipulator/braket.h>
 #include <src/prop/proptool/initialization/tensop_info.h>  
 

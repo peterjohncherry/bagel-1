@@ -374,7 +374,6 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
    
   if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() )
     total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_ );
-  
 
   string Gname_alt = get_gamma_name( chrvec_to_strvec(*block_aops_rngs_), *block_aops_, *ids_pos, bra_name, ket_name );
 
@@ -407,7 +406,7 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
   }
 
   Gamma_map->emplace( Gname_alt, make_shared<GammaInfo<DataType>>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
-                                                         block_aops_, make_shared<const vector<string>>(chrvec_to_strvec(*block_aops_rngs_)), ids_pos, Gamma_map) );
+                      block_aops_, make_shared<const vector<string>>(chrvec_to_strvec(*block_aops_rngs_)), ids_pos, Gamma_map) );
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -484,21 +483,6 @@ GammaGeneratorRedux<DataType>::standardize_delta_ordering_generic( shared_ptr<pi
   }
   return new_deltas_pos;
 }
-//////////////////////////////////////////////////////////////////////////////
-template<typename DataType> 
-vector<int> GammaGeneratorRedux<DataType>::get_standard_idx_order(const vector<string>&idxs) {
-//////////////////////////////////////////////////////////////////////////////
-
-  vector<int> pos(idxs.size());
-  iota(pos.begin(), pos.end(), 0);
-
-  auto idx_order_tmp = standard_order_;
-  sort(pos.begin(), pos.end(), [&idxs, &idx_order_tmp](int i1, int i2){
-                                   return (bool)( idxs[i1] < idxs[i2] );
-                                 }
-                            );
-  return pos;
-}
 ///////////////////////////////////////////////////////////////////////////////////////
 // Getting reordering vec to go from Atens uncids to gamma uncids
 // Running sort twice to get inverse; seems weird and there's probably a better way...
@@ -527,51 +511,13 @@ vector<int> GammaGeneratorRedux<DataType>::get_position_order(const vector<int> 
 
   return pos;
 }
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// This is preferable for ci-derivative terms; the derivative gamma matrices are by far the largest object, so 
-// we want the ordering which minimizes the number of distinct gamma matrices, even if this means increasing the number of
-// MO-tensor index transpositions we have to do. Consequently, we order into a canonical range sequence, by
-// range, rather than by operator index. 
-// //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType> 
-vector<int> GammaGeneratorRedux<DataType>::get_standardized_alt_order ( const vector<string>& rngs ,const vector<bool>& aops ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGeneratorRedux<DataType>::get_standardized_alt_order " << endl;
-  // TODO this should use standardized ordering 
-
-   
-  vector<int> standard_order = get_standard_idx_order(rngs) ;
-  vector<int> standard_order_plus(standard_order.size()/2);
-  vector<int> standard_order_kill(standard_order.size()/2);
-  vector<int>::iterator standard_order_plus_it = standard_order_plus.begin();
-  vector<int>::iterator standard_order_kill_it = standard_order_kill.begin();
-  for ( int pos : standard_order) {
-    if ( aops[pos] ) {
-      *standard_order_plus_it++ = pos;
-    } else {
-      *standard_order_kill_it++ = pos;
-    }
-  }
-
-  vector<int> standard_alt_order(standard_order.size());
-  vector<int>::iterator standard_alt_order_it = standard_alt_order.begin();
-  standard_order_plus_it = standard_order_plus.begin();
-  standard_order_kill_it = standard_order_kill.begin();
-  while ( standard_alt_order_it != standard_alt_order.end()){
-    *standard_alt_order_it++ = *standard_order_plus_it++;
-    *standard_alt_order_it++ = *standard_order_kill_it++;
-  }
-
-  return standard_alt_order;
-};
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This final ordering is preferable for orbital excitation derivative terms; it ensures that the indexes of the
 // perturbation tensor are always in the same order, which makes combining terms easier. 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::set_standardized_alt_order_unranged ( shared_ptr<GammaIntermediateRedux<DataType>>& gint,
-                                                                vector<int>& standard_alt_order ) {
+                                                                          vector<int>& standard_alt_order ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGenerator::set_standardized_alt_order_unranged" << endl;
   // TODO this should use standardized ordering 
@@ -641,20 +587,6 @@ GammaGeneratorRedux<DataType>::print_gamma_intermediate( shared_ptr<GammaInterme
      cout << "gint_ids  = [ "; cout.flush();   for ( auto pos : *(gint->ids_pos_) ) { cout << block_idxs_[pos] << " " ; cout.flush();  }   cout << "] " <<  endl;
     return;
 } 
-
- // { // TEST for transformations
- // vector<string> unique_block_dupe( std_rngs_.size());
- // vector<string>::const_iterator br_it = block_rngs_->begin();
- // for ( vector<int>::iterator it_it = idxs_trans_->begin() ;  it_it != idxs_trans_->end() ; it_it++, br_it++ ) { 
- //   unique_block_dupe[*it_it]  = *br_it;
- // }
-
- //  if ( unique_block_dupe != std_rngs_ ) { 
- //    print_vector(unique_block_dupe, "unique_block_dupe" ) ;
- //    print_vector(std_rngs_, " != std_rngs_" ) ;
- //    throw logic_error( " reordering is broken " ) ;
- //  }
- // }
 //////////////////////////////////////////////////////////////////////////
 template class GammaGeneratorRedux<double>;
 template class GammaGeneratorRedux<std::complex<double>>;

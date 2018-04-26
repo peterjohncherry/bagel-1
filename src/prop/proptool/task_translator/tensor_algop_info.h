@@ -64,8 +64,8 @@ class CtrOp_same_T : public CtrOp_base {
     const std::pair<int,int> ctr_abs_pos_;
     const std::pair<int,int> ctr_rel_pos_;
 
-    CtrOp_same_T(std::string T1name_in, std::string Tout_name_in, std::pair<int,int> ctr_abs_pos_in,
-                 std::pair<int,int> ctr_rel_pos_in, std::string ctr_type_in ):CtrOp_base(Tout_name_in, ctr_type_in),
+    CtrOp_same_T( std::string T1name_in, std::string Tout_name_in, std::pair<int,int> ctr_abs_pos_in,
+                  std::pair<int,int> ctr_rel_pos_in, std::string ctr_type_in ): CtrOp_base(Tout_name_in, ctr_type_in),
     T1name_(T1name_in), ctr_abs_pos_(ctr_abs_pos_in),  ctr_rel_pos_(ctr_rel_pos_in) {};
 
     ~CtrOp_same_T(){};
@@ -82,9 +82,9 @@ class CtrOp_single_id : public CtrOp_base {
     const int T1_ctr_abs_pos_; 
     const int T1_ctr_rel_pos_; 
 
-    CtrOp_single_id(std::string T1name, std::string T2name , std::string Tout_name , int T1_ctr_abs_pos, int T2_ctr_abs_pos,
-                 int T1_ctr_rel_pos, int T2_ctr_rel_pos, std::string ctr_type ): CtrOp_base(Tout_name, ctr_type),
-                 T1name_(T1name), T1_ctr_abs_pos_(T1_ctr_abs_pos), T1_ctr_rel_pos_(T1_ctr_rel_pos) {};
+    CtrOp_single_id( std::string T1name, std::string T2name , std::string Tout_name , int T1_ctr_abs_pos, int T2_ctr_abs_pos,
+                     int T1_ctr_rel_pos, int T2_ctr_rel_pos, std::string ctr_type ) : CtrOp_base(Tout_name, ctr_type),
+                     T1name_(T1name), T1_ctr_abs_pos_(T1_ctr_abs_pos), T1_ctr_rel_pos_(T1_ctr_rel_pos) {};
 
     ~CtrOp_single_id(){};
 

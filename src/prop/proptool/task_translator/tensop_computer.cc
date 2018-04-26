@@ -17,7 +17,8 @@ TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo<DataType
   string A_contrib = AInfo.name_;
 
   if (ACompute_map_->at(A_contrib)->size() == 0 )
-    cout << "THIS COMPUTE LIST IS EMPTY" << endl;
+    throw logic_error( "ACompute list is empty!! Aborting!!" );
+
   for (shared_ptr<CtrOp_base> ctr_op : *(ACompute_map_->at(A_contrib))){ cout << "getting " <<  ctr_op->Tout_name() << endl;
    
     // check if this is an uncontracted multitensor (0,0) && check if the data is in the map

@@ -11,7 +11,8 @@
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
-#include <src/prop/proptool/algebraic_manipulator/expression.h>
+#include <src/prop/proptool/algebraic_manipulator/expression_full.h>
+#include <src/prop/proptool/algebraic_manipulator/expression_orb_exc_deriv.h>
 #include <src/prop/proptool/task_translator/tensop_computer.h>
 namespace bagel {
 
