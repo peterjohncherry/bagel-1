@@ -330,9 +330,10 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
     string term_factor = term_info->get<string>( "factor" );
     string term_type = term_info->get<string>( "type" );
     
-    if (term_type[0] == 'o' )
+    if (term_type[0] == 'o' ) { 
       expression_type = "orb_excitation_derivative"; 
-
+      cout << " in loop expression_type = " << expression_type << endl;
+    }
     shared_ptr<Term_Init> new_term_init = term_init_map_->at(term_name);
 
     term_list->push_back(make_pair(term_factor, new_term_init));
@@ -342,7 +343,7 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
     for (auto& index_info : *indexes_ptree){
       string id_name = index_info->get<string>("name"); 
       string id_range = index_info->get<string>("range");
-      bool   id_sum =  index_info->get<bool>("sum", false );
+      bool id_sum =  index_info->get<bool>("sum", false );
       term_idrange_map->emplace( id_name, make_pair(id_sum, id_range));
     }
 
@@ -350,6 +351,7 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
     term_idrange_map_list->push_back( term_idrange_map );     
     
   }
+  cout << "before master init  expression_type = " << expression_type << endl;
   auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list, expression_type ); 
   auto eqn_init = make_shared<Equation_Init_Value<double>>( eqn_name, "Value", master_expression, inp_range_map_, target_indices, inp_factor_map_ );
   eqn_init->initialize_expressions();
@@ -478,7 +480,7 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
     }
    
     shared_ptr<Term_Init>  new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map); 
-    if ( term_type == "orb_exc_deriv" ) 
+    if ( term_type == "orb" ) 
       new_term->proj_op_name_ = term_inp->get<string>( "target op" , "X" );
 
     term_init_map_->emplace( term_name, new_term );

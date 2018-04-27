@@ -66,18 +66,8 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Init_Value<DataType>::initialize_expressions()" << endl;
 
-  cout << "range_map_ = " << endl;
-  for (auto& elem : *range_map_ ) { 
-    cout << "{ " <<  elem.first  << ", [ ";  cout.flush(); 
-    for ( int xx : *elem.second ) 
-    cout << xx << " "; cout.flush();
-    cout << "] } "<< endl;
-  }
-  cout << endl;
-  
   pair<double,double> bk_factor_dummy  = make_pair( 1.0, 1.0);
   //TODO The looping through the terms should be on the inside, and the summation on the outside,
-  //     but switching these loops round is headache, and I doubt it is significant speed wise  
   for ( int ii = 0 ; ii != master_expression_->term_list_->size(); ii++  ){
 
     //get factors and initialize range map
@@ -164,7 +154,8 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
         int kk = 0 ;
         vector<int>::iterator fvec_it = fvec.begin();
         for ( auto tiv_it = term_idx_val_map->begin() ; tiv_it != term_idx_val_map->end(); tiv_it++ ) {
-          if (tiv_it->first == "none" ) { continue ; }
+          if (tiv_it->first == "none" ) 
+            continue ;
           tiv_it->second = term_range_map.at(tiv_it->first)->at(*fvec_it);
           fvec_it++;
         }
@@ -185,10 +176,12 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
 
           // factor = factor_map_->at(*bk_factors_ita+)
           cout << "term_init->type_ = " << term_init->type_ << endl;
-          if (term_init->type_.substr(0,3) == "orb" ){
+          if (term_init->type_ == "orb" ){
             BraKet<DataType> new_bk( get_operator_info( bk_op_list, bk_op_trans_list, op_state_ids ), bk_factor_dummy,
                                                         bk_info.bra_index(), bk_info.ket_index(), term_init->type_);
-            new_bk.target_op_ = term_init-> proj_op_name_; 
+            new_bk.target_op_ = term_init->proj_op_name_; 
+            cout << "new_bk.target_op_  = " << new_bk.target_op_  << endl;
+            cout << "term_init->proj_op_name_ = " <<  term_init->proj_op_name_ << endl; 
             new_bk.orb_exc_deriv_ = true;
             braket_list.push_back( new_bk ) ;
           } else {

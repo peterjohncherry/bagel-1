@@ -12,9 +12,10 @@ void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list(){
   cout << "void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list()" << endl;
  
   required_blocks_ = make_shared<set<string>>();
-  string exc_op_name = "X"; // TODO replace with definition from input
- 
-  auto exc_op = MT_map_->at(exc_op_name);
+
+  cout << " braket_list_->front().target_op_ = " <<  braket_list_->front().target_op_ << endl;
+
+  auto exc_op = MT_map_->at( braket_list_->front().target_op_ );
   for ( auto& exc_ctp_map_it : *(exc_op->CTP_map()) ) {
     string exc_block_name = exc_ctp_map_it.first;
     auto  exc_block_G_to_A_map = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo<DataType>> >>>>();

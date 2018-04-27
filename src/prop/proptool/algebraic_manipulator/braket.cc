@@ -12,6 +12,8 @@ BraKet_Base::BraKet_Base( std::shared_ptr<MultiOp_Info> multiop_info,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet_Base::BraKet_Base" << endl;
 
+  cout << "BraKet_Base->type = " << type << endl;
+
   if (type_[0] == 'c' ) {
     name_ = "c_{I}"; 
   } else {
@@ -26,6 +28,12 @@ BraKet<DataType>::BraKet( std::shared_ptr<MultiOp_Info> multiop_info,
                           BraKet_Base( multiop_info, factor, bra_num, ket_num, type) {} 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+BraKet_OrbExcDeriv<DataType>::BraKet_OrbExcDeriv( std::shared_ptr<MultiOp_Info> multiop_info, 
+                                                  std::pair<double, double> factor, int bra_num, int ket_num,  std::string type) :
+                                                  BraKet_Base( multiop_info, factor, bra_num, ket_num, type) {} 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Following restructuing this class is starting to look more redundant, however I think it is still useful for

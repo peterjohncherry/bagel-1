@@ -41,6 +41,9 @@ cout << " void Equation_Base<DataType>::generate_all_expressions() " << endl;
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+// TODO This is a very strange way of doing things, but I remember it is for a nasty reason. Either fix it
+//      or find the reason and commend here....
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void Equation_Base<DataType>::add_expression( string expression_name ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,8 +61,8 @@ void Equation_Base<DataType>::add_expression( string expression_name ) {
   
   string expression_type = add_expression_info( bk_list ) ;
 
-  cout << "making expression" << endl;
-  if ( expression_type == "orbital_excitation_derivative" || expression_type == "op_deriv" ) {
+  cout << "making expression of Type : " << expression_type << endl;
+  if ( expression_type == "orbital_excitation_derivative" || expression_type == "orb" ) {
     cout << "expression_type = " << expression_type <<  endl;
 
     shared_ptr<Expression_Orb_Exc_Deriv<DataType>>  new_exp = make_shared<Expression_Orb_Exc_Deriv<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type );
@@ -91,9 +94,13 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
 
   //TODO get these quantities from input 
   bool spinfree = false;
-  string expression_type = "full";
+  string expression_type = expr_bk_list->front().type_;
+  cout << "expression_type =  " <<  expression_type << endl; 
+  
 
   for ( BraKet<DataType>& braket_info : *expr_bk_list ) {
+    if ( braket_info.type_ != expression_type )
+      throw logic_error( " inconsistent term types in expression defintion : " + braket_info.type_ + " != " + expression_type ) ;
 
     shared_ptr<vector<shared_ptr<Op_Info>>> op_info_vec = braket_info.multiop_info_->op_info_vec();
 

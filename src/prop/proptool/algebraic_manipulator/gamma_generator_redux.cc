@@ -133,12 +133,11 @@ bool GammaGeneratorRedux<DataType>::generic_reorderer_different_sector( string r
   gamma_vec_ = final_gamma_vec_;
   bool does_it_contribute = ( gamma_vec_->size() > 0 );
 
+//  if ( does_it_contribute ) 
+//    for ( auto& gint : *gamma_vec_ )
+//      print_gamma_intermediate( gint );
+
   int kk = 0;
-  if ( does_it_contribute ) 
-    for ( auto& gint : *gamma_vec_ )
-      print_gamma_intermediate( gint );
-
-
   if ( final_reordering && does_it_contribute ) { 
     while ( kk != gamma_vec_->size()){
       add_Acontrib_to_map( kk, bra_name_, ket_name_ );
@@ -419,7 +418,7 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::swap( int ii, int jj, int kk ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGeneratorRedux<DataType>::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
+//  cout << "GammaGeneratorRedux<DataType>::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
 
   shared_ptr<GammaIntermediateRedux<DataType>> gint =  gamma_vec_->at(kk); 
 
@@ -522,7 +521,7 @@ template<typename DataType>
 void GammaGeneratorRedux<DataType>::set_standardized_alt_order_unranged ( shared_ptr<GammaIntermediateRedux<DataType>>& gint,
                                                                           vector<int>& standard_alt_order ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "GammaGenerator::set_standardized_alt_order_unranged" << endl;
+//  cout << "GammaGenerator::set_standardized_alt_order_unranged" << endl;
   // TODO this should use standardized ordering 
 
   shared_ptr<vector<int>>           ids_pos = gint->ids_pos_;

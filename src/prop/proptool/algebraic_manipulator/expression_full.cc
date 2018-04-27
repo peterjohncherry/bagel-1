@@ -16,7 +16,6 @@ void Expression_Full<DataType>::generate_algebraic_task_list(){
   required_blocks_ = make_shared<set<string>>();
   for ( BraKet<DataType>& braket : *braket_list_ )
     braket.generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_, required_blocks_, CTP_map_ );
-   
  
   this->get_gamma_Atensor_contraction_list();
 }
@@ -37,8 +36,6 @@ void Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
 
       auto ACompute_list_loc = ACompute_map_->find(cmtp_name);
       if ( ACompute_list_loc != ACompute_map_->end() ){
-        cout << "Expression::get_gamma_Atensor_contraction_list::already built compute list for " << cmtp_name << " during generation of earlier compute list" << endl;
-        cout << cmtp_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(cmtp_name)->size() << "  --- Still in if " << endl;
         continue;
       } else {
         ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
