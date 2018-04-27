@@ -5,85 +5,28 @@
 using namespace std;
 using namespace WickUtils;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-BraKet<DataType>::BraKet( std::shared_ptr<MultiOp_Info> multiop_info, 
-                          std::pair<DataType, DataType> ReIm_factors, int bra_num, int ket_num,  std::string type) :
-                          multiop_info_(multiop_info), ReIm_factors_(ReIm_factors), bra_num_(bra_num), ket_num_(ket_num),
+BraKet_Base::BraKet_Base( std::shared_ptr<MultiOp_Info> multiop_info, 
+                          std::pair<double, double> factor, int bra_num, int ket_num,  std::string type) :
+                          multiop_info_(multiop_info), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
                           type_(type) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "BraKet::BraKet" << endl;
+  cout << "BraKet_Base::BraKet_Base" << endl;
 
   if (type_[0] == 'c' ) {
     name_ = "c_{I}"; 
   } else {
     name_ = ""; 
   }
-
   name_ += "<" + std::to_string(bra_num)+ "| ";   name_ += multiop_info->name_;   name_ += " |"+ std::to_string(ket_num) + ">";
-
-} 
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-BraKet<DataType>::BraKet( std::vector<std::string>& op_list, std::vector<char>& op_trans_list,
-                          DataType factor, int bra_num, int ket_num, 
-                          std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type) :
-                          op_list_(op_list), op_trans_list_(op_trans_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
-                          op_state_ids_(op_state_ids), type_(type), proj_op_(false) {
+BraKet<DataType>::BraKet( std::shared_ptr<MultiOp_Info> multiop_info, 
+                          std::pair<double, double> factor, int bra_num, int ket_num,  std::string type) :
+                          BraKet_Base( multiop_info, factor, bra_num, ket_num, type) {} 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  assert(false);
-  cout << "BraKet::BraKet" << endl;
 
-  //get state name first
-  string multiop_state_name = "";
-  string multiop_full_name = "";
-  string multiop_name = "";
-  shared_ptr<vector<shared_ptr<vector<int>>>> state_id_list =  make_shared<vector<shared_ptr<vector<int>>>>();
 
-  shared_ptr<vector<shared_ptr<Op_Info>>> multiop_info_list = make_shared<vector<shared_ptr<Op_Info>>>( op_list.size() );
-  vector<shared_ptr<Op_Info>>::iterator mil_it = multiop_info_list->begin();
-
-  for ( int ii = 0 ; ii != op_list_.size(); ii++, mil_it++ ) {
-    string op_state_name = "";
-    op_state_name += op_list_[ii] ;
-    string op_name = op_state_name;
-
-    if (op_state_ids_->at(ii).size() > 0 ) {
-      op_state_name +=  "_{"; 
-      for( int jj = 0; jj != (*op_state_ids_)[ii].size(); jj++ ) {
-        op_state_name += to_string((*op_state_ids_)[ii][jj]); 
-      }
-      op_state_name += "}"; 
-    }
-    string op_full_name = op_state_name;
-
-   if (op_trans_list.size() > 0 ) {
-      op_full_name +=  "^{" + op_trans_list[ii]; op_full_name += "}"; 
-   }
-    *mil_it = make_shared<Op_Info>( op_name, op_state_name, op_full_name,  make_shared<vector<int>> ( (*op_state_ids_)[ii]), op_trans_list[ii] ); 
-
-    multiop_name += op_name;
-    multiop_state_name += op_state_name;
-    multiop_full_name += op_full_name;
-  }
-  
-  if (type_[0] == 'c' )// checking if derivative  
-    name_ = "c_{I}"; 
-
-  // Getting the BraKet name 
-  name_ = "<" + std::to_string(bra_num)+ "| ";   name_ += multiop_full_name;   name_ += " |"+ std::to_string(ket_num) + ">";
-
-  op_order_ = std::vector<int>(op_list.size());
-  iota( op_order_.begin(), op_order_.end(), 0);
-  sort( op_order_.begin(), op_order_.end(), [ &op_list ] ( int i1, int i2) { return (bool)( op_list[i1] < op_list[i2]); });  
-
-  multiop_info_ = make_shared<MultiOp_Info>(multiop_name, multiop_state_name, multiop_full_name, multiop_info_list, op_order_ );  
-
-  WickUtils::print_vector( op_list, "op_list" ); std::cout << std::endl; 
-  WickUtils::print_vector( op_order_, "op_order" ); std::cout << std::endl; 
-  
-  projected_bra_ = false;
-  projected_ket_ = false;
-} 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Following restructuing this class is starting to look more redundant, however I think it is still useful for
 //merging, symmetry checking and sparsity. As well as controlling the reordering 

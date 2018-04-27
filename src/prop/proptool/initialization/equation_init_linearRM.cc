@@ -132,7 +132,7 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
               }
             }
          
-            braket_list.push_back(BraKet<DataType>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
+        //    braket_list.push_back(BraKet<DataType>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
           } 
     
         } while( fvec_cycle_skipper( fvec, maxs, mins ) );
@@ -247,7 +247,7 @@ void Equation_Init_LinearRM<DataType>::initialize_all_terms() {
             }
           }
         
-          braket_list.push_back(BraKet<DataType>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
+//          braket_list.push_back(BraKet<DataType>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
         } 
         
         vector<pair<string,int>> fixed_id_vals; 

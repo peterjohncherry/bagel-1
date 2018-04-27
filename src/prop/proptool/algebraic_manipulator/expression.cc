@@ -26,8 +26,13 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
   name_ = "";
   cout << "braket_list_->size() = " << braket_list_->size() << endl;
   for ( BraKet<DataType>& bk : *braket_list_ ) {
-    if (bk.factor() != 0.0 )
-      name_ += "(" + to_string(abs(bk.factor())) + ")" + bk.name() + " + ";
+    if ( bk.factor_.first != 0.0 )
+      name_ += "(" + to_string( bk.factor_.first) ; 
+    if ( bk.factor_.second != 0.0 ) {
+      name_ += " ," + to_string( bk.factor_.second) +  ")" + bk.name() + " + ";
+    } else { 
+      name_ += ") + ";
+    } 
   }
   name_.pop_back();
   name_.pop_back();

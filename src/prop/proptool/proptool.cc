@@ -477,13 +477,9 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
       braket_list->push_back( BraKet_Init( bk_ops, bra_index, bra_index_ptr, ket_index, ket_index_ptr ));
     }
    
-    shared_ptr<Term_Init> new_term; 
-    if ( term_type == "orb_exc_deriv" ) {
-      string proj_op_name = term_inp->get<string>( "projection op" , "X" );
-      new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map, proj_op_name );  
-    } else { 
-      new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map );  
-    }
+    shared_ptr<Term_Init>  new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map); 
+    if ( term_type == "orb_exc_deriv" ) 
+      new_term->proj_op_name_ = term_inp->get<string>( "target op" , "X" );
 
     term_init_map_->emplace( term_name, new_term );
   }

@@ -11,7 +11,7 @@ GammaGeneratorRedux<DataType>::GammaGeneratorRedux( shared_ptr<StatesInfo<DataTy
                                                     shared_ptr<TensOp_Base> total_op,
                                                     shared_ptr<map<string, shared_ptr<GammaInfo<DataType>>>>& Gamma_map_in,
                                                     shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo<DataType>> >>>>& G_to_A_map_in,
-                                                    DataType bk_factor                                                           ):
+                                                    pair<double,double> bk_factor                                                           ):
                                                     target_states_(target_states),
                                                     Bra_names_(target_states_->civec_names( Bra_num )),
                                                     Ket_names_(target_states_->civec_names( Ket_num )),
@@ -66,7 +66,7 @@ void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info
 
   shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
   
-  pair<DataType, DataType>  factors = block_info->factors();
+  pair< double, double >  factors = block_info->factors();
   cout << "factors = (" << factors.first << "," << factors.second << ")" << endl;
 
   gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediateRedux<DataType>>>>( 1, make_shared<GammaIntermediateRedux<DataType>>( ids_pos, deltas_pos, factors ) );
@@ -382,7 +382,10 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
 
   //TODO do this reordering w.r.t. standardized orders DQ : Is this ok? 
   vector<int> Aid_order_new = get_Aid_order( standardized_ids_pos );
-  pair<DataType,DataType> new_fac = make_pair( bk_factor_*gint->factors_.first , bk_factor_*gint->factors_.second );  
+  pair<double,double> new_fac = bk_factor_; 
+  pair_fac_mult( gint->factors_, new_fac );
+
+  pair<DataType, DataType > new_factor_tmp = make_pair( (DataType)new_fac.first,  (DataType)new_fac.second );
 
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
@@ -393,14 +396,14 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
     shared_ptr<AContribInfo<DataType>> AInfo = AInfo_loc->second;
     for ( int qq = 0 ; qq != AInfo->id_orders().size(); qq++ ) {
       if( Aid_order_new == AInfo->id_order(qq) ){
-        AInfo->combine_factors( qq, new_fac );
+        AInfo->combine_factors( qq, new_factor_tmp );
         AInfo->remaining_uses_ += 1;
         AInfo->total_uses_ += 1;
         break;
 
       } else if ( qq == AInfo->id_orders().size()-1) {
         AInfo->add_id_order(Aid_order_new);
-        AInfo->add_factor(new_fac);
+        AInfo->add_factor(new_factor_tmp);
       }
     }
   }

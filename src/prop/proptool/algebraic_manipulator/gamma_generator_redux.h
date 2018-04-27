@@ -16,11 +16,11 @@ class GammaIntermediateRedux {
    public :
      std::shared_ptr<std::vector<int>> ids_pos_;
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_;
-     std::pair<DataType,DataType> factors_;
+     std::pair<double,double> factors_;
 
      GammaIntermediateRedux( std::shared_ptr<std::vector<int>> ids_pos,
                              std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos,
-                             std::pair<DataType,DataType> factors ) :
+                             std::pair<double,double> factors ) :
      ids_pos_(ids_pos), deltas_pos_(deltas_pos), factors_(factors) {};
 
      ~GammaIntermediateRedux(){};
@@ -64,7 +64,7 @@ class GammaGeneratorRedux{
 
     std::shared_ptr<TensOp_Base> total_op_;
 
-    DataType bk_factor_;
+    std::pair<double,double> bk_factor_;
     int orig_aops_half_size_;
 
     std::vector<int> standard_order_;
@@ -98,7 +98,7 @@ class GammaGeneratorRedux{
                                    std::shared_ptr<TensOp_Base> multitensop, 
                                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo<DataType>>>>& Gamma_map_in,
                                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo<DataType>>  >>>>& G_to_A_map_in,
-                                   DataType bk_factor );
+                                   std::pair<double,double> bk_factor );
 
     ~GammaGeneratorRedux<DataType>(){};
 

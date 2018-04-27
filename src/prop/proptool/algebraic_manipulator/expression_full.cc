@@ -26,11 +26,6 @@ void Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression_Full::get_gamma_Atensor_contraction_list" << endl;
 
-//  cout << "entire CTP map" << endl;
-//  for ( auto  elem :  *CTP_map_ ) 
-//    cout << elem.first << endl;
-  
-
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto G2A_mapit = G_to_A_map_->begin(); G2A_mapit != G_to_A_map_->end(); G2A_mapit++) {
     auto A_map = G2A_mapit->second;

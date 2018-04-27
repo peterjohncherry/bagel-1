@@ -175,27 +175,11 @@ class Term_Init {
                std::shared_ptr<std::map<std::string, int>> idx_val_map) :
                name_(name), type_(type), braket_list_(braket_list), braket_factors_(braket_factors),
                idx_val_map_(idx_val_map) {
-             
+            
+               std::cout << "Term_Init type = " << type_ << std::endl;               
                if ( type_.substr(0,2) == "or" )
                  orbital_projector_ = true;
 
-               alg_name_ = "";
-               for ( int ii =0 ; ii != braket_factors_->size(); ii++ )
-                 alg_name_ += "(" + braket_factors_->at(ii) + ")" + braket_list->at(ii).name_ + " + ";
-               alg_name_.pop_back();
-               std::cout << "======================= New Term =======================" << std::endl;
-               std::cout << alg_name_ << std::endl << std::endl;
-               };
-    
-    // second variation of initialization for terms with orbital projector
-    Term_Init( std::string name, std::string type,
-               std::shared_ptr<std::vector<BraKet_Init>> braket_list,
-               std::shared_ptr<std::vector<std::string>> braket_factors,
-               std::shared_ptr<std::map<std::string, int>> idx_val_map,
-               std::string proj_op_name ) :
-               name_(name), type_(type), braket_list_(braket_list), braket_factors_(braket_factors),
-               idx_val_map_(idx_val_map), orbital_projector_(true), proj_op_name_(proj_op_name)  {
-             
                alg_name_ = "";
                for ( int ii =0 ; ii != braket_factors_->size(); ii++ )
                  alg_name_ += "(" + braket_factors_->at(ii) + ")" + braket_list->at(ii).name_ + " + ";
