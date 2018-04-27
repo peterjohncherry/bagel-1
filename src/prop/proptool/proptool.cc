@@ -328,10 +328,12 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
      
     string term_name = term_info->get<string>( "term" );
     string term_factor = term_info->get<string>( "factor" );
-    shared_ptr<Term_Init> new_term_init = term_init_map_->at(term_name);
-
-    if ( new_term_init->orbital_projector_ )
+    string term_type = term_info->get<string>( "type" );
+    
+    if (term_type[0] == 'o' )
       expression_type = "orb_excitation_derivative"; 
+
+    shared_ptr<Term_Init> new_term_init = term_init_map_->at(term_name);
 
     term_list->push_back(make_pair(term_factor, new_term_init));
 
@@ -340,7 +342,6 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
     for (auto& index_info : *indexes_ptree){
       string id_name = index_info->get<string>("name"); 
       string id_range = index_info->get<string>("range");
-       
       bool   id_sum =  index_info->get<bool>("sum", false );
       term_idrange_map->emplace( id_name, make_pair(id_sum, id_range));
     }
@@ -368,40 +369,38 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   string eqn_target = equation_inp->get<string>( "target" );
   auto target_indices = make_shared<vector<string>>(0);
   auto ti_ptree = equation_inp->get_child("target indexes"); // Must solve for all "target" with these indices
-  
-  for (auto& si : *ti_ptree) 
+
+  for (auto& si : *ti_ptree)
     target_indices->push_back( lexical_cast<string>(si->data()));
-  
+
   auto term_list = make_shared<vector<pair<string,shared_ptr<Term_Init>>>>();
   auto term_idrange_map_list = make_shared<vector<shared_ptr<map<string,pair<bool,string>>>>>();
   auto expressions_inp = equation_inp->get_child( "expression" );
-  auto expression_init_list  = make_shared<vector<shared_ptr<Expression_Init>>>(); 
+  auto expression_init_list  = make_shared<vector<shared_ptr<Expression_Init>>>();
   string expression_type = "full";
-  for ( auto& expression_def : *expressions_inp ) { 
+  for ( auto& expression_def : *expressions_inp ) {
     for ( auto& term_info : *expression_def) {
   
       string term_name = term_info->get<string>( "term" );
       string term_factor = term_info->get<string>( "factor" );
       cout << "term_name = " << term_name << endl;
-      
-      shared_ptr<Term_Init> term_init = term_init_map_->at(term_name); 
+
+      shared_ptr<Term_Init> term_init = term_init_map_->at(term_name);
       if ( term_init->orbital_projector_ )
-        expression_type = "orb_excitation_derivative"; 
-      term_list->push_back(make_pair(term_factor, term_init ));
-      
+        expression_type = "orb_excitation_derivative";
+
+      term_list->push_back( make_pair(term_factor, term_init ) );
       auto term_idrange_map = make_shared<map<string, pair<bool,string>>>();
-      auto indexes_ptree =  term_info->get_child("indexes"); 
+      auto indexes_ptree =  term_info->get_child("indexes");
       for (auto& index_info : *indexes_ptree){
-        string id_name = index_info->get<string>("name"); 
+        string id_name = index_info->get<string>("name");
         string id_range = index_info->get<string>("range");
-         
+
         bool   id_sum =  index_info->get<bool>("sum", false );
         term_idrange_map->emplace( id_name, make_pair(id_sum, id_range));
       }
-      
       term_idrange_map->emplace( "none" , make_pair( false, "none" ) ); // TODO sort a better way of dealing with this case 
       term_idrange_map_list->push_back( term_idrange_map );     
-      
     }
     //TODO clean up these classes, names are confusing; initialization is badly scrambled due to changes in how to deal with indexes and varying term
     //     types in the expression_computer. 
@@ -479,7 +478,7 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
     }
    
     shared_ptr<Term_Init> new_term; 
-    if ( term_type == "orbital projector" ) {
+    if ( term_type == "orb_exc_deriv" ) {
       string proj_op_name = term_inp->get<string>( "projection op" , "X" );
       new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map, proj_op_name );  
     } else { 

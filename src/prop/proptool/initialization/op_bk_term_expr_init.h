@@ -174,8 +174,11 @@ class Term_Init {
                std::shared_ptr<std::vector<std::string>> braket_factors,
                std::shared_ptr<std::map<std::string, int>> idx_val_map) :
                name_(name), type_(type), braket_list_(braket_list), braket_factors_(braket_factors),
-               idx_val_map_(idx_val_map), orbital_projector_(false) {
+               idx_val_map_(idx_val_map) {
              
+               if ( type_.substr(0,2) == "or" )
+                 orbital_projector_ = true;
+
                alg_name_ = "";
                for ( int ii =0 ; ii != braket_factors_->size(); ii++ )
                  alg_name_ += "(" + braket_factors_->at(ii) + ")" + braket_list->at(ii).name_ + " + ";

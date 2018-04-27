@@ -48,24 +48,27 @@ void Equation_Base<DataType>::add_expression( string expression_name ) {
  
   shared_ptr<vector<pair<DataType, string>>> term_name_list = expression_term_map_->at(expression_name);
   cout << "term_name_list->at(0).second = "; cout.flush(); cout << (*term_name_list)[0].second << endl;
-  shared_ptr<vector<BraKet<DataType>>> bk_list = term_braket_map_->at( (*term_name_list)[0].second ); //term_info.second);
+  shared_ptr<vector<BraKet<DataType>>> bk_list = term_braket_map_->at( (*term_name_list)[0].second );
 
   for ( int ii = 1; ii != term_name_list->size(); ii++ ){
-    shared_ptr<vector<BraKet<DataType>>> term_bk_list = term_braket_map_->at( term_name_list->at(ii).second ); //term_info.second);
-    for ( BraKet<DataType> bk :  *term_bk_list ) 
+    shared_ptr<vector<BraKet<DataType>>> term_bk_list = term_braket_map_->at( term_name_list->at(ii).second );
+    for ( BraKet<DataType> bk : *term_bk_list ) 
       bk_list->push_back(bk);
   }
   
   string expression_type = add_expression_info( bk_list ) ;
 
   cout << "making expression" << endl;
-  if ( expression_type == "orbital_excitation_derivative"  ) {
+  if ( expression_type == "orbital_excitation_derivative" || expression_type == "op_deriv" ) {
     cout << "expression_type = " << expression_type <<  endl;
+
     shared_ptr<Expression_Orb_Exc_Deriv<DataType>>  new_exp = make_shared<Expression_Orb_Exc_Deriv<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type );
     new_exp->generate_algebraic_task_list();
     expression_map_->emplace( expression_name, new_exp);
+
   } else  if ( expression_type == "full"  ) {
     cout << "expression_type = " << expression_type <<  endl;
+
     shared_ptr<Expression_Full<DataType>>  new_exp = make_shared<Expression_Full<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type );
     new_exp->generate_algebraic_task_list();
     expression_map_->emplace( expression_name, new_exp );
@@ -89,8 +92,6 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
   //TODO get these quantities from input 
   bool spinfree = false;
   string expression_type = "full";
-
-//  shared_ptr< vector<pair<string, DataType>> > braKet_name_list = make_shared<vector<pair< string, DataType >>>(0);
 
   for ( BraKet<DataType>& braket_info : *expr_bk_list ) {
 
