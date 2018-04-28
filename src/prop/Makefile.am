@@ -9,7 +9,9 @@ proptool/algebraic_manipulator/equation.cc proptool/algebraic_manipulator/equati
 proptool/algebraic_manipulator/braket.cc proptool/algebraic_manipulator/tensop.cc \
 proptool/algebraic_manipulator/ctrtensop.cc proptool/algebraic_manipulator/expression.cc \
 proptool/algebraic_manipulator/expression_full.cc proptool/algebraic_manipulator/expression_orb_exc_deriv.cc \
-proptool/algebraic_manipulator/gamma_info.cc proptool/algebraic_manipulator/gamma_generator_redux.cc \
+proptool/algebraic_manipulator/gamma_info.cc proptool/algebraic_manipulator/gamma_generator_base.cc \
+proptool/algebraic_manipulator/gamma_generator_redux.cc \
+proptool/algebraic_manipulator/gamma_generator_orb_exc_deriv.cc \
 proptool/algebraic_manipulator/symmetry_operations.cc proptool/algebraic_manipulator/system_info.cc proptool/algebraic_manipulator/range_block_info.cc \
 proptool/algebraic_manipulator/constraints.cc \
 \

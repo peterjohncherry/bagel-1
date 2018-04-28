@@ -11,7 +11,7 @@ using namespace WickUtils;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-Gamma_Computer<DataType>::Gamma_Computer( shared_ptr< map< string, shared_ptr<GammaInfo<DataType>>>>          Gamma_info_map_in,
+Gamma_Computer<DataType>::Gamma_Computer( shared_ptr< map< string, shared_ptr<GammaInfo_Base>>>          Gamma_info_map_in,
                                                 shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>>    CIvec_data_map_in,
                                                 shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>>    sigma_data_map,
                                                 shared_ptr< map< string, shared_ptr<Tensor_<DataType>>>>    gamma_data_map,
@@ -52,7 +52,7 @@ void Gamma_Computer<DataType>::get_gamma_tensor( string gamma_name ) {
 
   } else { 
     
-    shared_ptr<GammaInfo<DataType>> gamma_info = Gamma_info_map->at(gamma_name) ;
+    shared_ptr<GammaInfo_Base> gamma_info = Gamma_info_map->at(gamma_name) ;
     int order = gamma_info->order();
     if ( order == 2 ) { 
       build_gamma2_tensor( gamma_info );
@@ -68,7 +68,7 @@ void Gamma_Computer<DataType>::get_gamma_tensor( string gamma_name ) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer<DataType>::build_gamma2_tensor( shared_ptr<GammaInfo<DataType>> gamma2_info )  {
+void Gamma_Computer<DataType>::build_gamma2_tensor( shared_ptr<GammaInfo_Base> gamma2_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "Gamma_Computer::build_gamma2_tensor : " << gamma2_info->name() << endl;
   
@@ -89,7 +89,7 @@ cout << "Gamma_Computer::build_gamma2_tensor : " << gamma2_info->name() << endl;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer<DataType>::build_sigma2_tensor( shared_ptr<GammaInfo<DataType>> gamma2_info )  {
+void Gamma_Computer<DataType>::build_sigma2_tensor( shared_ptr<GammaInfo_Base> gamma2_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Gamma_Computer::build_sigma2_tensor : " << gamma2_info->sigma_name() << endl;
  
@@ -159,7 +159,7 @@ void Gamma_Computer<DataType>::build_sigma2_tensor( shared_ptr<GammaInfo<DataTyp
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer<DataType>::build_gammaN_tensor(shared_ptr<GammaInfo<DataType>> gammaN_info )  {
+void Gamma_Computer<DataType>::build_gammaN_tensor(shared_ptr<GammaInfo_Base> gammaN_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "Gamma_Computer::build_gammaN_tensor" << endl;
   
@@ -180,7 +180,7 @@ void Gamma_Computer<DataType>::build_gammaN_tensor(shared_ptr<GammaInfo<DataType
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer<DataType>::build_sigmaN_tensor( shared_ptr<GammaInfo<DataType>> gammaN_info )  {
+void Gamma_Computer<DataType>::build_sigmaN_tensor( shared_ptr<GammaInfo_Base> gammaN_info )  {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // sn  :  sigmaN   ,  ps : prev_sigma    
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +199,7 @@ void Gamma_Computer<DataType>::build_sigmaN_tensor( shared_ptr<GammaInfo<DataTyp
   sigma_data_map_->emplace( sigmaN_name , sigmaN );
 
   shared_ptr<Tensor_<DataType>> prev_sigma = sigma_data_map_->at( prev_sigma_name );
-  shared_ptr<GammaInfo<DataType>>       prev_gamma_info = Gamma_info_map->at( gammaN_info->prev_gamma_name() );
+  shared_ptr<GammaInfo_Base>       prev_gamma_info = Gamma_info_map->at( gammaN_info->prev_gamma_name() );
 
   shared_ptr<vector<IndexRange>>  ranges_ps = Get_Bagel_IndexRanges( prev_gamma_info->sigma_id_ranges() ) ;
   shared_ptr<vector<vector<int>>> block_offsets_ps = get_block_offsets( *ranges_ps ) ;
@@ -453,13 +453,13 @@ bool Gamma_Computer<DataType>::gamma_4idx_contract_test( string gamma_name ) {
 // Consistency tests for building up gamma 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-bool Gamma_Computer<DataType>::build_sigma_4idx_tensor_tests(shared_ptr<GammaInfo<DataType>> gamma_4idx_info ) { 
+bool Gamma_Computer<DataType>::build_sigma_4idx_tensor_tests(shared_ptr<GammaInfo_Base> gamma_4idx_info ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   bool passed = true;
 
-  shared_ptr<GammaInfo<DataType>> sigma_2idx_KJ_info = Gamma_info_map->at( gamma_4idx_info->prev_gammas(1) );
-  shared_ptr<GammaInfo<DataType>> sigma_2idx_IK_info = Gamma_info_map->at( gamma_4idx_info->prev_gammas(0) );
+  shared_ptr<GammaInfo_Base> sigma_2idx_KJ_info = Gamma_info_map->at( gamma_4idx_info->prev_gammas(1) );
+  shared_ptr<GammaInfo_Base> sigma_2idx_IK_info = Gamma_info_map->at( gamma_4idx_info->prev_gammas(0) );
 
   string IJ_Bra_name = gamma_4idx_info->Bra_info()->name();
   string IJ_Ket_name = gamma_4idx_info->Ket_info()->name();
@@ -486,7 +486,7 @@ bool Gamma_Computer<DataType>::build_sigma_4idx_tensor_tests(shared_ptr<GammaInf
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer<DataType>::build_detspace(shared_ptr<CIVecInfo<DataType>>  Psi_info ) {
+void Gamma_Computer<DataType>::build_detspace(shared_ptr<CIVecInfo_Base> Psi_info ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
    if (Determinants_map_new->find( Psi_info->name() ) ==  Determinants_map_new->end() ) 

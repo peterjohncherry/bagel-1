@@ -7,22 +7,21 @@
 
 using namespace WickUtils;
 
-template< typename DataType> 
-class GammaInfo {
+class GammaInfo_Base {
 
-   private :
+   protected :
      int order_ ;
 
      //Follows convention : <I | i j | K > < K | .........| J >
-     std::shared_ptr<CIVecInfo<DataType>> Bra_info_;      // < I |
-     std::shared_ptr<CIVecInfo<DataType>> Ket_info_;      // | J >
-     std::shared_ptr<CIVecInfo<DataType>> prev_Bra_info_; // < K |
+     std::shared_ptr<CIVecInfo_Base> Bra_info_;      // < I |
+     std::shared_ptr<CIVecInfo_Base> Ket_info_;      // | J >
+     std::shared_ptr<CIVecInfo_Base> prev_Bra_info_; // < K |
 
      std::shared_ptr<std::vector<std::string>> id_ranges_ ;
      std::shared_ptr<std::vector<std::string>> sigma_id_ranges_ ;
 
      std::shared_ptr<std::vector<bool>> aops_ ;
-     std::pair<DataType, DataType> factor_ ;
+     std::pair<double, double> factor_ ;
 
      std::string name_;
      std::string sigma_name_;
@@ -31,11 +30,8 @@ class GammaInfo {
      std::vector<std::string> prev_sigmas_;
 
    public :
-     GammaInfo( std::shared_ptr<CIVecInfo<DataType>> Bra_info, std::shared_ptr<CIVecInfo<DataType>> Ket_info,
-                std::shared_ptr<const std::vector<bool>> full_aops_vec, std::shared_ptr<const std::vector<std::string>> full_idx_ranges,
-                std::shared_ptr<std::vector<int>> idxs_pos, std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo<DataType>>>>& Gamma_map_in );
-     GammaInfo(){};
-    ~GammaInfo(){};
+     GammaInfo_Base(){};
+    ~GammaInfo_Base(){};
 
      int order() { return order_ ; };
 
@@ -57,9 +53,9 @@ class GammaInfo {
      std::string Ket_name() { return Ket_info_->name(); };
      std::string Prev_Bra_name() { return prev_Bra_info_->name(); };
 
-     std::shared_ptr<CIVecInfo<DataType>> Bra_info() {return  Bra_info_; };
-     std::shared_ptr<CIVecInfo<DataType>> prev_Bra_info(){ return prev_Bra_info_; };
-     std::shared_ptr<CIVecInfo<DataType>> Ket_info() { return Ket_info_; };
+     std::shared_ptr<CIVecInfo_Base> Bra_info() {return  Bra_info_; };
+     std::shared_ptr<CIVecInfo_Base> prev_Bra_info(){ return prev_Bra_info_; };
+     std::shared_ptr<CIVecInfo_Base> Ket_info() { return Ket_info_; };
 
      int Bra_nalpha() const {return  Bra_info_->nalpha(); };
      int prev_Bra_nalpha() const { return prev_Bra_info_->nalpha(); };
@@ -68,6 +64,19 @@ class GammaInfo {
      int Bra_nbeta() const {return  Bra_info_->nbeta(); };
      int prev_Bra_nbeta() const { return prev_Bra_info_->nbeta(); };
      int Ket_nbeta() const { return Ket_info_->nbeta(); };
+
+};
+
+
+template< typename DataType> 
+class GammaInfo : public GammaInfo_Base {
+
+   public :
+     GammaInfo( std::shared_ptr<CIVecInfo_Base> Bra_info, std::shared_ptr<CIVecInfo_Base> Ket_info,
+                std::shared_ptr<const std::vector<bool>> full_aops_vec, std::shared_ptr<const std::vector<std::string>> full_idx_ranges,
+                std::shared_ptr<std::vector<int>> idxs_pos, std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>>& Gamma_map_in );
+     GammaInfo(){};
+    ~GammaInfo(){};
 
 };
 

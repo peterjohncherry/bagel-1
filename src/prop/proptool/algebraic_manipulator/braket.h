@@ -18,7 +18,6 @@ class BraKet_Base{
     int ket_num_;
     std::string type_ ; // full, orb, ci 
     std::string multiop_name_;
-    std::string target_op_;        
     bool proj_op_;        
     bool projected_bra_;
     bool projected_ket_;
@@ -45,28 +44,35 @@ class BraKet_Base{
     std::shared_ptr<std::vector<char>> op_trans_list(){ return multiop_info_->transformations_; };
     std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> op_state_ids() { return multiop_info_->state_ids_; };
 
+    void print_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> G_to_A_map, bool has_orb_exc );
+
+    virtual void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<TensOp_Base>>> MT_map,                
+                                                      std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> G_to_A_map,
+                                                      std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,
+                                                      std::shared_ptr<StatesInfo_Base> target_states,
+                                                      std::shared_ptr<std::set<std::string>> required_blocks,
+                                                      std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map ) { assert(false); } 
+ 
     virtual std::string target_op(){ throw std::logic_error( "No operator is defined unless OrbExcDeriv" ); return "!!!";  }
 
 };
 
 template<typename DataType> 
-class BraKet : public BraKet_Base {
+class BraKet_Full : public BraKet_Base {
 
   public :
 
-    BraKet( std::shared_ptr<MultiOp_Info> multiop_info, std::pair<double,double> factor, int bra_num, int ket_num, std::string type );
-   ~BraKet(){};
+    BraKet_Full( std::shared_ptr<MultiOp_Info> multiop_info, std::pair<double, double> factor, int bra_num, int ket_num,  std::string type) :
+                 BraKet_Base( multiop_info, factor, bra_num, ket_num, type) {} 
+   ~BraKet_Full(){};
 
     void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<TensOp_Base>>> MT_map,                
-                                              std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType>> >>>> G_to_A_map,
-                                              std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo<DataType> >>> gamma_info_map,
-                                              std::shared_ptr<StatesInfo<DataType>> target_states,
+                                              std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> G_to_A_map,
+                                              std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,
+                                              std::shared_ptr<StatesInfo_Base> target_states,
                                               std::shared_ptr<std::set<std::string>> required_blocks,
                                               std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map );         
     
-   void print_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType>> >>>> G_to_A_map,
-                                          bool has_orb_exc );
-
 };
 
 template<typename DataType> 
@@ -74,19 +80,23 @@ class BraKet_OrbExcDeriv : public BraKet_Base {
 
   public :
 
-    BraKet_OrbExcDeriv( std::shared_ptr<MultiOp_Info> multiop_info, std::pair<double,double> factor, int bra_num, int ket_num, std::string type);
+    std::string target_op_;        
+
+    BraKet_OrbExcDeriv( std::shared_ptr<MultiOp_Info> multiop_info, std::pair<double,double> factor, int bra_num, int ket_num, std::string type) :
+                        BraKet_Base( multiop_info, factor, bra_num, ket_num, type) {} 
 
    ~BraKet_OrbExcDeriv(){};
 
-    void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<TensOp_Base>>> MT_map,                
-                                              std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType>> >>>> G_to_A_map,
-                                              std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo<DataType> >>> gamma_info_map,
-                                              std::shared_ptr<StatesInfo<DataType>> target_states,
+    void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string, std::shared_ptr<TensOp_Base>>> MT_map,                
+                                              std::shared_ptr<std::map<std::string,
+                                                              std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> >> block_G_to_A_map,
+                                              std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,
+                                              std::shared_ptr<StatesInfo_Base> target_states,
                                               std::shared_ptr<std::set<std::string>> required_blocks,
-                                              std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map ){};         
+                                              std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map ); 
     
-   void print_gamma_Atensor_contractions(std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType>> >>>> G_to_A_map,
-		                                        bool has_orb_exc ){};
+
+   std::string target_op(){ return target_op_;  }
 
 };
 

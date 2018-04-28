@@ -13,7 +13,7 @@ System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   braket_map_       = make_shared< map <string, shared_ptr<vector<shared_ptr< TensOp::TensOp<DataType>>>>>>();
-  term_braket_map_ = make_shared<map<string, shared_ptr<vector<BraKet<DataType>>>>>();
+  term_braket_map_ = make_shared<map<string, shared_ptr<vector<shared_ptr<BraKet_Base>>>>>();
 
   expression_term_map_ = make_shared<map<string, shared_ptr<vector<pair<DataType, string>>>>>();
   expression_map       = make_shared< map <string, shared_ptr<Expression<DataType>>>>();
@@ -23,7 +23,7 @@ System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info
   MT_map_         = make_shared< map <string, shared_ptr<TensOp_Base>>>();
   CTP_map_        = make_shared< map <string, shared_ptr<CtrTensorPart_Base>>>();
   ACompute_map   = make_shared< map <string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>();
-  Gamma_map      = make_shared< map <string, shared_ptr<GammaInfo<DataType>> > >();
+  Gamma_map      = make_shared< map <string, shared_ptr<GammaInfo_Base> > >();
 
   if (spinfree_ ) { 
     cout << " setting spinfree ranges" << endl;
@@ -66,8 +66,8 @@ System_Info<DataType>::Build_TensOp( string op_name,
                                      shared_ptr<vector<string>> op_idxs,
                                      shared_ptr<vector<bool>> op_aops, 
                                      shared_ptr<vector<vector<string>>> op_idx_ranges,
-                                     std::vector<std::shared_ptr<Transformation>>& symmfuncs,
-                                     std::vector<std::shared_ptr<Constraint>>& constraints,
+                                     vector<shared_ptr<Transformation>>& symmfuncs,
+                                     vector<shared_ptr<Constraint>>& constraints,
                                      DataType factor, string Tsymmetry, bool hconj,  int state_dep  ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
@@ -90,13 +90,13 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
-System_Info<DataType>::create_equation( std::string name, std::string type, 
-                                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
-                                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map, 
-                                        std::shared_ptr<std::map<std::pair< std::string, std::vector<std::pair<std::string, int>>>, 
-                                                                            std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec, 
-                                        std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
-                                                                  std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec ) { 
+System_Info<DataType>::create_equation( string name, string type, 
+                                        shared_ptr<map<string, shared_ptr<vector<shared_ptr<BraKet_Base>>>>>  term_braket_map,
+                                        shared_ptr<map<string, shared_ptr<vector<pair<DataType,string>>>>> expression_term_map, 
+                                        shared_ptr<map<pair< string, vector<pair<string, int>>>, 
+                                                                            shared_ptr<vector<shared_ptr<BraKet_Base>>>>> term_braket_map_state_spec, 
+                                        shared_ptr<map< pair<string, vector<pair<string, int>>>, 
+                                                                  shared_ptr<vector<pair<DataType, string>>>>> expression_term_map_state_spec ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "System_Info<DataType>::System_Info::create_equation" << endl; 
 
@@ -138,9 +138,9 @@ System_Info<DataType>::create_equation( std::string name, std::string type,
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
-System_Info<DataType>::create_equation( std::string name, std::string type, 
-                                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
-                                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map ){ 
+System_Info<DataType>::create_equation( string name, string type, 
+                                        shared_ptr<map<string, shared_ptr<vector<shared_ptr<BraKet_Base>>>>>  term_braket_map,
+                                        shared_ptr<map<string, shared_ptr<vector<pair<DataType,string>>>>> expression_term_map ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "System_Info<DataType>::System_Info::create_equation " << endl; 
 

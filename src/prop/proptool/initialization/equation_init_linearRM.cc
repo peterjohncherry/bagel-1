@@ -108,7 +108,7 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
           expression_term_list = etm_loc->second;
         } 
     
-        vector<BraKet<DataType>> braket_list;
+        vector<shared_ptr<BraKet_Base>> braket_list;
         do {
           int kk = 0 ;
           vector<int>::iterator fvec_it = fvec->begin();
@@ -131,8 +131,14 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
                 bk_info.op_list_->at(jj).get_op_idxs( op_state_ids->at(jj) );
               }
             }
-         
-        //    braket_list.push_back(BraKet<DataType>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
+              
+//            if ( term_init->type_ == "orb" ) {
+//              braket_list.push_back(make_shared<BraKet_OrbExcDeriv<DataType>>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(),
+//                                                                               bk_info.ket_index(), op_state_ids, term_init->type_ ) );
+//            } else ( term_init->type_ == "full" ) {
+//              braket_list.push_back(make_shared<BraKet_Full<DataType>>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(),
+//                                                                        bk_info.ket_index(), op_state_ids, term_init->type_ ) );
+//            }
           } 
     
         } while( fvec_cycle_skipper( fvec, maxs, mins ) );
@@ -154,14 +160,14 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
    
         string term_name;
         int need_new_line = 0; 
-        for ( BraKet<DataType>& bk : braket_list )   
-          term_name  += " " + bk.bk_name() + " +" ;
+        for ( shared_ptr<BraKet_Base>& bk : braket_list )   
+          term_name  += " " + bk->bk_name() + " +" ;
         
         term_name.back()= ' ';
         term_name += state_ids_name;
         cout << endl;
         cout << "term_name = " << term_name << endl;
-        term_braket_map_->emplace( term_name, make_shared<vector<BraKet<DataType>>>(braket_list) ); 
+        term_braket_map_->emplace( term_name, make_shared<vector<shared_ptr<BraKet_Base>>>(braket_list) ); 
         expression_term_list->push_back( make_pair( (DataType)1.0 , term_name) );
          
         expression_term_map_->emplace( term_name , make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name)));
@@ -232,7 +238,7 @@ void Equation_Init_LinearRM<DataType>::initialize_all_terms() {
           fvec_it++;
         }
         
-        vector<BraKet<DataType>> braket_list;
+        vector<shared_ptr<BraKet_Base>> braket_list;
         vector<string>::iterator bk_factors_it = term_init->braket_factors_->begin();
         for ( BraKet_Init bk_info : *(term_init->braket_list_) ) {
           vector<string> bk_op_list(bk_info.op_list_->size());
@@ -247,7 +253,7 @@ void Equation_Init_LinearRM<DataType>::initialize_all_terms() {
             }
           }
         
-//          braket_list.push_back(BraKet<DataType>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
+//          braket_list.push_back(make_shared<BraKet_Base>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
         } 
         
         vector<pair<string,int>> fixed_id_vals; 
@@ -260,7 +266,7 @@ void Equation_Init_LinearRM<DataType>::initialize_all_terms() {
         cout <<  "] " <<  endl;
         sort(fixed_id_vals.begin(), fixed_id_vals.end()); 
     
-        term_braket_map_state_spec_->emplace( make_pair(term_init->name_, fixed_id_vals), make_shared<vector<BraKet<DataType>>>(braket_list) ); 
+        term_braket_map_state_spec_->emplace( make_pair(term_init->name_, fixed_id_vals), make_shared<vector<shared_ptr<BraKet_Base>>>(braket_list) ); 
     
         expression_term_map_state_spec_->emplace( make_pair(term_init->name_, fixed_id_vals), make_shared<vector<pair<DataType, string>>>( 1, make_pair((DataType)1.0, term_init->name_)));
     

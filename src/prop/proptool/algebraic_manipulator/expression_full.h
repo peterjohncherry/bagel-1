@@ -16,23 +16,22 @@ class Expression_Full : public Expression<DataType>   {
      using Expression<DataType>::ACompute_map_;
      using Expression<DataType>::gamma_info_map_;
      using Expression<DataType>::required_blocks_;
-     using Expression<DataType>::target_to_G_to_A_map_; //TODO remove
+//     using Expression<DataType>::target_to_G_to_A_map_; //TODO remove
      using Expression<DataType>::G_to_A_map_;
 
      
-     Expression_Full( std::shared_ptr<std::vector<BraKet<DataType>>> braket_list,
-                      std::shared_ptr<StatesInfo<DataType>> states_info,
+     Expression_Full( std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>> braket_list,
+                      std::shared_ptr<StatesInfo_Base> states_info,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<TensOp_Base>>>  MT_map,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
                       std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>> >>> ACompute_map,
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo<DataType>> > > gamma_info_map,
+                      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base> > > gamma_info_map,
                       std::string expression_type ) :
                       Expression<DataType>( braket_list, states_info, MT_map, CTP_map, ACompute_map, gamma_info_map, expression_type ){};
      ~Expression_Full(){};
              
      void generate_algebraic_task_list(); 
      void get_gamma_Atensor_contraction_list();
-     void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo<DataType>> >>>>  exc_block_G_to_A_map ){ assert(false);};
 };
 
 #endif

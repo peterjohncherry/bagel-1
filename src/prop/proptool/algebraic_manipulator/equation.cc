@@ -5,7 +5,7 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string, std::shared_ptr< Expression<DataType>>>> expression_map,
-                                         shared_ptr< map <string, shared_ptr< GammaInfo<DataType> >>> gamma_info_map,
+                                         shared_ptr< map <string, shared_ptr< GammaInfo_Base >>> gamma_info_map,
                                          shared_ptr< map <string, shared_ptr< vector<shared_ptr<CtrOp_base>>>>> ACompute_map,
                                          shared_ptr< map< string, shared_ptr< TensOp_Base >>> MT_map,
                                          shared_ptr< map< string, shared_ptr< CtrTensorPart_Base>>> CTP_map,
@@ -50,12 +50,12 @@ void Equation_Base<DataType>::add_expression( string expression_name ) {
   cout << "Equation_Base<DataType>::add_Expression : " << expression_name << " hey!" <<  endl;
  
   shared_ptr<vector<pair<DataType, string>>> term_name_list = expression_term_map_->at(expression_name);
-  cout << "term_name_list->at(0).second = "; cout.flush(); cout << (*term_name_list)[0].second << endl;
-  shared_ptr<vector<BraKet<DataType>>> bk_list = term_braket_map_->at( (*term_name_list)[0].second );
 
+  cout << "term_name_list->at(0).second = "; cout.flush(); cout << (*term_name_list)[0].second << endl;
+  shared_ptr<vector<shared_ptr<BraKet_Base>>> bk_list = term_braket_map_->at( (*term_name_list)[0].second );
   for ( int ii = 1; ii != term_name_list->size(); ii++ ){
-    shared_ptr<vector<BraKet<DataType>>> term_bk_list = term_braket_map_->at( term_name_list->at(ii).second );
-    for ( BraKet<DataType> bk : *term_bk_list ) 
+    shared_ptr<vector<shared_ptr<BraKet_Base>>> term_bk_list = term_braket_map_->at( term_name_list->at(ii).second );
+    for ( shared_ptr<BraKet_Base> bk : *term_bk_list ) 
       bk_list->push_back(bk);
   }
   
@@ -86,7 +86,7 @@ void Equation_Base<DataType>::add_expression( string expression_name ) {
 // have double loop, outer for ket state, inner for brastate
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {
+string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<shared_ptr<BraKet_Base>>> expr_bk_list ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Base<DataType>::add_Expression_info  (bk input version)" << endl;
 
@@ -94,15 +94,15 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
 
   //TODO get these quantities from input 
   bool spinfree = false;
-  string expression_type = expr_bk_list->front().type_;
+  string expression_type = expr_bk_list->front()->type_;
   cout << "expression_type =  " <<  expression_type << endl; 
   
 
-  for ( BraKet<DataType>& braket_info : *expr_bk_list ) {
-    if ( braket_info.type_ != expression_type )
-      throw logic_error( " inconsistent term types in expression defintion : " + braket_info.type_ + " != " + expression_type ) ;
+  for ( shared_ptr<BraKet_Base>& braket_info : *expr_bk_list ) {
+    if ( braket_info->type_ != expression_type )
+      throw logic_error( " inconsistent term types in expression defintion : " + braket_info->type_ + " != " + expression_type ) ;
 
-    shared_ptr<vector<shared_ptr<Op_Info>>> op_info_vec = braket_info.multiop_info_->op_info_vec();
+    shared_ptr<vector<shared_ptr<Op_Info>>> op_info_vec = braket_info->multiop_info_->op_info_vec();
 
     for (std::vector<shared_ptr<Op_Info>>::const_iterator oiv_it = op_info_vec->begin(); oiv_it != op_info_vec->end(); oiv_it++ ) {  
 
@@ -126,16 +126,16 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<BraKet<Da
 
     }
 
-    if( MT_map_->find( braket_info.multiop_info_->op_name_ ) == MT_map_->end() ){
-      cout << "could not find MT " << braket_info.multiop_name_ << " in map" <<endl;
+    if( MT_map_->find( braket_info->multiop_info_->op_name_ ) == MT_map_->end() ){
+      cout << "could not find MT " << braket_info->multiop_name_ << " in map" <<endl;
       vector<shared_ptr<TensOp_Base>> tensop_list(op_info_vec->size());
       vector<shared_ptr<TensOp_Base>>::iterator tl_it = tensop_list.begin();
       
       for ( vector<shared_ptr<Op_Info>>::const_iterator oiv_it = op_info_vec->begin(); oiv_it != op_info_vec->end();  oiv_it++, tl_it++ )
         *tl_it = MT_map_->at((*oiv_it)->op_name_); 
 
-      shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info.multiop_info_->op_name_, spinfree, tensop_list, range_prime_map_ );
-      MT_map_->emplace(braket_info.multiop_info_->op_name_, multiop );
+      shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info->multiop_info_->op_name_, spinfree, tensop_list, range_prime_map_ );
+      MT_map_->emplace(braket_info->multiop_info_->op_name_, multiop );
     } 
     
 //    braKet_name_list->push_back( make_pair( braket_info.name(), braket_info.factor_ ) );

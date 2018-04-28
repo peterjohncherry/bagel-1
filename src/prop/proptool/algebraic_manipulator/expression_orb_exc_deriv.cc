@@ -13,21 +13,20 @@ void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list(){
  
   required_blocks_ = make_shared<set<string>>();
 
-  cout << " braket_list_->front().target_op_ = " <<  braket_list_->front().target_op_ << endl;
+  cout << " braket_list_->front().target_op_ = " <<  braket_list_->front()->target_op() << endl;
 
-  auto exc_op = MT_map_->at( braket_list_->front().target_op_ );
-  for ( auto& exc_ctp_map_it : *(exc_op->CTP_map()) ) {
-    string exc_block_name = exc_ctp_map_it.first;
-    auto  exc_block_G_to_A_map = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo<DataType>> >>>>();
-    for ( BraKet<DataType>& braket : *braket_list_ )
-      braket.generate_gamma_Atensor_contractions( MT_map_, exc_block_G_to_A_map, gamma_info_map_, states_info_,  required_blocks_, CTP_map_ );
-    this->get_gamma_Atensor_contraction_list( exc_block_G_to_A_map );
-    target_to_G_to_A_map_->emplace( exc_block_name, exc_block_G_to_A_map);
-  }
+  auto  exc_block_G_to_A_map = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>>();
+  for ( shared_ptr<BraKet_Base>& braket : *braket_list_ )
+    braket->generate_gamma_Atensor_contractions( MT_map_, exc_block_G_to_A_map, gamma_info_map_, states_info_,  required_blocks_, CTP_map_ );
+
+  this->get_gamma_Atensor_contraction_list( exc_block_G_to_A_map );
+//    target_to_G_to_A_map_->emplace( exc_block_name, exc_block_G_to_A_map);
+  
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo<DataType> >>>>> exc_block_G_to_A_map  ){
+void
+Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>> exc_block_G_to_A_map ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression_Orb_Exc_Deriv::get_gamma_Atensor_contraction_list" << endl;
 

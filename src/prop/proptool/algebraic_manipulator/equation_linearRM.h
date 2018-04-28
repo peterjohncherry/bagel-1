@@ -31,10 +31,10 @@ class Equation_LinearRM : public Equation_Base<DataType> {
   public :
                    
     Equation_LinearRM( std::string name, std::string type, std::shared_ptr<StatesInfo<DataType>> states_info, 
-                       std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
+                       std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>>  term_braket_map,
                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map, 
                        std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>,
-                                                      std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec,
+                                                      std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>> term_braket_map_state_spec,
                        std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
                                                  std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec ) 
                     : Equation_Base<DataType>( name, type, states_info, term_braket_map, expression_term_map, term_braket_map_state_spec, expression_term_map_state_spec){ cout << " eqn_lrm" << endl;}  
@@ -43,6 +43,6 @@ class Equation_LinearRM : public Equation_Base<DataType> {
 
     void generate_state_specific_terms(); 
   
-    void add_term( std::pair<std::string, std::vector<std::pair<std::string,int>>>&  new_key, std::shared_ptr<std::vector<BraKet<DataType>>> expr_bk_list );
+    void add_term( std::pair<std::string, std::vector<std::pair<std::string,int>>>&  new_key, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>> expr_bk_list );
 }; 
 #endif

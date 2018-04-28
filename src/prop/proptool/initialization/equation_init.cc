@@ -149,7 +149,7 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
         expression_term_list = etm_loc->second;
       } 
 
-      vector<BraKet<DataType>> braket_list;
+      vector<shared_ptr<BraKet_Base>> braket_list;
       do {
         int kk = 0 ;
         vector<int>::iterator fvec_it = fvec.begin();
@@ -177,15 +177,15 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
           // factor = factor_map_->at(*bk_factors_ita+)
           cout << "term_init->type_ = " << term_init->type_ << endl;
           if (term_init->type_ == "orb" ){
-            BraKet<DataType> new_bk( get_operator_info( bk_op_list, bk_op_trans_list, op_state_ids ), bk_factor_dummy,
-                                                        bk_info.bra_index(), bk_info.ket_index(), term_init->type_);
-            new_bk.target_op_ = term_init->proj_op_name_; 
-            cout << "new_bk.target_op_  = " << new_bk.target_op_  << endl;
+            shared_ptr<BraKet_OrbExcDeriv<DataType>> new_bk = make_shared< BraKet_OrbExcDeriv<DataType>>( get_operator_info( bk_op_list, bk_op_trans_list, op_state_ids ), bk_factor_dummy,
+                                                                                              bk_info.bra_index(), bk_info.ket_index(), term_init->type_);
+            new_bk->target_op_ = term_init->proj_op_name_; 
+            cout << "new_bk.target_op_  = " << new_bk->target_op_  << endl;
             cout << "term_init->proj_op_name_ = " <<  term_init->proj_op_name_ << endl; 
-            new_bk.orb_exc_deriv_ = true;
+            new_bk->orb_exc_deriv_ = true;
             braket_list.push_back( new_bk ) ;
           } else {
-            braket_list.push_back(BraKet<DataType>( get_operator_info( bk_op_list, bk_op_trans_list, op_state_ids ), bk_factor_dummy,
+            braket_list.push_back(make_shared<BraKet_Full<DataType>>( get_operator_info( bk_op_list, bk_op_trans_list, op_state_ids ), bk_factor_dummy,
                                                     bk_info.bra_index(), bk_info.ket_index(), term_init->type_));
           }
 
@@ -208,14 +208,14 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
  
       string term_name;
       int need_new_line = 0; 
-      for ( BraKet<DataType>& bk : braket_list )   
-        term_name  += " " + bk.bk_name() + " +" ;
+      for ( shared_ptr<BraKet_Base>& bk : braket_list )   
+        term_name  += " " + bk->bk_name() + " +" ;
       
       term_name.back()= ' ';
       term_name += state_ids_name;
       cout << endl;
       cout << "term_name = " << term_name << endl;
-      term_braket_map_->emplace( term_name, make_shared<vector<BraKet<DataType>>>(braket_list) ); 
+      term_braket_map_->emplace( term_name, make_shared<vector<shared_ptr<BraKet_Base>>>(braket_list) ); 
       expression_term_list->push_back( make_pair( (DataType)1.0 , term_name) );
        
       expression_term_map_->emplace( term_name , make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );

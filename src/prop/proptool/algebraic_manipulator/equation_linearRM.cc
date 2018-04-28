@@ -48,7 +48,7 @@ cout << " void Equation_LinearRM<DataType>::generate_state_specific_terms() " <<
 template<typename DataType>
 void
 Equation_LinearRM<DataType>::add_term( pair<string, vector<pair<string,int>>>&  new_key,
-                                       shared_ptr<vector<BraKet<DataType>>> expr_bk_list ) {  
+                                       shared_ptr<vector<std::shared_ptr<BraKet_Base>>> expr_bk_list ) {  
 //////////////////////////////////////////////////////////////////////////
 cout << " void Equation_LinearRM<DataType>::add_term" << endl;
 

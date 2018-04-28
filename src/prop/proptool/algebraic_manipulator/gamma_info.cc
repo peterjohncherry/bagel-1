@@ -10,13 +10,17 @@ using namespace WickUtils;
 // prev_Bra_info should be constructed from idxs_pos, full_idxs_ranges, full_aops and Ket.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename  DataType>
-GammaInfo<DataType>::GammaInfo ( shared_ptr<CIVecInfo<DataType>> Bra_info, shared_ptr<CIVecInfo<DataType>> Ket_info,
+GammaInfo<DataType>::GammaInfo ( shared_ptr<CIVecInfo_Base> Bra_info, shared_ptr<CIVecInfo_Base> Ket_info,
                                  shared_ptr<const vector<bool>> full_aops_vec, shared_ptr<const vector<string>> full_idx_ranges,
                                  shared_ptr<vector<int>> idxs_pos  ,
-                                 shared_ptr<map<string, shared_ptr<GammaInfo<DataType>>>>& Gamma_map ) :
-                                 order_(idxs_pos->size()), Bra_info_(Bra_info), Ket_info_(Ket_info) {
+                                 shared_ptr<map<string, shared_ptr<GammaInfo_Base>>>& Gamma_map ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "GammaInfo<DataType>:GammaInfo" << endl;
+// cout << "GammaInfo_Base:GammaInfo" << endl;
+
+  order_ = idxs_pos->size();
+  Bra_info_ = Bra_info; 
+  Ket_info_ = Ket_info; 
+
   id_ranges_ = make_shared<vector<string>>(idxs_pos->size());
   aops_      = make_shared<vector<bool>>(idxs_pos->size());
   for (int ii = 0 ; ii != idxs_pos->size(); ii++ ){

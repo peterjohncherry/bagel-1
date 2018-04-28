@@ -7,12 +7,12 @@ using namespace std;
 //TODO gamma_info_map should be generated outside and not fed in here. It constains _no_ Expression specific information.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_list,
-                                  shared_ptr<StatesInfo<DataType>> states_info,
+Expression<DataType>::Expression( shared_ptr<vector< shared_ptr<BraKet_Base>>> braket_list,
+                                  shared_ptr<StatesInfo_Base> states_info,
                                   shared_ptr<map< string, shared_ptr<TensOp_Base>>>  MT_map,
                                   shared_ptr<map< string, shared_ptr<CtrTensorPart_Base> >>            CTP_map,
                                   shared_ptr<map< string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>     ACompute_map,
-                                  shared_ptr<map< string, shared_ptr<GammaInfo<DataType>> > >                         gamma_info_map,
+                                  shared_ptr<map< string, shared_ptr<GammaInfo_Base> > >                         gamma_info_map,
                                   string expression_type ):
                                   braket_list_(braket_list), states_info_(states_info), MT_map_(MT_map), CTP_map_(CTP_map),
                                   ACompute_map_(ACompute_map), gamma_info_map_(gamma_info_map), type_(expression_type) {
@@ -20,16 +20,16 @@ Expression<DataType>::Expression( shared_ptr<vector< BraKet<DataType>>> braket_l
   cout << "Expression<DataType>::Expression (new constructor) " << endl;
 
   //Note that this G_to_A_map_ is expression specific
-  G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo<DataType> >>>>>();
-  target_to_G_to_A_map_ = make_shared<map<string, shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo<DataType>> > >>> >>();
+    G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>>();
+//  target_to_G_to_A_map_ = make_shared<map<string, shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> > >>> >>();
 
   name_ = "";
   cout << "braket_list_->size() = " << braket_list_->size() << endl;
-  for ( BraKet<DataType>& bk : *braket_list_ ) {
-    if ( bk.factor_.first != 0.0 )
-      name_ += "(" + to_string( bk.factor_.first) ; 
-    if ( bk.factor_.second != 0.0 ) {
-      name_ += " ," + to_string( bk.factor_.second) +  ")" + bk.name() + " + ";
+  for ( shared_ptr<BraKet_Base>& bk : *braket_list_ ) {
+    if ( bk->factor_.first != 0.0 )
+      name_ += "(" + to_string( bk->factor_.first) ; 
+    if ( bk->factor_.second != 0.0 ) {
+      name_ += " ," + to_string( bk->factor_.second) +  ")" + bk->name() + " + ";
     } else { 
       name_ += ") + ";
     } 

@@ -32,7 +32,7 @@ class System_Info {
            
         // key :    Name of Term
         // result : Vector of BraKets corresponding to Term
-        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_;
+        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>> term_braket_map_;
         
         // key :    Name of Expression
         // result : Vector of Terms corresponding to Expression
@@ -63,8 +63,8 @@ class System_Info {
         std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>>>> ACompute_map;
         
         // ket : name of Gamma
-        // result : GammaInfo<DataType>
-        std::shared_ptr< std::map <std::string, std::shared_ptr<GammaInfo<DataType>>>> Gamma_map;
+        // result : GammaInfo_Base
+        std::shared_ptr< std::map <std::string, std::shared_ptr<GammaInfo_Base>>> Gamma_map;
         
         /////CONSTRUCTOR and DESTRUCTOR/////
         System_Info(std::shared_ptr<StatesInfo<DataType>> states_info, bool spinfree);
@@ -84,16 +84,16 @@ class System_Info {
                                                                 DataType factor, std::string Tsymmetry, bool hconj, int state_dependence ) ;
        
         void  create_equation( std::string name, std::string type, 
-                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
+                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>>  term_braket_map,
                                std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map, 
                                std::shared_ptr<std::map<std::pair< std::string, std::vector<std::pair<std::string, int>>>, 
-                                                                   std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec, 
+                                                                   std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>> term_braket_map_state_spec, 
                                std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
                                                          std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec ); 
 
         
         void create_equation( std::string name, std::string type, 
-                              std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>  term_braket_map,
+                              std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>>  term_braket_map,
                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType,std::string>>>>> expression_term_map );
         
         int nalpha(int state_num) { return states_info_->nalpha( state_num ); };
@@ -106,7 +106,7 @@ class System_Info {
         
         std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> braket_map(){return braket_map_;}
            
-        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map(){return term_braket_map_;}
+        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>> term_braket_map(){return term_braket_map_;}
         
         std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map(){ return expression_term_map_;}
         

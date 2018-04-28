@@ -17,7 +17,7 @@ class Expression_Computer {
   private :  
     std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> gamma_computer_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<DataType>>>> expression_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo<DataType>>>> Gamma_info_map;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> Gamma_info_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
 
@@ -42,7 +42,7 @@ class Expression_Computer {
 
     void print_AContraction_list(std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>> ACompute_list, std::string A_Contrib_name );
 
-    bool check_AContrib_factors(AContribInfo<DataType>& AC_info );
+    bool check_AContrib_factors(AContribInfo_Base& AC_info );
    
     void set_gamma_maps( std::string expression_name,
                          std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map,
