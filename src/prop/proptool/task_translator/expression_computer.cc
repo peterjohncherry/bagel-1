@@ -82,8 +82,8 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
     A_combined_data->allocate();
     A_combined_data->zero(); 
  
-    auto A_contrib_loc = expression->G_to_A_map_->find( gamma_name );
-    if ( (A_contrib_loc != expression->G_to_A_map_->end()) &&  (A_contrib_loc->second->size() != 0) ) {
+    auto A_contrib_loc = expression->G_to_A_map()->find( gamma_name );
+    if ( (A_contrib_loc != expression->G_to_A_map()->end()) &&  (A_contrib_loc->second->size() != 0) ) {
       for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
       
         string  A_contrib_name = A_contrib_map_elem.first;    
@@ -192,8 +192,8 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     A_combined_data->zero(); 
  
     // Loop through A-tensors needed for this gamma
-    auto A_contrib_loc = expression->G_to_A_map_->find( gamma_name );
-    if ( (A_contrib_loc != expression->G_to_A_map_->end()) &&  (A_contrib_loc->second->size() != 0) ) {
+    auto A_contrib_loc = expression->G_to_A_map()->find( gamma_name );
+    if ( (A_contrib_loc != expression->G_to_A_map()->end()) &&  (A_contrib_loc->second->size() != 0) ) {
       for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
       
         string  A_contrib_name = A_contrib_map_elem.first;    

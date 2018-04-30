@@ -40,22 +40,13 @@ void System_Computer::System_Computer<DataType>::build_equation_computer(std::st
 
   shared_ptr<Equation_Base<DataType>> equation_basic = system_info_->equation_map_->at(equation_name);
 
-//  for ( auto& tmap_it : equation_basic->T_map() ){ 
-//    shared_ptr<set<string>> required_blocks = tmap_it->second->required_blocks() 
-//    for ( string block_name : *required_blocks )
-//      if ( tensop_data_map_->find(block_name) == tensop_data_map_->end() ) 
-//        cout << "REMOVE THIS" << endl;
-//  }
   if ( equation_basic->type()  ==  "Value" ) {
-    //shared_ptr<Equation_Value<DataType>> equation_val = dynamic_pointer_cast<Equation_Value<DataType>>(equation_basic);
     shared_ptr<Equation_Computer_Value<DataType>> equation_computer = make_shared<Equation_Computer_Value<DataType>>( equation_basic, range_conversion_map_ );
     equation_computer->set_computers( b_gamma_computer_ ) ;
     equation_computer->set_maps( gamma_data_map_, tensop_data_map_ );
     equation_computer->build_expression_computer();
     equation_computer->solve_equation();
   
-//  dynamic_pointer_cast<Equation_Base<DataType>>(equation(make_shared<Equation_Computer_Value<DataType>>( equation, range_conversion_map_ )));
-//    equation_computer = dynamic_pointer_cast<Equation_Computer_Base<DataType>>(make_shared<Equation_Computer_Value<DataType>>( equation, range_conversion_map_ ));
   } else if ( equation_basic->type()  ==  "LinearRM" ) {
     cout << " building linear RM computer " << endl;
     auto equation_linearrm = dynamic_pointer_cast<Equation_LinearRM<DataType>>( equation_basic ) ;
@@ -64,7 +55,7 @@ void System_Computer::System_Computer<DataType>::build_equation_computer(std::st
     shared_ptr<Equation_Computer_LinearRM<DataType>> equation_computer = make_shared<Equation_Computer_LinearRM<DataType>>( equation_linearrm, range_conversion_map_ );
     equation_computer->set_computers( b_gamma_computer_ ) ;
     equation_computer->set_maps( gamma_data_map_, tensop_data_map_ );
-    equation_computer->build_expression_computer();
+    equation_computer->build_expression_computer(); // TODO WRONG NAME AND WRONG FUNCTIONALITY
     equation_computer->solve_equation();
    
   } else {
@@ -81,7 +72,7 @@ void System_Computer::System_Computer<DataType>::get_necessary_tensor_blocks( sh
   cout << "Expression_Computer::Expression_Computer<DataType>::set_gamma_maps" << endl;
 
   // Loop through A-tensors needed for this gamma
-  for ( auto& gamma_contribs : *expression->G_to_A_map_ ){
+  for ( auto& gamma_contribs : *(expression->G_to_A_map()) ){
     for ( auto& A_contrib_list : *gamma_contribs.second ){
       auto& A_contrib  = A_contrib_list.second; 
       for ( auto& CTP : *( expression->CTP_map()->at(A_contrib->name())->CTP_vec() ) )

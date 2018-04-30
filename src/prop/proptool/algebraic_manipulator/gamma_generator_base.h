@@ -51,10 +51,6 @@ class GammaGenerator_Base{
     std::shared_ptr<std::map<char,int>> ket_elec_map_;
 
     // key    : name of this gamma
-    // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
-    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo_Base>>> >> G_to_A_map;
-
-    // key    : name of this gamma
     // result : information used here and in compute routines
     std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> Gamma_map;
 
@@ -92,7 +88,6 @@ class GammaGenerator_Base{
     GammaGenerator_Base( std::shared_ptr<StatesInfo_Base> target_states_, int Ket_num, int Bra_num,
                                    std::shared_ptr<TensOp_Base> multitensop, 
                                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo_Base>>>& Gamma_map_in,
-                                   std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo_Base>  >>>>& G_to_A_map_in,
                                    std::pair<double,double> bk_factor );
 
     ~GammaGenerator_Base(){};

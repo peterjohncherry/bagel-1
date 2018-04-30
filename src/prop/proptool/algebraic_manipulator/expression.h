@@ -34,14 +34,6 @@ class Expression {
         // result : gamma_info, also contains sigma info,  includes lists of gammas which must be calculated first.
         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo_Base> > > gamma_info_map_;
         
-        // key: name of gamma (or sigma)
-        // result :  name to a map containing the names of all A-tensors with which it must be contracted, and the relevant factors.
-        std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>> G_to_A_map_; //TODO should be private
-     
-        // key: name of block of target tensor
-        // result :  G_to_A_map for this target tensor block 
-       // std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>>> >> >> target_to_G_to_A_map_; //TODO should be private
-      
         // names of the range blocks of the original input tensors which are needed to compute this expression
         std::shared_ptr<std::set<std::string>> required_blocks_;
 
@@ -54,7 +46,7 @@ class Expression {
                     std::string expression_type );
         ~Expression(){};
         
-        void necessary_tensor_blocks();
+        void necessary_tensor_blocks( std::shared_ptr<std::map< std::string, std::shared_ptr< std::map< std::string, std::shared_ptr<AContribInfo_Base>> >>> G_to_A_map ); 
 
         virtual void get_gamma_Atensor_contraction_list() { assert( false); };
         virtual void generate_algebraic_task_list(){ assert(false); };
@@ -67,7 +59,12 @@ class Expression {
         std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map(){ return  CTP_map_;}
         std::shared_ptr<std::map<std::string,  std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map(){ return  ACompute_map_;}
         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo_Base> > > gamma_info_map(){ return  gamma_info_map_;}
-        std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>> G_to_A_map(){ return  G_to_A_map_;} //TODO should be private
+       
+        virtual std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>> G_to_A_map(){
+          throw std::logic_error("do not call G_to_A_map from the Expression_Base class" ); 
+          std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>> dummy; 
+        return  dummy;} //TODO should be private
+
         std::shared_ptr<std::set<std::string>> required_blocks()  { return  required_blocks_; } 
 
 };

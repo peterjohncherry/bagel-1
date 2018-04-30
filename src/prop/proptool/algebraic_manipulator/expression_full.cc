@@ -10,6 +10,7 @@ template<class DataType>
 void Expression_Full<DataType>::generate_algebraic_task_list(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "void Expression_Full<DataType>::generate_algebraic_task_list()" << endl;
+    
  
   // Will loop through terms and then generate mathematical task map. It's split into
   // two functions as this will gives more control over merging together of different BraKets' G_to_A_maps.

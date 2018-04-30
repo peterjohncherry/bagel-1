@@ -16,8 +16,6 @@ class Expression_Orb_Exc_Deriv : public Expression<DataType>   {
      using Expression<DataType>::ACompute_map_;
      using Expression<DataType>::gamma_info_map_;
      using Expression<DataType>::required_blocks_;
-//     using Expression<DataType>::target_to_G_to_A_map_;
-     using Expression<DataType>::G_to_A_map_; //TODO remove
  
    Expression_Orb_Exc_Deriv( std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>> braket_list,
                              std::shared_ptr<StatesInfo_Base> states_info,

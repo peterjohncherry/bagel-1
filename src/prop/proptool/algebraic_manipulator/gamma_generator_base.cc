@@ -9,13 +9,12 @@ using namespace WickUtils;
 GammaGenerator_Base::GammaGenerator_Base( shared_ptr<StatesInfo_Base> target_states, int Bra_num, int Ket_num,
                                           shared_ptr<TensOp_Base> total_op,
                                           shared_ptr<map<string, shared_ptr<GammaInfo_Base>>>& Gamma_map_in,
-                                          shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo_Base> >>>>& G_to_A_map_in,
                                           pair<double,double> bk_factor                                                           ):
                                           target_states_(target_states),
                                           Bra_names_(target_states_->civec_names( Bra_num )),
                                           Ket_names_(target_states_->civec_names( Ket_num )),
                                           total_op_(total_op), std_ids_(total_op->idxs()), std_aops_(total_op->aops()),
-                                          G_to_A_map(G_to_A_map_in), Gamma_map(Gamma_map_in), 
+                                          Gamma_map(Gamma_map_in), 
                                           bk_factor_(bk_factor), orig_aops_half_size_( std_aops_->size()/2 ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "GammaGenerator_Base::GammaGenerator_Base" << endl;

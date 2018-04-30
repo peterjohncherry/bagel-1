@@ -1,6 +1,7 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/braket.h>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_redux.h>
+#include <src/prop/proptool/algebraic_manipulator/gamma_generator_orb_exc_deriv.h>
 
 using namespace std;
 using namespace WickUtils;
@@ -136,24 +137,24 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
   cout << "target_op_ = " << target_op_ << endl;
 
   shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( *(multiop_info_->op_order_),  *(multiop_info_->transformations_) );
- 
+
   Total_Op_->generate_ranges( multiop_info_ );
 
-  shared_ptr<GammaGeneratorRedux<DataType>> GGen; // = make_shared<GammaGeneratorRedux<DataType>>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
+  shared_ptr<GammaGenerator_OrbExcDeriv<DataType>> GGen = make_shared<GammaGenerator_OrbExcDeriv<DataType>>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, block_G_to_A_map, factor_ );
 
   auto split_ranges = Total_Op_->state_specific_split_ranges_->at( multiop_info_->name_ );
 
   for ( auto range_map_it = split_ranges->begin(); range_map_it != split_ranges->end(); range_map_it++ ){
 
     // TODO if is only here for non-relativistic case ; constraints should be specified in input
-    if ( !(range_map_it->second->ci_sector_transition_ ) ) {
-
+    if ( !(range_map_it->second->ci_sector_transition_ ) ) 
       GGen->add_gamma( range_map_it->second, trans_aops );
-    }
+    
   }
 
   ctp_map->insert( Total_Op_->CTP_map()->begin(), Total_Op_->CTP_map()->end() );
 
+  cout << " ggac 8  " << endl;
 //  print_gamma_Atensor_contractions( G_to_A_map, false );
 
   return; 

@@ -20,7 +20,6 @@ Expression<DataType>::Expression( shared_ptr<vector< shared_ptr<BraKet_Base>>> b
   cout << "Expression<DataType>::Expression (new constructor) " << endl;
 
   //Note that this G_to_A_map_ is expression specific
-    G_to_A_map_ = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>>();
 //  target_to_G_to_A_map_ = make_shared<map<string, shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> > >>> >>();
 
   name_ = "";
@@ -43,12 +42,13 @@ Expression<DataType>::Expression( shared_ptr<vector< shared_ptr<BraKet_Base>>> b
 // This effectively occurs in other functions, but is useful to have seperately here for allocation purposes
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Expression<DataType>::necessary_tensor_blocks(){
+void
+Expression<DataType>::necessary_tensor_blocks( shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>> G_to_A_map){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression::necessary_tensor_blocks" << endl;
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
-  for (auto G2A_mapit = G_to_A_map_->begin(); G2A_mapit != G_to_A_map_->end(); G2A_mapit++) {
+  for (auto G2A_mapit = G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
     
     auto A_map = G2A_mapit->second;
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
@@ -79,8 +79,6 @@ void Expression<DataType>::necessary_tensor_blocks(){
           op_size = 1;
         }
       }
-
-//      shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = CMTP->CTP_vec;
     }
   }
   cout << "leaving Expression::necessary_tensor_blocks" << endl;

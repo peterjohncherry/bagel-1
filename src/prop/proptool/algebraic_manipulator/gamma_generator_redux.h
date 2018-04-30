@@ -33,12 +33,17 @@ class GammaGeneratorRedux : public GammaGenerator_Base {
 
   public :
 
+    // key    : name of this gamma
+    // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
+    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo_Base>>> >> G_to_A_map;
+
     GammaGeneratorRedux<DataType>( std::shared_ptr<StatesInfo_Base> target_states, int Ket_num, int Bra_num,
                                    std::shared_ptr<TensOp_Base> multitensop, 
                                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo_Base>>>& Gamma_map_in,
                                    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo_Base>  >>>>& G_to_A_map_in,
                                    std::pair<double,double> bk_factor ):
-                                   GammaGenerator_Base( target_states, Ket_num, Bra_num, multitensop, Gamma_map_in, G_to_A_map_in, bk_factor ) {} ;
+                                   GammaGenerator_Base( target_states, Ket_num, Bra_num, multitensop, Gamma_map_in, bk_factor ), 
+                                   G_to_A_map(G_to_A_map_in) {} ;
 
     ~GammaGeneratorRedux<DataType>(){};
 

@@ -11,7 +11,7 @@ void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
 
-  block_idxs_ = vector<string>( std_ids_->size() );
+  block_idxs_ = vector<string>( std_ids_->size() ); cout << "std_ids_->size() = " << std_ids_->size() << endl;
   {
   vector<int>::iterator it_it = block_info->idxs_trans()->begin();
   for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ ) 

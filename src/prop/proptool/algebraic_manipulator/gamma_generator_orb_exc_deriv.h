@@ -33,13 +33,17 @@ class GammaGenerator_OrbExcDeriv : public GammaGenerator_Base {
   friend GammaInfo_Base;
 
   public :
+    std::shared_ptr<std::map<std::string,
+                    std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> >> block_G_to_A_map_;
 
     GammaGenerator_OrbExcDeriv( std::shared_ptr<StatesInfo_Base> target_states, int Ket_num, int Bra_num,
                                 std::shared_ptr<TensOp_Base> multitensop, 
                                 std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo_Base>>>& Gamma_map_in,
-                                std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo_Base>  >>>>& G_to_A_map_in,
-                                std::pair<double,double> bk_factor ):
-                                GammaGenerator_Base( target_states, Ket_num, Bra_num, multitensop, Gamma_map_in, G_to_A_map_in, bk_factor ) {} ;
+                                std::shared_ptr<std::map<std::string,
+                                                std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> >>& block_G_to_A_map,
+                                std::pair<double,double> bk_factor ) :
+                                GammaGenerator_Base( target_states, Ket_num, Bra_num, multitensop, Gamma_map_in, bk_factor ), 
+                                block_G_to_A_map_(block_G_to_A_map) {} ;
 
     ~GammaGenerator_OrbExcDeriv(){};
 
