@@ -25,7 +25,7 @@ void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info
   idxs_trans_ = block_info->idxs_trans();
   shared_ptr<vector<int>>  idxs_trans_inverse_ = block_info->idxs_trans_inverse();
 
-  std_rngs_ = *(block_info->unique_block_);
+  std_rngs_ = *(block_info->unique_block_->orig_rngs_);
   standard_order_ = *(block_info->idxs_trans());
 
   cout << endl;

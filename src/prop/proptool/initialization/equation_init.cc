@@ -30,11 +30,11 @@ Equation_Init_Base::get_operator_info( std::vector<std::string>& op_list, std::v
     op_name = op_full_name;
 
     if (op_state_ids->at(ii).size() > 0 ) {
-      op_state_name +=  "_{"; 
+      op_full_name +=  "_{"; 
       for( int jj = 0; jj != (*op_state_ids)[ii].size(); jj++ ) {
-        op_state_name += to_string((*op_state_ids)[ii][jj]); 
+        op_full_name += to_string((*op_state_ids)[ii][jj]); 
       }
-      op_state_name += "}"; 
+      op_full_name += "}"; 
     }
 
     op_state_name = op_full_name;

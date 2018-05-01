@@ -25,7 +25,7 @@ bool Constraint_Spin_Neutral_Normal_Order::apply_constraint( const std::vector<s
   for ( int ii = 0; ii != rngs.size()/2 ; r_it++, ii++ ) 
     spin_shift =  (*r_it)[0] < 'Z'  ? spin_shift +1 : spin_shift -1 ;  
 
-  cout << "spin_shift = " << spin_shift << " "; cout.flush(); WickUtils::print_vector(rngs, "rngs" ); cout << endl; 
+//  cout << "spin_shift = " << spin_shift << " "; cout.flush(); WickUtils::print_vector(rngs, "rngs" ); cout << endl; 
 
   return ( spin_shift == 0 );
 }

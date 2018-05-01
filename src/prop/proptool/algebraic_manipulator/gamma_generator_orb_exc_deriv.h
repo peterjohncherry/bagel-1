@@ -36,16 +36,22 @@ class GammaGenerator_OrbExcDeriv : public GammaGenerator_Base {
     std::shared_ptr<std::map<std::string,
                     std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> >> block_G_to_A_map_;
 
+    std::string target_op_;
+
+    std::string target_block_name_;
+
     GammaGenerator_OrbExcDeriv( std::shared_ptr<StatesInfo_Base> target_states, int Ket_num, int Bra_num,
                                 std::shared_ptr<TensOp_Base> multitensop, 
                                 std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo_Base>>>& Gamma_map_in,
                                 std::shared_ptr<std::map<std::string,
                                                 std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> >>& block_G_to_A_map,
-                                std::pair<double,double> bk_factor ) :
+                                std::pair<double,double> bk_factor, std::string target_op ) :
                                 GammaGenerator_Base( target_states, Ket_num, Bra_num, multitensop, Gamma_map_in, bk_factor ), 
-                                block_G_to_A_map_(block_G_to_A_map) {} ;
+                                block_G_to_A_map_(block_G_to_A_map), target_op_(target_op) {} ;
 
     ~GammaGenerator_OrbExcDeriv(){};
+
+    void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops  );
 
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 };
