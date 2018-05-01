@@ -21,6 +21,7 @@ void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list(){
     braket->generate_gamma_Atensor_contractions( MT_map_, exc_block_G_to_A_map, gamma_info_map_, states_info_,  required_blocks_, CTP_map_ );
 
   throw logic_error( " die now.." ); 
+  //TODO I think using this explicitly seems silly, find a way around..
 //  this->get_gamma_Atensor_contraction_list( exc_block_G_to_A_map );
 //    target_to_G_to_A_map_->emplace( exc_block_name, exc_block_G_to_A_map);
   
@@ -43,8 +44,6 @@ Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_p
 
       auto ACompute_list_loc = ACompute_map_->find(cmtp_name);
       if ( ACompute_list_loc != ACompute_map_->end() ){
-        cout << "Expression::get_gamma_Atensor_contraction_list::already built compute list for " << cmtp_name << " during generation of earlier compute list" << endl;
-        cout << cmtp_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(cmtp_name)->size() << "  --- Still in if " << endl;
         continue;
       } else {
         ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
@@ -52,11 +51,10 @@ Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_p
         ACompute_map_->emplace(cmtp_name, ACompute_list);
         CTP_map_->at(cmtp_name)->got_compute_list( true );
       }
-      cout << cmtp_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(cmtp_name)->size() << endl;
     }
   }
-  cout << "leaving Get_CMTP_compute_Terms" << endl;
   return;
+
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Expression_Orb_Exc_Deriv<double>;

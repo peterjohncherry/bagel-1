@@ -89,8 +89,6 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
 
       GGen->add_gamma( range_map_it->second, trans_aops );
   
-      cout << "X1" << endl;     
-
       if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
         if ( GGen->generic_reorderer( "normal order", false, false ) ) {
           if ( GGen->generic_reorderer( "alternating order", false, true ) ){
@@ -147,11 +145,33 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
   for ( auto range_map_it = split_ranges->begin(); range_map_it != split_ranges->end(); range_map_it++ ){
 
     // TODO if is only here for non-relativistic case ; constraints should be specified in input
-    if ( !(range_map_it->second->ci_sector_transition_ ) ) 
+    if ( !(range_map_it->second->ci_sector_transition_ ) ){ 
       GGen->add_gamma( range_map_it->second, trans_aops );
-    
-  }
 
+      print_vector( *(GGen->std_ids()) ,    " GGen->std_ids()       " ); cout << endl;
+      print_vector( *(GGen->idxs_trans()) , " GGen->idxs_trans()    " ); cout << endl;
+      print_vector( GGen->block_ids_pos() , " GGen->block_ids_pos() " ); cout << endl;
+      print_vector( GGen->block_idxs() ,    " GGen->block_idxs()    " ); cout << endl;
+
+      if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
+        if ( GGen->generic_reorderer( "normal order", false, false ) ) {
+          if ( GGen->generic_reorderer( "alternating order", false, true ) ){
+
+            cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl;
+            vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
+            int qq = 0 ;
+            for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){
+              cout << tens_block->name()  << " from" ; cout.flush(); cout << tens_block->full_op_name() <<  " is a required block " << endl;
+              MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->name() );
+              required_blocks->emplace( tens_block->name() );
+            }
+            cout << endl;
+          }
+        }
+      }
+    }
+  }
+  //TODO This looks like it's going to overlap a load of stuff, also,  not sure if this is state specific
   ctp_map->insert( Total_Op_->CTP_map()->begin(), Total_Op_->CTP_map()->end() );
 
   cout << " ggac 8  " << endl;

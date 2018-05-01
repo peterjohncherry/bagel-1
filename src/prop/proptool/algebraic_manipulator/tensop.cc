@@ -141,7 +141,6 @@ void TensOp::TensOp<DataType>::generate_transformed_ranges( shared_ptr<Op_Info> 
 
   all_ranges_state_specific_->emplace( op_info->op_full_name_, all_ranges_new );
 
-  cout << "LEAVING TensOp::TensOp<DataType>::generate_transformed_ranges : " <<    endl;
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -264,7 +263,6 @@ void TensOp::TensOp<DataType>::generate_ranges( std::shared_ptr<Op_Info> op_info
 
   all_ranges_state_specific_->emplace( op_info->op_state_name_, all_ranges_new );
   
-  cout << "leaving TensOp " << name_ << " generate_ranges" << endl;
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

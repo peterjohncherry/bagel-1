@@ -24,6 +24,24 @@ class GammaIntermediate_Base {
 
      ~GammaIntermediate_Base(){};
 
+
+     virtual
+     std::shared_ptr<std::vector<std::pair<int,int>>> A_A_deltas_pos() {
+       throw std::logic_error( "Should not access (A, A) contractions from gammaintermediate_base");
+       return deltas_pos_  ;
+     } 
+
+     virtual
+     std::shared_ptr<std::vector<std::pair<int,int>>> target_A_deltas_pos() {
+       throw std::logic_error( "Should not access (target, A) contractions from gammaintermediate_base");
+       return deltas_pos_  ;
+     } 
+
+     virtual
+     std::shared_ptr<std::vector<std::pair<int,int>>> target_target_deltas_pos() {
+       throw std::logic_error( "Should not access (target, target) contractions from gammaintermediate_base");
+       return deltas_pos_;
+     } 
 };
 
 class GammaGenerator_Base{
@@ -66,7 +84,7 @@ class GammaGenerator_Base{
 
     std::shared_ptr<std::vector<bool>> block_aops_;
     std::shared_ptr<std::vector<char>> block_aops_rngs_;
-    std::shared_ptr<const std::vector<std::string>> block_rngs_; 
+    std::shared_ptr<std::vector<std::string>> block_rngs_; 
     std::vector<int> block_ids_pos_;
     
     std::vector<std::string> block_idxs_;
@@ -92,7 +110,13 @@ class GammaGenerator_Base{
 
     ~GammaGenerator_Base(){};
 
-    virtual void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops );
+    std::shared_ptr<const std::vector<std::string>> std_ids() { return std_ids_; }
+
+    std::shared_ptr<std::vector<int>> idxs_trans() { return idxs_trans_; }
+
+    std::vector<std::string>& block_idxs() { return block_idxs_; }
+
+    std::vector<int>& block_ids_pos() { return block_ids_pos_; }
 
     bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering );
 
@@ -104,16 +128,10 @@ class GammaGenerator_Base{
 
     void alternating_order();
 
-    virtual
-    void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name ) {
-          throw std::logic_error("Add Acontrib to map is term specific; cannot call from gamma_generator_base!! Aborting!!"); };
-
     //TODO Replace this, but keep for now as very clear, if slow.
     bool proj_onto_map( std::shared_ptr<GammaIntermediate_Base> gint,
                         std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
                         std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
-
-    void swap( int ii, int jj, int kk );
 
     std::shared_ptr<std::vector<std::pair<int,int>>>
     standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
@@ -126,5 +144,12 @@ class GammaGenerator_Base{
  
     void print_gamma_intermediate( std::shared_ptr<GammaIntermediate_Base> gint );
 
+    virtual void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops );
+
+    virtual void swap( int ii, int jj, int kk );
+
+    virtual
+    void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name ) {
+          throw std::logic_error("Add Acontrib to map is term specific; cannot call from gamma_generator_base!! Aborting!!"); };
 };
 #endif

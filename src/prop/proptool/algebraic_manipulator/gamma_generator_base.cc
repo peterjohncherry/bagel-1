@@ -39,7 +39,6 @@ void GammaGenerator_Base::add_gamma( const shared_ptr<Range_Block_Info> block_in
   block_aops_ = trans_aops;
   block_aops_rngs_ = block_info->orig_rngs_ch();
 
-  block_rngs_ = block_info->orig_rngs();
   idxs_trans_ = block_info->idxs_trans();
   shared_ptr<vector<int>>  idxs_trans_inverse_ = block_info->idxs_trans_inverse();
 
@@ -50,7 +49,7 @@ void GammaGenerator_Base::add_gamma( const shared_ptr<Range_Block_Info> block_in
   cout << "--------------- gamma def -------------------" << endl;
   print_vector( std_rngs_ ,        " unique_block_      "); cout <<endl;
   print_vector( standard_order_ ,  " range_reordering   "); cout << endl;
-  print_vector(*block_rngs_ ,      " orig_rngs          "); cout <<endl;
+  print_vector(*(block_info->orig_rngs()) ,      " orig_rngs          "); cout <<endl;
   cout << endl;
 
   int ii = 0 ;
@@ -335,7 +334,7 @@ void GammaGenerator_Base::alternating_order() {  // e.g. +-+-+-+-
   }
   return;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Cannot pass shared_ptr to gammaintermediate, as push back can potentially result in the vector being moved,
 // which messes up the pointer inside the shared_ptr.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -343,38 +342,39 @@ void GammaGenerator_Base::swap( int ii, int jj, int kk ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
 
-  shared_ptr<GammaIntermediate_Base> gint =  gamma_vec_->at(kk);
+ shared_ptr<GammaIntermediate_Base> gint =  gamma_vec_->at(kk);
 
-  int idx_buff = (*((gint)->ids_pos_))[ii];
- (*((gint)->ids_pos_))[ii] = (*((gint)->ids_pos_))[jj];
- (*((gint)->ids_pos_))[jj] = idx_buff;
+  int i_pos = (*(gint->ids_pos_))[ii];
+  int j_pos = (*(gint->ids_pos_))[jj];
 
-  if ( ( (*block_aops_rngs_)[ (*((gint)->ids_pos_))[jj] ] == (*block_aops_rngs_)[ (*((gint)->ids_pos_))[ii] ]) &&
-       (*block_aops_)[ (*((gint)->ids_pos_))[ii] ] != (*block_aops_)[(*((gint)->ids_pos_))[jj] ] ){
+ (*(gint->ids_pos_))[ii] = j_pos;
+ (*(gint->ids_pos_))[jj] = i_pos;
 
-    shared_ptr<pint_vec> new_deltas_tmp = make_shared<pint_vec>( *((gint)->deltas_pos_) );
-    pair<int,int> new_delta = (*block_aops_)[ ( *((gint)->ids_pos_))[jj] ]  ?
-                               make_pair( (*((gint)->ids_pos_))[jj], ( *((gint)->ids_pos_))[ii] ): make_pair((*((gint)->ids_pos_))[ii],(*((gint)->ids_pos_))[jj]);
+  if ( ( (*block_aops_rngs_)[j_pos] == (*block_aops_rngs_)[i_pos]) && (*block_aops_)[i_pos] != (*block_aops_)[ j_pos ] ){
+
+    shared_ptr<pint_vec> new_deltas_tmp = make_shared<pint_vec>( *(gint->deltas_pos_) );
+    pair<int,int> new_delta = (*block_aops_)[ j_pos ]  ?  make_pair( j_pos, i_pos ): make_pair( i_pos, j_pos);
 
     new_deltas_tmp->push_back( new_delta );
 
-    shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>( (gint)->ids_pos_->size()-2);
-    vector<int>::iterator nip_it = new_ids_pos->begin();
-    for( int qq = 0 ; qq != (gint)->ids_pos_->size() ; qq++) {
+   shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>( gint->ids_pos_->size()-2);
+   vector<int>::iterator nip_it = new_ids_pos->begin();
+    vector<int>::iterator gip_it = gint->ids_pos_->begin();
+    for( int qq = 0 ; qq != gint->ids_pos_->size(); ++qq, ++gip_it ) {
       if ( (qq != ii) && (qq != jj)){
-       *nip_it = (*((gint)->ids_pos_))[qq];
+       *nip_it = *gip_it;
         ++nip_it;
       }
     }
-
-    shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, (gint)->factors_ );
-
+ 
+    shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, gint->factors_ );
+ 
     gamma_vec_->push_back(new_gamma);
-
+ 
   }
-//  pair<double,double> anti_herm_fac = make_pair( -1.0 , 1.0 );
-//  WickUtils::pair_fac_mult( anti_herm_fac, (gint)->factors_  );
-
+  pair<double,double> anti_herm_fac = make_pair( -1.0, 1.0 );
+  WickUtils::pair_fac_mult( anti_herm_fac, gint->factors_  );
+ 
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////

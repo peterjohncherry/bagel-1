@@ -33,7 +33,6 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
     name_ += rng;
 
   cout << "range_block_ : name_ = " << name_ << endl;
-
   full_op_name_ = op_info->op_full_name_;
 
   plus_pnum_ = 1;
@@ -81,10 +80,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
     name_ += rng;
 
   cout << "range_block_ : name_ = " << name_ << endl;
-
   full_op_name_ = op_info->op_full_name_;
-
-
 
   plus_pnum_ = 1;
   kill_pnum_ = 1;
@@ -131,7 +127,6 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
     name_ += rng;
 
   cout << "range_block_ : name_ = " << name_ << endl;
-
   full_op_name_ = op_info->op_full_name_;
 
   plus_pnum_ = 1;
@@ -211,11 +206,9 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
   auto  sssr_loc = unique_split_ranges->find( unique_rngs );
   if ( sssr_loc != unique_split_ranges->end() ) {
     unique_block_ = sssr_loc->second; 
-    print_vector( *(unique_block_->orig_rngs_) , "unique_block_->orig_rngs_" ); cout << endl;
   } else  { 
     unique_block_ = std::make_shared<Range_Block_Info>(orig_rngs_, idxs_trans_, factors_, factors_, *aops, multiop_info ) ;
     unique_block_->unique_block_ = unique_block_->shared_from_this();
-    print_vector( *orig_rngs_ , "orig_rngs_" ); cout << endl;
   } 
 
       
