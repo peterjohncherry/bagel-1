@@ -13,7 +13,8 @@ GammaGenerator_Base::GammaGenerator_Base( shared_ptr<StatesInfo_Base> target_sta
                                           target_states_(target_states),
                                           Bra_names_(target_states_->civec_names( Bra_num )),
                                           Ket_names_(target_states_->civec_names( Ket_num )),
-                                          total_op_(total_op), std_ids_(total_op->idxs()), std_aops_(total_op->aops()),
+                                          total_op_(total_op), std_ids_(total_op->idxs()),
+                                          std_aops_(total_op->aops()),
                                           Gamma_map(Gamma_map_in), 
                                           bk_factor_(bk_factor), orig_aops_half_size_( std_aops_->size()/2 ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////

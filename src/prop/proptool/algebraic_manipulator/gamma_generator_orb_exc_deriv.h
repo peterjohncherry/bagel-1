@@ -53,6 +53,13 @@ class GammaGenerator_OrbExcDeriv : public GammaGenerator_Base {
     std::vector<int> target_block_id_pos_;
     int target_block_end_;
     int target_block_start_;
+    int target_block_size_;
+
+    std::vector<std::string> block_rngs_target_op_free_; 
+    std::vector<std::string> block_idxs_target_op_free_; 
+
+    std::vector<std::string> std_rngs_target_op_free_;
+    std::vector<std::string> std_idxs_target_op_free_;
 
     GammaGenerator_OrbExcDeriv( std::shared_ptr<StatesInfo_Base> target_states, int Ket_num, int Bra_num,
                                 std::shared_ptr<TensOp_Base> multitensop, 
@@ -72,5 +79,10 @@ class GammaGenerator_OrbExcDeriv : public GammaGenerator_Base {
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
     void transformation_tester( int kk  );
+
+    std::vector<int> get_standard_op_id_order ( const std::vector<int>& ids_pos );
+
+    std::vector<int> sort_arg1_wrt_arg2(const std::vector<int> &ids_pos, const std::vector<int>& standard_order );
+
 };
 #endif

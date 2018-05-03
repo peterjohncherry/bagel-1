@@ -85,6 +85,9 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     std::shared_ptr<std::vector<int>> aops_trans() const { return aops_trans_; }
 
     std::shared_ptr<std::vector<int>> idxs_trans_inverse() { return idxs_trans_inverse_;  }  
+
+    virtual
+    std::shared_ptr<Op_Info> op_info() { throw std::logic_error("Do not acces op_info from range_block_base"); std::shared_ptr<Op_Info> dummy; return dummy; } 
 };
 
 class SRBI_Helper { 
@@ -120,12 +123,15 @@ class Split_Range_Block_Info : public  Range_Block_Info, std::enable_shared_from
 
   private : 
     std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks_;
+   
 
   public :
 
+    std::shared_ptr<Op_Info> op_info_;
+
     Split_Range_Block_Info( const std::vector<bool>& aops, SRBI_Helper& helper, std::shared_ptr<Op_Info> op_info ) : 
                             Range_Block_Info( helper.orig_rngs_, helper.unique_block_, helper.idxs_trans_, helper.factors_, helper.ReIm_factors_, aops , op_info ),
-                            range_blocks_(helper.range_blocks_) {}// this->unique_blockXX_ = helper.unique_blockXX_; } 
+                            range_blocks_(helper.range_blocks_), op_info_(op_info) {}// this->unique_blockXX_ = helper.unique_blockXX_; } 
                      
    ~Split_Range_Block_Info(){};
 
@@ -133,6 +139,8 @@ class Split_Range_Block_Info : public  Range_Block_Info, std::enable_shared_from
     std::shared_ptr<Range_Block_Info> range_blocks(int ii){ return range_blocks_->at(ii) ;} 
 
     bool is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs );
+    
+    std::shared_ptr<Op_Info> op_info() { return op_info_; } 
 
 };
 
