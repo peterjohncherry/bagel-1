@@ -816,6 +816,7 @@ string WickUtils::get_ctp_name( const vector<string>& idxs, const vector<string>
 
   return ctp_name;
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // get range for ctrtensorpart  
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -839,6 +840,51 @@ string WickUtils::get_ctp_name( const vector<string>& idxs, const vector<string>
     shared_ptr<vector<pair<int,int>>> ctrs_standard = standardize_delta_ordering_generic(ctrs_buff, idxs); 
     for ( pair<int,int>& ctr : *ctrs_standard )  
       ctp_name += to_string(ctr.first)+to_string(ctr.second);
+  }
+ 
+  return ctp_name;
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// get range for ctrtensorpart  
+////////////////////////////////////////////////////////////////////////////////////////////////////
+string WickUtils::get_ctp_name( const string op_state_name, const vector<string>& idxs,
+                                const vector<string>& id_ranges, const vector<pair<int,int>>& ctrs_pos ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "WickUtils::get_ctp_name" << endl; 
+
+  string ctp_name = op_state_name+"_";
+
+  for (string id : id_ranges ) 
+    ctp_name += id[0];
+
+  if (ctrs_pos.size() != 0 ){ 
+    ctp_name += "_";
+    vector<pair<int,int>> ctrs_buff =  ctrs_pos;
+    shared_ptr<vector<pair<int,int>>> ctrs_standard = standardize_delta_ordering_generic(ctrs_buff, idxs); 
+    for ( pair<int,int>& ctr : *ctrs_standard )  
+      ctp_name += to_string(ctr.first)+to_string(ctr.second);
+  }
+ 
+  return ctp_name;
+
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// get range for ctrtensorpart  
+////////////////////////////////////////////////////////////////////////////////////////////////////
+string WickUtils::get_ctp_name( const string op_state_name, const vector<string>& id_ranges, 
+                                const vector<pair<int,int>>& ctrs_pos ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "WickUtils::get_ctp_name" << endl; 
+
+  string ctp_name = op_state_name+"_";
+
+  ctp_name = accumulate(id_ranges.begin(), id_ranges.end(), ctp_name ); 
+
+  if (ctrs_pos.size() != 0 ){ 
+    ctp_name += "_";
+    for ( vector<pair<int,int>>::const_iterator cp_it = ctrs_pos.begin(); cp_it != ctrs_pos.end(); cp_it++ )  
+      ctp_name += to_string(cp_it->first)+to_string(cp_it->second);
   }
  
   return ctp_name;

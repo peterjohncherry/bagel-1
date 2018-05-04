@@ -103,6 +103,8 @@ class GammaGenerator_Base{
   public :
     std::shared_ptr<std::vector< std::shared_ptr<GammaIntermediate_Base> >> gamma_vec_;
 
+    std::shared_ptr<Op_Info> op_info_;
+
     GammaGenerator_Base( std::shared_ptr<StatesInfo_Base> target_states_, int Ket_num, int Bra_num,
                                    std::shared_ptr<TensOp_Base> multitensop, 
                                    std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo_Base>>>& Gamma_map_in,

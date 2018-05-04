@@ -148,11 +148,6 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
     if ( !(range_map_it->second->ci_sector_transition_ ) ){ 
       GGen->add_gamma( range_map_it->second, trans_aops );
 
-      print_vector( *(GGen->std_ids()) ,    " GGen->std_ids()       " ); cout << endl;
-      print_vector( *(GGen->idxs_trans()) , " GGen->idxs_trans()    " ); cout << endl;
-      print_vector( GGen->block_ids_pos() , " GGen->block_ids_pos() " ); cout << endl;
-      print_vector( GGen->block_idxs() ,    " GGen->block_idxs()    " ); cout << endl;
-
       if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
         if ( GGen->generic_reorderer( "normal order", false, false ) ) {
           if ( GGen->generic_reorderer( "alternating order", false, true ) ){

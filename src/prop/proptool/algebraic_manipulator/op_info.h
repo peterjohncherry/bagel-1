@@ -5,6 +5,9 @@
 #include <memory>
 #include <string>
 
+#include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
+#include <src/prop/proptool/algebraic_manipulator/constraints.h>
+
 // Small class to label state specfic operator and connected symmetries
 // Necessary for generation of appropriate range blocks.
 // Information for specification is output during initialization of equation.
@@ -58,6 +61,7 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
        throw std::logic_error (" should only be called from Multiop_Info " ); 
        return std::make_shared<std::vector<char>>( 1, transformation_);
     } 
+    virtual std::string op_state_name_canonical() { return op_state_name_; } 
 
 };
 
@@ -69,6 +73,7 @@ class MultiOp_Info : public Op_Info {
     std::shared_ptr<std::vector<char>> transformations_;
     std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info_vec_;  
     std::shared_ptr<std::vector<int>> op_order_;
+    std::string op_state_name_canonical_;
 
     // should also include symmetry information
     MultiOp_Info( std::string op_name, std::string op_state_name, std::string op_full_name, 
@@ -82,7 +87,18 @@ class MultiOp_Info : public Op_Info {
       std::vector<char>::iterator t_it = transformations_->begin(); 
       for ( std::vector<std::shared_ptr<Op_Info>>::iterator oi_it = op_info_vec_->begin(); oi_it != op_info_vec_->end(); oi_it++ , t_it++ )
         *t_it = (*oi_it)->transformation_; 
+      
+      op_state_name_canonical_ = "";
+      std::cout << " op_pos = [ " ; std::cout.flush();
+      for ( int op_pos : *op_order_ ) { 
+        op_state_name_canonical_ += (*op_info_vec_)[op_pos]->op_state_name_; 
+        std::cout << op_pos << " " ; std::cout.flush();
+      } 
+      std::cout << "]" << std::endl;
 
+      std::cout << "op_state_name_canonical_ = "; std::cout.flush(); std::cout << op_state_name_canonical_ << std::endl;
+
+     
     } 
     ~MultiOp_Info(){}; 
 
@@ -95,6 +111,8 @@ class MultiOp_Info : public Op_Info {
     char transformation() { throw std::logic_error("Should not try to transform MultiOp all as one! Aborting!! "); return 'X'; } 
 
     std::shared_ptr<std::vector<char>> transformations() { return transformations_; } 
+    
+    std::string op_state_name_canonical() { return op_state_name_canonical_; } 
 };
 
 #endif

@@ -46,6 +46,8 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     int num_idxs_;
     std::shared_ptr<Transformation> transform_;
     
+    std::string op_state_name_;
+
     std::shared_ptr<const std::vector<std::string>> orig_rngs_;
     std::shared_ptr<Range_Block_Info> unique_block_;
 

@@ -28,9 +28,9 @@ void CtrTensorPart_Base::get_name(){
 /////////////////////////////////////////////////////////////////////////////
 string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_ctrs_pos ){
 /////////////////////////////////////////////////////////////////////////////
-  string new_name = "";
-  for(string id : *full_idxs_)
-    new_name += id;
+  
+  string new_name = op_info_->op_state_name_;
+
   new_name+="_"; 
 
   for(string id : *full_id_ranges_)
@@ -50,7 +50,7 @@ string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_c
 //////////////////////////////////////////////////////////////////////////////
 void CtrTensorPart_Base::get_ctp_idxs_ranges(){
 //////////////////////////////////////////////////////////////////////////////
-//cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
+cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
 
   int counter = 0;
   vector<bool> get_unc(full_idxs_->size(), true);
@@ -113,10 +113,6 @@ void CtrTensorPart<DataType>::FullContract( shared_ptr<map<string,shared_ptr<Ctr
                                             shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
                                             shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_CtrTensorPart
-cout << "CtrTensorPart<DataType>::FullContract" << endl; 
-#endif 
-/////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << endl <<  "CtrTensorPart<DataType>::FullContract : CTP name =  " << name_ << endl;
 int counter = 0 ;
   while ( ctrs_todo_->size() != 0 ){ 
@@ -125,12 +121,12 @@ int counter = 0 ;
     ctrs_done_->push_back(ctrs_todo_->back());
     string CTP_out_name = get_next_name(ctrs_done_);
     ctrs_todo_->pop_back();
-
+  
     shared_ptr<CtrTensorPart_Base> CTP_in;
     if ( Tmap->find(CTP_in_name) == Tmap->end()) {
       shared_ptr<vector<pair<int,int>>> new_ctrs_pos = make_shared<vector<pair<int,int>>>(*ctrs_todo_);
 
-      CTP_in = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos );
+      CTP_in = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos, op_info_ );
       Tmap->emplace(CTP_in->name(),  CTP_in);
     } else {
       CTP_in = Tmap->at(CTP_in_name);
@@ -150,7 +146,7 @@ int counter = 0 ;
     if ( Tmap->find(CTP_out_name) == Tmap->end()) {
 
       shared_ptr<vector<pair<int,int>>> new_ctrs_pos = make_shared<vector<pair<int,int>>>(*ctrs_done_);
-      CTP_out = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos );
+      CTP_out = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos, op_info_ );
       Tmap->emplace(CTP_out_name,  CTP_out); 
 
     } else {
@@ -158,16 +154,8 @@ int counter = 0 ;
     }
     CTP_out->dependencies_.emplace(name_);
 
-    // TODO This does nothing at the moment, but you want these ifs here when you do the proper treatment of excitation ops, so keep it!
-    if ( full_idxs_->at(ctrs_done_->back().first)[0] == 'X' || full_idxs_->at(ctrs_done_->back().second)[0] == 'X' ) { 
-      if ( full_idxs_->at(ctrs_done_->back().first)[0] != 'X' || full_idxs_->at(ctrs_done_->back().second)[0] != 'X' ) { // TODO replace with CtrOp_single_id
-        ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name_ << "'s Acompute_list"<<  endl;
-      } else { //TODO replace with CtrOp_exc_ids
-        ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name_ << "'s Acompute_list"<<  endl;
-      }
-    } else  {  
-      ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name_ << "'s Acompute_list"<<  endl;
-    }
+    ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name_ << "'s Acompute_list"<<  endl;
+
     cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done_->back().first << ","<< ctrs_done_->back().second << ") to get " << CTP_out_name ; cout.flush(); 
 
     shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list_out =  make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list);
@@ -177,6 +165,7 @@ int counter = 0 ;
     dependencies_.emplace(CTP_in_name);
   } 
   ACompute_map->emplace(name_, ACompute_list);
+  cout << endl <<  "Leaving CtrTensorPart<DataType>::FullContract : CTP name =  "; cout.flush(); cout << name_ << endl;
   return;
 }
 
@@ -186,46 +175,37 @@ void CtrMultiTensorPart<DataType>::FullContract( shared_ptr<map<string,shared_pt
                                                  shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list ,
                                                  shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_CtrMultiTensorPart
-cout << "CtrMultiTensorPart<DataType>::FullContract" << endl; 
-#endif 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << endl << "CtrMultiTensorPart<DataType>::FullContract NEWVER :   CMTP name = " << name_ << endl;
+cout << endl << "CtrMultiTensorPart<DataType>::FullContract :   CMTP name = " << name_ << endl;
 
   if ( get_compute_list_from_reordered_tens_ ) {  
               
     Tmap->at(reordered_tens_name_)->FullContract( Tmap, ACompute_list, ACompute_map) ; 
     ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >> (*(ACompute_map->at( reordered_tens_name_ ))); 
-
     ACompute_list->push_back( make_shared<CtrOp_reorder> ( reordered_tens_name_, name_, reordering_, "reordering" ));
-
   } else if (ctrs_pos_->size() > 0 ) {
     
     cout << "CTP_vec->size() = " << CTP_vec_->size() <<  "     cross_ctrs_pos_->size() = " <<  cross_ctrs_pos_->size() << endl;
     if ( (CTP_vec_->size() == 2) && ( cross_ctrs_pos_->size() > 0 ) ) {
-    
       shared_ptr<CtrTensorPart<DataType>> new_CTP = Binary_Contract_diff_tensors(cross_ctrs_pos_->back(), ctrs_pos_->back(), Tmap,  ACompute_list, ACompute_map);
-    
-      if (Tmap->find(new_CTP->name_) == Tmap->end())
+      if (Tmap->find(new_CTP->name_) == Tmap->end()){
         Tmap->emplace(new_CTP->name_, new_CTP);
-        
-      if ( cross_ctrs_pos_->size() > 1 )   
+      }
+
+      if ( cross_ctrs_pos_->size() > 1 ) {
         new_CTP->FullContract(Tmap, ACompute_list, ACompute_map);
-      
+      }
     } else if ( cross_ctrs_pos_->size() == 0 ) {
      
-      for ( auto& inner_CTP : *CTP_vec_ ) 
+      for ( auto& inner_CTP : *CTP_vec_ ){ 
         inner_CTP->FullContract(Tmap, ACompute_list, ACompute_map);
+      }
 
     } else {
-      throw logic_error("USING MT BINARY CONTRACT DIFF TENSORS MT!! This shouldn't happen anymore ... Aborting !! ");
-      shared_ptr<CtrMultiTensorPart> new_CMTP = Binary_Contract_diff_tensors_MT( CTP_vec_->at(cross_ctrs_pos_->back().first.first)->name_,
-                                                                                 CTP_vec_->at(cross_ctrs_pos_->back().second.first)->name_,
-                                                                                 ctrs_pos_->back(), Tmap, ACompute_list, ACompute_map);
-      new_CMTP->FullContract(Tmap, ACompute_list, ACompute_map);
+      throw logic_error("CtrMultiTensorPart<DataType>::FullContract ; Should always meet one of the above conditions... Aborting !! ");
     }
   }
   ACompute_map->emplace(name_, ACompute_list);
+  cout << endl << "Leaving CtrMultiTensorPart<DataType>::FullContract :   CMTP name = " << name_ << endl;
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,10 +217,6 @@ shared_ptr<CtrTensorPart<DataType>>
                                                           shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
                                                           shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_CtrMultiTensorPart
-cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors" << endl; 
-#endif 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors : " << name_ << endl; 
 
    int T1pos, T2pos, T1ctr, T2ctr;
@@ -257,6 +233,7 @@ cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors" << endl;
      T1ctr = cross_ctr.second.second;
      T2ctr = cross_ctr.first.second;
    }
+   
    shared_ptr<CtrTensorPart_Base> T1 = CTP_vec_->at(T1pos);
    shared_ptr<CtrTensorPart_Base> T2 = CTP_vec_->at(T2pos);
 
@@ -276,17 +253,22 @@ cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors" << endl;
    
    int T1shift =  Tsizes_cml->at(T1pos);
    int T2shift =  Tsizes_cml->at(T2pos);
-   for ( pair<int,int> ctr : *T1->ctrs_pos_)
+
+   for ( pair<int,int> ctr : *T1->ctrs_pos_){ 
      ctrs_done_->push_back( make_pair(ctr.first+T1shift, ctr.second+T1shift));
-   for ( pair<int,int> ctr : *T2->ctrs_pos_)
+   }
+
+   for ( pair<int,int> ctr : *T2->ctrs_pos_){
      ctrs_done_->push_back( make_pair(ctr.first+T2shift, ctr.second+T2shift));
+   }
 
    shared_ptr<vector<pair<int,int>>> ctrs_todo_ = make_shared<vector<pair<int,int>>>(0);
-   for (int ii = 0 ;  ii != cross_ctrs_pos_->size() ; ii++) 
+   for (int ii = 0 ;  ii != cross_ctrs_pos_->size() ; ii++) {
      if ( (cross_ctrs_pos_->at(ii).first.first + cross_ctrs_pos_->at(ii).second.first) == (T1pos + T2pos) )
        ctrs_todo_->push_back(make_pair( Tsizes_cml->at( cross_ctrs_pos_->at(ii).first.first )  +  cross_ctrs_pos_->at(ii).first.second,
                                         Tsizes_cml->at( cross_ctrs_pos_->at(ii).second.first ) +  cross_ctrs_pos_->at(ii).second.second ));
-    
+   }
+
    shared_ptr<vector<pair<int,int>>> full_ctrs = make_shared<vector<pair<int,int>>>( ctrs_done_->begin(), ctrs_done_->end() );
    full_ctrs->insert(full_ctrs->end(), ctrs_todo_->begin(), ctrs_todo_->end());
  
@@ -295,74 +277,24 @@ cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors" << endl;
   
    int T1_ctr_rel_pos = T1->unc_rel_pos_->at(T1ctr);
    int T2_ctr_rel_pos = T2->unc_rel_pos_->at(T2ctr);
-
-   shared_ptr<CtrTensorPart<DataType>> CTP_new = make_shared< CtrTensorPart<DataType> >(full_idxs_, full_id_ranges_, full_ctrs ); 
+   shared_ptr<CtrTensorPart<DataType>> CTP_new = make_shared< CtrTensorPart<DataType> >(full_idxs_, full_id_ranges_, full_ctrs, op_info_ ); 
    CTP_new->ctrs_todo_ = ctrs_todo_;
    CTP_new->ctrs_done_ = ctrs_done_;
    Tmap->emplace(CTP_new->name_, CTP_new);
-    
-    // TODO This does nothing at the moment, but you want these ifs here when you do the proper treatment of excitation ops, so keep it!
-    if ( full_idxs_->at(abs_ctr.first)[0] == 'X' || full_idxs_->at(abs_ctr.second)[0] == 'X' ) {
-      if ( full_idxs_->at(abs_ctr.first)[0] != 'X' || full_idxs_->at(abs_ctr.second)[0] != 'X' ) { // TODO replace with CtrOp_single_id
-        ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
-                                                            abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
-      } else {  // TODO replace with CtrOp_exc_ids 
-        ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
-                                                            abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
-      }
-    } else  {  
-       ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
-                                                           abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
-    }
-
+   
+   ACompute_list->push_back(make_shared<CtrOp_diff_T>( T1name, T2name, CTP_new->get_next_name(CTP_new->ctrs_done_),
+                                                       abs_ctr.first, abs_ctr.second, T1_ctr_rel_pos, T2_ctr_rel_pos, "diff_T_prod"));
+ 
    ACompute_map->emplace( CTP_new->get_next_name(CTP_new->ctrs_done_), make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list));
    
    //Add intermediate compute list into map seperately
-   shared_ptr<CtrTensorPart<DataType>> CTP_intermediate = make_shared< CtrTensorPart<DataType> >(full_idxs_, full_id_ranges_, ctrs_done_ ); 
+   shared_ptr<CtrTensorPart<DataType>> CTP_intermediate = make_shared< CtrTensorPart<DataType> >(full_idxs_, full_id_ranges_, ctrs_done_, op_info_ ); 
    Tmap->emplace(CTP_intermediate->name_, CTP_intermediate); 
     
    cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << abs_ctr.first << "," << abs_ctr.second << ") to get " << get_next_name(CTP_new->ctrs_done_) << endl;
    return CTP_new;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-shared_ptr<CtrMultiTensorPart<DataType>>
-CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors_MT( string T1name, string T2name, pair<int,int> ctr,
-                                                               shared_ptr< map<string, shared_ptr<CtrTensorPart_Base>> > Tmap,
-                                                               shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
-                                                               shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_CtrMultiTensorPart
-cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors_MT" << endl; 
-#endif 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors_MT" << endl; 
-   throw logic_error( " Should not be using this rountine anymore !!! Kept only for checking; Aborting!! " ); 
-   for ( pair<pair<int,int> , pair<int,int>>  cross_ctr : *cross_ctrs_pos_ ) {
-     int T1_pos = cross_ctr.first.first;
-     int T2_pos = cross_ctr.second.first;
-     int T1_ctr_pos = cross_ctr.second.first;
-     int T2_ctr_pos = cross_ctr.second.second;
-     cout << " {[" << T1_pos << ":" << T1_ctr_pos << "].[ " << T2_pos << ":" << T2_ctr_pos << "]}" ; cout.flush();
-   } cout << endl;
-
-   shared_ptr<CtrTensorPart<DataType>> T1T2_ctrd =  Binary_Contract_diff_tensors(cross_ctrs_pos_->back(), ctr, Tmap, ACompute_list, ACompute_map );
-   Tmap->emplace(T1T2_ctrd->name_, T1T2_ctrd);
-
-   shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> new_CTP_vec = make_shared<vector<shared_ptr<CtrTensorPart_Base>>>(0);
-   for ( shared_ptr<CtrTensorPart_Base> CTP : *CTP_vec_ ) {  
-     if (CTP->name_ == T1name || CTP->name_ == T2name)
-       continue;
-     new_CTP_vec->push_back(CTP);
-   }
-   
-   CTP_vec_->push_back(T1T2_ctrd);
-   shared_ptr<vector<pair<pair<int,int>, pair<int,int>>>> new_cross_ctrs_pos_ = make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(cross_ctrs_pos_->begin(), cross_ctrs_pos_->end()-1);
-   shared_ptr<CtrMultiTensorPart<DataType>> new_CMTP = make_shared< CtrMultiTensorPart<DataType> >(new_CTP_vec, new_cross_ctrs_pos_ ); 
-
-   return new_CMTP;
-}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class CtrTensorPart<double>;
 template class CtrTensorPart<complex<double>>;

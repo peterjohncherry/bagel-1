@@ -21,6 +21,8 @@ void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info
   block_aops_ = trans_aops;
   block_aops_rngs_ = block_info->orig_rngs_ch();
 
+  op_info_ = block_info->op_info();
+
   idxs_trans_ = block_info->idxs_trans();
   shared_ptr<vector<int>>  idxs_trans_inverse_ = block_info->idxs_trans_inverse();
 
@@ -48,13 +50,10 @@ void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info
   cout << "factors = (" << factors.first << "," << factors.second << ")" << endl;
 
   gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>( 1 );
-  cout << "hello" << endl;
   gamma_vec_->at(0) = make_shared<GammaIntermediateRedux<DataType>>( ids_pos, deltas_pos, factors );
 
-  cout << "hello again "<< endl;
   final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>(0);
  
-  cout << "hello again 2"<< endl;
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +65,7 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
   shared_ptr<GammaIntermediate_Base> gint = gamma_vec_->at(kk);
 
   shared_ptr<vector<pair<int,int>>> deltas_pos     = gint->deltas_pos_;
-  shared_ptr<vector<int>> ids_pos        = gint->ids_pos_;
+  shared_ptr<vector<int>> ids_pos                  = gint->ids_pos_;
 
   vector<int> standardized_ids_pos( ids_pos->size() ); 
   {
@@ -81,11 +80,11 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
   for ( vector<pair<int,int>>::iterator dp_it = deltas_pos->begin(); dp_it != deltas_pos->end(); dp_it++, idp_it++ ) 
     *idp_it = make_pair( (*idxs_trans_)[dp_it->first], (*idxs_trans_)[dp_it->second]);
 
-  string Aname_alt = get_ctp_name( *std_ids_, std_rngs_, idxs_deltas_pos );
-   
-  if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() )
-    total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_ );
+  string Aname_alt = get_ctp_name( op_info_->op_state_name_canonical(), *std_ids_,  std_rngs_, idxs_deltas_pos );
 
+  if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) {
+    total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_, op_info_ );
+  }
   string Gname_alt = get_gamma_name( chrvec_to_strvec(*block_aops_rngs_), *block_aops_, *ids_pos, bra_name, ket_name );
 
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )

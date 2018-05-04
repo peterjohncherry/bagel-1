@@ -34,6 +34,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 
   cout << "range_block_ : name_ = " << name_ << endl;
   full_op_name_ = op_info->op_full_name_;
+  op_state_name_ = op_info->op_state_name_;
 
   plus_pnum_ = 1;
   kill_pnum_ = 1;
@@ -81,6 +82,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 
   cout << "range_block_ : name_ = " << name_ << endl;
   full_op_name_ = op_info->op_full_name_;
+  op_state_name_ = op_info->op_state_name_;
 
   plus_pnum_ = 1;
   kill_pnum_ = 1;
@@ -128,6 +130,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 
   cout << "range_block_ : name_ = " << name_ << endl;
   full_op_name_ = op_info->op_full_name_;
+  op_state_name_ = op_info->op_state_name_;
 
   plus_pnum_ = 1;
   kill_pnum_ = 1;

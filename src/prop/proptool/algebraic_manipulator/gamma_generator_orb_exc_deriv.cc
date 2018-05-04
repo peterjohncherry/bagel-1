@@ -15,6 +15,8 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_gamma( const shared_ptr<Range_Blo
   block_aops_ = trans_aops;
   block_aops_rngs_ = block_info->orig_rngs_ch(); // May be transformed by Bra or Ket.
 
+  op_info_ = block_info->op_info();
+
   block_rngs_ = make_shared<vector<string>>( block_info->orig_rngs()->size() ) ; // After the below definition, this remains unchanged.
   vector<string>::iterator br_it = block_rngs_->begin();
   for ( vector<int>::iterator it_it = idxs_trans_->begin() ; it_it != idxs_trans_->end(); it_it++ , br_it++ )
@@ -26,6 +28,7 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_gamma( const shared_ptr<Range_Blo
 
   cout << "block_info->name = " << block_info->name() << endl;
   cout << "block_info->full_op_name = " << block_info->full_op_name() << endl;
+  cout << "block_info->op_state_name_canonical = " << op_info_->op_state_name_canonical() << endl;
   cout << "target_op_= " << target_op_ << endl;
 
   // TODO change; this will be problematic when we have multiple operators with the same name but different states.
@@ -42,41 +45,40 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_gamma( const shared_ptr<Range_Blo
   }
   cout << "target_block_name_ = " ; cout.flush(); cout << target_block_name_  << endl;
 
+
+
   // TMP.
   std_rngs_target_op_free_ = vector<string>(block_idxs_.size() - target_block_size_ ); 
   std_idxs_target_op_free_ = vector<string>(block_idxs_.size() - target_block_size_ ); 
   { 
+  std_name_target_op_free_ = "";
   shared_ptr<vector<shared_ptr<Range_Block_Info>>> range_blocks = block_info->range_blocks() ; 
   vector<string>::const_iterator si_it = std_ids_->begin();
   vector<string>::iterator sr_it = std_rngs_.begin();
   vector<string>::iterator sitof_it = std_idxs_target_op_free_.begin();
   vector<string>::iterator srtof_it = std_rngs_target_op_free_.begin();
-  for( vector<int>::iterator oo_it = block_info->op_info()->op_order()->begin(); oo_it != block_info->op_info()->op_order()->end(); oo_it++ ) {
+  for( vector<int>::iterator oo_it = op_info_->op_order()->begin(); oo_it != op_info_->op_order()->end(); oo_it++ ) {
     if ( (*range_blocks)[*oo_it]->full_op_name()[0] != target_op_[0] ){ 
+
       for ( int rr = 0  ; rr != (*range_blocks)[*oo_it]->num_idxs_; sr_it++, si_it++, srtof_it++, sitof_it++, rr++ ) {
-        *srtof_it = *si_it;
-        *sitof_it = *sr_it;
+        *sitof_it = *si_it;
+        *srtof_it = *sr_it;
       }  
+      std_name_target_op_free_ +=  (*range_blocks)[*oo_it]->op_state_name_;
+
     } else { 
       si_it += target_block_size_; 
       sr_it += target_block_size_;     
     }
+    
+  }
   }
 
-  print_vector(std_idxs_target_op_free_ ," std_idxs_target_op_free_" ); cout << endl;
-  print_vector(std_rngs_target_op_free_ ," std_rngs_target_op_free_" ); cout << endl;
-
-  }
-
- 
   {
   vector<int>::iterator it_it = idxs_trans_->begin();
   for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ )
     *bi_it = (*std_ids_)[ *it_it ];
-
   }
-  print_vector( block_idxs_, "block_idxs" ); cout <<endl;
-
 
   block_rngs_target_op_free_ = vector<string>(block_idxs_.size() - target_block_size_ ); 
   block_idxs_target_op_free_ = vector<string>(block_idxs_.size() - target_block_size_ ); 
@@ -94,17 +96,20 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_gamma( const shared_ptr<Range_Blo
    
   cout << endl;
   cout << "----------- gamma orb deriv def -------------------" << endl;
-  print_vector( std_rngs_ ,    " unique_block_ "); cout <<endl;
+  print_vector( std_rngs_ ,    " std_rngs_ "); cout <<endl;
   print_vector(*idxs_trans_ ,  " idxs_trans_   "); cout << endl;
   print_vector(*block_rngs_ ,  " block_rngs    "); cout <<endl;
+  print_vector( block_idxs_, "block_idxs" ); cout <<endl;
   print_vector(block_rngs_target_op_free_ ,  " block_rngs_target_op_free_ "); cout << endl;
   print_vector(block_idxs_target_op_free_ ,  " block_idxs_target_op_free_ "); cout <<endl;
+  print_vector(std_idxs_target_op_free_ ,    " std_idxs_target_op_free_   "); cout << endl;
+  print_vector(std_rngs_target_op_free_ ,    " std_rngs_target_op_free_   "); cout << endl;
   cout << endl;
 
   int ii = 0 ;
   block_to_std_order_ = vector<int>(idxs_trans_->size());
   for ( vector<int>::iterator so_it = idxs_trans_->begin() ; so_it != idxs_trans_->end() ; ++so_it, ++ii ) 
-    block_to_std_order_[*so_it] = (ii);
+    block_to_std_order_[*so_it] = ii;
 
 
   shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( std_rngs_.size() );
@@ -134,13 +139,18 @@ void GammaGenerator_OrbExcDeriv<DataType>::swap( int ii, int jj, int kk ){
 
   shared_ptr<GammaIntermediate_Base> gint =  gamma_vec_->at(kk);
 
+  // only need one buffer really, but this looks clearer
   int j_pos = (*((gint)->ids_pos_))[jj];
   int i_pos = (*((gint)->ids_pos_))[ii];
 
   (*((gint)->ids_pos_))[ii] = j_pos;
   (*((gint)->ids_pos_))[jj] = i_pos;
+  
 
   if ( ( (*block_aops_rngs_)[ j_pos ] == (*block_aops_rngs_)[ i_pos ]) &&( (*block_aops_)[ i_pos ] != (*block_aops_)[ j_pos ]) ){
+
+      i_pos = standard_order_[i_pos ]; 
+      j_pos = standard_order_[j_pos ]; 
 
       shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>( (gint)->ids_pos_->size()-2);
       vector<int>::iterator nip_it = new_ids_pos->begin();
@@ -183,7 +193,8 @@ void GammaGenerator_OrbExcDeriv<DataType>::swap( int ii, int jj, int kk ){
 
   }
   //Note that these are factors for the real and imaginary part, they are _not_ the real and imaginary part of the factor
-  pair<double,double> anti_herm_fac = make_pair( gint->factors_.first*-1.0 ,  gint->factors_.second*-1 );
+  gint->factors_.first*-1.0;
+  gint->factors_.second*-1.0;
 
   return;
 }
@@ -210,8 +221,6 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   }
 
   //The positions in A which are contracted with Gamma in the first stage of the operation
-
-
   vector<int> A_gamma_hadamard_mult_pos;
   if ( gint->target_A_deltas_pos()->size() != 0 ) {
 
@@ -226,30 +235,23 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
       ++aghmp_it;
     } 
   } 
-  print_vector( gamma_ids_pos, " post extension gamma_ids_pos" ) ; cout << endl;
 
   vector<int> A_ids_pos(standard_order_.size() - (target_block_size_) - gint->deltas_pos_->size() );
-  
-  print_vector( A_gamma_contraction_pos, "A_gamma_contraction_pos " ); cout << endl;
-  print_vector( A_gamma_hadamard_mult_pos, "A_gamma_hadamard_mult_pos " ); cout << endl;
   copy ( A_gamma_contraction_pos.begin(), A_gamma_contraction_pos.end(), A_ids_pos.begin());
   copy ( A_gamma_hadamard_mult_pos.begin(), A_gamma_hadamard_mult_pos.end(), A_ids_pos.begin()+A_gamma_contraction_pos.size());
-  print_vector( A_ids_pos, "A_ids_pos " ); cout << endl;
- 
 
-  { 
-    //This is the name of the CTP we need to contract (perhaps partially) with gamma
-    vector<pair<int,int>> idxs_deltas_pos(gint->deltas_pos_->size());
-    vector<pair<int,int>>::iterator  idp_it = idxs_deltas_pos.begin();
-    for ( vector<pair<int,int>>::iterator dp_it = gint->deltas_pos_->begin(); dp_it != gint->deltas_pos_->end(); dp_it++, idp_it++ ) 
-      *idp_it = make_pair( (*idxs_trans_)[dp_it->first], (*idxs_trans_)[dp_it->second]);
-  
-    string Aname_alt = get_ctp_name(  std_rngs_target_op_free_, std_idxs_target_op_free_, *(gint->deltas_pos_) );
-     
-    if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() )
-      total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_ );
-    cout << "Aname_alt = " << Aname_alt << endl;
-  }
+  print_vector( gamma_ids_pos,             "Gamma_ids_pos             " ); cout << endl;
+  print_vector( A_gamma_contraction_pos,   "A_gamma_contraction_pos   " ); cout << endl;
+  print_vector( A_gamma_hadamard_mult_pos, "A_gamma_hadamard_mult_pos " ); cout << endl;
+  print_vector( A_ids_pos,                 "A_ids_pos                 " ); cout << endl;
+   
+  //This is the name of the CTP we need to contract (perhaps partially) with gamma
+  string Aname_alt = get_ctp_name( std_name_target_op_free_, std_idxs_target_op_free_, std_rngs_target_op_free_, *(gint->deltas_pos_) );
+
+  cout << "Aname_alt = " << Aname_alt << endl;
+   
+  if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() )
+    total_op_->enter_cmtps_into_map( *(gint->deltas_pos_), std_rngs_, op_info_ );
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////

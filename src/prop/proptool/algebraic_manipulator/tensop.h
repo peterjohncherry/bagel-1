@@ -7,29 +7,6 @@
 #include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
 #include <src/prop/proptool/algebraic_manipulator/constraints.h>
 
-// TODO : FIX THIS STUPID STRUCTURE; I SUGGEST THE FOLLOWING:
-//DQ : class A {//stuff      } 
-//     class B : A { // more stuff }   
-//     class C { A name }
-//     class D : C {  B name }
-//     c.f. Op_Dense. Would prefer to this without having function in D. 
-
-//     Following solution looks OK:
-
-//     class X<param>;
-//     template specialization 
-//     
-//     class X<C> = A, class  X<D> = B;
-//     class Y<C> = C, class  Y<D> = D;
-//
-//     class Y<C> { X<C> name } 
-//     class Y<D> { X<D> name } 
-
-// Instead of having a parent and load of virtuals, you have a base class, and specializations for the relevant templates.
-// Is this way better? Presumably one has an advantage...
-// It doesn't look it to me; you still end up with a four classes, and then a templated map, which you probably want to factor out.... so six again :(
-// However, whilst you do technically have the same number of classes, you can at least have it so 
-
 class TensOp_Base;
 namespace TensOp {  template<typename DataType> class TensOp; } 
 namespace MultiTensOp { template<typename DataType> class MultiTensOp; } 
@@ -139,7 +116,7 @@ class TensOp_Base {
 
      virtual void generate_uncontracted_ctps( std::vector<std::vector<int>>& state_ids ) {} ;
 
-     virtual void enter_cmtps_into_map(pint_vec ctr_pos_list, const std::vector<std::string>& id_ranges ) = 0 ; 
+     virtual void enter_cmtps_into_map(const pint_vec& ctr_pos_list, const std::vector<std::string>& id_ranges, std::shared_ptr<Op_Info> op_info ) = 0 ; 
 
      virtual std::vector<std::shared_ptr<TensOp_Base>> sub_tensops() = 0;
  
@@ -180,6 +157,8 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
 
    void generate_uncontracted_ctps( std::shared_ptr<Op_Info> state_ids );
 
+   void generate_uncontracted_ctps( std::shared_ptr<MultiOp_Info> op_info );
+
    void generate_blocks();
 
    void generate_ranges( std::shared_ptr<Op_Info> op_info );
@@ -191,7 +170,7 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
 
    std::shared_ptr< std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_ranges() const{ return split_ranges_; } 
 
-   void enter_cmtps_into_map(pint_vec ctr_pos_list, const std::vector<std::string>& id_ranges ) { 
+   void enter_cmtps_into_map(const pint_vec& ctr_pos_list, const std::vector<std::string>& id_ranges, std::shared_ptr<Op_Info> op_info ) { 
      throw std::logic_error( "TensOp::TensOp<DataType> should cannot call enter_into_CTP_map form this class!! Aborting!!" ); } 
 
    std::vector<std::shared_ptr<TensOp_Base>> sub_tensops(){  std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_ ; return sub_tensops_; } 
@@ -234,10 +213,11 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
 
     std::vector<std::shared_ptr<TensOp_Base>> sub_tensops(){ return sub_tensops_; } 
  
-    void generate_uncontracted_ctps( std::shared_ptr<MultiOp_Info> op_info );
+    void generate_uncontracted_ctps( std::shared_ptr<Op_Info> op_info );
 
     void get_cmtp( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>>  ctp_vec, 
-                   std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>>>> ccp_vec );
+                   std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>>>> ccp_vec,
+                   std::shared_ptr<Op_Info> op_info );
 
     void shift_ccp_and_ctp_vecs( std::shared_ptr<CtrMultiTensorPart<DataType>>& tatb_cmtp,
                                  int ta, int tb, std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>>& ctp_vec,
@@ -245,7 +225,7 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
 
     std::shared_ptr< std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_ranges() const { return split_ranges_; } 
 
-    void enter_cmtps_into_map(pint_vec ctr_pos_list, const std::vector<std::string>& id_ranges );
+    void enter_cmtps_into_map(const pint_vec& ctr_pos_list, const std::vector<std::string>& id_ranges, std::shared_ptr<Op_Info> op_info );
 
     std::shared_ptr<std::vector<bool>> transform_aops( const char trans ); 
 
