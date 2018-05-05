@@ -144,8 +144,6 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
  
     std::shared_ptr< std::map< char, std::tuple< std::pair<double,double>, std::shared_ptr<std::vector<std::vector<std::string>>> >>>   idx_ranges_map_;
 
-    void generate_idx_ranges_map();
-
   public:
 
    TensOp( std::string name, std::vector<std::string>& idxs, std::vector<std::vector<std::string>>& idx_ranges,

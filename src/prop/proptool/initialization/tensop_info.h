@@ -71,7 +71,8 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
    idxs = make_shared<vector<string>>(vector<string> { "H0", "H1", "H2", "H3" } );
    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false } );//TODO check this ordering is correct
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free });
-   //symmfuncs = { hconj, perm_1032, perm_2301, perm_2103, perm_3012, perm_0321, perm_1230 };
+   symmfuncs = { hconj, perm_1032, perm_2301, perm_2103, perm_3012, perm_0321, perm_1230 };
+   symmfuncs = { hconj } ; 
    constraints = { all_same_spin };
    time_symm = "none";
    state_dep = 0;
@@ -106,19 +107,11 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
     aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
     symmfuncs = { hconj }; 
     constraints = { spin_neutral, not_all_act }; 
-//    constraints = { all_same_spin }; 
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt  });
 //    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_b, not_core_b, not_virt_b, not_virt_b  });
 //    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_a, not_core_a, not_virt_a, not_virt_a  });
     time_symm = "none";
     state_dep = 2;
-
-  } else if ( op_name == "t" ) {  /* ---- T Tensor herm conj TODO  should find a better way fo dealing with this----  */
-    idxs = make_shared<vector<string>>(vector<string>{"t0", "t1", "t2", "t3"}  );
-    aops = make_shared<vector<bool>>  (vector<bool>  {false, false, true, true } );
-    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
-    time_symm = "none";
-    state_dep = 0;
 
   } else if ( op_name == "X" ) {
 

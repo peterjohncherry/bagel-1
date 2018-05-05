@@ -69,11 +69,6 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
 
   Total_Op_ = MT_map->at( multiop_info_->op_name_ );
 
-  vector<char> projector_names;
-  for ( auto& tens : Total_Op_->sub_tensops() )
-    if ( tens->is_projector() )
-      projector_names.push_back(tens->name()[0]);
-
   shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( *(multiop_info_->op_order_),  *(multiop_info_->transformations_) );
  
   Total_Op_->generate_ranges( multiop_info_ );
@@ -81,6 +76,7 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
   shared_ptr<GammaGeneratorRedux<DataType>> GGen = make_shared<GammaGeneratorRedux<DataType>>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
 
   auto split_ranges = Total_Op_->state_specific_split_ranges_->at( multiop_info_->name_ );
+
 
   for ( auto range_map_it = split_ranges->begin(); range_map_it != split_ranges->end(); range_map_it++ ){
 
@@ -97,7 +93,7 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
             vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
             int qq = 0 ;
             for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){
-              cout << tens_block->name()  << " from" ; cout.flush(); cout << tens_block->full_op_name() <<  " is a required block " << endl;
+              cout << tens_block->name()  << " from " ; cout.flush(); cout << tens_block->full_op_name() <<  " is a required block " << endl;
               MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->name() );
               required_blocks->emplace( tens_block->name() );
             }
@@ -156,7 +152,7 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
             vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
             int qq = 0 ;
             for ( auto& tens_block : *(range_map_it->second->range_blocks()) ){
-              cout << tens_block->name()  << " from" ; cout.flush(); cout << tens_block->full_op_name() <<  " is a required block " << endl;
+              cout << tens_block->name()  << " from " ; cout.flush(); cout << tens_block->op_state_name_ <<  " is a required block " << endl;
               MT_map->at( sub_tensops[qq++]->name()  )->add_required_block( tens_block->name() );
               required_blocks->emplace( tens_block->name() );
             }

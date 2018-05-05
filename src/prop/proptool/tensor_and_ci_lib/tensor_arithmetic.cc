@@ -143,7 +143,6 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_over_idxs( shared_ptr<Tensor
   iota(new_order->begin(), new_order->end(), 0);
   put_ctrs_at_back( *new_order, summed_idxs_pos );
 
-
   vector<int> unc_pos( new_order->begin(), new_order->end() - num_ctrs );
   vector<IndexRange> unc_idxrng( unc_pos.size() );
   for ( int qq = 0; qq != unc_pos.size(); qq++ )
@@ -155,6 +154,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_over_idxs( shared_ptr<Tensor
   
   shared_ptr<vector<int>> ctr_maxs      = make_shared<vector<int>>(*unc_maxs);
   shared_ptr<vector<int>> ctr_mins      = make_shared<vector<int>>(unc_maxs->size(),0);
+
   //set max = min so contracted blocks are skipped in fvec_cycle
   for ( int qq = num_ctrs-1; qq!= num_ids; qq++ ) {
     unc_maxs->at(qq) = 0;
@@ -227,17 +227,19 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_
   cout << "Tensor_Arithmetic::contract_on_same_tensor" << endl;
   assert ( Tens_in->indexrange().size() > 0 );
 
-#ifndef NDEBUG
-  cout << "id_ranges_sizes = [ " << Tens_in->indexrange()[ctrs_pos[0]].size() << " " ;
-  for ( int ii =1 ; ii != ctrs_pos.size(); ii++ ) {
-    cout << Tens_in->indexrange()[ctrs_pos[ii]].size() << " " ;
-    assert( Tens_in->indexrange()[ctrs_pos[ii]].size() == Tens_in->indexrange()[ctrs_pos[ii-1]].size() ) ; 
-  } 
-  cout << " ] " << endl;
-#endif 
-
   vector<IndexRange> id_ranges_in = Tens_in->indexrange();
   shared_ptr<Tensor_<DataType>> Tens_out ;
+#ifndef NDEBUG
+  for ( int ii =1 ; ii != ctrs_pos.size(); ii++ ) {
+    cout << id_ranges_in[ctrs_pos[ii]].size() << " " ;
+    if( id_ranges_in[ctrs_pos[ii]].size() != id_ranges_in[ctrs_pos[ii-1]].size() ){
+      cout << " trying to contract two index blocks of unequal lengths : " << endl;
+      cout << " index at position  " <<  ctrs_pos[ii] << " has length " <<  id_ranges_in[ctrs_pos[ii]].size()  << endl; 
+      cout << " index at position  " <<  ctrs_pos[ii-1] << " has length " <<  id_ranges_in[ctrs_pos[ii-1]].size() << endl;
+      throw logic_error( "Aborting" ) ;
+    } 
+  } 
+#endif 
 
   if ( ctrs_pos.size() == Tens_in->indexrange().size() ) {
 
@@ -1180,6 +1182,8 @@ cout << "Tensor_Arithmetic::direct_tensor_product" <<endl;
     Tens_out = make_shared<Tensor_<DataType>>(Tout_rngs);  
     Tens_out->allocate();
 
+    cout << "Tout_rngs sizes = [ " ; cout.flush(); for ( auto& elem : Tout_rngs )  {  cout << elem.size() << " "; cout.flush(); } cout << "]" << endl;
+  
     cout << "Tens_out->size_alloc() = "; cout.flush() ; cout << Tens_out->size_alloc() << endl;
     //TODO think this is the wrong way round; T2 indexes will move slower, which is not what we want...    
     do { 
@@ -1203,6 +1207,10 @@ cout << "Tensor_Arithmetic::direct_tensor_product" <<endl;
         vector<Index> Tout_id_blocks( T2_id_blocks->size() + T1_id_blocks->size() );
         copy( T2_id_blocks->begin(), T2_id_blocks->end(), Tout_id_blocks.begin() );
         copy( T1_id_blocks->begin(), T1_id_blocks->end(), Tout_id_blocks.begin()+T2_id_blocks->size() );
+
+         cout << "T1_id_blocks sizes = [ " ; cout.flush(); for ( auto& elem : *T1_id_blocks )  {  cout << elem.size() << " "; cout.flush(); } cout << "]" << endl;
+         cout << "T2_id_blocks sizes = [ " ; cout.flush(); for ( auto& elem : *T2_id_blocks )  {  cout << elem.size() << " "; cout.flush(); } cout << "]" << endl;
+         cout << "Tout_id_blocks sizes = [ " ; cout.flush(); for ( auto& elem : Tout_id_blocks )  {  cout << elem.size() << " "; cout.flush(); } cout << "]" << endl;
     
         DataType* T1_data_ptr = T1_data.get();
         DataType* Tout_data_ptr = Tout_data.get();

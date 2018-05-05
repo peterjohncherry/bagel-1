@@ -92,6 +92,7 @@ class GammaGenerator_Base{
     std::shared_ptr<std::vector<int>> aops_trans_;
     std::shared_ptr<std::vector<int>> rngs_trans_;
     std::shared_ptr<std::vector<int>> idxs_trans_;
+    std::shared_ptr<std::vector<int>> idxs_trans_inverse_;
 
     std::shared_ptr<std::vector< std::shared_ptr<GammaIntermediate_Base>>> final_gamma_vec_;
     

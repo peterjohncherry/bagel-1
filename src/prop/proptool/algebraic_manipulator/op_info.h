@@ -54,7 +54,10 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
     }
 
     virtual std::shared_ptr<Op_Info> op_info( int ii ) { assert( ii == 0 );  return shared_from_this(); }
+    virtual std::shared_ptr<Op_Info> op_info_canonical( int ii ) { assert(ii == 0);  return shared_from_this(); } 
+
     virtual int op_order( int ii ) { assert( ii == 0 );  return  0; }
+
     virtual std::shared_ptr<std::vector<int>> op_order() { std::shared_ptr<std::vector<int>> oo = std::make_shared<std::vector<int>>(1,0); return oo ; }
     virtual char transformation() { return transformation_; } 
     virtual std::shared_ptr<std::vector<char>> transformations() {
@@ -65,6 +68,10 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
 
 };
 
+
+//Note : The order of members in op_info_vec is determined by the corresponding braket.
+//       Functions with "canonical" will return names/op_info as though they were in the "canonical" order; that is the
+//       same order which all MultiTensOps, and all data structures used in tensor arithmetic, are built.
 class MultiOp_Info : public Op_Info { 
 
   public :  
@@ -104,6 +111,7 @@ class MultiOp_Info : public Op_Info {
 
     std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info_vec() { return op_info_vec_; }
     std::shared_ptr<Op_Info> op_info( int ii ) { return (*op_info_vec_)[ii]; }
+    std::shared_ptr<Op_Info> op_info_canonical( int ii ) { return (*op_info_vec_)[(*op_order_)[ii]]; } 
 
     std::shared_ptr<std::vector<int>> op_order() { return op_order_; }
     int op_order( int ii ) { return (*op_order_)[ii]; }

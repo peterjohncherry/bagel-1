@@ -29,7 +29,7 @@ void CtrTensorPart_Base::get_name(){
 string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_ctrs_pos ){
 /////////////////////////////////////////////////////////////////////////////
   
-  string new_name = op_info_->op_state_name_;
+  string new_name = op_info_->op_state_name_canonical();
 
   new_name+="_"; 
 
@@ -50,7 +50,7 @@ string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_c
 //////////////////////////////////////////////////////////////////////////////
 void CtrTensorPart_Base::get_ctp_idxs_ranges(){
 //////////////////////////////////////////////////////////////////////////////
-cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
+//cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
 
   int counter = 0;
   vector<bool> get_unc(full_idxs_->size(), true);
@@ -88,7 +88,7 @@ cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
 template<class DataType>
 pair<int,int> CtrTensorPart<DataType>::get_pre_contract_ctr_rel_pos(pair<int,int>& ctr_pos ) { 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "CtrTensorPart::get_pre_contract_ctr_rel_pos" << endl;
+// cout << "CtrTensorPart::get_pre_contract_ctr_rel_pos" << endl;
 
   vector<bool> get_unc(full_idxs_->size(), true);
   for ( int ii = 0 ; ii != ctrs_done_->size()-1 ; ii++ )  {
@@ -161,7 +161,6 @@ int counter = 0 ;
     shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list_out =  make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list);
     ACompute_map->emplace(CTP_out_name, ACompute_list_out);
 
-    cout << endl <<  "Acompute_list->size() =" << ACompute_list->size() << endl;
     dependencies_.emplace(CTP_in_name);
   } 
   ACompute_map->emplace(name_, ACompute_list);
@@ -184,7 +183,6 @@ cout << endl << "CtrMultiTensorPart<DataType>::FullContract :   CMTP name = " <<
     ACompute_list->push_back( make_shared<CtrOp_reorder> ( reordered_tens_name_, name_, reordering_, "reordering" ));
   } else if (ctrs_pos_->size() > 0 ) {
     
-    cout << "CTP_vec->size() = " << CTP_vec_->size() <<  "     cross_ctrs_pos_->size() = " <<  cross_ctrs_pos_->size() << endl;
     if ( (CTP_vec_->size() == 2) && ( cross_ctrs_pos_->size() > 0 ) ) {
       shared_ptr<CtrTensorPart<DataType>> new_CTP = Binary_Contract_diff_tensors(cross_ctrs_pos_->back(), ctrs_pos_->back(), Tmap,  ACompute_list, ACompute_map);
       if (Tmap->find(new_CTP->name_) == Tmap->end()){
@@ -217,7 +215,7 @@ shared_ptr<CtrTensorPart<DataType>>
                                                           shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
                                                           shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors : " << name_ << endl; 
+//   cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors : " << name_ << endl; 
 
    int T1pos, T2pos, T1ctr, T2ctr;
 
@@ -237,7 +235,7 @@ shared_ptr<CtrTensorPart<DataType>>
    shared_ptr<CtrTensorPart_Base> T1 = CTP_vec_->at(T1pos);
    shared_ptr<CtrTensorPart_Base> T2 = CTP_vec_->at(T2pos);
 
-   string T1name = T1->name_; 
+   string T1name = T1->name_;  
    string T2name = T2->name_; 
 
    T1->FullContract(Tmap, ACompute_list, ACompute_map);

@@ -45,7 +45,6 @@ class CtrTensorPart_Base  {
                     ctrs_todo_      = std::make_shared< std::vector<std::pair<int,int>>>(0);
                     contracted_     = false;
                     got_compute_list_ = false;
-                    std::cout << "1 ctp name_ = "; std::cout.flush(); std::cout << name_ << std::endl;
                    };
 
 
@@ -57,7 +56,6 @@ class CtrTensorPart_Base  {
                         got_data_(false), size_( full_idxs_->size()), op_info_(op_info),
                         name_(WickUtils::get_ctp_name(op_info->op_state_name_canonical(), *full_idxs, *full_id_ranges_, *ctrs_pos_ )) {  
 
-                          std::cout <<  " 2 ctp name = " <<  name_ << std::endl;
                           ctrs_todo_ = std::make_shared<std::vector<std::pair<int,int>>>(*ctrs_pos);
                           ctrs_done_ = std::make_shared<std::vector<std::pair<int,int>>>(0);
                           got_data_ = false;
@@ -116,7 +114,6 @@ class CtrTensorPart : public  CtrTensorPart_Base , public std::enable_shared_fro
                   std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos,
                   std::shared_ptr<Op_Info> op_info ) :
                   CtrTensorPart_Base( full_idxs, full_id_ranges, ctrs_pos, op_info ) {
-                  std::cout << " ctp name_ = "; std::cout.flush(); std::cout << name_ << std::endl;
                   };
 
      void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
