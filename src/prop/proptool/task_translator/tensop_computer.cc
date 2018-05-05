@@ -229,7 +229,7 @@ TensOp_Computer::TensOp_Computer<DataType>::direct_product_tensors( std::vector<
     cout << "*tn_it = " << *tn_it << endl;
     shared_ptr<Tensor_<DataType>> Tens_next = find_or_get_CTP_data(*tn_it);
     Tens_intermediate = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::direct_tensor_product( Tens_prod, Tens_next ); 
-    Tens_prod = Tens_intermediate;
+    Tens_prod = std::move(Tens_intermediate);
     Tname_comp += *tn_it;
     cout << "  Tname_comp = " << Tname_comp << endl;
   }           

@@ -8,7 +8,6 @@
 #include <src/smith/indexrange.h>
 #include <src/smith/tensor.h>
 #include <src/smith/multitensor.h>
-//#include <src/prop/proptool/initialization/equation_init.h>
 #include <src/prop/proptool/initialization/equation_init_linearRM.h>
 #include <src/prop/proptool/initialization/op_bk_term_expr_init.h>
 #include <src/prop/proptool/integrals/moint_computer.h>

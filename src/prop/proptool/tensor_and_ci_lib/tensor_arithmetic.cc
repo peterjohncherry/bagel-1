@@ -1158,8 +1158,10 @@ cout << "Tensor_Arithmetic::direct_tensor_product" <<endl;
   
   shared_ptr<Tensor_<DataType>> Tens_out;
 
-  if ( Tens1->size_alloc() != 1 && Tens2->size_alloc() != 1 ) {
+  cout << " Tens1->rank() = "; cout.flush(); cout << Tens1->rank() ; cout.flush(); cout << " Tens1->size_alloc() = "; cout.flush(); cout << Tens1->size_alloc() << endl;
+  cout << " Tens2->rank() = "; cout.flush(); cout << Tens2->rank() ; cout.flush(); cout << " Tens2->size_alloc() = "; cout.flush(); cout << Tens2->size_alloc() << endl;
 
+  if ( Tens1->size_alloc() != 1 && Tens2->size_alloc() != 1 ) {
     //note column major ordering
     vector<IndexRange>      T1_rngs = Tens1->indexrange();
     shared_ptr<vector<int>> T1_maxs = get_num_index_blocks_vec( make_shared<vector<IndexRange>>(T1_rngs) );
@@ -1178,16 +1180,19 @@ cout << "Tensor_Arithmetic::direct_tensor_product" <<endl;
     Tens_out = make_shared<Tensor_<DataType>>(Tout_rngs);  
     Tens_out->allocate();
 
+    cout << "Tens_out->size_alloc() = "; cout.flush() ; cout << Tens_out->size_alloc() << endl;
     //TODO think this is the wrong way round; T2 indexes will move slower, which is not what we want...    
     do { 
-      
+      print_vector( *T2_block_pos, "T2_block_pos" ); cout << endl;
+
       shared_ptr<vector<Index>> T2_id_blocks = get_rng_blocks( T2_block_pos, T2_rngs); 
       size_t T2_block_size = Tens2->get_size( *T2_id_blocks ); 
-    
       std::unique_ptr<DataType[]> T2_data = Tens2->get_block(*T2_id_blocks);  
     
       do { 
-    
+         
+        print_vector( *T1_block_pos, "T1_block_pos" ); cout << endl;
+
         shared_ptr<vector<Index>> T1_id_blocks = get_rng_blocks( T1_block_pos, T1_rngs ); 
         size_t T1_block_size = Tens1->get_size( *T1_id_blocks ); 
     
@@ -1207,9 +1212,11 @@ cout << "Tensor_Arithmetic::direct_tensor_product" <<endl;
           scaler( T2_block_size, *T1_data_ptr, Tout_data_ptr ); 
           T1_data_ptr++;
           Tout_data_ptr += T2_block_size;
-        }
+         }
      
+        cout << "TA::dtp 21" << endl;
         Tens_out->put_block( Tout_data, Tout_id_blocks );
+        cout << "TA::dtp 22" << endl;
     
       } while(fvec_cycle_skipper(T1_block_pos, T1_maxs, T1_mins ));
     

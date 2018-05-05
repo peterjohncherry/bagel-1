@@ -138,7 +138,6 @@ namespace WickUtils {
   }
 
 
-
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
     if (name != "" ) 

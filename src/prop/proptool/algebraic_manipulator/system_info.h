@@ -20,7 +20,6 @@ class System_Info {
         std::vector<std::string> core;
         std::vector<std::string> act;
         std::vector<std::string> virt;
-
          
         // key :    Name of range
         // result : prime for this range
@@ -70,7 +69,6 @@ class System_Info {
         System_Info(std::shared_ptr<StatesInfo<DataType>> states_info, bool spinfree);
         ~System_Info(){};
         
-        
         void construct_equation_task_list( std::string equation_name );
         
         void Build_BraKet(std::shared_ptr<std::vector<std::shared_ptr<TensOp::TensOp<DataType>>>> Tens_vec  );
@@ -90,7 +88,6 @@ class System_Info {
                                                                    std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>> term_braket_map_state_spec, 
                                std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
                                                          std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec ); 
-
         
         void create_equation( std::string name, std::string type, 
                               std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>>  term_braket_map,
@@ -100,9 +97,6 @@ class System_Info {
         int nbeta(int state_num)  { return states_info_->nbeta( state_num );  };
         int nact(int state_num)   { return states_info_->nact( state_num );   };
         bool spinfree() {return spinfree_;}
-
-
-
         
         std::shared_ptr< std::map <std::string, std::shared_ptr<std::vector<std::shared_ptr< TensOp::TensOp<DataType>>>>>> braket_map(){return braket_map_;}
            

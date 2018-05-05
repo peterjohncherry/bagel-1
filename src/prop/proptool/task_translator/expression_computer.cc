@@ -30,7 +30,6 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
   evaluate_expression(expr);
   return;
 } 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( shared_ptr<Expression<DataType>> expression ) { 

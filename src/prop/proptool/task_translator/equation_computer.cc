@@ -18,12 +18,13 @@ void Equation_Computer_Base<DataType>::set_computers( std::shared_ptr<B_Gamma_Co
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
-void Equation_Computer_Base<DataType>::set_maps( std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map,  
-                                                 std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map ) {
+void Equation_Computer_Base<DataType>::set_maps( shared_ptr<map< string, shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map,  
+                                                 shared_ptr<map< string, shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Computer_Value<DataType>::set_maps() " << endl;
  
   gamma_data_map_ = gamma_data_map;
+  system_tensop_data_map_ = tensop_data_map;
   tensop_data_map_ = tensop_data_map;
 
   return; 
@@ -95,7 +96,7 @@ std::shared_ptr<SMITH::MultiTensor_<DataType>>
 Equation_Computer_Base<DataType>::get_tensop_vector( string tensop_name, vector<pair<string, int>>& fixed_idxs,
                                                                          vector<pair<string, int>>& summed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "Equation_Computer_Base<DataType>::get_tensop_vector ( name, fixed, summed) " << std::endl;
+  cout << "Equation_Computer_Base<DataType>::get_tensop_vector ( name, fixed, summed) : tensop_name = "; cout.flush(); cout << tensop_name << endl;
 
   vector<shared_ptr<Tensor_<DataType>>> tens_list(5); 
   // TODO replace with call to range map in equation for varios input idxs
@@ -115,9 +116,7 @@ template<typename DataType>
 std::shared_ptr<SMITH::MultiTensor_<DataType>>
 Equation_Computer_Base<DataType>::get_tensop_vector( string tensop_name, vector<pair<string, int>>& fixed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "Equation_Computer_Base<DataType>::get_tensop_vector (name, fixed)" << std::endl;
-  cout << tensop_name << endl;  
-
+  std::cout << "Equation_Computer_Base<DataType>::get_tensop_vector (name, fixed) : tensop_name = "; cout.flush(); cout  << tensop_name << endl;  
 
   vector<shared_ptr<Tensor_<DataType>>> tens_list(5); 
   // TODO replace with call to range map in equation for varios input idxs
@@ -145,7 +144,6 @@ Equation_Computer_Base<DataType>::evaluate_term( string expression_name, vector<
 
   return; 
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void

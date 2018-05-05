@@ -24,6 +24,7 @@ class Equation_Computer_Base {
      std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> gamma_computer_;
 
      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map_; 
+     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> system_tensop_data_map_;
      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map_;
 
      DataType
