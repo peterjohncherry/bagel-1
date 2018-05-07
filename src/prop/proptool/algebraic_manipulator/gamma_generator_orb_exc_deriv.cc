@@ -145,7 +145,6 @@ void GammaGenerator_OrbExcDeriv<DataType>::swap( int ii, int jj, int kk ){
 
   (*((gint)->ids_pos_))[ii] = j_pos;
   (*((gint)->ids_pos_))[jj] = i_pos;
-  
 
   if ( ( (*block_aops_rngs_)[ j_pos ] == (*block_aops_rngs_)[ i_pos ]) &&( (*block_aops_)[ i_pos ] != (*block_aops_)[ j_pos ]) ){
 

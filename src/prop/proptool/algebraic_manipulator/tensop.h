@@ -45,7 +45,6 @@ class TensOp_Base {
 
      // MultiTens specific, but should be obtainable for TensOp (with warning)
      std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_; 
-     std::shared_ptr< std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_ranges_;
 
    public:
 
@@ -53,8 +52,6 @@ class TensOp_Base {
 
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>>>> all_ranges_state_specific_;
     
-     std::shared_ptr<std::map<std::string,std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>>>> state_specific_split_ranges_; 
- 
      TensOp_Base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name),  factor_(std::make_pair(1.0,1.0)), spinfree_(spinfree),
                                                                                         Tsymm_(Tsymm), state_dep_(state_dep),
                                                                                         required_blocks_(std::make_shared<std::set<std::string>>()) {};
@@ -102,15 +99,14 @@ class TensOp_Base {
                 std::shared_ptr<std::set<std::shared_ptr<Op_Info>>> dummy;
                 return dummy; } 
 
-     virtual std::shared_ptr<std::vector<bool>> transform_aops( const char op_trans ) = 0;
+     virtual std::shared_ptr<std::vector<bool>> transform_aops( const char op_trans ) {
+         throw std::logic_error("Should not call from base class"); return std::make_shared<std::vector<bool>>(0); }
 
      virtual std::shared_ptr<std::vector<bool>> transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ) = 0;
 
      virtual bool is_projector(){ return false ; } 
 
      virtual std::shared_ptr< std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info > > > all_ranges() const  { return all_ranges_; }
-
-     virtual std::shared_ptr< std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info > > > split_ranges() const = 0 ;  
 
      virtual void generate_uncontracted_ctps( std::shared_ptr<Op_Info> op_info ) {} ;
 
@@ -119,6 +115,7 @@ class TensOp_Base {
      virtual void enter_cmtps_into_map(const pint_vec& ctr_pos_list, const std::vector<std::string>& id_ranges, std::shared_ptr<Op_Info> op_info ) = 0 ; 
 
      virtual std::vector<std::shared_ptr<TensOp_Base>> sub_tensops() = 0;
+     
  
 };
 
@@ -155,7 +152,7 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
 
    void generate_uncontracted_ctps( std::shared_ptr<Op_Info> state_ids );
 
-   void generate_uncontracted_ctps( std::shared_ptr<MultiOp_Info> op_info );
+//   void generate_uncontracted_ctps( std::shared_ptr<Op_Info> op_info );
 
    void generate_blocks();
 
@@ -166,10 +163,7 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
    std::shared_ptr<Range_Block_Info> 
    get_transformed_range_block( std::shared_ptr<Op_Info> op_info, std::shared_ptr<Range_Block_Info>& block );
 
-   std::shared_ptr< std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_ranges() const{ return split_ranges_; } 
-
-   void enter_cmtps_into_map(const pint_vec& ctr_pos_list, const std::vector<std::string>& id_ranges, std::shared_ptr<Op_Info> op_info ) { 
-     throw std::logic_error( "TensOp::TensOp<DataType> should cannot call enter_into_CTP_map form this class!! Aborting!!" ); } 
+   void enter_cmtps_into_map(const pint_vec& ctr_pos_list, const std::vector<std::string>& id_ranges, std::shared_ptr<Op_Info> op_info ); 
 
    std::vector<std::shared_ptr<TensOp_Base>> sub_tensops(){  std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_ ; return sub_tensops_; } 
   
@@ -221,11 +215,7 @@ class MultiTensOp : public TensOp_Base, public std::enable_shared_from_this<Mult
                                  int ta, int tb, std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>>& ctp_vec,
                                  std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >>& ccp_vec  );
 
-    std::shared_ptr< std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>> split_ranges() const { return split_ranges_; } 
-
     void enter_cmtps_into_map(const pint_vec& ctr_pos_list, const std::vector<std::string>& id_ranges, std::shared_ptr<Op_Info> op_info );
-
-    std::shared_ptr<std::vector<bool>> transform_aops( const char trans ); 
 
     std::shared_ptr<std::vector<bool>> transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ); 
 

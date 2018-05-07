@@ -83,24 +83,31 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
 
   string Aname_alt = get_ctp_name( op_info_->op_state_name_canonical(), *std_ids_,  std_rngs_, idxs_deltas_pos );
 
+  cout << "GGR:aAtm 4 " << endl;
   if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) 
     total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_, op_info_ );
   
+  cout << "GGR:aAtm 5 " << endl;
   string Gname_alt = get_gamma_name( chrvec_to_strvec(*block_aops_rngs_), *block_aops_, *ids_pos, bra_name, ket_name );
 
+  cout << "GGR:aAtm 6 " << endl;
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
     G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo_Base>>>() );
 
+  cout << "GGR:aAtm 7 " << endl;
   //TODO do this reordering w.r.t. standardized orders DQ : Is this ok? 
   vector<int> Aid_order_new = get_Aid_order( standardized_ids_pos );
+  cout << "GGR:aAtm 8 " << endl;
   pair<double,double> new_fac = bk_factor_; 
   pair_fac_mult( gint->factors_, new_fac );
 
+  cout << "GGR:aAtm 9 " << endl;
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
     auto AInfo = make_shared<AContribInfo_Full<DataType>>( Aname_alt, Aid_order_new, new_fac );
     G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
 
+  cout << "GGR:aAtm 10 " << endl;
   } else {
     shared_ptr<AContribInfo_Base> AInfo = AInfo_loc->second;
     for ( int qq = 0 ; qq != AInfo->id_orders().size(); qq++ ) {

@@ -14,7 +14,8 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     shared_ptr<vector<int>> idxs_trans,  pair<double,double> factors,
                                     pair<double,double> ReIm_factors,
                                     const vector<bool>& aops, shared_ptr<Op_Info>& op_info ) :
-                                    orig_rngs_(orig_block), idxs_trans_(idxs_trans), factors_(factors), ReIm_factors_(ReIm_factors)  {
+                                    orig_rngs_(orig_block), idxs_trans_(idxs_trans), factors_(factors), ReIm_factors_(ReIm_factors),
+                                    op_info_(op_info) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //   cout << "Range_Block_Info::Range_Block_Info 1" << endl;
 
@@ -60,7 +61,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     shared_ptr<Transformation> transform,  pair<double,double> factors, pair<double,double> ReIm_factors,
                                     const vector<bool>& aops, shared_ptr<Op_Info>& op_info) :
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(transform->idxs_trans(*orig_block)), factors_(factors),
-                                    ReIm_factors_(ReIm_factors), transform_(transform) {
+                                    ReIm_factors_(ReIm_factors), transform_(transform), op_info_(op_info)  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // cout << "Range_Block_Info::Range_Block_Info 2" << endl;
 
@@ -107,7 +108,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block, shared_ptr<Range_Block_Info> unique_block, shared_ptr<vector<int>> idxs_trans,
                                     pair<double,double> factors, pair<double,double> ReIm_factors, const vector<bool>& aops, shared_ptr<Op_Info>& op_info ) :
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_( idxs_trans ), factors_(factors),
-                                    ReIm_factors_(ReIm_factors) {
+                                    ReIm_factors_(ReIm_factors), op_info_(op_info)  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "Range_Block_Info::Range_Block_Info 3" << endl;
 
@@ -151,7 +152,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_blocks, std::vector<int>& cml_sizes, 
                           std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<Op_Info> multiop_info,  
-                          std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>>& unique_split_ranges ) :
+                          std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>>& unique_split_ranges ) :
                           range_blocks_(std::make_shared<std::vector<std::shared_ptr<Range_Block_Info>>>( range_blocks )) , factors_(std::make_pair(1.0,0.0)) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "SRBI_Helper::SRBI_Helper" << endl;

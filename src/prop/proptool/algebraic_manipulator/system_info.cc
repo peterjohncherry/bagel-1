@@ -80,7 +80,6 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
   
   // change to be expression specific
   cout << "getting  ctr tens ranges for New_Op : " << op_name << endl;
-//  new_op->generate_uncontracted_ctps();
   CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());
   cout << "got ctr tens ranges for new_op : " << op_name << endl;
 

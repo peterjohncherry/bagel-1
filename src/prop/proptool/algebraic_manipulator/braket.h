@@ -29,9 +29,9 @@ class BraKet_Base{
     std::vector<int> op_order_;
     std::shared_ptr<TensOp_Base> Total_Op_;
    
-    std::shared_ptr<MultiOp_Info> multiop_info_;
+    std::shared_ptr<Op_Info> multiop_info_;
    
-    BraKet_Base( std::shared_ptr<MultiOp_Info> multiop_info, std::pair<double, double> factor, int bra_num, int ket_num, std::string type);
+    BraKet_Base( std::shared_ptr<Op_Info> multiop_info, std::pair<double, double> factor, int bra_num, int ket_num, std::string type);
   
    ~BraKet_Base(){};
 
@@ -42,7 +42,7 @@ class BraKet_Base{
 
     std::shared_ptr<std::vector<int>> op_order() { return multiop_info_->op_order_; };
     std::shared_ptr<std::vector<char>> op_trans_list(){ return multiop_info_->transformations_; };
-    std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> op_state_ids() { return multiop_info_->state_ids_; };
+    std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> op_state_ids() { return multiop_info_->state_ids_list_; };
 
     void print_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> G_to_A_map, bool has_orb_exc );
 
@@ -71,16 +71,16 @@ class BraKet_Full : public BraKet_Base {
 
   public :
 
-    BraKet_Full( std::shared_ptr<MultiOp_Info> multiop_info, std::pair<double, double> factor, int bra_num, int ket_num,  std::string type) :
+    BraKet_Full( std::shared_ptr<Op_Info> multiop_info, std::pair<double, double> factor, int bra_num, int ket_num,  std::string type) :
                  BraKet_Base( multiop_info, factor, bra_num, ket_num, type) {} 
    ~BraKet_Full(){};
 
-    void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<TensOp_Base>>> MT_map,                
+    void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<TensOp_Base>>> MT_map,
                                               std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> G_to_A_map,
                                               std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,
                                               std::shared_ptr<StatesInfo_Base> target_states,
                                               std::shared_ptr<std::set<std::string>> required_blocks,
-                                              std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map );         
+                                              std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map );
     
 };
 
@@ -91,7 +91,7 @@ class BraKet_OrbExcDeriv : public BraKet_Base {
 
     std::string target_op_;        
 
-    BraKet_OrbExcDeriv( std::shared_ptr<MultiOp_Info> multiop_info, std::pair<double,double> factor, int bra_num, int ket_num, std::string type) :
+    BraKet_OrbExcDeriv( std::shared_ptr<Op_Info> multiop_info, std::pair<double,double> factor, int bra_num, int ket_num, std::string type) :
                         BraKet_Base( multiop_info, factor, bra_num, ket_num, type) {} 
 
    ~BraKet_OrbExcDeriv(){};

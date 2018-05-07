@@ -110,7 +110,6 @@ int main(int argc, char** argv) {
       } else if (title == "proptool") {
 
         cout << "===============INTO PROPTOOL================" << endl;
-        cout << "one day this will do something" << endl;
         shared_ptr<PropTool::PropTool> my_eqn = make_shared<PropTool::PropTool>(itree, geom, ref);
         my_eqn->compute();
         cout << "===============OUT OF PROPTOOL================" << endl;

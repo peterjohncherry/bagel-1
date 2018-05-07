@@ -57,6 +57,9 @@ Equation_Init_Base::get_operator_info( std::vector<std::string>& op_list, std::v
   iota( op_order.begin(), op_order.end(), 0);
   sort( op_order.begin(), op_order.end(), [ &op_list ] ( int i1, int i2) { return (bool)( op_list[i1] < op_list[i2]); });  
 
+
+  print_vector( op_order , "INIT op_order"  ) ; cout << endl;
+
   return make_shared<MultiOp_Info>(multiop_name, multiop_state_name, multiop_full_name, multiop_info_list, op_order );  
   
 }

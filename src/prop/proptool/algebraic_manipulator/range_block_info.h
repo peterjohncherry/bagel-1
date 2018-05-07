@@ -38,6 +38,7 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     std::string full_op_name_;
     std::string name_;
 
+
   public :
 
     long unsigned int plus_pnum_;
@@ -47,6 +48,8 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     std::shared_ptr<Transformation> transform_;
     
     std::string op_state_name_;
+
+    std::shared_ptr<Op_Info> op_info_;
 
     std::shared_ptr<const std::vector<std::string>> orig_rngs_;
     std::shared_ptr<Range_Block_Info> unique_block_;
@@ -71,14 +74,6 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
   
     std::string name() const { return name_; } 
     std::string full_op_name() const { return full_op_name_; } 
-
-
-    virtual
-    std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks(){ 
-      throw std::logic_error(" Should only call range_blocks() from Split_Range_Block" ); 
-      std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> dummy; 
-      return dummy;
-    } 
      
     std::shared_ptr<const std::vector<std::string>> orig_rngs() { return orig_rngs_; } 
     std::shared_ptr< std::vector<char>> orig_rngs_ch() { return orig_rngs_ch_; } 
@@ -88,8 +83,10 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
 
     std::shared_ptr<std::vector<int>> idxs_trans_inverse() { return idxs_trans_inverse_;  }  
 
-    virtual
-    std::shared_ptr<Op_Info> op_info() { throw std::logic_error("Do not acces op_info from range_block_base"); std::shared_ptr<Op_Info> dummy; return dummy; } 
+    virtual std::shared_ptr<Op_Info> op_info() { return op_info_; } 
+    
+    virtual std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks(){ 
+      return std::make_shared<std::vector<std::shared_ptr<Range_Block_Info>>> ( 1, shared_from_this() );  }
 };
 
 class SRBI_Helper { 
@@ -114,10 +111,8 @@ class SRBI_Helper {
 
     SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_blocks, std::vector<int>& cml_sizes, 
                  std::shared_ptr<std::vector<bool>> aops, std::shared_ptr<Op_Info> multiop_info,  
-                 std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info>>>& state_specific_split_ranges ); 
+                 std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>>& state_specific_split_ranges ); 
    ~SRBI_Helper(){};
-
-    void add_trans( std::shared_ptr<Split_Range_Block_Info> srbi, std::vector<int>&  op_order, std::vector<char> op_trans );
  
 };
 
@@ -125,15 +120,13 @@ class Split_Range_Block_Info : public  Range_Block_Info, std::enable_shared_from
 
   private : 
     std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks_;
-   
 
   public :
 
-    std::shared_ptr<Op_Info> op_info_;
 
     Split_Range_Block_Info( const std::vector<bool>& aops, SRBI_Helper& helper, std::shared_ptr<Op_Info> op_info ) : 
                             Range_Block_Info( helper.orig_rngs_, helper.unique_block_, helper.idxs_trans_, helper.factors_, helper.ReIm_factors_, aops , op_info ),
-                            range_blocks_(helper.range_blocks_), op_info_(op_info) {}// this->unique_blockXX_ = helper.unique_blockXX_; } 
+                            range_blocks_(helper.range_blocks_) {}// this->unique_blockXX_ = helper.unique_blockXX_; } 
                      
    ~Split_Range_Block_Info(){};
 

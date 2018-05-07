@@ -141,10 +141,10 @@ namespace WickUtils {
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
     if (name != "" ) 
-      std::cout << name << " ="; 
+      std::cout << name << " ="; std::cout.flush();
     std::cout << " [ ";
     for (auto  elem : invec)
-      std::cout << elem << " " ;
+      std::cout << elem << " " ; std::cout.flush();
     std::cout << "]  " ;
     return;
   }
@@ -152,11 +152,11 @@ namespace WickUtils {
   template<class T1, class T2  >
   void print_pair_vector(std::vector<std::pair<T1,T2>> invec, std::string name =""){
     if (name != "" ) 
-      std::cout << name << " ="; 
+      std::cout << name << " =";  std::cout.flush();
     std::cout << " [ ";
     for (auto  elem : invec)
       std::cout << "(" << elem.first << "," << elem.second << ") ";
-    std::cout << "]  " ;
+    std::cout << "]  " ; std::cout.flush();
     return;
   }
 

@@ -105,8 +105,6 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<shared_pt
     shared_ptr<vector<shared_ptr<Op_Info>>> op_info_vec = braket_info->multiop_info_->op_info_vec();
 
     for (std::vector<shared_ptr<Op_Info>>::const_iterator oiv_it = op_info_vec->begin(); oiv_it != op_info_vec->end(); oiv_it++ ) {  
-
-      cout << MT_map_->size();
       
       auto T_loc = MT_map_->find( (*oiv_it)->op_name_ );
       if( T_loc == MT_map_->end() ){ 
@@ -138,8 +136,6 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<shared_pt
       MT_map_->emplace(braket_info->multiop_info_->op_name_, multiop );
     } 
     
-//    braKet_name_list->push_back( make_pair( braket_info.name(), braket_info.factor_ ) );
-//    cout << "Pushed " <<  braket_info.multiop_info_->name_ << " back into braket_name_list" << endl;
   }
   
   return expression_type;

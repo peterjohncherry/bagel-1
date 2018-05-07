@@ -21,6 +21,7 @@ GammaGenerator_Base::GammaGenerator_Base( shared_ptr<StatesInfo_Base> target_sta
   cout << "GammaGenerator_Base::GammaGenerator_Base" << endl;
 
   print_vector(*std_aops_, "std_aops"); cout << endl; // This should be constant for all range blocks, but this is not the same as the MT aops
+  cout << "total_op_->num_idxs() = " ; cout.flush(); cout << total_op_->num_idxs() << endl;
   print_vector(*std_ids_, "std_ids"); cout << endl; // ids are not (necessarily) be constant for all range blocks
   
   return;
