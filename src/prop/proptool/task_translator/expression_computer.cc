@@ -159,8 +159,8 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
   string expression_name = expression->name();
   cout << endl << endl;
   cout << " --------- required_blocks ---------" << endl; 
-  for ( string block_name : *(expression->required_blocks()) ) 
-    cout << block_name << endl;
+  for ( std::shared_ptr<Range_Block_Info> block : *(expression->required_blocks_) ) 
+    cout << block->name() << endl;
   cout << endl << endl;
 
   bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 

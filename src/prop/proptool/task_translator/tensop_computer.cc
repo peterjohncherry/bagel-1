@@ -86,71 +86,70 @@ void TensOp_Computer::TensOp_Computer<DataType>::divide_tensors_in_place(string 
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_block_Tensor(string Tname){
+shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_block_Tensor(string tens_block_name){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "TensOp_Computer::TensOp_Computer::get_block_Tensor : " << Tname << endl;
+   cout << "TensOp_Computer::TensOp_Computer::get_block_Tensor : " << tens_block_name << endl;
  
    shared_ptr<Tensor_<DataType>> tens; 
    
-   if(  tensop_data_map_->find(Tname) != tensop_data_map_->end()){
-     tens = tensop_data_map_->at(Tname);
+   if(  tensop_data_map_->find(tens_block_name) != tensop_data_map_->end()){
+     tens = tensop_data_map_->at(tens_block_name);
 
    } else {
-     cout <<"not in map ... " <<  Tname << "must be formed from direct product tensor" << endl; 
+     cout <<"not in map ... " <<  tens_block_name << " must be formed from direct product tensor " << endl; 
+
      vector<string> sub_tens_names(0);
-     for ( shared_ptr<CtrTensorPart_Base>& ctp : *(CTP_map_->at(Tname)->CTP_vec())){ 
-       
+     for ( shared_ptr<CtrTensorPart_Base>& ctp : *(CTP_map_->at(tens_block_name)->CTP_vec()))
        sub_tens_names.push_back(ctp->name());
-       cout << " ctp->name() " << endl;
-     }
+     
      print_vector(sub_tens_names, "sub_tens_names" ); cout << endl; 
      tens = direct_product_tensors( sub_tens_names ); 
 
    }
 
-   cout << "leaving TensOp_Computer::TensOp_Computer::get_block_Tensor : " << Tname << endl;
+   cout << "leaving TensOp_Computer::TensOp_Computer::get_block_Tensor : " << tens_block_name << endl;
    return tens;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //TODO this can end up copying a lot; ideally should call the integrals just for these blocks
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void TensOp_Computer::TensOp_Computer<DataType>::get_tensor_data_blocks(shared_ptr<set<string>> required_blocks ){
+void TensOp_Computer::TensOp_Computer<DataType>::get_tensor_data_blocks(shared_ptr<set<shared_ptr<Range_Block_Info>>> required_blocks ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
 
-   for ( string Tname : *required_blocks ) { 
+   for ( auto& block : *required_blocks ) { 
  
+     string block_name = block->name();
+     string full_tens_name = block->op_info_->op_state_name_;
+    
      shared_ptr<Tensor_<DataType>> tens; 
      
-     if(  tensop_data_map_->find(Tname) != tensop_data_map_->end()){
-       tens = tensop_data_map_->at(Tname);
+     if(  tensop_data_map_->find(full_tens_name) != tensop_data_map_->end()){
+       tens = tensop_data_map_->at(full_tens_name);
      
      } else {
-       shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map_->at(Tname)->unc_id_ranges() ) ;
+       shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map_->at(block_name)->unc_id_ranges() ) ;
      
-       if(  tensop_data_map_->find(Tname.substr(0,1)) != tensop_data_map_->end()){
-         cout << "initializing uncontracted tensor block " << Tname << " using data from parent tensor \"" << Tname.substr(0,1) << "\"" << endl;
+       if( tensop_data_map_->find(full_tens_name) != tensop_data_map_->end()){
+         cout << "initializing uncontracted tensor block " << full_tens_name << " using data from parent tensor \"" << full_tens_name.substr(0,1) << "\"" << endl;
         
-         print_vector( *(CTP_map_->at(Tname)->unc_id_ranges()) , "unc_id_ranges" ) ; cout <<endl;  
-         tens = get_sub_tensor( tensop_data_map_->at(Tname.substr(0,1)), *id_block );
+         tens = get_sub_tensor( tensop_data_map_->at(full_tens_name), *id_block );
      
-         cout << Tname<< "->norm() = " << tens->norm() << endl; 
-     
-       } else if ( Tname[0] == 'X' || Tname[0] == 'T' || Tname[0] == 't' || Tname[0] == 'S'  ) {  
-         cout << "new tensor block : " << Tname << " is being initialized to 1.0,  for exciations" << endl; 
+       } else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't' || full_tens_name[0] == 'S'  ) {  
+         cout << "new tensor block : " << full_tens_name << " is being initialized to 1.0,  for exciations" << endl; 
          tens = make_shared<Tensor_<DataType>>(*id_block);
          tens->allocate();
          Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( tens, 1.0);
      
        } else {  
-         cout << "new tensor block : " << Tname << " is being initialized to zero" << endl; 
+         cout << "new tensor block : " << full_tens_name << " is being initialized to zero" << endl; 
          tens = make_shared<Tensor_<DataType>>(*id_block);
          tens->allocate();
          tens->zero();
        }
      }
-     tensop_data_map_->emplace(Tname, tens) ;
+     tensop_data_map_->emplace(full_tens_name, tens) ;
    } 
    cout << "leaving TensOp_Computer::TensOp_Computer::get_tensor_data_blocks" << endl;
    return;
@@ -244,17 +243,16 @@ TensOp_Computer::TensOp_Computer<DataType>::direct_product_tensors( std::vector<
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
-TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string T_in_name, shared_ptr<vector<int>> new_order){
+TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string tens_block_name, shared_ptr<vector<int>> new_order){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp_Computer::TensOp_Computer::reorder_block_Tensor "; cout.flush();
-  cout << " : " << T_in_name ; cout.flush();
-  cout <<  " New_order = [ "; cout.flush();  for (int pos : *new_order ) { cout << pos << " " ; cout.flush(); } cout << "] " << endl;
+  cout << " : " << tens_block_name ; cout.flush();  WickUtils::print_vector( *new_order, "new_order");
  
-  auto tensop_data_map_loc = tensop_data_map_->find(T_in_name); 
+  auto tensop_data_map_loc = tensop_data_map_->find( tens_block_name ); 
   shared_ptr<Tensor_<DataType>> T_part; 
   if( tensop_data_map_loc == tensop_data_map_->end() ){
-    T_part =  get_block_Tensor(T_in_name); 
-    tensop_data_map_->emplace(T_in_name , T_part );
+    T_part =  get_block_Tensor( tens_block_name ); 
+    tensop_data_map_->emplace( tens_block_name , T_part );
   } else { 
     T_part = tensop_data_map_loc->second; 
   }
@@ -296,7 +294,6 @@ TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,
  return rel_ctr;
 
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //TODO This should be replaced; ultimately, each of the blocks should be it's own tensor; this duplicates everything.
 //     Which blocks exist should be determined after the equation editor has run, so this should ultimately link to

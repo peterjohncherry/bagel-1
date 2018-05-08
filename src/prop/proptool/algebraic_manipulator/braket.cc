@@ -62,7 +62,7 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
                                                                  shared_ptr<map<string, shared_ptr<map<string,shared_ptr<AContribInfo_Base> >>>> G_to_A_map,
                                                                  shared_ptr<map<string, shared_ptr< GammaInfo_Base >>> gamma_info_map,
                                                                  shared_ptr<StatesInfo_Base> target_states,
-                                                                 shared_ptr<set<string>> required_blocks,
+                                                                 shared_ptr<set<shared_ptr<Range_Block_Info>>> required_blocks,
                                                                  shared_ptr<map<string, shared_ptr<CtrTensorPart_Base>>> ctp_map  ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet::generate_gamma_Atensor_contractions : " << name_ << endl;
@@ -99,8 +99,8 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
 
               for (  auto& rb_it :  *(range_map_it->second->range_blocks()) ){
                 cout << rb_it->unique_block_->name() << " is a required block " << endl;
-                MT_map->at( rb_it->unique_block_->op_info_->op_name_ )->add_required_block( rb_it->unique_block_->op_state_name_ );
-                required_blocks->emplace( rb_it->unique_block_->op_info_->op_state_name_ );
+                MT_map->at( rb_it->unique_block_->op_info_->op_name_ )->add_required_block( rb_it->unique_block_ );
+                required_blocks->emplace( rb_it->unique_block_ );
               }
 
               cout << endl;
@@ -119,8 +119,8 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
             if ( GGen->generic_reorderer( "alternating order", false, true ) ){
   
                 cout << range_map_it->second->unique_block_->name() << " is a required block " << endl;
-                MT_map->at( Total_Op_->name() )->add_required_block( range_map_it->second->unique_block_->op_info_->op_state_name_);
-                required_blocks->emplace( range_map_it->second->unique_block_->op_info_->op_state_name_ );
+                MT_map->at( Total_Op_->name() )->add_required_block( range_map_it->second->unique_block_ );
+                required_blocks->emplace( range_map_it->second->unique_block_ );
               }
               cout << endl;
             }
@@ -146,7 +146,7 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
                                                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> >> block_G_to_A_map,
                                                                         std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,
                                                                         std::shared_ptr<StatesInfo_Base> target_states,
-                                                                        std::shared_ptr<std::set<std::string>> required_blocks,
+                                                                        std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks,
                                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map ) {  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions : " << name_ << endl;
@@ -174,8 +174,8 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
               vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
               for (  auto& rb_it :  *(range_map_it->second->range_blocks()) ){
                 cout << rb_it->unique_block_->name() << " is a required block " << endl;
-                MT_map->at( rb_it->unique_block_->op_info_->op_name_ )->add_required_block( rb_it->unique_block_->op_state_name_ );
-                required_blocks->emplace( rb_it->unique_block_->op_info_->op_state_name_ );
+                MT_map->at( rb_it->unique_block_->op_info_->op_name_ )->add_required_block( rb_it->unique_block_ );
+                required_blocks->emplace( rb_it->unique_block_ );
               }
               cout << endl;
             }
@@ -193,8 +193,8 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
             if ( GGen->generic_reorderer( "alternating order", false, true ) ){
   
                 cout << range_map_it->second->unique_block_->name() << " is a required block " << endl;
-                MT_map->at( Total_Op_->name() )->add_required_block( range_map_it->second->unique_block_->op_info_->op_state_name_);
-                required_blocks->emplace( range_map_it->second->unique_block_->op_info_->op_state_name_ );
+                MT_map->at( Total_Op_->name() )->add_required_block( range_map_it->second->unique_block_);
+                required_blocks->emplace( range_map_it->second->unique_block_ );
               }
               cout << endl;
             }

@@ -41,7 +41,7 @@ class TensOp_Base {
  
      // TensOp specfic, but should be obtainable for MultiTensOp (with warning)
      std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>> hconj_ranges_;
-     std::shared_ptr<std::set<std::string>> required_blocks_;
+     std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks_;
 
      // MultiTens specific, but should be obtainable for TensOp (with warning)
      std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_; 
@@ -54,10 +54,10 @@ class TensOp_Base {
     
      TensOp_Base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name),  factor_(std::make_pair(1.0,1.0)), spinfree_(spinfree),
                                                                                         Tsymm_(Tsymm), state_dep_(state_dep),
-                                                                                        required_blocks_(std::make_shared<std::set<std::string>>()) {};
+                                                                                        required_blocks_(std::make_shared<std::set<std::shared_ptr<Range_Block_Info>>>()) {};
 
      TensOp_Base( std::string name, std::pair<double,double>& factor, bool spinfree ) : name_(name), factor_(factor), spinfree_(spinfree), Tsymm_("none"),
-                                                                                        state_dep_(0), required_blocks_(std::make_shared<std::set<std::string>>()) {};
+                                                                                        state_dep_(0), required_blocks_(std::make_shared<std::set<std::shared_ptr<Range_Block_Info>>>()) {};
 
      TensOp_Base( std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp_Base>>& sub_tensops );
 
@@ -80,11 +80,9 @@ class TensOp_Base {
      std::shared_ptr< const std::vector<std::vector<std::string>>> idx_ranges(){ return idx_ranges_;}
      std::vector<std::string> idx_ranges(int ii){ return (*idx_ranges_)[ii];}
 
-     virtual 
-     bool satisfies_constraints( std::vector<std::string>& ranges ) { return true ; } 
+     virtual bool satisfies_constraints( std::vector<std::string>& ranges ) { return true ; } 
     
-     void add_required_block( std::string block_name ) { required_blocks_->emplace( block_name ); } 
-     std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { return required_blocks_; } 
+     void add_required_block( std::shared_ptr<Range_Block_Info> block ) { required_blocks_->emplace( block ); } 
 
      std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base> >> CTP_map() { return CTP_map_; } 
 
@@ -173,7 +171,7 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
 
    bool satisfies_constraints( std::vector<std::string>& ranges ); 
 
-   void add_state_ids( std::shared_ptr<Op_Info> op_info ) { state_ids_->emplace(op_info); return; }
+   void add_state_ids( std::shared_ptr<Op_Info> op_info ) { state_ids_->emplace(op_info); }
 
    std::shared_ptr<std::set<std::shared_ptr<Op_Info>>> state_ids() { return state_ids_; } 
 

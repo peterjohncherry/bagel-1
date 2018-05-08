@@ -9,7 +9,7 @@ using namespace Algebra_Utils;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TensOp_Base::TensOp_Base( std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp_Base>>& sub_tensops ) :
                           name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0), 
-                          required_blocks_(std::make_shared<std::set<std::string>>()), sub_tensops_(sub_tensops) {
+                          required_blocks_(std::make_shared<std::set<std::shared_ptr<Range_Block_Info>>>()), sub_tensops_(sub_tensops) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << "TensOp_Base::TensOp_Base (MT constructor) " << endl; 
 
@@ -65,7 +65,6 @@ void TensOp::TensOp<DataType>::generate_uncontracted_ctps( std::shared_ptr<Op_In
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp<DataType> generate_uncontracted_ctps : "  << name_ << endl;
 
- 
   shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *idxs_ );
   shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
   shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, factor_); 
@@ -77,24 +76,6 @@ void TensOp::TensOp<DataType>::generate_uncontracted_ctps( std::shared_ptr<Op_In
   }
   return;
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//template<typename DataType>
-//void TensOp::TensOp<DataType>::generate_uncontracted_ctps( std::shared_ptr<Op_Info> op_info ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "TensOp::TensOp<DataType> generate_uncontracted_ctps : MultiOp_Info version"  << name_ << endl;
-// 
-//  shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *idxs_ );
-//  shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
-//  shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, factor_); 
-//
-//  vector<int>::iterator oo_it = op_info->op_order()->begin();
-//  for ( vector<shared_ptr<vector<string>>>::iterator bl_it = block_list_.begin(); bl_it != block_list_.end(); bl_it++, oo_it++ ) {
-//    shared_ptr<vector<string>> full_ranges = *bl_it;
-//    shared_ptr<CtrTensorPart<DataType>>  CTP = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, op_info->op_info(*oo_it) );
-//    CTP_map_->emplace(CTP->name(), CTP);
-// }
-//  return;
-//}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void TensOp::TensOp<DataType>::generate_transformed_ranges( shared_ptr<Op_Info> op_info ) {
@@ -299,8 +280,6 @@ TensOp::TensOp<DataType>::apply_direct_range_transformation( const vector<string
   for ( vector<string>::iterator bb_it = block_buff.begin() ; bb_it != block_buff.end() ; bb_it++ , b_it++ )
     (*bb_it)[0]  = tolower( (*b_it)[0] );
 
-//  WickUtils::pair_fac_mult( op_info->spin_flip_factor_, new_fac );
-
   return make_shared<const vector<string>>( block_buff );
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -346,6 +325,28 @@ TensOp::TensOp<DataType>::transform_aops( const std::vector<int>& op_order , con
   return transform_aops( op_trans[0] );
 
 }  
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void TensOp::TensOp<DataType>::enter_cmtps_into_map(const pint_vec& ctr_pos_list, const vector<string>& id_ranges, shared_ptr<Op_Info> op_info ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "TensOp::enter_cmtps_into_map " <<  endl;
+
+  //TODO change so we do not need this copying; either add a const into CtrTensorPart_Base or remove the Constr in TensOp_Base
+  shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *idxs_ );
+  shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>( id_ranges );
+  shared_ptr<vector<pair<int,int>>> ctrs_pos = make_shared<vector<pair<int,int>>>(ctr_pos_list);
+  shared_ptr< CtrTensorPart<DataType> > new_ctp;
+  
+  if( ctrs_pos->size() != 0 ) {
+    new_ctp = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, ctrs_pos , op_info) ; 
+  } else { 
+    throw logic_error("You did not intend for this function to be used in this way; all necessary uncontracted blocks should be entered into map before this is called");
+    new_ctp = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, ctrs_pos, op_info ); 
+  }
+  CTP_map_->emplace( new_ctp->name(), new_ctp ); 
+
+  return;
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 std::shared_ptr<std::vector<bool>> 
@@ -357,20 +358,14 @@ MultiTensOp::MultiTensOp<DataType>::transform_aops( const vector<int>& op_order 
   print_vector( op_trans , "op_trans" ); cout << endl;
 
   shared_ptr<vector<bool>> trans_aops = make_shared<vector<bool>>( num_idxs_ );
-cout << "X1" << endl;
   vector<bool>::iterator ta_it = trans_aops->begin();
   vector<int>::const_iterator oo_it = op_order.begin(); 
 
-cout << "X2" << endl;
   for ( vector<char>::const_iterator ot_it = op_trans.begin(); ot_it != op_trans.end(); ot_it++, oo_it++  ) {
-cout << "X3" << endl;
     shared_ptr<vector<bool>> trans_aops_part = sub_tensops_[*oo_it]->transform_aops( *ot_it );
-cout << "X4" << endl;
     ta_it = move( trans_aops_part->begin(), trans_aops_part->end(), ta_it);
-cout << "X5" << endl;
   } 
 
-cout << "X6" << endl;
   return trans_aops;
 }
 
@@ -491,7 +486,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( shared_ptr<Op_Info> multiop
 template<typename DataType>
 void MultiTensOp::MultiTensOp<DataType>::generate_uncontracted_ctps( shared_ptr<Op_Info> op_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::generate_uncontracted_ctps " <<  endl;
+//  cout << "MultiTensOp::generate_uncontracted_ctps " <<  endl;
 
   shared_ptr<vector<pair<int,int>>> noctrs = make_shared<vector<pair<int,int>>>(0);
 
@@ -502,33 +497,12 @@ void MultiTensOp::MultiTensOp<DataType>::generate_uncontracted_ctps( shared_ptr<
   
   return;
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-void TensOp::TensOp<DataType>::enter_cmtps_into_map(const pint_vec& ctr_pos_list, const vector<string>& id_ranges, shared_ptr<Op_Info> op_info ){
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::enter_cmtps_into_map " <<  endl;
 
-  //TODO change so we do not need this copying; either add a const into CtrTensorPart_Base or remove the Constr in TensOp_Base
-  shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *idxs_ );
-  shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>( id_ranges );
-  shared_ptr<vector<pair<int,int>>> ctrs_pos = make_shared<vector<pair<int,int>>>(ctr_pos_list);
-  shared_ptr< CtrTensorPart<DataType> > new_ctp;
-  
-  if( ctrs_pos->size() != 0 ) {
-    new_ctp = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, ctrs_pos , op_info) ; 
-  } else { 
-    throw logic_error("You did not intend for this function to be used in this way; all necessary uncontracted blocks should be entered into map before this is called");
-    new_ctp = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, ctrs_pos, op_info ); 
-  }
-  CTP_map_->emplace( new_ctp->name(), new_ctp ); 
-
-  return;
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void MultiTensOp::MultiTensOp<DataType>::enter_cmtps_into_map(const pint_vec& ctr_pos_list, const vector<string>& id_ranges, shared_ptr<Op_Info> op_info ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::enter_cmtps_into_map " <<  name_ << endl;
+//  cout << "MultiTensOp::enter_cmtps_into_map " <<  name_ << endl;
 
   shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart_Base> >> (num_tensors_); 
 

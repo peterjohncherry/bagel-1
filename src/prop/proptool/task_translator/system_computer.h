@@ -36,8 +36,6 @@ class System_Computer {
                     std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> b_gamma_machine );
    ~System_Computer(){};
 
-    void get_necessary_tensor_blocks( std::shared_ptr<Expression<DataType>> expression );
-    void get_tensor_block( std::string tensor_block_name, std::shared_ptr<std::vector<std::string>> idx_ranges ) ;
     void build_equation_computer(std::string equation_name );
     void build_tensop( std::string tensop_name ) ;
     void calculate_mo_integrals();

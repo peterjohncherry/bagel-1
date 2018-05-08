@@ -50,7 +50,7 @@ class BraKet_Base{
                                                       std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> G_to_A_map,
                                                       std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,
                                                       std::shared_ptr<StatesInfo_Base> target_states,
-                                                      std::shared_ptr<std::set<std::string>> required_blocks,
+                                                      std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks,
                                                       std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map ) { assert(false); } 
  
     virtual void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string, std::shared_ptr<TensOp_Base>>> MT_map,                
@@ -58,7 +58,7 @@ class BraKet_Base{
                                                               std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> >> block_G_to_A_map,
                                               std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,
                                               std::shared_ptr<StatesInfo_Base> target_states,
-                                              std::shared_ptr<std::set<std::string>> required_blocks,
+                                              std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks,
                                               std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map ) {
                                                   throw std::logic_error("Should only be called from Braket_OrbExcDeriv; you are now calling from BarKet_Base");} 
 
@@ -79,7 +79,7 @@ class BraKet_Full : public BraKet_Base {
                                               std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> G_to_A_map,
                                               std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,
                                               std::shared_ptr<StatesInfo_Base> target_states,
-                                              std::shared_ptr<std::set<std::string>> required_blocks,
+                                              std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks,
                                               std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map );
     
 };
@@ -101,7 +101,7 @@ class BraKet_OrbExcDeriv : public BraKet_Base {
                                                               std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> >> block_G_to_A_map,
                                               std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,
                                               std::shared_ptr<StatesInfo_Base> target_states,
-                                              std::shared_ptr<std::set<std::string>> required_blocks,
+                                              std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks,
                                               std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map ); 
     
 

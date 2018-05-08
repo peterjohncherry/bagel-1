@@ -35,7 +35,7 @@ class Expression {
         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo_Base> > > gamma_info_map_;
         
         // names of the range blocks of the original input tensors which are needed to compute this expression
-        std::shared_ptr<std::set<std::string>> required_blocks_;
+        std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks_;
 
         Expression( std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>> braket_list,
                     std::shared_ptr<StatesInfo_Base> states_info,
@@ -65,7 +65,7 @@ class Expression {
           std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>> dummy; 
         return  dummy;} //TODO should be private
 
-        std::shared_ptr<std::set<std::string>> required_blocks()  { return  required_blocks_; } 
+        std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks()  { return  required_blocks_; } 
 
 };
 #endif
