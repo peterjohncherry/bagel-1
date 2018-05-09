@@ -110,7 +110,7 @@ template<typename DataType>
 shared_ptr<Range_Block_Info>  
 TensOp::TensOp<DataType>::get_transformed_range_block( std::shared_ptr<Op_Info> op_info, std::shared_ptr<Range_Block_Info>& block ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp<DataType>::get_transformed_range_block : " <<  name_ <<  endl;
+//  cout << "TensOp::TensOp<DataType>::get_transformed_range_block : " <<  name_ <<  endl;
 
   shared_ptr<vector<string>> new_orig_rngs = make_shared<vector<string>>(*(block->unique_block_->orig_rngs_));
   pair<double,double> new_factors = block->factors();

@@ -7,6 +7,8 @@
 #include <src/prop/proptool/algebraic_manipulator/expression_orb_exc_deriv.h>
 #include <src/prop/proptool/task_translator/tensop_computer.h>
 #include <src/prop/proptool/tensor_and_ci_lib/b_gamma_computer.h>
+#include <src/prop/proptool/integrals/moint_computer.h>
+
 
 namespace bagel {
 
@@ -20,6 +22,7 @@ class Expression_Computer {
     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> Gamma_info_map;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
+    std::shared_ptr<MOInt_Computer<DataType>> moint_computer_;
 
   public:
    
@@ -29,7 +32,8 @@ class Expression_Computer {
     Expression_Computer( std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> b_gamma_computer,
                          std::shared_ptr<std::map< std::string , std::shared_ptr<Expression<DataType>>>> expression_map, 
                          std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map,
-                         std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map );
+                         std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map,
+                         std::shared_ptr<MOInt_Computer<DataType>> moint_computer  );
     ~Expression_Computer() {};
     
     void evaluate_expression( std::shared_ptr<Expression<DataType>> expression );

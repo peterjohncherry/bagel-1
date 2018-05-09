@@ -1,6 +1,7 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 #include <src/util/f77.h>
+#include <src/prop/proptool/debugging_utils.h>
 
 using namespace std;
 using namespace bagel;
@@ -8,6 +9,8 @@ using namespace bagel::SMITH;
 using namespace bagel::Tensor_Sorter;
 using namespace bagel::Tensor_Arithmetic_Utils; 
 using namespace WickUtils;
+using namespace Debugging_Utils;
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Specialized routine for summing over the whole tensor, should not be needed by handy for now
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -82,6 +85,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__tensor_return( sha
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Tensor_Arithmetic::trace_tensor__tensor_return" << endl;
   assert ( Tens_in->indexrange().size() > 1 );
+
  
 #ifndef NDEBUG
   for ( int ii =1 ; ii != Tens_in->indexrange().size(); ii++ ) 
@@ -128,26 +132,35 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_over_idxs( shared_ptr<Tensor_<DataType>> Tens_in, vector<int>& summed_idxs_pos) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Tensor_Arithmetic::contract_on_same_tensor" << endl;
+  cout << "Tensor_Arithmetic::sum_over_idxs" << endl;
   assert ( Tens_in->indexrange().size() > 0 );
 
+
+  cout << "TA::cost 1" <<  endl;
   vector<IndexRange> id_ranges = Tens_in->indexrange();
+  print_sizes( id_ranges , "idranges" ) ;cout << endl;
   shared_ptr<Tensor_<DataType>> Tens_out ;
+  cout << "TA::cost 2" <<  endl;
 
   int num_ids  = id_ranges.size();
   int num_ctrs = summed_idxs_pos.size();
   int num_uncs = num_ids - num_ctrs;
   
+  cout << "TA::cost 3" <<  endl;
   // Put contracted indexes at back so they change slowly; Fortran ordering in index blocks!
   shared_ptr<vector<int>> new_order = make_shared<vector<int>>(num_ids);
   iota(new_order->begin(), new_order->end(), 0);
   put_ctrs_at_back( *new_order, summed_idxs_pos );
 
+  cout << "TA::cost 4" <<  endl;
   vector<int> unc_pos( new_order->begin(), new_order->end() - num_ctrs );
   vector<IndexRange> unc_idxrng( unc_pos.size() );
   for ( int qq = 0; qq != unc_pos.size(); qq++ )
     unc_idxrng[qq] = id_ranges[unc_pos[qq]];
   
+  print_sizes( unc_idxrng, "unc_idx_rng" );cout << endl;
+
+  cout << "TA::cost 5" << endl;
   shared_ptr<vector<int>> unc_maxs      = get_range_lengths( id_ranges );
   shared_ptr<vector<int>> unc_mins      = make_shared<vector<int>>(unc_maxs->size(),0);
   shared_ptr<vector<int>> unc_block_pos = make_shared<vector<int>>(unc_maxs->size(),0);
@@ -155,12 +168,14 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_over_idxs( shared_ptr<Tensor
   shared_ptr<vector<int>> ctr_maxs      = make_shared<vector<int>>(*unc_maxs);
   shared_ptr<vector<int>> ctr_mins      = make_shared<vector<int>>(unc_maxs->size(),0);
 
+  cout << "TA::cost 6" << endl;
   //set max = min so contracted blocks are skipped in fvec_cycle
   for ( int qq = num_ctrs-1; qq!= num_ids; qq++ ) {
     unc_maxs->at(qq) = 0;
     unc_mins->at(qq) = 0;
   }
   
+  cout << "TA::cost 7" <<  endl;
   Tens_out = make_shared<Tensor_<DataType>>(unc_idxrng);
   Tens_out->allocate();
   Tens_out->zero();
@@ -206,12 +221,16 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_over_idxs( shared_ptr<Tensor
         blas::ax_plus_y_n(1.0, reordered_block.get() + (unc_block_size*flattened_ctr_id), unc_block_size, contracted_block.get() );
       }
        
+  cout << "TA::cost 8" <<  endl;
     } while( fvec_cycle_skipper(ctr_block_pos, ctr_maxs, ctr_mins ));
 
+  cout << "TA::cost 9" <<  endl;
     Tens_out->put_block(contracted_block, unc_id_blocks );
 
+  cout << "TA::cost 10" << endl;
   } while( fvec_cycle_skipper(unc_block_pos, unc_maxs, unc_mins));
 
+  cout << "TA::cost 11" << endl;
   return Tens_out;
 }
 
@@ -225,6 +244,8 @@ shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_ptr<Tensor_<DataType>> Tens_in,  vector<int>& ctrs_pos) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Tensor_Arithmetic::contract_on_same_tensor" << endl;
+  print_vector( ctrs_pos, "ctr_pos");cout << endl; 
+  print_sizes( Tens_in->indexrange() , "Tens_in->indexrange()" ) ;cout << endl;
   assert ( Tens_in->indexrange().size() > 0 );
 
   vector<IndexRange> id_ranges_in = Tens_in->indexrange();

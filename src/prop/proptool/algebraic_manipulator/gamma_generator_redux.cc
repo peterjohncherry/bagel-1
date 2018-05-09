@@ -10,6 +10,8 @@ template<typename DataType>
 void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info> block_info, shared_ptr<vector<bool>> trans_aops ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
+ 
+  block_info_ = block_info;
 
   block_idxs_ = vector<string>( std_ids_->size() );
   {
@@ -82,6 +84,26 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
     *idp_it = make_pair( (*idxs_trans_)[dp_it->first], (*idxs_trans_)[dp_it->second]);
 
   string Aname_alt = get_ctp_name( op_info_->op_state_name_canonical(), *std_ids_,  std_rngs_, idxs_deltas_pos );
+
+  print_vector( *(block_info_->orig_rngs_) ,                "block_info_->orig_rngs_                " ); cout << endl;
+  print_vector( *(block_info_->unique_block_->orig_rngs_) , "block_info_->unique_block_->orig_rngs_ " ); cout << endl;
+  print_vector( std_rngs_ ,                                 "std_rngs                               " ); cout << endl;
+  cout <<                                                   "Aname_alt                       = " << Aname_alt<< endl;
+  
+  cout << " block_info_->name()                = " << block_info_->name() << endl;
+  cout << " block_info_->unique_block_->name() = " << block_info_->unique_block_->name() << endl;
+
+  cout << "block_info_->name (split )          = ";
+  for ( auto elem : *(block_info_->range_blocks()) )
+    cout << elem->name() << " " ;
+  cout << endl;
+
+  cout << "block_info_->name (split canonical) = ";
+  for ( auto elem : *(block_info_->range_blocks_canonical()) )
+    cout << elem->name() << " ";
+  cout << endl;
+
+  assert(*(block_info_->unique_block_->orig_rngs_) == std_rngs_ ); 
 
   if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) 
     total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_, op_info_ );

@@ -33,6 +33,8 @@ class GammaGeneratorRedux : public GammaGenerator_Base {
 
   public :
 
+    std::shared_ptr<Range_Block_Info> block_info_;
+
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
     std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, std::shared_ptr<AContribInfo_Base>>> >> G_to_A_map;

@@ -65,7 +65,7 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
                                                                  shared_ptr<set<shared_ptr<Range_Block_Info>>> required_blocks,
                                                                  shared_ptr<map<string, shared_ptr<CtrTensorPart_Base>>> ctp_map  ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "BraKet::generate_gamma_Atensor_contractions : " << name_ << endl;
+  cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
 
 
   Total_Op_ = MT_map->at( multiop_info_->op_name_ );
@@ -97,10 +97,10 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
               cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl;
               vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
 
-              for (  auto& rb_it :  *(range_map_it->second->range_blocks()) ){
-                cout << rb_it->unique_block_->name() << " is a required block " << endl;
-                MT_map->at( rb_it->unique_block_->op_info_->op_name_ )->add_required_block( rb_it->unique_block_ );
-                required_blocks->emplace( rb_it->unique_block_ );
+              for (  auto& block :  *(range_map_it->second->range_blocks_canonical()) ){
+                cout << block->name() << " is a required block "; cout.flush(); print_vector( *(block->orig_rngs_), "rb_it->orig_rngs_" ); cout << endl;
+                MT_map->at( block->op_info_->op_name_ )->add_required_block( block );
+                required_blocks->emplace( block );
               }
 
               cout << endl;
@@ -118,9 +118,14 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
           if ( GGen->generic_reorderer( "normal order", false, false ) ) {
             if ( GGen->generic_reorderer( "alternating order", false, true ) ){
   
-                cout << range_map_it->second->unique_block_->name() << " is a required block " << endl;
-                MT_map->at( Total_Op_->name() )->add_required_block( range_map_it->second->unique_block_ );
-                required_blocks->emplace( range_map_it->second->unique_block_ );
+
+              for (  auto& block :  *(range_map_it->second->range_blocks_canonical()) ){
+                cout << block->name() << " is a required block "; cout.flush(); print_vector( *(block->orig_rngs_), "rb_it->orig_rngs_" ); cout << endl;
+                MT_map->at( block->op_info_->op_name_ )->add_required_block( block );
+                required_blocks->emplace( block );
+              }
+
+
               }
               cout << endl;
             }

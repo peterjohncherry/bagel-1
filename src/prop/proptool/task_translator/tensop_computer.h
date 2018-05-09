@@ -11,6 +11,7 @@
 #include <src/prop/proptool/algebraic_manipulator/ctrtensop.h>
 #include <src/prop/proptool/task_translator/tensor_algop_info.h>
 #include <src/prop/proptool/algebraic_manipulator/gamma_info.h>
+#include <src/prop/proptool/integrals/moint_computer.h>
 
 namespace bagel {
 
@@ -23,9 +24,10 @@ class TensOp_Computer {
     TensOp_Computer( std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> >> ACompute_map,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map,
-                     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map):
+                     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map,
+                     std::shared_ptr<MOInt_Computer<DataType>> moint_computer ):
                      ACompute_map_(ACompute_map), CTP_map_(CTP_map), tensop_data_map_(tensop_data_map),
-                     range_conversion_map_(range_conversion_map), 
+                     range_conversion_map_(range_conversion_map), moint_computer_(moint_computer), 
                      Tensor_Calc_(std::make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>()){}
 
     ~TensOp_Computer(){};
@@ -36,6 +38,7 @@ class TensOp_Computer {
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map_;
 
     std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<DataType>> Tensor_Calc_;
+    std::shared_ptr<MOInt_Computer<DataType>> moint_computer_;
 
     /////////// Tensor contraction routines /////////////////////////
 
@@ -87,6 +90,7 @@ class TensOp_Computer {
     relativize_ctr_positions(std::pair <int,int> ctr_todo, std::shared_ptr<CtrTensorPart_Base>  CTP1,
                                                            std::shared_ptr<CtrTensorPart_Base>  CTP2);
 
+    void build_mo_tensor( std::string mo_tensor_name );
 
 
 };

@@ -121,38 +121,117 @@ void TensOp_Computer::TensOp_Computer<DataType>::get_tensor_data_blocks(shared_p
    for ( auto& block : *required_blocks ) { 
  
      string block_name = block->name();
-     string full_tens_name = block->op_info_->op_state_name_;
+     cout << "fetching block " << block_name ; cout.flush(); 
     
      shared_ptr<Tensor_<DataType>> tens; 
      
-     if(  tensop_data_map_->find(full_tens_name) != tensop_data_map_->end()){
-       tens = tensop_data_map_->at(full_tens_name);
-     
+     if(  tensop_data_map_->find(block_name) != tensop_data_map_->end()){
+        cout << " .. already in map" <<  endl;
+
      } else {
+
+       string full_tens_name = block->op_info_->op_state_name_;
+       cout << " from full tensor " << full_tens_name << endl;
+
        shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map_->at(block_name)->unc_id_ranges() ) ;
+       print_vector( *( block->orig_rngs_ ), "id_block_rb"  ) ; cout << endl;
+       print_vector( *( CTP_map_->at(block_name)->unc_id_ranges() ), "id_block_ctp"  ) ; cout << endl;
      
-       if( tensop_data_map_->find(full_tens_name) != tensop_data_map_->end()){
-         cout << "initializing uncontracted tensor block " << full_tens_name << " using data from parent tensor \"" << full_tens_name.substr(0,1) << "\"" << endl;
-        
+       if( tensop_data_map_->find(full_tens_name) == tensop_data_map_->end()){
+
+         // TODO This will get the whole tensor, really, we should just get the blocks we want
+         if ( full_tens_name[0] == 'H' || full_tens_name[0] == 'h' || full_tens_name[0] == 'f' ) {  
+           cout << "getting the full mo tensor for " << full_tens_name << endl;
+           build_mo_tensor( full_tens_name ); 
+           cout << "initializing block " << block_name << " using full tensor \"" << full_tens_name << "\"" << endl;
+           tens = get_sub_tensor( tensop_data_map_->at(full_tens_name), *id_block );
+         }
+    
+         else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't' || full_tens_name[0] == 'S'  ) {  
+           cout << "new tensor block : " << full_tens_name << " is being initialized to 1.0" << endl; 
+           tens = make_shared<Tensor_<DataType>>(*id_block);
+           tens->allocate();
+           Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( tens, 1.0);
+         
+         } else {  
+           cout << "new tensor block : " << full_tens_name << " is being initialized to zero" << endl; 
+           tens = make_shared<Tensor_<DataType>>(*id_block);
+           tens->allocate();
+           tens->zero();
+         }
+ 
+       } else {
+       
          tens = get_sub_tensor( tensop_data_map_->at(full_tens_name), *id_block );
-     
-       } else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't' || full_tens_name[0] == 'S'  ) {  
-         cout << "new tensor block : " << full_tens_name << " is being initialized to 1.0,  for exciations" << endl; 
-         tens = make_shared<Tensor_<DataType>>(*id_block);
-         tens->allocate();
-         Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( tens, 1.0);
-     
-       } else {  
-         cout << "new tensor block : " << full_tens_name << " is being initialized to zero" << endl; 
-         tens = make_shared<Tensor_<DataType>>(*id_block);
-         tens->allocate();
-         tens->zero();
+  
        }
      }
-     tensop_data_map_->emplace(full_tens_name, tens) ;
+     tensop_data_map_->emplace(block_name, tens) ;
    } 
    cout << "leaving TensOp_Computer::TensOp_Computer::get_tensor_data_blocks" << endl;
    return;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Gets ranges and factors from the input which will be used in definition of terms
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void TensOp_Computer::TensOp_Computer<DataType>::build_mo_tensor( string mo_tensor_name ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "TensOp_Computer::TensOp_Computer::calculate_mo_integrals()" << endl;
+
+  if ( mo_tensor_name[0] == 'H' ) {   
+    auto H_loc = tensop_data_map_->find( "H_{00}" );
+
+    if ( H_loc == tensop_data_map_->end() ) {
+      vector<string> free4 = { "free", "free", "free", "free" };
+      auto v2  =  moint_computer_->get_v2( free4 ) ;
+      tensop_data_map_->emplace( "H_{00}" , v2 );
+ 
+      if ( mo_tensor_name != "H_{00}" ) 
+        tensop_data_map_->emplace( mo_tensor_name , v2 );
+    }
+
+  } else if ( mo_tensor_name[0] == 'h' ) {   
+    auto f_loc = tensop_data_map_->find( "h_{00}" );
+
+    if ( f_loc == tensop_data_map_->end() ) {
+      vector<string> free2 = { "free", "free" };
+      auto h1  =  moint_computer_->get_h1( free2 );
+      tensop_data_map_->emplace( "h_{00}" , h1 );
+ 
+      if ( mo_tensor_name != "h_{00}" )
+        tensop_data_map_->emplace( mo_tensor_name , h1 );
+    }
+
+  } else if ( mo_tensor_name[0] == 'f' ) {   
+    auto f_loc = tensop_data_map_->find( "f_{00}" );
+
+    if ( f_loc == tensop_data_map_->end() ) {
+      vector<string> free2 = { "free", "free" };
+      auto f1  =  moint_computer_->get_fock( free2 );
+      tensop_data_map_->emplace( "f_{00}" , f1 );
+ 
+      if ( mo_tensor_name != "f_{00}" )
+        tensop_data_map_->emplace( mo_tensor_name , f1 );
+    }
+  }
+  
+  DataType one = (DataType)(1.0); //TODO find a better way;
+  SMITH::IndexRange fs = *(range_conversion_map_->at("free"));
+  SMITH::IndexRange nvs = *(range_conversion_map_->at("c"));
+  nvs.merge(*(range_conversion_map_->at("a")));
+
+  SMITH::IndexRange ncs = *(range_conversion_map_->at("a"));
+  ncs.merge(*(range_conversion_map_->at("v")));
+
+  shared_ptr<vector<SMITH::IndexRange>> fs4 = make_shared<vector<SMITH::IndexRange>>(vector<SMITH::IndexRange> { ncs, ncs, nvs, nvs } );   
+  shared_ptr<SMITH::Tensor_<DataType>> XTens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor( fs4, one ); 
+  tensop_data_map_->emplace( "X" , XTens );
+
+  cout <<"X->norm() = "; cout.flush() ; cout << tensop_data_map_->at("X")->norm() << endl; 
+
+  return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a tensor with ranges specified by unc_ranges, where all values are equal to XX  

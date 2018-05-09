@@ -17,7 +17,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), idxs_trans_(idxs_trans), factors_(factors), ReIm_factors_(ReIm_factors),
                                     op_info_(op_info) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//   cout << "Range_Block_Info::Range_Block_Info 1" << endl;
+   cout << "Range_Block_Info::Range_Block_Info 1" << endl;
 
   num_idxs_ = orig_rngs_->size();
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
@@ -63,7 +63,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(transform->idxs_trans(*orig_block)), factors_(factors),
                                     ReIm_factors_(ReIm_factors), transform_(transform), op_info_(op_info)  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "Range_Block_Info::Range_Block_Info 2" << endl;
+ cout << "Range_Block_Info::Range_Block_Info 2" << endl;
 
   num_idxs_ = orig_rngs_->size();
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
@@ -102,6 +102,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   }
 
 }
+//Range_Block_Info( helper.orig_rngs_, helper.unique_block_, helper.idxs_trans_, helper.factors_, helper.ReIm_factors_, aops , op_info ),
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Constructor for use only when building from single operators (otherwise we will have problems with the inverse transformation)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +111,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_( idxs_trans ), factors_(factors),
                                     ReIm_factors_(ReIm_factors), op_info_(op_info)  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Range_Block_Info::Range_Block_Info 3" << endl;
+  cout << "Range_Block_Info::Range_Block_Info 3" << endl;
 
   num_idxs_ = orig_rngs_->size();
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
@@ -124,7 +125,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
 
   name_ = op_info->op_state_name_ + "_";
-  for ( auto& rng : *(unique_block->orig_rngs_) ) 
+  for ( auto& rng : *(unique_block->orig_rngs_) )
     name_ += rng;
 
   full_op_name_ = op_info->op_full_name_;
@@ -161,8 +162,6 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
   for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks_->begin() ; rb_it != range_blocks_->end(); rb_it++) 
     num_idxs_ += (*rb_it)->num_idxs_; 
 
-  string unique_name = ""; 
-
   idxs_trans_ = make_shared<vector<int>>(num_idxs_); 
   vector<int>::iterator it_it = idxs_trans_->begin();
 
@@ -177,9 +176,11 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
 
   //DQ : I feel like there should be a nicer way to do this; a lot of iterators, should I add braces to throw the iterators out?
   vector<int>::iterator cs_it = cml_sizes.begin();
-  
+
+  print_vector ( *(multiop_info->op_order_) , "*(multiop_info->op_order_)" ); cout << endl; 
+  print_vector (                  cml_sizes , "cml_sizes                 " ); cout << endl; 
   for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks_->begin() ; rb_it != range_blocks_->end(); rb_it++, cs_it++) {
- 
+  
     double Re_buff = factors_.first;
     double Im_buff = factors_.second;
     factors_.first =  (Re_buff*(*rb_it)->factors_.first   - Im_buff*(*rb_it)->factors_.second);
@@ -187,34 +188,36 @@ SRBI_Helper::SRBI_Helper( std::vector<std::shared_ptr<Range_Block_Info>>& range_
     
     copy( (*rb_it)->idxs_trans()->begin(), (*rb_it)->idxs_trans()->end(), it_it );
     std::for_each( it_it, it_it+(*rb_it)->num_idxs_, [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
-
+  
     copy( (*rb_it)->idxs_trans_inverse()->begin(), (*rb_it)->idxs_trans_inverse()->end(), iti_it );
     std::for_each( iti_it, iti_it+(*rb_it)->num_idxs_ , [  &cs_it ] ( int &pos ) { pos += *cs_it ; } );
-
+  
     copy( (*rb_it)->orig_rngs()->begin(), (*rb_it)->orig_rngs()->end(), or_it );
 
     copy( (*rb_it)->unique_block_->orig_rngs_->begin(), (*rb_it)->unique_block_->orig_rngs_->end(), ur_it + *cs_it );
-
-    unique_name += (*rb_it)->name_;
-
+  
     it_it += (*rb_it)->num_idxs_;
     iti_it += (*rb_it)->num_idxs_;
     or_it += (*rb_it)->num_idxs_;
   }
-
+ 
   orig_rngs_ = std::make_shared<const std::vector<string>>(orig_rngs);         
 
   auto  sssr_loc = unique_split_ranges->find( unique_rngs );
   if ( sssr_loc != unique_split_ranges->end() ) {
-    unique_block_ = sssr_loc->second; 
-  } else  { 
+    unique_block_ = sssr_loc->second;
+
+  } else { 
     shared_ptr<vector<int>> no_trans = make_shared<vector<int>>(unique_rngs.size());
     iota( no_trans->begin(), no_trans->end(), 0);
-    unique_block_ = std::make_shared<Range_Block_Info>(make_shared<const vector<string>>(unique_rngs), no_trans, factors_, factors_, *aops, multiop_info ) ;
-    unique_block_->unique_block_ = unique_block_->shared_from_this();
-  } 
-
-      
+    if ( multiop_info->op_order_->size() > 1  ) {
+      shared_ptr<Op_Info> multiop_info_canonical = multiop_info->op_info_canonical();
+      unique_block_ = std::make_shared<Range_Block_Info>(make_shared<const vector<string>>(unique_rngs), no_trans, factors_, factors_, *aops, multiop_info_canonical ) ;
+      unique_block_->unique_block_ = unique_block_->shared_from_this();
+    }
+  }
+  
+        
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool Split_Range_Block_Info::is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs ) { 

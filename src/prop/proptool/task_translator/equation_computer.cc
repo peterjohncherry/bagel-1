@@ -8,11 +8,13 @@ using namespace bagel::SMITH;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
-void Equation_Computer_Base<DataType>::set_computers( std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> gamma_computer ) {
+void Equation_Computer_Base<DataType>::set_computers( std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> gamma_computer, 
+                                                      std::shared_ptr<MOInt_Computer<DataType>> moint_computer) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Equation_Computer_Value<DataType>::set_computers " << endl;
 
   gamma_computer_ = gamma_computer;
+  moint_computer_ = moint_computer;
 
   return; 
 }
@@ -37,7 +39,8 @@ void Equation_Computer_Base<DataType>::build_expression_computer(){
 
   cout << "equation_->expression_map()->size() = "<< equation_->expression_map()->size() << endl; 
   expression_computer_ =
-  make_shared<Expression_Computer::Expression_Computer<DataType>>( gamma_computer_, equation_->expression_map(), range_conversion_map_, tensop_data_map_ );
+  make_shared<Expression_Computer::Expression_Computer<DataType>>( gamma_computer_, equation_->expression_map(), range_conversion_map_, tensop_data_map_,
+                                                                   moint_computer_ );
 
   return;
 }

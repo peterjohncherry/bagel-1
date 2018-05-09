@@ -35,7 +35,6 @@ void Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
       if ( CTP_map_->find(cmtp_name) == CTP_map_->end()){
         throw std::logic_error( cmtp_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
       }
-      cout << "cmtp_name = " << cmtp_name << endl;
       auto ACompute_list_loc = ACompute_map_->find(cmtp_name);
       if ( ACompute_list_loc != ACompute_map_->end() ){
         continue;

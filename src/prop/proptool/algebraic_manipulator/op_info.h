@@ -7,6 +7,7 @@
 
 #include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
 #include <src/prop/proptool/algebraic_manipulator/constraints.h>
+#include <src/prop/proptool/proputils.h>
 
 // Small class to label state specfic operator and connected symmetries
 // Necessary for generation of appropriate range blocks.
@@ -16,37 +17,36 @@
 
 class MultiOp_Info;
 
-class Op_Info : public std::enable_shared_from_this<Op_Info>  { 
+class Op_Info : public std::enable_shared_from_this<Op_Info>  {
   friend MultiOp_Info;
  
-  private : 
-     
+  private :
+
     std::shared_ptr<std::vector<int>> state_ids_;
     char transformation_;
 
-  public :  
+  public :
     std::string op_name_;
     std::string op_state_name_;
     std::string op_full_name_;
     std::string name_;
  
-    std::shared_ptr< std::vector<std::pair<std::vector<int>,std::shared_ptr<Transformation>>> > equivalent_operators_list_; 
-
-    bool spin_symm_;
-    std::pair<double,double> spin_flip_factor_ ;
+    bool canonical_order_;
 
     // TODO Find way round putting these in base, preferably no involving using functions
-    std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info_vec_;  
+    std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info_vec_;
     std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> state_ids_list_;
     std::shared_ptr<std::vector<char>> transformations_;
     std::shared_ptr<std::vector<int>> op_order_;
 
 
-    // should also include symmetry information
-     Op_Info( std::string op_name,  std::string op_state_name, std::string op_full_name, std::shared_ptr<std::vector<int>> state_ids, char transformation ) :  
-     op_name_(op_name), op_state_name_(op_state_name), op_full_name_(op_full_name), name_(op_full_name), state_ids_(state_ids), transformation_(tolower(transformation)){
+     Op_Info(){};
 
-       std::cout << "op_state_name = " << op_state_name_ << std::endl;
+    // should also include symmetry information
+     Op_Info( std::string op_name,  std::string op_state_name, std::string op_full_name, std::shared_ptr<std::vector<int>> state_ids, char transformation ) :
+              op_name_(op_name), op_state_name_(op_state_name), op_full_name_(op_full_name), name_(op_full_name), state_ids_(state_ids),
+              transformation_(tolower(transformation)) {
+              std::cout << "op_state_name = " << op_state_name_ << std::endl;
      }
 
      Op_Info( std::string op_name, std::string op_state_name, std::string op_full_name ,
@@ -85,6 +85,7 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
     virtual char transformation() { return transformation_; } 
     virtual std::string op_state_name_canonical() { return op_state_name_; } 
 
+    virtual std::shared_ptr<Op_Info> op_info_canonical() { return shared_from_this(); } 
 };
 
 //Note : The order of members in op_info_vec is determined by the corresponding braket.
@@ -94,29 +95,11 @@ class MultiOp_Info : public Op_Info {
 
   public :  
     int num_ops_;
-    std::string op_state_name_canonical_;
 
-    // TODO currently fudged; would like to only have op_info_vec defined in MultiOp_Info class
-    MultiOp_Info( std::string op_name, std::string op_state_name, std::string op_full_name, 
-                  std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info_vec, const std::vector<int>& op_order ) : 
-                  Op_Info( op_name, op_state_name, op_full_name, op_info_vec, op_order ) {
+    std::shared_ptr<MultiOp_Info> op_info_canonical_;
 
-      num_ops_ = op_info_vec->size();  
-      state_ids_list_ = std::make_shared<std::vector<std::shared_ptr<std::vector<int>>>>(num_ops_);    
+    MultiOp_Info( std::vector<std::string>& op_list, std::vector<char>& op_trans_list, std::shared_ptr<std::vector<std::vector<int>>> op_state_ids );
 
-      transformations_ = std::make_shared<std::vector<char>>(num_ops_);    
-      std::vector<char>::iterator t_it = transformations_->begin(); 
-      std::vector<std::shared_ptr<std::vector<int>>>::iterator sil_it = state_ids_list_->begin(); 
-      for ( std::vector<std::shared_ptr<Op_Info>>::iterator oi_it = op_info_vec_->begin(); oi_it != op_info_vec_->end(); oi_it++ , t_it++, sil_it++ ){
-        *t_it = (*oi_it)->transformation_; 
-        *sil_it = (*oi_it)->state_ids_; 
-      }
-      
-      op_state_name_canonical_ = "";
-      for ( int op_pos : *op_order_ )
-        op_state_name_canonical_ += (*op_info_vec_)[op_pos]->op_state_name_; 
-     
-    } 
     ~MultiOp_Info(){}; 
 
     std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info_vec() { return op_info_vec_; }
@@ -125,7 +108,9 @@ class MultiOp_Info : public Op_Info {
     char transformation() { assert( op_info_vec_->size() == 1 ); return transformations_->front(); } 
 
     int op_order( int ii ) { return  (*op_order_)[ii]; }
-    std::string op_state_name_canonical() { return op_state_name_canonical_; } 
+    std::string op_state_name_canonical() { return op_info_canonical_->op_state_name_; } 
+
+    std::shared_ptr<Op_Info> op_info_canonical() { return op_info_canonical_; } 
 };
 
 #endif

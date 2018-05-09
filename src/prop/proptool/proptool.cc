@@ -5,8 +5,8 @@ using namespace std;
 using namespace bagel;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, shared_ptr<const Reference> r): 
-                   idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
+PropTool::PropTool::PropTool( shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, shared_ptr<const Reference> r ): 
+                              idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "PropTool::PropTool::PropTool" << endl;
 

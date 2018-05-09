@@ -13,8 +13,10 @@ template < typename DataType >
 Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>>   gamma_computer,
                                                                          shared_ptr<map< string, shared_ptr<Expression<DataType>>>> expression_map,
                                                                          shared_ptr<map< string, shared_ptr<IndexRange>>>           range_conversion_map,
-                                                                         shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    tensop_data_map       ):
-  gamma_computer_(gamma_computer), expression_map_(expression_map), range_conversion_map_(range_conversion_map), tensop_data_map_(tensop_data_map) {
+                                                                         shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    tensop_data_map,
+                                                                         shared_ptr<MOInt_Computer<DataType>> moint_computer ) : 
+  gamma_computer_(gamma_computer), expression_map_(expression_map), range_conversion_map_(range_conversion_map), tensop_data_map_(tensop_data_map),
+  moint_computer_(moint_computer) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
   scalar_results_map = make_shared<map< string, DataType >>(); //TODO dumb, check why not in header and fix  
 
@@ -60,7 +62,8 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
   if ( !new_result )  
     cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
 
-  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_);
+  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
+                                                                                 moint_computer_ );
  
   TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
 
@@ -167,7 +170,8 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
   if ( !new_result )  
     cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
 
-  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_);
+  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
+                                                                                 moint_computer_ );
  
   TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
 
