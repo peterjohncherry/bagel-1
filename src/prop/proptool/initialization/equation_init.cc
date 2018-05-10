@@ -118,17 +118,18 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
 
           // factor = factor_map_->at(*bk_factors_ita+)
           cout << "term_init->type_ = " << term_init->type_ << endl;
+          shared_ptr<MultiOp_Info> multiop_info =  make_shared<MultiOp_Info>( bk_op_list, bk_op_trans_list, op_state_ids ); 
+          if ( multiop_info->canonical_order_ ) 
+            multiop_info->op_info_canonical_ = dynamic_pointer_cast<MultiOp_Info>(multiop_info->shared_from_this()); 
+
           if (term_init->type_ == "orb" ){
-            shared_ptr<BraKet_OrbExcDeriv<DataType>> new_bk = make_shared< BraKet_OrbExcDeriv<DataType>>( make_shared<MultiOp_Info>( bk_op_list, bk_op_trans_list, op_state_ids ), bk_factor_dummy,
-                                                                                              bk_info.bra_index(), bk_info.ket_index(), term_init->type_);
+            shared_ptr<BraKet_OrbExcDeriv<DataType>> new_bk = make_shared< BraKet_OrbExcDeriv<DataType>>( multiop_info, bk_factor_dummy, bk_info.bra_index(), bk_info.ket_index(), term_init->type_);
             new_bk->target_op_ = term_init->proj_op_name_; 
-            cout << "new_bk.target_op_  = " << new_bk->target_op_  << endl;
-            cout << "term_init->proj_op_name_ = " <<  term_init->proj_op_name_ << endl; 
+            cout << "new_bk.target_op_  = " << new_bk->target_op_; cout.flush(); cout << "term_init->proj_op_name_ = " <<  term_init->proj_op_name_ << endl; 
             new_bk->orb_exc_deriv_ = true;
             braket_list.push_back( new_bk ) ;
           } else {
-            braket_list.push_back(make_shared<BraKet_Full<DataType>>( make_shared<MultiOp_Info>( bk_op_list, bk_op_trans_list, op_state_ids ), bk_factor_dummy,
-                                                                      bk_info.bra_index(), bk_info.ket_index(), term_init->type_));
+            braket_list.push_back(make_shared<BraKet_Full<DataType>>( multiop_info, bk_factor_dummy, bk_info.bra_index(), bk_info.ket_index(), term_init->type_));
           }
 
         } 

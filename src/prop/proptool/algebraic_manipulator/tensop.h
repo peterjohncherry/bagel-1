@@ -131,8 +131,6 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
   
     std::shared_ptr<std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>  all_ranges_tmp_;
 
-    std::shared_ptr<std::set<std::shared_ptr<Op_Info>>> state_ids_;
-
     void apply_symmetry( const std::vector<std::string>& new_block, const std::vector<bool>& aops, std::shared_ptr<Op_Info> op_info );
 
     void add_to_range_block_map( std::vector<std::string>& idx_ranges );
@@ -148,7 +146,7 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
            std::string& Tsymm, int state_dep, std::shared_ptr<std::map<char, long unsigned int>> range_prime_map  );
    ~TensOp(){};
 
-   void generate_uncontracted_ctps( std::shared_ptr<Op_Info> state_ids );
+   void generate_uncontracted_ctps( std::shared_ptr<Op_Info> op_info );
 
 //   void generate_uncontracted_ctps( std::shared_ptr<Op_Info> op_info );
 
@@ -170,10 +168,6 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
    std::shared_ptr<std::vector<bool>> transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ); 
 
    bool satisfies_constraints( std::vector<std::string>& ranges ); 
-
-   void add_state_ids( std::shared_ptr<Op_Info> op_info ) { state_ids_->emplace(op_info); }
-
-   std::shared_ptr<std::set<std::shared_ptr<Op_Info>>> state_ids() { return state_ids_; } 
 
    std::shared_ptr<const std::vector<std::string>>
    apply_direct_range_transformation( const std::vector<std::string>& block, std::pair<double,double>& factor,

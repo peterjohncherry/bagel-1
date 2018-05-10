@@ -38,7 +38,6 @@ void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info
   print_vector( *(block_info->unique_block_->orig_rngs())  ,        " unique_block_      "); cout <<endl;
   print_vector( standard_order_ ,  " range_reordering   "); cout << endl;
   print_vector(*(block_info->orig_rngs()) ,      " orig_rngs          "); cout <<endl;
-  cout << "factors = (" << factors.first << "," << factors.second << ")" << endl;
   cout << endl;
 
   int ii = 0 ;
@@ -51,7 +50,6 @@ void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info
 
   shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
   
-
   gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>( 1 );
   gamma_vec_->at(0) = make_shared<GammaIntermediateRedux<DataType>>( ids_pos, deltas_pos, factors );
 
@@ -85,30 +83,10 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
 
   string Aname_alt = get_ctp_name( op_info_->op_state_name_canonical(), *std_ids_,  std_rngs_, idxs_deltas_pos );
 
-  print_vector( *(block_info_->orig_rngs_) ,                "block_info_->orig_rngs_                " ); cout << endl;
-  print_vector( *(block_info_->unique_block_->orig_rngs_) , "block_info_->unique_block_->orig_rngs_ " ); cout << endl;
-  print_vector( std_rngs_ ,                                 "std_rngs                               " ); cout << endl;
-  cout <<                                                   "Aname_alt                       = " << Aname_alt<< endl;
-  
-  cout << " block_info_->name()                = " << block_info_->name() << endl;
-  cout << " block_info_->unique_block_->name() = " << block_info_->unique_block_->name() << endl;
-
-  cout << "block_info_->name (split )          = ";
-  for ( auto elem : *(block_info_->range_blocks()) )
-    cout << elem->name() << " " ;
-  cout << endl;
-
-  cout << "block_info_->name (split canonical) = ";
-  for ( auto elem : *(block_info_->range_blocks_canonical()) )
-    cout << elem->name() << " ";
-  cout << endl;
-
-  assert(*(block_info_->unique_block_->orig_rngs_) == std_rngs_ ); 
-
   if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) 
     total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_, op_info_ );
   
-  string Gname_alt = get_gamma_name( chrvec_to_strvec(*block_aops_rngs_), *block_aops_, *ids_pos, bra_name, ket_name );
+  string Gname_alt = get_gamma_name(chrvec_to_strvec(*block_aops_rngs_), *block_aops_, *ids_pos, bra_name, ket_name );
 
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
     G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo_Base>>>() );

@@ -131,14 +131,6 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
                 bk_info.op_list_->at(jj).get_op_idxs( op_state_ids->at(jj) );
               }
             }
-              
-//            if ( term_init->type_ == "orb" ) {
-//              braket_list.push_back(make_shared<BraKet_OrbExcDeriv<DataType>>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(),
-//                                                                               bk_info.ket_index(), op_state_ids, term_init->type_ ) );
-//            } else ( term_init->type_ == "full" ) {
-//              braket_list.push_back(make_shared<BraKet_Full<DataType>>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(),
-//                                                                        bk_info.ket_index(), op_state_ids, term_init->type_ ) );
-//            }
           } 
     
         } while( fvec_cycle_skipper( fvec, maxs, mins ) );

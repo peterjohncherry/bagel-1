@@ -45,16 +45,12 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
     // should also include symmetry information
      Op_Info( std::string op_name,  std::string op_state_name, std::string op_full_name, std::shared_ptr<std::vector<int>> state_ids, char transformation ) :
               op_name_(op_name), op_state_name_(op_state_name), op_full_name_(op_full_name), name_(op_full_name), state_ids_(state_ids),
-              transformation_(tolower(transformation)) {
-              std::cout << "op_state_name = " << op_state_name_ << std::endl;
-     }
+              transformation_(tolower(transformation)) {}
 
-     Op_Info( std::string op_name, std::string op_state_name, std::string op_full_name ,
+     Op_Info( std::string op_name, std::string op_state_name, std::string op_full_name,
               std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info_vec, const std::vector<int>& op_order ) :
               op_name_(op_name), op_state_name_( op_state_name ), op_full_name_( op_full_name ), name_( op_full_name ),
-              op_info_vec_(op_info_vec), op_order_(std::make_shared<std::vector<int>> (op_order) ){
-              std::cout << "op_state_name = " << op_state_name_ << std::endl;
-    }; 
+              op_info_vec_(op_info_vec), op_order_(std::make_shared<std::vector<int>> (op_order) ){}; 
   
     ~Op_Info(){} 
 
@@ -84,6 +80,7 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
     virtual int op_order( int ii ) { assert( ii == 0 );  return  0; }
     virtual char transformation() { return transformation_; } 
     virtual std::string op_state_name_canonical() { return op_state_name_; } 
+    virtual int num_ops() { return 1; } 
 
     virtual std::shared_ptr<Op_Info> op_info_canonical() { return shared_from_this(); } 
 };
@@ -111,6 +108,7 @@ class MultiOp_Info : public Op_Info {
     std::string op_state_name_canonical() { return op_info_canonical_->op_state_name_; } 
 
     std::shared_ptr<Op_Info> op_info_canonical() { return op_info_canonical_; } 
+    int num_ops() {return num_ops_; }
 };
 
 #endif

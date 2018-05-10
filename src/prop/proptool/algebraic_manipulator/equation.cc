@@ -111,14 +111,12 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<shared_pt
         cout << "Adding " << (*oiv_it)->op_name_ << endl;
 
         shared_ptr<TensOp::TensOp<DataType>> new_op = TensOp_Info_Init::Initialize_Tensor_Op_Info<DataType>( (*oiv_it)->op_name_, range_prime_map_ );
-        new_op->add_state_ids( *oiv_it );
         new_op->generate_uncontracted_ctps( (*oiv_it ) );  
 
         CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());
         MT_map_->emplace( (*oiv_it)->op_name_, new_op );
 
       } else { 
-        T_loc->second->add_state_ids( (*oiv_it ) );
         T_loc->second->generate_uncontracted_ctps( *oiv_it );  
       }
 

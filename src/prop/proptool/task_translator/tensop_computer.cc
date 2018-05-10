@@ -190,6 +190,10 @@ void TensOp_Computer::TensOp_Computer<DataType>::build_mo_tensor( string mo_tens
  
       if ( mo_tensor_name != "H_{00}" ) 
         tensop_data_map_->emplace( mo_tensor_name , v2 );
+
+    } else { 
+      tensop_data_map_->emplace( mo_tensor_name , H_loc->second );
+
     }
 
   } else if ( mo_tensor_name[0] == 'h' ) {   
@@ -217,20 +221,6 @@ void TensOp_Computer::TensOp_Computer<DataType>::build_mo_tensor( string mo_tens
     }
   }
   
-  DataType one = (DataType)(1.0); //TODO find a better way;
-  SMITH::IndexRange fs = *(range_conversion_map_->at("free"));
-  SMITH::IndexRange nvs = *(range_conversion_map_->at("c"));
-  nvs.merge(*(range_conversion_map_->at("a")));
-
-  SMITH::IndexRange ncs = *(range_conversion_map_->at("a"));
-  ncs.merge(*(range_conversion_map_->at("v")));
-
-  shared_ptr<vector<SMITH::IndexRange>> fs4 = make_shared<vector<SMITH::IndexRange>>(vector<SMITH::IndexRange> { ncs, ncs, nvs, nvs } );   
-  shared_ptr<SMITH::Tensor_<DataType>> XTens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor( fs4, one ); 
-  tensop_data_map_->emplace( "X" , XTens );
-
-  cout <<"X->norm() = "; cout.flush() ; cout << tensop_data_map_->at("X")->norm() << endl; 
-
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

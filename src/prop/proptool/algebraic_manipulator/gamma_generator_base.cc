@@ -21,7 +21,6 @@ GammaGenerator_Base::GammaGenerator_Base( shared_ptr<StatesInfo_Base> target_sta
   cout << "GammaGenerator_Base::GammaGenerator_Base" << endl;
 
   print_vector(*std_aops_, "std_aops"); cout << endl; // This should be constant for all range blocks, but this is not the same as the MT aops
-  cout << "total_op_->num_idxs() = " ; cout.flush(); cout << total_op_->num_idxs() << endl;
   print_vector(*std_ids_, "std_ids"); cout << endl; // ids are not (necessarily) be constant for all range blocks
   
   return;
@@ -65,7 +64,6 @@ void GammaGenerator_Base::add_gamma( const shared_ptr<Range_Block_Info> block_in
   shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
   
   pair< double, double >  factors = block_info->factors();
-  cout << "factors = (" << factors.first << "," << factors.second << ")" << endl;
 
   gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base >>>( 1, make_shared<GammaIntermediate_Base>( ids_pos, deltas_pos, factors ) );
   final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base >>>(0);
@@ -128,10 +126,6 @@ bool GammaGenerator_Base::generic_reorderer_different_sector( string reordering_
 
   gamma_vec_ = final_gamma_vec_;
   bool does_it_contribute = ( gamma_vec_->size() > 0 );
-
-//  if ( does_it_contribute ) 
-//    for ( auto& gint : *gamma_vec_ )
-//      print_gamma_intermediate( gint );
 
   int kk = 0;
   if ( final_reordering && does_it_contribute ) { 

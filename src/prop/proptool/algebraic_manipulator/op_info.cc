@@ -5,7 +5,7 @@ using namespace std;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 MultiOp_Info::MultiOp_Info( vector<string>& op_list, vector<char>& op_trans_list, shared_ptr<vector<vector<int>>> op_state_ids ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiOp_Info::MultiOp_Info" << endl;
+  //cout << "MultiOp_Info::MultiOp_Info" << endl;
 
   op_order_ = make_shared<vector<int>>(op_list.size());
   canonical_order_ = true;
@@ -21,14 +21,13 @@ MultiOp_Info::MultiOp_Info( vector<string>& op_list, vector<char>& op_trans_list
       }
     }
   }
-
   op_name_       = "";
   op_state_name_ = "";
   op_full_name_  = "";
 
   shared_ptr<vector<shared_ptr<vector<int>>>> state_id_list =  make_shared<vector<shared_ptr<vector<int>>>>();
 
-  op_info_vec_ = make_shared<vector<shared_ptr<Op_Info>>>( op_list.size() );
+  this->op_info_vec_ = make_shared<vector<shared_ptr<Op_Info>>>( op_list.size() );
   vector<shared_ptr<Op_Info>>::iterator oiv_it = op_info_vec_->begin();
 
   for ( int ii = 0 ; ii != op_list.size(); ii++, oiv_it++ ) {
@@ -58,6 +57,7 @@ MultiOp_Info::MultiOp_Info( vector<string>& op_list, vector<char>& op_trans_list
     op_full_name_  += single_op_full_name;
 
   }
+  name_ = op_state_name_;
 
   num_ops_ = op_info_vec_->size();  
   state_ids_list_ = make_shared<vector<shared_ptr<vector<int>>>>(num_ops_);    
@@ -84,5 +84,6 @@ MultiOp_Info::MultiOp_Info( vector<string>& op_list, vector<char>& op_trans_list
       *sic_it++ = (*op_state_ids)[pos];
     } 
     op_info_canonical_ = make_shared<MultiOp_Info>( op_list_canonical, op_trans_list_canonical, state_ids_canonical ); 
+    op_info_canonical_->op_info_canonical_ = op_info_canonical_; 
   }   
 }

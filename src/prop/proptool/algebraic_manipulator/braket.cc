@@ -13,14 +13,12 @@ BraKet_Base::BraKet_Base( std::shared_ptr<Op_Info> multiop_info,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet_Base::BraKet_Base" << endl;
 
-  cout << "BraKet_Base->type = " << type << endl;
-
   if (type_[0] == 'c' ) {
     name_ = "c_{I}"; 
   } else {
     name_ = ""; 
   }
-  name_ += "<" + std::to_string(bra_num)+ "| ";   name_ += multiop_info->name_;   name_ += " |"+ std::to_string(ket_num) + ">";
+  name_ += "<" + to_string(bra_num)+ "| " + multiop_info->op_full_name_  + " |" + to_string(ket_num) + ">";
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void BraKet_Base::print_gamma_Atensor_contractions(shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo_Base> >>>> G_to_A_map,
@@ -28,7 +26,6 @@ void BraKet_Base::print_gamma_Atensor_contractions(shared_ptr<map<string, shared
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout <<  "BraKet_Base::print_gamma_Atensor_contractions()" << endl; 
  
-  cout << "no proj" << endl;
   for( auto map_it = G_to_A_map->begin() ; map_it != G_to_A_map->end(); map_it++){
   
     cout << "====================================================" << endl;
@@ -67,13 +64,9 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
 
-
   Total_Op_ = MT_map->at( multiop_info_->op_name_ );
 
   shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( *(multiop_info_->op_order_),  *(multiop_info_->transformations_) );
-
-  cout << "hello" << endl; 
-  print_vector( *(multiop_info_->op_order_) ," op_info->op_order" ); cout << endl;
 
   Total_Op_->generate_ranges( multiop_info_ );
 
@@ -89,21 +82,16 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
       if ( !(range_map_it->second->ci_sector_transition_ ) ) {
   
         GGen->add_gamma( range_map_it->second, trans_aops );
-  
+
         if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
           if ( GGen->generic_reorderer( "normal order", false, false ) ) {
             if ( GGen->generic_reorderer( "alternating order", false, true ) ){
- 
-              cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl;
-              vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
 
-              for (  auto& block :  *(range_map_it->second->range_blocks_canonical()) ){
-                cout << block->name() << " is a required block "; cout.flush(); print_vector( *(block->orig_rngs_), "rb_it->orig_rngs_" ); cout << endl;
+              for (  auto& block :  *(range_map_it->second->unique_block_->range_blocks()) ){
                 MT_map->at( block->op_info_->op_name_ )->add_required_block( block );
                 required_blocks->emplace( block );
               }
 
-              cout << endl;
             }
           }
         }
@@ -111,23 +99,23 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
     }
   } else { 
     for ( auto range_map_it = all_ranges->begin(); range_map_it != all_ranges->end(); range_map_it++ ){
-      // TODO if is only here for non-relativistic case ; constraints should be specified in input
+  
       if ( !(range_map_it->second->ci_sector_transition_ ) ) {
+ 
         GGen->add_gamma( range_map_it->second, trans_aops );
+
         if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
           if ( GGen->generic_reorderer( "normal order", false, false ) ) {
             if ( GGen->generic_reorderer( "alternating order", false, true ) ){
   
 
-              for (  auto& block :  *(range_map_it->second->range_blocks_canonical()) ){
-                cout << block->name() << " is a required block "; cout.flush(); print_vector( *(block->orig_rngs_), "rb_it->orig_rngs_" ); cout << endl;
+              for (  auto& block :  *(range_map_it->second->unique_block_->range_blocks()) ){
                 MT_map->at( block->op_info_->op_name_ )->add_required_block( block );
                 required_blocks->emplace( block );
               }
 
 
               }
-              cout << endl;
             }
           }
         }
@@ -169,20 +157,16 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
   if ( multiop_info_->op_info_vec()->size() > 1 ) { 
  
     for ( auto range_map_it = all_ranges->begin(); range_map_it != all_ranges->end(); range_map_it++ ){
-      // TODO if is only here for non-relativistic case ; constraints should be specified in input
       if ( !(range_map_it->second->ci_sector_transition_ ) ) {
         GGen->add_gamma( range_map_it->second, trans_aops );
         if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
           if ( GGen->generic_reorderer( "normal order", false, false ) ) {
             if ( GGen->generic_reorderer( "alternating order", false, true ) ){
-              cout << "We need these blocks : " ; cout.flush(); cout << " Total_Op_->sub_tensops().size() = " ; cout.flush(); cout << Total_Op_->sub_tensops().size() << endl;
               vector<shared_ptr<TensOp_Base>> sub_tensops = Total_Op_->sub_tensops();
               for (  auto& rb_it :  *(range_map_it->second->range_blocks()) ){
-                cout << rb_it->unique_block_->name() << " is a required block " << endl;
                 MT_map->at( rb_it->unique_block_->op_info_->op_name_ )->add_required_block( rb_it->unique_block_ );
                 required_blocks->emplace( rb_it->unique_block_ );
               }
-              cout << endl;
             }
           }
         }
@@ -190,18 +174,14 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
     }
   } else { 
     for ( auto range_map_it = all_ranges->begin(); range_map_it != all_ranges->end(); range_map_it++ ){
-      // TODO if is only here for non-relativistic case ; constraints should be specified in input
       if ( !(range_map_it->second->ci_sector_transition_ ) ) {
         GGen->add_gamma( range_map_it->second, trans_aops );
         if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
           if ( GGen->generic_reorderer( "normal order", false, false ) ) {
             if ( GGen->generic_reorderer( "alternating order", false, true ) ){
-  
-                cout << range_map_it->second->unique_block_->name() << " is a required block " << endl;
                 MT_map->at( Total_Op_->name() )->add_required_block( range_map_it->second->unique_block_);
                 required_blocks->emplace( range_map_it->second->unique_block_ );
               }
-              cout << endl;
             }
           }
         }
@@ -209,12 +189,6 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
     }
 
   ctp_map->insert( Total_Op_->CTP_map()->begin(), Total_Op_->CTP_map()->end() );
-  
-  //TODO This looks like it's going to overlap a load of stuff, also,  not sure if this is state specific
-  ctp_map->insert( Total_Op_->CTP_map()->begin(), Total_Op_->CTP_map()->end() );
-
-  cout << " ggac 8  " << endl;
-//  print_gamma_Atensor_contractions( G_to_A_map, false );
 
   return; 
 }
