@@ -53,12 +53,12 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
       }
     }
     }
-    string summed_ids_name = "summed indexes : [ " ;
+    string summed_ids_name = "summed_ids : [ " ;
     for ( auto& elem : *term_idrange_map )
       if (elem.second.first )
         summed_ids_name+=  " " + elem.first + ","; 
-    summed_ids_name.back() = ']';
-
+    summed_ids_name.back() = ' ';
+    summed_ids_name += ']';
 
     do {
       vector<int> fvec_summed_ids( mins_fixed_ids.size() , 0 );
@@ -118,15 +118,14 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
           }
 
         } 
-        print_vector( fvec_summed_ids,  "  fvec_summed_ids" ); print_vector( mins_summed_ids,  "  mins_summed_ids" ); print_vector( maxs_summed_ids,  "  maxs_summed_ids" ); cout << endl; 
       } while( fvec_cycle_skipper( fvec_summed_ids, maxs_summed_ids, mins_summed_ids ) );
       cout << endl << endl;
 
       string state_ids_name = summed_ids_name;
+      state_ids_name += " fixed_ids : [ ";  
       for ( int rr = 0 ; rr != fvec_fixed_ids.size() ;rr++ )
         if ( fixed_indexes[rr]  )
           state_ids_name += "( " + idx_ordered_names[rr] + " : " + to_string(term_idx_val_map->at(idx_ordered_names[rr])) +" ),"; 
-
       state_ids_name.back() = ']';
 
       string term_name =  state_ids_name;
@@ -134,12 +133,7 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
         term_name  += " " + bk->bk_name() + " +" ;
       term_name.back() = ' ';
 
-      cout << "state_ids_name = " << state_ids_name << endl;
-      cout << "master_expression_->name = " << master_expression_->name_ << endl;
-      cout << "braket_list.size() =  " << braket_list.size() << endl;
-
       string expression_name = master_expression_->name_ +  state_ids_name;
-      cout << "expression_name = " << expression_name << endl;
       shared_ptr<vector<pair<DataType, string>>> expression_term_list; 
       auto etm_loc = expression_term_map_->find( expression_name );
       if ( etm_loc == expression_term_map_->end() ) {
@@ -156,7 +150,7 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
       string term_alg_name = master_expression_->term_list_->at(ii).second->alg_name_;
        
       //expression_term_map_->emplace( term_name , make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );
-      //expression_term_map_by_states_->emplace( make_pair(term_alg_name, fixed_id_vals), make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );
+      expression_term_map_by_states_->emplace( make_pair(term_alg_name, fixed_id_vals), make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );
     } while( fvec_cycle_skipper( fvec_fixed_ids, maxs_fixed_ids, mins_fixed_ids ) );
 
   }
