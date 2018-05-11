@@ -141,11 +141,17 @@ System_Info<DataType>::create_equation( string name, string type,
                                         shared_ptr<map<string, shared_ptr<vector<shared_ptr<BraKet_Base>>>>>  term_braket_map,
                                         shared_ptr<map<string, shared_ptr<vector<pair<DataType,string>>>>> expression_term_map ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "System_Info<DataType>::System_Info::create_equation " << endl; 
+  cout << "System_Info<DataType>::System_Info::create_equation : "; cout.flush(); cout << name  << endl; 
 
   term_braket_map_->insert(term_braket_map->begin(), term_braket_map->end()) ;
   expression_term_map_->insert(expression_term_map->begin(), expression_term_map->end()) ;
-  
+ 
+  cout << endl << "Contents of expression_term_map " << endl;
+  cout << "--------------------------------------------------" << endl;
+  for ( auto& elem : *expression_term_map ) 
+    cout << elem.first << endl;
+  cout << endl;
+ 
   shared_ptr<Equation_Base<DataType>>  new_eqn;
   if ( type == "Value" ) { 
     shared_ptr<Equation_Value<DataType>> new_eqn_val  = make_shared<Equation_Value<DataType>> ( name, type, states_info_,  term_braket_map, expression_term_map );

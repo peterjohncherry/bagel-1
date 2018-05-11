@@ -326,14 +326,13 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
   string expression_type = "full"; 
   for (auto& term_info: *expression_def) {
      
-    string term_name = term_info->get<string>( "term" );
+    string term_name   = term_info->get<string>( "term" );
+    string term_type   = term_info->get<string>( "type" );
     string term_factor = term_info->get<string>( "factor" );
-    string term_type = term_info->get<string>( "type" );
     
-    if (term_type[0] == 'o' ) { 
+    if (term_type[0] == 'o' )
       expression_type = "orb_excitation_derivative"; 
-      cout << " in loop expression_type = " << expression_type << endl;
-    }
+    
     shared_ptr<Term_Init> new_term_init = term_init_map_->at(term_name);
 
     term_list->push_back(make_pair(term_factor, new_term_init));
@@ -351,7 +350,6 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
     term_idrange_map_list->push_back( term_idrange_map );     
     
   }
-  cout << "before master init  expression_type = " << expression_type << endl;
   auto master_expression = make_shared<Expression_Init>( term_list, term_idrange_map_list, expression_type ); 
   auto eqn_init = make_shared<Equation_Init_Value<double>>( eqn_name, "Value", master_expression, inp_range_map_, target_indices, inp_factor_map_ );
   eqn_init->initialize_expressions();

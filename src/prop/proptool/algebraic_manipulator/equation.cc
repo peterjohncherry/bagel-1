@@ -96,7 +96,6 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<shared_pt
   bool spinfree = false;
   string expression_type = expr_bk_list->front()->type_;
   cout << "expression_type =  " <<  expression_type << endl; 
-  
 
   for ( shared_ptr<BraKet_Base>& braket_info : *expr_bk_list ) {
     if ( braket_info->type_ != expression_type )

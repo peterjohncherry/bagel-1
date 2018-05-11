@@ -11,7 +11,7 @@ BraKet_Base::BraKet_Base( std::shared_ptr<Op_Info> multiop_info,
                           multiop_info_(multiop_info), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
                           type_(type) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "BraKet_Base::BraKet_Base" << endl;
+//  cout << "BraKet_Base::BraKet_Base" << endl;
 
   if (type_[0] == 'c' ) {
     name_ = "c_{I}"; 

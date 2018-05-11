@@ -10,6 +10,8 @@ class Expression {
       public :
         std::string name_;   
 
+        bool do_not_evaluate_; // TODO Fix this hack used to avoid evaluating the master expression
+
         std::string type_; // full, orb_exc_deriv, ci_deriv
 
         //List of terms, currently a list of BraKets...

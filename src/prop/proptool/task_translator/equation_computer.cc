@@ -141,7 +141,7 @@ void
 Equation_Computer_Base<DataType>::evaluate_term( string expression_name, vector<pair<string, int>>& fixed_idxs,
                                                                                vector<pair<string, int>>& summed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "Equation_Computer_Base<DataType>::evaluate_term A" << std::endl;
+  std::cout << "Equation_Computer_Base<DataType>::evaluate_term A : " << expression_name << std::endl;
 
   expression_computer_->evaluate_expression( expression_name);
 
@@ -152,7 +152,7 @@ template<typename DataType>
 void
 Equation_Computer_Base<DataType>::evaluate_term( string expression_name, vector<pair<string, int>>& fixed_idxs ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "Equation_Computer_Base<DataType>::evaluate_term B" << std::endl;
+  std::cout << "Equation_Computer_Base<DataType>::evaluate_term B : " << expression_name << std::endl;
 
   cout << "expression_name = " << expression_name  << " = [ ";  cout.flush();
   for ( auto& xx : fixed_idxs ) {

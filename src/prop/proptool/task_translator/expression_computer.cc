@@ -29,7 +29,11 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
   cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : name input : " << expression_name <<  endl;
 
   shared_ptr<Expression<DataType>> expr = expression_map_->at(expression_name); cout << "got " << expression_name << " info "<< endl;
-  evaluate_expression(expr);
+//  if ( expr->do_not_evaluate_ ) { 
+//    cout << "Skipping evaluation of " << expression_name << endl << endl;
+//  }  else {
+    evaluate_expression(expr);
+//  }
   return;
 } 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

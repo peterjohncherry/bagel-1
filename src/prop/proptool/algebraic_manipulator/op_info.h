@@ -30,6 +30,7 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
     std::string op_state_name_;
     std::string op_full_name_;
     std::string name_;
+
  
     bool canonical_order_;
 
@@ -38,7 +39,6 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
     std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> state_ids_list_;
     std::shared_ptr<std::vector<char>> transformations_;
     std::shared_ptr<std::vector<int>> op_order_;
-
 
      Op_Info(){};
 
@@ -53,16 +53,6 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
               op_info_vec_(op_info_vec), op_order_(std::make_shared<std::vector<int>> (op_order) ){}; 
   
     ~Op_Info(){} 
-
-    //TODO This is awkward, should probably always have these, but how to get round inability to set shared from this in constructor?
-    //     Don't want to use inline function every time I access op_info_vec/op_order/transformations etc.
-    void initialize_as_multiop_info(){
-        op_info_vec_ = std::make_shared<std::vector<std::shared_ptr<Op_Info>>>( 1, shared_from_this()); 
-        transformations_ = std::make_shared<std::vector<char>>( 1, transformation_ ); 
-        op_order_ = std::make_shared<std::vector<int>>( 1, 0 ); 
-        state_ids_list_ = std::make_shared<std::vector<std::shared_ptr<std::vector<int>>>> (1, state_ids_);
-        return;
-    } ; 
 
     virtual std::shared_ptr<std::vector<std::shared_ptr<Op_Info>>> op_info() {
       assert( false ); 

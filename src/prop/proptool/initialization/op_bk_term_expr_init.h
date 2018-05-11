@@ -225,9 +225,9 @@ class Expression_Init {
                      term_list_(term_list), term_range_maps_(term_range_maps), type_(type) {
                        for ( std::pair<std::string, std::shared_ptr<Term_Init>> term : *term_list_ )
                          name_ += "(" +term.first +")."+ term.second->name_+ "+";
+                      
                        name_.pop_back();
-                       std::cout << "Expression name " << std::endl;
-                       std::cout << name_ << std::endl << std::endl;
+                       std::cout << "New Expression : "; std::cout.flush(); std::cout <<  name_ << " initialized " << std::endl << std::endl;
                      };
     ~Expression_Init(){};
  
