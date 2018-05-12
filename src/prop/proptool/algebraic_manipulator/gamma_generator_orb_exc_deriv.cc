@@ -16,6 +16,8 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_gamma( const shared_ptr<Range_Blo
   block_aops_rngs_ = block_info->orig_rngs_ch(); // May be transformed by Bra or Ket.
 
   op_info_ = block_info->op_info();
+  cout <<" op_info_->op_full_name_ = "<<  op_info_->op_full_name_ << endl;
+  print_vector(*( op_info_->op_order_) , " op_order " ) ; cout << endl;
 
   block_rngs_ = make_shared<vector<string>>( block_info->orig_rngs()->size() ) ; // After the below definition, this remains unchanged.
   vector<string>::iterator br_it = block_rngs_->begin();
@@ -44,8 +46,9 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_gamma( const shared_ptr<Range_Blo
     target_block_start_ += (*rb_it)->num_idxs_; 
   }
   cout << "target_block_name_ = " ; cout.flush(); cout << target_block_name_  << endl;
-
-
+  print_vector(*block_aops_ ,      "block_aops      "); cout << endl;
+  print_vector(*block_aops_rngs_ , "block_aops_rngs "); cout << endl;
+  print_vector(*idxs_trans_ ,      "idxs_trans      "); cout << endl;
 
   // TMP.
   std_rngs_target_op_free_ = vector<string>(block_idxs_.size() - target_block_size_ ); 
@@ -57,7 +60,9 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_gamma( const shared_ptr<Range_Blo
   vector<string>::iterator sr_it = std_rngs_.begin();
   vector<string>::iterator sitof_it = std_idxs_target_op_free_.begin();
   vector<string>::iterator srtof_it = std_rngs_target_op_free_.begin();
-  for( vector<int>::iterator oo_it = op_info_->op_order()->begin(); oo_it != op_info_->op_order()->end(); oo_it++ ) {
+  cout << "ggoxd::ag 1" << endl;
+  for( vector<int>::iterator oo_it = op_info_->op_order_->begin(); oo_it != op_info_->op_order_->end(); oo_it++ ) {
+    cout << "(*range_blocks)["; cout.flush(); cout << *oo_it <<"]->full_op_name()[0] = "; cout.flush(); cout << (*range_blocks)[*oo_it]->full_op_name(); cout << " ?= "; cout.flush(); cout <<  target_op_ << endl;
     if ( (*range_blocks)[*oo_it]->full_op_name()[0] != target_op_[0] ){ 
 
       for ( int rr = 0  ; rr != (*range_blocks)[*oo_it]->num_idxs_; sr_it++, si_it++, srtof_it++, sitof_it++, rr++ ) {
@@ -73,7 +78,7 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_gamma( const shared_ptr<Range_Blo
     
   }
   }
-
+  cout << " X" << endl;
   {
   vector<int>::iterator it_it = idxs_trans_->begin();
   for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ )
