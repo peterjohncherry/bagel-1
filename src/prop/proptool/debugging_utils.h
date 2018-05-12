@@ -39,6 +39,18 @@ namespace Debugging_Utils {
     std::cout << "]" << std::endl;
   }
  
+  template<typename DataType>
+  std::shared_ptr<std::vector<DataType>> get_pos_from_arg2( const std::vector<int>& pos, const std::vector<DataType>& vec2 ) {
+
+    std::shared_ptr<std::vector<DataType>> selected_elems = std::make_shared<std::vector<DataType>>(pos.size());
+    std::vector<int>::const_iterator p_it = pos.begin(); 
+    for ( typename std::vector<DataType>::iterator se_it = selected_elems->begin(); se_it != selected_elems->end() ; se_it++, p_it++ )
+      *se_it = vec2[*p_it]; 
+  
+    return selected_elems;
+  } 
+  
+
 
 
 }

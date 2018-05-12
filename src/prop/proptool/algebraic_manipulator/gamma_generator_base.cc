@@ -134,7 +134,7 @@ bool GammaGenerator_Base::generic_reorderer_different_sector( string reordering_
       kk++;
     } 
   }
-
+  cout << " leaving GammaGenerator_Base::generic_reorderer_different_sector" << endl;
   return does_it_contribute;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -368,8 +368,8 @@ void GammaGenerator_Base::swap( int ii, int jj, int kk ){
     gamma_vec_->push_back(new_gamma);
  
   }
-  pair<double,double> anti_herm_fac = make_pair( -1.0, 1.0 );
-  WickUtils::pair_fac_mult( anti_herm_fac, gint->factors_  );
+  gint->factors_.first *= -1.0;
+  gint->factors_.second *= -1.0;
  
   return;
 }

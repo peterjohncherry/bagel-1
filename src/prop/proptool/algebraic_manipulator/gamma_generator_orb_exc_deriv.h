@@ -62,6 +62,7 @@ class GammaGenerator_OrbExcDeriv : public GammaGenerator_Base {
     std::vector<std::string> std_idxs_target_op_free_;
 
     std::string std_name_target_op_free_;
+    std::vector<bool> block_pos_target_op_free_;
 
     GammaGenerator_OrbExcDeriv( std::shared_ptr<StatesInfo_Base> target_states, int Ket_num, int Bra_num,
                                 std::shared_ptr<TensOp_Base> multitensop, 

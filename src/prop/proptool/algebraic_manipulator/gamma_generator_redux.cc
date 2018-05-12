@@ -82,7 +82,8 @@ void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name
     *idp_it = make_pair( (*idxs_trans_)[dp_it->first], (*idxs_trans_)[dp_it->second]);
 
   string Aname_alt = get_ctp_name( op_info_->op_state_name_canonical(), *std_ids_,  std_rngs_, idxs_deltas_pos );
-
+  cout << "Aname_alt = " << Aname_alt << endl;
+  
   if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) 
     total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_, op_info_ );
   
