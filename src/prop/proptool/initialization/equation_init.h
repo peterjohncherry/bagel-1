@@ -3,7 +3,8 @@
 
 #include <src/global.h>
 #include <src/prop/proptool/initialization/op_bk_term_expr_init.h>
-#include <src/prop/proptool/algebraic_manipulator/braket.h>
+#include <src/prop/proptool/algebraic_manipulator/braket_full.h>
+#include <src/prop/proptool/algebraic_manipulator/braket_orb_exc_deriv.h>
 // Equation_Init constructs the expressions necessary for evaluation of the equation
 // specified in the user input.
 // The "master expression" is the expression with variables for indexes.

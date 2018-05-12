@@ -73,7 +73,7 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
           mins_summed_ids[rr] = fvec_fixed_ids[rr];
           maxs_summed_ids[rr] = fvec_fixed_ids[rr];
         }
-      } 
+      }
 
       //for summations.
       vector<shared_ptr<BraKet_Base>> braket_list(0);
@@ -105,8 +105,8 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
           }
 
           shared_ptr<MultiOp_Info> multiop_info =  make_shared<MultiOp_Info>( bk_op_list, bk_op_trans_list, op_state_ids ); 
-          if ( multiop_info->canonical_order_ ) 
-            multiop_info->op_info_canonical_ = dynamic_pointer_cast<MultiOp_Info>(multiop_info->shared_from_this()); 
+          if ( multiop_info->canonical_order_ )
+            multiop_info->op_info_canonical_ = dynamic_pointer_cast<MultiOp_Info>(multiop_info->shared_from_this());
 
           if (term_init->type_ == "orb" ){
             shared_ptr<BraKet_OrbExcDeriv<DataType>> new_bk = make_shared< BraKet_OrbExcDeriv<DataType>>( multiop_info, bk_factor_dummy, bk_info.bra_index(), bk_info.ket_index(), term_init->type_);
@@ -117,7 +117,7 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
             braket_list.push_back(make_shared<BraKet_Full<DataType>>( multiop_info, bk_factor_dummy, bk_info.bra_index(), bk_info.ket_index(), term_init->type_));
           }
 
-        } 
+        }
       } while( fvec_cycle_skipper( fvec_summed_ids, maxs_summed_ids, mins_summed_ids ) );
       cout << endl << endl;
 
@@ -139,16 +139,16 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
       if ( etm_loc == expression_term_map_->end() ) {
         expression_term_list = make_shared<vector<pair<DataType, string>>>(0);
         expression_term_map_->emplace( expression_name, expression_term_list );
-      } else { 
+      } else {
         expression_term_list = etm_loc->second;
       } 
 
       expression_term_list->push_back( make_pair( (DataType)1.0 , term_name) );
 
-      term_braket_map_->emplace( term_name, make_shared<vector<shared_ptr<BraKet_Base>>>(braket_list) ); 
+      term_braket_map_->emplace( term_name, make_shared<vector<shared_ptr<BraKet_Base>>>(braket_list) );
 
       string term_alg_name = master_expression_->term_list_->at(ii).second->alg_name_;
-       
+
       //expression_term_map_->emplace( term_name , make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );
       expression_term_map_by_states_->emplace( make_pair(term_alg_name, fixed_id_vals), make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );
     } while( fvec_cycle_skipper( fvec_fixed_ids, maxs_fixed_ids, mins_fixed_ids ) );
@@ -156,7 +156,6 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
   }
   return;
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Equation_Init_Value<double>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

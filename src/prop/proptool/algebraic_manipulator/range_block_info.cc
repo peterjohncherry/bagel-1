@@ -17,7 +17,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), idxs_trans_(idxs_trans), factors_(factors), ReIm_factors_(ReIm_factors),
                                     op_info_(op_info) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   cout << "Range_Block_Info::Range_Block_Info 1" << endl;
+//   cout << "Range_Block_Info::Range_Block_Info 1" << endl;
 
   num_idxs_ = orig_rngs_->size();
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
@@ -47,7 +47,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(transform->idxs_trans(*orig_block)), factors_(factors),
                                     ReIm_factors_(ReIm_factors), transform_(transform), op_info_(op_info)  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "Range_Block_Info::Range_Block_Info 2" << endl;
+// cout << "Range_Block_Info::Range_Block_Info 2" << endl;
 
   num_idxs_ = orig_rngs_->size();
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
@@ -77,7 +77,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_( idxs_trans ), factors_(factors),
                                     ReIm_factors_(ReIm_factors), op_info_(op_info)  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Range_Block_Info::Range_Block_Info 3" << endl;
+//  cout << "Range_Block_Info::Range_Block_Info 3" << endl;
 
   num_idxs_ = orig_rngs_->size();
   idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
@@ -103,7 +103,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Range_Block_Info::set_transition_vars( const vector<bool>& aops ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Range_Block_Info::set_transition_vars" << endl;
+//  cout << "Range_Block_Info::set_transition_vars" << endl;
 
   plus_pnum_ = 1;
   kill_pnum_ = 1;
@@ -132,7 +132,7 @@ Split_Range_Block_Info::Split_Range_Block_Info( shared_ptr<vector<shared_ptr<Ran
                                                 shared_ptr<map<const vector<string>, shared_ptr<Range_Block_Info>>>& unique_split_ranges ) :
                                                 Range_Block_Info(), range_blocks_( range_blocks ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Split_Range_Block_Info::Split_Range_Block_Info" << endl;
+//  cout << "Split_Range_Block_Info::Split_Range_Block_Info" << endl;
 
   op_info_ =  op_info;
   ReIm_factors_ = make_pair(1.0, 0.0); // TODO temporary hack
@@ -180,10 +180,9 @@ Split_Range_Block_Info::Split_Range_Block_Info( shared_ptr<vector<shared_ptr<Ran
   name_ = "";
   name_ = op_info->op_state_name_ + "_";
 
-  print_vector( *orig_rngs_ch_ , "X orig_rngs_ch" ); cout << endl;
   for ( auto  elem : *orig_rngs_ch_ )
     name_ += elem;
-  cout << "name_ = " << name_ << endl;
+//  cout << "name_ = " << name_ << endl;
 
   canonical_ = true; 
   { 

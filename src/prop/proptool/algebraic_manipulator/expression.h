@@ -1,8 +1,8 @@
 #ifndef __SRC_PROP_PROPTOOL_ALGEBRAICMANIPULATOR_EXPRESSION_H
 #define __SRC_PROP_PROPTOOL_ALGEBRAICMANIPULATOR_EXPRESSION_H
 #include <src/prop/proptool/proputils.h>
-#include <src/prop/proptool/algebraic_manipulator/braket.h>
-#include <src/prop/proptool/algebraic_manipulator/tensop.h>
+#include <src/prop/proptool/algebraic_manipulator/braket_full.h>
+#include <src/prop/proptool/algebraic_manipulator/braket_orb_exc_deriv.h>
 
 template<typename DataType>
 class Expression {

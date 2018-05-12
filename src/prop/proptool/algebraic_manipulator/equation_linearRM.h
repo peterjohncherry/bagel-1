@@ -37,7 +37,7 @@ class Equation_LinearRM : public Equation_Base<DataType> {
                                                       std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>> term_braket_map_state_spec,
                        std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
                                                  std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec ) 
-                    : Equation_Base<DataType>( name, type, states_info, term_braket_map, expression_term_map, term_braket_map_state_spec, expression_term_map_state_spec){ cout << " eqn_lrm" << endl;}  
+                    : Equation_Base<DataType>( name, type, states_info, term_braket_map, expression_term_map, term_braket_map_state_spec, expression_term_map_state_spec){}  
 
    ~Equation_LinearRM(){};
 
