@@ -52,7 +52,6 @@ void CtrTensorPart_Base::get_ctp_idxs_ranges(){
 //////////////////////////////////////////////////////////////////////////////
 //cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
 
-  int counter = 0;
   vector<bool> get_unc(full_idxs_->size(), true);
 
   for (int ii =0; ii != ctrs_pos_->size() ; ii++){
@@ -113,57 +112,67 @@ void CtrTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<string,
                                                           shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
                                                           shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << endl <<  "CtrTensorPart<DataType>::build_contraction_sequence : CTP name =  " << name_ << endl;
-int counter = 0 ;
-  while ( ctrs_todo_->size() != 0 ){ 
+  cout << endl <<  "CtrTensorPart<DataType>::build_contraction_sequence : CTP name =  " << name_ << endl;
 
-    string CTP_in_name = get_next_name(ctrs_done_);
-    ctrs_done_->push_back(ctrs_todo_->back());
-    string CTP_out_name = get_next_name(ctrs_done_);
-    ctrs_todo_->pop_back();
-  
-    shared_ptr<CtrTensorPart_Base> CTP_in;
-    if ( Tmap->find(CTP_in_name) == Tmap->end()) {
-      shared_ptr<vector<pair<int,int>>> new_ctrs_pos = make_shared<vector<pair<int,int>>>(*ctrs_todo_);
+  if ( ctrs_pos_->size() == 0 ) {
 
-      CTP_in = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos, op_info_ );
-      Tmap->emplace(CTP_in->name(),  CTP_in);
-    } else {
-      CTP_in = Tmap->at(CTP_in_name);
-      assert(CTP_in);
-    }
-    CTP_in->dependents_.emplace(CTP_out_name);
-    CTP_in->dependents_.emplace(name_);
+    ACompute_list->push_back( make_shared<CtrOp_Get>( name_, "get" ) ); 
+
+    return;
+
+  } else {  
  
-    pair<int,int> ctrs_rel_pos_in = get_pre_contract_ctr_rel_pos( ctrs_done_->back() ) ;
-
-    if ( ACompute_map->find(CTP_in_name) == ACompute_map->end()) {                                                       
-      shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list_new = make_shared<vector<shared_ptr<CtrOp_base> >>(0);   
-      CTP_in->build_contraction_sequence(Tmap, ACompute_list_new, ACompute_map);                                                       
-    }
-
-    shared_ptr<CtrTensorPart_Base> CTP_out;
-    if ( Tmap->find(CTP_out_name) == Tmap->end()) {
-
-      shared_ptr<vector<pair<int,int>>> new_ctrs_pos = make_shared<vector<pair<int,int>>>(*ctrs_done_);
-      CTP_out = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos, op_info_ );
-      Tmap->emplace(CTP_out_name,  CTP_out); 
-
-    } else {
-      CTP_out = Tmap->at(CTP_out_name);
-    }
-    CTP_out->dependencies_.emplace(name_);
-
-    ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name_ << "'s Acompute_list"<<  endl;
-
-    cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done_->back().first << ","<< ctrs_done_->back().second << ") to get " << CTP_out_name ; cout.flush(); 
-
-    shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list_out =  make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list);
-    ACompute_map->emplace(CTP_out_name, ACompute_list_out);
-
-    dependencies_.emplace(CTP_in_name);
-  } 
-  ACompute_map->emplace(name_, ACompute_list);
+    while ( ctrs_todo_->size() != 0 ){ 
+  
+      string CTP_in_name = get_next_name(ctrs_done_);
+      ctrs_done_->push_back(ctrs_todo_->back());
+      string CTP_out_name = get_next_name(ctrs_done_);
+      ctrs_todo_->pop_back();
+    
+      shared_ptr<CtrTensorPart_Base> CTP_in;
+      if ( Tmap->find(CTP_in_name) == Tmap->end()) {
+        shared_ptr<vector<pair<int,int>>> new_ctrs_pos = make_shared<vector<pair<int,int>>>(*ctrs_todo_);
+  
+        CTP_in = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos, op_info_ );
+        Tmap->emplace(CTP_in->name(),  CTP_in);
+      } else {
+        CTP_in = Tmap->at(CTP_in_name);
+        assert(CTP_in);
+      }
+      CTP_in->dependents_.emplace(CTP_out_name);
+      CTP_in->dependents_.emplace(name_);
+   
+      pair<int,int> ctrs_rel_pos_in = get_pre_contract_ctr_rel_pos( ctrs_done_->back() ) ;
+  
+      if ( ACompute_map->find(CTP_in_name) == ACompute_map->end()) {                                                       
+        shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list_new = make_shared<vector<shared_ptr<CtrOp_base> >>(0);   
+        CTP_in->build_contraction_sequence(Tmap, ACompute_list_new, ACompute_map);                                                       
+      }
+  
+      shared_ptr<CtrTensorPart_Base> CTP_out;
+      if ( Tmap->find(CTP_out_name) == Tmap->end()) {
+  
+        shared_ptr<vector<pair<int,int>>> new_ctrs_pos = make_shared<vector<pair<int,int>>>(*ctrs_done_);
+        CTP_out = make_shared< CtrTensorPart<DataType> >( full_idxs_, full_id_ranges_, new_ctrs_pos, op_info_ );
+        Tmap->emplace(CTP_out_name,  CTP_out); 
+  
+      } else {
+        CTP_out = Tmap->at(CTP_out_name);
+      }
+      CTP_out->dependencies_.emplace(name_);
+  
+      ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name_ << "'s Acompute_list"<<  endl;
+  
+      cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done_->back().first << ","<< ctrs_done_->back().second << ") to get " << CTP_out_name ; cout.flush(); 
+  
+      shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list_out =  make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list);
+      ACompute_map->emplace(CTP_out_name, ACompute_list_out);
+  
+      dependencies_.emplace(CTP_in_name);
+    } 
+    ACompute_map->emplace(name_, ACompute_list);
+  }
+ 
   cout << endl <<  "Leaving CtrTensorPart<DataType>::build_contraction_sequence : CTP name =  "; cout.flush(); cout << name_ << endl;
   return;
 }
@@ -176,27 +185,34 @@ void CtrMultiTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<st
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 cout << endl << "CtrMultiTensorPart<DataType>::build_contraction_sequence :   CMTP name = " << name_ << endl;
 
-  if ( get_compute_list_from_reordered_tens_ ) {  
+  if ( get_compute_list_from_reordered_tens_ ) {  // TODO Should not need this anymore now op_info class has been extended; all Acontrib should be in canonical order on entry.
               
     Tmap->at(reordered_tens_name_)->build_contraction_sequence( Tmap, ACompute_list, ACompute_map) ; 
     ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >> (*(ACompute_map->at( reordered_tens_name_ ))); 
     ACompute_list->push_back( make_shared<CtrOp_reorder> ( reordered_tens_name_, name_, reordering_, "reordering" ));
+
   } else if (ctrs_pos_->size() > 0 ) {
     
     if ( (CTP_vec_->size() == 2) && ( cross_ctrs_pos_->size() > 0 ) ) {
-      shared_ptr<CtrTensorPart<DataType>> new_CTP = Binary_Contract_diff_tensors(cross_ctrs_pos_->back(), ctrs_pos_->back(), Tmap,  ACompute_list, ACompute_map);
-      if (Tmap->find(new_CTP->name_) == Tmap->end()){
-        Tmap->emplace(new_CTP->name_, new_CTP);
-      }
 
-      if ( cross_ctrs_pos_->size() > 1 ) {
+      shared_ptr<CtrTensorPart<DataType>> new_CTP = Binary_Contract_diff_tensors(cross_ctrs_pos_->back(), ctrs_pos_->back(), Tmap,  ACompute_list, ACompute_map);
+      if (Tmap->find(new_CTP->name_) == Tmap->end())
+        Tmap->emplace(new_CTP->name_, new_CTP);
+      
+
+      if ( cross_ctrs_pos_->size() > 1 )
         new_CTP->build_contraction_sequence(Tmap, ACompute_list, ACompute_map);
-      }
+      
     } else if ( cross_ctrs_pos_->size() == 0 ) {
      
-      for ( auto& inner_CTP : *CTP_vec_ ){ 
-        inner_CTP->build_contraction_sequence(Tmap, ACompute_list, ACompute_map);
+      shared_ptr<vector<string>> direct_product_tensor_list = make_shared<vector<string>>( CTP_vec_->size()); 
+      vector<string>::iterator dptl_it = direct_product_tensor_list->begin();
+      for ( vector<shared_ptr<CtrTensorPart_Base>>::iterator cv_it = CTP_vec_->begin(); cv_it != CTP_vec_->end() ;  cv_it++, dptl_it++ ){ 
+        (*cv_it)->build_contraction_sequence(Tmap, ACompute_list, ACompute_map);
+        *dptl_it = (*cv_it)->name();
       }
+      
+      ACompute_list->push_back ( make_shared<CtrOp_DirectProduct> ( direct_product_tensor_list, name_, "cartesian") );
 
     } else {
       throw logic_error("CtrMultiTensorPart<DataType>::build_contraction_sequence ; Should always meet one of the above conditions... Aborting !! ");

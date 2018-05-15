@@ -61,20 +61,16 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
         if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
           if ( GGen->generic_reorderer( "normal order", false, false ) ) {
             if ( GGen->generic_reorderer( "alternating order", false, true ) ){
-  
-
               for (  auto& block :  *(range_map_it->second->unique_block_->range_blocks()) ){
                 MT_map->at( block->op_info_->op_name_ )->add_required_block( block );
                 required_blocks->emplace( block );
-              }
-
-
               }
             }
           }
         }
       }
     }
+  }
 
   ctp_map->insert( Total_Op_->CTP_map()->begin(), Total_Op_->CTP_map()->end() );
 

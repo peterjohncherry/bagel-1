@@ -23,6 +23,7 @@ TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo_Base& AI
 
      cout << "getting " <<  ctr_op->Tout_name() << endl;
    
+    //TODO don't check ctr_type(), check if dynamic_pointer_cast<X>( ctr_op ) is null (where X is the type of contraction you're casting to).
     // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
     if( tensop_data_map_->find(ctr_op->Tout_name()) == tensop_data_map_->end() ) {
        cout << A_contrib << " not in data_map, must calculate it " << endl;
@@ -49,6 +50,10 @@ TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo_Base& AI
         tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
         cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
 
+      } else if ( ctr_op->ctr_type()[0] == 'c' ) { cout << " : cartesian (direct) product tensors" <<  endl; 
+        New_Tdata = direct_product_tensors( *(ctr_op->tensor_list()) );
+        tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata);
+        cout << ctr_op->Tout_name() << "->norm() = " << New_Tdata->norm() << endl;
       } else { 
         throw std::runtime_error(" unknown contraction type : " + ctr_op->ctr_type() ) ;
       }

@@ -45,12 +45,10 @@ Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_p
 
       auto ACompute_list_loc = ACompute_map_->find(cmtp_name);
       if ( ACompute_list_loc != ACompute_map_->end() ){
-        cout << "cmtp_name : " ; cout.flush() ; cout << cmtp_name << " already in map    "; cout.flush();
-        cout << "AComputer_list_length = " << ACompute_list_loc->second->size() << endl;  
+        cout << "cmtp_name : " ; cout.flush() ; cout << cmtp_name << " already in map    "; cout.flush(); cout << "AComputer_list_length = " << ACompute_list_loc->second->size() << endl;  
         continue;
       } else {
-        shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list;
-        ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
+        shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
         CTP_map_->at(cmtp_name)->build_contraction_sequence(CTP_map_, ACompute_list, ACompute_map_);
         ACompute_map_->emplace(cmtp_name, ACompute_list);
         CTP_map_->at(cmtp_name)->got_compute_list( true );

@@ -66,7 +66,6 @@ void TensOp::TensOp<DataType>::generate_uncontracted_ctps( std::shared_ptr<Op_In
 
   shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *idxs_ );
   shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
-  shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, factor_); 
 
   for ( vector<shared_ptr<vector<string>>>::iterator bl_it = block_list_.begin(); bl_it != block_list_.end(); bl_it++ ) {
     shared_ptr<vector<string>> full_ranges = *bl_it;
@@ -126,14 +125,14 @@ TensOp::TensOp<DataType>::get_transformed_range_block( std::shared_ptr<Op_Info> 
     case 'i' : // inverse
       for_each( new_aops.begin(), new_aops.end(), [] ( bool aop ) { return !aop; } ); 
       assert ( hermitian_inverse_ ); // TODO in principal, this should go to an op specific function.
-      trans_factors = make_pair(1.0, -1.0);
+      trans_factors = make_pair(1.0, 1.0);
       break;
 
     case 'h' : // hconj
       for_each( new_aops.begin(), new_aops.end(), [] ( bool aop ) { return !aop; } ); 
       std::reverse( new_orig_rngs->begin(), new_orig_rngs->end() );
       std::reverse( new_idxs_trans->begin(), new_idxs_trans->end() );
-      trans_factors = make_pair(1.0, -1.0);
+      trans_factors = make_pair(1.0, 1.0);
       break;
 
     case 't' : // time reversal
@@ -254,7 +253,7 @@ void TensOp::TensOp<DataType>::apply_symmetry( const vector<string>& new_block, 
   iota( idxs_trans->begin(), idxs_trans->end(), 0 );
 
   new_block_c =  make_shared<const vector<string>>(*new_block_c);
-  factor_trans = make_pair(1.0,1.0);
+  factor_trans = make_pair(1.0,0.0);
 
   //TODO This kind of recursion looks nasty; check it's OK.
   shared_ptr<Range_Block_Info> new_range_block = make_shared<Range_Block_Info>( new_block_c, idxs_trans, factor_, factor_trans, aops , op_info ) ;  

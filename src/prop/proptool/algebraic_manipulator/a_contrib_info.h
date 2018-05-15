@@ -27,29 +27,27 @@ class AContribInfo_Base {
     void decrease_remaining_uses() { remaining_uses_-=1; }
 
 
-    virtual std::vector<int> id_order(int qq) { assert(false); std::vector<int> dummy; return dummy; };
-    virtual std::vector<std::vector<int>> id_orders() { assert(false); std::vector<std::vector<int>> dummy ;return dummy; };
+    virtual std::vector<int> id_order(int qq) { assert(false); return std::vector<int>(0); }
+    virtual std::vector<std::vector<int>> id_orders() { assert(false); return std::vector<std::vector<int>>(0); }
 
     virtual void add_id_order( std::vector<int>& new_id_order ) { assert(false); } 
-    virtual std::pair<double,double> factor(int qq) { assert(false); std::pair<double,double> dummy; return dummy; };
+    virtual std::pair<double,double> factor(int qq) { assert(false); return std::pair<double,double>(0.0,0.0); }
 
-    virtual void add_factor( std::pair<double,double>& new_factor ) {};
-    virtual void combine_factors( int qq, std::pair<double,double>& new_factor ) {}; 
+    virtual void add_factor( std::pair<double,double>& new_factor ) { throw std::logic_error("do not call add_factor from AContribInfo_Base"); }
+    virtual void combine_factors( int qq, std::pair<double,double>& new_factor ) {throw std::logic_error("do not call combine_factors from AContribInfo_Base");  }
 
     virtual
     void add_pre_contraction_reordering( std::vector<int>& new_id_order ) {
-      throw std::logic_error("should not call add_pre_contraction_reordering from AContribInfo_Base"); }
+      throw std::logic_error("do not call add_pre_contraction_reordering() from AContribInfo_Base"); }
 
-    virtual
-    std::string target_block_name() { throw  std::logic_error("should not access target_block_name from AContribInfo_Base");  return "no"; } 
+    virtual std::string target_block_name() { throw  std::logic_error("do not call target_block_name() from AContribInfo_Base"); return "ERROR!"; } 
 
     virtual
     std::vector<std::vector<int>> pre_contraction_reorderings() {
-       throw  std::logic_error("should not access target_block_name from AContribInfo_Base");  
-       std::vector<std::vector<int>> dummy; return dummy; }
+      throw  std::logic_error("do not call pre_contraction_reorderings() from AContribInfo_Base");return std::vector<std::vector<int>>(0); }
 
     virtual
-    std::vector<int> post_contraction_reordering() { throw std::logic_error( "Should not access post_contraction_reorderings from AContribInfo_Base" );  return std::vector<int>(0); }
+    std::vector<int> post_contraction_reordering() { throw std::logic_error("Do not call post_contraction_reordering() from AContribInfo_Base");return std::vector<int>(0); }
     
     virtual
     std::vector<int> gamma_contraction_pos() {  throw std::logic_error( "Should not access gamma_contraction_pos from AContribInfo_Base" );  return std::vector<int>(0); }

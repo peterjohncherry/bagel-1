@@ -368,7 +368,7 @@ void GammaGenerator_Base::swap( int ii, int jj, int kk ){
     gamma_vec_->push_back(new_gamma);
  
   }
-  gint->factors_.first *= -1.0;
+  gint->factors_.first  *= -1.0;
   gint->factors_.second *= -1.0;
  
   return;

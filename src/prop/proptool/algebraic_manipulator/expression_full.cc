@@ -22,7 +22,8 @@ void Expression_Full<DataType>::generate_algebraic_task_list(){
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
+void 
+Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression_Full::get_gamma_Atensor_contraction_list" << endl;
 
@@ -31,7 +32,6 @@ void Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
     auto A_map = G2A_mapit->second;
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
       string cmtp_name  = A_map_it->first;
-      shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list;
       if ( CTP_map_->find(cmtp_name) == CTP_map_->end()){
         throw std::logic_error( cmtp_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
       }
@@ -39,7 +39,7 @@ void Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
       if ( ACompute_list_loc != ACompute_map_->end() ){
         continue;
       } else {
-        ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
+        shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
         CTP_map_->at(cmtp_name)->build_contraction_sequence(CTP_map_, ACompute_list, ACompute_map_);
         ACompute_map_->emplace(cmtp_name, ACompute_list);
         CTP_map_->at(cmtp_name)->got_compute_list( true );

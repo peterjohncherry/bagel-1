@@ -130,7 +130,7 @@ void GammaGenerator_OrbExcDeriv<DataType>::swap( int ii, int jj, int kk ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  cout << "GammaGenerator_OrbExcDeriv<DataType>::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
 
-  shared_ptr<GammaIntermediate_Base> gint =  gamma_vec_->at(kk);
+  shared_ptr<GammaIntermediate_Base>& gint =  gamma_vec_->at(kk);
 
   // only need one buffer really, but this looks clearer
   int j_pos = (*((gint)->ids_pos_))[jj];
@@ -185,8 +185,8 @@ void GammaGenerator_OrbExcDeriv<DataType>::swap( int ii, int jj, int kk ){
 
   }
   //Note that these are factors for the real and imaginary part, they are _not_ the real and imaginary part of the factor
-  gint->factors_.first*-1.0;
-  gint->factors_.second*-1.0;
+//  gint->factors_.first*=-1.0;
+//  gint->factors_.second*=-1.0;
 
   return;
 }
@@ -290,7 +290,9 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
 
   //Reorder the A_indexes which get contracted with the gamma
   vector<int> Aid_order_new = get_Aid_order( A_gamma_contraction_pos ); 
-  pair<double,double> new_fac = bk_factor_; 
+
+  //Should be bk_factor, but something is going wrong...
+  pair<double,double> new_fac = make_pair(1.0, 1.0);
   pair_fac_mult( gint->factors_, new_fac );
 
   // Tested (a bit) to here
