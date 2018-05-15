@@ -40,7 +40,7 @@ void Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
         continue;
       } else {
         ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
-        CTP_map_->at(cmtp_name)->FullContract(CTP_map_, ACompute_list, ACompute_map_);
+        CTP_map_->at(cmtp_name)->build_contraction_sequence(CTP_map_, ACompute_list, ACompute_map_);
         ACompute_map_->emplace(cmtp_name, ACompute_list);
         CTP_map_->at(cmtp_name)->got_compute_list( true );
       }

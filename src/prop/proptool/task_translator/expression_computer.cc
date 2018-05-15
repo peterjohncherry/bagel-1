@@ -28,12 +28,9 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
   cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : name input : " << expression_name <<  endl;
 
-  shared_ptr<Expression<DataType>> expr = expression_map_->at(expression_name); cout << "got " << expression_name << " info "<< endl;
-//  if ( expr->do_not_evaluate_ ) { 
-//    cout << "Skipping evaluation of " << expression_name << endl << endl;
-//  }  else {
-    evaluate_expression(expr);
-//  }
+  shared_ptr<Expression<DataType>> expr = expression_map_->at(expression_name);
+  cout << "got " << expression_name << " info "<< endl;
+  evaluate_expression(expr);
   return;
 } 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +42,7 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( sh
   if ( expression->type_ == "full" ) {
     evaluate_expression_full( expression );
  
-  } else if ( expression->type_ == "orbital_excitation_derivative") {
+  } else if ( expression->type_ == "orb") {
     evaluate_expression_orb_exc_deriv( expression );
   
   } else { 
@@ -75,86 +72,50 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
   // Copy the results from the contractions into these places in the data map.
   // Perhaps have seperate field in expression which is map of these blocks; can be removed when we a finished, and helps seperate updates from actual tensor
 
-  for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
-
-    string gamma_name = AG_contrib.first; 
-
-    shared_ptr<Tensor_<DataType>> A_combined_data;
-    if ( gamma_name != "ID" ) {
-      A_combined_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(expression->gamma_info_map_->at(gamma_name)->id_ranges())) );
-    } else {
-      A_combined_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
-    }  
-    A_combined_data->allocate();
-    A_combined_data->zero(); 
+  for ( auto& exc_block_G_to_A_map_elem : *(expression->exc_block_G_to_A_map() ) ) {
  
-    auto A_contrib_loc = expression->G_to_A_map()->find( gamma_name );
-    if ( (A_contrib_loc != expression->G_to_A_map()->end()) &&  (A_contrib_loc->second->size() != 0) ) {
-      for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
-      
-        string  A_contrib_name = A_contrib_map_elem.first;    
-        shared_ptr<AContribInfo_Base> A_contrib = A_contrib_map_elem.second;    
+    string target_block_name = exc_block_G_to_A_map_elem.first; 
+    auto G_to_A_map = exc_block_G_to_A_map_elem.second; 
+       
+    for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
+    
+      string gamma_name = AG_contrib.first; 
+      cout << "gamma_name = " << gamma_name << endl;
+    
+      shared_ptr<Tensor_<DataType>> A_combined_data;
+      if ( gamma_name != "ID" ) {
+        A_combined_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(expression->gamma_info_map_->at(gamma_name)->id_ranges())) );
+      } else {
+        A_combined_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
+      }  
+      A_combined_data->allocate();
+      A_combined_data->zero(); 
+    
+      auto A_contrib_loc = G_to_A_map->find( gamma_name );
+      if ( (A_contrib_loc != G_to_A_map->end()) &&  (A_contrib_loc->second->size() != 0) ) {
+        for ( auto&  A_contrib_map_elem : *A_contrib_loc->second ) {
+          string  A_contrib_name = A_contrib_map_elem.first;    
+          shared_ptr<AContribInfo_OrbExcDeriv<DataType>> a_contrib = dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>(A_contrib_map_elem.second);
+           assert (a_contrib);
 
-        if (check_AContrib_factors(*A_contrib))
-          continue;
-     
-        //Should be OK; same method is used 
-        TensOp_Machine->Calculate_CTP( *A_contrib );
-
-        if ( gamma_name != "ID" ) {
-          if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) {
-            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
-              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
-              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
-            }
-
-         } else { // if ( Acontrib_name in map )
-                  
-           for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
-              shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
-              vector<string> sub_tensor_names(CTP_vec->size()); 
-
-              vector<string>::iterator stn_it = sub_tensor_names.begin();
-              for ( vector<shared_ptr<CtrTensorPart_Base>>::iterator cv_it = CTP_vec->begin(); cv_it != CTP_vec->end(); ++cv_it, ++stn_it )
-                *stn_it = (*cv_it)->name();
-
-              shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
-              tensop_data_map_->emplace( A_contrib_name, A_contrib_data );
-              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
-              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered ); 
-
-            }
-          }
-        } else { // if ( gamma_name == "ID" ) {
-  
-          if ( tensop_data_map_->find(A_contrib_name) == tensop_data_map_->end() ) {
-            shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
-            vector<string> sub_tensor_names(CTP_vec->size()); 
-            for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
-              sub_tensor_names[rr] = CTP_vec->at(rr)->name();
-            
-            shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
-            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++)
-              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_data );
+          for ( auto& a_reorderings_elem : a_contrib->reorderings_map_ ) {
+            vector<int> post_contraction_reordering = a_reorderings_elem.first;
+            shared_ptr<AContribInfo_Part<DataType>> acontrib_part = a_reorderings_elem.second; 
+            auto a_contrib = a_reorderings_elem.second;
              
-          } else {
-
-            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++)
-              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), tensop_data_map_->at(A_contrib_name) );
+            if ( check_AContrib_factors(*a_contrib) )
+              continue;
+            for ( auto& aid_order : acontrib_part->id_orders() ) {
+              print_vector(aid_order , "aid_order" ); cout << endl;
+              TensOp_Machine->Calculate_CTP( *acontrib_part );
+            }
 
           }
         }
       }
-    
-      // This final contraction with gamma needs to be changed; do not contract over indexes defined in AContrib_OrbExc 
-      if ( gamma_name != "ID" ) {
-
-      } else {
-
-      }
     }
   }
-
+  cout << "leaving Expression_Computer::evaluate_expression_orb_exc_deriv" << endl;
   return;  
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,7 +162,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     // Loop through A-tensors needed for this gamma
     auto A_contrib_loc = expression->G_to_A_map()->find( gamma_name );
     if ( (A_contrib_loc != expression->G_to_A_map()->end()) &&  (A_contrib_loc->second->size() != 0) ) {
-      for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
+      for ( auto&  A_contrib_map_elem : *A_contrib_loc->second ) {
       
         string  A_contrib_name = A_contrib_map_elem.first;    
         shared_ptr<AContribInfo_Base> A_contrib = A_contrib_map_elem.second;    

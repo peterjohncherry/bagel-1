@@ -65,7 +65,13 @@ class Expression {
         virtual std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>> G_to_A_map(){
           throw std::logic_error("do not call G_to_A_map from the Expression_Base class" ); 
           std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>> dummy; 
-        return  dummy;} //TODO should be private
+          return dummy;} //TODO should be private
+
+        virtual
+        std::shared_ptr<std::map<std::string, std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>>>> exc_block_G_to_A_map(){ 
+          throw std::logic_error("do not call exc_block_G_to_A_map from the Expression_Base class" ); 
+          std::shared_ptr<std::map<std::string, std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>>>> dummy; 
+          return dummy;};
 
         std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks()  { return  required_blocks_; } 
 

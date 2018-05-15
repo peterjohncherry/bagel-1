@@ -203,7 +203,6 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   
   string Gname_alt = get_gamma_name( chrvec_to_strvec(*block_aops_rngs_), *block_aops_, gamma_ids_pos, bra_name, ket_name );
 
-  cout << "target_block_start_ = " << target_block_start_ << "   target_block_end_ = " << target_block_end_;
   cout << "Gname_alt = " << Gname_alt << endl; 
   if ( Gamma_map->find(Gname_alt) == Gamma_map->end() ) {
     Gamma_map->emplace( Gname_alt, make_shared<GammaInfo<DataType>>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
@@ -282,9 +281,9 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   
   shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo_Base>>>>> G_to_A_map;
   auto map_loc = block_G_to_A_map_->find(target_block_name_);
-  if( map_loc == block_G_to_A_map_->end() ) {
-     G_to_A_map = make_shared<map<string, shared_ptr<map<string, shared_ptr<AContribInfo_Base>>>>>() ;
-     block_G_to_A_map_->emplace( target_block_name_,  G_to_A_map );
+  if ( map_loc == block_G_to_A_map_->end() ) {
+    G_to_A_map = make_shared<map<string, shared_ptr<map<string, shared_ptr<AContribInfo_Base>>>>>() ;
+    block_G_to_A_map_->emplace( target_block_name_,  G_to_A_map );
   } else {  
     G_to_A_map = map_loc->second;
   } 
@@ -303,27 +302,15 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   }
   }
 
+  auto AInfo_test =  make_shared<AContribInfo_OrbExcDeriv<DataType>> ( Aname_alt, target_block_name_, A_gamma_contraction_pos, Aid_order_new, A_gamma_to_T_index_order, new_fac ); 
+
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
-     // TODO add new definition of AContrb_Info for orbexcderiv
-    auto AInfo = make_shared<AContribInfo_Full<DataType>>( Aname_alt, Aid_order_new, new_fac );
+    auto AInfo =  make_shared<AContribInfo_OrbExcDeriv<DataType>> ( Aname_alt, target_block_name_, A_gamma_contraction_pos, Aid_order_new, A_gamma_to_T_index_order, new_fac ); 
     G_to_A_map->at( Gname_alt )->emplace( Aname_alt, AInfo );
   } else {
-    shared_ptr<AContribInfo_Base> AInfo = AInfo_loc->second;
-    // REDO THIS
-    // Merge using A_gamma_to_T_index_order first, and then A_id_order second
-    for ( int qq = 0 ; qq != AInfo->id_orders().size(); qq++ ) {
-      if( Aid_order_new == AInfo->id_order(qq) ){
-        AInfo->combine_factors( qq, new_fac );
-        AInfo->remaining_uses_ += 1;
-        AInfo->total_uses_ += 1;
-        break;
-
-      } else if ( qq == AInfo->id_orders().size()-1) {
-        AInfo->add_id_order(Aid_order_new);
-        AInfo->add_factor(new_fac);
-      }
-    }
+    shared_ptr<AContribInfo_OrbExcDeriv<DataType>> AInfo = std::dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>( AInfo_loc->second );
+    AInfo->add_reordering( A_gamma_to_T_index_order, Aid_order_new, new_fac ); 
   }
   
 

@@ -109,11 +109,11 @@ pair<int,int> CtrTensorPart<DataType>::get_pre_contract_ctr_rel_pos(pair<int,int
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void CtrTensorPart<DataType>::FullContract( shared_ptr<map<string,shared_ptr<CtrTensorPart_Base> >> Tmap,
-                                            shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
-                                            shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
+void CtrTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<string,shared_ptr<CtrTensorPart_Base> >> Tmap,
+                                                          shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
+                                                          shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << endl <<  "CtrTensorPart<DataType>::FullContract : CTP name =  " << name_ << endl;
+cout << endl <<  "CtrTensorPart<DataType>::build_contraction_sequence : CTP name =  " << name_ << endl;
 int counter = 0 ;
   while ( ctrs_todo_->size() != 0 ){ 
 
@@ -139,7 +139,7 @@ int counter = 0 ;
 
     if ( ACompute_map->find(CTP_in_name) == ACompute_map->end()) {                                                       
       shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list_new = make_shared<vector<shared_ptr<CtrOp_base> >>(0);   
-      CTP_in->FullContract(Tmap, ACompute_list_new, ACompute_map);                                                       
+      CTP_in->build_contraction_sequence(Tmap, ACompute_list_new, ACompute_map);                                                       
     }
 
     shared_ptr<CtrTensorPart_Base> CTP_out;
@@ -164,21 +164,21 @@ int counter = 0 ;
     dependencies_.emplace(CTP_in_name);
   } 
   ACompute_map->emplace(name_, ACompute_list);
-  cout << endl <<  "Leaving CtrTensorPart<DataType>::FullContract : CTP name =  "; cout.flush(); cout << name_ << endl;
+  cout << endl <<  "Leaving CtrTensorPart<DataType>::build_contraction_sequence : CTP name =  "; cout.flush(); cout << name_ << endl;
   return;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void CtrMultiTensorPart<DataType>::FullContract( shared_ptr<map<string,shared_ptr<CtrTensorPart_Base> >> Tmap,
-                                                 shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list ,
-                                                 shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
+void CtrMultiTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<string,shared_ptr<CtrTensorPart_Base> >> Tmap,
+                                                               shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list ,
+                                                               shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << endl << "CtrMultiTensorPart<DataType>::FullContract :   CMTP name = " << name_ << endl;
+cout << endl << "CtrMultiTensorPart<DataType>::build_contraction_sequence :   CMTP name = " << name_ << endl;
 
   if ( get_compute_list_from_reordered_tens_ ) {  
               
-    Tmap->at(reordered_tens_name_)->FullContract( Tmap, ACompute_list, ACompute_map) ; 
+    Tmap->at(reordered_tens_name_)->build_contraction_sequence( Tmap, ACompute_list, ACompute_map) ; 
     ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >> (*(ACompute_map->at( reordered_tens_name_ ))); 
     ACompute_list->push_back( make_shared<CtrOp_reorder> ( reordered_tens_name_, name_, reordering_, "reordering" ));
   } else if (ctrs_pos_->size() > 0 ) {
@@ -190,20 +190,20 @@ cout << endl << "CtrMultiTensorPart<DataType>::FullContract :   CMTP name = " <<
       }
 
       if ( cross_ctrs_pos_->size() > 1 ) {
-        new_CTP->FullContract(Tmap, ACompute_list, ACompute_map);
+        new_CTP->build_contraction_sequence(Tmap, ACompute_list, ACompute_map);
       }
     } else if ( cross_ctrs_pos_->size() == 0 ) {
      
       for ( auto& inner_CTP : *CTP_vec_ ){ 
-        inner_CTP->FullContract(Tmap, ACompute_list, ACompute_map);
+        inner_CTP->build_contraction_sequence(Tmap, ACompute_list, ACompute_map);
       }
 
     } else {
-      throw logic_error("CtrMultiTensorPart<DataType>::FullContract ; Should always meet one of the above conditions... Aborting !! ");
+      throw logic_error("CtrMultiTensorPart<DataType>::build_contraction_sequence ; Should always meet one of the above conditions... Aborting !! ");
     }
   }
   ACompute_map->emplace(name_, ACompute_list);
-  cout << endl << "Leaving CtrMultiTensorPart<DataType>::FullContract :   CMTP name = " << name_ << endl;
+  cout << endl << "Leaving CtrMultiTensorPart<DataType>::build_contraction_sequence :   CMTP name = " << name_ << endl;
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,8 +238,8 @@ shared_ptr<CtrTensorPart<DataType>>
    string T1name = T1->name_;  
    string T2name = T2->name_; 
 
-   T1->FullContract(Tmap, ACompute_list, ACompute_map);
-   T2->FullContract(Tmap, ACompute_list, ACompute_map);
+   T1->build_contraction_sequence(Tmap, ACompute_list, ACompute_map);
+   T2->build_contraction_sequence(Tmap, ACompute_list, ACompute_map);
 
    shared_ptr<vector<string>> full_id_ranges_ = make_shared<vector<string>>(T1->full_id_ranges_->begin(), T1->full_id_ranges_->end()) ;
    full_id_ranges_->insert(full_id_ranges_->end(), T2->full_id_ranges_->begin(), T2->full_id_ranges_->end()); 

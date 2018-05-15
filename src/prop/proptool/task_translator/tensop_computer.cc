@@ -12,7 +12,7 @@ template<class DataType>
 void
 TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo_Base& AInfo ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP : " <<  AInfo.name_  << endl;
+  cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP : "; cout.flush(); cout <<  AInfo.name_ << endl;
 
   string A_contrib = AInfo.name_;
 

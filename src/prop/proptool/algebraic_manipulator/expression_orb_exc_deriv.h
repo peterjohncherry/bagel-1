@@ -17,6 +17,8 @@ class Expression_Orb_Exc_Deriv : public Expression<DataType>   {
      using Expression<DataType>::gamma_info_map_;
      using Expression<DataType>::required_blocks_;
  
+   std::shared_ptr<std::map<std::string, std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>>>> exc_block_G_to_A_map_;
+
    Expression_Orb_Exc_Deriv( std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>> braket_list,
                              std::shared_ptr<StatesInfo_Base> states_info,
                              std::shared_ptr<std::map< std::string, std::shared_ptr<TensOp_Base>>>  MT_map,
@@ -29,7 +31,10 @@ class Expression_Orb_Exc_Deriv : public Expression<DataType>   {
 
    void generate_algebraic_task_list(); 
 
-   void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>> exc_block_G_to_A_map  );
+   void get_gamma_Atensor_contraction_list( std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>>& G_to_A_map  );
+
+   std::shared_ptr<std::map<std::string, std::shared_ptr<std::map< std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base>> >>>>> exc_block_G_to_A_map() 
+   { return exc_block_G_to_A_map_; };
 
 
 };

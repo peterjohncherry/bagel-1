@@ -16,38 +16,42 @@ void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list(){
   cout << " braket_list_->front().target_op_ = " <<  braket_list_->front()->target_op() << endl;
 
   //auto  exc_block_G_to_A_map = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>>();
-  auto  exc_block_G_to_A_map = make_shared<map<string, shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>>>>();
+  exc_block_G_to_A_map_ = make_shared<map<string, shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>>>>();
   for ( shared_ptr<BraKet_Base>& braket : *braket_list_ )
-    braket->generate_gamma_Atensor_contractions( MT_map_, exc_block_G_to_A_map, gamma_info_map_, states_info_,  required_blocks_, CTP_map_ );
+    braket->generate_gamma_Atensor_contractions( MT_map_, exc_block_G_to_A_map_, gamma_info_map_, states_info_,  required_blocks_, CTP_map_ );
 
-  throw logic_error( " die now.." ); 
-  //TODO I think using this explicitly seems silly, find a way around..
-//  this->get_gamma_Atensor_contraction_list( exc_block_G_to_A_map );
-//    target_to_G_to_A_map_->emplace( exc_block_name, exc_block_G_to_A_map);
+  //TODO This is repeatedly generating the task list for different A; this is not necessary; define seperate vector or map for all required A.
+  for ( auto& elem : *exc_block_G_to_A_map_ )
+    this->get_gamma_Atensor_contraction_list( elem.second );
+  
+  cout << "EOED::gatl1 " <<endl;
   
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
-Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>> exc_block_G_to_A_map ){
+Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_ptr< map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>>& G_to_A_map ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Expression_Orb_Exc_Deriv::get_gamma_Atensor_contraction_list" << endl;
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
-  for (auto G2A_mapit = exc_block_G_to_A_map->begin(); G2A_mapit != exc_block_G_to_A_map->end(); G2A_mapit++) {
+  for (auto G2A_mapit = G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
     auto A_map = G2A_mapit->second;
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
       string cmtp_name  = A_map_it->first;
-      shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list;
+      cout << "getting compute map for " << cmtp_name << "    "; cout.flush();
       if ( CTP_map_->find(cmtp_name) == CTP_map_->end())
         throw std::logic_error( cmtp_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
 
       auto ACompute_list_loc = ACompute_map_->find(cmtp_name);
       if ( ACompute_list_loc != ACompute_map_->end() ){
+        cout << "cmtp_name : " ; cout.flush() ; cout << cmtp_name << " already in map    "; cout.flush();
+        cout << "AComputer_list_length = " << ACompute_list_loc->second->size() << endl;  
         continue;
       } else {
+        shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list;
         ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
-        CTP_map_->at(cmtp_name)->FullContract(CTP_map_, ACompute_list, ACompute_map_);
+        CTP_map_->at(cmtp_name)->build_contraction_sequence(CTP_map_, ACompute_list, ACompute_map_);
         ACompute_map_->emplace(cmtp_name, ACompute_list);
         CTP_map_->at(cmtp_name)->got_compute_list( true );
       }

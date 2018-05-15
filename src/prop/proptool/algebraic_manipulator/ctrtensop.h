@@ -95,7 +95,7 @@ class CtrTensorPart_Base  {
 
     std::string get_next_name(std::shared_ptr<std::vector<std::pair<int,int>>> new_ctrs_pos);
 
-    virtual void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
+    virtual void build_contraction_sequence( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
                                std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
                                std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map) = 0 ; 
 //                              { throw std::logic_error(" Calling full contract from CtrTensorPart_Base !! Aborting !! ");  } ; 
@@ -116,7 +116,7 @@ class CtrTensorPart : public  CtrTensorPart_Base , public std::enable_shared_fro
                   CtrTensorPart_Base( full_idxs, full_id_ranges, ctrs_pos, op_info ) {
                   };
 
-     void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
+     void build_contraction_sequence( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
                         std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
                         std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> ACompute_map );
 
@@ -183,7 +183,7 @@ class CtrMultiTensorPart : public CtrTensorPart_Base , public  std::enable_share
              reordered_tens_name_ = reordered_tens_name; return; } 
                                                                                          
 
-    void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> Tmap,
+    void build_contraction_sequence( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> Tmap,
                        std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map);
 
