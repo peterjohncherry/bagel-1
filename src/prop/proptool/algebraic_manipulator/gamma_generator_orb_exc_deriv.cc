@@ -281,19 +281,22 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   //Reorder the A_indexes which get contracted with the gamma
   vector<int> Aid_order_new = get_Aid_order( A_gamma_contraction_pos ); 
 
+  print_vector( gamma_ids_pos,             "Gamma_ids_pos             " ); cout << endl;
+  print_vector( A_gamma_contraction_pos,   "A_gamma_contraction_pos   " ); cout << endl;
+  print_vector( A_T_pos,                   "A_T_pos                   " ); cout << endl;
+  print_vector( A_ids_pos,                 "A_ids_pos                 " ); cout << endl;
+  print_vector( Aid_order_new ,            "Aid_order_new             " ); cout << endl;
+  print_vector( T_pos,                     "T_pos                     " ); cout << endl;
+  print_vector( A_gamma_to_T_index_order,  "A_gamma_to_T_index_order  " ); cout << endl; 
+
   //Should be bk_factor, but something is going wrong...
   pair<double,double> new_fac = make_pair(1.0, 0.0);
   pair_fac_mult( gint->factors_, new_fac );
+   
+  if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
+    G_to_A_map->emplace( Gname_alt,  make_shared<map<string, shared_ptr<AContribInfo_Base>>>() );
 
-  // Tested (a bit) to here
-  { 
-  if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() ){
-    auto AInfo_map = make_shared<map<string, shared_ptr<AContribInfo_Base>>>();
-    G_to_A_map->emplace( Gname_alt, AInfo_map );
-  }
-  }
-
-  auto AInfo_test =  make_shared<AContribInfo_OrbExcDeriv<DataType>> ( Aname_alt, target_block_name_, A_gamma_contraction_pos, Aid_order_new, A_gamma_to_T_index_order, new_fac ); 
+  auto AInfo_test = make_shared<AContribInfo_OrbExcDeriv<DataType>> ( Aname_alt, target_block_name_, A_gamma_contraction_pos, Aid_order_new, A_gamma_to_T_index_order, new_fac ); 
 
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
@@ -303,9 +306,7 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
     shared_ptr<AContribInfo_OrbExcDeriv<DataType>> AInfo = std::dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>( AInfo_loc->second );
     AInfo->add_reordering( A_gamma_to_T_index_order, Aid_order_new, new_fac ); 
   }
-  
 
-  //cout << " Leaving GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
 }
 ///////////////////////////////////////////////////////////////////////////////////////
 // Brute approach to getting inverse, keep for now to check

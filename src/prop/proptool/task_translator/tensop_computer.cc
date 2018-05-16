@@ -277,7 +277,7 @@ cout << "TensOp_Computer::contract_on_different_tensor" << ": "  << T1_in_name <
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
 TensOp_Computer::TensOp_Computer<DataType>::contract_different_tensors( std::string T1_in_name, std::string T2_in_name, std::string T_out_name,
-                                                              std::pair<std::vector<int>,std::vector<int>> ctrs_todo                  ){
+                                                                        std::pair<std::vector<int>,std::vector<int>> ctrs_todo                  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp_Computer::contract_on_different_tensor" << endl; 
 

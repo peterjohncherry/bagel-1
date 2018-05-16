@@ -27,6 +27,9 @@ class Expression_Computer {
   public:
    
     std::shared_ptr<std::map< std::string, DataType>> scalar_results_map;
+
+    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensor_results_map_;
+
     std::shared_ptr<StatesInfo<DataType>> TargetsInfo;
 
     Expression_Computer( std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> b_gamma_computer,

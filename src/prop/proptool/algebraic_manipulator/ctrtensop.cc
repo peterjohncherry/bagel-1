@@ -112,7 +112,7 @@ void CtrTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<string,
                                                           shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
                                                           shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << endl <<  "CtrTensorPart<DataType>::build_contraction_sequence : CTP name =  " << name_ << endl;
+//  cout << endl <<  "CtrTensorPart<DataType>::build_contraction_sequence : CTP name =  " << name_ << endl;
 
   if ( ctrs_pos_->size() == 0 ) {
 
@@ -173,7 +173,6 @@ void CtrTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<string,
     ACompute_map->emplace(name_, ACompute_list);
   }
  
-  cout << endl <<  "Leaving CtrTensorPart<DataType>::build_contraction_sequence : CTP name =  "; cout.flush(); cout << name_ << endl;
   return;
 }
 
@@ -183,7 +182,7 @@ void CtrMultiTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<st
                                                                shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list ,
                                                                shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << endl << "CtrMultiTensorPart<DataType>::build_contraction_sequence :   CMTP name = " << name_ << endl;
+// cout << endl << "CtrMultiTensorPart<DataType>::build_contraction_sequence :   CMTP name = " << name_ << endl;
 
   if ( get_compute_list_from_reordered_tens_ ) {  // TODO Should not need this anymore now op_info class has been extended; all Acontrib should be in canonical order on entry.
               
@@ -219,7 +218,6 @@ cout << endl << "CtrMultiTensorPart<DataType>::build_contraction_sequence :   CM
     }
   }
   ACompute_map->emplace(name_, ACompute_list);
-  cout << endl << "Leaving CtrMultiTensorPart<DataType>::build_contraction_sequence :   CMTP name = " << name_ << endl;
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -19,9 +19,8 @@ Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_
   moint_computer_(moint_computer) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
   scalar_results_map = make_shared<map< string, DataType >>(); //TODO dumb, check why not in header and fix  
-
+  tensor_results_map_ = make_shared<map< string, shared_ptr<Tensor_<DataType>>>>(); 
 }  
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( string expression_name ) { 
@@ -56,13 +55,6 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
   cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_deriv : " << expression->name() << endl;
 
-  string expression_name = expression->name();
-  int counter = 0;
-
-  bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
-  if ( !new_result )  
-    cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
-
   auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
                                                                                  moint_computer_ );
   cout << endl<< "-------------------- Contents of CTP_map ----------------" << endl;
@@ -80,6 +72,15 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
   for ( auto& exc_block_G_to_A_map_elem : *(expression->exc_block_G_to_A_map() ) ) {
  
     string target_block_name = exc_block_G_to_A_map_elem.first; 
+
+    shared_ptr<Tensor_<DataType>> target_block_data;
+    auto target_block_data_loc = tensor_results_map_->find( target_block_name ); 
+    if ( target_block_data_loc == tensor_results_map_->end() ) {
+      // MUST ALLOCATE
+    } else {
+      target_block_data = target_block_data_loc->second;
+    }
+
     auto G_to_A_map = exc_block_G_to_A_map_elem.second; 
        
     for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
@@ -87,34 +88,69 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
       string gamma_name = AG_contrib.first; 
       cout << "gamma_name = " << gamma_name << endl;
     
-      shared_ptr<Tensor_<DataType>> A_combined_data;
+      shared_ptr<Tensor_<DataType>> A_combined_pre_gamma_contraction_data;
       if ( gamma_name != "ID" ) {
-        A_combined_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(expression->gamma_info_map_->at(gamma_name)->id_ranges())) );
+        A_combined_pre_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(expression->gamma_info_map_->at(gamma_name)->id_ranges())) );
       } else {
-        A_combined_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
+        A_combined_pre_gamma_contraction_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
       }  
-      A_combined_data->allocate();
-      A_combined_data->zero(); 
+      A_combined_pre_gamma_contraction_data->allocate();
+      A_combined_pre_gamma_contraction_data->zero(); 
     
       auto A_contrib_loc = G_to_A_map->find( gamma_name );
       if ( (A_contrib_loc != G_to_A_map->end()) &&  (A_contrib_loc->second->size() != 0) ) {
         for ( auto&  A_contrib_map_elem : *A_contrib_loc->second ) {
           string  A_contrib_name = A_contrib_map_elem.first;    
           shared_ptr<AContribInfo_OrbExcDeriv<DataType>> a_contrib = dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>(A_contrib_map_elem.second);
-           assert (a_contrib);
+          assert (a_contrib);
 
           for ( auto& a_reorderings_elem : a_contrib->reorderings_map_ ) {
             vector<int> post_contraction_reordering = a_reorderings_elem.first;
-            shared_ptr<AContribInfo_Part<DataType>> acontrib_part = a_reorderings_elem.second; 
-            auto a_contrib = a_reorderings_elem.second;
+            shared_ptr<AContribInfo_Part<DataType>> a_pre_contract = a_reorderings_elem.second; 
              
-            if ( check_AContrib_factors(*a_contrib) )
+            if ( check_AContrib_factors(*a_pre_contract) )
               continue;
-            for ( auto& aid_order : acontrib_part->id_orders() ) {
-              print_vector(aid_order , "aid_order" ); cout << endl;
-              TensOp_Machine->Calculate_CTP( *acontrib_part );
+
+            cout << endl << endl;
+            TensOp_Machine->Calculate_CTP( *a_pre_contract );
+
+            if ( gamma_name != "ID" ) {
+              if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) {
+                cout <<" acontrib_name = " <<  A_contrib_name << "gamma_name = " << gamma_name << endl;
+
+                for ( int qq = 0 ; qq != a_pre_contract->id_orders().size(); qq++){
+                   // shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
+                   // A_combined_pre_gamma_contraction_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
+                }
+            
+              } else {
+                cout << " A_contrib_name = "  << A_contrib_name << endl;
+                throw logic_error(" Should have been built from direct product, but was not found in map");
+              }
+            
+            } else {
+            
+              for ( int qq = 0 ; qq != a_pre_contract->id_orders().size(); qq++)
+                A_combined_pre_gamma_contraction_data->ax_plus_y( (DataType)(a_pre_contract->factor(qq).first), tensop_data_map_->at(A_contrib_name) );
+              
+            }
+          }
+
+          if ( gamma_name != "ID" ) {
+            // get the desired gamma matrix
+            shared_ptr<Tensor_<DataType>> gamma_data;
+            auto gamma_data_loc = gamma_computer_->gamma_data_map()->find( gamma_name ); 
+            if ( gamma_data_loc == gamma_computer_->gamma_data_map()->end() ) {
+              gamma_computer_->get_gamma( gamma_name );
+              gamma_data = gamma_computer_->gamma_data(gamma_name);
+            } else {
+              gamma_data = gamma_data_loc->second;
             }
 
+            // shared_ptr<Tensor_<DataType>> tmp_result = Tensor_Calc_->contract_different_tensors( gamma_data, A_combined_pre_gamma_contraction_data, ctrs_todo );
+    
+          } else {
+            // if no contraction with gamma....
           }
         }
       }
@@ -190,7 +226,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
               cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
             }
 
-         } else {
+        } else {
 
            cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO is a way to avoid this, implement it
            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
@@ -244,7 +280,6 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 	      cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
             }
           }
-
         }
   
         cout << "added " << A_contrib_name << endl; 

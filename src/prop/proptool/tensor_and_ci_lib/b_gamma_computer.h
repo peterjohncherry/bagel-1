@@ -76,6 +76,9 @@ class B_Gamma_Computer {
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map() {return sigma_data_map_; }
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map() {return civec_data_map_; }
 
+      std::shared_ptr<SMITH::Tensor_<DataType>> gamma_data( std::string name ) {return gamma_data_map_->at(name); }
+      std::shared_ptr<SMITH::Tensor_<DataType>> sigma_data( std::string name ) {return sigma_data_map_->at(name); }
+      std::shared_ptr<SMITH::Tensor_<DataType>> civec_data( std::string name ) {return civec_data_map_->at(name); }
 };
 
 }
