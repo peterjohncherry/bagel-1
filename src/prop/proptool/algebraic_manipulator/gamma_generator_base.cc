@@ -134,7 +134,6 @@ bool GammaGenerator_Base::generic_reorderer_different_sector( string reordering_
       kk++;
     } 
   }
-  cout << " leaving GammaGenerator_Base::generic_reorderer_different_sector" << endl;
   return does_it_contribute;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////

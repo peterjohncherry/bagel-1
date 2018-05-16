@@ -136,6 +136,7 @@ void TensOp_Computer::TensOp_Computer<DataType>::get_tensor_data_blocks(shared_p
      } else {
 
        string full_tens_name = block->op_info_->op_state_name_;
+
        cout << " from full tensor " << full_tens_name << endl;
 
        shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map_->at(block_name)->unc_id_ranges() ) ;

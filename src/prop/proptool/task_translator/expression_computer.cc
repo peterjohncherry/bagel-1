@@ -65,6 +65,11 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
 
   auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
                                                                                  moint_computer_ );
+  cout << endl<< "-------------------- Contents of CTP_map ----------------" << endl;
+  for ( auto& elem : *(expression->CTP_map_) ) 
+    cout << elem.first << endl;
+
+  cout << endl << endl;
  
   TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
 

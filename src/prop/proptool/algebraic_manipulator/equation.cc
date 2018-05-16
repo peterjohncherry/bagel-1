@@ -117,6 +117,7 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<shared_pt
 
       } else { 
         T_loc->second->generate_uncontracted_ctps( *oiv_it );  
+        CTP_map_->insert( T_loc->second->CTP_map()->begin(), T_loc->second->CTP_map()->end());
       }
 
     }

@@ -62,7 +62,7 @@ bool TensOp::TensOp<DataType>::satisfies_constraints( vector<string>& ranges ){
 template<typename DataType>
 void TensOp::TensOp<DataType>::generate_uncontracted_ctps( std::shared_ptr<Op_Info> op_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp<DataType> generate_uncontracted_ctps : "  << name_ << endl;
+  cout << "TensOp::TensOp<DataType> generate_uncontracted_ctps : " << name_ ; cout.flush(); cout << " op_info->op_full_name_ = ";cout.flush(); cout << op_info->op_full_name_ << endl;
 
   shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *idxs_ );
   shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
@@ -78,7 +78,7 @@ void TensOp::TensOp<DataType>::generate_uncontracted_ctps( std::shared_ptr<Op_In
 template<typename DataType>
 void TensOp::TensOp<DataType>::generate_transformed_ranges( shared_ptr<Op_Info> op_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp<DataType>::generate_transformed_ranges : " <<  name_ <<  endl;
+  cout << "TensOp::TensOp<DataType>::generate_transformed_ranges : " <<  name_ ; cout.flush(); cout << " op_info->op_full_name_ = ";cout.flush(); cout << op_info->op_full_name_ << endl; 
  
   shared_ptr<map<const vector<string>, shared_ptr<Range_Block_Info>>> all_ranges_ref;
 
@@ -209,26 +209,30 @@ void TensOp::TensOp<DataType>::generate_blocks() {
 template<typename DataType>
 void TensOp::TensOp<DataType>::generate_ranges( std::shared_ptr<Op_Info> op_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp::TensOp<DataType>::generate_ranges : " << name_ <<   endl;
+cout << "TensOp::TensOp<DataType>::generate_ranges : " << name_; cout.flush(); cout << "op_info->op_full_name_ = " << op_info->op_full_name_ <<   endl;
 
-  auto arss_loc = all_ranges_state_specific_->find( op_info->op_state_name_);
-  if ( arss_loc == all_ranges_state_specific_->end() ){ 
-    all_ranges_tmp_ = make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ();
-    
-    vector<shared_ptr<vector<string>>>::iterator bl_it = block_list_.begin();
-    for ( bl_it = block_list_.begin(); bl_it != block_list_.end() ; bl_it++ )
-      apply_symmetry( *(*bl_it), *aops_, op_info ) ;  
-    
-    shared_ptr< map< const vector<string>, shared_ptr<Range_Block_Info> > > all_ranges_new = 
-              make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ( *all_ranges_tmp_ );
-    
-    all_ranges_state_specific_->emplace( op_info->op_state_name_, all_ranges_new );
-  } 
+  if ( all_ranges_state_specific_->find( op_info->op_full_name_) == all_ranges_state_specific_->end() ) { 
 
-  if ( op_info->transformation() != 'n' ) {  
-    generate_transformed_ranges( op_info ); 
-  } else { 
-    all_ranges_state_specific_->emplace( op_info->op_full_name_, all_ranges_state_specific_->at(op_info->op_state_name_) );
+    auto arss_loc = all_ranges_state_specific_->find( op_info->op_state_name_);
+    if ( arss_loc == all_ranges_state_specific_->end() ){ 
+      all_ranges_tmp_ = make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ();
+      
+      vector<shared_ptr<vector<string>>>::iterator bl_it = block_list_.begin();
+      for ( bl_it = block_list_.begin(); bl_it != block_list_.end() ; bl_it++ )
+        apply_symmetry( *(*bl_it), *aops_, op_info ) ;  
+      
+      shared_ptr< map< const vector<string>, shared_ptr<Range_Block_Info> > > all_ranges_new = 
+                make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ( *all_ranges_tmp_ );
+      
+      all_ranges_state_specific_->emplace( op_info->op_state_name_, all_ranges_new );
+    } 
+  
+    // Now performing transformations
+    if ( op_info->transformation() != 'n' ) {  
+      generate_transformed_ranges( op_info ); 
+    } else { 
+      all_ranges_state_specific_->emplace( op_info->op_full_name_, all_ranges_state_specific_->at(op_info->op_state_name_) );
+    }
   }
   
   return;
@@ -326,7 +330,7 @@ TensOp::TensOp<DataType>::transform_aops( const std::vector<int>& op_order , con
 template<typename DataType>
 void TensOp::TensOp<DataType>::enter_cmtps_into_map(const pint_vec& ctr_pos_list, const vector<string>& id_ranges, shared_ptr<Op_Info> op_info ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "TensOp::enter_cmtps_into_map " <<  endl;
+  cout << "TensOp::enter_cmtps_into_map " <<  name_ ; cout.flush(); cout << "op_info->op_full_name_ = " ; cout.flush(); cout << op_info->op_full_name_ << endl;
 
   //TODO change so we do not need this copying; either add a const into CtrTensorPart_Base or remove the Constr in TensOp_Base
   shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *idxs_ );
@@ -404,7 +408,7 @@ template<typename DataType>
 void
 MultiTensOp::MultiTensOp<DataType>::generate_ranges( shared_ptr<Op_Info> multiop_info ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::generate_ranges() = " << name_ <<  endl;
+  cout << "MultiTensOp::generate_ranges() = " << name_ ; cout.flush(); cout << "multiop_info->op_full_name_ = "; cout.flush(); cout << multiop_info->op_full_name_ <<  endl;
  
   vector< map< const vector<string>, shared_ptr< Range_Block_Info >>::const_iterator> rng_maps( num_tensors_ );  
   vector< map< const vector<string>, shared_ptr< Range_Block_Info >>::const_iterator> rng_maps_begin( num_tensors_ );  
@@ -476,7 +480,7 @@ MultiTensOp::MultiTensOp<DataType>::generate_ranges( shared_ptr<Op_Info> multiop
 template<typename DataType>
 void MultiTensOp::MultiTensOp<DataType>::generate_uncontracted_ctps( shared_ptr<Op_Info> op_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "MultiTensOp::generate_uncontracted_ctps " <<  endl;
+  cout << "MultiTensOp::generate_uncontracted_ctps "; cout.flush(); cout << "op_info->op_full_name_ = "; cout.flush(); cout << op_info->op_full_name_ <<  endl;
 
   shared_ptr<vector<pair<int,int>>> noctrs = make_shared<vector<pair<int,int>>>(0);
 
@@ -492,7 +496,7 @@ void MultiTensOp::MultiTensOp<DataType>::generate_uncontracted_ctps( shared_ptr<
 template<typename DataType>
 void MultiTensOp::MultiTensOp<DataType>::enter_cmtps_into_map(const pint_vec& ctr_pos_list, const vector<string>& id_ranges, shared_ptr<Op_Info> op_info ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "MultiTensOp::enter_cmtps_into_map " <<  name_ << endl;
+  cout << "MultiTensOp::enter_cmtps_into_map " <<  name_ ; cout.flush(); cout << "   op_info->op_full_name_ = " ; cout.flush(); cout << op_info->op_full_name_ << endl;
 
   shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart_Base> >> (num_tensors_); 
 
@@ -560,7 +564,7 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
                                                    shared_ptr<vector<pair<pair<int,int>, pair<int,int>>>> ccp_vec, // ccp : cross_ctrs_pos
                                                    shared_ptr<Op_Info> op_info ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- // cout << "MultiTensOp::MultiTensOp<DataType>::get_cmtp " << endl;
+  cout << "MultiTensOp::MultiTensOp<DataType>::get_cmtp "; cout.flush(); cout << "  op_info->op_full_name_ = " ; cout.flush(); cout << op_info->op_full_name_ << endl;
   
   auto ctp_vec_buff =  make_shared<vector<shared_ptr<CtrTensorPart_Base>>>(*ctp_vec);  
   auto ccp_vec_buff =  make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(*ccp_vec);
