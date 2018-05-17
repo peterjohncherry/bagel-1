@@ -985,4 +985,18 @@ vector<string> WickUtils::chrvec_to_strvec( const vector<char>& chrvec ) {
 
   return strvec;
 } 
+
+//////////////////////////////////////////////////////////////////////////////////////
+shared_ptr<vector<int>> WickUtils::get_ascending_order( const vector<int>& scrambled_vec ) {
+//////////////////////////////////////////////////////////////////////////////////////
+ 
+  shared_ptr<vector<int>> new_order = make_shared<vector<int>>(scrambled_vec.size());
+  iota(new_order->begin(), new_order->end() , 0 );
+  sort ( new_order->begin(), new_order->end(), [&scrambled_vec]( int& i1, int& i2 ){ return (bool)( scrambled_vec[i1] < scrambled_vec[i2] );}); 
+
+  return new_order;
+} 
+
+
+
 #endif

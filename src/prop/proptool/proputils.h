@@ -123,6 +123,8 @@ namespace WickUtils {
 
   void pair_fac_mult( const std::pair<double,double>& factor_fixed , std::pair<double,double>& factor_changing );
 
+  std::shared_ptr<std::vector<int>> get_ascending_order( const std::vector<int>& scrambled_vec );
+
   template<class DataType>  
   void reorder_vector_inplace(const std::vector<int>& new_order, std::vector<DataType>& orig_vec ){
 

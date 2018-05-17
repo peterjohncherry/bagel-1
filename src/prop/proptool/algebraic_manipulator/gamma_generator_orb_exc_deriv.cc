@@ -200,15 +200,20 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
 
   //get full gamma ids pos and A_contrib_ids
   vector<int> gamma_ids_pos = *(gint->ids_pos_);
-  
   string Gname_alt = get_gamma_name( chrvec_to_strvec(*block_aops_rngs_), *block_aops_, gamma_ids_pos, bra_name, ket_name );
-
   if ( Gamma_map->find(Gname_alt) == Gamma_map->end() ) {
     Gamma_map->emplace( Gname_alt, make_shared<GammaInfo<DataType>>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
                                                                      block_aops_, make_shared<const vector<string>>(chrvec_to_strvec(*block_aops_rngs_)),
                                                                      gint->ids_pos_, Gamma_map) );
   }
 
+  //This is the name of the CTP we need to contract (perhaps partially) with gamma
+  string Aname_alt = get_ctp_name( std_name_target_op_free_, std_idxs_target_op_free_, std_rngs_target_op_free_, *(gint->deltas_pos_) );
+  if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() )
+    total_op_->enter_cmtps_into_map( *(gint->deltas_pos_), std_rngs_, op_info_ );
+
+ 
+ 
   {
   vector<int> gamma_ids_pos_buff = gamma_ids_pos;
   vector<int>::iterator gipb_it = gamma_ids_pos_buff.begin(); 
@@ -217,28 +222,45 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   }
   }
  
-  vector<int> A_gamma_contraction_pos(0);
+  vector<int> gamma_contraction_pos(0);
+  vector<int> A_contraction_pos(0);
   vector<int> T_gamma_pos(0);
   vector<int> T_pos(0);
   // Get A indexes which must be contracted with gamma indexes
   // Get T indexes which are not contracted with A, and are basically gamma indexes
-  for( vector<int>::iterator gip_it = gamma_ids_pos.begin(); gip_it != gamma_ids_pos.end() ; gip_it++ ){
+  int pos_in_gamma = 0;
+  for( vector<int>::iterator gip_it = gamma_ids_pos.begin(); gip_it != gamma_ids_pos.end() ; gip_it++, pos_in_gamma++ ){
     if ( ( *gip_it < target_block_start_) ||  ( *gip_it >= target_block_end_ )  ){ 
-      A_gamma_contraction_pos.push_back(*gip_it);
+
+      if ( *gip_it < target_block_start_)  { 
+        A_contraction_pos.push_back(*gip_it);
+      } else { 
+        A_contraction_pos.push_back(*gip_it - target_block_size_ );
+      }
+      gamma_contraction_pos.push_back(pos_in_gamma);
+
     } else {
-      T_gamma_pos.push_back(*gip_it);
-      T_pos.push_back(*gip_it);
+      T_gamma_pos.push_back(pos_in_gamma);
+      T_pos.push_back(*gip_it - target_block_start_ );
     }
   }
-
+ 
   // Get A indexes which are not contracted with gamma; these are T indexes.
   vector<int> A_T_pos(0);
   if ( gint->target_A_deltas_pos()->size() != 0 ) {
-    for ( pair<int,int>&  ctr : *(gint->target_A_deltas_pos()) ) { 
-      A_T_pos.push_back(ctr.second);
-      T_pos.push_back(ctr.first);
+    for ( pair<int,int>& ctr : *(gint->target_A_deltas_pos()) ) { 
+
+      if ( ctr.second < target_block_start_ ) {
+        A_T_pos.push_back(ctr.second);
+      } else {
+        A_T_pos.push_back(ctr.second + target_block_end_);
+      } 
+
+      T_pos.push_back(ctr.first - target_block_start_ );
+
     }
   }
+
   // Might have
   // Tw Tx Ty Tz  = < | ax ay ai al | J > Ai A(j/w) A(k/z) Al   
   //
@@ -248,26 +270,23 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   // Sort remaining indexes so they match up with T order
   // Tw Tx Ty Tz  = < | ax ay | J > A'(j/w) A'(k/z)       : [ xyjk ->jxyk ] or [ xywz -> wxyz ]
   //
+  
   // The latter case corresponds to this reordering (not we get x and y in the first loop, and j/w and k/z in the second
-  vector<int> A_gamma_to_T_index_order = get_Aid_order ( T_pos );
+  shared_ptr<vector<int>> post_contraction_reordering = get_ascending_order ( T_pos );
 
   // Get positions where T is contracted with itself ( I think this should be disposed of, and we should have T_^{S} and T^{D} seperate )
-  if ( gint->target_target_deltas_pos()->size() != 0 ) {
-    for ( pair<int,int>&  ctr : *(gint->target_target_deltas_pos()) ) { 
-      T_pos.push_back(ctr.first);
-      T_pos.push_back(ctr.second);
-    }
-  }
+//  if ( gint->target_target_deltas_pos()->size() != 0 ) {
+//    for ( pair<int,int>&  ctr : *(gint->target_target_deltas_pos()) ) { 
+//      T_pos.push_back( ctr.first - target_block_start_ );
+//      T_pos.push_back( ctr.second - target_block_start_ );
+//    }
+//  }
 
-  vector<int> A_ids_pos( A_gamma_contraction_pos.size() + A_T_pos.size() );
-  copy ( A_gamma_contraction_pos.begin(), A_gamma_contraction_pos.end(), A_ids_pos.begin());
-  copy ( A_T_pos.begin(), A_T_pos.end(), A_ids_pos.begin() + A_gamma_contraction_pos.size());
-  
-  //This is the name of the CTP we need to contract (perhaps partially) with gamma
-  string Aname_alt = get_ctp_name( std_name_target_op_free_, std_idxs_target_op_free_, std_rngs_target_op_free_, *(gint->deltas_pos_) );
-   
-  if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() )
-    total_op_->enter_cmtps_into_map( *(gint->deltas_pos_), std_rngs_, op_info_ );
+  shared_ptr<vector<int>> pre_contraction_reordering;
+  vector<int> A_ids_pos( A_contraction_pos.size() + A_T_pos.size() );
+  copy ( A_contraction_pos.begin(), A_contraction_pos.end(), A_ids_pos.begin() );
+  copy ( A_T_pos.begin(), A_T_pos.end(), A_ids_pos.begin() + A_contraction_pos.size() );
+  pre_contraction_reordering = get_ascending_order( A_ids_pos ); 
 
   shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo_Base>>>>> G_to_A_map;
   auto map_loc = block_G_to_A_map_->find(target_block_name_);
@@ -279,15 +298,17 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   } 
 
   //Reorder the A_indexes which get contracted with the gamma
-  vector<int> Aid_order_new = get_Aid_order( A_gamma_contraction_pos ); 
-
-  print_vector( gamma_ids_pos,             "Gamma_ids_pos             " ); cout << endl;
-  print_vector( A_gamma_contraction_pos,   "A_gamma_contraction_pos   " ); cout << endl;
-  print_vector( A_T_pos,                   "A_T_pos                   " ); cout << endl;
-  print_vector( A_ids_pos,                 "A_ids_pos                 " ); cout << endl;
-  print_vector( Aid_order_new ,            "Aid_order_new             " ); cout << endl;
-  print_vector( T_pos,                     "T_pos                     " ); cout << endl;
-  print_vector( A_gamma_to_T_index_order,  "A_gamma_to_T_index_order  " ); cout << endl; 
+  cout << "------------" << target_block_name_ << "----------"<< endl;
+  print_vector( gamma_ids_pos,                "Gamma_ids_pos              " ); cout << endl;
+  print_vector( A_ids_pos,                    "A_ids_pos                  " ); cout << endl;
+  print_vector( T_pos,                        "T_pos                      " ); cout << endl;
+  print_vector( T_gamma_pos,                  "T_gamma_pos                " ); cout << endl;
+  print_vector( A_T_pos,                      "A_T_pos                    " ); cout << endl;
+  print_vector( A_contraction_pos,            "A_contraction_pos          " ); cout << endl;
+  print_vector( gamma_contraction_pos,        "gamma_contraction_pos      " ); cout << endl;
+  print_vector( *pre_contraction_reordering,  "pre_contraction_reordering " ); cout << endl;
+  print_vector( *post_contraction_reordering, "post_contraction_reordering" ); cout << endl;
+  cout << endl;
 
   //Should be bk_factor, but something is going wrong...
   pair<double,double> new_fac = make_pair(1.0, 0.0);
@@ -296,15 +317,20 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
     G_to_A_map->emplace( Gname_alt,  make_shared<map<string, shared_ptr<AContribInfo_Base>>>() );
 
-  auto AInfo_test = make_shared<AContribInfo_OrbExcDeriv<DataType>> ( Aname_alt, target_block_name_, A_gamma_contraction_pos, Aid_order_new, A_gamma_to_T_index_order, new_fac ); 
+  string aname_ctp = "pcr[";
+  for ( auto elem  : *post_contraction_reordering ){
+    aname_ctp += elem;
+    aname_ctp += ' ';
+  }
+  aname_ctp += ']';
 
-  auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
+  auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(aname_ctp);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
-    auto AInfo =  make_shared<AContribInfo_OrbExcDeriv<DataType>> ( Aname_alt, target_block_name_, A_gamma_contraction_pos, Aid_order_new, A_gamma_to_T_index_order, new_fac ); 
-    G_to_A_map->at( Gname_alt )->emplace( Aname_alt, AInfo );
+    //auto Ainfo = make_shared<AContribInfo_OrbExcDeriv<DataType>>( Aname_alt, target_block_name_, gamma_contraction_pos, *pre_contraction_reordering, *post_contraction_reordering, new_fac ):
+//    G_to_A_map->at( Gname_alt )->emplace( aname_ctp, AInfo );
   } else {
-    shared_ptr<AContribInfo_OrbExcDeriv<DataType>> AInfo = std::dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>( AInfo_loc->second );
-    AInfo->add_reordering( A_gamma_to_T_index_order, Aid_order_new, new_fac ); 
+//    shared_ptr<AContribInfo_OrbExcDeriv<DataType>> AInfo = std::dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>( AInfo_loc->second );
+//    AInfo->add_reordering( *post_contraction_reordering, *pre_contraction_reordering, new_fac ); 
   }
 
 }

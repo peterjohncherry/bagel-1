@@ -39,13 +39,11 @@ Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_p
     auto A_map = G2A_mapit->second;
     for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
       string cmtp_name  = A_map_it->first;
-      cout << "getting compute map for " << cmtp_name << "    "; cout.flush();
       if ( CTP_map_->find(cmtp_name) == CTP_map_->end())
         throw std::logic_error( cmtp_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
 
       auto ACompute_list_loc = ACompute_map_->find(cmtp_name);
       if ( ACompute_list_loc != ACompute_map_->end() ){
-        cout << "cmtp_name : " ; cout.flush() ; cout << cmtp_name << " already in map    "; cout.flush(); cout << "AComputer_list_length = " << ACompute_list_loc->second->size() << endl;  
         continue;
       } else {
         shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
