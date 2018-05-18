@@ -88,35 +88,91 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
       string gamma_name = AG_contrib.first; 
       cout << "gamma_name = " << gamma_name << endl;
        
-      auto A_contrib_loc = G_to_A_map->find( gamma_name );
-      if ( (A_contrib_loc != G_to_A_map->end()) &&  (A_contrib_loc->second->size() != 0) ) {
-        for ( auto&  A_contrib_map_elem : *A_contrib_loc->second ) {     // Loop through different final reorderings.
+      auto final_reorderings_map_loc = G_to_A_map->find( gamma_name );
+      if ( (final_reorderings_map_loc != G_to_A_map->end()) &&  (final_reorderings_map_loc->second->size() != 0) ) {
 
-          shared_ptr<AContribInfo_OrbExcDeriv<DataType>> a_contribs_all_orderings = dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>(A_contrib_map_elem.second);
-          assert(a_contribs_all_orderings);
-         
-   //     for ( auto elem : *(acontribs_all_orderings->different gamma_contraction_pos_) ){ 
+        // loop over different final reorderings 
+        for ( auto& final_reordering_elem : *(final_reorderings_map_loc->second) ) {     // Loop through different final reorderings.
 
-            shared_ptr<Tensor_<DataType>> A_combined_pre_gamma_contraction_data;
-//            if ( gamma_name != "ID" ) {
-//              A_combined_pre_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(expression->gamma_info_map_->at(gamma_name)->id_ranges())) );
-//            } else {
-//              A_combined_pre_gamma_contraction_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
-//            }  
-//            A_combined_pre_gamma_contraction_data->allocate();
-//            A_combined_pre_gamma_contraction_data->zero(); 
+          shared_ptr<AContribInfo_OrbExcDeriv<DataType>> a_intermediate_info = dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>(final_reordering_elem.second);
 
-            // for ( auto ordering : A_contrib->id_orders() )  { // 
-            //  shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
-            //  A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
-            // }
+          cout << endl << endl; 
+          cout << " final_reordering_elem.second->name_ = " << final_reordering_elem.second->name_  << endl;
+
+          auto gamma_contraction_pos_map = final_reordering_elem.second->gamma_pos_map();
+
+          shared_ptr<Tensor_<DataType>> post_a_gamma_contraction_data;
+          if ( gamma_name != "ID" ) {
+            post_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( a_intermediate_info->post_gamma_contraction_ranges() )));
+          } else {
+            post_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
+          }  
+          post_a_gamma_contraction_data->allocate();
+          post_a_gamma_contraction_data->zero(); 
+
+          // loop over different gamma contraction positions         
+          for ( auto a_contrib_map_elem : *(gamma_contraction_pos_map) ){ 
+
+            vector<int> gamma_contraction_pos = a_contrib_map_elem.first;
+            vector<int> a_contraction_pos(gamma_contraction_pos.size());
+            iota( a_contraction_pos.begin(), a_contraction_pos.end(), 0 );
+
+            pair<vector<int>, vector<int>> gamma_a_contractions = make_pair( gamma_contraction_pos, a_contraction_pos ); 
+            print_vector( gamma_a_contractions.first, "gamma_contraction_pos" ); cout.flush(); print_vector( gamma_a_contractions.second , "     a_contraction_pos" ); cout << endl; 
+
+            shared_ptr<Tensor_<DataType>> pre_a_gamma_contraction_data;
+            if ( gamma_name != "ID" ) {
+              pre_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(expression->gamma_info_map_->at(gamma_name)->id_ranges())) );
+            } else {
+              pre_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
+            }  
+
+            pre_a_gamma_contraction_data->allocate();
+            pre_a_gamma_contraction_data->zero(); 
+                 
+            // loop over different a_contractoins
+            for ( auto& a_contrib_elem : *(a_contrib_map_elem.second) ) {
+                            
+              string  a_contrib_name = a_contrib_elem.first;    
+              cout << "a_contrib_name = " << a_contrib_name ; cout.flush(); 
+
+              shared_ptr<AContribInfo_Base> a_contrib = a_contrib_elem.second;    
+
+              if (check_AContrib_factors(*a_contrib))
+                continue;
+//              print_AContraction_list( expression->ACompute_map_->at(a_contrib_name), a_contrib_name );
+              TensOp_Machine->Calculate_CTP( *a_contrib );
+              
+              for ( int qq = 0 ; qq != a_contrib->id_orders().size(); qq++){
+
+                print_vector( a_contrib->id_order(qq) , "   id_reordering ") ; cout << endl;
+ 
+                shared_ptr<Tensor_<DataType>> a_contrib_reordered = TensOp_Machine->reorder_block_Tensor( a_contrib_name, make_shared<vector<int>>(a_contrib->id_order(qq)) );
+                pre_a_gamma_contraction_data->ax_plus_y( (DataType)(a_contrib->factor(qq).first), a_contrib_reordered );
+              
+              }
+            }
+            if ( gamma_name != "ID" ) {
+      
+              gamma_computer_->get_gamma( gamma_name );
+              shared_ptr<Tensor_<DataType>> gamma_data = gamma_computer_->gamma_data(gamma_name); 
+              shared_ptr<Tensor_<DataType>> tmp_result =   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( gamma_data, pre_a_gamma_contraction_data, gamma_a_contractions  );
+              post_a_gamma_contraction_data->ax_plus_y( (DataType)(1.0), tmp_result ) ;
+      
+            } else {
+              cout << "I ignore identity based terms for now " << endl; 
+            }
+
+          } 
+          print_vector( *(a_intermediate_info->post_contraction_reordering()) , "post_contraction_reordering" ); cout << endl;                
+          shared_ptr<Tensor_<DataType>> reordered_tensor_block =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( post_a_gamma_contraction_data, a_intermediate_info->post_contraction_reordering() );
             
-          // Contract pre contraction reorderings with gamma and add to combined T_contrib
-
+          cout << "X" << endl;
+          target_block_data->ax_plus_y((DataType)(1.0), reordered_tensor_block );
         }
       }
     }
-  }
+  }                  
   cout << "leaving Expression_Computer::evaluate_expression_orb_exc_deriv" << endl;
   return;  
 }

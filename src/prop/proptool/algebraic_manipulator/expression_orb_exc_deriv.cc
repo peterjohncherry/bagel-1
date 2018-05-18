@@ -36,20 +36,31 @@ Expression_Orb_Exc_Deriv<DataType>::get_gamma_Atensor_contraction_list( shared_p
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto G2A_mapit = G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
-    auto A_map = G2A_mapit->second;
-    for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
-      string cmtp_name  = A_map_it->first;
-      if ( CTP_map_->find(cmtp_name) == CTP_map_->end())
-        throw std::logic_error( cmtp_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
 
-      auto ACompute_list_loc = ACompute_map_->find(cmtp_name);
-      if ( ACompute_list_loc != ACompute_map_->end() ){
-        continue;
-      } else {
-        shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
-        CTP_map_->at(cmtp_name)->build_contraction_sequence(CTP_map_, ACompute_list, ACompute_map_);
-        ACompute_map_->emplace(cmtp_name, ACompute_list);
-        CTP_map_->at(cmtp_name)->got_compute_list( true );
+    auto post_reorder_map = G2A_mapit->second;
+    for (auto prm_it = post_reorder_map->begin(); prm_it != post_reorder_map->end(); prm_it++) {
+      auto gamma_pos_map = prm_it->second->gamma_pos_map(); 
+
+      for (auto gpm_it = gamma_pos_map->begin(); gpm_it != gamma_pos_map->end(); gpm_it++) {
+        auto A_map = gpm_it->second;
+
+        for (auto A_map_it = A_map->begin(); A_map_it != A_map->end(); A_map_it++){
+          string cmtp_name  = A_map_it->first;
+
+          if ( CTP_map_->find(cmtp_name) == CTP_map_->end())
+            throw std::logic_error( cmtp_name + " is not yet in the map!! Generation of Gamma contributions probably has problems!! " ) ;
+       
+          auto ACompute_list_loc = ACompute_map_->find(cmtp_name);
+          if ( ACompute_list_loc != ACompute_map_->end() ){
+            continue;
+          } else {
+            shared_ptr<vector<shared_ptr<CtrOp_base>>>  ACompute_list = make_shared<vector<shared_ptr<CtrOp_base> >>(0);
+            CTP_map_->at(cmtp_name)->build_contraction_sequence(CTP_map_, ACompute_list, ACompute_map_);
+            ACompute_map_->emplace(cmtp_name, ACompute_list);
+            CTP_map_->at(cmtp_name)->got_compute_list( true );
+          }
+   
+        }
       }
     }
   }

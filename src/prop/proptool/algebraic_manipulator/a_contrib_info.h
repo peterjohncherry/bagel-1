@@ -26,7 +26,6 @@ class AContribInfo_Base {
     void decrease_total_uses() { total_uses_-=1; }
     void decrease_remaining_uses() { remaining_uses_-=1; }
 
-
     virtual std::vector<int> id_order(int qq) { assert(false); return std::vector<int>(0); }
     virtual std::vector<std::vector<int>> id_orders() { assert(false); return std::vector<std::vector<int>>(0); }
 
@@ -47,10 +46,24 @@ class AContribInfo_Base {
       throw  std::logic_error("do not call pre_contraction_reorderings() from AContribInfo_Base");return std::vector<std::vector<int>>(0); }
 
     virtual
-    std::vector<int> post_contraction_reordering() { throw std::logic_error("Do not call post_contraction_reordering() from AContribInfo_Base");return std::vector<int>(0); }
+    std::shared_ptr<std::vector<int>> post_contraction_reordering() { throw std::logic_error("Do not call post_contraction_reordering() from AContribInfo_Base"); return std::make_shared<std::vector<int>>(0); }
     
     virtual
     std::vector<int> gamma_contraction_pos() {  throw std::logic_error( "Should not access gamma_contraction_pos from AContribInfo_Base" );  return std::vector<int>(0); }
+
+    virtual 
+    std::shared_ptr<std::map<std::vector<int>, std::shared_ptr<std::map<std::string , std::shared_ptr<AContribInfo_Base>>>>> gamma_pos_map(){ 
+      throw std::logic_error( "Should not access gamma_contraction_pos from AContribInfo_Base" );
+      return std::make_shared<std::map<std::vector<int>, std::shared_ptr<std::map<std::string , std::shared_ptr<AContribInfo_Base>>>>>();
+    }
+
+    virtual std::shared_ptr<std::vector<std::string>> post_gamma_contraction_ranges() { 
+       throw std::logic_error( "Should not access post_gamma_contraction_ranges from AContribInfo_Base" );
+    return std::make_shared<std::vector<std::string>>(0); }
+
+    virtual  std::shared_ptr<std::vector<std::string>> a_block_ranges() {
+       throw std::logic_error( "Should not access a_block_ranges from AContribInfo_Base" );
+    return std::make_shared<std::vector<std::string>>(0); }
 
 };
 
@@ -60,10 +73,16 @@ class AContribInfo_Full : public AContribInfo_Base {
   public :
     std::vector<std::vector<int>> id_orders_;
     std::vector<std::pair<double,double>> factors;
+    std::shared_ptr<std::vector<std::string>> post_reorder_rngs_;
 
     AContribInfo_Full( std::string name,  std::vector<int>& id_order , std::pair<double,double> factor ):
                        AContribInfo_Base(name),  factors(std::vector<std::pair<double,double>>(1,factor)),
                        id_orders_(std::vector<std::vector<int>>(1,id_order)) {};
+
+    AContribInfo_Full( std::string name,  std::vector<int>& id_order, std::shared_ptr<std::vector<std::string>> post_reorder_rngs, std::pair<double,double> factor ):
+                       AContribInfo_Base(name),  factors(std::vector<std::pair<double,double>>(1,factor)),
+                       id_orders_(std::vector<std::vector<int>>(1,id_order)), post_reorder_rngs_(post_reorder_rngs) {};
+
     ~AContribInfo_Full(){};
 
     std::pair<double,double> factor(int qq) {return factors[qq]; };
@@ -78,6 +97,8 @@ class AContribInfo_Full : public AContribInfo_Base {
 
     std::vector<int> id_order(int qq) { return id_orders_[qq]; };
     std::vector<std::vector<int>> id_orders() { return id_orders_; };
+ 
+    std::shared_ptr<std::vector<std::string>> a_block_ranges() { return post_reorder_rngs_ ; } 
 
 };
 
@@ -86,59 +107,65 @@ class AContribInfo_OrbExcDeriv : public AContribInfo_Base {
 
   public :
     std::string target_block_name_;
-    std::vector<int> gamma_contraction_pos_;
     std::vector<std::pair<double,double>> factors_;
+    std::shared_ptr<std::vector<int>> post_contraction_reordering_;
+    std::shared_ptr<std::vector<std::string>> post_gamma_contraction_ranges_;
 
     // key : rearrangement after gamma contraction
     // key : rearrangement before gamma contraction
-    std::map<std::vector<int>, std::shared_ptr<std::map<std::string , std::shared_ptr<AContribInfo_Full<DataType>>>>>  gamma_pos_map_;
+    std::shared_ptr<std::map<std::vector<int>, std::shared_ptr<std::map<std::string , std::shared_ptr<AContribInfo_Base>>>>>  gamma_pos_map_;
 
 
-    AContribInfo_OrbExcDeriv( std::string ablock_name, std::string target_block_name, std::vector<int>& gamma_contraction_pos,
-                              std::vector<int>& pre_contraction_reordering, std::vector<int>& post_contraction_reordering,
-                              std::pair<double,double> factor ):
-                              AContribInfo_Base(name), target_block_name_( target_block_name ),
-                              factors_(std::vector<std::pair<double,double>>(1,factor)) {
-                                
-                                auto Ablock_map = std::make_shared<std::map< std::string , std::shared_ptr<AContribInfo_Full<DataType>> >>(); 
-                                Ablock_map->emplace( ablock_name, std::make_shared<AContribInfo_Full<DataType>>(ablock_name, pre_contraction_reordering, factor) );
-                                      
-                                gamma_pos_map_.emplace( gamma_contraction_pos, Ablock_map );
-                                add_reordering( ablock_name, gamma_contraction_pos, pre_contraction_reordering, factor );
-                              };
+    AContribInfo_OrbExcDeriv( std::string ablock_name, std::string target_block_name, std::shared_ptr<std::vector<int>> post_contraction_reordering, 
+                              std::shared_ptr<std::vector<std::string>> post_gamma_contraction_ranges ):
+                              AContribInfo_Base(ablock_name), target_block_name_( target_block_name ), post_contraction_reordering_(post_contraction_reordering),
+                              post_gamma_contraction_ranges_(post_gamma_contraction_ranges),
+                              gamma_pos_map_(std::make_shared<std::map<std::vector<int>, std::shared_ptr<std::map<std::string , std::shared_ptr<AContribInfo_Base>>>>>())  {};
 
     ~AContribInfo_OrbExcDeriv(){};
 
     std::pair<double,double> factor( int qq ) { return factors_[qq]; } ;
 
     void add_reordering( std::string ablock_name,  std::vector<int>& gamma_contraction_pos,
-                         std::vector<int>& pre_contraction_reordering, std::pair<double,double> factor ) {
+                         std::vector<int>& pre_contraction_reordering,
+                         std::shared_ptr<std::vector<std::string>> pre_contraction_ranges, std::pair<double,double> factor ) {
 
-      auto AInfo_loc = gamma_pos_map_->find( gamma_contraction_pos ); 
-      if ( AInfo_loc == gamma_pos_map_->end() ) {
+      auto ablock_map_loc = gamma_pos_map_->find( gamma_contraction_pos ); 
+      if ( ablock_map_loc == gamma_pos_map_->end() ) {
 
-        auto ablock_map = std::make_shared<std::map< std::string , std::shared_ptr<AContribInfo_Full<DataType>> >>(); 
-        auto AInfo = std::make_shared<AContribInfo_Full<DataType>>( ablock_name, pre_contraction_reordering, factor );
-        ablock_map->emplace( ablock_name, std::make_shared<AContribInfo_Full<DataType>>(ablock_name, pre_contraction_reordering, factor) );
-        gamma_pos_map_->at( ablock_name )->emplace( ablock_map );
+        auto ablock_map = std::make_shared<std::map< std::string , std::shared_ptr<AContribInfo_Base> >>(); 
+        auto a_info = std::make_shared<AContribInfo_Full<DataType>>( ablock_name, pre_contraction_reordering, pre_contraction_ranges, factor );
+        ablock_map->emplace( ablock_name, a_info);
+        gamma_pos_map_->emplace( gamma_contraction_pos, ablock_map );
     
       } else {
 
-        std::shared_ptr<AContribInfo_Full<DataType>> AInfo = AInfo_loc->second;
-        for ( int qq = 0 ; qq != AInfo->id_orders().size(); qq++ ) {
-          if( pre_contraction_reordering == AInfo->id_order(qq) ){
-            AInfo->combine_factors( qq, factor );
-            AInfo->remaining_uses_ += 1;
-            AInfo->total_uses_ += 1;
-            break;
-    
-          } else if ( qq == AInfo->id_orders().size()-1) {
-            AInfo->add_id_order(pre_contraction_reordering);
-            AInfo->add_factor(factor);
+        std::shared_ptr<std::map< std::string, std::shared_ptr<AContribInfo_Base>>> ablock_map = ablock_map_loc->second;
+        auto ablock_loc = ablock_map->find(ablock_name);
+        if ( ablock_loc == ablock_map->end() ) {
+
+          auto a_info = std::make_shared<AContribInfo_Full<DataType>>( ablock_name, pre_contraction_reordering, pre_contraction_ranges, factor );
+          ablock_map->emplace( ablock_name, a_info );
+          gamma_pos_map_->emplace( gamma_contraction_pos, ablock_map );
+
+        } else { 
+          std::shared_ptr<AContribInfo_Full<DataType>> AInfo = std::dynamic_pointer_cast<AContribInfo_Full<DataType>>(ablock_loc->second);
+ 
+          for ( int qq = 0 ; qq != AInfo->id_orders().size(); qq++ ) {
+            if( pre_contraction_reordering == AInfo->id_order(qq) ){
+              AInfo->combine_factors( qq, factor );
+              AInfo->remaining_uses_ += 1;
+              AInfo->total_uses_ += 1;
+              break;
+          
+            } else if ( qq == AInfo->id_orders().size()-1) {
+              AInfo->add_id_order(pre_contraction_reordering);
+              AInfo->add_factor(factor);
+            }
           }
         }
       }
-    }; 
+    }
  
     void combine_factors( int qq, std::pair<double,double>& new_factor )  {
       factors_[qq].first += new_factor.first;  
@@ -146,9 +173,11 @@ class AContribInfo_OrbExcDeriv : public AContribInfo_Base {
     }
 
     std::string target_block_name() { return target_block_name_; } 
-    std::vector<int> gamma_contraction_pos() { return gamma_contraction_pos_; } // defined w.r.t. order after pre_contraction_reordering
+     
+    std::shared_ptr<std::map<std::vector<int>, std::shared_ptr<std::map<std::string , std::shared_ptr<AContribInfo_Base>>>>> gamma_pos_map(){ return gamma_pos_map_ ;}
+ 
+    std::shared_ptr<std::vector<std::string>> post_gamma_contraction_ranges() { return post_gamma_contraction_ranges_; }
+    std::shared_ptr<std::vector<int>> post_contraction_reordering() { return post_contraction_reordering_; }
 
 };
-
-
 #endif
