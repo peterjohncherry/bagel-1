@@ -223,7 +223,7 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
  
   vector<int> gamma_contraction_pos(0);
   vector<int> A_contraction_pos(0);
-  vector<int> T_pos(0);
+  shared_ptr<vector<int>> T_pos = make_shared<vector<int>>(0);
   shared_ptr<vector<string>> post_gamma_contraction_rngs = make_shared<vector<string>>(0);
   // Get A indexes which must be contracted with gamma indexes
   // Get T indexes which are not contracted with A, and are basically gamma indexes
@@ -240,7 +240,7 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
 
     } else {
       post_gamma_contraction_rngs->push_back(std_rngs_[*gip_it]);
-      T_pos.push_back(*gip_it - target_block_start_ );
+      T_pos->push_back(*gip_it - target_block_start_ );
     }
   }
  
@@ -255,7 +255,7 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
         A_T_pos.push_back(ctr.second + target_block_end_);
       } 
       post_gamma_contraction_rngs->push_back(std_rngs_[ctr.first]);
-      T_pos.push_back(ctr.first - target_block_start_ );
+      T_pos->push_back(ctr.first - target_block_start_ );
 
     }
   }
@@ -271,15 +271,15 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   //
   
   // The latter case corresponds to this reordering (not we get x and y in the first loop, and j/w and k/z in the second
-  shared_ptr<vector<int>> post_contraction_reordering = get_ascending_order ( T_pos );
+  shared_ptr<vector<int>> post_contraction_reordering = get_ascending_order (*T_pos );
 
-  // Get positions where T is contracted with itself ( I think this should be disposed of, and we should have T_^{S} and T^{D} seperate )
-//  if ( gint->target_target_deltas_pos()->size() != 0 ) {
-//    for ( pair<int,int>&  ctr : *(gint->target_target_deltas_pos()) ) { 
-//      T_pos.push_back( ctr.first - target_block_start_ );
-//      T_pos.push_back( ctr.second - target_block_start_ );
-//    }
-//  }
+ // Get positions where T is contracted with itself ( I think this should be disposed of, and we should have T_^{S} and T^{D} seperate )
+ // if ( gint->target_target_deltas_pos()->size() != 0 ) {
+ //  for ( pair<int,int>&  ctr : *(gint->target_target_deltas_pos()) ) { 
+ //    T_pos->push_back( ctr.first - target_block_start_ );
+ //     T_pos->push_back( ctr.second - target_block_start_ );
+ //   }
+ //  }
 
   shared_ptr<vector<int>> pre_contraction_reordering;
   vector<int> A_ids_pos( A_contraction_pos.size() + A_T_pos.size() );
@@ -300,7 +300,7 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   cout << "------------" << target_block_name_ << "----------"<< endl;
   print_vector( gamma_ids_pos,                "Gamma_ids_pos              " ); cout << endl;
   print_vector( A_ids_pos,                    "A_ids_pos                  " ); cout << endl;
-  print_vector( T_pos,                        "T_pos                      " ); cout << endl;
+  print_vector( *T_pos,                       "T_pos                      " ); cout << endl;
   print_vector( A_T_pos,                      "A_T_pos                    " ); cout << endl;
   print_vector( A_contraction_pos,            "A_contraction_pos          " ); cout << endl;
   print_vector( gamma_contraction_pos,        "gamma_contraction_pos      " ); cout << endl;
@@ -339,7 +339,7 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
 
      cout << "did not find Gname_alt : " << Gname_alt << " in G_to_a_map_" << endl;
      
-     auto a_info = make_shared<AContribInfo_OrbExcDeriv<DataType>>( final_reordering_name, target_block_name_, post_contraction_reordering, post_gamma_contraction_rngs );
+     auto a_info = make_shared<AContribInfo_OrbExcDeriv<DataType>>( final_reordering_name, target_block_name_, T_pos,  post_gamma_contraction_rngs );
      a_info->add_reordering( Aname_alt, gamma_contraction_pos, *pre_contraction_reordering, pre_contraction_ranges, new_fac );
      
      cout << "made final_reordering_object : " << final_reordering_name << endl;

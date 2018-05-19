@@ -316,7 +316,7 @@ shared_ptr<Tensor_<DataType>>
 TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string tens_block_name, shared_ptr<vector<int>> new_order){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp_Computer::TensOp_Computer::reorder_block_Tensor "; cout.flush();
-  cout << " : " << tens_block_name ; cout.flush();  WickUtils::print_vector( *new_order, "new_order");
+  cout << " : " << tens_block_name ; cout.flush();  WickUtils::print_vector( *new_order, "    new_order"); cout << endl;
  
   auto tensop_data_map_loc = tensop_data_map_->find( tens_block_name ); 
   shared_ptr<Tensor_<DataType>> T_part; 

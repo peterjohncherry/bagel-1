@@ -65,6 +65,10 @@ class AContribInfo_Base {
        throw std::logic_error( "Should not access a_block_ranges from AContribInfo_Base" );
     return std::make_shared<std::vector<std::string>>(0); }
 
+    virtual 
+    std::shared_ptr<std::vector<int>> target_block_positions() { 
+      throw std::logic_error( "Should not access target_block_positions from AContribInfo_Base" );
+    return std::make_shared<std::vector<int>>(); }
 };
 
 template<typename DataType>
@@ -108,19 +112,22 @@ class AContribInfo_OrbExcDeriv : public AContribInfo_Base {
   public :
     std::string target_block_name_;
     std::vector<std::pair<double,double>> factors_;
-    std::shared_ptr<std::vector<int>> post_contraction_reordering_;
+    std::shared_ptr<std::vector<int>> target_block_positions_;
     std::shared_ptr<std::vector<std::string>> post_gamma_contraction_ranges_;
+    std::shared_ptr<std::vector<int>> post_contraction_reordering_;
 
     // key : rearrangement after gamma contraction
     // key : rearrangement before gamma contraction
     std::shared_ptr<std::map<std::vector<int>, std::shared_ptr<std::map<std::string , std::shared_ptr<AContribInfo_Base>>>>>  gamma_pos_map_;
 
 
-    AContribInfo_OrbExcDeriv( std::string ablock_name, std::string target_block_name, std::shared_ptr<std::vector<int>> post_contraction_reordering, 
-                              std::shared_ptr<std::vector<std::string>> post_gamma_contraction_ranges ):
-                              AContribInfo_Base(ablock_name), target_block_name_( target_block_name ), post_contraction_reordering_(post_contraction_reordering),
-                              post_gamma_contraction_ranges_(post_gamma_contraction_ranges),
-                              gamma_pos_map_(std::make_shared<std::map<std::vector<int>, std::shared_ptr<std::map<std::string , std::shared_ptr<AContribInfo_Base>>>>>())  {};
+    AContribInfo_OrbExcDeriv( std::string ablock_name, std::string target_block_name, 
+                              std::shared_ptr<std::vector<int>> target_block_positions, std::shared_ptr<std::vector<std::string>> post_gamma_contraction_ranges ):
+                              AContribInfo_Base(ablock_name), target_block_name_( target_block_name ), target_block_positions_(target_block_positions),
+                              post_gamma_contraction_ranges_(post_gamma_contraction_ranges) { 
+                                gamma_pos_map_=std::make_shared<std::map<std::vector<int>, std::shared_ptr<std::map<std::string,std::shared_ptr<AContribInfo_Base>>>>>();
+                                post_contraction_reordering_ = get_ascending_order( *target_block_positions_ );
+                              };
 
     ~AContribInfo_OrbExcDeriv(){};
 
@@ -178,6 +185,7 @@ class AContribInfo_OrbExcDeriv : public AContribInfo_Base {
  
     std::shared_ptr<std::vector<std::string>> post_gamma_contraction_ranges() { return post_gamma_contraction_ranges_; }
     std::shared_ptr<std::vector<int>> post_contraction_reordering() { return post_contraction_reordering_; }
+    std::shared_ptr<std::vector<int>> target_block_positions() { return target_block_positions_; }
 
 };
 #endif

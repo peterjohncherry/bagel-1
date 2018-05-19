@@ -1,5 +1,6 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/task_translator/expression_computer.h>
+#include <src/prop/proptool/debugging_utils.h>
 
 using namespace std;
 using namespace bagel;
@@ -7,6 +8,7 @@ using namespace bagel::SMITH;
 using namespace Tensor_Arithmetic;
 using namespace Tensor_Arithmetic_Utils;
 using namespace WickUtils;
+using namespace Debugging_Utils;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
@@ -64,11 +66,14 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
   cout << endl << endl;
  
   TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
+  cout << endl;
+  for ( std::shared_ptr<Range_Block_Info> block : *(expression->required_blocks_) ) 
+     cout << block->name() << endl;
+  cout << endl << endl;
 
   // define seperate generic name for each of the required blocks in the target tensor.
   // Copy the results from the contractions into these places in the data map.
   // Perhaps have seperate field in expression which is map of these blocks; can be removed when we a finished, and helps seperate updates from actual tensor
-
   for ( auto& exc_block_G_to_A_map_elem : *(expression->exc_block_G_to_A_map() ) ) {
  
     string target_block_name = exc_block_G_to_A_map_elem.first; 
@@ -76,10 +81,15 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
     shared_ptr<Tensor_<DataType>> target_block_data;
     auto target_block_data_loc = tensor_results_map_->find( target_block_name ); 
     if ( target_block_data_loc == tensor_results_map_->end() ) {
-      // MUST ALLOCATE
+      shared_ptr<vector<string>> target_block_ranges = expression->CTP_map_->at(target_block_name)->full_id_ranges();
+      target_block_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( target_block_ranges )));
+      target_block_data->allocate();
+      target_block_data->zero(); 
+      tensor_results_map_->emplace( target_block_name, target_block_data );
     } else {
       target_block_data = target_block_data_loc->second;
     }
+  
 
     auto G_to_A_map = exc_block_G_to_A_map_elem.second; 
        
@@ -102,7 +112,7 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
           auto gamma_contraction_pos_map = final_reordering_elem.second->gamma_pos_map();
 
           shared_ptr<Tensor_<DataType>> post_a_gamma_contraction_data;
-          if ( gamma_name != "ID" ) {
+          if ( a_intermediate_info->post_gamma_contraction_ranges()->size() > 0 ) {
             post_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( a_intermediate_info->post_gamma_contraction_ranges() )));
           } else {
             post_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
@@ -134,7 +144,7 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
             for ( auto& a_contrib_elem : *(a_contrib_map_elem.second) ) {
                             
               string  a_contrib_name = a_contrib_elem.first;    
-              cout << "a_contrib_name = " << a_contrib_name ; cout.flush(); 
+              cout << "a_contrib_name = " << a_contrib_name <<"   "; cout.flush(); 
 
               shared_ptr<AContribInfo_Base> a_contrib = a_contrib_elem.second;    
 
@@ -160,15 +170,27 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
               post_a_gamma_contraction_data->ax_plus_y( (DataType)(1.0), tmp_result ) ;
       
             } else {
-              cout << "I ignore identity based terms for now " << endl; 
+              post_a_gamma_contraction_data->ax_plus_y( (DataType)(1.0), pre_a_gamma_contraction_data ) ;
             }
 
           } 
-          print_vector( *(a_intermediate_info->post_contraction_reordering()) , "post_contraction_reordering" ); cout << endl;                
-          shared_ptr<Tensor_<DataType>> reordered_tensor_block =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( post_a_gamma_contraction_data, a_intermediate_info->post_contraction_reordering() );
-            
-          cout << "X" << endl;
-          target_block_data->ax_plus_y((DataType)(1.0), reordered_tensor_block );
+          if ( a_intermediate_info->post_contraction_reordering()->size() == target_block_data->rank() ) {
+            print_vector( *(a_intermediate_info->post_contraction_reordering()) , "post_contraction_reordering" ); cout << endl;                
+            shared_ptr<Tensor_<DataType>> reordered_tensor_block =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( post_a_gamma_contraction_data, a_intermediate_info->post_contraction_reordering() );
+            cout << "reordered_tensor ranges = "; cout.flush(); print_sizes( reordered_tensor_block->indexrange(), "" );  cout << "target_block_data ranges = "; cout.flush(); print_sizes( target_block_data->indexrange(), "" ); cout << endl;
+            target_block_data->ax_plus_y((DataType)(1.0), reordered_tensor_block );
+
+          } else if ( a_intermediate_info->post_contraction_reordering()->size() != 0 ) { 
+        
+            cout << endl << "target_block_name = " << target_block_name <<  endl;
+            cout << " PRE target_block_data->norm() = " << target_block_data->norm(); cout.flush();
+            cout << "    target_block_data->rank() = " << target_block_data->rank() << endl;
+            Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( target_block_data, post_a_gamma_contraction_data, *(a_intermediate_info->target_block_positions()) );
+            cout << "POST target_block_data->norm() = " << target_block_data->norm(); cout.flush();
+            cout << "    target_block_data->rank() = " << target_block_data->rank()  <<endl;
+          } else {
+            throw logic_error ("Expression_computer:: should never end up with contribution to target term having rank 1 " ); 
+          }
         }
       }
     }

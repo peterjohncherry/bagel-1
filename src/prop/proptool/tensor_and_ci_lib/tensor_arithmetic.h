@@ -129,6 +129,11 @@ class Tensor_Arithmetic {
 
      static void
      divide_tensors_in_place( std::shared_ptr<SMITH::Tensor_<DataType>> T1, std::shared_ptr<SMITH::Tensor_<DataType>> T2 );
+    
+     static void
+     add_tensor_along_trace( std::shared_ptr<SMITH::Tensor_<DataType>> t_target, std::shared_ptr<SMITH::Tensor_<DataType>> t_summand,
+                             std::vector<int>& summand_pos );
+
 }; 
  
 template<> void Tensor_Arithmetic<double>::gemm ( char op1, char op2, int size_i, int size_l, int size_j, 

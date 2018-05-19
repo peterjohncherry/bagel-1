@@ -124,6 +124,105 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__tensor_return( sha
   return Tens_out;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Adds smaller tensor along partial trace of bigger tensor , e.g., 
+// T_ijkl = X_ijkl             if j != l
+// T_ijkl = X_ijkl + Y_ik      otherwise
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( shared_ptr<Tensor_<DataType>> t_target, shared_ptr<Tensor_<DataType>> t_summand,
+                                                                        vector<int>& summand_pos ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(summand_pos , "summand_pos"); cout << endl;
+  assert ( t_target->indexrange().size() > summand_pos.size() && summand_pos.size() > 0 );
+  
+
+  vector<int> summand_reordering = *(get_ascending_order( summand_pos ));
+
+  vector<IndexRange> t_target_ranges  = t_target->indexrange();
+  vector<IndexRange> t_summand_ranges = t_summand->indexrange();
+
+  int num_ids  = t_target_ranges.size();
+  int summand_rank = t_summand_ranges.size();
+  int num_traced = num_ids - summand_rank;
+
+  shared_ptr<vector<int>> target_reordering= make_shared<vector<int>>(num_ids);
+
+  // ensures ranges at back (Fortran ordering!) of target are those of _reordered_ summand 
+  vector<bool> traced(t_target_ranges.size(), true ); 
+  {
+
+    vector<int>::iterator sp_it = summand_pos.begin();
+    for ( ; sp_it !=summand_pos.end(); sp_it++ ) 
+      traced[*sp_it] = false; 
+    
+    int qq = 0;
+    sp_it = summand_pos.begin();
+    vector<bool>::iterator t_it = traced.begin(); 
+    vector<int>::iterator tip_s_it = target_reordering->begin() + num_traced; 
+    for ( vector<int>::iterator tip_it = target_reordering->begin() ; qq != num_ids; qq++, t_it++ ) 
+      if ( *t_it ) {
+        *tip_it = qq; 
+         ++tip_it;
+      } else {
+        *tip_s_it = *sp_it++; 
+         ++tip_s_it;
+      }
+  }
+  shared_ptr<vector<int>> target_reordering_inverse = get_ascending_order( *target_reordering ) ;
+  shared_ptr<vector<int>> target_maxs = get_range_lengths( t_target_ranges );
+  shared_ptr<vector<int>> summand_maxs = get_range_lengths( t_summand_ranges );
+  shared_ptr<vector<int>> summand_mins = make_shared<vector<int>>(summand_rank, 0);
+  shared_ptr<vector<int>> summand_block_pos = make_shared<vector<int>>(summand_rank,0);
+
+  do {
+
+    shared_ptr<vector<Index>> summand_block_ranges = get_rng_blocks( summand_block_pos, t_summand_ranges );
+    
+    unique_ptr<DataType[]> summand_block_data  = t_summand->get_block(*summand_block_ranges);
+
+    size_t summand_block_size  = t_summand->get_size( *summand_block_ranges );    
+   
+    for ( int ii = 0; ii != target_maxs->front(); ii++ ) { 
+ 
+      shared_ptr<vector<Index>> target_block_ranges = make_shared<vector<Index>>(num_ids);
+      {
+        vector<int>::iterator sr_it = summand_reordering.begin();
+        vector<bool>::iterator t_it = traced.begin(); 
+        int qq = 0; 
+        for ( vector<Index>::iterator tbr_it = target_block_ranges->begin(); tbr_it != target_block_ranges->end(); tbr_it++, qq++, t_it++ )
+          if (*t_it){ 
+           *tbr_it = t_target_ranges[qq].range(ii);
+          } else {
+           *tbr_it = summand_block_ranges->at(*sr_it);
+            sr_it++;
+          }
+          
+      }
+      
+      shared_ptr<vector<Index>> target_block_ranges_reordered = make_shared<vector<Index>>(num_ids);
+      {
+      vector<Index>::iterator tbrr_it = target_block_ranges_reordered->begin();
+      for ( vector<int>::iterator tbr_it =  target_reordering->begin(); tbr_it != target_reordering->end(); tbr_it++ , tbrr_it++ ) 
+        *tbrr_it = (*target_block_ranges)[*tbr_it];
+         
+      } ;
+ 
+      unique_ptr<DataType[]> target_block_data = t_target->get_block(*target_block_ranges);
+      { 
+        unique_ptr<DataType[]> target_block_data_reordered = reorder_tensor_data( target_block_data.get(), target_reordering, target_block_ranges );
+        blas::ax_plus_y_n(1.0, target_block_data_reordered.get(), summand_block_size, summand_block_data.get() );
+        target_block_data = reorder_tensor_data( target_block_data_reordered.get(), target_reordering, target_block_ranges );
+      }
+    
+      t_target->put_block( target_block_data, *target_block_ranges );
+    }    
+
+  } while( fvec_cycle_skipper(summand_block_pos, summand_maxs, summand_mins) );
+
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Sum over indexes on a tensor, is used for excitation operators. Note the output tensor may have an odd number of indexes,
 //as a rule, this may mess up some of the other routines....
 //Currently using reordering, as other wise there's going to be a huge amount of hopping about (weird stride). Don't know what is best.
@@ -135,32 +234,23 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_over_idxs( shared_ptr<Tensor
   cout << "Tensor_Arithmetic::sum_over_idxs" << endl;
   assert ( Tens_in->indexrange().size() > 0 );
 
-
-  cout << "TA::cost 1" <<  endl;
   vector<IndexRange> id_ranges = Tens_in->indexrange();
-  print_sizes( id_ranges , "idranges" ) ;cout << endl;
   shared_ptr<Tensor_<DataType>> Tens_out ;
-  cout << "TA::cost 2" <<  endl;
 
   int num_ids  = id_ranges.size();
   int num_ctrs = summed_idxs_pos.size();
   int num_uncs = num_ids - num_ctrs;
   
-  cout << "TA::cost 3" <<  endl;
   // Put contracted indexes at back so they change slowly; Fortran ordering in index blocks!
   shared_ptr<vector<int>> new_order = make_shared<vector<int>>(num_ids);
   iota(new_order->begin(), new_order->end(), 0);
   put_ctrs_at_back( *new_order, summed_idxs_pos );
 
-  cout << "TA::cost 4" <<  endl;
   vector<int> unc_pos( new_order->begin(), new_order->end() - num_ctrs );
   vector<IndexRange> unc_idxrng( unc_pos.size() );
   for ( int qq = 0; qq != unc_pos.size(); qq++ )
     unc_idxrng[qq] = id_ranges[unc_pos[qq]];
   
-  print_sizes( unc_idxrng, "unc_idx_rng" );cout << endl;
-
-  cout << "TA::cost 5" << endl;
   shared_ptr<vector<int>> unc_maxs      = get_range_lengths( id_ranges );
   shared_ptr<vector<int>> unc_mins      = make_shared<vector<int>>(unc_maxs->size(),0);
   shared_ptr<vector<int>> unc_block_pos = make_shared<vector<int>>(unc_maxs->size(),0);
@@ -168,14 +258,12 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_over_idxs( shared_ptr<Tensor
   shared_ptr<vector<int>> ctr_maxs      = make_shared<vector<int>>(*unc_maxs);
   shared_ptr<vector<int>> ctr_mins      = make_shared<vector<int>>(unc_maxs->size(),0);
 
-  cout << "TA::cost 6" << endl;
   //set max = min so contracted blocks are skipped in fvec_cycle
   for ( int qq = num_ctrs-1; qq!= num_ids; qq++ ) {
     unc_maxs->at(qq) = 0;
     unc_mins->at(qq) = 0;
   }
   
-  cout << "TA::cost 7" <<  endl;
   Tens_out = make_shared<Tensor_<DataType>>(unc_idxrng);
   Tens_out->allocate();
   Tens_out->zero();
@@ -221,16 +309,12 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_over_idxs( shared_ptr<Tensor
         blas::ax_plus_y_n(1.0, reordered_block.get() + (unc_block_size*flattened_ctr_id), unc_block_size, contracted_block.get() );
       }
        
-  cout << "TA::cost 8" <<  endl;
     } while( fvec_cycle_skipper(ctr_block_pos, ctr_maxs, ctr_mins ));
 
-  cout << "TA::cost 9" <<  endl;
     Tens_out->put_block(contracted_block, unc_id_blocks );
 
-  cout << "TA::cost 10" << endl;
   } while( fvec_cycle_skipper(unc_block_pos, unc_maxs, unc_mins));
 
-  cout << "TA::cost 11" << endl;
   return Tens_out;
 }
 
