@@ -135,12 +135,20 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( shared_p
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(summand_pos , "summand_pos"); cout << endl;
   assert ( t_target->indexrange().size() > summand_pos.size() && summand_pos.size() > 0 );
-  
+
+  cout << "TA:atat START t_target->norm()  = " << t_target->norm(); cout.flush(); cout << "    TA:atat START t_summand->norm() = " << t_summand->norm() << endl;  
 
   vector<int> summand_reordering = *(get_ascending_order( summand_pos ));
 
   vector<IndexRange> t_target_ranges  = t_target->indexrange();
   vector<IndexRange> t_summand_ranges = t_summand->indexrange();
+
+  {
+  vector<int>::iterator sp_it = summand_pos.begin();
+  for (vector<IndexRange>::iterator tsr_it = t_summand_ranges.begin(); tsr_it != t_summand_ranges.end(); tsr_it++, sp_it  )
+    assert ( tsr_it->size() == t_target_ranges[*sp_it].size() ); 
+  
+  }
 
   int num_ids  = t_target_ranges.size();
   int summand_rank = t_summand_ranges.size();
@@ -197,16 +205,14 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( shared_p
            *tbr_it = summand_block_ranges->at(*sr_it);
             sr_it++;
           }
-          
       }
-      
       shared_ptr<vector<Index>> target_block_ranges_reordered = make_shared<vector<Index>>(num_ids);
       {
       vector<Index>::iterator tbrr_it = target_block_ranges_reordered->begin();
       for ( vector<int>::iterator tbr_it =  target_reordering->begin(); tbr_it != target_reordering->end(); tbr_it++ , tbrr_it++ ) 
         *tbrr_it = (*target_block_ranges)[*tbr_it];
          
-      } ;
+      };
  
       unique_ptr<DataType[]> target_block_data = t_target->get_block(*target_block_ranges);
       { 
@@ -216,12 +222,18 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( shared_p
       }
     
       t_target->put_block( target_block_data, *target_block_ranges );
+      cout <<" contracted_index = " << ii << endl;
     }    
-
+    
+    print_vector(*summand_block_pos , "summand_block_pos"); cout << endl;
   } while( fvec_cycle_skipper(summand_block_pos, summand_maxs, summand_mins) );
+  
+  cout << "TA:atat END t_target->norm()  = " << t_target->norm() << endl;  
+  cout << "TA:atat END t_summand->norm() = " << t_summand->norm() << endl;  
 
   return;
 }
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Sum over indexes on a tensor, is used for excitation operators. Note the output tensor may have an odd number of indexes,
 //as a rule, this may mess up some of the other routines....
@@ -578,6 +590,7 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
 
   vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
   vector<IndexRange> T2_org_rngs = Tens2_in->indexrange();
+  assert( T1_org_rngs[ctr_todo.first] ==  T2_org_rngs[ctr_todo.second] );
 
   shared_ptr<vector<int>> T1_org_order= make_shared<vector<int>>(T1_org_rngs.size());
   iota(T1_org_order->begin(), T1_org_order->end(), 0);
@@ -667,6 +680,11 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;
 
   vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
   vector<IndexRange> T2_org_rngs = Tens2_in->indexrange();
+
+#ifndef NDEBUG
+  for ( int ii = 0 ; ii != ctrs_todo.first.size(); ii++ ) 
+     assert( T1_org_rngs[ctrs_todo.first[ii]].size() ==  T2_org_rngs[ctrs_todo.second[ii]].size() );
+#endif
 
   shared_ptr<vector<int>> T1_org_order= make_shared<vector<int>>(T1_org_rngs.size());
   iota(T1_org_order->begin(), T1_org_order->end(), 0);

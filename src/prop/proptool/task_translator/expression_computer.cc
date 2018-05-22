@@ -59,18 +59,16 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
 
   auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
                                                                                  moint_computer_ );
-  cout << endl<< "-------------------- Contents of CTP_map ----------------" << endl;
-  for ( auto& elem : *(expression->CTP_map_) ) 
-    cout << elem.first << endl;
+//  cout << endl<< "-------------------- Contents of CTP_map ----------------" << endl;
+//  for ( auto& elem : *(expression->CTP_map_) ) 
+//    cout << elem.first << endl;
 
-  cout << endl << endl;
  
   TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
-  cout << endl;
-  for ( std::shared_ptr<Range_Block_Info> block : *(expression->required_blocks_) ) 
-     cout << block->name() << endl;
-  cout << endl << endl;
-
+  cout << "num_required_blocks = " << expression->required_blocks_->size() << endl; 
+  for ( auto& elem : *(expression->required_blocks_) ) { cout << elem->name() << " " ;cout.flush(); }
+  cout << endl << endl; 
+ 
   // define seperate generic name for each of the required blocks in the target tensor.
   // Copy the results from the contractions into these places in the data map.
   // Perhaps have seperate field in expression which is map of these blocks; can be removed when we a finished, and helps seperate updates from actual tensor
@@ -86,10 +84,12 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
       target_block_data->allocate();
       target_block_data->zero(); 
       tensor_results_map_->emplace( target_block_name, target_block_data );
+      cout <<  endl << endl << " INIT 1" << target_block_name; cout.flush(); cout<< "->norm() = "; cout.flush(); cout <<  target_block_data->norm() << endl;
     } else {
       target_block_data = target_block_data_loc->second;
+      cout <<  endl << endl << " INIT 2" << target_block_name; cout.flush(); cout<< "->norm() = "; cout.flush(); cout <<  target_block_data->norm() << endl;
     }
-  
+
 
     auto G_to_A_map = exc_block_G_to_A_map_elem.second; 
        
@@ -106,88 +106,95 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
 
           shared_ptr<AContribInfo_OrbExcDeriv<DataType>> a_intermediate_info = dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>(final_reordering_elem.second);
 
-          cout << endl << endl; 
-          cout << " final_reordering_elem.second->name_ = " << final_reordering_elem.second->name_  << endl;
-
           auto gamma_contraction_pos_map = final_reordering_elem.second->gamma_pos_map();
 
           shared_ptr<Tensor_<DataType>> post_a_gamma_contraction_data;
           if ( a_intermediate_info->post_gamma_contraction_ranges()->size() > 0 ) {
             post_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( a_intermediate_info->post_gamma_contraction_ranges() )));
           } else {
-            post_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
+            throw logic_error (" Expression_Computer::evaluate_expression_orb_exc_deriv : " + expression->name() + " : Should never have fully contracted term; implies all active indexes in excitation operator! Aborting! " );
           }  
           post_a_gamma_contraction_data->allocate();
           post_a_gamma_contraction_data->zero(); 
 
           // loop over different gamma contraction positions         
-          for ( auto a_contrib_map_elem : *(gamma_contraction_pos_map) ){ 
+          for ( auto a_contrib_map_elem : *gamma_contraction_pos_map ){ 
 
             vector<int> gamma_contraction_pos = a_contrib_map_elem.first;
-            vector<int> a_contraction_pos(gamma_contraction_pos.size());
+            vector<int> a_contraction_pos( gamma_contraction_pos.size() );
             iota( a_contraction_pos.begin(), a_contraction_pos.end(), 0 );
 
             pair<vector<int>, vector<int>> gamma_a_contractions = make_pair( gamma_contraction_pos, a_contraction_pos ); 
-            print_vector( gamma_a_contractions.first, "gamma_contraction_pos" ); cout.flush(); print_vector( gamma_a_contractions.second , "     a_contraction_pos" ); cout << endl; 
 
             shared_ptr<Tensor_<DataType>> pre_a_gamma_contraction_data;
-            if ( gamma_name != "ID" ) {
-              pre_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(expression->gamma_info_map_->at(gamma_name)->id_ranges())) );
-            } else {
-              pre_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
-            }  
-
-            pre_a_gamma_contraction_data->allocate();
-            pre_a_gamma_contraction_data->zero(); 
                  
-            // loop over different a_contractoins
+            //TODO get rid of this hack to find A_block_ranges 
+            bool first_a_contrib = true; 
             for ( auto& a_contrib_elem : *(a_contrib_map_elem.second) ) {
-                            
+                          
               string  a_contrib_name = a_contrib_elem.first;    
               cout << "a_contrib_name = " << a_contrib_name <<"   "; cout.flush(); 
 
               shared_ptr<AContribInfo_Base> a_contrib = a_contrib_elem.second;    
 
+              if ( first_a_contrib ) {  
+                first_a_contrib = false;
+                shared_ptr<vector<string>> buff = a_contrib->a_block_ranges();
+                vector<int>::iterator io_it =  a_contrib->id_order(0).begin();
+                print_vector( a_contrib->id_order(0), "a_contrib->id_order(0)" ); cout << endl;
+                
+
+                shared_ptr<vector<string>> pagc_ranges = make_shared<vector<string>>(buff->size()) ;
+                for ( vector<string>::iterator pagcr_it = pagc_ranges->begin(); pagcr_it != pagc_ranges->end() ; pagcr_it++, io_it++ )
+                  *pagcr_it = buff->at( *io_it ) ;
+
+
+                print_vector( *pagc_ranges, "pagc_ranges" ); cout << endl;
+                pre_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( pagc_ranges ) ) );
+                pre_a_gamma_contraction_data->allocate();
+                pre_a_gamma_contraction_data->zero(); 
+              }
+ 
               if (check_AContrib_factors(*a_contrib))
                 continue;
-//              print_AContraction_list( expression->ACompute_map_->at(a_contrib_name), a_contrib_name );
+
               TensOp_Machine->Calculate_CTP( *a_contrib );
-              
+
               for ( int qq = 0 ; qq != a_contrib->id_orders().size(); qq++){
 
-                print_vector( a_contrib->id_order(qq) , "   id_reordering ") ; cout << endl;
- 
+                
                 shared_ptr<Tensor_<DataType>> a_contrib_reordered = TensOp_Machine->reorder_block_Tensor( a_contrib_name, make_shared<vector<int>>(a_contrib->id_order(qq)) );
                 pre_a_gamma_contraction_data->ax_plus_y( (DataType)(a_contrib->factor(qq).first), a_contrib_reordered );
-              
+
               }
             }
+
             if ( gamma_name != "ID" ) {
-      
+
               gamma_computer_->get_gamma( gamma_name );
-              shared_ptr<Tensor_<DataType>> gamma_data = gamma_computer_->gamma_data(gamma_name); 
-              shared_ptr<Tensor_<DataType>> tmp_result =   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( gamma_data, pre_a_gamma_contraction_data, gamma_a_contractions  );
-              post_a_gamma_contraction_data->ax_plus_y( (DataType)(1.0), tmp_result ) ;
-      
+              shared_ptr<Tensor_<DataType>> gamma_data = gamma_computer_->gamma_data(gamma_name);
+              shared_ptr<Tensor_<DataType>> reordered_tensor_block =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( post_a_gamma_contraction_data, a_intermediate_info->post_contraction_reordering() );
+              shared_ptr<Tensor_<DataType>> tmp_result =   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( gamma_data, pre_a_gamma_contraction_data,  gamma_a_contractions );
+              assert( post_a_gamma_contraction_data->size_alloc() == tmp_result->size_alloc() );
+              post_a_gamma_contraction_data->ax_plus_y( (DataType)(1.0), tmp_result );
+
             } else {
-              post_a_gamma_contraction_data->ax_plus_y( (DataType)(1.0), pre_a_gamma_contraction_data ) ;
+             assert ( post_a_gamma_contraction_data->size_alloc() == pre_a_gamma_contraction_data->size_alloc() ) ;
+             post_a_gamma_contraction_data->ax_plus_y( (DataType)(1.0), pre_a_gamma_contraction_data ) ;
             }
 
-          } 
+          }
+
           if ( a_intermediate_info->post_contraction_reordering()->size() == target_block_data->rank() ) {
-            print_vector( *(a_intermediate_info->post_contraction_reordering()) , "post_contraction_reordering" ); cout << endl;                
             shared_ptr<Tensor_<DataType>> reordered_tensor_block =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( post_a_gamma_contraction_data, a_intermediate_info->post_contraction_reordering() );
-            cout << "reordered_tensor ranges = "; cout.flush(); print_sizes( reordered_tensor_block->indexrange(), "" );  cout << "target_block_data ranges = "; cout.flush(); print_sizes( target_block_data->indexrange(), "" ); cout << endl;
+            assert (target_block_data->size_alloc() == reordered_tensor_block->size_alloc() ) ;
+
             target_block_data->ax_plus_y((DataType)(1.0), reordered_tensor_block );
 
           } else if ( a_intermediate_info->post_contraction_reordering()->size() != 0 ) { 
         
-            cout << endl << "target_block_name = " << target_block_name <<  endl;
-            cout << " PRE target_block_data->norm() = " << target_block_data->norm(); cout.flush();
-            cout << "    target_block_data->rank() = " << target_block_data->rank() << endl;
             Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( target_block_data, post_a_gamma_contraction_data, *(a_intermediate_info->target_block_positions()) );
-            cout << "POST target_block_data->norm() = " << target_block_data->norm(); cout.flush();
-            cout << "    target_block_data->rank() = " << target_block_data->rank()  <<endl;
+
           } else {
             throw logic_error ("Expression_computer:: should never end up with contribution to target term having rank 1 " ); 
           }

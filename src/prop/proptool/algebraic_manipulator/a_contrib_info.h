@@ -127,6 +127,7 @@ class AContribInfo_OrbExcDeriv : public AContribInfo_Base {
                               post_gamma_contraction_ranges_(post_gamma_contraction_ranges) { 
                                 gamma_pos_map_=std::make_shared<std::map<std::vector<int>, std::shared_ptr<std::map<std::string,std::shared_ptr<AContribInfo_Base>>>>>();
                                 post_contraction_reordering_ = get_ascending_order( *target_block_positions_ );
+                                assert(post_gamma_contraction_ranges_->size() == post_contraction_reordering_->size());
                               };
 
     ~AContribInfo_OrbExcDeriv(){};

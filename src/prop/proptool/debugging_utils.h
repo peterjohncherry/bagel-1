@@ -22,7 +22,8 @@ namespace Debugging_Utils {
     for ( const auto& elem : vec ) { 
       std::cout << elem.size() << " " ; std::cout.flush();
     }
-    std::cout << "]" << std::endl;
+    std::cout << "]" ; std::cout.flush();
+
   }
  
   template<typename DataType>
@@ -36,7 +37,7 @@ namespace Debugging_Utils {
     for ( const auto& elem : vec ) { 
       std::cout << elem->size() << " " ; std::cout.flush();
     }
-    std::cout << "]" << std::endl;
+    std::cout << "]"; std::cout.flush();
   }
  
   template<typename DataType>
@@ -50,7 +51,18 @@ namespace Debugging_Utils {
     return selected_elems;
   } 
   
+ 
+  template<typename DataType>
+  DataType sum_unique_ptr_elems( std::unique_ptr<DataType[]>& my_data, const size_t my_size ) {
 
+    DataType* end_ptr = my_data.get()+my_size;
+    DataType total = (DataType)(0.0);
+    for ( DataType* ptr = my_data.get(); ptr != end_ptr; ptr++ )
+      total += *ptr;
+   
+    return total;
+  } 
+ 
 
 
 }

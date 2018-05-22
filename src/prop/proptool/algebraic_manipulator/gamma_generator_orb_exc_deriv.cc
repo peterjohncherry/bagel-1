@@ -161,9 +161,10 @@ void GammaGenerator_OrbExcDeriv<DataType>::swap( int ii, int jj, int kk ){
       //Make it so T is first index, if all or no T, make it so creation op is first index
       if ( (j_pos >= target_block_start_) && ( j_pos < target_block_end_ )  ) {
 
-        if ( (i_pos >= target_block_start_) &&  ( i_pos < target_block_end_ )  ) {
+        if (  (i_pos >= target_block_start_) &&  ( i_pos < target_block_end_ ) ) {
           pair<int,int> new_delta = (*block_aops_)[ j_pos ] ? make_pair( j_pos, i_pos ) : make_pair( i_pos , j_pos);
 	  new_target_target_deltas_pos->push_back(new_delta);
+	  
         } else {
           pair<int,int> new_delta = make_pair( j_pos, i_pos );
 	  new_target_A_deltas_pos->push_back(new_delta);
@@ -178,10 +179,10 @@ void GammaGenerator_OrbExcDeriv<DataType>::swap( int ii, int jj, int kk ){
         new_A_A_deltas_pos->push_back(new_delta);
       } 
   
-    shared_ptr<GammaIntermediate_OrbExcDeriv<DataType>> new_gamma = 
-         make_shared<GammaIntermediate_OrbExcDeriv<DataType>>( new_ids_pos, new_A_A_deltas_pos, new_target_A_deltas_pos, new_target_target_deltas_pos, (gint)->factors_ );
-
-    gamma_vec_->push_back(new_gamma);
+      shared_ptr<GammaIntermediate_OrbExcDeriv<DataType>> new_gamma = 
+           make_shared<GammaIntermediate_OrbExcDeriv<DataType>>( new_ids_pos, new_A_A_deltas_pos, new_target_A_deltas_pos, new_target_target_deltas_pos, (gint)->factors_ );
+      
+      gamma_vec_->push_back(new_gamma);
 
   }
   //Note that these are factors for the real and imaginary part, they are _not_ the real and imaginary part of the factor
@@ -273,19 +274,32 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   // The latter case corresponds to this reordering (not we get x and y in the first loop, and j/w and k/z in the second
   shared_ptr<vector<int>> post_contraction_reordering = get_ascending_order (*T_pos );
 
- // Get positions where T is contracted with itself ( I think this should be disposed of, and we should have T_^{S} and T^{D} seperate )
- // if ( gint->target_target_deltas_pos()->size() != 0 ) {
- //  for ( pair<int,int>&  ctr : *(gint->target_target_deltas_pos()) ) { 
- //    T_pos->push_back( ctr.first - target_block_start_ );
- //     T_pos->push_back( ctr.second - target_block_start_ );
- //   }
- //  }
+//  { 
+//  vector<string> buff = *post_gamma_contraction_rngs;
+//  vector<string>::iterator pgcr_it = post_gamma_contraction_rngs->begin();
+//  for ( vector<int>::iterator pcr_it = post_contraction_reordering->begin(); pcr_it != post_contraction_reordering->end() ; pcr_it++, pgcr_it++ ) 
+//    *pgcr_it = buff[*pcr_it];
+
+//  }
+  print_vector( *T_pos , "T_pos" ) ; cout << endl;
+//  assert( T_pos->size() == 4 ) ;
+  if ( T_pos->size() == 4 ) { 
+
+  // Get positions where T is contracted with itself ( I think this should be disposed of, and we should have T_^{S} and T^{D} seperate )
+//  if ( gint->target_target_deltas_pos()->size() != 0 ) {
+//   for ( pair<int,int>&  ctr : *(gint->target_target_deltas_pos()) ) { 
+//     T_pos->push_back( ctr.first - target_block_start_ );
+//     T_pos->push_back( ctr.second - target_block_start_ );
+//    }
+//   }
 
   shared_ptr<vector<int>> pre_contraction_reordering;
   vector<int> A_ids_pos( A_contraction_pos.size() + A_T_pos.size() );
   copy ( A_contraction_pos.begin(), A_contraction_pos.end(), A_ids_pos.begin() );
   copy ( A_T_pos.begin(), A_T_pos.end(), A_ids_pos.begin() + A_contraction_pos.size() );
-  pre_contraction_reordering = get_ascending_order( A_ids_pos ); 
+//  pre_contraction_reordering = get_ascending_order( A_ids_pos ); 
+ 
+  pre_contraction_reordering  =  make_shared<vector<int>> ( get_Aid_order( A_ids_pos ) ) ;
 
   shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo_Base>>>>> G_to_A_map;
   auto map_loc = block_G_to_A_map_->find(target_block_name_);
@@ -337,18 +351,19 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
   auto a_info_loc =  G_to_A_map->at( Gname_alt )->find(final_reordering_name);
   if ( a_info_loc == G_to_A_map->at( Gname_alt )->end() ) {
 
-     cout << "did not find Gname_alt : " << Gname_alt << " in G_to_a_map_" << endl;
+     cout << "did not find final_reordering : " << final_reordering_name << " in "  << Gname_alt << "  G_to_a_map_" << endl;
      
      auto a_info = make_shared<AContribInfo_OrbExcDeriv<DataType>>( final_reordering_name, target_block_name_, T_pos,  post_gamma_contraction_rngs );
      a_info->add_reordering( Aname_alt, gamma_contraction_pos, *pre_contraction_reordering, pre_contraction_ranges, new_fac );
      
      cout << "made final_reordering_object : " << final_reordering_name << endl;
      G_to_A_map->at( Gname_alt )->emplace( final_reordering_name, a_info );
+
   } else {
 //    shared_ptr<AContribInfo_OrbExcDeriv<DataType>> AInfo = std::dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>( AInfo_loc->second );
 //    AInfo->add_reordering( *post_contraction_reordering, *pre_contraction_reordering, new_fac ); 
   }
-
+  }
 }
 ///////////////////////////////////////////////////////////////////////////////////////
 // Brute approach to getting inverse, keep for now to check
