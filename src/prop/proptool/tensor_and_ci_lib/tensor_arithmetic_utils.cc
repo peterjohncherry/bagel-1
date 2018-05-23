@@ -30,7 +30,7 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor 3arg" << endl;
 
   do { 
 
-     vector<Index> id_blocks = *(get_rng_blocks( block_pos, id_ranges ));
+     vector<Index> id_blocks = get_rng_blocks( block_pos, id_ranges );
      unique_ptr<complex<double>[]> block = Tens_in->get_block( id_blocks );
      Tens_out->put_block( block, id_blocks );
 
@@ -54,7 +54,7 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor 2arg" << endl; print_sizes( id
 
   do { 
 
-     vector<Index> id_blocks = *(get_rng_blocks( block_pos, id_ranges ));
+     vector<Index> id_blocks = get_rng_blocks( block_pos, id_ranges );
      unique_ptr<complex<double>[]> block = Tens_in->get_block( id_blocks );
      Tens_out->put_block( block, id_blocks );
 
@@ -86,7 +86,7 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor 3arg" << endl;
 
   do { 
 
-     vector<Index> id_blocks = *(get_rng_blocks( block_pos, id_ranges ));
+     vector<Index> id_blocks = get_rng_blocks( block_pos, id_ranges );
      unique_ptr<double[]> block = Tens_in->get_block( id_blocks );
      Tens_out->put_block( block, id_blocks );
 
@@ -110,7 +110,7 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor 2arg" << endl; print_sizes( id
 
   do { 
 
-     vector<Index> id_blocks = *(get_rng_blocks( block_pos, id_ranges ));
+     vector<Index> id_blocks = get_rng_blocks( block_pos, id_ranges );
      unique_ptr<double[]> block = Tens_in->get_block( id_blocks );
      Tens_out->put_block( block, id_blocks );
 
@@ -155,7 +155,7 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, st
      do {
      
       
-       vector<Index> id_blocks = *(get_rng_blocks( block_pos, Bagel_id_ranges ));
+       vector<Index> id_blocks = get_rng_blocks( block_pos, Bagel_id_ranges );
       
        if ( !(Tens->exists(id_blocks)) ) { 
      
@@ -294,7 +294,7 @@ void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<double>
      for ( int ii = 0 ; ii != Bagel_id_ranges.size(); ii++)
        id_pos[ii] = block_offsets->at(ii).at(block_pos.at(ii));
     
-     vector<Index> id_blocks = *(get_rng_blocks( block_pos, Bagel_id_ranges ));
+     vector<Index> id_blocks = get_rng_blocks( block_pos, Bagel_id_ranges );
     
      if ( Tens->exists(id_blocks) ) { 
 
@@ -497,28 +497,16 @@ cout << "Tensor_Arithmetic_Utils::put_ctr_at_front" <<  endl;
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//shared_ptr<vector<Index>>
-//Tensor_Arithmetic_Utils::get_rng_blocks(shared_ptr<vector<int>> block_pos, const vector<IndexRange>& id_ranges) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
-//  cout << "TensOp_Computer::get_rng_blocks " << endl;
-//#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  shared_ptr<vector<Index>> id_blocks = make_shared<vector<Index>>(block_pos->size());
-//  for( int ii =0; ii != block_pos->size(); ii++ ) 
-//     id_blocks->at(ii) = id_ranges[ii].range(block_pos->at(ii));
- // return id_blocks;
-//}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<Index>>
+vector<Index>
 Tensor_Arithmetic_Utils::get_rng_blocks( const vector<int>& block_pos, const vector<IndexRange>& id_ranges) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
   cout << "TensOp_Computer::get_rng_blocks " << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<vector<Index>> id_blocks = make_shared<vector<Index>>(block_pos.size());
+  vector<Index> id_blocks(block_pos.size());
   for( int ii =0; ii != block_pos.size(); ii++ ) 
-     id_blocks->at(ii) = id_ranges[ii].range(block_pos[ii]);
+     id_blocks[ii] = id_ranges[ii].range(block_pos[ii]);
   return id_blocks;
 }
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -532,8 +520,10 @@ cout << "TensOp_Computer::get_num_index_blocks" << endl;
   vector<int> num_id_blocks_vec(rngvec.size()); 
   vector<int>::iterator iter = num_id_blocks_vec.begin();
 
-  for( IndexRange id_rng : rngvec ) 
-     *iter++ = id_rng.range().size()-1;
+  for( IndexRange& id_rng : rngvec ){
+     *iter = id_rng.range().size()-1;
+      ++iter;
+  }
 
   return num_id_blocks_vec;
 }

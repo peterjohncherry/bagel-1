@@ -15,7 +15,7 @@ namespace Tensor_Arithmetic_Utils {
      std::shared_ptr<std::vector<int>> get_Tens_strides ( std::vector<int>& range_sizes);
      std::shared_ptr<std::vector<int>> get_Tens_strides_column_major( std::vector<int>& range_sizes); 
  
-     std::shared_ptr<std::vector<SMITH::Index>>
+     std::vector<SMITH::Index>
      get_rng_blocks(const std::vector<int>& block_pos, const std::vector<SMITH::IndexRange>& id_ranges);
 
      std::vector<int>  get_num_index_blocks_vec(std::vector<SMITH::IndexRange>& rngvec);
@@ -115,6 +115,26 @@ namespace Tensor_Arithmetic_Utils {
        for( int ii = 0; ii != origvec->size(); ii++ )
           newvec->at(ii) = origvec->at(neworder->at(ii));
        return newvec;
+     };
+
+     template<class vtype>
+     std::vector<vtype> inverse_reorder_vector(const std::vector<int>& neworder, const std::vector<vtype>& origvec ) {
+
+     std::vector<vtype> newvec(origvec.size());
+     typename std::vector<vtype>::const_iterator ov_it = origvec.begin();
+     for( std::vector<int>::const_iterator no_it = neworder.begin(); no_it != neworder.end(); ov_it++, no_it++ )
+       newvec[*no_it] = *ov_it;
+     return newvec;
+     };
+
+     template<class vtype>
+     std::vector<vtype> reorder_vector(const std::vector<int>& neworder , const std::vector<vtype>& origvec ) {
+
+     std::vector<vtype> newvec(origvec.size());
+     typename std::vector<vtype>::iterator nv_it = newvec.begin();
+     for( std::vector<int>::const_iterator no_it = neworder.begin(); no_it != neworder.end(); nv_it++, no_it++ )
+       *nv_it = origvec[*no_it];
+     return newvec;
      };
 
 }

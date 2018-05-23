@@ -109,7 +109,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::convert_Dvec_sigma_to_tensor(
   auto boffset = [&block_offsets, &block_pos]( int pos ){ return block_offsets->at(pos).at(block_pos.at(pos)); }; 
   do {
       
-    vector<Index> sigma_id_blocks = *(get_rng_blocks( block_pos, *sigma_ranges ));
+    vector<Index> sigma_id_blocks = get_rng_blocks( block_pos, *sigma_ranges );
     int block_size = sigma_id_blocks[0].size();
     int orb_pos = 0;
     //TODO check: starts at one because ci_index is the first index, although do not understand  how this was working before
@@ -174,7 +174,7 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::get_gammaN_from_sigmaN( share
   auto boffset = [&block_offsets, &block_pos]( int pos ){ return block_offsets->at(pos).at(block_pos.at(pos)); }; 
   do {
       
-    vector<Index> gammaN_id_blocks = *(get_rng_blocks( block_pos, *gammaN_ranges ));
+    vector<Index> gammaN_id_blocks = get_rng_blocks( block_pos, *gammaN_ranges );
     int block_size = 1 ;
     int orb_pos = 0;
     for ( int  ii = 0 ; ii != order; ii++ ){

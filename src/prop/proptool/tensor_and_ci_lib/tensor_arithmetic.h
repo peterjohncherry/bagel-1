@@ -70,10 +70,7 @@ class Tensor_Arithmetic {
 
      //Note the reordering assums column major ordering
      static std::unique_ptr<DataType[]>
-     reorder_tensor_data( const DataType* orig_data,
-                          std::shared_ptr<std::vector<int>> new_order_vec,
-                          std::shared_ptr<std::vector<SMITH::Index>> orig_index_blocks ) ;
-
+     reorder_tensor_data( const DataType* orig_data,  std::vector<int>& new_order_vec, std::vector<SMITH::Index>& orig_index_blocks ) ;
 
      static std::unique_ptr<DataType[]>
      get_block_of_data( DataType* data_ptr , std::shared_ptr<std::vector<SMITH::IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos) ;
