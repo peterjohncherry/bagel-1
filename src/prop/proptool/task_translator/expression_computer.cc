@@ -140,16 +140,12 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
               if ( first_a_contrib ) {  
                 first_a_contrib = false;
                 shared_ptr<vector<string>> buff = a_contrib->a_block_ranges();
-                vector<int>::iterator io_it =  a_contrib->id_order(0).begin();
-                print_vector( a_contrib->id_order(0), "a_contrib->id_order(0)" ); cout << endl;
-                
-
+                vector<int> aid_order = a_contrib->id_orders().front();
+                vector<int>::iterator aio_it = aid_order.begin();
                 shared_ptr<vector<string>> pagc_ranges = make_shared<vector<string>>(buff->size()) ;
-                for ( vector<string>::iterator pagcr_it = pagc_ranges->begin(); pagcr_it != pagc_ranges->end() ; pagcr_it++, io_it++ )
-                  *pagcr_it = buff->at( *io_it ) ;
-
-
-                print_vector( *pagc_ranges, "pagc_ranges" ); cout << endl;
+                for ( vector<string>::iterator pagcr_it = pagc_ranges->begin(); pagcr_it != pagc_ranges->end() ; pagcr_it++, aio_it++ )
+                  *pagcr_it = buff->at( *aio_it ) ;
+               
                 pre_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( pagc_ranges ) ) );
                 pre_a_gamma_contraction_data->allocate();
                 pre_a_gamma_contraction_data->zero(); 
@@ -161,7 +157,6 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
               TensOp_Machine->Calculate_CTP( *a_contrib );
 
               for ( int qq = 0 ; qq != a_contrib->id_orders().size(); qq++){
-
                 
                 shared_ptr<Tensor_<DataType>> a_contrib_reordered = TensOp_Machine->reorder_block_Tensor( a_contrib_name, make_shared<vector<int>>(a_contrib->id_order(qq)) );
                 pre_a_gamma_contraction_data->ax_plus_y( (DataType)(a_contrib->factor(qq).first), a_contrib_reordered );
