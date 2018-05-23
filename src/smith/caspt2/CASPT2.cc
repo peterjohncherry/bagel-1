@@ -31,7 +31,7 @@
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
-#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
+//#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 
 using namespace std;
 using namespace bagel;
@@ -201,7 +201,7 @@ void CASPT2::CASPT2::solve() {
     n = init_residual();
     shared_ptr<Queue> normq = make_normq(false, true);
     shared_ptr<Tensor_<double>> Dummy = t2all_[0]->at(0)->clone();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems(Dummy , 1.0  );
+//    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems(Dummy , 1.0  );
     t2 = Dummy;
     cout << "set t2all" << endl;
     while(!normq->done())
@@ -230,7 +230,7 @@ void CASPT2::CASPT2::solve() {
     shared_ptr<Tensor> h1_buff = make_shared<Tensor>(*h1_);
     shared_ptr<Tensor> v2_buff =v2_->copy();
     shared_ptr<Tensor> v2_buff_buff = v2_->copy();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_buff, 1.0);
+  //  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_buff, 1.0);
     //v2_ = H_2el_;
     h1_->zero();
 
@@ -261,23 +261,23 @@ void CASPT2::CASPT2::solve() {
     shared_ptr<vector<int>> normal_to_smith_order3 = make_shared<vector<int>>( vector<int> { 2, 1, 3, 0} ); // ++-- -> -+-+   
     shared_ptr<vector<int>> normal_to_smith_order4 = make_shared<vector<int>>( vector<int> { 3, 1, 2, 0} ); // ++-- -> -+-+   //full conj
     
-    shared_ptr<Tensor_<double>> RTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvaa));
-    shared_ptr<Tensor_<double>> YTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvcc));
-    shared_ptr<Tensor_<double>> ZTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvac));
-    shared_ptr<Tensor_<double>> PTens = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vvac), 1.0);
+    shared_ptr<Tensor_<double>> RTens;// = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvaa));
+    shared_ptr<Tensor_<double>> YTens;//= Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvcc));
+    shared_ptr<Tensor_<double>> ZTens;// = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvac));
+    shared_ptr<Tensor_<double>> PTens;// = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vvac), 1.0);
 
     vector<IndexRange> t2_id_ranges =  t2all_[0]->at(0)->indexrange();  
     shared_ptr<vector<IndexRange>> t2_id_ranges_ptr =  make_shared<vector<IndexRange>>(t2_id_ranges);  
     shared_ptr<Tensor_<double>> t2_one = t2all_[0]->at(0)->clone();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one, 1.0);
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_, 1.0);
+//    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one, 1.0);
+//    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_, 1.0);
     shared_ptr<MultiTensor> sist = make_shared<MultiTensor>(1);
   
     cout << " v2_->norm() = " << v2_->norm() << endl;
     cout << " t2_one->norm() = " << t2_one->norm() << endl;
 
     {
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_, 1.0);
+//    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_, 1.0);
     cout << "new v2_->norm() = " << v2_->norm() << endl;
     shared_ptr<MultiTensor> sist = make_shared<MultiTensor>(1);
     set_rdm( 0, 0 );
@@ -293,7 +293,7 @@ void CASPT2::CASPT2::solve() {
     {
     v2_->zero();
     cout << "v2_buff->norm() = " << v2_buff->norm() << endl;
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( v2_buff, v2_, avav );
+//    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( v2_buff, v2_, avav );
     cout << "avav v2_->norm() = " << v2_->norm() << endl;
     set_rdm(0, 0);
     s = init_residual();
@@ -307,7 +307,7 @@ void CASPT2::CASPT2::solve() {
     {
     v2_->zero();
     cout << "v2_buff->norm() = " << v2_buff->norm() << endl;
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( v2_buff, v2_, cvcv );
+//    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( v2_buff, v2_, cvcv );
     cout << "cvcv v2_->norm() = " << v2_->norm() << endl;
     set_rdm(0, 0);
     s = init_residual();
@@ -321,7 +321,7 @@ void CASPT2::CASPT2::solve() {
     {
     v2_->zero();
     cout << "v2_buff->norm() = " << v2_buff->norm() << endl;
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( v2_buff, v2_, avcv );
+//    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( v2_buff, v2_, avcv );
     cout << "avcv v2_->norm() = " << v2_->norm() << endl;
     set_rdm(0, 0);
     s = init_residual();

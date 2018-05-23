@@ -6,108 +6,65 @@
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
 #include <src/prop/proptool/algebraic_manipulator/a_contrib_info.h>
 
-template<typename DataType> 
-class BraKet{
-     private : 
-       std::string name_;
+class BraKet_Base{
+  protected : 
+    std::string name_;
 
-     public :
-       const std::vector<std::string> op_list_;
-       const std::vector<char> op_trans_list_;
-       const std::shared_ptr<std::vector<std::vector<int>>> op_state_ids_;
-       const DataType factor_;
-       const int bra_num_;
-       const int ket_num_;
-       const std::string type_ ; // should be "ci_deriv" or "full" 
-       const std::string multiop_name_;
-       const bool proj_op_;        
-       const std::string proj_op_name_;        
-       bool projected_bra_;
-       bool projected_ket_;
+  public :
+    std::vector<std::string> op_list_;
+    std::vector<char> op_trans_list_;
+    std::shared_ptr<std::vector<std::vector<int>>> op_state_ids_;
+    int bra_num_;
+    int ket_num_;
+    std::string type_ ; // full, orb, ci 
+    std::string multiop_name_;
+    bool proj_op_;        
+    bool projected_bra_;
+    bool projected_ket_;
+    bool orb_exc_deriv_;
 
-       std::vector<int> op_order_;
-       std::shared_ptr<TensOp_Base> Total_Op_;
+    std::pair<double,double> factor_;
+    std::pair<double,double> ReIm_factors_;
+   
+    std::vector<int> op_order_;
+    std::shared_ptr<TensOp_Base> Total_Op_;
+   
+    std::shared_ptr<Op_Info> multiop_info_;
+   
+    BraKet_Base( std::shared_ptr<Op_Info> multiop_info, std::pair<double, double> factor, int bra_num, int ket_num, std::string type);
+  
+   ~BraKet_Base(){};
 
-       BraKet( std::vector<std::string>& op_list, std::vector<char>& op_trans_list,
-               DataType factor, int bra_num, int ket_num, 
-               std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type) :
-               op_list_(op_list), op_trans_list_(op_trans_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
-               op_state_ids_(op_state_ids), type_(type), 
-               multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))),
-               proj_op_(false) {
+    std::string bk_name() { return name_ ; } 
+    std::string name() { return name_ ; } 
+    std::pair<double,double> factor() const { return factor_ ; } 
 
-                 if (type_[0] == 'c' )// checking if derivative  
-                   name_ = "c_{I}"; 
-                 
-                 name_ = "<" + std::to_string(bra_num)+ "| ";
-               
-                 for ( int ii = 0 ; ii != op_list_.size(); ii++ ) {
-                   name_ += op_list_[ii] ;
-                   if (op_state_ids_->at(ii).size() > 0 ) {
-                     name_ +=  "^{"; 
-                     for( int jj = 0; jj != op_state_ids_->at(ii).size(); jj++ ) 
-                       name_ += std::to_string(op_state_ids_->at(ii)[jj]); 
-                     name_ += "}"; 
-                   }
-                 }
-                 name_ += " |"+ std::to_string(ket_num) + ">";
-               
-                 op_order_ = std::vector<int>(op_list.size());
-                 iota( op_order_.begin(), op_order_.end(), 0);
-                 sort( op_order_.begin(), op_order_.end(), [ &op_list ] ( int i1, int i2) { return (bool)( op_list[i1] < op_list[i2]); });  
-                 WickUtils::print_vector( op_list, "op_list" ); std::cout << std::endl; 
-                 WickUtils::print_vector( op_order_, "op_order" ); std::cout << std::endl; 
-           
-                 projected_bra_ = false;
-                 projected_ket_ = false;
-               }; 
 
-       BraKet( std::vector<std::string>& op_list, std::vector<char>& op_trans_list, DataType factor, int bra_num, int ket_num, 
-               std::shared_ptr<std::vector<std::vector<int>>> op_state_ids, std::string type,
-               std::string proj_op_name) :
-               op_list_(op_list), op_trans_list_(op_trans_list), factor_(factor), bra_num_(bra_num), ket_num_(ket_num),
-               op_state_ids_(op_state_ids), type_(type),
-               multiop_name_(std::accumulate(op_list_.begin(), op_list_.end(), std::string(""))),
-               proj_op_(true), proj_op_name_(proj_op_name) {
+    std::shared_ptr<std::vector<int>> op_order() { return multiop_info_->op_order_; };
+    std::shared_ptr<std::vector<char>> op_trans_list(){ return multiop_info_->transformations_; };
+    std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> op_state_ids() { return multiop_info_->state_ids_list_; };
 
-               if (type_[0] == 'c' )// checking if derivative  
-                 name_ = "c_{I}"; 
+    void print_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> G_to_A_map, bool has_orb_exc );
+
+    virtual void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<TensOp_Base>>> MT_map,                
+                                                      std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> G_to_A_map,
+                                                      std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,
+                                                      std::shared_ptr<StatesInfo_Base> target_states,
+                                                      std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks,
+                                                      std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map ) {
+                                                        throw std::logic_error("Should only be called from Braket_Full; you are now calling from BraKet_Base");} 
  
-               name_ = "<" + std::to_string(bra_num)+ "| ";
-               
-                 for ( int ii = 0 ; ii != op_list_.size(); ii++ ) {
-                   name_ += op_list_[ii] ;
-                   if (op_state_ids_->at(ii).size() > 0 ) {
-                     name_ +=  "^{"; 
-                     for( int jj = 0; jj != op_state_ids_->at(ii).size(); jj++ ) 
-                       name_ += std::to_string(op_state_ids_->at(ii)[jj]); 
-                     name_ += "}"; 
-                   }
-                 }
-                 name_ += " |"+ std::to_string(ket_num) + ">";
-                  
-                 projected_bra_ = false;
-                 projected_ket_ = false;
-               }; 
+    virtual void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string, std::shared_ptr<TensOp_Base>>> MT_map,                
+                                              std::shared_ptr<std::map<std::string,
+                                                              std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> >> block_G_to_A_map,
+                                              std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,
+                                              std::shared_ptr<StatesInfo_Base> target_states,
+                                              std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks,
+                                              std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map ) {
+                                                throw std::logic_error("Should only be called from Braket_OrbExcDeriv; you are now calling from BraKet_Base");} 
 
-      ~BraKet(){};
-
-
-       std::string bk_name() { return name_ ; } 
-       std::string name() { return name_ ; } 
-       DataType factor() const { return factor_ ; } 
-
-      // void add_required_tens_block( std::string block_name ) { required_blocks.emplace( block_name ); } 
-      // std::shared_ptr<std::set<std::string>> required_blocks( std::string block_name ) { required_blocks.emplace( block_name ); } 
-
-       void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<TensOp_Base>>> MT_map,                
-                                                 std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> >>>> G_to_A_map,
-                                                 std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo >>> gamma_info_map,
-                                                 std::shared_ptr<StatesInfo<DataType>> target_states,
-                                                 std::shared_ptr<std::set<std::string>> required_blocks );         
-       
-      void print_gamma_Atensor_contractions(std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo> >>>> G_to_A_map,
-		                                        bool has_orb_exc );
+    virtual std::string target_op(){ throw std::logic_error( "No operator is defined unless OrbExcDeriv" ); return "!!!";  }
 
 };
+
 #endif

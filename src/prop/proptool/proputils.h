@@ -18,24 +18,22 @@
 #include <numeric>
 #include <complex> 
 #include <cassert>
+#include <functional>
+#include <cctype>
 namespace WickUtils {  
-
-  using delta_ints = std::vector<std::vector<std::pair<int,int>>>;
-  using delta_strs = std::vector<std::vector<std::pair<std::string,std::string>>>;
-  using delta_bools = std::vector<std::vector<std::pair<bool,bool>>>;
-
-  using vv_ints  = std::vector< std::vector<int> >;
-  using vv_strs  = std::vector< std::vector<std::string> >;
-  using vv_bools = std::vector< std::vector<bool> >;
 
   using pint_vec = std::vector<std::pair<int,int>>;
   using pstr_vec = std::vector<std::pair<std::string,std::string>>;
   using pbool_vec = std::vector<std::pair<bool,bool>>;
  
-  //routines for mimicking for loop of arbitrary depth
+  // routines for mimicking for loop of arbitrary depth
+  // TODO TRIM THIS DOWN !!! you can't need all of these
   void fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max ) ;
+
   bool fvec_cycle_test(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max ) ;
+
   bool fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max , std::shared_ptr<std::vector<int>> min) ;
+
   bool constrained_fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max) ;
  
   bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max,
@@ -49,10 +47,17 @@ namespace WickUtils {
   bool fvec_cycle_skipper_f2b(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max,
                               std::shared_ptr<std::vector<int>> min ) ;
 
+  bool fvec_cycle_skipper_f2b( std::vector<int>& forvec, std::vector<int>& max , std::vector<int>& min );
+
+  bool fvec_cycle_skipper( std::vector<int>& forvec, std::vector<int>& max, std::vector<int>& min ); 
+
+  bool fvec_cycle_skipper( std::vector<int>& forvec, std::vector<int>::reverse_iterator max_it, std::vector<int>::reverse_iterator min_it ); 
+
   template<class T1>
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<T1>>>> combgen( std::shared_ptr<std::vector<T1>> invec);
 
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<std::vector<int>> vec1, int NN );
+
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<const std::vector<int>> vec1, int NN );
  
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
@@ -64,8 +69,6 @@ namespace WickUtils {
   std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
   get_unique_pairs(std::shared_ptr< const std::vector<int>> ids1 , std::shared_ptr< const std::vector<int>> ids2 , int num_pairs);
   std::shared_ptr<std::vector<int>> reorder_vector(std::vector<int>& neworder , const std::vector<int>& origvec ) ;
-
-  void print_pvec (pint_vec pvec) ;
 
   std::shared_ptr<std::vector<int>> get_unc_ids_from_deltas_ids_comparison(std::shared_ptr<std::vector<int>> ids , std::shared_ptr<std::vector<std::pair<int,int>>> deltas );
 
@@ -105,16 +108,47 @@ namespace WickUtils {
 
   std::string get_ctp_name( const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges, const std::vector<std::pair<int,int>>& ctrs_pos ); 
 
+  std::string get_ctp_name( const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges );
+
+  std::string get_ctp_name( const std::string op_state_name, const std::vector<std::string>& id_ranges, const std::vector<std::pair<int,int>>& ctrs_pos );
+
+  std::string get_ctp_name( const std::string op_state_name, const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges, const std::vector<std::pair<int,int>>& ctrs_pos );
+
   unsigned int range_to_prime(char range );
   unsigned int range_to_prime_spinfree(char range );
+
+  std::vector<char> strvec_to_chrvec( const std::vector<std::string>& strvec );
+ 
+  std::vector<std::string> chrvec_to_strvec( const std::vector<char>& chrvec );
+
+  unsigned int get_block_hash( const std::vector<std::string>&  block  );
+
+  void pair_fac_mult( const std::pair<double,double>& factor_fixed , std::pair<double,double>& factor_changing );
+
+  std::shared_ptr<std::vector<int>> get_ascending_order( const std::vector<int>& scrambled_vec );
+
+  template<class DataType>  
+  void reorder_vector_inplace(const std::vector<int>& new_order, std::vector<DataType>& orig_vec ){
+
+  std::vector<DataType> reordered_vec(orig_vec.size());
+  auto rv_it = reordered_vec.begin();
+
+  for( std::vector<int>::const_iterator no_it = new_order.begin(); no_it != new_order.end(); no_it++, rv_it++ )
+     *rv_it = orig_vec[*no_it];
+
+  orig_vec =  std::move(reordered_vec); 
+
+  return;
+  }
+
 
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
     if (name != "" ) 
-      std::cout << name << " ="; 
+      std::cout << name << " ="; std::cout.flush();
     std::cout << " [ ";
     for (auto  elem : invec)
-      std::cout << elem << " " ;
+      std::cout << elem << " " ; std::cout.flush();
     std::cout << "]  " ;
     return;
   }
@@ -122,11 +156,11 @@ namespace WickUtils {
   template<class T1, class T2  >
   void print_pair_vector(std::vector<std::pair<T1,T2>> invec, std::string name =""){
     if (name != "" ) 
-      std::cout << name << " ="; 
+      std::cout << name << " =";  std::cout.flush();
     std::cout << " [ ";
     for (auto  elem : invec)
       std::cout << "(" << elem.first << "," << elem.second << ") ";
-    std::cout << "]  " ;
+    std::cout << "]  " ; std::cout.flush();
     return;
   }
 
@@ -185,6 +219,20 @@ namespace WickUtils {
     return dereffed_vec;
   }
 
+  struct CI_Sector_Hasher
+  {
+    const size_t max_ao_range_prime = 1029; // to ensure no CI range is givent the same number as a orbital range, set after ops read in, but leave this for now
+
+    std::size_t operator()(std::string const& ci_sector_name) const noexcept
+    {
+         std::size_t ci_sector_hash = 0;
+         do { 
+           ci_sector_hash = std::hash<std::string>{}( ci_sector_name );
+         } while ( ci_sector_hash < max_ao_range_prime ); 
+
+        return ci_sector_hash;
+    }
+  }; 
 
 }
 

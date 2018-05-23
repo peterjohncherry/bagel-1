@@ -3,14 +3,12 @@
 
 using namespace std;
 using namespace bagel;
-using namespace Symmetry_Operations;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-PropTool::PropTool::PropTool(shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, shared_ptr<const Reference> r): 
-                   idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
+PropTool::PropTool::PropTool( shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, shared_ptr<const Reference> r ): 
+                              idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "PropTool::PropTool::PropTool" << endl;
-  cout << " std::numeric_limits<unsigned long>::max() =  " <<  std::numeric_limits<unsigned long>::max() <<  endl;
 
   // sort out how to determine datatype!!
   inp_factor_map_ = make_shared<map<string, double>>();
@@ -86,18 +84,14 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
 
   system_computer_ = make_shared<System_Computer::System_Computer<double>>(sys_info_, moint_computer, range_conversion_map_, gamma_computer );
 
-  cout << "initialized sys_info" << endl;
   shared_ptr< const PTree > ops_def_tree = idata_->get_child_optional( "operators" ) ;
   if (ops_def_tree)
     get_new_ops_init( ops_def_tree ); 
-  cout << "got ops_init" << endl;
 
   // Getting info about target expression (this includes which states are relevant)
   get_terms_init( idata_->get_child( "terms" ) ); 
-  cout << "got terms_init" << endl;
 
   get_equations_init( idata_->get_child( "equations" ) );
-  cout << "got equations_init" << endl;
 
   return;
 }
@@ -111,6 +105,7 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
 
   //Initializing range sizes either from idate or reference wfn 
   maxtile_   = idata_->get<int>("maxtile", 10);
+
   //cimaxtile_ = idata_->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
   cimaxtile_ = 100000; //TODO fix this so it uses the above statement, issue in b_gamma_computer means must use large cimaxblock for now
 
@@ -122,9 +117,9 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   if (nfrozenvirt_)
     cout << "    * freezing " << nfrozenvirt_ << " orbital" << (nfrozenvirt_^1 ? "s" : "") << " (virtual)" << endl;
 
-  nclosed_  = idata_->get<int>( "nclosed" , ref_->nclosed()); cout << " nclosed_ = " <<  nclosed_  << endl;
-  nact_     = idata_->get<int>( "nact"  , ref_->nact());      cout << " nact_    = " <<  nact_  << endl;
-  nvirt_    = idata_->get<int>( "nvirt" , ref_->nvirt());     cout << " nvirt_   = " <<  nvirt_  << endl;
+  nclosed_  = idata_->get<int>( "nclosed" , ref_->nclosed());
+  nact_     = idata_->get<int>( "nact"  , ref_->nact());
+  nvirt_    = idata_->get<int>( "nvirt" , ref_->nvirt());
   nocc_     = nclosed_ + nact_; 
   nfrozenvirt_ = idata_->get<int>( "nfrozenvirt", 0 );
 
@@ -238,9 +233,9 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
 
   // keep this so you don't have to get names correct, needs modification for spin case
   auto conv_to_range = []( string rng ) {
-           if( rng[0] == 'c' ) return "cor";
-           if( rng[0] == 'a' ) return "act";
-           if( rng[0] == 'v' ) return "vir";
+           if( rng[0] == 'c' ) return "c";
+           if( rng[0] == 'a' ) return "a";
+           if( rng[0] == 'v' ) return "v";
       };
 
   //TODO  add in user defined ranges (not just on the operators; actual range extents using orbital numbers
@@ -276,11 +271,11 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
     string                             TimeSymm = op_def_inp->get<string>( "TimeSymm", "none" );
     bool                               hconj = conv_to_bool(op_def_inp->get<int>( "HermConj", false ));
       
-    vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> symmfuncs =  Symmetry_Operations::identity_only() ; // TODO define this by list of pairs of vectors
-    vector<bool(*)(shared_ptr<vector<string>>)> constraints = { &Symmetry_Operations::always_true };  // TODO define this by list of vectors 
+    vector<shared_ptr<Transformation>> symmfuncs(0);
+    vector<shared_ptr<Constraint>> constraints(0);
     
     cout << "user defined op name : " << op_name << endl;
-    shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp( op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep); 
+    shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp(op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep);
     sys_info_->MT_map()->emplace( op_name, new_op );
 
   }
@@ -309,7 +304,6 @@ void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_de
   }
   return;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_equation_init_Value( shared_ptr<const PTree> equation_inp ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -332,12 +326,14 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
   string expression_type = "full"; 
   for (auto& term_info: *expression_def) {
      
-    string term_name = term_info->get<string>( "term" );
+    string term_name   = term_info->get<string>( "term" );
+    string term_type   = term_info->get<string>( "type" );
     string term_factor = term_info->get<string>( "factor" );
-    shared_ptr<Term_Init> new_term_init = term_init_map_->at(term_name);
-
-    if ( new_term_init->orbital_projector_ )
+    
+    if (term_type[0] == 'o' )
       expression_type = "orb_excitation_derivative"; 
+    
+    shared_ptr<Term_Init> new_term_init = term_init_map_->at(term_name);
 
     term_list->push_back(make_pair(term_factor, new_term_init));
 
@@ -346,8 +342,7 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
     for (auto& index_info : *indexes_ptree){
       string id_name = index_info->get<string>("name"); 
       string id_range = index_info->get<string>("range");
-       
-      bool   id_sum =  index_info->get<bool>("sum", false );
+      bool id_sum =  index_info->get<bool>("sum", false );
       term_idrange_map->emplace( id_name, make_pair(id_sum, id_range));
     }
 
@@ -374,40 +369,38 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   string eqn_target = equation_inp->get<string>( "target" );
   auto target_indices = make_shared<vector<string>>(0);
   auto ti_ptree = equation_inp->get_child("target indexes"); // Must solve for all "target" with these indices
-  
-  for (auto& si : *ti_ptree) 
+
+  for (auto& si : *ti_ptree)
     target_indices->push_back( lexical_cast<string>(si->data()));
-  
+
   auto term_list = make_shared<vector<pair<string,shared_ptr<Term_Init>>>>();
   auto term_idrange_map_list = make_shared<vector<shared_ptr<map<string,pair<bool,string>>>>>();
   auto expressions_inp = equation_inp->get_child( "expression" );
-  auto expression_init_list  = make_shared<vector<shared_ptr<Expression_Init>>>(); 
+  auto expression_init_list  = make_shared<vector<shared_ptr<Expression_Init>>>();
   string expression_type = "full";
-  for ( auto& expression_def : *expressions_inp ) { 
+  for ( auto& expression_def : *expressions_inp ) {
     for ( auto& term_info : *expression_def) {
   
       string term_name = term_info->get<string>( "term" );
       string term_factor = term_info->get<string>( "factor" );
       cout << "term_name = " << term_name << endl;
-      
-      shared_ptr<Term_Init> term_init = term_init_map_->at(term_name); 
+
+      shared_ptr<Term_Init> term_init = term_init_map_->at(term_name);
       if ( term_init->orbital_projector_ )
-        expression_type = "orb_excitation_derivative"; 
-      term_list->push_back(make_pair(term_factor, term_init ));
-      
+        expression_type = "orb_excitation_derivative";
+
+      term_list->push_back( make_pair(term_factor, term_init ) );
       auto term_idrange_map = make_shared<map<string, pair<bool,string>>>();
-      auto indexes_ptree =  term_info->get_child("indexes"); 
+      auto indexes_ptree =  term_info->get_child("indexes");
       for (auto& index_info : *indexes_ptree){
-        string id_name = index_info->get<string>("name"); 
+        string id_name = index_info->get<string>("name");
         string id_range = index_info->get<string>("range");
-         
+
         bool   id_sum =  index_info->get<bool>("sum", false );
         term_idrange_map->emplace( id_name, make_pair(id_sum, id_range));
       }
-      
       term_idrange_map->emplace( "none" , make_pair( false, "none" ) ); // TODO sort a better way of dealing with this case 
       term_idrange_map_list->push_back( term_idrange_map );     
-      
     }
     //TODO clean up these classes, names are confusing; initialization is badly scrambled due to changes in how to deal with indexes and varying term
     //     types in the expression_computer. 
@@ -484,13 +477,9 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
       braket_list->push_back( BraKet_Init( bk_ops, bra_index, bra_index_ptr, ket_index, ket_index_ptr ));
     }
    
-    shared_ptr<Term_Init> new_term; 
-    if ( term_type == "orbital projector" ) {
-      string proj_op_name = term_inp->get<string>( "projection op" , "X" );
-      new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map, proj_op_name );  
-    } else { 
-      new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map );  
-    }
+    shared_ptr<Term_Init>  new_term = make_shared<Term_Init>( term_name, term_type, braket_list, braket_factors, id_val_map); 
+    if ( term_type == "orb" ) 
+      new_term->proj_op_name_ = term_inp->get<string>( "target op" , "X" );
 
     term_init_map_->emplace( term_name, new_term );
   }
@@ -514,9 +503,9 @@ cout << "PropTool::PropTool::set_ao_range_info" << endl;
   not_active_rng_  = make_shared<SMITH::IndexRange>(*closed_rng_); not_active_rng_->merge(*virtual_rng_);
   not_virtual_rng_ = make_shared<SMITH::IndexRange>(*closed_rng_); not_virtual_rng_->merge(*active_rng_);
 
-  range_conversion_map_->emplace("cor", closed_rng_); 
-  range_conversion_map_->emplace("act", active_rng_);
-  range_conversion_map_->emplace("vir", virtual_rng_);
+  range_conversion_map_->emplace("c", closed_rng_); 
+  range_conversion_map_->emplace("a", active_rng_);
+  range_conversion_map_->emplace("v", virtual_rng_);
   range_conversion_map_->emplace("free", free_rng_);
  
   range_conversion_map_->emplace("notcor", not_closed_rng_);
@@ -561,55 +550,53 @@ cout << "PropTool::PropTool::set_ci_range_info" << endl;
  
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
+void  PropTool::PropTool::identify_degeneracies( const vector<double>& energies ) {
+//////////////////////////////////////////////////////////////////////////////////////////////
+  cout << "void PropTool::PropTool::set_target_state_info()" << endl;
+
+  int state_num = 0;
+  double energy_buff = energies.front();
+  degenerate_states_ = vector<vector<int>>(0);
+ 
+  if ( energies.size() > 1 ) {
+    vector<int> degenerate_set(0); 
+    for ( vector<double>::const_iterator e_it = (energies.begin()+1) ; e_it != energies.end(); e_it++, state_num++ ) {
+      if ( ( abs(energy_buff - *e_it) > 0.0000001 ) || ( e_it == energies.end() ) ) {
+        degenerate_states_.push_back(degenerate_set);
+        degenerate_set = vector<int>(0); 
+      } else {
+        degenerate_states_.push_back( degenerate_set );
+      }
+    }
+  }
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::set_target_state_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////
 cout << "PropTool::PropTool::set_target_info" << endl;
   targets_info_ = make_shared<StatesInfo<double>> ( target_states_ ) ;
 
-  bool spinfree = false;
-  if (!spinfree ) {
+  for ( int state_num : target_states_ ){ 
+     shared_ptr<map<char,int>> elec_range_map = make_shared<map<char,int>>(); 
+     elec_range_map->emplace('c', nclosed_ - ncore_);
+     elec_range_map->emplace('C', nclosed_ - ncore_);
+     elec_range_map->emplace('A', civectors_->data(state_num)->det()->nelea());
+     elec_range_map->emplace('a', civectors_->data(state_num)->det()->neleb());
+     elec_range_map->emplace('v', 0 );
+     elec_range_map->emplace('V', 0 );
+  
+     shared_ptr<map<char,int>> hole_range_map = make_shared<map<char,int>>(); 
+     hole_range_map->emplace('c', 0);
+     hole_range_map->emplace('C', 0);
+     hole_range_map->emplace('a', nact_ - civectors_->data(state_num)->det()->nelea() );
+     hole_range_map->emplace('A', nact_ - civectors_->data(state_num)->det()->neleb() );
+     hole_range_map->emplace('v', 100 ); // TODO this is almost certainly always OK, but should be set properly...
+     hole_range_map->emplace('V', 100 );
 
-    for ( int state_num : target_states_ ){ 
-       shared_ptr<map<char,int>> elec_range_map = make_shared<map<char,int>>(); 
-       elec_range_map->emplace('c', nclosed_ - ncore_);
-       elec_range_map->emplace('C', nclosed_ - ncore_);
-       elec_range_map->emplace('A', civectors_->data(state_num)->det()->nelea());
-       elec_range_map->emplace('a', civectors_->data(state_num)->det()->neleb());
-       elec_range_map->emplace('v', 0 );
-       elec_range_map->emplace('V', 0 );
-    
-       shared_ptr<map<char,int>> hole_range_map = make_shared<map<char,int>>(); 
-       hole_range_map->emplace('c', 0);
-       hole_range_map->emplace('C', 0);
-       hole_range_map->emplace('a', nact_ - civectors_->data(state_num)->det()->nelea() );
-       hole_range_map->emplace('A', nact_ - civectors_->data(state_num)->det()->neleb() );
-       hole_range_map->emplace('v', 100 ); // TODO this is almost certainly always OK, but should be set properly...
-       hole_range_map->emplace('V', 100 );
-
-       targets_info_->add_state( nact_, civectors_->data(state_num)->det()->nelea() + civectors_->data(state_num)->det()->neleb(), state_num,
-                                 elec_range_map, hole_range_map); 
-    }
-
-  } else {
-
-    for ( int state_num : target_states_ ){ 
-       shared_ptr<map<char,int>> elec_range_map = make_shared<map<char,int>>(); 
-       elec_range_map->emplace('c', nclosed_ - ncore_);
-       elec_range_map->emplace('a', civectors_->data(state_num)->det()->nelea());
-       elec_range_map->emplace('A', civectors_->data(state_num)->det()->neleb());
-       elec_range_map->emplace('v', 0 );
-    
-       shared_ptr<map<char,int>> hole_range_map = make_shared<map<char,int>>(); 
-       hole_range_map->emplace('c', 0);
-       hole_range_map->emplace('a', nact_ - civectors_->data(state_num)->det()->nelea() );
-       hole_range_map->emplace('A', nact_ - civectors_->data(state_num)->det()->neleb() );
-       hole_range_map->emplace('v', 1000 ); // TODO this is almost certainly always OK, but should be set properly...
-      
-
-       targets_info_->add_state( nact_, civectors_->data(state_num)->det()->nelea() + civectors_->data(state_num)->det()->neleb(), state_num,
-                                 elec_range_map, hole_range_map ); 
-    }
-  } 
+     targets_info_->add_state( nact_, civectors_->data(state_num)->det()->nelea() + civectors_->data(state_num)->det()->neleb(), state_num,
+                               elec_range_map, hole_range_map); 
+  }
 
   cout << "range_prime_map" << endl;  
   for ( auto& elem : *range_prime_map_ ) {

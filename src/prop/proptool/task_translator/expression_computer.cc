@@ -1,5 +1,6 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/task_translator/expression_computer.h>
+#include <src/prop/proptool/debugging_utils.h>
 
 using namespace std;
 using namespace bagel;
@@ -7,40 +8,47 @@ using namespace bagel::SMITH;
 using namespace Tensor_Arithmetic;
 using namespace Tensor_Arithmetic_Utils;
 using namespace WickUtils;
+using namespace Debugging_Utils;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
 Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>>   gamma_computer,
                                                                          shared_ptr<map< string, shared_ptr<Expression<DataType>>>> expression_map,
                                                                          shared_ptr<map< string, shared_ptr<IndexRange>>>           range_conversion_map,
-                                                                         shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    tensop_data_map       ):
-  gamma_computer_(gamma_computer), expression_map_(expression_map), range_conversion_map_(range_conversion_map), tensop_data_map_(tensop_data_map) {
+                                                                         shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    tensop_data_map,
+                                                                         shared_ptr<MOInt_Computer<DataType>> moint_computer ) : 
+  gamma_computer_(gamma_computer), expression_map_(expression_map), range_conversion_map_(range_conversion_map), tensop_data_map_(tensop_data_map),
+  moint_computer_(moint_computer) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
   scalar_results_map = make_shared<map< string, DataType >>(); //TODO dumb, check why not in header and fix  
-
+  tensor_results_map_ = make_shared<map< string, shared_ptr<Tensor_<DataType>>>>(); 
 }  
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( string expression_name ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_EXPRESSION_COMPUTER
   cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : name input : " << expression_name <<  endl;
+#endif
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<Expression<DataType>> expr = expression_map_->at(expression_name); cout << "got " << expression_name << " info "<< endl;
+  shared_ptr<Expression<DataType>> expr = expression_map_->at(expression_name);
+  cout << "got " << expression_name << " info "<< endl;
   evaluate_expression(expr);
   return;
 } 
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( shared_ptr<Expression<DataType>> expression ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression_Computer::Expression_Computer<DataType>::evaluate_expression" << endl; 
+#ifdef __DEBUG_EXPRESSION_COMPUTER
+ cout << "Expression_Computer::Expression_Computer<DataType>::evaluate_expression" << endl; 
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
   
   if ( expression->type_ == "full" ) {
     evaluate_expression_full( expression );
  
-  } else if ( expression->type_ == "orbital_excitation_derivative") {
+  } else if ( expression->type_ == "orb") {
     evaluate_expression_orb_exc_deriv( expression );
   
   } else { 
@@ -52,54 +60,176 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( sh
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb_exc_deriv( shared_ptr<Expression<DataType>> expression ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_deriv : " << expression->name() << endl;
+#ifdef __DEBUG_EXPRESSION_COMPUTER 
+cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_deriv : " << expression->name() << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  string expression_name = expression->name();
-  int counter = 0;
+  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
+                                                                                 moint_computer_ );
+//  cout << endl<< "-------------------- Contents of CTP_map ----------------" << endl;
+//  for ( auto& elem : *(expression->CTP_map_) ) 
+//    cout << elem.first << endl;
 
-  bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
-  if ( !new_result )  
-    cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
-
-  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_);
  
-  TensOp_Machine->get_block_Tensor_test( expression->required_blocks_ );
+  TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
+  cout << "num_required_blocks = " << expression->required_blocks_->size() << endl; 
+  for ( auto& elem : *(expression->required_blocks_) ) { cout << elem->name() << " " ;cout.flush(); }
+  cout << endl << endl; 
+ 
+  // define seperate generic name for each of the required blocks in the target tensor.
+  // Copy the results from the contractions into these places in the data map.
+  // Perhaps have seperate field in expression which is map of these blocks; can be removed when we a finished, and helps seperate updates from actual tensor
+  for ( auto& exc_block_G_to_A_map_elem : *(expression->exc_block_G_to_A_map() ) ) {
+ 
+    string target_block_name = exc_block_G_to_A_map_elem.first; 
 
-  //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
-  for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
-    string gamma_name = AG_contrib.first;  cout << " gamma_name  = " << gamma_name << endl; 
-    shared_ptr<Tensor_<DataType>> A_combined_data;
-    // Build A_tensor to hold sums of different A-tensors.
-    if ( gamma_name != "ID" ) {
-      A_combined_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges(expression->gamma_info_map_->at(gamma_name)->id_ranges())) );
+    shared_ptr<Tensor_<DataType>> target_block_data;
+    auto target_block_data_loc = tensor_results_map_->find( target_block_name ); 
+    if ( target_block_data_loc == tensor_results_map_->end() ) {
+      shared_ptr<vector<string>> target_block_ranges = expression->CTP_map_->at(target_block_name)->full_id_ranges();
+      target_block_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( target_block_ranges )));
+      target_block_data->allocate();
+      target_block_data->zero(); 
+      tensor_results_map_->emplace( target_block_name, target_block_data );
+      cout <<  endl << endl << " INIT 1" << target_block_name; cout.flush(); cout<< "->norm() = "; cout.flush(); cout <<  target_block_data->norm() << endl;
     } else {
-      A_combined_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
-    }  
-    A_combined_data->allocate();
-    A_combined_data->zero(); 
-  }
+      target_block_data = target_block_data_loc->second;
+      cout <<  endl << endl << " INIT 2" << target_block_name; cout.flush(); cout<< "->norm() = "; cout.flush(); cout <<  target_block_data->norm() << endl;
+    }
+
+
+    auto G_to_A_map = exc_block_G_to_A_map_elem.second; 
+       
+    for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
+    
+      string gamma_name = AG_contrib.first; 
+      cout << "gamma_name = " << gamma_name << endl;
+       
+      auto final_reorderings_map_loc = G_to_A_map->find( gamma_name );
+      if ( (final_reorderings_map_loc != G_to_A_map->end()) &&  (final_reorderings_map_loc->second->size() != 0) ) {
+
+        // loop over different final reorderings 
+        for ( auto& final_reordering_elem : *(final_reorderings_map_loc->second) ) {     // Loop through different final reorderings.
+
+          shared_ptr<AContribInfo_OrbExcDeriv<DataType>> a_intermediate_info = dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>(final_reordering_elem.second);
+
+          auto gamma_contraction_pos_map = final_reordering_elem.second->gamma_pos_map();
+
+          shared_ptr<Tensor_<DataType>> post_a_gamma_contraction_data;
+          if ( a_intermediate_info->post_gamma_contraction_ranges()->size() > 0 ) {
+            post_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( a_intermediate_info->post_gamma_contraction_ranges() )));
+          } else {
+            throw logic_error (" Expression_Computer::evaluate_expression_orb_exc_deriv : " + expression->name() + " : Should never have fully contracted term; implies all active indexes in excitation operator! Aborting! " );
+          }  
+          post_a_gamma_contraction_data->allocate();
+          post_a_gamma_contraction_data->zero(); 
+
+          // loop over different gamma contraction positions         
+          for ( auto a_contrib_map_elem : *gamma_contraction_pos_map ){ 
+
+            vector<int> gamma_contraction_pos = a_contrib_map_elem.first;
+            vector<int> a_contraction_pos( gamma_contraction_pos.size() );
+            iota( a_contraction_pos.begin(), a_contraction_pos.end(), 0 );
+
+            pair<vector<int>, vector<int>> gamma_a_contractions = make_pair( gamma_contraction_pos, a_contraction_pos ); 
+
+            shared_ptr<Tensor_<DataType>> pre_a_gamma_contraction_data;
+                 
+            //TODO get rid of this hack to find A_block_ranges 
+            bool first_a_contrib = true; 
+            for ( auto& a_contrib_elem : *(a_contrib_map_elem.second) ) {
+                          
+              string  a_contrib_name = a_contrib_elem.first;    
+              cout << "a_contrib_name = " << a_contrib_name <<"   "; cout.flush(); 
+
+              shared_ptr<AContribInfo_Base> a_contrib = a_contrib_elem.second;    
+
+              if ( first_a_contrib ) {  
+                first_a_contrib = false;
+                shared_ptr<vector<string>> buff = a_contrib->a_block_ranges();
+                vector<int> aid_order = a_contrib->id_orders().front();
+                vector<int>::iterator aio_it = aid_order.begin();
+                shared_ptr<vector<string>> pagc_ranges = make_shared<vector<string>>(buff->size()) ;
+                for ( vector<string>::iterator pagcr_it = pagc_ranges->begin(); pagcr_it != pagc_ranges->end() ; pagcr_it++, aio_it++ )
+                  *pagcr_it = buff->at( *aio_it ) ;
+               
+                pre_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( pagc_ranges ) ) );
+                pre_a_gamma_contraction_data->allocate();
+                pre_a_gamma_contraction_data->zero(); 
+              }
+ 
+              if (check_AContrib_factors(*a_contrib))
+                continue;
+
+              TensOp_Machine->Calculate_CTP( *a_contrib );
+
+              for ( int qq = 0 ; qq != a_contrib->id_orders().size(); qq++){
+                
+                shared_ptr<Tensor_<DataType>> a_contrib_reordered = TensOp_Machine->reorder_block_Tensor( a_contrib_name, make_shared<vector<int>>(a_contrib->id_order(qq)) );
+                pre_a_gamma_contraction_data->ax_plus_y( (DataType)(a_contrib->factor(qq).first), a_contrib_reordered );
+
+              }
+            }
+
+            if ( gamma_name != "ID" ) {
+
+              gamma_computer_->get_gamma( gamma_name );
+              shared_ptr<Tensor_<DataType>> gamma_data = gamma_computer_->gamma_data(gamma_name);
+              shared_ptr<Tensor_<DataType>> reordered_tensor_block =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( post_a_gamma_contraction_data, a_intermediate_info->post_contraction_reordering() );
+              shared_ptr<Tensor_<DataType>> tmp_result =   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( gamma_data, pre_a_gamma_contraction_data,  gamma_a_contractions );
+              assert( post_a_gamma_contraction_data->size_alloc() == tmp_result->size_alloc() );
+              post_a_gamma_contraction_data->ax_plus_y( (DataType)(1.0), tmp_result );
+
+            } else {
+             assert ( post_a_gamma_contraction_data->size_alloc() == pre_a_gamma_contraction_data->size_alloc() ) ;
+             post_a_gamma_contraction_data->ax_plus_y( (DataType)(1.0), pre_a_gamma_contraction_data ) ;
+            }
+
+          }
+
+          if ( a_intermediate_info->post_contraction_reordering()->size() == target_block_data->rank() ) {
+            shared_ptr<Tensor_<DataType>> reordered_tensor_block =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( post_a_gamma_contraction_data, a_intermediate_info->post_contraction_reordering() );
+            assert (target_block_data->size_alloc() == reordered_tensor_block->size_alloc() ) ;
+
+            target_block_data->ax_plus_y((DataType)(1.0), reordered_tensor_block );
+
+          } else if ( a_intermediate_info->post_contraction_reordering()->size() != 0 ) { 
+        
+            Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( target_block_data, post_a_gamma_contraction_data, *(a_intermediate_info->target_block_positions()) );
+
+          } else {
+            throw logic_error ("Expression_computer:: should never end up with contribution to target term having rank 1 " ); 
+          }
+        }
+      }
+    }
+  }                  
+  cout << "leaving Expression_Computer::evaluate_expression_orb_exc_deriv" << endl;
   return;  
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_full( shared_ptr<Expression<DataType>> expression ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_EXPRESSION_COMPUTER
 cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : " << expression->name() << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
   string expression_name = expression->name();
   cout << endl << endl;
   cout << " --------- required_blocks ---------" << endl; 
-  for ( string block_name : *(expression->required_blocks()) ) 
-    cout << block_name << endl;
+  for ( std::shared_ptr<Range_Block_Info> block : *(expression->required_blocks_) ) 
+    cout << block->name() << endl;
   cout << endl << endl;
 
   bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
   if ( !new_result )  
     cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
 
-  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_);
+  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
+                                                                                 moint_computer_ );
  
-  TensOp_Machine->get_block_Tensor_test( expression->required_blocks_ );
+  TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
 
   DataType result = 0.0;
   map< string, DataType > g_result_map;
@@ -107,7 +237,8 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
 
-    string gamma_name = AG_contrib.first;  cout << " gamma_name  = " << gamma_name << endl; 
+    string gamma_name = AG_contrib.first; 
+    cout << " gamma_name  = " << gamma_name << endl; 
 
     shared_ptr<Tensor_<DataType>> A_combined_data;
     // Build A_tensor to hold sums of different A-tensors.
@@ -120,12 +251,12 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     A_combined_data->zero(); 
  
     // Loop through A-tensors needed for this gamma
-    auto A_contrib_loc = expression->G_to_A_map_->find( gamma_name );
-    if ( (A_contrib_loc != expression->G_to_A_map_->end()) &&  (A_contrib_loc->second->size() != 0) ) {
-      for ( auto  A_contrib_map_elem : *A_contrib_loc->second ) {
+    auto A_contrib_loc = expression->G_to_A_map()->find( gamma_name );
+    if ( (A_contrib_loc != expression->G_to_A_map()->end()) &&  (A_contrib_loc->second->size() != 0) ) {
+      for ( auto&  A_contrib_map_elem : *A_contrib_loc->second ) {
       
         string  A_contrib_name = A_contrib_map_elem.first;    
-        shared_ptr<AContribInfo> A_contrib = A_contrib_map_elem.second;    
+        shared_ptr<AContribInfo_Base> A_contrib = A_contrib_map_elem.second;    
 
         if (check_AContrib_factors(*A_contrib))
           continue;
@@ -134,18 +265,20 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
         TensOp_Machine->Calculate_CTP( *A_contrib );
 
         if ( gamma_name != "ID" ) {
-          if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) { cout << A_contrib_name << " found in map" << endl;
+          if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) {
 
             for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
               shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
               A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
+
 	      cout << " A_contrib->factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
 	      cout <<  A_contrib->factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
               cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
             }
 
-         } else { cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO is a way to avoid this, implement it
-            
+        } else {
+
+           cout << A_contrib_name << " not found in map; must be formed from direct product" << endl; //TODO is a way to avoid this, implement it
            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
 
               shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
@@ -162,7 +295,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
               shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );//TODO fix so uses piecewise contraction where possible 
               tensop_data_map_->emplace( A_contrib_name, A_contrib_data );
               shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
-              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
+              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered ); //TODO replace with interface function in tensop_computer
 
               cout << " A_contrib->factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
 	      cout <<  A_contrib->factor(qq).first << ", " <<  tensop_data_map_->at(A_contrib_name)->norm() << endl;
@@ -197,7 +330,6 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 	      cout << "A_combined_data->norm() = "<<  A_combined_data->norm() << endl;
             }
           }
-
         }
   
         cout << "added " << A_contrib_name << endl; 
@@ -250,7 +382,10 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::print_AContraction_list(shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list, string A_contrib_name ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_EXPRESSION_COMPUTER
 cout << "Expression_Computer::print_AContraction_list" << endl;  
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
   cout << "=========================================================================================================" << endl;
   cout << A_contrib_name << endl;
   cout << "=========================================================================================================" << endl;
@@ -274,9 +409,12 @@ cout << "Expression_Computer::print_AContraction_list" << endl;
  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
-bool Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors(AContribInfo& AC_info ) {
+bool Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors(AContribInfo_Base& AC_info ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- 
+#ifdef __DEBUG_EXPRESSION_COMPUTER
+cout << "Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors" << endl;
+#endif
+///////////////////////////////////////////////////////////////////////////////////////////////////////
   bool  skip = false;
   for ( int qq = 0 ; qq != AC_info.id_orders().size(); qq++) { 
      if ( AC_info.factor(qq).first != 0 || AC_info.factor(qq).second !=0) { 
@@ -297,7 +435,9 @@ void Expression_Computer::Expression_Computer<DataType>::set_gamma_maps( string 
                                                                          shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    sigma_data_map,
                                                                          shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    civec_data_map  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression_Computer::Expression_Computer<DataType>::set_gamma_maps" << endl;
+#ifdef __DEBUG_EXPRESSION_COMPUTER 
+cout << "Expression_Computer::Expression_Computer<DataType>::set_gamma_maps" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
   gamma_computer_->set_maps(range_conversion_map_, expression_map_->at(expression_name)->gamma_info_map_, gamma_data_map, sigma_data_map, civec_data_map );
   return;

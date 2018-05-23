@@ -41,7 +41,7 @@ cout << "Equation_Computer_LinearRM<DataType>::solve_equation()" << endl;
 
     this->evaluate_term( "residual" , fixed_indexes ); 
     residues = this->get_tensop_vector( "residual", fixed_indexes );
-    pt_amps = this->get_tensop_vector( "pt_amps",  fixed_indexes );
+    pt_amps = this->get_tensop_vector( "pt_amps",  fixed_indexes ); //TODO Wrong, or bad name; this is the update
     denom = this->get_tensop_vector( "denom" , fixed_indexes );
 
     if ( residues->rms() < 1.0e-15) {

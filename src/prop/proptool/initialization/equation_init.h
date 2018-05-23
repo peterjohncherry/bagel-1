@@ -3,7 +3,8 @@
 
 #include <src/global.h>
 #include <src/prop/proptool/initialization/op_bk_term_expr_init.h>
-#include <src/prop/proptool/algebraic_manipulator/braket.h>
+#include <src/prop/proptool/algebraic_manipulator/braket_full.h>
+#include <src/prop/proptool/algebraic_manipulator/braket_orb_exc_deriv.h>
 // Equation_Init constructs the expressions necessary for evaluation of the equation
 // specified in the user input.
 // The "master expression" is the expression with variables for indexes.
@@ -37,9 +38,11 @@ class Equation_Init_Base {
                          name_(name), type_(type),  master_expression_list_(master_expression_list),
                          range_map_(range_map) {};
 
-
      ~Equation_Init_Base(){};
 
+     std::shared_ptr<MultiOp_Info>
+     get_operator_info( std::vector<std::string>& op_list, std::vector<char>& op_trans_list,
+                        std::shared_ptr<std::vector<std::vector<int>>> op_state_ids );
 
      virtual void initialize_expressions() = 0;
      virtual void build() = 0;
@@ -58,7 +61,7 @@ class Equation_Init_Value : public Equation_Init_Base {
      std::shared_ptr<std::vector<std::string>> target_indexes_;                // Need a different expression for each one of these.
      std::shared_ptr<std::map< std::string, DataType >> factor_map_; 
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_;
-     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_;
+     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>> term_braket_map_;
      std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
                                std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_by_states_;
                                                          
@@ -75,7 +78,7 @@ class Equation_Init_Value : public Equation_Init_Base {
                           expression_term_map_by_states_ = std::make_shared<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
                                                                                       std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>>();
                                                          
-                          term_braket_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>();
+                          term_braket_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>>();
 
                           }; 
 

@@ -21,10 +21,10 @@ class Equation_Init_LinearRM : public Equation_Init_Base {
      std::shared_ptr<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>, 
                                std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>> expression_term_map_state_spec_;
 
-     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_;
+     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>> term_braket_map_;
 
      std::shared_ptr<std::map<std::pair< std::string, std::vector<std::pair<std::string, int>>>, 
-                                         std::shared_ptr<std::vector<BraKet<DataType>>>>> term_braket_map_state_spec_;
+                                         std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>> term_braket_map_state_spec_;
    
      Equation_Init_LinearRM( std::string name,  std::string type, std::shared_ptr<std::vector<std::shared_ptr<Expression_Init>>> master_expressions,
                              std::shared_ptr<std::map< std::string, std::shared_ptr<std::vector<int>> >> range_map,
@@ -34,10 +34,10 @@ class Equation_Init_LinearRM : public Equation_Init_Base {
                              target_variable_(target_variable), target_indexes_(target_indexes),
                              factor_map_(factor_map)  {
 
-                             term_braket_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<BraKet<DataType>>>>>();
+                             term_braket_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>>();
 
                              term_braket_map_state_spec_ = std::make_shared<std::map< std::pair<std::string, std::vector<std::pair<std::string, int>>>,
-                                                                                     std::shared_ptr<std::vector<BraKet<DataType>>>>>();
+                                                                                     std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>>();
 
                              expression_term_map_ = std::make_shared<std::map<std::string, std::shared_ptr<std::vector<std::pair<DataType, std::string>>>>>();
 

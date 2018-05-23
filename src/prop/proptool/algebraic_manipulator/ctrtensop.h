@@ -4,6 +4,7 @@
 #include <src/prop/proptool/task_translator/tensor_algop_info.h>
 #include <src/prop/proptool/algebraic_manipulator/a_contrib_info.h>
 #include <src/prop/proptool/proputils.h>
+#include <src/prop/proptool/algebraic_manipulator/op_info.h>
 #include <unordered_set>
 
 class CtrTensorPart_Base  {
@@ -12,7 +13,6 @@ class CtrTensorPart_Base  {
     std::shared_ptr<std::vector<std::string>> full_idxs_;
     std::shared_ptr<std::vector<std::string>> full_id_ranges_;
     std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos_;
-    std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors_;
 
     std::string name_;
 
@@ -34,13 +34,15 @@ class CtrTensorPart_Base  {
     int size_;
 
     std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec_;
+ 
+    std::shared_ptr<Op_Info> op_info_;
+
   public :
     CtrTensorPart_Base()  { //TODO Fix this rubbish 
                     full_idxs_      = std::make_shared< std::vector<std::string>>(0);
                     full_id_ranges_ = std::make_shared< std::vector<std::string>>(0);
                     ctrs_pos_       = std::make_shared< std::vector<std::pair<int,int>>>(0);
                     ctrs_todo_      = std::make_shared< std::vector<std::pair<int,int>>>(0);
-                    ReIm_factors_   = std::make_shared< std::vector<std::pair<int,int>>>(ctrs_pos_->size());
                     contracted_     = false;
                     got_compute_list_ = false;
                    };
@@ -49,10 +51,11 @@ class CtrTensorPart_Base  {
     CtrTensorPart_Base( std::shared_ptr<std::vector<std::string>> full_idxs,
                         std::shared_ptr<std::vector<std::string>> full_id_ranges,
                         std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos,
-                        std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors ) :
+                        std::shared_ptr<Op_Info> op_info ) :
                         full_id_ranges_(full_id_ranges), full_idxs_(full_idxs), ctrs_pos_(ctrs_pos),
-                        ReIm_factors_(ReIm_factors), got_data_(false), size_( full_idxs_->size()),
-                        name_(WickUtils::get_ctp_name(*full_idxs_, *full_id_ranges_, *ctrs_pos_ )) {  
+                        got_data_(false), size_( full_idxs_->size()), op_info_(op_info),
+                        name_(WickUtils::get_ctp_name(op_info->op_state_name_canonical(), *full_idxs, *full_id_ranges_, *ctrs_pos_ )) {  
+
                           ctrs_todo_ = std::make_shared<std::vector<std::pair<int,int>>>(*ctrs_pos);
                           ctrs_done_ = std::make_shared<std::vector<std::pair<int,int>>>(0);
                           got_data_ = false;
@@ -65,7 +68,6 @@ class CtrTensorPart_Base  {
     std::string name() { return name_; }
     std::shared_ptr<std::vector<std::string>> full_idxs() { return  full_idxs_; }
     std::shared_ptr<std::vector<std::string>> full_id_ranges() { return full_id_ranges_; }
-    std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors() { return ReIm_factors_; }
 
     std::shared_ptr<std::vector<int>> unc_pos() { return unc_pos_; }
     std::shared_ptr<std::vector<std::string>> unc_idxs() { return unc_idxs_ ; }
@@ -93,7 +95,7 @@ class CtrTensorPart_Base  {
 
     std::string get_next_name(std::shared_ptr<std::vector<std::pair<int,int>>> new_ctrs_pos);
 
-    virtual void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
+    virtual void build_contraction_sequence( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
                                std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
                                std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map) = 0 ; 
 //                              { throw std::logic_error(" Calling full contract from CtrTensorPart_Base !! Aborting !! ");  } ; 
@@ -110,10 +112,11 @@ class CtrTensorPart : public  CtrTensorPart_Base , public std::enable_shared_fro
     CtrTensorPart(std::shared_ptr<std::vector<std::string>> full_idxs,
                   std::shared_ptr<std::vector<std::string>> full_id_ranges,
                   std::shared_ptr<std::vector<std::pair<int,int>>> ctrs_pos,
-                  std::shared_ptr<std::vector<std::pair<int,int>>> ReIm_factors ) :
-                  CtrTensorPart_Base( full_idxs, full_id_ranges, ctrs_pos, ReIm_factors) {};
+                  std::shared_ptr<Op_Info> op_info ) :
+                  CtrTensorPart_Base( full_idxs, full_id_ranges, ctrs_pos, op_info ) {
+                  };
 
-     void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
+     void build_contraction_sequence( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> CTP_map,
                         std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
                         std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> ACompute_map );
 
@@ -137,11 +140,13 @@ class CtrMultiTensorPart : public CtrTensorPart_Base , public  std::enable_share
     CtrMultiTensorPart(){};
 
     CtrMultiTensorPart( std::shared_ptr<std::vector<std::shared_ptr<CtrTensorPart_Base>>> CTP_vec,
-                        std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >> cross_ctrs_pos_in  )
+                        std::shared_ptr<std::vector<std::pair<std::pair<int,int>, std::pair<int,int>> >> cross_ctrs_pos, 
+                        std::shared_ptr<Op_Info> op_info )
                         : CtrTensorPart_Base() {
                          int counter = 0;
+                         op_info_ = op_info;
                          CTP_vec_         = CTP_vec;
-                         cross_ctrs_pos_ = cross_ctrs_pos_in;
+                         cross_ctrs_pos_ = cross_ctrs_pos;
                          Tsizes_cml      = std::make_shared<std::vector<int>>(0);
                          ctrs_pos_       = std::make_shared<std::vector<std::pair<int,int>>>(0);
                          got_compute_list_ = false;
@@ -152,17 +157,18 @@ class CtrMultiTensorPart : public CtrTensorPart_Base , public  std::enable_share
                            Tsizes_cml->push_back(cml_size);
                            full_idxs_->insert(full_idxs_->end() , ctp->full_idxs_->begin(), ctp->full_idxs_->end());
                            full_id_ranges_->insert(full_id_ranges_->end(),  ctp->full_id_ranges_->begin(), ctp->full_id_ranges_->end());
-                           for (auto relctr : *ctp->ctrs_pos_ )
+
+                           for (auto relctr : *(ctp->ctrs_pos_) )
                              ctrs_pos_->push_back( std::make_pair(relctr.first+Tsizes_cml->back(), relctr.second+Tsizes_cml->back()));
 
                            cml_size+=ctp->full_idxs_->size();
                          }
           
-                         for (auto cctr : *cross_ctrs_pos_in)  
+                         for (auto cctr : *cross_ctrs_pos)  
                            ctrs_pos_->push_back(std::make_pair(Tsizes_cml->at(cctr.first.first)+cctr.first.second, Tsizes_cml->at(cctr.second.first)+cctr.second.second));
                          
                          get_ctp_idxs_ranges();
-                         this->name_ = WickUtils::get_ctp_name(*full_idxs_, *full_id_ranges_, *ctrs_pos_ ) ;
+                         this->name_ = WickUtils::get_ctp_name(op_info->op_state_name_canonical(), *full_idxs_, *full_id_ranges_, *ctrs_pos_ ) ;
                        };
 
 
@@ -177,7 +183,7 @@ class CtrMultiTensorPart : public CtrTensorPart_Base , public  std::enable_share
              reordered_tens_name_ = reordered_tens_name; return; } 
                                                                                          
 
-    void FullContract( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> Tmap,
+    void build_contraction_sequence( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base> >> Tmap,
                        std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
                        std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map);
 
@@ -187,14 +193,6 @@ class CtrMultiTensorPart : public CtrTensorPart_Base , public  std::enable_share
                                   std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
                                   std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base> >> ACompute_list,
                                   std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map);
-
-    // TODO : Remove, this should not be needed once the mutiltensor nesting is done correctly.
-    std::shared_ptr<CtrMultiTensorPart<DataType>>
-    Binary_Contract_diff_tensors_MT( std::string T1, std::string T2, std::pair<int,int> ctr_todo,
-                                     std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
-                                     std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list_new ,
-                                     std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map);
-
 
 };
 

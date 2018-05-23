@@ -2,11 +2,12 @@
 #define __SRC_PROPTOOL_TENSOP_INFO_INIT
 #include <src/global.h>
 #include <bagel_config.h>
-#include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
 #include <src/prop/proptool/algebraic_manipulator/tensop.h>
+#include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
+#include <src/prop/proptool/algebraic_manipulator/constraints.h>
 
 using namespace std;
-using namespace Symmetry_Operations;
+
 namespace  TensOp_Info_Init {
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -15,181 +16,119 @@ namespace  TensOp_Info_Init {
 template<class DataType>
 shared_ptr<TensOp::TensOp<DataType>> Initialize_Tensor_Op_Info( string op_name, shared_ptr<map<char, long unsigned int>> range_prime_map ) {
 /////////////////////////////////////////////////////////////////////////////////
-cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info::Initialize_Tensor_Op_Info" << endl;
+cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << endl;
 
-  vector<string> free     = {"cor", "act", "vir"};
-  vector<string> not_core = {"act", "vir"};
-  vector<string> not_act  = {"cor", "vir"};
-  vector<string> not_virt = {"cor", "act"};
-  vector<string> core     = {"cor"};
-  vector<string> act      = {"act"};
-  vector<string> virt     = {"vir"};
 
-  DataType                           factor;
+  static vector<string> free     = {"c", "C", "a", "A", "v", "V"};
+  static vector<string> not_core = {"a", "A", "v", "V"};
+  static vector<string> not_act  = {"c", "C", "v", "V"};
+  static vector<string> not_virt = {"c", "C", "a", "A"};
+  static vector<string> core     = {"c", "C"};
+  static vector<string> act      = {"a", "A"};
+  static vector<string> virt     = {"v", "V"};
+ 
+  static vector<string> free_a     = {"c", "a", "v"};
+  static vector<string> not_core_a = {"a", "v"};
+  static vector<string> not_act_a  = {"c", "v"};
+  static vector<string> not_virt_a = {"c", "a"};
+  static vector<string> core_a     = {"c"};
+  static vector<string> act_a      = {"a"};
+  static vector<string> virt_a     = {"v"};
+ 
+  static vector<string> free_b     = {"C", "A", "V"};
+  static vector<string> not_core_b = {"A", "V"};
+  static vector<string> not_act_b  = {"C", "V"};
+  static vector<string> not_virt_b = {"C", "A"};
+  static vector<string> core_b     = {"C"};
+  static vector<string> act_b      = {"A"};
+  static vector<string> virt_b     = {"V"};
+
+  pair<double,double>                factor = make_pair(1.0, 0.0);
   shared_ptr<vector<string>>         idxs;
   shared_ptr<vector<bool>>           aops;
   shared_ptr<vector<vector<string>>> idx_ranges;
   string                             time_symm;
-  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>),int,int >> symmfuncs;
-  vector<bool(*)(shared_ptr<vector<string>>)>  constraints;
+  vector<shared_ptr<Transformation>> symmfuncs = vector<shared_ptr<Transformation>>(0);
+  vector<shared_ptr<Constraint>> constraints = vector<shared_ptr<Constraint>>(0);
   int state_dep;
 
+  static shared_ptr<Transformation_Hermitian> hconj = make_shared<Transformation_Hermitian>( "hconj" );  
+  static shared_ptr<Transformation_Spinflip>  spinflip = make_shared<Transformation_Spinflip>( "spinflip" );
+  static shared_ptr<Transformation_1032>  perm_1032 = make_shared<Transformation_1032>( "1032" ); 
+  static shared_ptr<Transformation_2301>  perm_2301 = make_shared<Transformation_2301>( "2301" );
+  static shared_ptr<Transformation_2103>  perm_2103 = make_shared<Transformation_2103>( "2103" );
+  static shared_ptr<Transformation_3012>  perm_3012 = make_shared<Transformation_3012>( "3012" );
+  static shared_ptr<Transformation_0321>  perm_0321 = make_shared<Transformation_0321>( "0321" );
+  static shared_ptr<Transformation_1230>  perm_1230 = make_shared<Transformation_1230>( "1230" );
+  static shared_ptr<Transformation_ID>  identity = make_shared<Transformation_ID>( "Id" );
+
+  static shared_ptr<Constraint_NotAllAct>  not_all_act = make_shared<Constraint_NotAllAct>();
+  static shared_ptr<Constraint_Spin_Neutral_Normal_Order>  spin_neutral = make_shared<Constraint_Spin_Neutral_Normal_Order>();
+  static shared_ptr<Constraint_All_Same_Spin>  all_same_spin = make_shared<Constraint_All_Same_Spin>();
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
-   factor = (DataType) (1.0);
-   idxs = make_shared<vector<string>>(vector<string> {"H0", "H1", "H2", "H3"});
-   aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false});//TODO check this ordering is correct
+   idxs = make_shared<vector<string>>(vector<string> { "H0", "H1", "H2", "H3" } );
+   aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false } );//TODO check this ordering is correct
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free, free, free, free });
+   symmfuncs = { hconj, perm_1032, perm_2301, perm_2103, perm_3012, perm_0321, perm_1230 };
+   constraints = { all_same_spin };
    time_symm = "none";
-   symmfuncs = identity_only();
-   constraints = {  &Symmetry_Operations::always_true };
    state_dep = 0;
-
+ 
+ 
+  //} else if ( op_name == "Q" ) {  /*TEST*/
+  //
+  // idxs = make_shared<vector<string>>(vector<string> { "H0", "H1", "H2", "H3" } );
+  // aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false } );//TODO check this ordering is correct
+  // idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, virt, act, act });
+  // constraints = { all_same_spin };
+  // time_symm = "none";
+  // state_dep = 0;
+  //
+  //
   } else if ( op_name == "h" ) {  /* ---- h Tensor ( 1 electron Hamiltonian ) ----  */
 
-   factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"h0", "h1"});
    aops = make_shared<vector<bool>>(vector<bool>  {true, false});
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free });
    time_symm = "none";
-   symmfuncs = identity_only(); //set_1el_symmfuncs();
-   constraints = {  &Symmetry_Operations::always_true };
    state_dep = 0;
   
-  } else if ( op_name == "Q" ) {  /* ---- test six index ----  */
-
-   factor = (DataType) (1.0);
-   idxs = make_shared<vector<string>>(vector<string> {"Q0", "Q1", "Q2", "Q3", "Q4", "Q5" });
-   aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
-   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core,  not_core, not_core, not_virt, not_virt, not_virt });
-   time_symm = "none";
-   symmfuncs = identity_only();
-   constraints = {  &Symmetry_Operations::always_true };
-   state_dep = 0;
- 
-  } else if ( op_name == "R" ) {  /* ---- test six index ----  */
-
-   factor = (DataType) (1.0);
-   idxs = make_shared<vector<string>>(vector<string> {"R0", "R1", "R2", "R3", "R4", "R5" });
-   aops = make_shared<vector<bool>>(vector<bool>  {true, true, true, false, false, false});
-   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt,  virt, act, act, core, core });
-   time_symm = "none";
-   symmfuncs = identity_only();
-   constraints = {  &Symmetry_Operations::always_true };
-   state_dep = 0;
-
   } else if ( op_name == "f" ) {  /* ---- state averaged fock operator ----  */
 
-   factor = (DataType) (1.0);
    idxs = make_shared<vector<string>>(vector<string> {"f0", "f1"});
    aops = make_shared<vector<bool>>(vector<bool>  {true, false});
    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free,free });
    time_symm = "none";
-   symmfuncs = set_1el_symmfuncs();
-   constraints = {  &Symmetry_Operations::always_true };
    state_dep = 0;
 
-  } else if ( op_name == "L" ) {  /* ---- L Tensor ----  */
-
-    factor = (DataType) (1.0);
-    idxs = make_shared<vector<string>>(vector<string> {"L0", "L1", "L2", "L3"});
-    aops = make_shared<vector<bool>>(vector<bool>  { false, false, true, true });
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, not_virt, not_virt });
-    time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = { &Symmetry_Operations::NotAllAct };
-    state_dep = 2;
-    
-      
-  } else if ( op_name == "M" ) {  /* ---- M Tensor ----  */
-
-    factor = (DataType) (1.0);
-    idxs = make_shared<vector<string>>(vector<string> {"M0", "M1", "M2", "M3"});
-    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false });
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { virt, virt, core, core });
-    time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = { &Symmetry_Operations::NotAllAct };
-    state_dep = 2;
- 
-  } else if ( op_name == "N" ) {  /* ---- N Tensor ----  */
-
-    factor = (DataType) (1.0);
-    idxs = make_shared<vector<string>>(vector<string> {"N0", "N1", "N2", "N3"});
-    aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false });
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act });
-    time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = { &Symmetry_Operations::always_true  };
-    state_dep = 0;
-    
   } else if ( op_name == "T" ) {  /* ---- T Tensor ----  */
 
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} );
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
     time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = {  &Symmetry_Operations::NotAllAct };
     state_dep = 2;
  
   } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
 
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
+    symmfuncs = { hconj }; 
+    constraints = { spin_neutral, not_all_act }; 
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt  });
+//    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_b, not_core_b, not_virt_b, not_virt_b  });
+//    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_a, not_core_a, not_virt_a, not_virt_a  });
     time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = {  &Symmetry_Operations::NotAllAct };
     state_dep = 2;
-
-  } else if ( op_name == "t" ) {  /* ---- T Tensor herm conj TODO  should find a better way fo dealing with this----  */
-    cout << "getting t op " << endl;
-    factor = (DataType) (1.0);
-    idxs = make_shared<vector<string>>(vector<string>{"t0", "t1", "t2", "t3"}  );
-    aops = make_shared<vector<bool>>  (vector<bool>  {false, false, true, true } );
-    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
-    time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = { &Symmetry_Operations::NotAllAct };
-    state_dep = 0;
 
   } else if ( op_name == "X" ) {
 
-    factor = (DataType) (1.0);
     idxs = make_shared<vector<string>>( vector<string> {"X3", "X2", "X1", "X0"} );
     aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt } );
     time_symm = "none";
-    symmfuncs = identity_only();
-   //constraints = {  &Symmetry_Operations::always_true };
-    constraints = { &Symmetry_Operations::NotAllAct };
-    state_dep = 0;
-
-  } else if ( op_name == "x" ) {
-
-    factor = (DataType) (1.0);
-    idxs = make_shared<vector<string>>( vector<string> {"X0", "X1"} );
-    aops = make_shared<vector<bool>>( vector<bool> { false, true } );
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act } );
-    time_symm = "none";
-    symmfuncs = identity_only();
-   //constraints = {  &Symmetry_Operations::always_true };
-    constraints = { &Symmetry_Operations::NotAllAct };
-    state_dep = 2;
-
-   } else if ( op_name == "Z" ) { /* 2el test op */
-
-    factor = (DataType) (1.0);
-    idxs = make_shared<vector<string>>( vector<string> { "Z0", "Z1", "Z2", "Z3" } );
-    aops = make_shared<vector<bool>>( vector<bool>  { false, false, true, true } );
-    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { act, act, act, act } );
-    time_symm = "none";
-    symmfuncs = identity_only();
-    constraints = {  &Symmetry_Operations::always_true };
     state_dep = 0;
 
   } else {
@@ -198,10 +137,9 @@ cout << "shared_ptr<TensOp::TensOp<DataType>> System_Info<DataType>::System_Info
 
   }
 
+  cout << "initializing tensop" << endl;
   shared_ptr<TensOp::TensOp<DataType>> new_tens =  make_shared<TensOp::TensOp<DataType>>( op_name, *idxs, *idx_ranges, *aops,
                                                                                           factor, symmfuncs, constraints, time_symm, state_dep, range_prime_map);
-  new_tens->get_ctrs_tens_ranges();
-
   return new_tens;
 }
 }

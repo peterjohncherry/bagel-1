@@ -1,515 +1,369 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/tensop.h>
 #include <src/prop/proptool/algebraic_manipulator/algebra_utils.h>
-
+#include <tuple> 
 using namespace std;
 using namespace WickUtils;
 using namespace Algebra_Utils;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                                  std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
-                                  std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr< Range_Block_Info> >> all_ranges ):
-                                  idxs_(idxs),  aops_(aops), plus_ops_(plus_ops), kill_ops_(kill_ops), idx_ranges_(idx_ranges),
-                                  orig_factor_(factor), num_idxs_(idxs.size()), all_ranges_(all_ranges) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Op_General_base::Op_General_base constructor"<< endl;
-           
-  idxs_ptr_ =  make_shared<const vector<string>>(idxs_);
-  aops_ptr_ =  make_shared<const vector<bool>>(aops_);
-  idx_ranges_ptr_ =  make_shared<const vector<vector<string>>>(idx_ranges_);
-
-  plus_ops_ptr_ = make_shared<const vector<int>>(plus_ops);
-  kill_ops_ptr_ = make_shared<const vector<int>>(kill_ops);
-
-  split_ranges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info> >>();
-
-  all_ranges_trans_ = make_shared<map< char, shared_ptr<const map< const vector<string>,  shared_ptr<Range_Block_Info>>> >>();
-
-  split_ranges_trans_ = make_shared< map< pair<vector<char>, vector<int>>, shared_ptr<const map< const vector<string>,  shared_ptr<Split_Range_Block_Info>>> >>();
-
-  all_rangesX_trans_ = make_shared<map< char, shared_ptr<const map< const vector<string>,  shared_ptr<Range_BlockX_Info>>> >>();
-
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                                  std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
-                                  std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr< Range_Block_Info> >> all_ranges,
-                                  std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr< Range_BlockX_Info> >> all_rxnges ):
-                                  idxs_(idxs),  aops_(aops), plus_ops_(plus_ops), kill_ops_(kill_ops), idx_ranges_(idx_ranges),
-                                  orig_factor_(factor), num_idxs_(idxs.size()), all_ranges_(all_ranges), all_rxnges_(all_rxnges) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Op_General_base::Op_General_base constructor"<< endl;
-           
-  idxs_ptr_ =  make_shared<const vector<string>>(idxs_);
-  aops_ptr_ =  make_shared<const vector<bool>>(aops_);
-  idx_ranges_ptr_ =  make_shared<const vector<vector<string>>>(idx_ranges_);
-
-  plus_ops_ptr_ = make_shared<const vector<int>>(plus_ops);
-  kill_ops_ptr_ = make_shared<const vector<int>>(kill_ops);
-
-  split_ranges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info> >>();
-
-  split_rxnges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<SplitX_Range_Block_Info> >>();
-
-  all_ranges_trans_ = make_shared<map< char, shared_ptr<const map< const vector<string>,  shared_ptr<Range_Block_Info>>> >>();
-
-  split_ranges_trans_ = make_shared< map< pair<vector<char>, vector<int>>, shared_ptr<const map< const vector<string>,  shared_ptr<Split_Range_Block_Info>>> >>();
-
-  all_rangesX_trans_ = make_shared<map< char, shared_ptr<const map< const vector<string>,  shared_ptr<Range_BlockX_Info>>> >>();
-
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                                  std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
-                                  std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info> >> split_ranges ) : 
-                                  idxs_(idxs),  aops_(aops), plus_ops_(plus_ops), kill_ops_(kill_ops), idx_ranges_(idx_ranges), orig_factor_(factor), num_idxs_(idxs.size()),
-                                  split_ranges_(split_ranges) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Op_General_base::Op_General_base constructor"<< endl;
-           
-  idxs_ptr_ =  make_shared<const vector<string>>(idxs_);
-  aops_ptr_ =  make_shared<const vector<bool>>(aops_);
-  idx_ranges_ptr_ =  make_shared<const vector<vector<string>>>(idx_ranges_);
-
-  plus_ops_ptr_ = make_shared<const vector<int>>(plus_ops);
-  kill_ops_ptr_ = make_shared<const vector<int>>(kill_ops);
-
-  all_rxnges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info> >>() ; 
-
-  all_ranges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>() ; 
-
-  all_ranges_trans_ = make_shared<map< char, shared_ptr<const map< const vector<string>,  shared_ptr<Range_Block_Info>>> >>();
-
-  split_ranges_trans_ = make_shared< map< pair<vector<char>, vector<int>>, shared_ptr<const map< const vector<string>,  shared_ptr<Split_Range_Block_Info>>> >>();
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Op_General_base::Op_General_base( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                                  std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
-                                  std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info> >> split_ranges, 
-                                  std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<SplitX_Range_Block_Info> >> split_rxnges ) : 
-                                  idxs_(idxs),  aops_(aops), plus_ops_(plus_ops), kill_ops_(kill_ops), idx_ranges_(idx_ranges), orig_factor_(factor), num_idxs_(idxs.size()),
-                                  split_ranges_(split_ranges), split_rxnges_(split_rxnges) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "Op_General_base::Op_General_base constructor"<< endl;
-           
-  idxs_ptr_ =  make_shared<const vector<string>>(idxs_);
-  aops_ptr_ =  make_shared<const vector<bool>>(aops_);
-  idx_ranges_ptr_ =  make_shared<const vector<vector<string>>>(idx_ranges_);
-
-  plus_ops_ptr_ = make_shared<const vector<int>>(plus_ops);
-  kill_ops_ptr_ = make_shared<const vector<int>>(kill_ops);
-
-  all_rxnges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info> >>() ; 
-
-  all_ranges_ = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>() ; 
-
-  all_ranges_trans_ = make_shared<map< char, shared_ptr<const map< const vector<string>,  shared_ptr<Range_Block_Info>>> >>();
-
-  split_ranges_trans_ = make_shared< map< pair<vector<char>, vector<int>>, shared_ptr<const map< const vector<string>,  shared_ptr<Split_Range_Block_Info>>> >>();
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TensOp_Base::TensOp_Base( std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp_Base>>& sub_tensops ) :
-             name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0), 
-             required_blocks_(std::make_shared<std::set<std::string>>()) {
+                          name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0), 
+                          required_blocks_(std::make_shared<std::set<std::shared_ptr<Range_Block_Info>>>()), sub_tensops_(sub_tensops) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+cout << "TensOp_Base::TensOp_Base (MT constructor) " << endl; 
 
-  sub_tensops_ = sub_tensops;
- 
   sort( sub_tensops_.begin(), sub_tensops_.end(), [](shared_ptr<TensOp_Base> t1, shared_ptr<TensOp_Base> t2){ return (bool)( t1->name() < t2->name() );} );
-  cout << "sub_tensops_ = [ " ; cout.flush();
-  for ( auto t : sub_tensops_) { 
-     cout << t->name() << " " ; cout.flush();
-  }
-  cout << "]" << endl;
+
+  cout << "sub_tensops_ = [ " ; cout.flush();  for ( auto& t : sub_tensops_)    cout << t->name() << " ";  cout << "]" << endl;
 
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-TensOp_General::TensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                                std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
-                                std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> all_ranges) : 
-                                Op_General_base( idxs, aops, plus_ops, kill_ops, idx_ranges, factor, all_ranges ) { 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp_General::TensOp_General "<< endl;
-  // has split ranges
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-MultiTensOp_General::MultiTensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                                          std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor, std::vector<int>& cmlsizevec, 
-                                          std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr< Split_Range_Block_Info>>> split_ranges ) :
-                                          Op_General_base::Op_General_base( idxs, aops, plus_ops, kill_ops, idx_ranges, factor, split_ranges ), 
-                                          cmlsizevec_(cmlsizevec) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "MultiTensOp_General::MultiTensOp_General "<< endl;
-  cmlsizevec_ptr_ =  make_shared<const vector<int>>(cmlsizevec_);
-  split_ranges_ = split_ranges; 
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-TensOp_General::TensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                                std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
-                                std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> all_ranges, 
-                                std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info >>> all_rxnges  ) : 
-                                Op_General_base( idxs, aops, plus_ops, kill_ops, idx_ranges, factor, all_ranges, all_rxnges ) { 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp_General::TensOp_General "<< endl;
-  // has split ranges
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-TensOp_General::TensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                                std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor,
-                                std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Split_Range_Block_Info >>> split_ranges,  
-                                std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<SplitX_Range_Block_Info >>> split_rxnges ) : 
-                                Op_General_base( idxs, aops, plus_ops, kill_ops, idx_ranges, factor, split_ranges, split_rxnges) { 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp_General::TensOp_General "<< endl;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-MultiTensOp_General::MultiTensOp_General( std::vector<std::string>& idxs,  std::vector<bool>& aops, std::vector<int>& plus_ops, std::vector<int>& kill_ops,
-                                          std::vector<std::vector<std::string>>& idx_ranges, std::pair<double,double> factor, std::vector<int>& cmlsizevec, 
-                                          std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr< Split_Range_Block_Info>>> split_ranges ,
-                                          std::shared_ptr<const std::map< const std::vector<std::string>,  std::shared_ptr< SplitX_Range_Block_Info>>> split_rxnges ) :
-                                          Op_General_base::Op_General_base( idxs, aops, plus_ops, kill_ops, idx_ranges, factor, split_ranges, split_rxnges), 
-                                          cmlsizevec_(cmlsizevec) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "MultiTensOp_General::MultiTensOp_General "<< endl;
-  cmlsizevec_ptr_ =  make_shared<const vector<int>>(cmlsizevec_);
-  split_ranges_ = split_ranges; 
-  split_rxnges_ = split_rxnges; 
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vector<string>>& idx_ranges,
-                                  vector<bool>& aops, DataType orig_factor,
-                                  vector< tuple< shared_ptr<vector<string>>(*)(shared_ptr<vector<string>>), int, int > >& symmfuncs, 
-                                  vector<bool(*)(shared_ptr<vector<string>>) >& constraints,
+                                  vector<bool>& aops, std::pair<double, double>& factor,
+                                  vector<shared_ptr<Transformation>>& symmfuncs,
+                                  vector<shared_ptr<Constraint>>& constraints,
                                   string& Tsymm, int state_dep, shared_ptr<map<char, long unsigned int>> range_prime_map ) :
-                                  TensOp_Base( name, true ),  symmfuncs_(symmfuncs), constraints_(constraints)   {
+                                  TensOp_Base( name, factor, true ), symmfuncs_(symmfuncs), constraints_(constraints)   {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   cout << "TensOp::TensOp" <<   endl;
-          
+
+  num_idxs_ = idxs.size();
+
+  all_ranges_state_specific_ =  make_shared<map<string, shared_ptr<map<const vector<string>, shared_ptr<Range_Block_Info>>>>>();
   CTP_map_ = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
-   
-  std::vector<int> plus_ops;
-  std::vector<int> kill_ops;
-  for ( int ii =0 ; ii != aops.size() ; ii++ ) {
-    if(aops[ii]) {
-      plus_ops.push_back(ii);
-    } else {
-      kill_ops.push_back(ii);
-    }
-  }
 
-  auto all_ranges = generate_ranges( idxs, idx_ranges, aops, range_prime_map );
-
-  auto all_rxnges = generate_rangesX( idxs, idx_ranges, aops );
-
-  pair<double,double> orig_factor_tmp =  make_pair(1.0, 1.0);
-
-  Op_dense_ = make_shared<const TensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, orig_factor_tmp, all_ranges, all_rxnges );
+  //TODO switch inputs (and input reading) to use shared_ptrs; needless copying here
+  aops_ = make_shared<const vector<bool>>(aops);
+  idxs_ = make_shared<const vector<string>>(idxs);
+  idx_ranges_ = make_shared<const vector<vector<string>>> (idx_ranges); 
+  generate_blocks();
 
   return;
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TODO this is too slow; just build ranges using symmetry, don't check.
-template<typename DataType>
-std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info> >>
-TensOp::TensOp<DataType>::generate_ranges( vector<string>& idxs,  vector<vector<string>>& idx_ranges, vector<bool>& aops,
-                                           shared_ptr<map< char , long unsigned int >> range_prime_map ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp::generate_ranges" <<   endl;
-
-  //set up loop utils
-  shared_ptr<const vector<string>> orig_idxs = make_shared<const vector<string>>(idxs);
-  int num_idxs = orig_idxs->size();
-
-  map< const vector<string>, shared_ptr<Range_Block_Info> > all_ranges;
-  
-  auto apply_symmetry = [ &all_ranges, &orig_idxs, &aops, &range_prime_map ]( const vector<string>& ranges_1,  const vector<string>& ranges_2 ) {
-     const bool a_unique_range_block = true; //TODO put symmetry back in
-     if (a_unique_range_block) {
-       const pair<int,int> fac(1,1);
-       const pair<double,double> fac_new(1.0,1.0);
-       shared_ptr<const vector<string>> unique_ranges = make_shared<const vector<string>>(ranges_2); 
-       shared_ptr<const vector<string>> trans_idxs = orig_idxs;
-       bool survives = WickUtils::RangeCheck( ranges_2, aops );
-       shared_ptr<const vector<bool>> test = make_shared<const vector<bool>>(aops); 
-       all_ranges.emplace(ranges_2, make_shared< Range_Block_Info >( a_unique_range_block, survives, fac_new, unique_ranges, unique_ranges, orig_idxs, trans_idxs, test, range_prime_map ) );
-     }
-     return false;
-  };
-
-  shared_ptr<vector<int>> fvec = make_shared<vector<int>>( num_idxs, 0); 
-  shared_ptr<vector<int>> maxs = make_shared<vector<int>>( num_idxs );
-  bool is_unique = true;
-  pair<int,int> fac(1,1);
-  pair<double,double> fac_new(1.0,1.0);
-  int  num_cycles = 1;
-
-  for( int ii = 0; ii != idx_ranges.size(); ii++ ){
-    maxs->at(ii) = ( idx_ranges[ii].size()-1 );
-    num_cycles *= idx_ranges[ii].size();
-  }
-
-  //generate all possible ranges
-  vector<vector<string>> possible_ranges(0);
-  for (int ii = 0 ; ii != num_cycles ; ii++){
-    vector<string> new_range(idx_ranges.size());
-    for (auto jj = 0 ; jj != fvec->size() ; jj++ )
-       new_range[jj] = idx_ranges[jj][fvec->at(jj)];
-    if(satisfies_constraints(new_range))
-      possible_ranges.push_back(new_range);
-    fvec_cycle( fvec, maxs );
-  } 
-
-  // Initialize range maps and add in first range to start things off.
-  const vector<string> init_range = possible_ranges[0];
-  shared_ptr<const vector<string>> orig_range = make_shared<const vector<string>>(possible_ranges[0]);
-  shared_ptr<const vector<string>> trans_range = orig_range;
-  shared_ptr<const vector<string>> trans_idxs = orig_idxs;
-   
-  bool survives = WickUtils::RangeCheck( *orig_range, aops );
-  shared_ptr<const vector<bool>> test = make_shared<const vector<bool>>(aops); 
-  all_ranges.emplace(init_range, make_shared< Range_Block_Info >( is_unique, survives, fac_new, orig_range, trans_range, orig_idxs, trans_idxs, test, range_prime_map ) );
- 
-  auto unique_range_blocks = vector< shared_ptr< const vector<string>>>(1, trans_range );
-  //Apply symmetry operations to remove unnecessary ranges 
-  for (int ii = 1 ; ii!=possible_ranges.size(); ii++) {
-    for (int kk = 0 ; kk != ii; kk++) {
-      if( apply_symmetry(possible_ranges[kk], possible_ranges[ii]) ){ //note that this sets the elements of all_ranges_
-        break;
-      }
-      if(kk == ii-1){
-        unique_range_blocks.push_back(make_shared<const vector<string>>(possible_ranges[ii]));
-        break;
-      }
-    } 
-  }
-
-  auto all_ranges_ptr = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> (all_ranges);
-  auto unique_ranges_ptr = make_shared<std::vector< std::shared_ptr< const std::vector<std::string>> >>(unique_range_blocks);                                                                                                                
-  return all_ranges_ptr;
-              
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-std::shared_ptr<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info> >>
-TensOp::TensOp<DataType>::generate_rangesX( vector<string>& idxs,  vector<vector<string>>& idx_ranges, vector<bool>& aops ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-cout << "TensOp::TensOp<DataType>::generate_rangesX" <<   endl;
-
-  //set up loop utils
-  shared_ptr<const vector<string>> orig_idxs = make_shared<const vector<string>>(idxs);
-  shared_ptr<const vector<bool>> orig_aops = make_shared<const vector<bool>>(aops);
-
-  map< const vector<string>, shared_ptr<Range_BlockX_Info> > all_ranges_tmp;
-
-  shared_ptr<vector<int>> fvec = make_shared<vector<int>>( orig_idxs->size(), 0);
-  shared_ptr<vector<int>> maxs = make_shared<vector<int>>( orig_idxs->size() );
-  pair<double,double> fac_new(1.0,1.0);
-  int num_cycles = 1;
-
-  for( int ii = 0; ii != idx_ranges.size(); ii++ ){
-    maxs->at(ii) = ( idx_ranges[ii].size()-1 );
-    num_cycles *= idx_ranges[ii].size();
-  }
-  
-  shared_ptr<vector<int>> no_trans = make_shared<vector<int>>(idxs.size());
-  iota( no_trans->begin(), no_trans->end(), 0 );
-
-  //generate all possible ranges
-  vector<vector<string>> possible_ranges(0);
-  for (int ii = 0 ; ii != num_cycles ; ii++){
-    vector<string> new_range(idx_ranges.size());
-    for (auto jj = 0 ; jj != fvec->size() ; jj++ )
-       new_range[jj] = idx_ranges[jj][fvec->at(jj)];
-    if(satisfies_constraints(new_range))
-      all_ranges_tmp.emplace( new_range,  make_shared< Range_BlockX_Info > ( make_shared<const vector<string>>(new_range), orig_idxs, orig_aops, no_trans, no_trans, no_trans, fac_new ) );
-    fvec_cycle( fvec, maxs );
-  }
-
-  auto all_ranges_ptr = make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_BlockX_Info >>> (all_ranges_tmp);
-  return all_ranges_ptr ;
-              
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-void TensOp::TensOp<DataType>::transform( char transformation,  shared_ptr<map< char , long unsigned int >> range_prime_map ) {  
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// This is not done in range_block_info as the symmetry functions are stored in here; note that the transformations performed by the symmetry functions
-// pertain to the transformations of the elements of the molecular orbital integral tensor. They *do not* transform the creation and annihilation 
-// operators. The operator transformations performed in this function *do* transform the creation and annihilation operators. 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- cout << "Range_Block_Info::transform( bool is_unique, bool survives, std::pair<double,double> factors " << endl; 
-  //set up loop utils
-
-  vector<string> trans_orig_idxs = *idxs(); 
-  vector<bool> trans_orig_aops = *aops(); 
-  //transform_tens_vec( transformation, trans_orig_idxs ); 
-  transform_tens_vec( transformation, trans_orig_aops ); 
- 
-  int num_idxs = trans_orig_idxs.size();
-  map< const vector<string>, shared_ptr<Range_Block_Info> > all_ranges_tmp;
-  
-  auto apply_symmetry = [&all_ranges_tmp,  &trans_orig_idxs, &trans_orig_aops, &range_prime_map, this ]( const vector<string>& ranges_1,  const vector<string>& ranges_2 ) {
-     bool a_unique_range_block = true; //TODO put symmetry back in, should compare to original all ranges....
-     if (a_unique_range_block) {
-       pair<double,double> block_fac(1.0,1.0); // TODO set from transform
-       shared_ptr<const vector<string>> unique_ranges_trans = make_shared<const vector<string>>(ranges_2); 
-       shared_ptr<const vector<string>> trans_orig_idxs_ptr = make_shared<const vector<string>>(trans_orig_idxs);
-       bool survives = WickUtils::RangeCheck( ranges_2, trans_orig_aops );
-       shared_ptr<const vector<bool>> trans_orig_aops_ptr = make_shared<const vector<bool>>( trans_orig_aops ); 
-       all_ranges_tmp.emplace(ranges_2, make_shared< Range_Block_Info >( a_unique_range_block, survives, block_fac, unique_ranges_trans, unique_ranges_trans, trans_orig_idxs_ptr, trans_orig_idxs_ptr, trans_orig_aops_ptr, range_prime_map ) );
-     }
-     return false;
-  };
-
-  shared_ptr<vector<int>> fvec = make_shared<vector<int>>( num_idxs, 0); 
-  shared_ptr<vector<int>> mins = make_shared<vector<int>>( num_idxs, 0); 
-  shared_ptr<vector<int>> maxs = make_shared<vector<int>>( num_idxs );
-  int  num_cycles = 1;
-  vector<vector<string>> trans_idx_ranges = *idx_ranges();
-//  transform_tens_vec( transformation, trans_idx_ranges ); 
-  for( int ii = 0; ii != trans_idx_ranges.size(); ii++ ){
-    maxs->at(ii) = ( trans_idx_ranges[ii].size()-1 );
-    num_cycles *= trans_idx_ranges[ii].size();
-  }
-
-  //generate all possible ranges
-  vector<vector<string>> possible_ranges(0);
-  for (int ii = 0 ; ii != num_cycles ; ii++){
-    vector<string> new_range(trans_idx_ranges.size());
-    for (auto jj = 0 ; jj != fvec->size() ; jj++ )
-       new_range[jj] = trans_idx_ranges[jj][fvec->at(jj)];
-    if(satisfies_constraints(new_range))
-      possible_ranges.push_back(new_range);
-    fvec_cycle_skipper( fvec, maxs, mins );
-  } 
-
-  vector< shared_ptr< const vector<string>> > unique_range_blocks;
-  //Apply symmetry operations to remove unnecessary ranges 
-  for (int ii = 0 ; ii!=possible_ranges.size(); ii++) {
-    for (int kk = 0 ; kk != ii; kk++) {
-      if( apply_symmetry(possible_ranges[kk], possible_ranges[ii]) ){ //note that this sets the elements of all_ranges_trans_
-        break;
-      }
-      if(kk == ii-1){
-        unique_range_blocks.push_back(make_shared<const vector<string>>(possible_ranges[ii]));
-        break;
-      }
-    } 
-  }
-
-  Op_dense_->all_ranges_trans_->emplace( transformation, make_shared<const std::map< const std::vector<std::string>, std::shared_ptr<Range_Block_Info >>> (all_ranges_tmp) );
-
-  return;
-  
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 bool TensOp::TensOp<DataType>::satisfies_constraints( vector<string>& ranges ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  shared_ptr<vector<string>> ranges_ptr = make_shared<vector<string>>(ranges);
-  for (auto OK : constraints_) 
-    if( !OK(ranges_ptr))
+//  cout <<  " TensOp::TensOp<DataType>::satisfies_constraints" << endl;
+  
+  for (auto& cstr : constraints_) 
+    if(!(cstr->apply_constraint( ranges )) ) 
       return false;
+  
   return true;
-}; 
+} 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //get contractions and ranges; note this is done by TensOp not TensOp gen as the contractions needed will be 
 //dependent on the sparsity associated with the relevant state
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void TensOp::TensOp<DataType>::get_ctrs_tens_ranges() {
+void TensOp::TensOp<DataType>::generate_uncontracted_ctps( std::shared_ptr<Op_Info> op_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DBG_TensOp 
-  cout << "TensOp get_ctrs_tens_ranges" << endl;
-#endif 
-//////////////////////////////////////////////////////////////////////////////////////
-  cout << "TensOp::TensOp<DataType> get_ctrs_tens_ranges" /* << name_*/ << endl;
+//  cout << "TensOp::TensOp<DataType> generate_uncontracted_ctps : " << name_ ; cout.flush(); cout << " op_info->op_full_name_ = ";cout.flush(); cout << op_info->op_full_name_ << endl;
 
-  //TODO fix this hack; only call get_ctrs_tens_ranges after a shared pointer has been created elsewhere, and get_ctrs_tens_ranges
-  //     has to be called before anything can happen to the TensOp, so this is basically safe, just totally illogical.
-  sub_tensops_ = vector<shared_ptr<TensOp_Base>>(1 , this->shared_from_this());
-
-  //puts uncontracted ranges into map 
+  shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *idxs_ );
   shared_ptr<vector<pair<int,int>>>  noctrs = make_shared<vector< pair<int,int>>>(0);
-  for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
-    shared_ptr<vector<pair<int,int>>>  ReIm_factors = make_shared< vector<pair<int,int>>>(1, rng_it->second->factors()); 
-    shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
-    shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
- 
-    shared_ptr<CtrTensorPart<DataType>>  CTP = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, ReIm_factors ); 
-    cout << "CTP->name() = " << CTP->name() << " is going into CTP_map" <<  endl;
-    CTP_map_->emplace(CTP->name(), CTP); //maybe should be addded in with ctr_idxs
-  }
- 
-  //puts_contracted ranges into map
-  for ( int nctrs = 1 ; nctrs != (num_idxs()/2)+1 ; nctrs++ ){
-    shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>>  ctr_lists = get_unique_pairs(plus_ops(), kill_ops(), nctrs);
-    for (shared_ptr<vector<pair<int,int>>> ctr_vec : *ctr_lists) {
-      for (auto rng_it = all_ranges()->begin(); rng_it != all_ranges()->end(); rng_it++) {
-        bool valid =true;
-        for (int ii = 0 ; ii != ctr_vec->size(); ii++){
-          if ( rng_it->first[ctr_vec->at(ii).first] != rng_it->first[ctr_vec->at(ii).second]){
-            valid = false;
-            break;
-          }
-        }
 
-        if (valid) {
-          shared_ptr<vector<pair<int,int>>> ReIm_factors = make_shared<vector<pair<int,int>>>(1, rng_it->second->factors()); 
-          shared_ptr<vector<string>> full_ranges = make_shared<vector<string>>(rng_it->first);
-          shared_ptr<vector<string>> full_idxs   = make_shared<vector<string>>( *this->idxs() );
-
-          shared_ptr<CtrTensorPart<DataType>> CTP = make_shared<CtrTensorPart<DataType>>( full_idxs, full_ranges, ctr_vec, ReIm_factors ); 
-          cout << "CTP->name() = " << CTP->name() << "is going into CTP_map " << endl;
-          CTP_map_->emplace(CTP->name(), CTP); 
-
-        }
-      }
-    }
+  for ( vector<shared_ptr<vector<string>>>::iterator bl_it = block_list_.begin(); bl_it != block_list_.end(); bl_it++ ) {
+    shared_ptr<vector<string>> full_ranges = *bl_it;
+    shared_ptr<CtrTensorPart<DataType>>  CTP = make_shared< CtrTensorPart<DataType> >( full_idxs, full_ranges, noctrs, op_info );
+    CTP_map_->emplace(CTP->name(), CTP);
   }
   return;
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void TensOp::TensOp<DataType>::generate_transformed_ranges( shared_ptr<Op_Info> op_info ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "TensOp::TensOp<DataType>::generate_transformed_ranges : " <<  name_ ; cout.flush(); cout << " op_info->op_full_name_ = ";cout.flush(); cout << op_info->op_full_name_ << endl; 
+ 
+  shared_ptr<map<const vector<string>, shared_ptr<Range_Block_Info>>> all_ranges_ref;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Only build the CTP for the unique ranges; these are the only ones needed. If gamma generator
-// asks for any other ones, then you have a bug.
-///////////////////////////.///////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DType>
-void TensOp::TensOp<DType>::get_ctp_idxs_ranges( shared_ptr<vector<pair<int,int>>> ctrs_pos, shared_ptr<Range_Block_Info> block_info ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  vector<bool> get_unc(block_info->orig_idxs()->size(), true);
-  for (int ii =0; ii != ctrs_pos->size() ; ii++){
-    get_unc[ctrs_pos->at(ii).first] = false;
-    get_unc[ctrs_pos->at(ii).second] = false;
+  auto arss_loc = all_ranges_state_specific_->find( op_info->op_state_name_ );
+  if (arss_loc == all_ranges_state_specific_->end() ) {
+    generate_ranges( op_info );
+    all_ranges_ref = all_ranges_state_specific_->at( op_info->op_state_name_ );
+  } else {
+    all_ranges_ref = arss_loc->second;
   }
 
-  int num_unc_ids =  get_unc.size() - ctrs_pos->size()*2;
+  shared_ptr<map<const vector<string>, shared_ptr<Range_Block_Info>>> all_ranges_new =
+  make_shared<map<const vector<string>, shared_ptr<Range_Block_Info>>>();
 
-  vector<string> unc_id_ranges( num_unc_ids );
-  vector<string> unc_idxs( num_unc_ids );
-  vector<int> unc_pos( num_unc_ids );
-  map<int,int> unc_rel_pos;
-
-  int jj = 0;
-  for ( int ii = 0 ; ii !=get_unc.size() ; ii++ ) {
-    if (get_unc[ii]){
-      unc_id_ranges[jj] = block_info->orig_block()->at(ii);
-      unc_idxs[jj]      = block_info->orig_idxs()->at(ii);
-      unc_pos[jj]       = ii;
-      unc_rel_pos.emplace(ii, jj);
-      jj++;
-    }
+  for (auto& elem : *all_ranges_ref ) {
+    shared_ptr<Range_Block_Info>  new_block = get_transformed_range_block( op_info, elem.second );
+    all_ranges_new->emplace( *(new_block->orig_rngs() ), new_block);
   } 
+
+  all_ranges_state_specific_->emplace( op_info->op_full_name_, all_ranges_new );
+
+  return;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+shared_ptr<Range_Block_Info>  
+TensOp::TensOp<DataType>::get_transformed_range_block( std::shared_ptr<Op_Info> op_info, std::shared_ptr<Range_Block_Info>& block ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "TensOp::TensOp<DataType>::get_transformed_range_block : " <<  name_ <<  endl;
+
+  shared_ptr<vector<string>> new_orig_rngs = make_shared<vector<string>>(*(block->unique_block_->orig_rngs_));
+  pair<double,double> new_factors = block->factors();
+
+  pair<double,double> trans_factors;
+  char op_transformation = tolower(op_info->transformation());
+
+  shared_ptr<vector<int>> new_idxs_trans = make_shared<vector<int>>(block->num_idxs_); 
+  iota( new_idxs_trans->begin(), new_idxs_trans->end(), 0 );
+
+  vector<bool> new_aops = *aops_;
  
-  return; 
+  switch ( op_transformation ) { 
+
+    case 'i' : // inverse
+      for_each( new_aops.begin(), new_aops.end(), [] ( bool aop ) { return !aop; } ); 
+      assert ( hermitian_inverse_ ); // TODO in principal, this should go to an op specific function.
+      trans_factors = make_pair(1.0, 1.0);
+      break;
+
+    case 'h' : // hconj
+      for_each( new_aops.begin(), new_aops.end(), [] ( bool aop ) { return !aop; } ); 
+      std::reverse( new_orig_rngs->begin(), new_orig_rngs->end() );
+      std::reverse( new_idxs_trans->begin(), new_idxs_trans->end() );
+      trans_factors = make_pair(1.0, 1.0);
+      break;
+
+    case 't' : // time reversal
+      for_each( new_orig_rngs->begin(), new_orig_rngs->end(), [] ( string& rng ) { if ( rng[0] > 'Z' ){ rng[0] -=32;} else { rng[0] += 32;}}); 
+      trans_factors = make_pair(-1.0, 1.0);
+      break;
+
+    case '0' : // do nothing
+      trans_factors = make_pair(1.0, 1.0);
+      break;
+
+    case 'n' : // do nothing
+      trans_factors = make_pair(1.0, 1.0);
+      break;
+
+    default : 
+      std::cout << "do not have transformation " << op_transformation << " implemented; please check the braket specification in the input file." << std::endl;
+      throw std::logic_error( " Aborting!!" );
+  } 
+
+  vector<int> id_trans = *(block->idxs_trans());
+
+  reorder_vector_inplace( id_trans, *new_orig_rngs );
+  reorder_vector_inplace( id_trans, *new_idxs_trans );
+
+  shared_ptr<const vector<string>> new_orig_rngs_c = std::const_pointer_cast<const vector<string>>(new_orig_rngs);
+
+  return make_shared<Range_Block_Info>( new_orig_rngs_c, block->unique_block_, new_idxs_trans, factor_, trans_factors, new_aops, op_info );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void TensOp::TensOp<DataType>::generate_blocks() {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// cout << "TensOp::TensOp<DataType>::generate_blocks" <<   endl;
+  
+  vector<int> fvec( num_idxs_, 0 );
+  vector<int> mins( num_idxs_, 0 );
+  vector<int> maxs( num_idxs_ );
+  pair<double,double> fac_new(1.0,1.0);
+  int num_blocks = 1;
+
+  for( int ii = 0; ii != idx_ranges_->size(); ii++ ){
+    maxs[ii] = ( (*idx_ranges_)[ii].size()-1 );
+    num_blocks *= (*idx_ranges_)[ii].size();
+  }
+
+  // do all symm test ; loop through ranges , try to transform into another..., if fail,  then add as unique range.
+  // generate all possible ranges
+  block_list_ = vector<shared_ptr<vector<string>>>(num_blocks);
+  vector<shared_ptr<vector<string>>>::iterator bl_it = block_list_.begin();
+  do { 
+
+    shared_ptr<vector<string>> new_block = make_shared<vector<string>>(idx_ranges_->size());
+    for (auto jj = 0 ; jj != fvec.size() ; jj++ )
+      (*new_block)[jj] = (*idx_ranges_)[jj][fvec[jj]];
+
+    if( satisfies_constraints( *new_block ) ){
+     *bl_it = new_block; 
+      ++bl_it;
+    } else {
+      --num_blocks; 
+    }
+
+  } while( fvec_cycle_skipper( fvec, maxs, mins ) );
+
+  block_list_.resize(num_blocks);
+
+  if ( num_blocks <  0 )
+    throw logic_error( " The tensor " +  name_ + " appears to have no valid blocks under the current constraints! Aborting!!" ); 
+
+  return;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void TensOp::TensOp<DataType>::generate_ranges( std::shared_ptr<Op_Info> op_info ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// cout << "TensOp::TensOp<DataType>::generate_ranges : " << name_; cout.flush(); cout << "op_info->op_full_name_ = " << op_info->op_full_name_ <<   endl;
+
+  if ( all_ranges_state_specific_->find( op_info->op_full_name_) == all_ranges_state_specific_->end() ) { 
+
+    auto arss_loc = all_ranges_state_specific_->find( op_info->op_state_name_);
+    if ( arss_loc == all_ranges_state_specific_->end() ){ 
+      all_ranges_tmp_ = make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ();
+      
+      vector<shared_ptr<vector<string>>>::iterator bl_it = block_list_.begin();
+      for ( bl_it = block_list_.begin(); bl_it != block_list_.end() ; bl_it++ )
+        apply_symmetry( *(*bl_it), *aops_, op_info ) ;  
+      
+      shared_ptr< map< const vector<string>, shared_ptr<Range_Block_Info> > > all_ranges_new = 
+                make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ( *all_ranges_tmp_ );
+      
+      all_ranges_state_specific_->emplace( op_info->op_state_name_, all_ranges_new );
+    } 
+  
+    // Now performing transformations
+    if ( op_info->transformation() != 'n' ) {  
+      generate_transformed_ranges( op_info ); 
+    } else { 
+      all_ranges_state_specific_->emplace( op_info->op_full_name_, all_ranges_state_specific_->at(op_info->op_state_name_) );
+    }
+  }
+  
+  return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void TensOp::TensOp<DataType>::apply_symmetry( const vector<string>& new_block, const vector<bool>& aops, shared_ptr<Op_Info> op_info ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//   cout << "TensOp::TensOp<DataType>::apply_symmetry : " << op_info->name_ <<  endl; 
+
+  pair<double,double> factor_trans;
+  shared_ptr<const vector<string>> new_block_c = apply_direct_range_transformation( new_block, factor_, op_info  );
+  for ( auto& func : symmfuncs_ ) {
+    auto art_loc = all_ranges_tmp_->find(func->transform( *new_block_c ));
+    if( art_loc != all_ranges_tmp_->end() ){
+      all_ranges_tmp_->emplace( *new_block_c, make_shared<Range_Block_Info>( new_block_c, art_loc->second , func, factor_, factor_trans, aops , op_info ));
+      return;
+    }
+  }
+
+  shared_ptr<vector<int>> idxs_trans = make_shared<vector<int>>(new_block.size());
+  iota( idxs_trans->begin(), idxs_trans->end(), 0 );
+
+  new_block_c =  make_shared<const vector<string>>(*new_block_c);
+  factor_trans = make_pair(1.0,0.0);
+
+  //TODO This kind of recursion looks nasty; check it's OK.
+  shared_ptr<Range_Block_Info> new_range_block = make_shared<Range_Block_Info>( new_block_c, idxs_trans, factor_, factor_trans, aops , op_info ) ;  
+  new_range_block->unique_block_ = new_range_block->shared_from_this();
+
+  all_ranges_tmp_->emplace( *new_block_c, new_range_block );  
+
+  return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+shared_ptr<const vector<string>>
+TensOp::TensOp<DataType>::apply_direct_range_transformation( const vector<string>& block, pair<double,double>& new_fac, 
+                                                             shared_ptr<Op_Info>& op_info ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "TensOp::TensOp<DataType>::apply_direct_range_transformation : " << op_info->name_ <<  endl;
+
+  // TODO should be in seperate function
+  vector<string> block_buff = block ;
+  vector<string>::const_iterator b_it = block.begin();
+  for ( vector<string>::iterator bb_it = block_buff.begin() ; bb_it != block_buff.end() ; bb_it++ , b_it++ )
+    (*bb_it)[0]  = tolower( (*b_it)[0] );
+
+  return make_shared<const vector<string>>( block_buff );
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+std::shared_ptr<std::vector<bool>> 
+TensOp::TensOp<DataType>::transform_aops( const char op_trans ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "TensOp::TensOp<DataType>::transform_aops " << name_ << endl;
+
+  vector<bool> aops = *aops_; 
+  char bob = tolower(op_trans);
+  switch ( bob ) { 
+    case 'i' : // inverse
+      for_each( aops.begin(), aops.end(), [] ( decltype(aops)::reference aop ) { aop = !aop; } ); 
+      break;
+
+    case 'h' : // hconj
+      for_each( aops.begin(), aops.end(), [] ( decltype(aops)::reference aop ) { aop = !aop; } ); 
+      break;
+
+    case 't' : // time reversal
+      break;
+
+    case 'n' : // time reversal
+      break;
+
+    default : 
+      //throw logic_error( "do not have transformation " + bob +" implemented; please check the braket specification in the input file. TensOp::transform_aops"); 
+      assert(false);
+      break;
+  } 
+
+  return make_shared<vector<bool>>(aops);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+std::shared_ptr<std::vector<bool>> 
+TensOp::TensOp<DataType>::transform_aops( const std::vector<int>& op_order , const std::vector<char>& op_trans ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "TensOp::TensOp<DataType>::transform_aops"  << endl;
+
+  return transform_aops( op_trans[0] );
+
+}  
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void TensOp::TensOp<DataType>::enter_cmtps_into_map(const pint_vec& ctr_pos_list, const vector<string>& id_ranges, shared_ptr<Op_Info> op_info ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "TensOp::enter_cmtps_into_map " <<  name_ ; cout.flush(); cout << "op_info->op_full_name_ = " ; cout.flush(); cout << op_info->op_full_name_ << endl;
+
+  //TODO change so we do not need this copying; either add a const into CtrTensorPart_Base or remove the Constr in TensOp_Base
+  shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *idxs_ );
+  shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>( id_ranges );
+  shared_ptr<vector<pair<int,int>>> ctrs_pos = make_shared<vector<pair<int,int>>>(ctr_pos_list);
+  shared_ptr< CtrTensorPart<DataType> > new_ctp;
+  
+  if( ctrs_pos->size() != 0 ) {
+    new_ctp = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, ctrs_pos , op_info) ; 
+  } else { 
+    throw logic_error("You did not intend for this function to be used in this way; all necessary uncontracted blocks should be entered into map before this is called");
+    new_ctp = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, ctrs_pos, op_info ); 
+  }
+  CTP_map_->emplace( new_ctp->name(), new_ctp ); 
+
+  return;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+std::shared_ptr<std::vector<bool>> 
+MultiTensOp::MultiTensOp<DataType>::transform_aops( const vector<int>& op_order , const vector<char>& op_trans ) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "MultiTensOp::MultiTensOp<DataType>::transform_aops " << endl;
+
+  shared_ptr<vector<bool>> trans_aops = make_shared<vector<bool>>( num_idxs_ );
+  vector<bool>::iterator ta_it = trans_aops->begin();
+  vector<int>::const_iterator oo_it = op_order.begin(); 
+
+  for ( vector<char>::const_iterator ot_it = op_trans.begin(); ot_it != op_trans.end(); ot_it++, oo_it++  ) {
+    shared_ptr<vector<bool>> trans_aops_part = sub_tensops_[*oo_it]->transform_aops( *ot_it );
+    ta_it = move( trans_aops_part->begin(), trans_aops_part->end(), ta_it);
+  } 
+
+  return trans_aops;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -520,360 +374,137 @@ MultiTensOp::MultiTensOp<DataType>::MultiTensOp( std::string name, bool spinfree
                                                  TensOp_Base( name, spinfree, sub_tensops ),
                                                  num_tensors_(sub_tensops_.size()) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::MultiTensOp<DataType>::MultiTensOp" << endl;
+//  cout << "MultiTensOp::MultiTensOp<DataType>::MultiTensOp" << endl;
     
-  vector<string> idxs;
-  vector<vector<string>> idx_ranges;
-  vector<bool> aops;
- 
-  vector<int> cmlsizevec(num_tensors_);
-  vector<int> plus_ops;
-  vector<int> kill_ops;
- 
-  int num_idxs = 0;
-  for ( int ii = 0;  ii != sub_tensops_.size() ; ii++ ) {
-  
-    cmlsizevec[ii]  = num_idxs;
-    idx_ranges.insert(  idx_ranges.end(), sub_tensops_[ii]->idx_ranges()->begin(), sub_tensops_[ii]->idx_ranges()->end() );
-    idxs.insert( idxs.end(),sub_tensops_[ii]->idxs()->begin(), sub_tensops_[ii]->idxs()->end() );
-    aops.insert( aops.end(),sub_tensops_[ii]->aops()->begin(), sub_tensops_[ii]->aops()->end() );
+  all_ranges_state_specific_ = make_shared<map<string,shared_ptr<map<const vector<string>, shared_ptr<Range_Block_Info>>>>>(); 
 
-    for ( int elem : *(sub_tensops_[ii]->plus_ops()) )
-      plus_ops.push_back(elem + cmlsizevec[ii]);
-  
-    for ( int elem : *(sub_tensops_[ii]->kill_ops()) )
-      kill_ops.push_back(elem + cmlsizevec[ii]);
-  
-    num_idxs += sub_tensops_[ii]->num_idxs();
-  } 
-  shared_ptr<const map < const vector<string> , shared_ptr<Split_Range_Block_Info > > >  all_ranges_ptr = generate_ranges( idxs, aops, cmlsizevec, range_prime_map );
-  shared_ptr<const map < const vector<string> , shared_ptr<SplitX_Range_Block_Info > > >  all_rxnges_ptr = generate_rangesX( idxs, aops, cmlsizevec );
-
-  Op_dense_ = make_shared<const MultiTensOp_General>( idxs, aops, plus_ops, kill_ops, idx_ranges, make_pair(1.0,1.0), cmlsizevec, all_ranges_ptr, all_rxnges_ptr ); 
   CTP_map_  = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
-
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-shared_ptr< const map< const vector<string>, shared_ptr<Split_Range_Block_Info> >>
-MultiTensOp::MultiTensOp<DataType>::generate_ranges( vector<string>& idxs, vector<bool>& aops, vector<int>& cmlsizevec, 
-                                                     shared_ptr<map<char, long unsigned int>> range_prime_map ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::generate_ranges()" << endl;
-
-  int num_idxs = idxs.size();
-  shared_ptr<const vector<string>> orig_idxs = make_shared<const vector<string>>(idxs);
-  vector< map< const  vector<string>, shared_ptr< Range_Block_Info >>::const_iterator> rng_maps(num_tensors_);  
-  vector<int> posvec( num_tensors_, 0 ); 
-
-  map< const vector<string>, shared_ptr<Split_Range_Block_Info> > all_ranges;
-
-  // Such an ugly loop that this should be fixed when switch ranges to numbers
-  // The reason for it is that maps can't map->begin()+ii , so must iterate
-  // This is why you had the ugly thing before; it was much faster than this stupid thing with all it's checking.
-  // Maybe add some comments in future so you can understand things...
-  if ( num_tensors_ > 1 ) { 
-    shared_ptr<vector<int>> forvec = make_shared<vector<int>>(num_tensors_, 0 ); 
-    shared_ptr<vector<int>> old_forvec = make_shared<vector<int>>(*forvec);
-
-    shared_ptr<vector<int>> mins   = make_shared<vector<int>>(num_tensors_, 0 );  
-    shared_ptr<vector<int>> maxs   = make_shared<vector<int>>(num_tensors_, 0 );  
-    for ( int ii = 0 ; ii != sub_tensops_.size() ; ii++ ){ 
-      maxs->at(ii) = sub_tensops_[ii]->all_ranges()->size()-1;
-      rng_maps[ii] = sub_tensops_[ii]->all_ranges()->begin() ; 
-    }
-
-    do {
-
-      for ( int ii = 0 ; ii != forvec->size() ; ii++ ) {
-        if ( (*old_forvec)[ii] != (*forvec)[ii] ) {
-          if ( (*forvec)[ii] == 0 ) {
-            rng_maps[ii] = sub_tensops_[ii]->all_ranges()->begin() ;
-          } else {
-            rng_maps[ii]++;
-          }
-        }
-      }
-
-      old_forvec = make_shared<vector<int>>(*forvec);
-      shared_ptr< vector <shared_ptr<Range_Block_Info >>> split_block = make_shared< vector <shared_ptr<Range_Block_Info >>>(num_tensors_);
-      vector<shared_ptr<Range_Block_Info>>::iterator split_block_iter = split_block->begin();
-      for (int jj = 0 ; jj != num_tensors_ ; jj++) 
-        *split_block_iter++ = rng_maps[jj]->second;
-       
-      //TODO Must obtain from constraint functions 
-      shared_ptr<Split_Range_Block_Info> srbi;
-      {
-      SRBI_Helper helper(split_block);
-      srbi = make_shared<Split_Range_Block_Info>( helper, range_prime_map );
-      }
-      all_ranges.emplace( *(srbi->orig_block()), srbi ) ;
- 
-    } while( fvec_cycle_skipper( forvec, maxs, mins ) );
-  
-
-  } else { 
-
-     //TODO  add constructor so can just have single tensor, need not be vector
-    for ( auto elem : *(sub_tensops_[0]->all_ranges()) )  {
-      SRBI_Helper helper( make_shared<vector<shared_ptr<Range_Block_Info >>>(1, elem.second));
-      shared_ptr<Split_Range_Block_Info> srbi = make_shared<Split_Range_Block_Info>(helper, range_prime_map);
-      all_ranges.emplace( *(srbi->orig_block()), srbi ) ;
-    }
-  }
-   
-  return make_shared< const map < const vector<string> , shared_ptr<Split_Range_Block_Info > > >( all_ranges );
-  
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-shared_ptr< const map< const vector<string>, shared_ptr<SplitX_Range_Block_Info> >>
-MultiTensOp::MultiTensOp<DataType>::generate_rangesX( vector<string>& idxs, vector<bool>& aops, vector<int>& cmlsizevec  ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::generate_rangesX()" << endl;
- 
-  int num_idxs = idxs.size();
-  shared_ptr<const vector<string>> orig_idxs = make_shared<const vector<string>>(idxs);
-  vector< map< const  vector<string>, shared_ptr< Range_BlockX_Info >>::const_iterator> rng_maps(num_tensors_);  
-  vector<int> posvec( num_tensors_, 0 ); 
-
-  map< const vector<string>, shared_ptr<SplitX_Range_Block_Info> > split_rxnges;
-
-  if ( num_tensors_ > 1 ) { 
-    shared_ptr<vector<int>> forvec = make_shared<vector<int>>(num_tensors_, 0 ); 
-    shared_ptr<vector<int>> old_forvec = make_shared<vector<int>>(*forvec);
- 
-    shared_ptr<vector<int>> mins   = make_shared<vector<int>>(num_tensors_, 0 );  
-    shared_ptr<vector<int>> maxs   = make_shared<vector<int>>(num_tensors_, 0 );  
-
-    for ( int ii = 0 ; ii != sub_tensops_.size() ; ii++ ){ 
-      maxs->at(ii) = sub_tensops_[ii]->all_rxnges()->size()-1;
-      rng_maps[ii] = sub_tensops_[ii]->all_rxnges()->begin() ; 
-    }
- 
-    do {
- 
-      for ( int ii = 0 ; ii != forvec->size() ; ii++ ) {
-        if ( (*old_forvec)[ii] != (*forvec)[ii] ) {
-          if ( (*forvec)[ii] == 0 ) {
-            rng_maps[ii] = sub_tensops_[ii]->all_rxnges()->begin() ;
-          } else {
-            rng_maps[ii]++;
-          }
-        }
-       }
-     
-      old_forvec = make_shared<vector<int>>(*forvec);
-      shared_ptr< vector <shared_ptr<Range_BlockX_Info >>> split_block = make_shared< vector <shared_ptr<Range_BlockX_Info >>>( num_tensors_ );
-      vector<string> merged_ranges(num_idxs);
-      vector<string>::iterator mr_it = merged_ranges.begin();
-      vector<shared_ptr<Range_BlockX_Info>>::iterator sb_it = split_block->begin();
-      for (auto  rm_it = rng_maps.begin(); rm_it != rng_maps.end(); rm_it++, sb_it++ ){  
-        *sb_it = (*rm_it)->second;
-         copy( (*rm_it)->first.begin(), (*rm_it)->first.end(), mr_it ) ;
-         mr_it +=  (*rm_it)->first.size();  
-      } 
-
-      //TODO Must obtain from constraint functions 
-      shared_ptr<SplitX_Range_Block_Info> srbi;
-      {
-        SRBIX_Helper helper(split_block);
-        srbi = make_shared<SplitX_Range_Block_Info>( make_shared<vector<string>>(merged_ranges), make_shared<const vector<string>>(idxs),  
-                                                     make_shared<const vector<bool>>(aops), helper );
-      }
-      split_rxnges.emplace( merged_ranges, srbi ) ;
-
-    } while( fvec_cycle_skipper( forvec, maxs, mins ) );
-
-  } else { 
-
-    //TODO add constructor so can just have single tensor, need not be vector
-    for ( auto elem : *(sub_tensops_[0]->all_rxnges()) )  {
-      SRBIX_Helper helper( make_shared<vector<shared_ptr<Range_BlockX_Info >>>(1, elem.second));
-      shared_ptr<SplitX_Range_Block_Info> srbi = make_shared<SplitX_Range_Block_Info>( make_shared<vector<string>>( elem.first ), Op_dense_->idxs(), Op_dense_->aops(), helper);
-      split_rxnges.emplace( elem.first, srbi ) ;
-    }
-  }
-   
-  return make_shared< const map < const vector<string> , shared_ptr<SplitX_Range_Block_Info > > >( split_rxnges );
-  
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-void MultiTensOp::MultiTensOp<DataType>::transform( const vector<char>& transformations,  const vector<int>& op_order, shared_ptr<map<char, long unsigned int>> range_prime_map  ) {  
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// transformations pertain to the operators following reordering, e.g., if the origin multitensop is ABC, and the transformed version is B^{+} C A then
-// op_order = { 1, 2, 0 }
-// transformations = { 'H','0','0' }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::MultiTensOp<DataType>::transform" << endl;
-
-  int num_idxs = idxs()->size();
-  
-  //swap round sub_tensops_ vector so can use original routines.
-  vector<shared_ptr<TensOp_Base>> sub_tensops_trans = vector<shared_ptr<TensOp_Base>>(  sub_tensops_.size() );
-  {
-    vector<shared_ptr<TensOp_Base>>::iterator stt_it = sub_tensops_trans.begin();
-    for ( vector<int>::const_iterator  oo_it = op_order.begin(); oo_it != op_order.end(); oo_it++, ++stt_it )
-      *stt_it = sub_tensops_[*oo_it];
-  }
- 
-  //getting transformed idxs and aops, and performing transformations on all_ranges for sub ops  
-  vector<string> trans_idxs(idxs()->size());
-  vector<bool> trans_aops(aops()->size());
-  {
-    vector<string>::iterator ti_it = trans_idxs.begin();
-    vector<bool>::iterator ta_it = trans_aops.begin();
+  { 
+    num_idxs_ = 0;
+    factor_ = make_pair(1.0,0.0);
+    vector<string> idxs;
+    vector<vector<string>> idx_ranges;
+    vector<bool> aops;
+    vector<int> cmlsizevec(num_tensors_);
+    for ( int ii = 0;  ii != sub_tensops_.size() ; ii++ ) {
     
-    vector<char>::const_iterator t_it = transformations.begin(); 
-    for ( auto stt_it = sub_tensops_trans.begin(); stt_it != sub_tensops_trans.end(); ++stt_it, t_it++  ) {
-      if ( (*stt_it)->all_ranges_trans()->find(*t_it) == (*stt_it)->all_ranges_trans()->end() )
-        (*stt_it)->transform(*t_it, range_prime_map);
-     
-      vector<string> sub_trans_idxs = vector<string>(*((*stt_it)->idxs()));
-      transform_tens_vec( *t_it, sub_trans_idxs );
-      copy( sub_trans_idxs.begin(), sub_trans_idxs.end(), ti_it );
-      ti_it += sub_trans_idxs.size();
-     
-      vector<bool> sub_trans_aops = vector<bool>(*((*stt_it)->aops()));
-      transform_tens_vec( *t_it, sub_trans_aops );
-      copy( sub_trans_aops.begin(), sub_trans_aops.end(), ta_it );
-      ta_it += sub_trans_aops.size();
+      WickUtils::pair_fac_mult( sub_tensops_[ii]->factor_ , factor_ );
+      idx_ranges.insert(  idx_ranges.end(), sub_tensops_[ii]->idx_ranges()->begin(), sub_tensops_[ii]->idx_ranges()->end() );
+      idxs.insert( idxs.end(),sub_tensops_[ii]->idxs()->begin(), sub_tensops_[ii]->idxs()->end() );
+      aops.insert( aops.end(),sub_tensops_[ii]->aops()->begin(), sub_tensops_[ii]->aops()->end() );
+      cmlsizevec[ii]  = num_idxs_;
+      num_idxs_ += sub_tensops_[ii]->num_idxs();
+   
+    } 
+    aops_ = make_shared<const vector<bool>>(aops);
+    idxs_ = make_shared<const vector<string>>(idxs);
+    idx_ranges_ = make_shared<const vector<vector<string>>> (idx_ranges); 
+    cmlsizevec_ = make_shared<const vector<int>>( cmlsizevec ); 
+  } 
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void
+MultiTensOp::MultiTensOp<DataType>::generate_ranges( shared_ptr<Op_Info> multiop_info ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  cout << "MultiTensOp::generate_ranges() = " << name_ ; cout.flush(); cout << "multiop_info->op_full_name_ = "; cout.flush(); cout << multiop_info->op_full_name_ <<  endl;
+ 
+  vector< map< const vector<string>, shared_ptr< Range_Block_Info >>::const_iterator> rng_maps( num_tensors_ );  
+  vector< map< const vector<string>, shared_ptr< Range_Block_Info >>::const_iterator> rng_maps_begin( num_tensors_ );  
+  all_ranges_ = make_shared<map< const vector<string>, shared_ptr<Range_Block_Info> >>();
+
+  shared_ptr<vector<bool>> trans_aops = transform_aops( *(multiop_info->op_order_),  *(multiop_info->transformations()) );
+  if ( num_tensors_ > 1 ) {
+    vector<int> forvec(num_tensors_, 0 ); 
+    vector<int> old_forvec(num_tensors_, 0 );
+    vector<int> mins(num_tensors_, 0 );  
+    vector<int> maxs(num_tensors_ );  
+    
+    vector<int> trans_cml_sizes(rng_maps.size(),0);
+    int cml_size = 0; 
+    string  unique_multiop_name = "";
+    for ( int ii = 0; ii != sub_tensops_.size(); ii++ ){
+      sub_tensops_[multiop_info->op_order(ii)]->generate_transformed_ranges( multiop_info->op_info(ii) );
+
+      maxs[ii] = sub_tensops_[multiop_info->op_order(ii)]->all_ranges_state_specific_->at( multiop_info->op_info(ii)->name_ )->size()-1;
+
+      rng_maps[ii] = sub_tensops_[multiop_info->op_order(ii)]->all_ranges_state_specific_->at( multiop_info->op_info(ii)->name_ )->begin();
+
+      trans_cml_sizes[ii] = (*cmlsizevec_)[multiop_info->op_order(ii)];
+  
+      unique_multiop_name += multiop_info->op_info(multiop_info->op_order(ii))->op_state_name_;
     }
-  }
 
-  vector< map< const  vector<string>, shared_ptr< Range_Block_Info >>::const_iterator> rng_maps(num_tensors_);  
-  vector<int> posvec( num_tensors_, 0 ); 
-
-  map< const vector<string>, shared_ptr<Split_Range_Block_Info> > split_ranges_tmp;
-  if ( num_tensors_ > 1 ) { 
-    shared_ptr<vector<int>> forvec = make_shared<vector<int>>(num_tensors_, 0 ); 
-    shared_ptr<vector<int>> old_forvec = make_shared<vector<int>>(*forvec);
-
-    shared_ptr<vector<int>> mins   = make_shared<vector<int>>(num_tensors_, 0 );  
-    shared_ptr<vector<int>> maxs   = make_shared<vector<int>>(num_tensors_, 0 );  
-
-    for ( int ii = 0 ; ii != sub_tensops_trans.size() ; ii++ ){ 
-      maxs->at(ii) = sub_tensops_trans[ii]->all_ranges_trans()->at(transformations[ii])->size()-1;
-      rng_maps[ii] = sub_tensops_trans[ii]->all_ranges_trans()->at(transformations[ii])->begin() ; 
+    std::shared_ptr<map< const vector<string>, shared_ptr< Range_Block_Info >>> unique_split_ranges_map;
+    auto sssr_loc = all_ranges_state_specific_->find(unique_multiop_name);
+    if ( sssr_loc  != all_ranges_state_specific_->end() ) {
+      unique_split_ranges_map = sssr_loc->second;
+    } else { 
+      unique_split_ranges_map = all_ranges_;
     }
+  
+    rng_maps_begin = rng_maps;
 
     do {
-
-      for ( int ii = 0 ; ii != forvec->size() ; ii++ ) {
-        if ( (*old_forvec)[ii] != (*forvec)[ii] ) {
-          if ( (*forvec)[ii] == 0 ) {
-            rng_maps[ii] = sub_tensops_trans[ii]->all_ranges_trans()->at(transformations[ii])->begin() ;
+      for ( int ii = 0 ; ii != forvec.size() ; ii++ ) {
+        if ( old_forvec[ii] != forvec[ii] ) {
+          if ( forvec[ii] == 0 ) {
+            rng_maps[ii] = rng_maps_begin[ii];
           } else {
             rng_maps[ii]++;
           }
         }
       }
-
-      old_forvec = make_shared<vector<int>>(*forvec);
-      shared_ptr< vector <shared_ptr<Range_Block_Info >>> split_block = make_shared< vector <shared_ptr<Range_Block_Info >>>(num_tensors_);
+ 
+      old_forvec = forvec;
+      shared_ptr< vector <shared_ptr<Range_Block_Info >>> split_block = make_shared< vector <shared_ptr<Range_Block_Info >>>( num_tensors_ );
       vector<shared_ptr<Range_Block_Info>>::iterator sb_it = split_block->begin();
-      for (int jj = 0 ; jj != num_tensors_ ; jj++, sb_it++ ) 
-        *sb_it = rng_maps[jj]->second;
+      for (auto  rm_it = rng_maps.begin(); rm_it != rng_maps.end(); rm_it++, sb_it++ )
+        *sb_it = (*rm_it)->second;
        
       //TODO Must obtain from constraint functions 
-      shared_ptr<Split_Range_Block_Info> srbi;
-      {
-      SRBI_Helper helper(split_block);
-      srbi = make_shared<Split_Range_Block_Info>( helper, range_prime_map );
+      shared_ptr<Split_Range_Block_Info> srbi =  make_shared<Split_Range_Block_Info>( split_block, trans_cml_sizes, trans_aops, multiop_info, unique_split_ranges_map );
+      if ( srbi->canonical_ ) {
+        srbi->unique_block_ = dynamic_pointer_cast<Split_Range_Block_Info>(srbi->shared_from_this());
       }
-      split_ranges_tmp.emplace( *(srbi->orig_block()), srbi ) ;
- 
-    } while( fvec_cycle_skipper( forvec, maxs, mins ) );
-  
+      all_ranges_->emplace( *(srbi->orig_rngs_), srbi ) ;
 
-  } else { 
+    } while (fvec_cycle_skipper(forvec, maxs, mins )); 
 
-  //TODO  add constructor so can just have single tensor, need not be vector
-    if ( sub_tensops_.front()->all_ranges_trans()->find(transformations.front()) == sub_tensops_.front()->all_ranges_trans()->end() )
-      sub_tensops_.front()->transform(transformations.front(), range_prime_map);
-
-    for ( auto elem : *(sub_tensops_.front()->all_ranges_trans()->at(transformations.front())) )  {
-      SRBI_Helper helper( make_shared<vector<shared_ptr<Range_Block_Info >>>(1, elem.second));
-      shared_ptr<Split_Range_Block_Info> srbi = make_shared<Split_Range_Block_Info>(helper, range_prime_map);
-      split_ranges_tmp.emplace( *(srbi->orig_block()), srbi ) ;
-    }
+    all_ranges_state_specific_->emplace( multiop_info->name_, all_ranges_ ); 
   }
-  
-  Op_dense_->split_ranges_trans()->emplace( make_pair( transformations, op_order ),  make_shared< const map < const vector<string> , shared_ptr<Split_Range_Block_Info > > >( split_ranges_tmp ) );
-  
   return;
-
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//get contractions and range, looks totally inefficient, but generating everything and then checking in sequence
-//seems to work out faster; it's either check everything lots of times, or regenerate it lots of times. 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void MultiTensOp::MultiTensOp<DataType>::get_ctrs_tens_ranges() {
+void MultiTensOp::MultiTensOp<DataType>::generate_uncontracted_ctps( shared_ptr<Op_Info> op_info ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "MultiTensOp::get_ctrs_tens_ranges " <<  endl;
+//  cout << "MultiTensOp::generate_uncontracted_ctps "; cout.flush(); cout << "op_info->op_full_name_ = "; cout.flush(); cout << op_info->op_full_name_ <<  endl;
 
-  //puts uncontracted ranges into map 
   shared_ptr<vector<pair<int,int>>> noctrs = make_shared<vector<pair<int,int>>>(0);
- 
-  //silly, should just test {act,act,....} against contraints, and check if act in each ranges... 
-  for (auto rng_it = Op_dense_->split_ranges()->begin(); rng_it != Op_dense_->split_ranges()->end(); rng_it++) {
 
-    bool check = true;
-    for (int xx = 0; xx !=rng_it->first.size() ; xx++ ) {
-      if (rng_it->first[xx][0] != 'a') {
-        check=false;
-        break;
-      }
-    }
-
-    if(!check){
-      continue;
-
-    } else {
-      enter_cmtps_into_map(*noctrs, rng_it->second->factors(), rng_it->first );
-
-    }
-  }
-
-  //puts_contractions, with specified ranges, into the map
-  for ( int nctrs = 1 ; nctrs != (Op_dense_->num_idxs()/2)+1 ; nctrs++ ){
-    shared_ptr<vector<shared_ptr<vector<pair<int,int>>>>> ctr_lists = get_unique_pairs( Op_dense_->plus_ops(), Op_dense_->kill_ops(), nctrs );
-
-    for (shared_ptr<vector<pair<int,int>>> ctr_vec : *ctr_lists) {
-      for (auto rng_it = Op_dense_->split_ranges()->begin(); rng_it != Op_dense_->split_ranges()->end(); rng_it++) {
+  auto all_ranges = all_ranges_state_specific_->at(op_info->name_); 
+  vector<int>::iterator oo_it = op_info->op_order()->begin();
+  for (auto rng_it = all_ranges->begin(); rng_it != all_ranges->end(); rng_it++, oo_it++)
+    enter_cmtps_into_map(*noctrs, rng_it->first, op_info->op_info(*oo_it)  );
   
-        bool valid = true;
-        //checks ranges for contractions match
-        for (int ii = 0 ; ii != ctr_vec->size(); ii++){
-          if ( rng_it->first[(*ctr_vec)[ii].first] != rng_it->first[(*ctr_vec)[ii].second]){
-            valid = false;
-            break;
-          }
-        }
-        if (valid)
-          enter_cmtps_into_map(*ctr_vec, rng_it->second->factors(), rng_it->first );
-        
-      }
-    }
-  }
   return;
-}  
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void MultiTensOp::MultiTensOp<DataType>::enter_cmtps_into_map(pint_vec ctr_pos_list, pair<int,int> ReIm_factors, const vector<string>& id_ranges ){
+void MultiTensOp::MultiTensOp<DataType>::enter_cmtps_into_map(const pint_vec& ctr_pos_list, const vector<string>& id_ranges, shared_ptr<Op_Info> op_info ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- // cout << "MultiTensOp::enter_into_CTP_map" << endl;
+//  cout << "MultiTensOp::enter_cmtps_into_map " <<  name_ ; cout.flush(); cout << "   op_info->op_full_name_ = " ; cout.flush(); cout << op_info->op_full_name_ << endl;
 
   shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = make_shared< vector< shared_ptr<CtrTensorPart_Base> >> (num_tensors_); 
-  vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
-  vector<vector<pair<int,int>>> sameT_ctrs_pos( num_tensors_,  pint_vec(0));
-  shared_ptr<vector<pair<int,int>>> no_ctrs =  make_shared<vector<pair<int,int>>>(0);
-  shared_ptr<vector<pair<int,int>>> ReIm_factor_vec = make_shared<vector<pair<int,int>>>(1, ReIm_factors ) ; 
 
-  //seperate contractions into those on the same tensor, and those between different tensors 
-  // TODO tidy this up, e.g., use lambda to get cross pos
+  vector<pair<pair<int,int>,pair<int,int>>> diffT_ctrs_pos(0);
+
+  vector<vector<pair<int,int>>> sameT_ctrs_pos( num_tensors_);
+
+  shared_ptr<vector<pair<int,int>>> no_ctrs =  make_shared<vector<pair<int,int>>>(0);
+
   for ( pair<int,int> ctr_pos : ctr_pos_list ) {
  
     pair<int,int> ctr1;
@@ -892,48 +523,51 @@ void MultiTensOp::MultiTensOp<DataType>::enter_cmtps_into_map(pint_vec ctr_pos_l
       } 
 
     if (ctr1.first == ctr2.first) {
-      sameT_ctrs_pos.at(ctr1.first).push_back(make_pair(ctr1.second, ctr2.second));  
+      sameT_ctrs_pos[ctr1.first].push_back(make_pair(ctr1.second, ctr2.second));  
     } else {
       diffT_ctrs_pos.push_back(make_pair(ctr1,ctr2));
     }
   } 
-
-  //get_ranges for individual tensors
-  for (int ii = 0 ; ii !=num_tensors_; ii++ ){ 
-    shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>(id_ranges.begin()+Op_dense_->cmlsizevec(ii), id_ranges.begin()+cmlsizevec(ii)+sub_tensops_[ii]->num_idxs());
+  
+  //NOTE : seems like you should not need to copy sameT_ctrs and diffT_ctrs on input, but later recursive operations within CTPs make me worry about this
+  int cmlsize_tmp = 0;
+  for (int ii = 0 ; ii !=  op_info->op_order_->size(); ii++ ){ 
     shared_ptr<vector<string>>  TS_idxs = make_shared<vector<string>>( *(sub_tensops_[ii]->idxs()) );
-   
+    shared_ptr<vector<string>>  TS_id_ranges = make_shared<vector<string>>( id_ranges.begin() + cmlsize_tmp, id_ranges.begin() + (cmlsize_tmp+TS_idxs->size()) );
+    cmlsize_tmp += TS_idxs->size();
+
     if( sameT_ctrs_pos[ii].size() != 0 ) {
-      CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, make_shared<vector<pair<int,int>>>(sameT_ctrs_pos[ii]), ReIm_factor_vec ) ; 
+      CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, make_shared<vector<pair<int,int>>>(sameT_ctrs_pos[ii]), op_info->op_info_canonical(ii) ) ; 
     } else { 
-      CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, ReIm_factor_vec ); 
+      CTP_vec->at(ii) = make_shared< CtrTensorPart<DataType> >( TS_idxs, TS_id_ranges, no_ctrs, op_info->op_info_canonical(ii) ); 
     }
     CTP_map_->emplace(CTP_vec->at(ii)->name(), CTP_vec->at(ii)); 
 
   }
+
   if ( CTP_vec->size() < 3  ){ 
-    auto new_cmtp = make_shared<CtrMultiTensorPart<DataType>>(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos));
+    auto new_cmtp = make_shared<CtrMultiTensorPart<DataType>>(CTP_vec, make_shared<vector<pair<pair<int,int>,pair<int,int>>>> (diffT_ctrs_pos), op_info );
     CTP_map_->emplace(new_cmtp->name(), new_cmtp );
   } else {
-    get_cmtp(CTP_vec, make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(diffT_ctrs_pos) ); 
+    get_cmtp(CTP_vec, make_shared<vector<pair<pair<int,int>,pair<int,int>>>>(diffT_ctrs_pos), op_info ); 
   } 
 
   return;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // If the ctp_vec has more than two elements then the multitensor is built up recursively from other multitensors, this is
 // to simplify the process of contracting the tensors.  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>>  ctp_vec,  // ctp : contracted_tensor_parts
-                                                   shared_ptr<vector<pair<pair<int,int>, pair<int,int>>>> ccp_vec  ){ // ccp : cross_ctrs_pos
+                                                   shared_ptr<vector<pair<pair<int,int>, pair<int,int>>>> ccp_vec, // ccp : cross_ctrs_pos
+                                                   shared_ptr<Op_Info> op_info ){ 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- // cout << "MultiTensOp::MultiTensOp<DataType>::get_cmtp " << endl;
+//  cout << "MultiTensOp::MultiTensOp<DataType>::get_cmtp "; cout.flush(); cout << "  op_info->op_full_name_ = " ; cout.flush(); cout << op_info->op_full_name_ << endl;
   
   auto ctp_vec_buff =  make_shared<vector<shared_ptr<CtrTensorPart_Base>>>(*ctp_vec);  
   auto ccp_vec_buff =  make_shared<vector<pair<pair<int,int>, pair<int,int>>>>(*ccp_vec);
-  auto cmtp_orig_ctp_order = make_shared<CtrMultiTensorPart<DataType>>(ctp_vec_buff, ccp_vec_buff);
+  auto cmtp_orig_ctp_order = make_shared<CtrMultiTensorPart<DataType>>(ctp_vec_buff, ccp_vec_buff, op_info);
 
   vector<pair<pair<int,int>, pair<int,int>>>::iterator ccp_it = ccp_vec->begin();
   int counter = 0 ;
@@ -957,7 +591,7 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
         }
       }
 
-      shared_ptr<CtrMultiTensorPart<DataType>> cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb );
+      shared_ptr<CtrMultiTensorPart<DataType>> cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb, op_info );
       CTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
 
       shift_ccp_and_ctp_vecs( cmtp_tatb, ta_pos, tb_pos, ctp_vec, ccp_vec_merged_tatb );
@@ -971,14 +605,14 @@ void MultiTensOp::MultiTensOp<DataType>::get_cmtp( shared_ptr<vector<shared_ptr<
     while ( ctp_vec->size() > 2 ) { 
       auto ctp_vec_tatb = make_shared<vector<shared_ptr<CtrTensorPart_Base>>>( vector<shared_ptr<CtrTensorPart_Base>> { *(ctp_vec->end()-2), *(ctp_vec->end()-1) } );
       auto ccp_vec_tatb = make_shared<vector<pair<pair<int,int>, pair<int,int>> >>(0);
-      auto cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb );
+      auto cmtp_tatb = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec_tatb, ccp_vec_tatb, op_info);
       CTP_map_->emplace( cmtp_tatb->name(), cmtp_tatb );
       ctp_vec->pop_back(); 
       ctp_vec->back() = cmtp_tatb;
     }
   }   
 
-  shared_ptr<CtrMultiTensorPart<DataType>> cmtp_new_ctp_order = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec, ccp_vec );
+  shared_ptr<CtrMultiTensorPart<DataType>> cmtp_new_ctp_order = make_shared<CtrMultiTensorPart<DataType>>( ctp_vec, ccp_vec, op_info );
   std::shared_ptr<std::vector<int>> new_order_to_orig_order =  get_pattern_match_order( cmtp_orig_ctp_order->unc_idxs(), cmtp_new_ctp_order->unc_idxs() ) ; 
 
   cmtp_orig_ctp_order->use_new_order_compute_list( new_order_to_orig_order, cmtp_new_ctp_order->name() );

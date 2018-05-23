@@ -28,43 +28,30 @@ System_Computer::System_Computer<DataType>::System_Computer(shared_ptr<System_In
   b_gamma_computer_->set_maps( range_conversion_map_, system_info_->Gamma_map, gamma_data_map_,
                                sigma_data_map_, civec_data_map_ );
 
-  calculate_mo_integrals();
-
-  cout << "should either set or initialize maps here " << endl;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void System_Computer::System_Computer<DataType>::build_equation_computer(std::string equation_name ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << " void System_Computer::System_Computer<DataType>::build_equation_computer" << endl;
+  cout << "System_Computer<DataType>::build_equation_computer : " << equation_name << endl;
 
   shared_ptr<Equation_Base<DataType>> equation_basic = system_info_->equation_map_->at(equation_name);
 
-//  for ( auto& tmap_it : equation_basic->T_map() ){ 
-//    shared_ptr<set<string>> required_blocks = tmap_it->second->required_blocks() 
-//    for ( string block_name : *required_blocks )
-//      if ( tensop_data_map_->find(block_name) == tensop_data_map_->end() ) 
-//        cout << "REMOVE THIS" << endl;
-//  }
   if ( equation_basic->type()  ==  "Value" ) {
-    //shared_ptr<Equation_Value<DataType>> equation_val = dynamic_pointer_cast<Equation_Value<DataType>>(equation_basic);
     shared_ptr<Equation_Computer_Value<DataType>> equation_computer = make_shared<Equation_Computer_Value<DataType>>( equation_basic, range_conversion_map_ );
-    equation_computer->set_computers( b_gamma_computer_ ) ;
+    equation_computer->set_computers( b_gamma_computer_, moint_computer_ ) ;
     equation_computer->set_maps( gamma_data_map_, tensop_data_map_ );
     equation_computer->build_expression_computer();
     equation_computer->solve_equation();
   
-//  dynamic_pointer_cast<Equation_Base<DataType>>(equation(make_shared<Equation_Computer_Value<DataType>>( equation, range_conversion_map_ )));
-//    equation_computer = dynamic_pointer_cast<Equation_Computer_Base<DataType>>(make_shared<Equation_Computer_Value<DataType>>( equation, range_conversion_map_ ));
   } else if ( equation_basic->type()  ==  "LinearRM" ) {
-    cout << " building linear RM computer " << endl;
     auto equation_linearrm = dynamic_pointer_cast<Equation_LinearRM<DataType>>( equation_basic ) ;
     if (!equation_linearrm) { throw logic_error("casting of sptr<Equation_base> to sptr<Equation_LinearRM>  failed") ; } 
 
     shared_ptr<Equation_Computer_LinearRM<DataType>> equation_computer = make_shared<Equation_Computer_LinearRM<DataType>>( equation_linearrm, range_conversion_map_ );
-    equation_computer->set_computers( b_gamma_computer_ ) ;
+    equation_computer->set_computers( b_gamma_computer_, moint_computer_ ) ;
     equation_computer->set_maps( gamma_data_map_, tensop_data_map_ );
-    equation_computer->build_expression_computer();
+    equation_computer->build_expression_computer(); // TODO WRONG NAME AND WRONG FUNCTIONALITY
     equation_computer->solve_equation();
    
   } else {
@@ -72,89 +59,6 @@ void System_Computer::System_Computer<DataType>::build_equation_computer(std::st
     throw std::logic_error( "this type of equation has not been implemented yet! Aborting!!" );
   }
  
-  return;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template < typename DataType >
-void System_Computer::System_Computer<DataType>::get_necessary_tensor_blocks( shared_ptr<Expression<DataType>> expression ){
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression_Computer::Expression_Computer<DataType>::set_gamma_maps" << endl;
-
-  // Loop through A-tensors needed for this gamma
-  for ( auto& gamma_contribs : *expression->G_to_A_map_ ){
-    for ( auto& A_contrib_list : *gamma_contribs.second ){
-      auto& A_contrib  = A_contrib_list.second; 
-      for ( auto& CTP : *( expression->CTP_map()->at(A_contrib->name())->CTP_vec() ) )
-        if ( tensop_data_map_->find(CTP->name() ) == tensop_data_map_->end() )
-          get_tensor_block( CTP->name(), CTP->full_id_ranges() );
-    }
-  }
-  return;
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Gets ranges and factors from the input which will be used in definition of terms
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-void System_Computer::System_Computer<DataType>::get_tensor_block( string tensor_block_name, shared_ptr<vector<string>> idx_ranges ) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "System_Computer::System_Computer::get_tensor_block" << endl;
-
-  shared_ptr<vector<SMITH::IndexRange>> smith_idx_ranges = make_shared<vector<SMITH::IndexRange>>(idx_ranges->size());
-  vector<SMITH::IndexRange>::iterator sir_it = smith_idx_ranges->begin();
-  for ( string& range_name :  *idx_ranges )
-    *sir_it++ = *(range_conversion_map_->at(range_name));
- 
-  if (tensor_block_name[0] == 'H' ) {
-  //  tensop_data_map_->emplace( tensor_block_name, moint_computer_->get_v2( *idx_ranges ) );
-
-  shared_ptr<SMITH::Tensor_<double>> H_block = Tensor_Arithmetic_Utils::get_sub_tensor( tensop_data_map_->at("H") , *smith_idx_ranges ) ;
-
-  } else {
-   
-    DataType one = (DataType)(1.0); //TODO find a better way;
-    tensop_data_map_->emplace( "T" , Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor( smith_idx_ranges, one ) );
-  }
-  return;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Gets ranges and factors from the input which will be used in definition of terms
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-void System_Computer::System_Computer<DataType>::calculate_mo_integrals() {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "System_Computer::System_Computer::calculate_mo_integrals()" << endl;
-
-  cout << "getting mo integrals " <<  endl;
-  vector<string> free4 = { "free", "free", "free", "free" };
-  vector<string> act4 = { "act", "act", "act", "act" };
-  vector<string> free2 = { "free", "free" };
-
-  f1_ =  moint_computer_->get_fock( free2, false ) ;
-  h1_  =  moint_computer_->get_h1( free2, true ) ;
-  v2_  =  moint_computer_->get_v2( free4 ) ;
-  cout << " new_coeffs  v2->norm() = " << v2_->norm() << endl;
-
-  tensop_data_map_->emplace( "H" , v2_ );
-  tensop_data_map_->emplace( "h" , h1_ );
-  tensop_data_map_->emplace( "f" , f1_ );
-
-  //  tensop_data_map_->emplace( "T" , moint_computer_->get_test_tensor( free4 ) );
-  //tensop_data_map_->emplace( "X" , moint_computer_->get_test_tensor( free4 ) );
-  DataType one = (DataType)(1.0); //TODO find a better way;
-  SMITH::IndexRange fs = *(range_conversion_map_->at("free"));
-  SMITH::IndexRange nvs = *(range_conversion_map_->at("cor"));
-  nvs.merge(*(range_conversion_map_->at("act")));
-
-  SMITH::IndexRange ncs = *(range_conversion_map_->at("act"));
-  ncs.merge(*(range_conversion_map_->at("vir")));
-
-  shared_ptr<vector<SMITH::IndexRange>> fs4 = make_shared<vector<SMITH::IndexRange>>(vector<SMITH::IndexRange> { ncs, ncs, nvs, nvs } );   
-  shared_ptr<SMITH::Tensor_<DataType>> XTens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor( fs4, one ); 
-  tensop_data_map_->emplace( "X" , XTens );
-
-  cout <<"X->norm() = "; cout.flush() ; cout << tensop_data_map_->at("X")->norm() << endl; 
-
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////

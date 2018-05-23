@@ -8,7 +8,6 @@
 #include <src/smith/indexrange.h>
 #include <src/smith/tensor.h>
 #include <src/smith/multitensor.h>
-//#include <src/prop/proptool/initialization/equation_init.h>
 #include <src/prop/proptool/initialization/equation_init_linearRM.h>
 #include <src/prop/proptool/initialization/op_bk_term_expr_init.h>
 #include <src/prop/proptool/integrals/moint_computer.h>
@@ -36,6 +35,9 @@ namespace PropTool {
     int nstates_;
     std::vector<int> target_states_; //note this is total range of the states
     std::vector<int> all_states_;
+
+    std::vector<std::vector<int>> degenerate_states_; // use as a hack for time reversal symmetry
+
     //range info 
     int nclosed_; 
     int ncore_; 
@@ -78,6 +80,7 @@ namespace PropTool {
     void read_input_and_initialize(); 
     void get_wavefunction_info();
     void set_target_state_info();
+    void identify_degeneracies( const std::vector<double>& energies );
     void set_ao_range_info();
     void set_ci_range_info();
 

@@ -17,7 +17,7 @@ class Op_Init {
     char trans_; // H or h : hermitian conjugate, T or t = transpose, C or c = complex conjugate, anything else : nothing                     
      
     Op_Init(std::string base_name, std::vector<std::string>& idxs, std::shared_ptr<std::vector<int*>> idx_ptrs ) :
-            name_(base_name), idxs_(idxs), idx_ptrs_(idx_ptrs), alg_name_(base_name), trans_('0') {
+            name_(base_name), idxs_(idxs), idx_ptrs_(idx_ptrs), alg_name_(base_name), trans_('n') {
               if (idxs.front() != "none" ) {
                 alg_name_ += "_{";
                 for (std::string idx : idxs_ )
@@ -174,25 +174,12 @@ class Term_Init {
                std::shared_ptr<std::vector<std::string>> braket_factors,
                std::shared_ptr<std::map<std::string, int>> idx_val_map) :
                name_(name), type_(type), braket_list_(braket_list), braket_factors_(braket_factors),
-               idx_val_map_(idx_val_map), orbital_projector_(false) {
-             
-               alg_name_ = "";
-               for ( int ii =0 ; ii != braket_factors_->size(); ii++ )
-                 alg_name_ += "(" + braket_factors_->at(ii) + ")" + braket_list->at(ii).name_ + " + ";
-               alg_name_.pop_back();
-               std::cout << "======================= New Term =======================" << std::endl;
-               std::cout << alg_name_ << std::endl << std::endl;
-               };
-    
-    // second variation of initialization for terms with orbital projector
-    Term_Init( std::string name, std::string type,
-               std::shared_ptr<std::vector<BraKet_Init>> braket_list,
-               std::shared_ptr<std::vector<std::string>> braket_factors,
-               std::shared_ptr<std::map<std::string, int>> idx_val_map,
-               std::string proj_op_name ) :
-               name_(name), type_(type), braket_list_(braket_list), braket_factors_(braket_factors),
-               idx_val_map_(idx_val_map), orbital_projector_(true), proj_op_name_(proj_op_name)  {
-             
+               idx_val_map_(idx_val_map) {
+            
+               std::cout << "Term_Init type = " << type_ << std::endl;               
+               if ( type_.substr(0,2) == "or" )
+                 orbital_projector_ = true;
+
                alg_name_ = "";
                for ( int ii =0 ; ii != braket_factors_->size(); ii++ )
                  alg_name_ += "(" + braket_factors_->at(ii) + ")" + braket_list->at(ii).name_ + " + ";
@@ -238,9 +225,9 @@ class Expression_Init {
                      term_list_(term_list), term_range_maps_(term_range_maps), type_(type) {
                        for ( std::pair<std::string, std::shared_ptr<Term_Init>> term : *term_list_ )
                          name_ += "(" +term.first +")."+ term.second->name_+ "+";
+                      
                        name_.pop_back();
-                       std::cout << "Expression name " << std::endl;
-                       std::cout << name_ << std::endl << std::endl;
+                       std::cout << "New Expression : "; std::cout.flush(); std::cout <<  name_ << " initialized " << std::endl << std::endl;
                      };
     ~Expression_Init(){};
  
