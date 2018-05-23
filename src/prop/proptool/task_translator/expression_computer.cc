@@ -27,7 +27,10 @@ Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( string expression_name ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_EXPRESSION_COMPUTER
   cout <<  "Expression_Computer::Expression_Computer::evaluate_expression : name input : " << expression_name <<  endl;
+#endif
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<Expression<DataType>> expr = expression_map_->at(expression_name);
   cout << "got " << expression_name << " info "<< endl;
@@ -38,7 +41,9 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( st
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( shared_ptr<Expression<DataType>> expression ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression_Computer::Expression_Computer<DataType>::evaluate_expression" << endl; 
+#ifdef __DEBUG_EXPRESSION_COMPUTER
+ cout << "Expression_Computer::Expression_Computer<DataType>::evaluate_expression" << endl; 
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
   
   if ( expression->type_ == "full" ) {
     evaluate_expression_full( expression );
@@ -55,7 +60,9 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression( sh
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb_exc_deriv( shared_ptr<Expression<DataType>> expression ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_deriv : " << expression->name() << endl;
+#ifdef __DEBUG_EXPRESSION_COMPUTER 
+cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_deriv : " << expression->name() << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
                                                                                  moint_computer_ );
@@ -204,7 +211,9 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_full( shared_ptr<Expression<DataType>> expression ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_EXPRESSION_COMPUTER
 cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : " << expression->name() << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
   string expression_name = expression->name();
   cout << endl << endl;
@@ -373,7 +382,10 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::print_AContraction_list(shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list, string A_contrib_name ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_EXPRESSION_COMPUTER
 cout << "Expression_Computer::print_AContraction_list" << endl;  
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
   cout << "=========================================================================================================" << endl;
   cout << A_contrib_name << endl;
   cout << "=========================================================================================================" << endl;
@@ -399,7 +411,10 @@ cout << "Expression_Computer::print_AContraction_list" << endl;
 template < typename DataType >
 bool Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors(AContribInfo_Base& AC_info ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- 
+#ifdef __DEBUG_EXPRESSION_COMPUTER
+cout << "Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors" << endl;
+#endif
+///////////////////////////////////////////////////////////////////////////////////////////////////////
   bool  skip = false;
   for ( int qq = 0 ; qq != AC_info.id_orders().size(); qq++) { 
      if ( AC_info.factor(qq).first != 0 || AC_info.factor(qq).second !=0) { 
@@ -420,7 +435,9 @@ void Expression_Computer::Expression_Computer<DataType>::set_gamma_maps( string 
                                                                          shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    sigma_data_map,
                                                                          shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    civec_data_map  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression_Computer::Expression_Computer<DataType>::set_gamma_maps" << endl;
+#ifdef __DEBUG_EXPRESSION_COMPUTER 
+cout << "Expression_Computer::Expression_Computer<DataType>::set_gamma_maps" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
   gamma_computer_->set_maps(range_conversion_map_, expression_map_->at(expression_name)->gamma_info_map_, gamma_data_map, sigma_data_map, civec_data_map );
   return;
