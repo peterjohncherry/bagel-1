@@ -26,7 +26,7 @@ class AContribInfo_Base {
     void decrease_total_uses() { total_uses_-=1; }
     void decrease_remaining_uses() { remaining_uses_-=1; }
 
-    virtual std::vector<int> id_order(int qq) { assert(false); return std::vector<int>(0); }
+    virtual std::vector<int>& id_order(int qq) = 0;
     virtual std::vector<std::vector<int>> id_orders() { assert(false); return std::vector<std::vector<int>>(0); }
 
     virtual void add_id_order( std::vector<int>& new_id_order ) { assert(false); } 
@@ -99,7 +99,7 @@ class AContribInfo_Full : public AContribInfo_Base {
       factors[qq].second += new_factor.second;  
     }
 
-    std::vector<int> id_order(int qq) { return id_orders_[qq]; };
+    std::vector<int>& id_order(int qq) { return id_orders_[qq]; };
     std::vector<std::vector<int>> id_orders() { return id_orders_; };
  
     std::shared_ptr<std::vector<std::string>> a_block_ranges() { return post_reorder_rngs_ ; } 
@@ -187,6 +187,7 @@ class AContribInfo_OrbExcDeriv : public AContribInfo_Base {
     std::shared_ptr<std::vector<std::string>> post_gamma_contraction_ranges() { return post_gamma_contraction_ranges_; }
     std::shared_ptr<std::vector<int>> post_contraction_reordering() { return post_contraction_reordering_; }
     std::shared_ptr<std::vector<int>> target_block_positions() { return target_block_positions_; }
+    std::vector<int>& id_order(int qq) { return *target_block_positions_; };
 
 };
 #endif

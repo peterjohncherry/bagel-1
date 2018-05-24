@@ -9,11 +9,8 @@ namespace bagel {
 
 namespace Tensor_Arithmetic_Utils {  
 
-     std::shared_ptr<std::vector<int>> get_CTens_strides( std::vector<int>& range_sizes, int ctr1 , int ctr2 ) ;
-     std::shared_ptr<std::vector<int>> get_CTens_strides( std::vector<int>& range_sizes, std::vector<int>& ctr_idxs_pos );
-
-     std::shared_ptr<std::vector<int>> get_Tens_strides ( std::vector<int>& range_sizes);
-     std::shared_ptr<std::vector<int>> get_Tens_strides_column_major( std::vector<int>& range_sizes); 
+     std::vector<int> get_Tens_strides ( const std::vector<int>& range_sizes);
+     std::vector<int> get_Tens_strides_column_major( const std::vector<int>& range_sizes); 
  
      std::vector<SMITH::Index>
      get_rng_blocks(const std::vector<int>& block_pos, const std::vector<SMITH::IndexRange>& id_ranges);

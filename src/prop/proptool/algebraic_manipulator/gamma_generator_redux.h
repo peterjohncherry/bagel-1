@@ -54,5 +54,7 @@ class GammaGeneratorRedux : public GammaGenerator_Base {
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
     void block_trans_test( int kk );
+  
+    void print_new_gamma_definition(); 
 };
 #endif

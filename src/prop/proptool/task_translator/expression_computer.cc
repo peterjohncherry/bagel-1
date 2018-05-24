@@ -165,7 +165,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
 
               for ( int qq = 0 ; qq != a_contrib->id_orders().size(); qq++){
                 
-                shared_ptr<Tensor_<DataType>> a_contrib_reordered = TensOp_Machine->reorder_block_Tensor( a_contrib_name, make_shared<vector<int>>(a_contrib->id_order(qq)) );
+                shared_ptr<Tensor_<DataType>> a_contrib_reordered = TensOp_Machine->reorder_block_Tensor( a_contrib_name, a_contrib->id_order(qq));
                 pre_a_gamma_contraction_data->ax_plus_y( (DataType)(a_contrib->factor(qq).first), a_contrib_reordered );
 
               }
@@ -175,7 +175,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
 
               gamma_computer_->get_gamma( gamma_name );
               shared_ptr<Tensor_<DataType>> gamma_data = gamma_computer_->gamma_data(gamma_name);
-              shared_ptr<Tensor_<DataType>> reordered_tensor_block =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( post_a_gamma_contraction_data, a_intermediate_info->post_contraction_reordering() );
+              shared_ptr<Tensor_<DataType>> reordered_tensor_block =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( post_a_gamma_contraction_data, *(a_intermediate_info->post_contraction_reordering()) );
               shared_ptr<Tensor_<DataType>> tmp_result =   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( gamma_data, pre_a_gamma_contraction_data,  gamma_a_contractions );
               assert( post_a_gamma_contraction_data->size_alloc() == tmp_result->size_alloc() );
               post_a_gamma_contraction_data->ax_plus_y( (DataType)(1.0), tmp_result );
@@ -188,14 +188,16 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
           }
 
           if ( a_intermediate_info->post_contraction_reordering()->size() == target_block_data->rank() ) {
-            shared_ptr<Tensor_<DataType>> reordered_tensor_block =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( post_a_gamma_contraction_data, a_intermediate_info->post_contraction_reordering() );
+            shared_ptr<Tensor_<DataType>> reordered_tensor_block =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( post_a_gamma_contraction_data, *(a_intermediate_info->post_contraction_reordering()) );
             assert (target_block_data->size_alloc() == reordered_tensor_block->size_alloc() ) ;
 
             target_block_data->ax_plus_y((DataType)(1.0), reordered_tensor_block );
-
+            tensop_data_map_->at( target_block_name ) =  target_block_data ; 
+            
           } else if ( a_intermediate_info->post_contraction_reordering()->size() != 0 ) { 
-        
+
             Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( target_block_data, post_a_gamma_contraction_data, *(a_intermediate_info->target_block_positions()) );
+            tensop_data_map_->at( target_block_name ) =  target_block_data ; 
 
           } else {
             throw logic_error ("Expression_computer:: should never end up with contribution to target term having rank 1 " ); 
@@ -203,8 +205,15 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
         }
       }
     }
+    cout << target_block_name << "->norm() = " ;cout.flush();   cout << tensop_data_map_->at(target_block_name)->norm() << endl;
   }                  
-  cout << "leaving Expression_Computer::evaluate_expression_orb_exc_deriv" << endl;
+  cout << "----------------final_blocks-----------------" << endl; 
+  for ( auto& elem : *(expression->required_blocks_) ) {
+      cout << elem->name() << "->norm() = " ;cout.flush();
+      cout << tensop_data_map_->at(elem->name())->norm() << endl;
+   }
+  cout << endl << endl; 
+ 
   return;  
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -268,7 +277,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
           if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) {
 
             for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
-              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
+              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, A_contrib->id_order(qq) );
               A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
 
 	      cout << " A_contrib->factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";
@@ -294,7 +303,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
               
               shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );//TODO fix so uses piecewise contraction where possible 
               tensop_data_map_->emplace( A_contrib_name, A_contrib_data );
-              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, make_shared<vector<int>>(A_contrib->id_order(qq)) );
+              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, A_contrib->id_order(qq) );
               A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered ); //TODO replace with interface function in tensop_computer
 
               cout << " A_contrib->factor(" << qq<<").first), tensop_data_map_->at(" << A_contrib_name << ")-norm() = ";

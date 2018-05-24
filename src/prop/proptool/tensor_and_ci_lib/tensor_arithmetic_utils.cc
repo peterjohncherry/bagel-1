@@ -172,17 +172,17 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, st
          int id_block_size = Tens->get_size(id_blocks);
        
          unique_ptr<double[]>    T_data_block = Tens->get_block(id_blocks);
-         shared_ptr<vector<int>> Tens_strides = get_Tens_strides_column_major(*id_blocks_sizes);
+         vector<int> Tens_strides = get_Tens_strides_column_major(*id_blocks_sizes);
          double* pos = T_data_block.get();
          int shift = 0 ; 
          if ( block_pos.size() >2 ) { 
            do {
      
              int id_pos_tmp = shift;
-             vector<int> id_pos_rel(Tens_strides->size(), 0 );
-             for ( int kk = Tens_strides->size()-1 ; kk != 1 ; kk--){
-               id_pos_rel[kk] = id_pos_tmp/Tens_strides->at(kk);
-               id_pos_tmp -= id_pos_rel[kk]*Tens_strides->at(kk); 
+             vector<int> id_pos_rel(Tens_strides.size(), 0 );
+             for ( int kk = Tens_strides.size()-1 ; kk != 1 ; kk--){
+               id_pos_rel[kk] = id_pos_tmp/Tens_strides.at(kk);
+               id_pos_tmp -= id_pos_rel[kk]*Tens_strides.at(kk); 
              }
 
              vector<int> id_pos(block_pos.size());
@@ -205,7 +205,7 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, st
      
          } else {
          
-           vector<int> id_pos_rel(Tens_strides->size(), 0 );
+           vector<int> id_pos_rel(Tens_strides.size(), 0 );
 
            vector<int> id_pos(block_pos.size());
            for ( int ii = 0 ; ii != Bagel_id_ranges.size(); ii++)
@@ -307,7 +307,7 @@ void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<double>
 
 
        unique_ptr<double[]>    T_data_block = Tens->get_block(id_blocks);
-       shared_ptr<vector<int>> Tens_strides = get_Tens_strides(id_blocks_sizes);
+       vector<int> Tens_strides = get_Tens_strides(id_blocks_sizes);
 
        for (int ii = 0 ; ii != id_blocks_sizes.size() ; ii++ ) 
          id_blocks_sizes[ii]--;       
@@ -363,78 +363,35 @@ void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<complex
   return; 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides(vector<int>& range_sizes) { 
+vector<int> Tensor_Arithmetic_Utils::get_Tens_strides( const vector<int>& range_sizes) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
 cout << "Tensor_Arithmetic_Utils::get_Tens_strides row major" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
-  shared_ptr<vector<int>> Tens_strides= make_shared<vector<int>>(range_sizes.size());
-  Tens_strides->front() = 1;
+  vector<int> Tens_strides(range_sizes.size());
+  Tens_strides.front() = 1;
   for ( int ii = 1  ; ii!= range_sizes.size(); ii++ ) 
-    Tens_strides->at(ii) = Tens_strides->at(ii-1) * range_sizes[ii-1];
+    Tens_strides.at(ii) = Tens_strides.at(ii-1) * range_sizes[ii-1];
    
   return Tens_strides;
   
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_Tens_strides_column_major(vector<int>& range_sizes) { 
+vector<int> Tensor_Arithmetic_Utils::get_Tens_strides_column_major( const vector<int>& range_sizes) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
 cout << "Tensor_Arithmetic_Utils::get_Tens_strides_column_major " << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
-  shared_ptr<vector<int>> Tens_strides= make_shared<vector<int>>(range_sizes.size());
-  Tens_strides->front() = 1;
+  vector<int> Tens_strides(range_sizes.size());
+  Tens_strides.front() = 1;
   if (range_sizes.size() > 1 ) {
     for ( int ii = 1  ; ii!= range_sizes.size(); ii++ ) 
-      Tens_strides->at(ii) = Tens_strides->at(ii-1) * range_sizes[ii-1];
+      Tens_strides.at(ii) = Tens_strides.at(ii-1) * range_sizes[ii-1];
   }
   return Tens_strides;
  
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_CTens_strides( vector<int>& range_sizes, int ctr1 , int ctr2 ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
-cout << "Tensor_Arithemetic_Utils::get_CTens_strides " <<  endl;
-#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  shared_ptr<vector<int>>  CTens_strides = make_shared<vector<int>>(range_sizes.size(), 1); 
-  for ( int ii = 0  ; ii!= range_sizes.size(); ii++ ) 
-    for ( int jj = ii-1  ; jj!= -1; jj-- ) 
-      if (jj!= ctr1 && jj!=ctr2) 
-        CTens_strides->at(ii) *= range_sizes[jj];
-  
-  CTens_strides->at(ctr1) = 0;
-  CTens_strides->at(ctr2) = 0;
-
-  return CTens_strides;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Gets the vector of strides of the tensor for which ctr_idxs_pos are contracted from the 
-//range sizes of the tensor where they are not contracted.
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> Tensor_Arithmetic_Utils::get_CTens_strides( vector<int>& range_sizes, vector<int>& ctr_idxs_pos ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
-cout << "Tensor_Arithemetic_Utils::get_CTens_strides " <<  endl;
-#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  shared_ptr<vector<int>>  CTens_strides = make_shared<vector<int>>(range_sizes.size(), 1); 
-  vector<bool> is_unc(ctr_idxs_pos.size(), false);
-  for ( int pos : ctr_idxs_pos)  
-    is_unc[pos] = false;
-
-  for ( int ii = 0  ; ii!= range_sizes.size(); ii++ ) 
-    for ( int jj = ii-1  ; jj!= -1; jj-- ) 
-      if (is_unc[jj]) 
-        CTens_strides->at(ii) *= range_sizes[jj];
-  
-  for ( int ii : ctr_idxs_pos ) 
-    CTens_strides->at(ii) = 0 ; 
-
-  return CTens_strides;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //rearranges position vector to have ctr pos at back

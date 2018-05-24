@@ -19,7 +19,7 @@ cout << "MOInt_Computer<DataType>::get_v2" << endl;
   MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, alt_ordered_blocks );
 
   // again for flipping indexes
-  shared_ptr<vector<int>> alt_to_norm_order =  make_shared<vector<int>>( vector<int>  { 3, 1, 2, 0 }) ;
+  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
   auto Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
   shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
 
@@ -49,7 +49,7 @@ cout << "MOInt_Computer<DataType>::get_v2 string ver" << endl;
    cout << " v2.tensor->norm()->size_alloc() = " <<  v2.tensor()->size_alloc() << endl;
    cout << " v2.tensor()->norm() = " << v2.tensor()->norm() << endl; 
   // again for flipping indexes
-  shared_ptr<vector<int>> alt_to_norm_order =  make_shared<vector<int>>( vector<int>  { 3, 1, 2, 0 } );
+  vector<int> alt_to_norm_order =  { 3, 1, 2, 0 };
   shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
   cout << "X" << endl;
   //return v2.tensor();// v2_tens; 

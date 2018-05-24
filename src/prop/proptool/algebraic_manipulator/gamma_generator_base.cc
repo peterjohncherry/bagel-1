@@ -18,61 +18,20 @@ GammaGenerator_Base::GammaGenerator_Base( shared_ptr<StatesInfo_Base> target_sta
                                           Gamma_map(Gamma_map_in), 
                                           bk_factor_(bk_factor), orig_aops_half_size_( std_aops_->size()/2 ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
   cout << "GammaGenerator_Base::GammaGenerator_Base" << endl;
-
   print_vector(*std_aops_, "std_aops"); cout << endl; // This should be constant for all range blocks, but this is not the same as the MT aops
   print_vector(*std_ids_, "std_ids"); cout << endl; // ids are not (necessarily) be constant for all range blocks
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
   
   return;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GammaGenerator_Base::add_gamma( const shared_ptr<Range_Block_Info> block_info, shared_ptr<vector<bool>> trans_aops ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "void GammaGenerator_Base::add_gamma " << endl;
-
-  block_idxs_ = vector<string>( std_ids_->size() );
-  {
-  vector<int>::iterator it_it = block_info->idxs_trans()->begin();
-  for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ ) 
-    *bi_it = (*std_ids_)[ *it_it ];
-  }
-
-  block_aops_ = trans_aops;
-  block_aops_rngs_ = block_info->orig_rngs_ch();
-
-  idxs_trans_ = block_info->idxs_trans();
-  shared_ptr<vector<int>>  idxs_trans_inverse_ = block_info->idxs_trans_inverse();
-
-  std_rngs_ = *(block_info->unique_block_->orig_rngs_);
-  standard_order_ = *(block_info->idxs_trans());
-
-  cout << endl;
-  cout << "--------------- gamma def -------------------" << endl;
-  print_vector( std_rngs_ ,        " unique_block_      "); cout <<endl;
-  print_vector( standard_order_ ,  " range_reordering   "); cout << endl;
-  print_vector(*(block_info->orig_rngs()) ,      " orig_rngs          "); cout <<endl;
-  cout << endl;
-
-  int ii = 0 ;
-  block_to_std_order_ = vector<int>(standard_order_.size());
-  for ( vector<int>::iterator so_it = standard_order_.begin() ; so_it != standard_order_.end() ; ++so_it, ++ii ) 
-    block_to_std_order_[*so_it] = (ii);
-
-  shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( std_rngs_.size() );
-  iota( ids_pos->begin(), ids_pos->end(), 0 );
-
-  shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
-  
-  pair< double, double >  factors = block_info->factors();
-
-  gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base >>>( 1, make_shared<GammaIntermediate_Base>( ids_pos, deltas_pos, factors ) );
-  final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base >>>(0);
-  return;
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator_Base::generic_reorderer( string reordering_name, bool first_reordering, bool final_reordering ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator_Base::generic_reorderer" << endl; 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator_Base::generic_reorderer" << endl; 
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   int kk = 0;
   bool does_it_contribute = false;
@@ -93,7 +52,9 @@ bool GammaGenerator_Base::generic_reorderer( string reordering_name, bool first_
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator_Base::generic_reorderer_different_sector( string reordering_name, bool final_reordering ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator_Base::generic_reorderer_different_sector" << endl;
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator_Base::generic_reorderer_different_sector" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   if ( reordering_name == "normal order" ) {
     normal_order();
@@ -144,7 +105,9 @@ bool GammaGenerator_Base::proj_onto_map( shared_ptr<GammaIntermediate_Base> gint
 //Grossly inefficient, but totally generic, should write seperate routines for normal and antinormal
 //ordering; consecutive operators means can just count.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator_Base::proj_onto_map" << endl;
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator_Base::proj_onto_map" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<vector<int>> idxs_pos =  gint->ids_pos_;
 
@@ -199,7 +162,9 @@ bool GammaGenerator_Base::proj_onto_map( shared_ptr<GammaIntermediate_Base> gint
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator_Base::normal_order() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator_Base::normal_order" << endl;
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator_Base::normal_order" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////
  
   int kk = 0;
   while ( kk != gamma_vec_->size() ) {
@@ -251,7 +216,9 @@ void GammaGenerator_Base::normal_order() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator_Base::anti_normal_order() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator_Base::anti_normal_order" << endl;
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator_Base::anti_normal_order" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////
  
   int kk = 0;
   while ( kk != gamma_vec_->size() ) {
@@ -300,7 +267,9 @@ void GammaGenerator_Base::anti_normal_order() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator_Base::alternating_order() {  // e.g. +-+-+-+-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator_Base::alternating_order" << endl;
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator_Base::alternating_order" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////
  
   int kk = 0;
   while ( kk != gamma_vec_->size() ) {
@@ -332,10 +301,12 @@ void GammaGenerator_Base::alternating_order() {  // e.g. +-+-+-+-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Cannot pass shared_ptr to gammaintermediate, as push back can potentially result in the vector being moved,
 // which messes up the pointer inside the shared_ptr.
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator_Base::swap( int ii, int jj, int kk ){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
  shared_ptr<GammaIntermediate_Base> gint =  gamma_vec_->at(kk);
 
@@ -376,7 +347,9 @@ void GammaGenerator_Base::swap( int ii, int jj, int kk ){
 shared_ptr<pint_vec>
 GammaGenerator_Base::standardize_delta_ordering_generic( shared_ptr<pint_vec> deltas_pos  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-//cout << "GammaGenerator_Base::standardize_delta_ordering_generic" << endl;
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator_Base::standardize_delta_ordering_generic" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////
 //TODO must order by indexes, not just by initial position
 //     If one of the indexes is X, cannot "just" not contract
 //     must also account for reordering ; T_{ijkl} = ... + <I| ijklmnop | J> A_{mnop} delta_{lm}
@@ -408,7 +381,9 @@ GammaGenerator_Base::standardize_delta_ordering_generic( shared_ptr<pint_vec> de
 ///////////////////////////////////////////////////////////////////////////////////////
 vector<int> GammaGenerator_Base::get_Aid_order ( const vector<int>& id_pos ) {
 ///////////////////////////////////////////////////////////////////////////////////////
-//   cout << "GammaGenerator_Base::get_Aid_order " << endl;
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator_Base::get_Aid_order " << endl;
+#endif ////////////////////////////////////////////////////////////////////////////////
 
   vector<int> new_id_pos(id_pos.size());
   vector<int> tmp_order = get_position_order(id_pos);
@@ -421,7 +396,9 @@ vector<int> GammaGenerator_Base::get_Aid_order ( const vector<int>& id_pos ) {
 ///////////////////////////////////////////////////////////////////////////////////////
 vector<int> GammaGenerator_Base::get_position_order(const vector<int> &ids_pos) {
 ///////////////////////////////////////////////////////////////////////////////////////
-
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator_Base::get_position_order" << endl;
+#endif ////////////////////////////////////////////////////////////////////////////////
   vector<int> pos(ids_pos.size());
   iota(pos.begin(), pos.end(), 0);
   sort(pos.begin(), pos.end(), [&ids_pos](int i1, int i2){return (bool)( ids_pos[i1] < ids_pos[i2] ); });
@@ -434,9 +411,10 @@ vector<int> GammaGenerator_Base::get_position_order(const vector<int> &ids_pos) 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator_Base::set_standardized_alt_order_unranged ( shared_ptr<GammaIntermediate_Base>& gint,
                                                                           vector<int>& standard_alt_order ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "GammaGenerator::set_standardized_alt_order_unranged" << endl;
-  // TODO this should use standardized ordering 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator::set_standardized_alt_order_unranged" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<vector<int>>           ids_pos = gint->ids_pos_;
   shared_ptr<vector<pair<int,int>>> deltas_pos = gint->deltas_pos_; 
@@ -496,6 +474,9 @@ void GammaGenerator_Base::set_standardized_alt_order_unranged ( shared_ptr<Gamma
 void
 GammaGenerator_Base::print_gamma_intermediate( shared_ptr<GammaIntermediate_Base> gint ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_GAMMAGENERATOR_BASE
+cout << "GammaGenerator_Base::print_gamma_intermediate" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////
      print_vector( *(gint->ids_pos_), "gint_ids_pos" ); cout  << endl;
      cout << "gint_aops = [ "; cout.flush();  for ( auto pos : *(gint->ids_pos_) ) { cout << block_aops_->at(pos) << " " ; cout.flush();  }  cout << "] " << endl;
      cout << "gint_rngs = [ "; cout.flush();  for ( auto pos : *(gint->ids_pos_) ) { cout << (*block_aops_rngs_)[pos] << " " ; cout.flush();  }   cout << "]" << endl;

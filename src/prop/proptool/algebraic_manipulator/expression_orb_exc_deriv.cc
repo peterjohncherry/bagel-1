@@ -14,7 +14,6 @@ void Expression_Orb_Exc_Deriv<DataType>::generate_algebraic_task_list(){
   required_blocks_ = make_shared<set<shared_ptr<Range_Block_Info>>>();
 
   cout << " braket_list_->front().target_op_ = " <<  braket_list_->front()->target_op() << endl;
-
   //auto  exc_block_G_to_A_map = make_shared<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>>();
   exc_block_G_to_A_map_ = make_shared<map<string, shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>>>>();
   for ( shared_ptr<BraKet_Base>& braket : *braket_list_ )

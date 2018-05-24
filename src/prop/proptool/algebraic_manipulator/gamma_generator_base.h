@@ -92,7 +92,6 @@ class GammaGenerator_Base{
     std::shared_ptr<std::vector<int>> aops_trans_;
     std::shared_ptr<std::vector<int>> rngs_trans_;
     std::shared_ptr<std::vector<int>> idxs_trans_;
-    std::shared_ptr<std::vector<int>> idxs_trans_inverse_;
 
     std::shared_ptr<std::vector< std::shared_ptr<GammaIntermediate_Base>>> final_gamma_vec_;
     
@@ -147,7 +146,7 @@ class GammaGenerator_Base{
  
     void print_gamma_intermediate( std::shared_ptr<GammaIntermediate_Base> gint );
 
-    virtual void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops );
+    virtual void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops ){assert(false); return;};
 
     virtual void swap( int ii, int jj, int kk );
 

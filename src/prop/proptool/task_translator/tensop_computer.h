@@ -55,7 +55,7 @@ class TensOp_Computer {
 
     std::shared_ptr<SMITH::Tensor_<DataType>> direct_product_tensors( std::vector<std::string>& Tensor_names );
 
-    std::shared_ptr<SMITH::Tensor_<DataType>> reorder_block_Tensor(std::string Tname, std::shared_ptr<std::vector<int>> new_order);
+    std::shared_ptr<SMITH::Tensor_<DataType>> reorder_block_Tensor(std::string Tname, std::vector<int>& new_order);
 
     std::shared_ptr<SMITH::Tensor_<DataType>> get_block_Tensor(std::string Tname);
 
