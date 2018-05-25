@@ -12,7 +12,6 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_gamma( const shared_ptr<Range_Blo
 cout << "void GammaGenerator_OrbExcDeriv::add_gamma " << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  block_idxs_ = vector<string>( std_ids_->size() );
   idxs_trans_ = block_info->idxs_trans();
   block_aops_ = trans_aops;
   block_aops_rngs_ = block_info->orig_rngs_ch(); // May be transformed by Bra or Ket.
@@ -42,9 +41,8 @@ cout << "void GammaGenerator_OrbExcDeriv::add_gamma " << endl;
   }
 
   // TMP.
-  std_rngs_target_op_free_ = vector<string>(block_idxs_.size() - target_block_size_ ); 
-  std_idxs_target_op_free_ = vector<string>(block_idxs_.size() - target_block_size_ ); 
-  block_pos_target_op_free_ = vector<bool>(block_idxs_.size(), true );
+  std_rngs_target_op_free_ = vector<string>(block_aops_->size() - target_block_size_ ); 
+  std_idxs_target_op_free_ = vector<string>(block_aops_->size() - target_block_size_ ); 
   { 
   std_name_target_op_free_ = "";
   shared_ptr<vector<shared_ptr<Range_Block_Info>>> range_blocks = block_info->range_blocks() ; 
@@ -53,7 +51,6 @@ cout << "void GammaGenerator_OrbExcDeriv::add_gamma " << endl;
   vector<string>::iterator sitof_it = std_idxs_target_op_free_.begin();
   vector<string>::iterator srtof_it = std_rngs_target_op_free_.begin();
 
-  vector<bool>::iterator bptof_it = block_pos_target_op_free_.begin();
   for( vector<int>::iterator oo_it = op_info_->op_order_->begin(); oo_it != op_info_->op_order_->end(); oo_it++ ) {
     if ( (*range_blocks)[*oo_it]->full_op_name()[0] != target_op_[0] ){ 
       for ( int rr = 0  ; rr != (*range_blocks)[*oo_it]->num_idxs_; sr_it++, si_it++, srtof_it++, sitof_it++, rr++ ) {
@@ -64,29 +61,8 @@ cout << "void GammaGenerator_OrbExcDeriv::add_gamma " << endl;
     } else { 
       si_it += target_block_size_; 
       sr_it += target_block_size_;
-      for( int qq = 0  ;qq != target_block_size_ ; qq++, bptof_it++ ) 
-        *bptof_it = false;
     }
   }
-  }
-  {
-  vector<int>::iterator it_it = idxs_trans_->begin();
-  for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ )
-    *bi_it = (*std_ids_)[ *it_it ];
-  }
-
-  block_rngs_target_op_free_ = vector<string>(block_idxs_.size() - target_block_size_ ); 
-  block_idxs_target_op_free_ = vector<string>(block_idxs_.size() - target_block_size_ ); 
-
-  int kk = 0;
-  for ( int ii = 0 ; ii != target_block_start_; ii++, kk++ ) {
-    block_rngs_target_op_free_[kk] = (*block_rngs_)[ii];
-    block_idxs_target_op_free_[kk] = block_idxs_[ii];
-  }  
-
-  for ( int ii = target_block_end_; ii != std_rngs_.size(); ii++, kk++ ){ 
-    block_rngs_target_op_free_[kk] = (*block_rngs_)[ii];
-    block_idxs_target_op_free_[kk] = block_idxs_[ii];
   }
 
   shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( std_rngs_.size() );
@@ -96,11 +72,10 @@ cout << "void GammaGenerator_OrbExcDeriv::add_gamma " << endl;
   shared_ptr<vector<pair<int,int>>> target_target_deltas_pos = make_shared<vector<pair<int,int>>>(0);
   shared_ptr<vector<pair<int,int>>> target_A_deltas_pos = make_shared<vector<pair<int,int>>>(0);
   
-  pair< double, double >  factors = block_info->factors();
-
   //TODO  Change to specialized class
-  gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base >>>();
-  gamma_vec_->push_back(make_shared<GammaIntermediate_OrbExcDeriv<DataType>>( ids_pos, A_deltas_pos, target_A_deltas_pos, target_target_deltas_pos, factors ));
+  gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base >>>(1);
+  gamma_vec_->front() = make_shared<GammaIntermediate_OrbExcDeriv<DataType>>( ids_pos, A_deltas_pos, target_A_deltas_pos, target_target_deltas_pos, block_info->factors());
+
   final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base >>>(0);
   return;
 }
@@ -184,28 +159,20 @@ cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<GammaIntermediate_Base> gint = (*gamma_vec_)[kk];
-
-  //get full gamma ids pos and A_contrib_ids
   vector<int> gamma_ids_pos = *(gint->ids_pos_);
 
   string Gname_alt = get_gamma_name( chrvec_to_strvec(*block_aops_rngs_), *block_aops_, gamma_ids_pos, bra_name, ket_name );
-  if ( Gamma_map->find(Gname_alt) == Gamma_map->end() ) 
-    Gamma_map->emplace( Gname_alt, make_shared<GammaInfo<DataType>>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
+  if ( Gamma_map_->find(Gname_alt) == Gamma_map_->end() ) 
+    Gamma_map_->emplace( Gname_alt, make_shared<GammaInfo<DataType>>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
                                                                      block_aops_, make_shared<const vector<string>>(chrvec_to_strvec(*block_aops_rngs_)),
-                                                                     gint->ids_pos_, Gamma_map) );
+                                                                     gint->ids_pos_, Gamma_map_) );
 
   //This is the name of the CTP we need to contract (perhaps partially) with gamma
   string Aname_alt = get_ctp_name( std_name_target_op_free_, std_idxs_target_op_free_, std_rngs_target_op_free_, *(gint->deltas_pos_) );
   if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() )
     total_op_->enter_cmtps_into_map( *(gint->deltas_pos_), std_rngs_, op_info_ );
- 
-  {
-  vector<int> gamma_ids_pos_buff = gamma_ids_pos;
-  vector<int>::iterator gipb_it = gamma_ids_pos_buff.begin(); 
-  for ( vector<int>::iterator gip_it = gamma_ids_pos.begin(); gip_it != gamma_ids_pos.end() ; gip_it++, gipb_it++ ){
-    *gip_it = standard_order_[*gipb_it];  
-  }
-  }
+
+  transform_to_canonical_ids_pos( gamma_ids_pos );
  
   vector<int> gamma_contraction_pos(0);
   vector<int> A_contraction_pos(0);
@@ -258,7 +225,6 @@ cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
   
   // The latter case corresponds to this reordering (not we get x and y in the first loop, and j/w and k/z in the second
   shared_ptr<vector<int>> post_contraction_reordering = get_ascending_order (*T_pos );
-  if ( T_pos->size() == 4 ) { 
 
   shared_ptr<vector<int>> pre_contraction_reordering;
   vector<int> A_ids_pos( A_contraction_pos.size() + A_T_pos.size() );
@@ -276,18 +242,10 @@ cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
     G_to_A_map = map_loc->second;
   } 
 
-  //Reorder the A_indexes which get contracted with the gamma
-  cout << "------------" << target_block_name_ << "----------"<< endl;
-  print_vector( gamma_ids_pos,                "Gamma_ids_pos              " ); cout << endl;
-  print_vector( A_ids_pos,                    "A_ids_pos                  " ); cout << endl;
-  print_vector( *T_pos,                       "T_pos                      " ); cout << endl;
-  print_vector( A_T_pos,                      "A_T_pos                    " ); cout << endl;
-  print_vector( A_contraction_pos,            "A_contraction_pos          " ); cout << endl;
-  print_vector( gamma_contraction_pos,        "gamma_contraction_pos      " ); cout << endl;
-  print_vector( *pre_contraction_reordering,  "pre_contraction_reordering " ); cout << endl;
-  print_vector( *post_contraction_reordering, "post_contraction_reordering" ); cout << endl;
-  print_vector( *post_gamma_contraction_rngs, "post_gamma_contraction_rngs" ); cout << endl;
-  cout << endl;
+#ifdef __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
+  print_target_block_info( gamma_ids_pos, A_ids_pos, *T_pos, A_T_pos, A_contraction_pos, gamma_contraction_pos,       
+                           *pre_contraction_reordering, *post_contraction_reordering, *post_gamma_contraction_rngs);
+#endif
 
   //Should be bk_factor, but something is going wrong...
   pair<double,double> new_fac = make_pair(1.0, 0.0);
@@ -296,20 +254,13 @@ cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
     G_to_A_map->emplace( Gname_alt,  make_shared<map<string, shared_ptr<AContribInfo_Base>>>() );
 
-  string final_reordering_name = Gname_alt; 
-  final_reordering_name += " pcr[";
-  char shift = 0;
-  for ( auto elem  : *post_contraction_reordering ){
-    final_reordering_name += elem+'0';
-    final_reordering_name += ' ';
-  }
-  final_reordering_name += ']';
+  string final_reordering_name = get_final_reordering_name( Gname_alt, *post_contraction_reordering );
 
   shared_ptr<vector<string>> pre_contraction_ranges = make_shared<vector<string>>( A_ids_pos.size());  
   { 
-    vector<int>::iterator pcr_it = pre_contraction_reordering->begin();
+    vector<string>::iterator pcr_it = pre_contraction_ranges->begin();
     for ( vector<int>::iterator aip_it =  A_ids_pos.begin(); aip_it != A_ids_pos.end(); aip_it++, pcr_it++) 
-      (*pre_contraction_ranges)[*pcr_it]  = std_rngs_[ *aip_it ];
+      *pcr_it = std_rngs_[ *aip_it ];
   }
 
   auto a_info_loc =  G_to_A_map->at( Gname_alt )->find(final_reordering_name);
@@ -323,159 +274,58 @@ cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
 //    shared_ptr<AContribInfo_OrbExcDeriv<DataType>> AInfo = std::dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>( AInfo_loc->second );
 //    AInfo->add_reordering( *post_contraction_reordering, *pre_contraction_reordering, new_fac ); 
   }
-  }
+  
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Brute approach to getting inverse, keep for now to check
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-vector<int> GammaGenerator_OrbExcDeriv<DataType>::get_standard_op_id_order ( const vector<int>& ids_pos ) {
+template<typename DataType> 
+void
+GammaGenerator_OrbExcDeriv<DataType>::print_target_block_info( const vector<int>& gamma_ids_pos, const vector<int>&  A_ids_pos,                  
+                                                               const vector<int>& T_pos, const vector<int>& A_T_pos,                    
+                                                               const vector<int>& A_contraction_pos,
+                                                               const vector<int>& gamma_contraction_pos,      
+                                                               const vector<int>& pre_contraction_reordering, 
+                                                               const vector<int>& post_contraction_reordering,
+                                                               const vector<string>& post_gamma_contraction_rngs) { 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
-cout << "GammaGenerator_OrbExcDeriv::get_standard_op_id_order " << endl;
+cout << "GammaGenerator_OrbExcDeriv::print_target_block_info" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  vector<int> new_ids_pos(ids_pos.size());
-
-  vector<int> tmp_pos(ids_pos.size());
-  iota(tmp_pos.begin(), tmp_pos.end(), 0);
-  vector<int>& standard_order_ref = standard_order_;
-  sort(tmp_pos.begin(), tmp_pos.end(), [&ids_pos, standard_order_ref](int i1, int i2){return (bool)( standard_order_ref[i1] < standard_order_ref[i2] ); });
-
-  vector<int> reordering(ids_pos.size());
-  iota(reordering.begin(), reordering.end(), 0);
-  sort(reordering.begin(), reordering.end(), [&tmp_pos](int i1, int i2){return (bool)( tmp_pos[i1] < tmp_pos[i2] ); });
-
-  return reordering;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-vector<int> GammaGenerator_OrbExcDeriv<DataType>::sort_arg1_wrt_arg2(const vector<int> &ids_pos, const vector<int>& standard_order ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
-cout << "GammaGenerator_OrbExcDeriv::sort_art1_wrt_arg2" << endl;
-#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  vector<int> pos(ids_pos.size());
-  iota(pos.begin(), pos.end(), 0);
-  sort(pos.begin(), pos.end(), [&ids_pos, &standard_order](int i1, int i2){return (bool)( standard_order[i1] < standard_order[i2] ); });
-
-  return pos;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType> 
-void GammaGenerator_OrbExcDeriv<DataType>::transformation_tester( int kk  ){  // e.g. ++++----
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
-cout << "GammaGenerator_OrbExcDeriv<DataType>::transformation_tester" << endl;
-#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  shared_ptr<GammaIntermediate_Base> gint = gamma_vec_->at(kk);
-  shared_ptr<vector<pair<int,int>>> deltas_pos = gint->deltas_pos_;
-
-  cout << endl << endl << endl;
-  cout << "----------- gamma orb deriv Contribs -------------------" << endl;
-  print_vector( *(gint->ids_pos_) ,                         " ids_pos     _            "); cout <<endl;
-  print_pair_vector( *( gint->deltas_pos_),                 " A_A_deltas_pos           "); cout << endl;
-  print_pair_vector( *( gint->target_target_deltas_pos()),  " target_target_deltas_pos "); cout << endl;
-  print_pair_vector( *( gint->target_A_deltas_pos()),       " target_A_deltas_pos      "); cout << endl;
+  cout << "------------" << target_block_name_ << "----------"<< endl;
+  print_vector( gamma_ids_pos,                "Gamma_ids_pos              " ); cout << endl;
+  print_vector( A_ids_pos,                    "A_ids_pos                  " ); cout << endl;
+  print_vector( T_pos,                       "T_pos                      " ); cout << endl;
+  print_vector( A_T_pos,                      "A_T_pos                    " ); cout << endl;
+  print_vector( A_contraction_pos,            "A_contraction_pos          " ); cout << endl;
+  print_vector( gamma_contraction_pos,        "gamma_contraction_pos      " ); cout << endl;
+  print_vector( pre_contraction_reordering,  "pre_contraction_reordering " ); cout << endl;
+  print_vector( post_contraction_reordering, "post_contraction_reordering" ); cout << endl;
+  print_vector( post_gamma_contraction_rngs, "post_gamma_contraction_rngs" ); cout << endl;
   cout << endl;
-
-  if ( gint->A_A_deltas_pos()->size() != 0 ) { 
-
-    vector<pair<string,string>> A_A_deltas_rngs;
-    for ( pair<int,int>& ctr :  *(gint->deltas_pos_) )
-      A_A_deltas_rngs.push_back(make_pair((*block_rngs_)[ctr.first],(*block_rngs_)[ctr.second])) ;
-    
-    vector<pair<string,string>> A_A_deltas_idxs;
-    for ( pair<int,int>& ctr :  *(gint->deltas_pos_) ) 
-      A_A_deltas_idxs.push_back(make_pair(block_idxs_[ctr.first] , block_idxs_[ctr.second] )) ;
-
-
-    vector<pair<int,int>> A_A_deltas_pos( gint->deltas_pos_->size() ); 
-    vector<pair<int,int>>::iterator aadp_it =  A_A_deltas_pos.begin(); 
-    for ( auto gaadp_it = gint->deltas_pos_->begin(); gaadp_it != gint->deltas_pos_->end(); aadp_it++, gaadp_it++ ){
-       (*aadp_it).first  =  (*idxs_trans_)[ (*gaadp_it).first  ];
-       (*aadp_it).second =  (*idxs_trans_)[ (*gaadp_it).second ];
-    }
-
-    vector<pair<string,string>> A_A_deltas_rngs_trans;
-    for ( pair<int,int>& ctr :  A_A_deltas_pos )
-      A_A_deltas_rngs_trans.push_back(make_pair(std_rngs_[ctr.first] ,std_rngs_[ctr.second])) ;
-    
-    vector<pair<string,string>> A_A_deltas_idxs_trans;
-    for ( pair<int,int>& ctr :  A_A_deltas_pos ) 
-      A_A_deltas_idxs_trans.push_back(make_pair((*std_ids_)[ctr.first] , (*std_ids_)[ctr.second] )) ;
-
-    print_pair_vector( A_A_deltas_idxs_trans , "A_A_deltas_idxs_trans " ); 
-    print_pair_vector( A_A_deltas_idxs , "   A_A_deltas_idxs " ); 
-
-    assert( A_A_deltas_idxs_trans == A_A_deltas_idxs ); 
-
-  } 
-
-  if ( gint->target_target_deltas_pos()->size() != 0 ) { 
-
-    vector<pair<string,string>> T_T_deltas_rngs;
-    for ( pair<int,int>& ctr :  *(gint->target_target_deltas_pos()) )
-       T_T_deltas_rngs.push_back(make_pair( std_rngs_[ctr.first] , std_rngs_[ctr.second] ) );
-    
-    vector<pair<string,string>> T_T_deltas_idxs;
-    for ( pair<int,int>& ctr :  *(gint->target_target_deltas_pos()) )
-       T_T_deltas_idxs.push_back(make_pair( (*std_ids_)[ctr.first] , (*std_ids_)[ctr.second] ) );
-
-    for ( pair<int,int>& ctr :  *(gint->target_target_deltas_pos()) ){
-       ctr.first  =  (*idxs_trans_)[ctr.first];
-       ctr.second =  (*idxs_trans_)[ctr.second];
-    }
-
-    vector<pair<string,string>> T_T_deltas_trans_rngs;
-    for ( pair<int,int>& ctr :  *(gint->target_target_deltas_pos()) )
-       T_T_deltas_trans_rngs.push_back(make_pair( std_rngs_[ctr.first] , std_rngs_[ctr.second] ) );
-    
-    vector<pair<string,string>> T_T_deltas_trans_idxs;
-    for ( pair<int,int>& ctr :  *(gint->target_target_deltas_pos()) )
-       T_T_deltas_trans_idxs.push_back(make_pair( (*std_ids_)[ctr.first] , (*std_ids_)[ctr.second] ) );
-  
-    print_pair_vector( T_T_deltas_trans_idxs , "T_T_deltas_trans_idxs " ); 
-    print_pair_vector( T_T_deltas_idxs , "   T_T_deltas_idxs " ); 
-
-    assert( T_T_deltas_trans_idxs == T_T_deltas_idxs ) ;
-  }
-
-  if ( gint->target_A_deltas_pos()->size() != 0 ) { 
-
- 
-    vector<pair<string,string>> T_A_deltas_rngs;
-    for ( pair<int,int>& ctr :  *(gint->target_A_deltas_pos()) )
-       T_A_deltas_rngs.push_back(make_pair( std_rngs_[ctr.first] , std_rngs_[ctr.second] ) );
-    
-    vector<pair<string,string>> T_A_deltas_idxs;
-    for ( pair<int,int>& ctr :  *(gint->target_A_deltas_pos()) )
-       T_A_deltas_idxs.push_back(make_pair( (*std_ids_)[ctr.first] , (*std_ids_)[ctr.second] ) );
-
-    for ( pair<int,int>& ctr :  *(gint->target_A_deltas_pos()) ){
-      ctr.first  =  (*idxs_trans_)[ctr.first];
-      ctr.second =  (*idxs_trans_)[ctr.second];
-    }
-
-    vector<pair<string,string>> T_A_deltas_trans_rngs;
-    for ( pair<int,int>& ctr :  *(gint->target_A_deltas_pos()) )
-       T_A_deltas_trans_rngs.push_back(make_pair( std_rngs_[ctr.first] , std_rngs_[ctr.second] ) );
-    
-    vector<pair<string,string>> T_A_deltas_trans_idxs;
-    for ( pair<int,int>& ctr :  *(gint->target_A_deltas_pos()) )
-       T_A_deltas_trans_idxs.push_back(make_pair( (*std_ids_)[ctr.first] , (*std_ids_)[ctr.second] ) );
-
-    print_pair_vector( T_A_deltas_trans_idxs , "T_A_deltas_trans_idxs " ); 
-    print_pair_vector( T_A_deltas_idxs , "   T_A_deltas_idxs " ); 
-
-    assert( T_A_deltas_trans_idxs == T_A_deltas_idxs )  ;
- 
-  } 
-  cout << endl << endl;
   return;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType> 
+string
+GammaGenerator_OrbExcDeriv<DataType>::get_final_reordering_name ( string Gname_alt,
+                                                                  const vector<int>& post_contraction_reordering ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
+cout << "GammaGenerator_OrbExcDeriv::get_final_reordering_name" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  string final_reordering_name = Gname_alt; 
+  final_reordering_name += " pcr[";
+  for ( auto elem  : post_contraction_reordering ){
+    final_reordering_name += ( '0' + elem );
+    final_reordering_name += ' ';
+  }
+  final_reordering_name += ']';
+
+  return final_reordering_name;
+
+} 
+
 ////////////////////////////////////////////////////////////////////////////
 template class GammaGenerator_OrbExcDeriv<double>;
 template class GammaGenerator_OrbExcDeriv<std::complex<double>>;

@@ -33,7 +33,6 @@ class GammaGeneratorRedux : public GammaGenerator_Base {
 
   public :
 
-    std::shared_ptr<Range_Block_Info> block_info_;
 
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
@@ -53,7 +52,7 @@ class GammaGeneratorRedux : public GammaGenerator_Base {
 
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
-    void block_trans_test( int kk );
+    void block_trans_test( std::shared_ptr<GammaIntermediate_Base>& gint );
   
     void print_new_gamma_definition(); 
 };

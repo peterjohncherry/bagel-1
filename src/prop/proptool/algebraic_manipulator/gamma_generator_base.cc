@@ -2,32 +2,10 @@
 #include <map>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_orb_exc_deriv.h>
 
-#define __DEBUG_GAMMAGENERATOR_BASE
+//#define __DEBUG_GAMMAGENERATOR_BASE
 
 using namespace std;
 using namespace WickUtils;
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-GammaGenerator_Base::GammaGenerator_Base( shared_ptr<StatesInfo_Base> target_states, int Bra_num, int Ket_num,
-                                          shared_ptr<TensOp_Base> total_op,
-                                          shared_ptr<map<string, shared_ptr<GammaInfo_Base>>>& Gamma_map_in,
-                                          pair<double,double> bk_factor                                                           ):
-                                          target_states_(target_states),
-                                          Bra_names_(target_states_->civec_names( Bra_num )),
-                                          Ket_names_(target_states_->civec_names( Ket_num )),
-                                          total_op_(total_op), std_ids_(total_op->idxs()),
-                                          std_aops_(total_op->aops()),
-                                          Gamma_map(Gamma_map_in), 
-                                          bk_factor_(bk_factor), orig_aops_half_size_( std_aops_->size()/2 ) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_GAMMAGENERATOR_BASE
-  cout << "GammaGenerator_Base::GammaGenerator_Base" << endl;
-  print_vector(*std_aops_, "std_aops"); cout << endl; // This should be constant for all range blocks, but this is not the same as the MT aops
-  print_vector(*std_ids_, "std_ids"); cout << endl; // ids are not (necessarily) be constant for all range blocks
-#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  
-  return;
-}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator_Base::generic_reorderer( string reordering_name, bool first_reordering, bool final_reordering ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,10 +20,10 @@ cout << "GammaGenerator_Base::generic_reorderer" << endl;
     for ( string ket_name : *Ket_names_ ) {
       bra_name_ = bra_name;
       ket_name_ = ket_name;
-      bra_hole_map_ = target_states_->hole_range_map(bra_name);
-      bra_elec_map_ = target_states_->elec_range_map(bra_name);
-      ket_hole_map_ = target_states_->hole_range_map(ket_name);
-      ket_elec_map_ = target_states_->elec_range_map(ket_name);
+      bra_hole_map_ = target_states_->hole_range_map(bra_name_);
+      bra_elec_map_ = target_states_->elec_range_map(bra_name_);
+      ket_hole_map_ = target_states_->hole_range_map(ket_name_);
+      ket_elec_map_ = target_states_->elec_range_map(ket_name_);
       if( generic_reorderer_different_sector( reordering_name, final_reordering ) ) //TODO find a better way; have contribs specified for individual BraKet combinations?
         does_it_contribute = true;
     }
@@ -75,7 +53,7 @@ cout << "GammaGenerator_Base::generic_reorderer_different_sector" << endl;
     while ( gv_it != gamma_vec_->end() ) {
       if ( proj_onto_map( *gv_it, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ) )
         final_gamma_vec_->push_back( *gv_it );
-      gv_it++;
+      ++gv_it;
     }
 
   } else if ( reordering_name == "alternating order" ) {
@@ -84,7 +62,7 @@ cout << "GammaGenerator_Base::generic_reorderer_different_sector" << endl;
     while ( gv_it != gamma_vec_->end() ) {
       if ( proj_onto_map( *gv_it, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ) )
         final_gamma_vec_->push_back( *gv_it );
-      gv_it++;
+      ++gv_it;
     }
   }
 
@@ -95,7 +73,7 @@ cout << "GammaGenerator_Base::generic_reorderer_different_sector" << endl;
   if ( final_reordering && does_it_contribute ) { 
     while ( kk != gamma_vec_->size()){
       add_Acontrib_to_map( kk, bra_name_, ket_name_ );
-      kk++;
+      ++kk;
     } 
   }
   return does_it_contribute;
@@ -419,46 +397,70 @@ void GammaGenerator_Base::set_standardized_alt_order_unranged ( shared_ptr<Gamma
 cout << "GammaGenerator_Base::set_standardized_alt_order_unranged" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<vector<int>>           ids_pos = gint->ids_pos_;
-  shared_ptr<vector<pair<int,int>>> deltas_pos = gint->deltas_pos_; 
-
-  //TODO Should be simplifiable into sorting_by value in standard_pos... 
-  vector<int> ids_pos_standardized( ids_pos->size() );
-  vector<int>::iterator ips_it = ids_pos_standardized.begin();
-  for ( vector<int>::iterator ip_it  =ids_pos->begin(); ip_it != ids_pos->end(); ip_it++, ips_it++ )
-    *ips_it = standard_order_[*ip_it];
-
-  vector<int> good_order( ids_pos->size() );
-  iota( good_order.begin(), good_order.end(), 0);
-  sort( good_order.begin(), good_order.end(), [&ids_pos_standardized ] ( int i1, int i2) { return (bool)( ids_pos_standardized[i1] < ids_pos_standardized[i2]); });  
-
-  vector<int> ids_reordered_pos(ids_pos->size());
-  vector<int>::iterator irp_it = ids_reordered_pos.begin();
-  for ( auto elem : good_order ) 
-    *irp_it++ =  ids_pos->at(elem); 
-  
+  vector<int> ids_reordered_pos =  *(gint->ids_pos_);
+  { 
+  vector<int>& tmp = standard_order_; // TODO cannot remember how to avoid this without asking lambda to capture whole class...
+  sort( ids_reordered_pos.begin(), ids_reordered_pos.end(), [tmp] ( int i1, int i2) { return (bool)( tmp[i1] < tmp[i2]); });  
+  } 
+ 
   vector<int> standard_order_plus(ids_reordered_pos.size()/2);
   vector<int> standard_order_kill(ids_reordered_pos.size()/2);
-  vector<int>::iterator standard_order_plus_it = standard_order_plus.begin();
-  vector<int>::iterator standard_order_kill_it = standard_order_kill.begin();
+  vector<int>::iterator sop_it = standard_order_plus.begin();
+  vector<int>::iterator sok_it = standard_order_kill.begin();
   for ( int pos : ids_reordered_pos) {
     if ( block_aops_->at(pos) ) {
-      *standard_order_plus_it++ = pos;
+      *sop_it = pos;
+      ++sop_it;
     } else {
-      *standard_order_kill_it++ = pos;
+      *sok_it = pos;
+      ++sok_it;
     }
   }
 
-  vector<int>::iterator standard_alt_order_it = standard_alt_order.begin();
-  standard_order_plus_it = standard_order_plus.begin();
-  standard_order_kill_it = standard_order_kill.begin();
-  while ( standard_alt_order_it != standard_alt_order.end()){
-    *standard_alt_order_it++ = *standard_order_plus_it++;
-    *standard_alt_order_it++ = *standard_order_kill_it++;
+  sop_it = standard_order_plus.begin();
+  sok_it = standard_order_kill.begin();
+  vector<int>::iterator sao_it = standard_alt_order.begin();
+  while ( sao_it != standard_alt_order.end()){
+    *sao_it = *sop_it;
+    ++sop_it;
+    ++sao_it;
+    *sao_it = *sok_it;
+    ++sok_it;
+    ++sao_it;
   }
 
   return;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGenerator_Base::transform_to_canonical_ids_pos( vector<int>& ids_pos ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
+cout << "GammaGenerator_Base::transform_to_canonical_ids_pos" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  vector<int> buff = ids_pos;
+  vector<int>::iterator b_it = buff.begin();
+  for ( vector<int>::iterator ip_it = ids_pos.begin(); ip_it != ids_pos.end() ; ip_it++, b_it++ )
+    *ip_it = standard_order_[*b_it];
+
+  return;
+} 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGenerator_Base::transform_to_canonical_ids_pos( vector<pair<int,int>>& deltas_pos ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
+cout << "GammaGenerator_Base::transform_to_canonical_ids_pos" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector<pair<int,int>> buff = deltas_pos;
+  vector<pair<int,int>>::iterator  b_it = deltas_pos.begin();
+  for ( vector<pair<int,int>>::iterator dp_it = deltas_pos.begin(); dp_it != deltas_pos.end(); dp_it++, b_it++ ) 
+    *b_it = make_pair( standard_order_[dp_it->first], standard_order_[dp_it->second]);
+
+  return;
+} 
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 void
 GammaGenerator_Base::print_gamma_intermediate( shared_ptr<GammaIntermediate_Base> gint ) { 
@@ -471,4 +473,123 @@ cout << "GammaGenerator_Base::print_gamma_intermediate" << endl;
      cout << "gint_rngs = [ "; cout.flush();  for ( auto pos : *(gint->ids_pos_) ) { cout << (*block_aops_rngs_)[pos] << " " ; cout.flush();  }   cout << "]" << endl;
      cout << "gint_ids  = [ "; cout.flush();   for ( auto pos : *(gint->ids_pos_) ) { cout << block_idxs_[pos] << " " ; cout.flush();  }   cout << "] " <<  endl;
     return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGenerator_Base::transformation_tester( shared_ptr<GammaIntermediate_Base>& gint  ){  // e.g. ++++----
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
+cout << "GammaGenerator_Base::transformation_tester" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  block_idxs_ = vector<string>( std_ids_->size() );
+  {
+  vector<int>::iterator it_it = idxs_trans_->begin();
+  for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ )
+    *bi_it = (*std_ids_)[ *it_it ];
+  }
+
+  shared_ptr<vector<pair<int,int>>> deltas_pos = gint->deltas_pos_;
+
+  cout << endl << endl << endl;
+  cout << "----------- gamma orb deriv Contribs -------------------" << endl;
+  print_vector( *(gint->ids_pos_) ,                         " ids_pos     _            "); cout <<endl;
+  print_pair_vector( *( gint->deltas_pos_),                 " A_A_deltas_pos           "); cout << endl;
+  print_pair_vector( *( gint->target_target_deltas_pos()),  " target_target_deltas_pos "); cout << endl;
+  print_pair_vector( *( gint->target_A_deltas_pos()),       " target_A_deltas_pos      "); cout << endl;
+  cout << endl;
+
+  if ( gint->A_A_deltas_pos()->size() != 0 ) { 
+
+    vector<pair<string,string>> A_A_deltas_rngs;
+    for ( pair<int,int>& ctr :  *(gint->deltas_pos_) )
+      A_A_deltas_rngs.push_back(make_pair((*block_rngs_)[ctr.first],(*block_rngs_)[ctr.second])) ;
+    
+    vector<pair<string,string>> A_A_deltas_idxs;
+    for ( pair<int,int>& ctr :  *(gint->deltas_pos_) ) 
+      A_A_deltas_idxs.push_back(make_pair(block_idxs_[ctr.first] , block_idxs_[ctr.second] )) ;
+
+
+    vector<pair<int,int>> A_A_deltas_pos( gint->deltas_pos_->size() ); 
+    vector<pair<int,int>>::iterator aadp_it =  A_A_deltas_pos.begin(); 
+    for ( auto gaadp_it = gint->deltas_pos_->begin(); gaadp_it != gint->deltas_pos_->end(); aadp_it++, gaadp_it++ ){
+       (*aadp_it).first  =  (*idxs_trans_)[ (*gaadp_it).first  ];
+       (*aadp_it).second =  (*idxs_trans_)[ (*gaadp_it).second ];
+    }
+
+    vector<pair<string,string>> A_A_deltas_rngs_trans;
+    for ( pair<int,int>& ctr :  A_A_deltas_pos )
+      A_A_deltas_rngs_trans.push_back(make_pair(std_rngs_[ctr.first] ,std_rngs_[ctr.second])) ;
+    
+    vector<pair<string,string>> A_A_deltas_idxs_trans;
+    for ( pair<int,int>& ctr :  A_A_deltas_pos ) 
+      A_A_deltas_idxs_trans.push_back(make_pair((*std_ids_)[ctr.first] , (*std_ids_)[ctr.second] )) ;
+
+    print_pair_vector( A_A_deltas_idxs_trans , "A_A_deltas_idxs_trans " ); 
+    print_pair_vector( A_A_deltas_idxs , "   A_A_deltas_idxs " ); 
+
+    assert( A_A_deltas_idxs_trans == A_A_deltas_idxs ); 
+
+  } 
+
+  if ( gint->target_target_deltas_pos()->size() != 0 ) { 
+
+    vector<pair<string,string>> T_T_deltas_rngs;
+    for ( pair<int,int>& ctr :  *(gint->target_target_deltas_pos()) )
+       T_T_deltas_rngs.push_back(make_pair( std_rngs_[ctr.first] , std_rngs_[ctr.second] ) );
+    
+    vector<pair<string,string>> T_T_deltas_idxs;
+    for ( pair<int,int>& ctr :  *(gint->target_target_deltas_pos()) )
+       T_T_deltas_idxs.push_back(make_pair( (*std_ids_)[ctr.first] , (*std_ids_)[ctr.second] ) );
+
+    for ( pair<int,int>& ctr :  *(gint->target_target_deltas_pos()) ){
+       ctr.first  =  (*idxs_trans_)[ctr.first];
+       ctr.second =  (*idxs_trans_)[ctr.second];
+    }
+
+    vector<pair<string,string>> T_T_deltas_trans_rngs;
+    for ( pair<int,int>& ctr :  *(gint->target_target_deltas_pos()) )
+       T_T_deltas_trans_rngs.push_back(make_pair( std_rngs_[ctr.first] , std_rngs_[ctr.second] ) );
+    
+    vector<pair<string,string>> T_T_deltas_trans_idxs;
+    for ( pair<int,int>& ctr :  *(gint->target_target_deltas_pos()) )
+       T_T_deltas_trans_idxs.push_back(make_pair( (*std_ids_)[ctr.first] , (*std_ids_)[ctr.second] ) );
+  
+    print_pair_vector( T_T_deltas_trans_idxs , "T_T_deltas_trans_idxs " ); 
+    print_pair_vector( T_T_deltas_idxs , "   T_T_deltas_idxs " ); 
+
+    assert( T_T_deltas_trans_idxs == T_T_deltas_idxs ) ;
+  }
+
+  if ( gint->target_A_deltas_pos()->size() != 0 ) { 
+
+ 
+    vector<pair<string,string>> T_A_deltas_rngs;
+    for ( pair<int,int>& ctr :  *(gint->target_A_deltas_pos()) )
+       T_A_deltas_rngs.push_back(make_pair( std_rngs_[ctr.first] , std_rngs_[ctr.second] ) );
+    
+    vector<pair<string,string>> T_A_deltas_idxs;
+    for ( pair<int,int>& ctr :  *(gint->target_A_deltas_pos()) )
+       T_A_deltas_idxs.push_back(make_pair( (*std_ids_)[ctr.first] , (*std_ids_)[ctr.second] ) );
+
+    for ( pair<int,int>& ctr :  *(gint->target_A_deltas_pos()) ){
+      ctr.first  =  (*idxs_trans_)[ctr.first];
+      ctr.second =  (*idxs_trans_)[ctr.second];
+    }
+
+    vector<pair<string,string>> T_A_deltas_trans_rngs;
+    for ( pair<int,int>& ctr :  *(gint->target_A_deltas_pos()) )
+       T_A_deltas_trans_rngs.push_back(make_pair( std_rngs_[ctr.first] , std_rngs_[ctr.second] ) );
+    
+    vector<pair<string,string>> T_A_deltas_trans_idxs;
+    for ( pair<int,int>& ctr :  *(gint->target_A_deltas_pos()) )
+       T_A_deltas_trans_idxs.push_back(make_pair( (*std_ids_)[ctr.first] , (*std_ids_)[ctr.second] ) );
+
+    print_pair_vector( T_A_deltas_trans_idxs , "T_A_deltas_trans_idxs " ); 
+    print_pair_vector( T_A_deltas_idxs , "   T_A_deltas_idxs " ); 
+
+    assert( T_A_deltas_trans_idxs == T_A_deltas_idxs )  ;
+ 
+  } 
+  cout << endl << endl;
+  return;
 } 

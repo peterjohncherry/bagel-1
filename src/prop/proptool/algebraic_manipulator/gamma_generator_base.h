@@ -52,14 +52,6 @@ class GammaGenerator_Base{
     std::shared_ptr<std::vector<std::string>> Bra_names_;
     std::shared_ptr<std::vector<std::string>> Ket_names_;
 
-    std::shared_ptr<std::vector<bool>> orig_aops_ ;
-    std::shared_ptr<std::vector<std::string>> orig_ids_ ;
-    std::shared_ptr<std::vector<std::string>> orig_rngs_ ;
-
-    std::shared_ptr<const std::vector<bool>> std_aops_ ;
-    std::shared_ptr<const std::vector<std::string>> std_ids_ ;
-    std::vector<std::string> std_rngs_ ;
-
     std::string bra_name_;
     std::string ket_name_;
 
@@ -68,57 +60,52 @@ class GammaGenerator_Base{
     std::shared_ptr<std::map<char,int>> bra_elec_map_;
     std::shared_ptr<std::map<char,int>> ket_elec_map_;
 
-    // key    : name of this gamma
-    // result : information used here and in compute routines
-    std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> Gamma_map;
+    std::shared_ptr<const std::vector<bool>> std_aops_ ;
+    std::shared_ptr<const std::vector<std::string>> std_ids_ ;
+    std::vector<std::string> std_rngs_ ;
 
-    std::shared_ptr<TensOp_Base> total_op_;
-
-    std::pair<double,double> bk_factor_;
-    int orig_aops_half_size_;
-
-    std::vector<int> standard_order_;
-    std::vector<int> block_to_std_order_;
-    std::vector<std::string> standardized_full_ids_;
-    std::vector<std::string> standardized_full_id_ranges_;
+    std::shared_ptr<Range_Block_Info> block_info_;
 
     std::shared_ptr<std::vector<bool>> block_aops_;
     std::shared_ptr<std::vector<char>> block_aops_rngs_;
     std::shared_ptr<std::vector<std::string>> block_rngs_; 
-    std::vector<int> block_ids_pos_;
-    
+
     std::vector<std::string> block_idxs_;
 
-    std::shared_ptr<std::vector<int>> aops_trans_;
-    std::shared_ptr<std::vector<int>> rngs_trans_;
+    std::vector<int> standard_order_;
     std::shared_ptr<std::vector<int>> idxs_trans_;
 
-    std::shared_ptr<std::vector< std::shared_ptr<GammaIntermediate_Base>>> final_gamma_vec_;
-    
+    std::pair<double,double> bk_factor_;
+
+    std::shared_ptr<Op_Info> op_info_;
+    std::shared_ptr<TensOp_Base> total_op_;
+
+    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate_Base>>> gamma_vec_;
+    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate_Base>>> final_gamma_vec_;
+
+    // key    : name of this gamma
+    // result : information used here and in compute routines
+    std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> Gamma_map_;
+
     // key    : name of A-tensor
     // result : list of reorderings which much be applied to this A-tensor before it is contracted with this gamma.
     //          second part of pair is factor associated with each reordering.
     std::shared_ptr<std::map<std::string, std::vector< std::pair<std::vector<int>, std::pair<int,int>> >> > Aid_orders_map;
 
   public :
-    std::shared_ptr<std::vector< std::shared_ptr<GammaIntermediate_Base> >> gamma_vec_;
 
-    std::shared_ptr<Op_Info> op_info_;
-
-    GammaGenerator_Base( std::shared_ptr<StatesInfo_Base> target_states_, int Ket_num, int Bra_num,
-                                   std::shared_ptr<TensOp_Base> multitensop, 
-                                   std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo_Base>>>& Gamma_map_in,
-                                   std::pair<double,double> bk_factor );
+    GammaGenerator_Base( std::shared_ptr<StatesInfo_Base> target_states, int Bra_num, int Ket_num, std::shared_ptr<TensOp_Base> total_op,
+                         std::shared_ptr<std::map<std::string, std::shared_ptr<GammaInfo_Base>>>& Gamma_map,
+                         std::pair<double,double> bk_factor ):
+                         target_states_(target_states), Bra_names_(target_states_->civec_names( Bra_num )),
+                         Ket_names_(target_states_->civec_names( Ket_num )), total_op_(total_op), std_ids_(total_op->idxs()),
+                         std_aops_(total_op->aops()), Gamma_map_(Gamma_map), bk_factor_(bk_factor) {
+         #ifdef __DEBUG_GAMMAGENERATOR_BASE
+         std::cout << "GammaGenerator_Base::GammaGenerator_Base" << std::endl;
+         #endif
+         } 
 
     ~GammaGenerator_Base(){};
-
-    std::shared_ptr<const std::vector<std::string>> std_ids() { return std_ids_; }
-
-    std::shared_ptr<std::vector<int>> idxs_trans() { return idxs_trans_; }
-
-    std::vector<std::string>& block_idxs() { return block_idxs_; }
-
-    std::vector<int>& block_ids_pos() { return block_ids_pos_; }
 
     bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering );
 
@@ -130,11 +117,6 @@ class GammaGenerator_Base{
 
     void alternating_order();
 
-    //TODO Replace this, but keep for now as very clear, if slow.
-    bool proj_onto_map( std::shared_ptr<GammaIntermediate_Base> gint,
-                        std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
-                        std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
-
     std::shared_ptr<std::vector<std::pair<int,int>>>
     standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
 
@@ -143,15 +125,23 @@ class GammaGenerator_Base{
     std::vector<int> get_Aid_order( const std::vector<int>& id_pos );
 
     std::vector<int> get_position_order(const std::vector<int> &positions) ;
- 
-    void print_gamma_intermediate( std::shared_ptr<GammaIntermediate_Base> gint );
+
+    bool proj_onto_map( std::shared_ptr<GammaIntermediate_Base> gint,
+                        std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
+                        std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
+
+    void transform_to_canonical_ids_pos( std::vector<int>& ids_pos );
+    void transform_to_canonical_ids_pos( std::vector<std::pair<int,int>>& deltas_pos );
 
     virtual void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops ){assert(false); return;};
 
     virtual void swap( int ii, int jj, int kk );
 
-    virtual
-    void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name ) {
-          throw std::logic_error("Add Acontrib to map is term specific; cannot call from gamma_generator_base!! Aborting!!"); };
+    void print_gamma_intermediate( std::shared_ptr<GammaIntermediate_Base> gint );
+
+    virtual void add_Acontrib_to_map( int gamma_vec_position, std::string bra_name, std::string ket_name ) { assert(false); } 
+  
+    void transformation_tester( std::shared_ptr<GammaIntermediate_Base>& gint  ); 
+
 };
 #endif

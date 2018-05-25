@@ -81,11 +81,18 @@ class GammaGenerator_OrbExcDeriv : public GammaGenerator_Base {
 
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
+    std::string get_final_reordering_name ( std::string Gname_alt, const std::vector<int>& post_contraction_reordering );
+
+    void print_target_block_info( const std::vector<int>& gamma_ids_pos, const std::vector<int>&  A_ids_pos,                  
+                                  const std::vector<int>& T_pos, const std::vector<int>& A_T_pos,                    
+                                  const std::vector<int>& A_contraction_pos,
+                                  const std::vector<int>& gamma_contraction_pos,      
+                                  const std::vector<int>& pre_contraction_reordering, 
+                                  const std::vector<int>& post_contraction_reordering,
+                                  const std::vector<std::string>& post_gamma_contraction_rngs); 
+  
+
     void transformation_tester( int kk  );
-
-    std::vector<int> get_standard_op_id_order ( const std::vector<int>& ids_pos );
-
-    std::vector<int> sort_arg1_wrt_arg2(const std::vector<int> &ids_pos, const std::vector<int>& standard_order );
 
 };
 #endif
