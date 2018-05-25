@@ -2,6 +2,8 @@
 #include <map>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_orb_exc_deriv.h>
 
+#define __DEBUG_GAMMAGENERATOR_BASE
+
 using namespace std;
 using namespace WickUtils;
 
@@ -44,7 +46,8 @@ cout << "GammaGenerator_Base::generic_reorderer" << endl;
       bra_elec_map_ = target_states_->elec_range_map(bra_name);
       ket_hole_map_ = target_states_->hole_range_map(ket_name);
       ket_elec_map_ = target_states_->elec_range_map(ket_name);
-      does_it_contribute = generic_reorderer_different_sector( reordering_name, final_reordering );
+      if( generic_reorderer_different_sector( reordering_name, final_reordering ) ) //TODO find a better way; have contribs specified for individual BraKet combinations?
+        does_it_contribute = true;
     }
   }
   return does_it_contribute;
@@ -413,28 +416,19 @@ void GammaGenerator_Base::set_standardized_alt_order_unranged ( shared_ptr<Gamma
                                                                           vector<int>& standard_alt_order ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_GAMMAGENERATOR_BASE
-cout << "GammaGenerator::set_standardized_alt_order_unranged" << endl;
+cout << "GammaGenerator_Base::set_standardized_alt_order_unranged" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<vector<int>>           ids_pos = gint->ids_pos_;
   shared_ptr<vector<pair<int,int>>> deltas_pos = gint->deltas_pos_; 
 
-  vector<string> unc_idxs( ids_pos->size() );
-  vector<bool> unc_aops( block_aops_->size() - 2*deltas_pos->size() );
-
-  vector<string>::iterator ui_it = unc_idxs.begin();
-  vector<bool>::iterator ua_it = unc_aops.begin();
-  for ( vector<int>::iterator ip_it= ids_pos->begin(); ip_it != ids_pos->end(); ip_it++, ui_it++, ua_it++ ) {
-    *ui_it = block_idxs_[*ip_it];
-    *ua_it = (*block_aops_)[*ip_it];
-  }
-
-  vector<int> good_order( ids_pos->size() );
+  //TODO Should be simplifiable into sorting_by value in standard_pos... 
   vector<int> ids_pos_standardized( ids_pos->size() );
   vector<int>::iterator ips_it = ids_pos_standardized.begin();
   for ( vector<int>::iterator ip_it  =ids_pos->begin(); ip_it != ids_pos->end(); ip_it++, ips_it++ )
     *ips_it = standard_order_[*ip_it];
 
+  vector<int> good_order( ids_pos->size() );
   iota( good_order.begin(), good_order.end(), 0);
   sort( good_order.begin(), good_order.end(), [&ids_pos_standardized ] ( int i1, int i2) { return (bool)( ids_pos_standardized[i1] < ids_pos_standardized[i2]); });  
 
@@ -442,11 +436,6 @@ cout << "GammaGenerator::set_standardized_alt_order_unranged" << endl;
   vector<int>::iterator irp_it = ids_reordered_pos.begin();
   for ( auto elem : good_order ) 
     *irp_it++ =  ids_pos->at(elem); 
-  
-  vector<string> ids_reordered(ids_pos->size());
-  vector<string>::iterator ir_it = ids_reordered.begin();
-  for ( auto elem : ids_reordered_pos ) 
-    *ir_it++ =  block_idxs_[elem]; 
   
   vector<int> standard_order_plus(ids_reordered_pos.size()/2);
   vector<int> standard_order_kill(ids_reordered_pos.size()/2);

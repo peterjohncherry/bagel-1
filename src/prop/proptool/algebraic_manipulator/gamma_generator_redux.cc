@@ -23,18 +23,23 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   idxs_trans_ = block_info_->idxs_trans();
   std_rngs_ = *(block_info_->unique_block_->orig_rngs_);
   standard_order_ = *(block_info_->idxs_trans());
+  print_vector( standard_order_ , " standard_order" ); cout << "  "; cout.flush(); print_vector(*std_ids_, "std_ids_" ); cout << endl; 
 
   print_new_gamma_definition(); 
 
+  cout << "ggr:ag 1 " << endl;
   shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( std_rngs_.size() );
   iota( ids_pos->begin(), ids_pos->end(), 0 );
 
   shared_ptr<vector<pair<int,int>>> deltas_pos = make_shared<vector<pair<int,int>>>(0);
   
   gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>( 1 );
+  cout << "ggr:ag 2 " << endl;
   gamma_vec_->at(0) = make_shared<GammaIntermediateRedux<DataType>>( ids_pos, deltas_pos, block_info_->factors() );
+  cout << "ggr:ag 3 " << endl;
 
   final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>(0);
+  cout << "ggr:ag 4 " << endl;
  
   return;
 }
