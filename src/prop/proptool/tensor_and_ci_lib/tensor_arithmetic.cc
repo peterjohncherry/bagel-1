@@ -2,7 +2,6 @@
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 #include <src/util/f77.h>
 #include <src/prop/proptool/debugging_utils.h>
-
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
@@ -10,6 +9,8 @@ using namespace bagel::Tensor_Sorter;
 using namespace bagel::Tensor_Arithmetic_Utils; 
 using namespace WickUtils;
 using namespace Debugging_Utils;
+
+#define __DEBUG_TENSOR_ARITHMETIC
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Specialized routine for summing over the whole tensor, should not be needed by handy for now
@@ -137,20 +138,23 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( shared_p
                                                                         vector<int>& summand_pos ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC 
-cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(summand_pos , "summand_pos"); cout << endl;
+cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(summand_pos , "   summand_pos"); cout << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  assert ( t_target->indexrange().size() > summand_pos.size() && summand_pos.size() > 0 );
 
   vector<int> summand_reordering = *(get_ascending_order( summand_pos ));
   vector<IndexRange> t_target_ranges  = t_target->indexrange();
   vector<IndexRange> t_summand_ranges = t_summand->indexrange();
 
+
+#ifdef __DEBUG_TENSOR_ARITHMETIC 
   {
   vector<int>::iterator sp_it = summand_pos.begin();
   for (vector<IndexRange>::iterator tsr_it = t_summand_ranges.begin(); tsr_it != t_summand_ranges.end(); tsr_it++, sp_it  )
-    assert ( tsr_it->size() == t_target_ranges[*sp_it].size() ); 
-  
+    if  ( tsr_it->size() != t_target_ranges[*sp_it].size() )
+      cout << "t_summand range_block->size() = " << tsr_it->size() << " != " << t_target_ranges[*sp_it].size() << "  t_target_ranges[" <<  *sp_it<<"].size() "<< endl; 
   }
+#endif 
+
 
   int num_ids  = t_target_ranges.size();
   int summand_rank = t_summand_ranges.size();
@@ -693,8 +697,13 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;   assert
   vector<IndexRange> T2_org_rngs = Tens2_in->indexrange();
 
 #ifndef NDEBUG
-  for ( int ii = 0 ; ii != ctrs_todo.first.size(); ii++ ) 
-     assert( T1_org_rngs[ctrs_todo.first[ii]].size() ==  T2_org_rngs[ctrs_todo.second[ii]].size() );
+  for ( int ii = 0 ; ii != ctrs_todo.first.size(); ii++ ) {
+    if (T1_org_rngs[ctrs_todo.first[ii]].size() !=  T2_org_rngs[ctrs_todo.second[ii]].size() ){
+     cout << " ctr1_size = " << T1_org_rngs[ctrs_todo.first[ii]].size();  cout.flush(); cout << " ctr1_pos = " << ctrs_todo.first[ii]  << endl;
+     cout << " ctr2_size = " << T2_org_rngs[ctrs_todo.second[ii]].size(); cout.flush(); cout << " ctr2_pos = " << ctrs_todo.second[ii] << endl;
+     throw logic_error("Extents of ranges to be contracted do not match!! Aborting");
+    }
+  }
 #endif
 
   vector<int> T1_org_order(T1_org_rngs.size());
@@ -1020,8 +1029,8 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( shared_ptr<Tensor_<DataType>> Tens_in, vector<int>& new_order ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
-cout << "Tensor_Arithmetic::reorder_block_Tensor "; cout.flush();
+#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+cout << "Tensor_Arithmetic::reorder_block_Tensor " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    vector<IndexRange> T_id_ranges = Tens_in->indexrange();
@@ -1058,7 +1067,7 @@ unique_ptr<DataType[]>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data( const DataType* orig_data, vector<int>&  new_order_vec,
                                                                      vector<Index>& orig_index_blocks ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

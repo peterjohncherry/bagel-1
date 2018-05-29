@@ -338,7 +338,7 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string tens_block_name, vector<int>& new_order){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOP_COMPUTER
+#ifdef __DEBUG_TENSOP_COMPUTER_VERBOSE
   cout << "TensOp_Computer::TensOp_Computer::reorder_block_Tensor "; cout.flush();
   cout << " : " << tens_block_name ; cout.flush();  WickUtils::print_vector( new_order, "    new_order"); cout << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -368,10 +368,10 @@ TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,
 
    pair<int,int> rel_ctr;
 
-   int T1_orig_size = CTP1->full_id_ranges()->size(); 
-   int T2_orig_size = CTP2->full_id_ranges()->size(); 
+   int T1_orig_size = CTP1->full_id_ranges()->size();
+   int T2_orig_size = CTP2->full_id_ranges()->size();
 
-   if (ctr_todo.first >= T1_orig_size ){ 
+   if (ctr_todo.first >= T1_orig_size ){
      rel_ctr = make_pair(ctr_todo.second, ctr_todo.first-T2_orig_size);
    } else {
      rel_ctr = make_pair(ctr_todo.first, ctr_todo.second-T1_orig_size);

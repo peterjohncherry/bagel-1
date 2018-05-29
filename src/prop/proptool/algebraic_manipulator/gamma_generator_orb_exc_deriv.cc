@@ -2,6 +2,9 @@
 #include <map>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_orb_exc_deriv.h>
 
+
+#define __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
+
 using namespace std;
 using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +43,6 @@ cout << "void GammaGenerator_OrbExcDeriv::add_gamma " << endl;
     target_block_start_ += rb->num_idxs_; 
   }
 
-  // TMP.
   std_rngs_target_op_free_ = vector<string>(block_aops_->size() - target_block_size_ ); 
   std_idxs_target_op_free_ = vector<string>(block_aops_->size() - target_block_size_ ); 
   { 
@@ -86,7 +88,7 @@ cout << "void GammaGenerator_OrbExcDeriv::add_gamma " << endl;
 template <typename DataType> 
 void GammaGenerator_OrbExcDeriv<DataType>::swap( int ii, int jj, int kk ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
+#ifdef __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV_VERBOSE
 cout << "GammaGenerator_OrbExcDeriv<DataType>::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -172,6 +174,15 @@ cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
   if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() )
     total_op_->enter_cmtps_into_map( *(gint->deltas_pos_), std_rngs_, op_info_ );
 
+  shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo_Base>>>>> G_to_A_map;
+  auto map_loc = block_G_to_A_map_->find(target_block_name_);
+  if ( map_loc == block_G_to_A_map_->end() ) {
+    G_to_A_map = make_shared<map<string, shared_ptr<map<string, shared_ptr<AContribInfo_Base>>>>>() ;
+    block_G_to_A_map_->emplace( target_block_name_,  G_to_A_map );
+  } else {  
+    G_to_A_map = map_loc->second;
+  } 
+
   transform_to_canonical_ids_pos( gamma_ids_pos );
  
   vector<int> gamma_contraction_pos(0);
@@ -207,7 +218,7 @@ cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
       } else {
         A_T_pos.push_back(ctr.second + target_block_end_);
       } 
-      post_gamma_contraction_rngs->push_back(std_rngs_[ctr.first]);
+     post_gamma_contraction_rngs->push_back(std_rngs_[ctr.first]);
       T_pos->push_back(ctr.first - target_block_start_ );
 
     }
@@ -221,7 +232,6 @@ cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
   //
   // Sort remaining indexes so they match up with T order
   // Tw Tx Ty Tz  = < | ax ay | J > A'(j/w) A'(k/z)       : [ xyjk ->jxyk ] or [ xywz -> wxyz ]
-  //
   
   // The latter case corresponds to this reordering (not we get x and y in the first loop, and j/w and k/z in the second
   shared_ptr<vector<int>> post_contraction_reordering = get_ascending_order (*T_pos );
@@ -231,49 +241,41 @@ cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
   copy ( A_contraction_pos.begin(), A_contraction_pos.end(), A_ids_pos.begin() );
   copy ( A_T_pos.begin(), A_T_pos.end(), A_ids_pos.begin() + A_contraction_pos.size() );
  
-  pre_contraction_reordering  =  make_shared<vector<int>> ( get_Aid_order( A_ids_pos ) ) ;
+  pre_contraction_reordering  =  make_shared<vector<int>> ( get_position_order(A_ids_pos) );
 
-  shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo_Base>>>>> G_to_A_map;
-  auto map_loc = block_G_to_A_map_->find(target_block_name_);
-  if ( map_loc == block_G_to_A_map_->end() ) {
-    G_to_A_map = make_shared<map<string, shared_ptr<map<string, shared_ptr<AContribInfo_Base>>>>>() ;
-    block_G_to_A_map_->emplace( target_block_name_,  G_to_A_map );
-  } else {  
-    G_to_A_map = map_loc->second;
-  } 
 
 #ifdef __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
   print_target_block_info( gamma_ids_pos, A_ids_pos, *T_pos, A_T_pos, A_contraction_pos, gamma_contraction_pos,       
                            *pre_contraction_reordering, *post_contraction_reordering, *post_gamma_contraction_rngs);
 #endif
 
-  //Should be bk_factor, but something is going wrong...
-  pair<double,double> new_fac = make_pair(1.0, 0.0);
-  pair_fac_mult( gint->factors_, new_fac );
+//  if ( T_pos->size() == 4 ) { 
    
-  if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
-    G_to_A_map->emplace( Gname_alt,  make_shared<map<string, shared_ptr<AContribInfo_Base>>>() );
-
-  string final_reordering_name = get_final_reordering_name( Gname_alt, *post_contraction_reordering );
-
-  shared_ptr<vector<string>> pre_contraction_ranges = make_shared<vector<string>>( A_ids_pos.size());  
-  { 
-    vector<string>::iterator pcr_it = pre_contraction_ranges->begin();
-    for ( vector<int>::iterator aip_it =  A_ids_pos.begin(); aip_it != A_ids_pos.end(); aip_it++, pcr_it++) 
-      *pcr_it = std_rngs_[ *aip_it ];
-  }
-
-  auto a_info_loc =  G_to_A_map->at( Gname_alt )->find(final_reordering_name);
-  if ( a_info_loc == G_to_A_map->at( Gname_alt )->end() ) {
-
-     auto a_info = make_shared<AContribInfo_OrbExcDeriv<DataType>>( final_reordering_name, target_block_name_, T_pos,  post_gamma_contraction_rngs );
-     a_info->add_reordering( Aname_alt, gamma_contraction_pos, *pre_contraction_reordering, pre_contraction_ranges, new_fac );
-     G_to_A_map->at( Gname_alt )->emplace( final_reordering_name, a_info );
-
-  } else {
-//    shared_ptr<AContribInfo_OrbExcDeriv<DataType>> AInfo = std::dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>( AInfo_loc->second );
-//    AInfo->add_reordering( *post_contraction_reordering, *pre_contraction_reordering, new_fac ); 
-  }
+    if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
+      G_to_A_map->emplace( Gname_alt,  make_shared<map<string, shared_ptr<AContribInfo_Base>>>() );
+    
+    string final_reordering_name = get_final_reordering_name( Gname_alt, *post_contraction_reordering );
+    
+    shared_ptr<vector<string>> pre_contraction_ranges = make_shared<vector<string>>( A_ids_pos.size());  
+    { 
+      vector<int>::iterator pcr_it = pre_contraction_reordering->begin();
+      for ( vector<int>::iterator aip_it =  A_ids_pos.begin(); aip_it != A_ids_pos.end(); aip_it++, pcr_it++) 
+        (*pre_contraction_ranges)[*pcr_it] = std_rngs_[ *aip_it ];
+    }
+    
+    pair<double,double> new_fac = make_pair(1.0, 0.0);
+    pair_fac_mult( gint->factors_, new_fac );
+    
+    auto a_info_loc =  G_to_A_map->at( Gname_alt )->find(final_reordering_name);
+    if ( a_info_loc == G_to_A_map->at( Gname_alt )->end() ) {
+      auto a_info = make_shared<AContribInfo_OrbExcDeriv<DataType>>( final_reordering_name, target_block_name_, T_pos,  post_gamma_contraction_rngs );
+      a_info->add_reordering( Aname_alt, gamma_contraction_pos, *pre_contraction_reordering, pre_contraction_ranges, new_fac );
+      G_to_A_map->at( Gname_alt )->emplace( final_reordering_name, a_info );
+    } else {
+      shared_ptr<AContribInfo_OrbExcDeriv<DataType>> a_info = std::dynamic_pointer_cast<AContribInfo_OrbExcDeriv<DataType>>( a_info_loc->second );
+      a_info->add_reordering( Aname_alt, gamma_contraction_pos, *pre_contraction_reordering, pre_contraction_ranges, new_fac ); 
+    }
+//  }
   
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
