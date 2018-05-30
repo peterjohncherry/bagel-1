@@ -2,7 +2,7 @@
 #include <map>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_redux.h>
 
-#define __DEBUG_GAMMA_GENERATOR_REDUX
+//#define __DEBUG_GAMMA_GENERATOR_REDUX
 
 using namespace std;
 using namespace WickUtils;

@@ -17,17 +17,12 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), idxs_trans_(idxs_trans), factors_(factors), ReIm_factors_(ReIm_factors),
                                     op_info_(op_info) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//   cout << "Range_Block_Info::Range_Block_Info 1" << endl;
+#ifdef __DEBUG_RANGE_BLOCK_INFO
+cout << "Range_Block_Info::Range_Block_Info 1" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   num_idxs_ = orig_rngs_->size();
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
-  idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
-
-  {
-  vector<int>::iterator it_it = idxs_trans_->begin();
-  for ( int ii = 0 ; ii != num_idxs_; ii++, it_it++ ) 
-    (*idxs_trans_inverse_)[ *it_it ] = *it_it;
-  }
 
   name_ = op_info->op_state_name_ + "_";
   for ( auto elem : *orig_block )
@@ -47,17 +42,11 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(transform->idxs_trans(*orig_block)), factors_(factors),
                                     ReIm_factors_(ReIm_factors), transform_(transform), op_info_(op_info)  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "Range_Block_Info::Range_Block_Info 2" << endl;
+#ifdef __DEBUG_RANGE_BLOCK_INFO
+cout << "Range_Block_Info::Range_Block_Info 2" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   num_idxs_ = orig_rngs_->size();
-  idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
-
-  {
-  vector<int>::iterator it_it = idxs_trans_->begin();
-  for ( int ii = 0 ; ii != num_idxs_; ii++, it_it++ ) 
-    (*idxs_trans_inverse_)[ *it_it ] = ii;
-  }
-
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
 
   name_ = op_info->op_state_name_ + "_";
@@ -77,17 +66,11 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_( idxs_trans ), factors_(factors),
                                     ReIm_factors_(ReIm_factors), op_info_(op_info)  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Range_Block_Info::Range_Block_Info 3" << endl;
+#ifdef __DEBUG_RANGE_BLOCK_INFO
+cout << "Range_Block_Info::Range_Block_Info 3" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   num_idxs_ = orig_rngs_->size();
-  idxs_trans_inverse_ = make_shared<vector<int>>( num_idxs_ );
-
-  {
-  vector<int>::iterator it_it = idxs_trans_->begin();
-  for ( int ii = 0 ; ii != num_idxs_; ii++, it_it++ ) 
-    (*idxs_trans_inverse_)[ *it_it ] = ii;
-  }
-
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
 
   name_ = op_info->op_state_name_ + "_";
@@ -100,10 +83,12 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
   set_transition_vars(aops);
 
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Range_Block_Info::set_transition_vars( const vector<bool>& aops ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Range_Block_Info::set_transition_vars" << endl;
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_RANGE_BLOCK_INFO
+cout << "Range_Block_Info::set_transition_vars" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   plus_pnum_ = 1;
   kill_pnum_ = 1;
@@ -124,20 +109,20 @@ void Range_Block_Info::set_transition_vars( const vector<bool>& aops ) {
   }
 
   return;
-
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Split_Range_Block_Info::Split_Range_Block_Info( shared_ptr<vector<shared_ptr<Range_Block_Info>>> range_blocks, vector<int>& cml_sizes, 
                                                 shared_ptr<vector<bool>> aops, shared_ptr<Op_Info> op_info,  
                                                 shared_ptr<map<const vector<string>, shared_ptr<Range_Block_Info>>>& unique_split_ranges ) :
                                                 Range_Block_Info(), range_blocks_( range_blocks ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << "Split_Range_Block_Info::Split_Range_Block_Info" << endl;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_SPLIT_RANGE_BLOCK_INFO
+cout << "Split_Range_Block_Info::Split_Range_Block_Info" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   op_info_ =  op_info;
   ReIm_factors_ = make_pair(1.0, 0.0); // TODO temporary hack
   factors_ = make_pair(1.0,0.0);
-
 
   num_idxs_ = 0;
   for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks_->begin() ; rb_it != range_blocks_->end(); rb_it++) 
@@ -182,7 +167,6 @@ Split_Range_Block_Info::Split_Range_Block_Info( shared_ptr<vector<shared_ptr<Ran
 
   for ( auto  elem : *orig_rngs_ch_ )
     name_ += elem;
-//  cout << "name_ = " << name_ << endl;
 
   canonical_ = true; 
   { 
@@ -226,11 +210,12 @@ Split_Range_Block_Info::Split_Range_Block_Info( shared_ptr<vector<shared_ptr<Ran
   }
 
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool Split_Range_Block_Info::is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs ) { 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //cout << "Split_Range_Block_Info::is_sparse" << endl;
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_RANGE_BLOCK_INFO
+cout << "Split_Range_Block_Info::is_sparse" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_iter =  range_blocks_->begin();
   for ( std::vector<std::vector<int>>::const_iterator si_iter = state_idxs->begin(); si_iter != state_idxs->end(); si_iter++ ){
      //if ( (*rb_iter)->is_sparse(*si_iter) ) 
@@ -239,10 +224,3 @@ bool Split_Range_Block_Info::is_sparse( const std::shared_ptr<std::vector<std::v
   }
   return false; 
 }
-
-
-//Remove split_block_helper ; not using const anymore, so just define construct elements of split block in constructor
-//Have split block_canonical defined in split_block constructor ; this is the simplest way to ensure and test consistency.
-//
-//Have op_info_canonical be state symmetric things; worry about how to deal with inter state transformations.
-//

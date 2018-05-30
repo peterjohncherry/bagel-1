@@ -3,14 +3,17 @@
 
 using namespace std;
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Note, spinfree should tell us not just if the wavefunction is free, but whether or 
 //not the perturbation being applied is spin independent
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info , bool spinfree ) :
                                                  states_info_(states_info), spinfree_(spinfree) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef  __DEBUG_PROPTOOL_SYSTEM_INFO
+cout << "System_Info::System_Info" <<endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   braket_map_       = make_shared< map <string, shared_ptr<vector<shared_ptr< TensOp::TensOp<DataType>>>>>>();
   term_braket_map_ = make_shared<map<string, shared_ptr<vector<shared_ptr<BraKet_Base>>>>>();
@@ -20,13 +23,12 @@ System_Info<DataType>::System_Info( shared_ptr<StatesInfo<DataType>> states_info
   
   equation_map_       = make_shared< map <string, shared_ptr<Equation_Base<DataType>>>>();
 
-  MT_map_         = make_shared< map <string, shared_ptr<TensOp_Base>>>();
-  CTP_map_        = make_shared< map <string, shared_ptr<CtrTensorPart_Base>>>();
-  ACompute_map   = make_shared< map <string, shared_ptr<vector<shared_ptr<CtrOp_base>> >>>();
-  Gamma_map      = make_shared< map <string, shared_ptr<GammaInfo_Base> > >();
+  MT_map_        = make_shared< map <string, shared_ptr<TensOp_Base>>>();
+  CTP_map_       = make_shared< map <string, shared_ptr<CtrTensorPart_Base>>>();
+  ACompute_map   = make_shared< map <string, shared_ptr<vector<shared_ptr<CtrOp_base>>>>>();
+  Gamma_map      = make_shared< map <string, shared_ptr<GammaInfo_Base>>>();
 
   if (spinfree_ ) { 
-    cout << " setting spinfree ranges" << endl;
     free     = {"c", "a", "v"};
     not_core = {"a", "v"};
     not_act  = {"c", "v"};
@@ -50,7 +52,9 @@ template<class DataType>
 void
 System_Info<DataType>::construct_equation_task_list( string equation_name ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef  __DEBUG_PROPTOOL_SYSTEM_INFO
   cout << "System_Info<DataType>::System_Info::construct_equation_task_list : " << equation_name << endl;
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   if (equation_map_->at( equation_name)->type() == "Value" ) { 
     equation_map_->at( equation_name)->generate_all_expressions();
@@ -70,7 +74,9 @@ System_Info<DataType>::Build_TensOp( string op_name,
                                      vector<shared_ptr<Constraint>>& constraints,
                                      DataType factor, string Tsymmetry, bool hconj,  int state_dep  ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef  __DEBUG_PROPTOOL_SYSTEM_INFO
 cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //NOTE: change to use proper factor ( the factor is the factor by which the Re/Im parts of the Tensop are multiplied, not the Re/Im parts of the factor itself) 
   pair<double,double> tmp_fac = make_pair(1.0 , 1.0 );
@@ -79,14 +85,12 @@ cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
                                                                                         tmp_fac, symmfuncs, constraints, Tsymmetry, state_dep, range_prime_map_);
   
   // change to be expression specific
-  cout << "getting  ctr tens ranges for New_Op : " << op_name << endl;
   CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());
-  cout << "got ctr tens ranges for new_op : " << op_name << endl;
 
   return new_op;
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
 System_Info<DataType>::create_equation( string name, string type, 
@@ -96,8 +100,11 @@ System_Info<DataType>::create_equation( string name, string type,
                                                                             shared_ptr<vector<shared_ptr<BraKet_Base>>>>> term_braket_map_state_spec, 
                                         shared_ptr<map< pair<string, vector<pair<string, int>>>, 
                                                                   shared_ptr<vector<pair<DataType, string>>>>> expression_term_map_state_spec ) { 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "System_Info<DataType>::System_Info::create_equation" << endl; 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef  __DEBUG_PROPTOOL_SYSTEM_INFO
+cout << "System_Info<DataType>::System_Info::create_equation" << endl;
+cout << "name = " << name  <<  endl;  cout << "type = " << type  <<  endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   term_braket_map_->insert(term_braket_map->begin(), term_braket_map->end()) ;
   expression_term_map_->insert(expression_term_map->begin(), expression_term_map->end()) ;
@@ -129,28 +136,23 @@ System_Info<DataType>::create_equation( string name, string type,
   
   } else {  
     throw logic_error( "equation type \""+ type + "\" not implemented yet! Aborting!"); 
-
   }
-  cout << "put equation " << name << " into map" <<endl;
   return;
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
 System_Info<DataType>::create_equation( string name, string type, 
                                         shared_ptr<map<string, shared_ptr<vector<shared_ptr<BraKet_Base>>>>>  term_braket_map,
                                         shared_ptr<map<string, shared_ptr<vector<pair<DataType,string>>>>> expression_term_map ){ 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "System_Info<DataType>::System_Info::create_equation : "; cout.flush(); cout << name  << endl; 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef  __DEBUG_PROPTOOL_SYSTEM_INFO
+cout << "System_Info<DataType>::System_Info::create_equation : "; cout.flush();
+cout << "name = " << name  <<  endl; cout << "type = " << type  <<  endl;
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   term_braket_map_->insert(term_braket_map->begin(), term_braket_map->end()) ;
   expression_term_map_->insert(expression_term_map->begin(), expression_term_map->end()) ;
- 
-  cout << endl << "Contents of expression_term_map " << endl;
-  cout << "--------------------------------------------------" << endl;
-  for ( auto& elem : *expression_term_map ) 
-    cout << elem.first << endl;
-  cout << endl;
  
   shared_ptr<Equation_Base<DataType>>  new_eqn;
   if ( type == "Value" ) { 
@@ -160,18 +162,14 @@ System_Info<DataType>::create_equation( string name, string type,
     equation_map_->emplace( name, new_eqn); 
 
   } else if ( type == "LinearRM") { 
-  
     throw logic_error( "Must provide state specific term map for doing linearRM!! Aborting!! " ) ; 
     
   } else {  
     throw logic_error( "equation type \""+ type + "\" not implemented yet! Aborting!"); 
 
   }
-
   return;
-
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class System_Info<double>;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

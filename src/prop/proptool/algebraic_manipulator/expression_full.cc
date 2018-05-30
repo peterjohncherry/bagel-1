@@ -9,23 +9,26 @@ using namespace std;
 template<class DataType>
 void Expression_Full<DataType>::generate_algebraic_task_list(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "void Expression_Full<DataType>::generate_algebraic_task_list()" << endl;
-    
+#ifdef __DEBUG_PROPTOOL_EXPRESSION_FULL
+cout << "void Expression_Full<DataType>::generate_algebraic_task_list()" << endl;
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
-  // Will loop through terms and then generate mathematical task map. It's split into
-  // two functions as this will gives more control over merging together of different BraKets' G_to_A_maps.
   required_blocks_ = make_shared<set<shared_ptr<Range_Block_Info>>>();
   for ( shared_ptr<BraKet_Base>& braket : *braket_list_ )
     braket->generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_, required_blocks_, CTP_map_ );
  
   this->get_gamma_Atensor_contraction_list();
+
+  return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void 
 Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression_Full::get_gamma_Atensor_contraction_list" << endl;
+#ifdef __DEBUG_PROPTOOL_EXPRESSION_FULL
+cout << "Expression_Full::get_gamma_Atensor_contraction_list" << endl;
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto G2A_mapit = G_to_A_map_->begin(); G2A_mapit != G_to_A_map_->end(); G2A_mapit++) {
@@ -44,10 +47,8 @@ Expression_Full<DataType>::get_gamma_Atensor_contraction_list(){
         ACompute_map_->emplace(cmtp_name, ACompute_list);
         CTP_map_->at(cmtp_name)->got_compute_list( true );
       }
-      cout << cmtp_name << " has a compute list of length : "; cout.flush() ; cout << ACompute_map_->at(cmtp_name)->size() << endl;
     }
   }
-  cout << "leaving Get_CMTP_compute_Terms" << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

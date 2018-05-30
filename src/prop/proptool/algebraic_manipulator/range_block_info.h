@@ -26,7 +26,6 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     std::pair<double,double> factors_;       // Original block factor
 
     std::shared_ptr<std::vector<int>> idxs_trans_;         
-    std::shared_ptr<std::vector<int>> idxs_trans_inverse_;  
     std::shared_ptr<std::vector<int>> aops_trans_;
 
     std::shared_ptr<std::vector<char>> orig_rngs_ch_;
@@ -82,8 +81,6 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
  
     std::shared_ptr<std::vector<int>> idxs_trans() const { return idxs_trans_; }
     std::shared_ptr<std::vector<int>> aops_trans() const { return aops_trans_; }
-
-    std::shared_ptr<std::vector<int>> idxs_trans_inverse() { return idxs_trans_inverse_; }
 
     virtual std::shared_ptr<Op_Info> op_info() { return op_info_; } 
 

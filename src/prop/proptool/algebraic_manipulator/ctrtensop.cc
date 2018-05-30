@@ -6,6 +6,9 @@ using namespace std;
 ///////////////////////////////////////////////////////////////////////////
 void CtrTensorPart_Base::get_name(){
 ///////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_CTR_TENSOR_PART
+cout << "CtrTensorPart_Base" << endl;
+#endif ////////////////////////////////////////////////////////////////////
   name_ = "";
   for(string id : *full_idxs_)
     name_ += id;
@@ -24,10 +27,12 @@ void CtrTensorPart_Base::get_name(){
   }
   return;
 };
-
-/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
 string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_ctrs_pos ){
-/////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_CTR_TENSOR_PART
+cout << "CtrTensorPart_Base::get_next_name" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////
   
   string new_name = op_info_->op_state_name_canonical();
 
@@ -50,7 +55,9 @@ string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_c
 //////////////////////////////////////////////////////////////////////////////
 void CtrTensorPart_Base::get_ctp_idxs_ranges(){
 //////////////////////////////////////////////////////////////////////////////
-//cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
+#ifdef __DEBUG_PROPTOOL_CTR_TENSOR_PART
+cout << "CtrTensorPart_Base::get_ctp_idxs_ranges() " << name_  << endl;
+#endif ///////////////////////////////////////////////////////////////////////
 
   vector<bool> get_unc(full_idxs_->size(), true);
 
@@ -87,7 +94,9 @@ void CtrTensorPart_Base::get_ctp_idxs_ranges(){
 template<class DataType>
 pair<int,int> CtrTensorPart<DataType>::get_pre_contract_ctr_rel_pos(pair<int,int>& ctr_pos ) { 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "CtrTensorPart::get_pre_contract_ctr_rel_pos" << endl;
+#ifdef __DEBUG_PROPTOOL_CTR_TENSOR_PART
+cout << "CtrTensorPart::get_pre_contract_ctr_rel_pos" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<bool> get_unc(full_idxs_->size(), true);
   for ( int ii = 0 ; ii != ctrs_done_->size()-1 ; ii++ )  {
@@ -104,15 +113,16 @@ pair<int,int> CtrTensorPart<DataType>::get_pre_contract_ctr_rel_pos(pair<int,int
     }
  
   return make_pair( unc_rel_pos_[ctr_pos.first], unc_rel_pos_[ctr_pos.second] ); 
-
 }
-//////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void CtrTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<string,shared_ptr<CtrTensorPart_Base> >> Tmap,
                                                           shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
                                                           shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
-/////////////////////////////////////////////////////////////////////////////////////////////////////
-//  cout << endl <<  "CtrTensorPart<DataType>::build_contraction_sequence : CTP name =  " << name_ << endl;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_CTR_TENSOR_PART
+cout << endl <<  "CtrTensorPart<DataType>::build_contraction_sequence : CTP name =  " << name_ << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   if ( ctrs_pos_->size() == 0 ) {
 
@@ -161,8 +171,9 @@ void CtrTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<string,
       }
       CTP_out->dependencies_.emplace(name_);
   
-      ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" )); cout << " added to " << name_ << "'s Acompute_list"<<  endl;
-  
+      ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" ));
+
+      cout << " added to " << name_ << "'s Acompute_list"<<  endl;
       cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done_->back().first << ","<< ctrs_done_->back().second << ") to get " << CTP_out_name ; cout.flush(); 
   
       shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list_out =  make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list);
@@ -172,17 +183,17 @@ void CtrTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<string,
     } 
     ACompute_map->emplace(name_, ACompute_list);
   }
- 
   return;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void CtrMultiTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<string,shared_ptr<CtrTensorPart_Base> >> Tmap,
                                                                shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list ,
                                                                shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << endl << "CtrMultiTensorPart<DataType>::build_contraction_sequence :   CMTP name = " << name_ << endl;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_CTR_MULTITENSOR_PART
+cout << endl << "CtrMultiTensorPart<DataType>::build_contraction_sequence :   CMTP name = " << name_ << endl;
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   if ( get_compute_list_from_reordered_tens_ ) {  // TODO Should not need this anymore now op_info class has been extended; all Acontrib should be in canonical order on entry.
               
@@ -220,7 +231,7 @@ void CtrMultiTensorPart<DataType>::build_contraction_sequence( shared_ptr<map<st
   ACompute_map->emplace(name_, ACompute_list);
   return;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<CtrTensorPart<DataType>>
  CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors( pair<pair<int,int>, pair<int,int>> cross_ctr,// These two arguments should be 
@@ -228,8 +239,10 @@ shared_ptr<CtrTensorPart<DataType>>
                                                           shared_ptr<map<string,shared_ptr<CtrTensorPart_Base > >> Tmap,
                                                           shared_ptr<vector<shared_ptr<CtrOp_base> >> ACompute_list,
                                                           shared_ptr<map<string, shared_ptr<vector<shared_ptr<CtrOp_base>> > >> ACompute_map ){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//   cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors : " << name_ << endl; 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_CTR_MULTITENSOR_PART
+cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors : " << name_ << endl; 
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    int T1pos, T2pos, T1ctr, T2ctr;
 

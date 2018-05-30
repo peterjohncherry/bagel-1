@@ -98,7 +98,6 @@ class CtrTensorPart_Base  {
     virtual void build_contraction_sequence( std::shared_ptr<std::map<std::string,std::shared_ptr<CtrTensorPart_Base>>> CTP_map,
                                std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >> Acompute_list ,
                                std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector< std::shared_ptr<CtrOp_base> >>>> Acompute_map) = 0 ; 
-//                              { throw std::logic_error(" Calling full contract from CtrTensorPart_Base !! Aborting !! ");  } ; 
     
     virtual std::pair<int,int> get_pre_contract_ctr_rel_pos( std::pair<int,int>& ctr_pos ) = 0;
 };

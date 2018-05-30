@@ -15,7 +15,9 @@ GammaInfo<DataType>::GammaInfo ( shared_ptr<CIVecInfo_Base> Bra_info, shared_ptr
                                  shared_ptr<vector<int>> idxs_pos  ,
                                  shared_ptr<map<string, shared_ptr<GammaInfo_Base>>>& Gamma_map ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// cout << "GammaInfo_Base:GammaInfo" << endl;
+#ifdef __DEBUG_GAMMA_INFO
+ cout << "GammaInfo_Base:GammaInfo" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
   order_ = idxs_pos->size();
   Bra_info_ = Bra_info; 
@@ -51,16 +53,12 @@ GammaInfo<DataType>::GammaInfo ( shared_ptr<CIVecInfo_Base> Bra_info, shared_ptr
         shared_ptr<GammaInfo<DataType>> prev_gamma_ = make_shared<GammaInfo<DataType>>( Bra_info_, Ket_info_, full_aops_vec, full_idx_ranges, prev_gamma_idxs_pos, Gamma_map );
         Gamma_map->emplace( prev_gammas_[(ii/2)-1], prev_gamma_ );
       }
-
       if(  ii == 2 )
         prev_Bra_info_ = Gamma_map->at( prev_gammas_[0] )->Bra_info() ;
-
     }
-    print_vector( prev_gammas_ , "prev gammas of " + name_ ); cout << endl;
   }
 
 }
-
 //////////////////////////////////////////////////////////////////////////
 template class GammaInfo<double>;
 template class GammaInfo<std::complex<double>>;

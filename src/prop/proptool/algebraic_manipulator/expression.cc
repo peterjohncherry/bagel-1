@@ -1,6 +1,9 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/expression.h>
 
+#ifdef __DEBUG_PROPTOOL_EXPRESSION
+#include <src/prop/proptool/debugging_utils.h>
+#endif
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -17,12 +20,13 @@ Expression<DataType>::Expression( shared_ptr<vector< shared_ptr<BraKet_Base>>> b
                                   braket_list_(braket_list), states_info_(states_info), MT_map_(MT_map), CTP_map_(CTP_map),
                                   ACompute_map_(ACompute_map), gamma_info_map_(gamma_info_map), type_(expression_type) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression<DataType>::Expression (new constructor) " << endl;
+#ifdef __DEBUG_PROPTOOL_EXPRESSION
+cout << "Expression<DataType>::Expression (new constructor) " << endl;
+Debugging_Utils::print_names( braket_list, "brakets in expression" ); cout << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //Note that this G_to_A_map_ is expression specific
-
   name_ = "";
-  cout << "braket_list_->size() = " << braket_list_->size() << endl;
   for ( shared_ptr<BraKet_Base>& bk : *braket_list_ ) {
     if ( bk->factor_.first != 0.0 )
       name_ += "(" + to_string( bk->factor_.first) ; 
@@ -35,6 +39,7 @@ Expression<DataType>::Expression( shared_ptr<vector< shared_ptr<BraKet_Base>>> b
   name_.pop_back();
   name_.pop_back();
 
+
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Builds a list of the tensor blocks which are needed for evaluation of this expression.
@@ -44,7 +49,9 @@ template<class DataType>
 void
 Expression<DataType>::necessary_tensor_blocks( shared_ptr<map< string, shared_ptr< map<string, shared_ptr<AContribInfo_Base>> >>> G_to_A_map){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Expression::necessary_tensor_blocks" << endl;
+#ifdef __DEBUG_PROPTOOL_EXPRESSION
+cout << "Expression::necessary_tensor_blocks" << endl;
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //loop through G_to_A_map ; get all A-tensors associated with a given gamma
   for (auto G2A_mapit = G_to_A_map->begin(); G2A_mapit != G_to_A_map->end(); G2A_mapit++) {
@@ -80,7 +87,6 @@ Expression<DataType>::necessary_tensor_blocks( shared_ptr<map< string, shared_pt
       }
     }
   }
-  cout << "leaving Expression::necessary_tensor_blocks" << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

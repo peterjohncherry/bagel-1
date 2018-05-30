@@ -10,11 +10,10 @@ void Equation_Base<DataType>::set_maps(  std::shared_ptr< std::map <std::string,
                                          shared_ptr< map< string, shared_ptr< TensOp_Base >>> MT_map,
                                          shared_ptr< map< string, shared_ptr< CtrTensorPart_Base>>> CTP_map,
                                          shared_ptr< map< char, long unsigned int>> range_prime_map  ) {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef Equation_Base_DBG 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_EQUATION_BASE
 cout << "void Equation_Value<DataType>::set_maps" << endl;
-#endif
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   expression_map_ = expression_map;   if(!expression_map_ ) throw logic_error( "expression_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " ); 
   gamma_info_map_ = gamma_info_map;   if(!gamma_info_map_ ) throw logic_error( "gamma_info_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
@@ -23,7 +22,6 @@ cout << "void Equation_Value<DataType>::set_maps" << endl;
   CTP_map_        = CTP_map;          if(!CTP_map_        ) throw logic_error( "CTP_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
   range_prime_map_  = range_prime_map; if(!range_prime_map_        ) throw logic_error( "range_prime_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
 
-  cout << "leaving void Equation_Value<DataType>::set_maps" << endl;
   return;
 }
 //////////////////////////////////////////////////////////////////////////
@@ -31,7 +29,9 @@ using namespace std;
 template<typename DataType>
 void Equation_Base<DataType>::generate_all_expressions() {  
 //////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_EQUATION_BASE
 cout << " void Equation_Base<DataType>::generate_all_expressions() " << endl;  
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   for ( auto& expr_info : *expression_term_map_ ){ 
     cout <<"expr_info.first = " << expr_info.first << endl;
@@ -47,7 +47,9 @@ cout << " void Equation_Base<DataType>::generate_all_expressions() " << endl;
 template<class DataType>
 void Equation_Base<DataType>::add_expression( string expression_name ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Equation_Base<DataType>::add_Expression : " << expression_name << " hey!" <<  endl;
+#ifdef __DEBUG_PROPTOOL_EQUATION_BASE
+cout << "Equation_Base<DataType>::add_Expression : " << expression_name << " hey!" <<  endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   shared_ptr<vector<pair<DataType, string>>> term_name_list = expression_term_map_->at(expression_name);
 
@@ -88,14 +90,14 @@ void Equation_Base<DataType>::add_expression( string expression_name ) {
 template<class DataType>
 string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<shared_ptr<BraKet_Base>>> expr_bk_list ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Equation_Base<DataType>::add_Expression_info  (bk input version)" << endl;
-
-  cout << "expr_bk_list->size() = " <<  expr_bk_list->size() << endl;
+#ifdef __DEBUG_PROPTOOL_EQUATION_BASE
+cout << "Equation_Base<DataType>::add_Expression_info  (bk input version)" << endl;
+Debugging_Utils::print_names( expr_bk_list, "BraKet_list for expression" ); cout << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //TODO get these quantities from input 
   bool spinfree = false;
   string expression_type = expr_bk_list->front()->type_;
-  cout << "expression_type =  " <<  expression_type << endl; 
 
   for ( shared_ptr<BraKet_Base>& braket_info : *expr_bk_list ) {
     if ( braket_info->type_ != expression_type )
@@ -107,7 +109,6 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<shared_pt
       
       auto T_loc = MT_map_->find( (*oiv_it)->op_name_ );
       if( T_loc == MT_map_->end() ){ 
-        cout << "Adding " << (*oiv_it)->op_name_ << endl;
 
         shared_ptr<TensOp::TensOp<DataType>> new_op = TensOp_Info_Init::Initialize_Tensor_Op_Info<DataType>( (*oiv_it)->op_name_, range_prime_map_ );
         new_op->generate_uncontracted_ctps( (*oiv_it ) );  
@@ -123,7 +124,6 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<shared_pt
     }
 
     if( MT_map_->find( braket_info->multiop_info_->op_name_ ) == MT_map_->end() ){
-      cout << "could not find MT " << braket_info->multiop_name_ << " in map" <<endl;
       vector<shared_ptr<TensOp_Base>> tensop_list(op_info_vec->size());
       vector<shared_ptr<TensOp_Base>>::iterator tl_it = tensop_list.begin();
       
@@ -133,9 +133,7 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<shared_pt
       shared_ptr<MultiTensOp::MultiTensOp<DataType>> multiop = make_shared<MultiTensOp::MultiTensOp<DataType>>( braket_info->multiop_info_->op_name_, spinfree, tensop_list, range_prime_map_ );
       MT_map_->emplace(braket_info->multiop_info_->op_name_, multiop );
     } 
-    
   }
-  
   return expression_type;
 }
 //////////////////////////////////////////////////////////////////////////

@@ -4,10 +4,7 @@
 
 using namespace std;
 using namespace WickUtils;
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Following restructuing this class is starting to look more redundant, however I think it is still useful for
-//merging, symmetry checking and sparsity. As well as controlling the reordering 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string, std::shared_ptr<TensOp_Base>>> MT_map,                
                                                                         std::shared_ptr<std::map<std::string,
@@ -17,8 +14,11 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
                                                                         std::shared_ptr<StatesInfo_Base> target_states,
                                                                         std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks,
                                                                         std::shared_ptr<std::map<std::string, std::shared_ptr<CtrTensorPart_Base>>> ctp_map ) {  
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions : " << name_ << " "; cout.flush(); cout << "target_op_ = " <<  target_op_ << endl;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_BRAKET_ORBEXCDERIV
+cout << "BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions : " << name_ << " "; cout.flush(); cout << "target_op_ = " <<  target_op_ << endl;
+cout << "multiop_info_->name_ = "; cout.flush(); cout <<  multiop_info_->name_ << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   Total_Op_ = MT_map->at( multiop_info_->op_name_ );
 
@@ -27,8 +27,6 @@ void BraKet_OrbExcDeriv<DataType>::generate_gamma_Atensor_contractions( std::sha
   Total_Op_->generate_ranges( multiop_info_ );
 
   shared_ptr<GammaGenerator_OrbExcDeriv<DataType>> GGen = make_shared<GammaGenerator_OrbExcDeriv<DataType>>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, block_G_to_A_map, factor_, target_op_ );
-
-  cout << "multiop_info_->name_ = "; cout.flush(); cout <<  multiop_info_->name_ << endl;
 
   auto all_ranges = Total_Op_->all_ranges_state_specific_->at( multiop_info_->name_ );
 

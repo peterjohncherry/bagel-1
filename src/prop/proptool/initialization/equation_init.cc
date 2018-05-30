@@ -6,7 +6,9 @@ using namespace bagel;
 template<typename DataType> 
 void Equation_Init_Value<DataType>::initialize_expressions() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Equation_Init_Value<DataType>::initialize_expressions()" << endl;
+#ifdef __DEBUG_PROPTOOL_EQUATION_INIT_VALUE 
+cout << "Equation_Init_Value<DataType>::initialize_expressions()" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////
 
   pair<double,double> bk_factor_dummy  = make_pair( 1.0, 1.0);
   //TODO The looping through the terms should be on the inside, and the summation on the outside,
@@ -119,7 +121,6 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
 
         }
       } while( fvec_cycle_skipper( fvec_summed_ids, maxs_summed_ids, mins_summed_ids ) );
-      cout << endl << endl;
 
       string state_ids_name = summed_ids_name;
       state_ids_name += " fixed_ids : [ ";  
@@ -149,7 +150,7 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
 
       string term_alg_name = master_expression_->term_list_->at(ii).second->alg_name_;
 
-      //expression_term_map_->emplace( term_name , make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );
+      // expression_term_map_->emplace( term_name , make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );
       expression_term_map_by_states_->emplace( make_pair(term_alg_name, fixed_id_vals), make_shared<vector<pair<DataType, string>>>( 1,  make_pair( (DataType)1.0 , term_name) ) );
     } while( fvec_cycle_skipper( fvec_fixed_ids, maxs_fixed_ids, mins_fixed_ids ) );
 

@@ -23,8 +23,6 @@ cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP : "; cout.flush(); cou
     throw logic_error( "ACompute list is empty!! Aborting!!" );
 
   for (shared_ptr<CtrOp_base> ctr_op : *(ACompute_map_->at(A_contrib))){
-
-     cout << "getting " <<  ctr_op->Tout_name() << endl;
    
     //TODO don't check ctr_type(), check if dynamic_pointer_cast<X>( ctr_op ) is null (where X is the type of contraction you're casting to).
     // check if this is an uncontracted multitensor (0,0) && check if the data is in the map
@@ -115,12 +113,10 @@ cout << "TensOp_Computer::TensOp_Computer::get_block_Tensor : " << tens_block_na
      for ( shared_ptr<CtrTensorPart_Base>& ctp : *(CTP_map_->at(tens_block_name)->CTP_vec()))
        sub_tens_names.push_back(ctp->name());
      
-     print_vector(sub_tens_names, "sub_tens_names" ); cout << endl; 
      tens = direct_product_tensors( sub_tens_names ); 
 
    }
 
-   cout << "leaving TensOp_Computer::TensOp_Computer::get_block_Tensor : " << tens_block_name << endl;
    return tens;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

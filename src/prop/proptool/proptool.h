@@ -102,6 +102,8 @@ namespace PropTool {
 
     std::vector<std::string> equation_execution_list_;
 
+    void print_input_info();
+
     public: 
 
       PropTool(std::shared_ptr<const PTree> idata, std::shared_ptr<const Geometry> g, std::shared_ptr<const Reference> r);

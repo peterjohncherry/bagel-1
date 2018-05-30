@@ -39,6 +39,38 @@ namespace Debugging_Utils {
     }
     std::cout << "]"; std::cout.flush();
   }
+
+
+  template<typename DataType>
+  void print_names( const std::vector<DataType> vec, std::string name ) {
+ 
+    if ( name != "" ) { 
+     std::cout << name << " sizes : " ; std::cout.flush();
+    }
+ 
+    std::cout << "[ " ; std::cout.flush();
+    for ( const auto& elem : vec ) { 
+      std::cout << elem.name() << " " ; std::cout.flush();
+    }
+    std::cout << "]" ; std::cout.flush();
+
+  }
+ 
+  template<typename DataType>
+  void print_names( const std::vector<std::shared_ptr<DataType>> vec, std::string name ) {
+ 
+    if ( name != "" ) { 
+     std::cout << name << " names : " ; std::cout.flush();
+    }
+ 
+    std::cout << "[ " ;std::cout.flush();
+    for ( const auto& elem : vec ) { 
+      std::cout << elem->name() << " " ; std::cout.flush();
+    }
+    std::cout << "]"; std::cout.flush();
+  }
+ 
+
  
   template<typename DataType>
   std::shared_ptr<std::vector<DataType>> get_pos_from_arg2( const std::vector<int>& pos, const std::vector<DataType>& vec2 ) {

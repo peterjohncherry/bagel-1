@@ -1,5 +1,6 @@
 #include <src/prop/proptool/proptool.h>
 #include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
+#include <src/prop/proptool/debugging_utils.h>
 
 using namespace std;
 using namespace bagel;
@@ -8,7 +9,9 @@ using namespace bagel;
 PropTool::PropTool::PropTool( shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, shared_ptr<const Reference> r ): 
                               idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
   cout << "PropTool::PropTool::PropTool" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // sort out how to determine datatype!!
   inp_factor_map_ = make_shared<map<string, double>>();
@@ -33,7 +36,9 @@ PropTool::PropTool::PropTool( shared_ptr<const PTree> idata, shared_ptr<const Ge
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::execute_compute_lists(){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
  cout << "PropTool::PropTool::execute_compute_lists()" << endl; 
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
  for ( string& equation_name : equation_execution_list_ ) 
    system_computer_->build_equation_computer( equation_name );
@@ -48,7 +53,9 @@ void PropTool::PropTool::execute_compute_lists(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::build_algebraic_task_lists( string  eqn_interdependence ){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
   cout << "PropTool::PropTool::build_algebraic_task_lists()" << endl; 
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   if ( eqn_interdependence == "share"  ) { 
     for ( string& equation_name : equation_execution_list_ ) 
@@ -61,7 +68,9 @@ void PropTool::PropTool::build_algebraic_task_lists( string  eqn_interdependence
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::read_input_and_initialize(){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
 cout << "void PropTool::PropTool::read_input_and_initialize()" << endl; 
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // Get user specified variables (e.g. ranges, constant factors) which may appear in term definitions
   get_expression_variables( idata_->get_child("variables") );
@@ -101,7 +110,9 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_wavefunction_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
 cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //Initializing range sizes either from idate or reference wfn 
   maxtile_   = idata_->get<int>("maxtile", 10);
@@ -147,7 +158,9 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> variable_def_tree ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
  cout << " PropTool::PropTool::get_expression_variables" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //TODO don't do this...........
   inp_factor_map_->emplace("one", 1.0 ); 
@@ -208,25 +221,14 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
         
   }
 
-  cout << "USER DEFINED FACTORS " << endl;
-  for ( auto elem : *inp_factor_map_ ) 
-    cout << elem.first << " = " << elem.second << endl; 
-
-  cout << "USER DEFINED RANGES " << endl;
-  for ( auto elem : *inp_range_map_ ) {
-    cout << elem.first << " = [ " ;
-    for (int orb_num :  *elem.second ) {
-      cout << orb_num << " " ; cout.flush();
-    }
-    cout << "]" << endl;
-  }
-
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_new_ops_init( shared_ptr<const PTree> ops_def_tree ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
 cout << "void PropTool::PropTool::get_new_ops_init" << endl; 
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //this shouldn't be necessary, but the conversion doesn't seem to work otherwise....
   auto conv_to_bool = []( int aop ) { return aop == 1 ? true : false ; };
@@ -285,7 +287,9 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_def_tree ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
   cout << "PropTool::PropTool::get_equations_init" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   for ( auto& equation_inp : *equation_def_tree ){
  
@@ -307,7 +311,10 @@ void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_de
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_equation_init_Value( shared_ptr<const PTree> equation_inp ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+#ifdef __DEBUG_PROPTOOL_DRIVER
 cout << " PropTool::PropTool::get_equation_init_Value" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   string eqn_name = equation_inp->get<string>( "name" );
 
@@ -363,7 +370,9 @@ cout << " PropTool::PropTool::get_equation_init_Value" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_equation_init_LinearRM( shared_ptr<const PTree> equation_inp ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
 cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   string eqn_name = equation_inp->get<string>( "name" );
   string eqn_target = equation_inp->get<string>( "target" );
@@ -383,7 +392,6 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   
       string term_name = term_info->get<string>( "term" );
       string term_factor = term_info->get<string>( "factor" );
-      cout << "term_name = " << term_name << endl;
 
       shared_ptr<Term_Init> term_init = term_init_map_->at(term_name);
       if ( term_init->orbital_projector_ )
@@ -415,16 +423,16 @@ cout << " PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   sys_info_->create_equation( eqn_name, "LinearRM", eqn_init->term_braket_map_, eqn_init->expression_term_map_,
                               eqn_init->term_braket_map_state_spec_, eqn_init->expression_term_map_state_spec_ );
 
-  cout << "eqn_name = "; cout.flush(); cout << eqn_name << endl;
   equation_execution_list_.push_back(eqn_name); 
-  cout << " LEAVING PropTool::PropTool::get_linear_equation_init_LinearRM" << endl;
   
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
   cout << "PropTool::PropTool::get_term_init" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    
   int zero = 0;
   for ( auto& term_inp : *term_inp_list ) { 
@@ -489,7 +497,9 @@ void PropTool::PropTool::get_terms_init( shared_ptr<const PTree> term_inp_list )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::set_ao_range_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
 cout << "PropTool::PropTool::set_ao_range_info" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //TODO should also read user defined ranges from input!
   closed_rng_  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nclosed_-ncore_, maxtile_, 0, ncore_));
@@ -531,28 +541,23 @@ cout << "PropTool::PropTool::set_ao_range_info" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::set_ci_range_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
 cout << "PropTool::PropTool::set_ci_range_info" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  cout << " set ci ranges " << endl;
-  for ( int ii : target_states_ ) {
-
-    cout << " ii = " << ii << endl; 
+  for ( int ii : target_states_ )
     range_conversion_map_->emplace( get_civec_name( ii , civectors_->data(ii)->det()->norb(), civectors_->data(ii)->det()->nelea(), civectors_->data(ii)->det()->neleb()),
                                                     make_shared<SMITH::IndexRange>(civectors_->data(ii)->det()->size(), cimaxtile_ ));  
     
-    shared_ptr<SMITH::IndexRange>  ci_index_ranges =  make_shared<SMITH::IndexRange>(civectors_->data(ii)->det()->size(), cimaxtile_ );
-    cout << "cirngs = [ ";  for (auto irng : ci_index_ranges->range()) { cout << irng.size()  << " "; }; cout << "] " << endl;
- 
-  }    
-  cout << " set done with rangesd  ranges " << endl;
-
  return;
  
 }
 //////////////////////////////////////////////////////////////////////////////////////////////
 void  PropTool::PropTool::identify_degeneracies( const vector<double>& energies ) {
 //////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
   cout << "void PropTool::PropTool::set_target_state_info()" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   int state_num = 0;
   double energy_buff = energies.front();
@@ -574,7 +579,9 @@ void  PropTool::PropTool::identify_degeneracies( const vector<double>& energies 
 //////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::set_target_state_info() {
 //////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
 cout << "PropTool::PropTool::set_target_info" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   targets_info_ = make_shared<StatesInfo<double>> ( target_states_ ) ;
 
   for ( int state_num : target_states_ ){ 
@@ -597,16 +604,9 @@ cout << "PropTool::PropTool::set_target_info" << endl;
      targets_info_->add_state( nact_, civectors_->data(state_num)->det()->nelea() + civectors_->data(state_num)->det()->neleb(), state_num,
                                elec_range_map, hole_range_map); 
   }
-
-  cout << "range_prime_map" << endl;  
-  for ( auto& elem : *range_prime_map_ ) {
-    string rng = ""; rng.push_back(elem.first); cout << rng << " : " << elem.second << endl; 
-  }
  
-  for ( auto& elem : targets_info_->civec_info_map_ ){ 
+  for ( auto& elem : targets_info_->civec_info_map_ )
     elem.second->set_elec_hole_pnums( range_prime_map_ );
-    cout << elem.second->name() << " elec_pnum = " << elem.second->elec_pnum() << " hole_pnum = " << elem.second->hole_pnum() << endl;  
-  }
   
   targets_info_->range_prime_map_ = range_prime_map_;
 
@@ -616,7 +616,9 @@ cout << "PropTool::PropTool::set_target_info" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<SMITH::IndexRange>> PropTool::PropTool::convert_to_indexrange( shared_ptr<const vector<string>> range_block_str ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
   cout << "PropTool::PropTool::convert_to_indexrange" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<vector<SMITH::IndexRange>> range_block = make_shared<vector<SMITH::IndexRange>>( range_block_str->size() );
   for( int ii = 0; ii != range_block_str->size() ; ii++ ) 
@@ -626,10 +628,53 @@ shared_ptr<vector<SMITH::IndexRange>> PropTool::PropTool::convert_to_indexrange(
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::print_input_info() { 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
+cout << "PropTool::PropTool::print_input_info()" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  cout << "range_prime_map" << endl;  
+  for ( auto& elem : *range_prime_map_ ) {
+    string rng = "";
+    rng.push_back(elem.first);
+    cout << rng << " : " << elem.second << endl; 
+  }
+ 
+  for ( auto& elem : targets_info_->civec_info_map_ )
+    cout << elem.second->name() << " elec_pnum = " << elem.second->elec_pnum() << " hole_pnum = " << elem.second->hole_pnum() << endl;  
+
+  cout <<  endl << "=========== Range map ============ " << endl;
+  for ( auto& elem : *range_conversion_map_ ){ 
+    Debugging_Utils::print_sizes(  elem.second->range(),elem.first );
+    cout << " total_size = " << elem.second->size() << endl;
+  }
+
+  cout << endl << "============ user defined factors =============== " << endl;
+  for ( auto elem : *inp_factor_map_ ) 
+    cout << elem.first << " = " << elem.second << endl; 
+
+  cout << endl << "============ user defiend ranges ================ " << endl;
+  for ( auto elem : *inp_range_map_ ) {
+    cout << elem.first << " = [ " ;
+    for (int orb_num :  *elem.second ) {
+      cout << orb_num << " " ; cout.flush();
+    }
+    cout << "]" << endl;
+  }
+
+  cout << endl << "======equation_execution_list_====== " << endl;
+  for ( auto elem : equation_execution_list_ ) 
+    cout << elem << endl;
+
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void PropTool::PropTool::set_primes() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
   cout << "PropTool::PropTool::set_primes" << endl;
-
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // for encoding ranges and contractions
   range_primes_ =  { 1013, 1009, 997, 991, 983, 977, 971, 967, 953, 947, 941, 937, 929, 919, 911, 907, 887, 883, 881, 877,
                       863, 859, 857, 853, 839, 829, 827, 823, 821, 811, 809, 797, 787, 773, 769, 761, 757, 751, 743, 739, 733,

@@ -139,22 +139,26 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( shared_p
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(summand_pos , "   summand_pos"); cout << endl;
+{
+  vector<IndexRange> t_target_ranges_tmp  = t_target->indexrange();
+  vector<IndexRange> t_summand_ranges_tmp = t_summand->indexrange();
+  {
+  vector<int>::iterator sp_it = summand_pos.begin();
+  for (vector<IndexRange>::iterator tsr_it = t_summand_ranges_tmp.begin(); tsr_it != t_summand_ranges_tmp.end(); tsr_it++, sp_it++  )
+    if  ( tsr_it->size() != t_target_ranges_tmp[*sp_it].size() ){
+      cout << "t_summand range_block->size() = " << tsr_it->size() << " != " << t_target_ranges_tmp[*sp_it].size() << "  t_target_ranges[" << *sp_it <<"].size() "<< endl; 
+      print_vector( summand_pos, "summand_pos") ; cout << endl;
+      print_sizes( t_target->indexrange(), "t_target_ranges_tmp" ); cout << endl;
+      print_sizes( t_summand->indexrange(), "t_summand_ranges_tmp" ); cout << endl;
+      throw logic_error( "mismatched index range sizes in add_tensor_along_trace ! Aborting ! " ); 
+    } 
+  }
+}
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<int> summand_reordering = *(get_ascending_order( summand_pos ));
   vector<IndexRange> t_target_ranges  = t_target->indexrange();
   vector<IndexRange> t_summand_ranges = t_summand->indexrange();
-
-
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
-  {
-  vector<int>::iterator sp_it = summand_pos.begin();
-  for (vector<IndexRange>::iterator tsr_it = t_summand_ranges.begin(); tsr_it != t_summand_ranges.end(); tsr_it++, sp_it  )
-    if  ( tsr_it->size() != t_target_ranges[*sp_it].size() )
-      cout << "t_summand range_block->size() = " << tsr_it->size() << " != " << t_target_ranges[*sp_it].size() << "  t_target_ranges[" <<  *sp_it<<"].size() "<< endl; 
-  }
-#endif 
-
 
   int num_ids  = t_target_ranges.size();
   int summand_rank = t_summand_ranges.size();
@@ -235,7 +239,6 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
 #ifdef __DEBUG_TENSOR_ARITHMETIC 
   cout << "TA:atat END t_target->norm()  = " << t_target->norm() << endl;  cout << "TA:atat END t_summand->norm() = " << t_summand->norm() << endl;  
 #endif 
-
   return;
 }
 
@@ -348,29 +351,29 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::contract_on_same_tensor" << endl;
+print_vector( ctrs_pos, "ctr_pos");cout << endl; 
+print_sizes( Tens_in->indexrange() , "Tens_in->indexrange()" ) ;cout << endl;
+{ 
+  vector<IndexRange> id_ranges_in_tmp = Tens_in->indexrange();
+  for ( int ii =1 ; ii != ctrs_pos.size(); ii++ ) {
+    cout << id_ranges_in_tmp[ctrs_pos[ii]].size() << " " ;
+    if( id_ranges_in_tmp[ctrs_pos[ii]].size() != id_ranges_in_tmp[ctrs_pos[ii-1]].size() ){
+      cout << " trying to contract two index blocks of unequal lengths : " << endl;
+      cout << " index at position  " <<  ctrs_pos[ii] << " has length " <<  id_ranges_in_tmp[ctrs_pos[ii]].size()  << endl; 
+      cout << " index at position  " <<  ctrs_pos[ii-1] << " has length " <<  id_ranges_in_tmp[ctrs_pos[ii-1]].size() << endl;
+      throw logic_error( "Aborting" ) ;
+    } 
+  } 
+}
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  print_vector( ctrs_pos, "ctr_pos");cout << endl; 
-  print_sizes( Tens_in->indexrange() , "Tens_in->indexrange()" ) ;cout << endl;
   assert ( Tens_in->indexrange().size() > 0 );
 
   vector<IndexRange> id_ranges_in = Tens_in->indexrange();
   shared_ptr<Tensor_<DataType>> Tens_out ;
-#ifndef NDEBUG
-  for ( int ii =1 ; ii != ctrs_pos.size(); ii++ ) {
-    cout << id_ranges_in[ctrs_pos[ii]].size() << " " ;
-    if( id_ranges_in[ctrs_pos[ii]].size() != id_ranges_in[ctrs_pos[ii-1]].size() ){
-      cout << " trying to contract two index blocks of unequal lengths : " << endl;
-      cout << " index at position  " <<  ctrs_pos[ii] << " has length " <<  id_ranges_in[ctrs_pos[ii]].size()  << endl; 
-      cout << " index at position  " <<  ctrs_pos[ii-1] << " has length " <<  id_ranges_in[ctrs_pos[ii-1]].size() << endl;
-      throw logic_error( "Aborting" ) ;
-    } 
-  } 
-#endif 
 
   if ( ctrs_pos.size() == Tens_in->indexrange().size() ) {
 
     DataType Tensor_trace = trace_tensor__number_return( Tens_in ) ;
-    cout << "Tensor_trace = " << Tensor_trace << endl;
 
     Tens_out = trace_tensor__tensor_return( Tens_in ) ;
 
@@ -561,18 +564,15 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
        int TensIn_block_size = get_block_size( TensIn_org_rng_blocks.begin(), TensIn_org_rng_blocks.end()); 
        int ctr_block_size    = TensIn_new_rng_blocks.back().size();  
  
-       cout << "-----------Tensor block in old order----------- " << endl;
        std::unique_ptr<DataType[]> TensIn_data_reord;
        {
        std::unique_ptr<DataType[]> TensIn_data_org = TensIn->get_block(TensIn_org_rng_blocks);
        TensIn_data_reord = reorder_tensor_data(TensIn_data_org.get(), TensIn_new_order, TensIn_org_rng_blocks);
        }
        
-       unique_ptr<DataType[]> VecIn_data = VecIn->get_block(vector<Index> { VecIn_rng[0].range(block_pos.front()) } ); 
-       
        DataType dblone =  1.0;
-       int int_one = 1; 
-       
+
+       unique_ptr<DataType[]> VecIn_data = VecIn->get_block(vector<Index> { VecIn_rng[0].range(block_pos.front()) } ); 
        gemv( 'N', TensOut_block_size, ctr_block_size, TensIn_data_reord.get(), VecIn_data.get(), TensOut_data.get(), dblone, dblone ); 
        
        TensIn_new_rng_blocks = get_rng_blocks( block_pos, TensIn_new_rngs); 
@@ -585,7 +585,6 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
   
   return TensOut;
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Contracts tensors T1 and T2 over two specified indexes
 //T1_org_rg T2_org_rg are the original index ranges for the tensors (not necessarily normal ordered).
@@ -690,21 +689,26 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( shar
                                                                             pair< vector<int>, vector<int> >& ctrs_todo){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC 
-cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;   assert( ctrs_todo.first.size() ==  ctrs_todo.second.size() );
+cout << "Tensor_Arithmetic::contract_different_tensors" <<endl;
+  {   
+    if (  ctrs_todo.first.size() !=  ctrs_todo.second.size() ) {
+     cout << "  ctrs_todo.first.size() = " <<  ctrs_todo.first.size() << " != " <<  ctrs_todo.second.size() << " = ctrs_todo.second.size() " << endl;
+     throw logic_error( "different number of contracted indexes on each tensor! Aborting! "); 
+    } 
+    vector<IndexRange> T1_org_rngs_tmp = Tens1_in->indexrange();
+    vector<IndexRange> T2_org_rngs_tmp = Tens2_in->indexrange();
+    for ( int ii = 0 ; ii != ctrs_todo.first.size(); ii++ ) {
+      if (T1_org_rngs_tmp[ctrs_todo.first[ii]].size() !=  T2_org_rngs_tmp[ctrs_todo.second[ii]].size() ){
+       cout << " ctr1_size = " << T1_org_rngs_tmp[ctrs_todo.first[ii]].size();  cout.flush(); cout << " ctr1_pos = " << ctrs_todo.first[ii]  << endl;
+       cout << " ctr2_size = " << T2_org_rngs_tmp[ctrs_todo.second[ii]].size(); cout.flush(); cout << " ctr2_pos = " << ctrs_todo.second[ii] << endl;
+       throw logic_error("Extents of ranges to be contracted do not match!! Aborting");
+      }
+    }
+  }
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
   vector<IndexRange> T2_org_rngs = Tens2_in->indexrange();
-
-#ifndef NDEBUG
-  for ( int ii = 0 ; ii != ctrs_todo.first.size(); ii++ ) {
-    if (T1_org_rngs[ctrs_todo.first[ii]].size() !=  T2_org_rngs[ctrs_todo.second[ii]].size() ){
-     cout << " ctr1_size = " << T1_org_rngs[ctrs_todo.first[ii]].size();  cout.flush(); cout << " ctr1_pos = " << ctrs_todo.first[ii]  << endl;
-     cout << " ctr2_size = " << T2_org_rngs[ctrs_todo.second[ii]].size(); cout.flush(); cout << " ctr2_pos = " << ctrs_todo.second[ii] << endl;
-     throw logic_error("Extents of ranges to be contracted do not match!! Aborting");
-    }
-  }
-#endif
 
   vector<int> T1_org_order(T1_org_rngs.size());
   iota(T1_org_order.begin(), T1_org_order.end(), 0);
@@ -793,8 +797,6 @@ cout << "Tensor_Arithmetic::contract_different_tensors_general" <<endl;   assert
   
   return Tens_out;
 }
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Sets all elements of input tensor Tens to the value specified by elem_val 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -802,7 +804,7 @@ template<class DataType>
 void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems(shared_ptr<Tensor_<DataType>> Tens, DataType elem_val  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC 
-   cout << "Tensor_Arithmetic::set_tensor_elems all " << endl;
+cout << "Tensor_Arithmetic::set_tensor_elems all " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
    vector<IndexRange> id_ranges = Tens->indexrange();
@@ -821,7 +823,6 @@ void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems(shared_ptr
 
    return;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Divides elements of T1 by elements of T2, i.e.,  T1_{ijkl..} = T1_{ijkl..} / T2_{ijkl..}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -831,13 +832,14 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::divide_tensors_in_place( shared_
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic<DataType>::divide_tensors " << endl;
+ if ( T1->indexrange() != T2->indexrange()) {
+   Debugging_Utils::print_sizes( T1->indexrange() , "T1->indexrange()"); cout << endl;
+   Debugging_Utils::print_sizes( T2->indexrange() , "T2->indexrange()"); cout << endl;
+   throw logic_error( "Trying to do elementwise division of two arrays with different dimensions!! Aborting" ); 
+ }
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
    vector<IndexRange> id_ranges = T1->indexrange();
-#ifndef NDEBUG
-   if (id_ranges != T2->indexrange()) 
-    throw logic_error( "Trying to do elementwise division of two arrays with different dimensions!! Aborting" ); 
-#endif
 
    vector<int> range_lengths = get_range_lengths( id_ranges ); 
    vector<int> block_pos(range_lengths.size(),0);  

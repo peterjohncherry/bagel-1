@@ -7,22 +7,22 @@ using namespace bagel;
 template<typename DataType> 
 void Equation_Init_LinearRM<DataType>::initialize_expressions() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Equation_Init_LinearRM<DataType>::initialize_expressions()" << endl;
-
-  cout << "range_map_ = " << endl;
-  for (auto& elem : *range_map_ ) { 
-    cout << "{ " <<  elem.first  << ", [ ";  cout.flush(); 
-    for ( int xx : *elem.second ) 
-    cout << xx << " "; cout.flush();
-    cout << "] } "<< endl;
-  }
-  cout << endl;
+#ifdef __DEBUG_PROPTOOL_EQUATION_INIT_LINEARRM
+cout << "Equation_Init_LinearRM<DataType>::initialize_expressions()" << endl;
+cout << "range_map_ = " << endl;
+for (auto& elem : *range_map_ ) { 
+  cout << "{ " <<  elem.first  << ", [ ";  cout.flush(); 
+  for ( int xx : *elem.second ) 
+  cout << xx << " "; cout.flush();
+  cout << "] } "<< endl;
+}
+cout << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////
  
   for ( std::shared_ptr<Expression_Init>& master_expression : *master_expression_list_ ) { 
     //TODO The looping through the terms should be on the inside, and the summation on the outside,
     //     but switching these loops round is headache, and I doubt it is significant speed wise  
     for ( int ii = 0 ; ii != master_expression->term_list_->size(); ii++  ){
-      cout << "master_expression_->term_list_->at("<<ii<<").second->name_ "; cout.flush(); 
       cout << master_expression->term_list_->at(ii).second->name_ << endl;  
     
       //get factors and initialize range map
@@ -59,7 +59,6 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
       int qq = 0 ;
       for ( auto& elem : *term_idrange_map ) {
         if ( term_idx_val_map->find(elem.first) != term_idx_val_map->end() ) { // TODO neaten this up 
-          cout <<  elem.first << " --> (" << elem.second.first << ", " << elem.second.second <<  " ) " << endl;
           if ( !elem.second.first ){ 
             maxs_summer->at(qq) = maxs->at(qq);
             summed_indexes[qq] = true;
@@ -97,7 +96,6 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
     
         shared_ptr<vector<pair<DataType, string>>> expression_term_list; 
         string expression_name = master_expression->name_ + state_ids_name;
-        cout << "expression_name = " << expression_name << endl;
         auto etm_loc = expression_term_map_->find( expression_name );
         if ( etm_loc == expression_term_map_->end() ) {
           expression_term_list = make_shared<vector<pair<DataType, string>>>();
@@ -181,19 +179,20 @@ void Equation_Init_LinearRM<DataType>::initialize_expressions() {
 template<typename DataType> 
 void Equation_Init_LinearRM<DataType>::initialize_all_terms() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "Equation_Init_LinearRM<DataType>::initialize_all_terms()" << endl;
+#ifdef __DEBUG_PROPTOOL_EQUATION_INIT_LINEARRM
+cout << "Equation_Init_LinearRM<DataType>::initialize_all_terms()" << endl;
+cout << "range_map_ = " << endl;
+for (auto& elem : *range_map_ ) { 
+  cout << "{ " <<  elem.first  << ", [ ";  cout.flush(); 
+  for ( int xx : *elem.second ) 
+  cout << xx << " "; cout.flush();
+  cout << "] } "<< endl;
+}
+cout << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////
 
-  cout << "range_map_ = " << endl;
-  for (auto& elem : *range_map_ ) { 
-    cout << "{ " <<  elem.first  << ", [ ";  cout.flush(); 
-    for ( int xx : *elem.second ) 
-    cout << xx << " "; cout.flush();
-    cout << "] } "<< endl;
-  }
-  cout << endl;
   for (  std::shared_ptr<Expression_Init>& master_expression : *master_expression_list_ ) {   
     for ( int ii = 0 ; ii != master_expression->term_list_->size(); ii++  ){
-      cout << " ii = " << ii << endl;
       int counter = 0;
       DataType term_factor = factor_map_->at(master_expression->term_list_->at(ii).first);
       shared_ptr< Term_Init > term_init = master_expression->term_list_->at(ii).second;
@@ -245,17 +244,13 @@ void Equation_Init_LinearRM<DataType>::initialize_all_terms() {
             }
           }
         
-//          braket_list.push_back(make_shared<BraKet_Base>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
+//       braket_list.push_back(make_shared<BraKet_Base>( bk_op_list, bk_op_trans_list, factor_map_->at(*bk_factors_it++), bk_info.bra_index(), bk_info.ket_index(), op_state_ids, term_init->type_ ));
         } 
         
         vector<pair<string,int>> fixed_id_vals; 
-    
-        cout << term_init->name_ << " " ; cout.flush(); cout << " [ "; cout.flush();  
-        for ( int rr = 0 ; rr != fvec->size() ;rr++ ) {  
+        for ( int rr = 0 ; rr != fvec->size() ;rr++ )
           fixed_id_vals.push_back(make_pair( idx_ordered_names[rr], term_idx_val_map->at(idx_ordered_names[rr]) ));
-          cout << "{ " << fixed_id_vals.back().first << ", " << fixed_id_vals.back().second << " } "; cout.flush();
-        }
-        cout <<  "] " <<  endl;
+        
         sort(fixed_id_vals.begin(), fixed_id_vals.end()); 
     
         term_braket_map_state_spec_->emplace( make_pair(term_init->name_, fixed_id_vals), make_shared<vector<shared_ptr<BraKet_Base>>>(braket_list) ); 

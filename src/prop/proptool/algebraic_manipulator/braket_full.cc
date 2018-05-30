@@ -4,9 +4,6 @@
 
 using namespace std;
 using namespace WickUtils;
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Following restructuing this class is starting to look more redundant, however I think it is still useful for
-//merging, symmetry checking and sparsity. As well as controlling the reordering 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<TensOp_Base>>> MT_map,
@@ -16,7 +13,9 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
                                                                  shared_ptr<set<shared_ptr<Range_Block_Info>>> required_blocks,
                                                                  shared_ptr<map<string, shared_ptr<CtrTensorPart_Base>>> ctp_map  ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
+#ifdef __DEBUG_PROPTOOL_BRAKET_FULL
+cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   Total_Op_ = MT_map->at( multiop_info_->op_name_ );
 
@@ -78,7 +77,6 @@ void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<
 
   return; 
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class BraKet_Full<double>;
 template class BraKet_Full<std::complex<double>>;

@@ -15,8 +15,9 @@ System_Computer::System_Computer<DataType>::System_Computer(shared_ptr<System_In
                                                             range_conversion_map_(range_conversion_map),
                                                             b_gamma_computer_(b_gamma_computer) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "System_Computer::System_Computer<DataType>::System_Computer()" << endl;
-
+#ifdef __DEBUG_PROPTOOL
+cout << "System_Computer::System_Computer<DataType>::System_Computer()" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   sigma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
   civec_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
   gamma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
@@ -33,7 +34,9 @@ System_Computer::System_Computer<DataType>::System_Computer(shared_ptr<System_In
 template<typename DataType>
 void System_Computer::System_Computer<DataType>::build_equation_computer(std::string equation_name ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  cout << "System_Computer<DataType>::build_equation_computer : " << equation_name << endl;
+#ifdef __DEBUG_PROPTOOL_SYSTEM_COMPUTER
+cout << "System_Computer<DataType>::build_equation_computer : " << equation_name << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<Equation_Base<DataType>> equation_basic = system_info_->equation_map_->at(equation_name);
 
