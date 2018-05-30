@@ -31,7 +31,7 @@
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
-//#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 
 using namespace std;
 using namespace bagel;
@@ -61,8 +61,6 @@ CASPT2::CASPT2::CASPT2(shared_ptr<const SMITH_Info<double>> ref) : SpinFreeMetho
 
 CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   info_    = cas.info_;
-  virt_    = cas.virt_;
-  active_  = cas.active_;
   closed_  = cas.closed_;
   rvirt_   = cas.rvirt_;
   ractive_ = cas.ractive_;
@@ -81,9 +79,12 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   for (int i = 0; i != nstates_; ++i) {
     sall_.push_back(cas.sall_[i]->copy());
   }
-  h1_ = cas.h1_;   //     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 0.0  );
-  f1_ = cas.f1_;   //     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 0.0  );
-  v2_ = cas.v2_;   //     Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );  
+  //h1_ = cas.h1_;
+  //f1_ = cas.f1_;
+  v2_ = cas.v2_;
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 0.0  );
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 0.0  );
+  //Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );  
   cout << "CASPT2 init v2_->norm() = " << v2_->norm() << endl; 
   H_2el_ =  cas.H_2el_; 
 
@@ -151,6 +152,45 @@ void CASPT2::CASPT2::solve() {
   Timer timer;
   print_iteration();
 
+  {// TEST
+    set_rdm(0, 0);
+    double norm = 0.0;
+    n = init_residual();
+    shared_ptr<Tensor_<double>> dummy = t2all_[0]->at(0)->clone();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( dummy, 1.0  );
+    t2 = dummy;
+    cout << "t2->norm() = " << t2->norm() ; cout.flush(); cout << "     n->norm() = " << n->norm() << endl;
+    cout << "set t2all" << endl;
+    shared_ptr<Queue> normq = make_normq(false, true);
+    while(!normq->done())
+      normq->next_compute();
+    cout << "executed norm compute list " << endl;
+    norm += dot_product_transpose(n, t2);
+    cout << "----------------------------------TEST-------------------------------" << endl;
+    cout << "norm = "<<  norm << endl;
+    cout << "---------------------------------------------------------------------" << endl;
+  }
+
+  {// TEST source
+    set_rdm(0, 0);
+    double source_norm = 0.0;
+    shared_ptr<Tensor_<double>> dummy = v2_->clone();
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( dummy, 1.0  );
+    v2_ = dummy;
+    cout << "post v2_->norm() = " << v2_->norm() << endl;
+    s = init_residual();
+    s->zero();
+    shared_ptr<Queue> source_task_list = make_sourceq(false, true);
+    while(!source_task_list->done())
+      source_task_list->next_compute();
+    cout << "executed source task list " << endl;
+    cout << "----------------------------------TEST-------------------------------" << endl;
+    cout << "source_norm = "<<  s->norm() << endl;
+    cout << "---------------------------------------------------------------------" << endl;
+  }
+
+  throw logic_error( "die here for testing purposes!" ); 
+
   // <proj_jst|H|0_K> set to sall in ms-caspt2
   for (int istate = 0; istate != nstates_; ++istate) { //K states
     t2all_[istate]->fac(istate) = 0.0;
@@ -194,24 +234,6 @@ void CASPT2::CASPT2::solve() {
         norm += dot_product_transpose(n, t2all_[istate]->at(jst));
       }
     }
-
-  {// TEST
-    set_rdm(0, 0);
-    double norm = 0.0;
-    n = init_residual();
-    shared_ptr<Queue> normq = make_normq(false, true);
-    shared_ptr<Tensor_<double>> Dummy = t2all_[0]->at(0)->clone();
-//    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems(Dummy , 1.0  );
-    t2 = Dummy;
-    cout << "set t2all" << endl;
-    while(!normq->done())
-      normq->next_compute();
-    cout << "executed norm compute list " << endl;
-    norm += dot_product_transpose(n, t2);
-    cout << "----------------------------------TEST-------------------------------" << endl;
-    cout << "norm = "<<  norm << endl;
-    cout << "---------------------------------------------------------------------" << endl;
-  }
 
     pt2energy_[istate] = energy_[istate]+(*eref_)(istate,istate) - info_->shift()*norm;
     cout << "    * CASPT2 energy : state " << setw(2) << istate << fixed << setw(20) << setprecision(10) << pt2energy_[istate] << endl;

@@ -2,7 +2,6 @@
 #include <map>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_orb_exc_deriv.h>
 
-
 #define __DEBUG_GAMMA_GENERATOR_ORB_EXC_DERIV
 
 using namespace std;

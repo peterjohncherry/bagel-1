@@ -10,7 +10,7 @@ PropTool::PropTool::PropTool( shared_ptr<const PTree> idata, shared_ptr<const Ge
                               idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_DRIVER
-  cout << "PropTool::PropTool::PropTool" << endl;
+cout << "PropTool::PropTool::PropTool" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   // sort out how to determine datatype!!
@@ -37,7 +37,7 @@ PropTool::PropTool::PropTool( shared_ptr<const PTree> idata, shared_ptr<const Ge
 void PropTool::PropTool::execute_compute_lists(){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_DRIVER
- cout << "PropTool::PropTool::execute_compute_lists()" << endl; 
+cout << "PropTool::PropTool::execute_compute_lists()" << endl; 
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
  for ( string& equation_name : equation_execution_list_ ) 
@@ -54,7 +54,7 @@ void PropTool::PropTool::execute_compute_lists(){
 void PropTool::PropTool::build_algebraic_task_lists( string  eqn_interdependence ){  
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_DRIVER
-  cout << "PropTool::PropTool::build_algebraic_task_lists()" << endl; 
+cout << "PropTool::PropTool::build_algebraic_task_lists()" << endl; 
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   if ( eqn_interdependence == "share"  ) { 
@@ -218,9 +218,7 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
     } else {
       cout << "need to sort internally defined variables this (most urgently the eigenvalues of the Fock operator)" << endl;
     }
-        
   }
-
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -276,7 +274,7 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
     vector<shared_ptr<Transformation>> symmfuncs(0);
     vector<shared_ptr<Constraint>> constraints(0);
     
-    cout << "user defined op name : " << op_name << endl;
+    cout << endl << " user defined operator : " << op_name << endl << endl;
     shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp(op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep);
     sys_info_->MT_map()->emplace( op_name, new_op );
 
@@ -288,7 +286,7 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
 void PropTool::PropTool::get_equations_init( shared_ptr<const PTree> equation_def_tree ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_DRIVER
-  cout << "PropTool::PropTool::get_equations_init" << endl;
+cout << "PropTool::PropTool::get_equations_init" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   for ( auto& equation_inp : *equation_def_tree ){
