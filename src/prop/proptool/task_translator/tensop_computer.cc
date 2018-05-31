@@ -66,6 +66,43 @@ cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP : "; cout.flush(); cou
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Adds summand name factor to target name 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void TensOp_Computer::TensOp_Computer<DataType>::sum_different_orderings( string target_name, string summand_name, 
+                                                                          vector<DataType> factor_list, vector<vector<int>> id_orders  ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOP_COMPUTER
+cout << " TensOp_Computer::TensOp_Computer::sum_different_orderings " << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  typename vector<DataType>::iterator fl_it = factor_list.begin();
+  for ( vector<vector<int>>::iterator io_it = id_orders.begin(); io_it != id_orders.end() ; io_it++ , fl_it++ ) { 
+    reorder_block_Tensor(summand_name, *io_it );
+    add_tensors( target_name, summand_name, *fl_it ); 
+  }  
+
+  return; 
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Adds summand name factor to target name 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void TensOp_Computer::TensOp_Computer<DataType>::add_tensors(string target_name, string summand_name, DataType factor ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOP_COMPUTER
+cout << " TensOp_Computer::TensOp_Computer::add_tensors " << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   shared_ptr<Tensor_<DataType>> target_tens  = find_or_get_CTP_data( target_name );
+   shared_ptr<Tensor_<DataType>> summand_tens = find_or_get_CTP_data( summand_name );
+   cout << " target_tens->norm() = " << target_tens->norm() << endl;
+   cout << " summand_tens->norm() = " << summand_tens->norm() << endl;
+   Tensor_Calc_->add_tensors( target_tens, summand_tens, factor ); 
+
+   return; 
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a tensor T3 with elements T3_{ijkl..} = T1_{ijkl..}/T2_{ijkl..} 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
@@ -76,6 +113,36 @@ cout << " TensOp_Computer::TensOp_Computer::divide_tensors " << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
    return Tensor_Calc_->divide_tensors( find_or_get_CTP_data(T1_name),  find_or_get_CTP_data(T2_name)); 
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Builds a tensor with the relevant ranges and puts it into the map at the name
+//Intended for intermediate and temporary tensors
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void TensOp_Computer::TensOp_Computer<DataType>::build_tensor( string new_data_name , std::vector<string> id_ranges ){ 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOP_COMPUTER
+cout << " TensOp_Computer::TensOp_Computer::divide_tensors " << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    shared_ptr<Tensor_<DataType>> new_data; 
+    if ( id_ranges.size()  != 0 ) {
+      new_data = make_shared<Tensor_<DataType>>( Get_Bagel_IndexRanges( id_ranges ) );
+    } else {
+      new_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
+    }  
+    new_data->allocate();
+    new_data->zero(); 
+ 
+    auto new_data_loc = tensop_data_map_->find( new_data_name); 
+    if(  new_data_loc != tensop_data_map_->end()){
+      cout << "The tensor block " << new_data_name << "is already in the map.... overwriting " << endl;
+      new_data_loc->second = new_data;
+    } else { 
+      tensop_data_map_->emplace ( new_data_name , new_data ); 
+    } 
+ 
+  return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //As above, but does division in place, modifying the input;  T1_{ijkl..} = T1_{ijkl..}/T2_{ijkl..} 
@@ -456,6 +523,21 @@ cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str
   shared_ptr<vector<IndexRange>> ranges_Bagel = make_shared<vector<IndexRange>>(ranges_str->size());
   for ( int ii = 0 ; ii != ranges_str->size(); ii++)
     ranges_Bagel->at(ii) = *range_conversion_map_->at(ranges_str->at(ii));
+
+  return ranges_Bagel;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+vector<IndexRange>
+TensOp_Computer::TensOp_Computer<DataType>::Get_Bagel_IndexRanges( vector<string>& ranges_str ){ 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOP_COMPUTER
+cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(ranges_str, "ranges_str" ) ; cout << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector<IndexRange> ranges_Bagel(ranges_str.size());
+  for ( int ii = 0 ; ii != ranges_str.size(); ii++)
+    ranges_Bagel[ii] = *range_conversion_map_->at(ranges_str[ii]);
 
   return ranges_Bagel;
 }

@@ -42,6 +42,14 @@ class TensOp_Computer {
 
     /////////// Tensor contraction routines /////////////////////////
 
+    void add_tensors( std::string target_name, std::string summand_name, DataType factor );
+ 
+    void build_tensor( std::string new_data_name, std::vector<std::string> id_ranges ); 
+
+    std::vector<SMITH::IndexRange> Get_Bagel_IndexRanges( std::vector<std::string>& ranges_str ); 
+
+    void sum_different_orderings( std::string target_name, std::string summand_name, std::vector<DataType> factor_list, std::vector<std::vector<int>> id_orders );
+
     //only for two contracted indexes
     std::shared_ptr<SMITH::Tensor_<DataType>> contract_on_same_tensor( std::string Tname, std::string Tout_name, std::pair<int,int> ctr_todo ) ;
 

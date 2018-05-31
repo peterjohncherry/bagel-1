@@ -4,6 +4,9 @@
 
 using namespace std;
 using namespace WickUtils;
+
+#define __DEBUG_PROPTOOL_BRAKET_FULL
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void BraKet_Full<DataType>::generate_gamma_Atensor_contractions( shared_ptr<map<string,shared_ptr<TensOp_Base>>> MT_map,
@@ -60,22 +63,21 @@ cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
         if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
           if ( GGen->generic_reorderer( "normal order", false, false ) ) {
             if ( GGen->generic_reorderer( "alternating order", false, true ) ){
-              for (  auto& block :  *(range_map_it->second->unique_block_->range_blocks()) ){
-                MT_map->at( block->op_info_->op_name_ )->add_required_block( block );
-                required_blocks->emplace( block );
-              }
+
+              auto& block = range_map_it->second->unique_block_; 
+              MT_map->at( block->op_info_->op_name_ )->add_required_block( block );
+              required_blocks->emplace( block );
+              
             }
           }
         }
       }
     }
   }
-
   ctp_map->insert( Total_Op_->CTP_map()->begin(), Total_Op_->CTP_map()->end() );
-
   print_gamma_Atensor_contractions( G_to_A_map, false );
 
-  return; 
+  return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class BraKet_Full<double>;

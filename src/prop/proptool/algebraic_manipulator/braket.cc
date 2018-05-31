@@ -3,6 +3,8 @@
 
 using namespace std;
 using namespace WickUtils;
+
+#define __DEBUG_PROPTOOL_BRAKET_BASE
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 BraKet_Base::BraKet_Base( std::shared_ptr<Op_Info> multiop_info, 
                           std::pair<double, double> factor, int bra_num, int ket_num,  std::string type) :
@@ -25,7 +27,7 @@ void BraKet_Base::print_gamma_Atensor_contractions(shared_ptr<map<string, shared
 		                                        bool has_orb_exc ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_BRAKET_BASE
-  cout <<  "BraKet_Base::print_gamma_Atensor_contractions()" << endl; 
+cout <<  "BraKet_Base::print_gamma_Atensor_contractions()" << endl; 
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   for( auto map_it = G_to_A_map->begin() ; map_it != G_to_A_map->end(); map_it++){

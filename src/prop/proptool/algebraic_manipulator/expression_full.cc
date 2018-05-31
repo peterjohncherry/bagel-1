@@ -14,6 +14,7 @@ cout << "void Expression_Full<DataType>::generate_algebraic_task_list()" << endl
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   required_blocks_ = make_shared<set<shared_ptr<Range_Block_Info>>>();
+  cout << "braket_list_->size() = "; cout.flush(); cout << braket_list_->size() << endl;
   for ( shared_ptr<BraKet_Base>& braket : *braket_list_ )
     braket->generate_gamma_Atensor_contractions( MT_map_, G_to_A_map_, gamma_info_map_, states_info_, required_blocks_, CTP_map_ );
  

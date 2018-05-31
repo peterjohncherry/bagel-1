@@ -1,6 +1,7 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/expression.h>
 
+#define __DEBUG_PROPTOOL_EXPRESSION
 #ifdef __DEBUG_PROPTOOL_EXPRESSION
 #include <src/prop/proptool/debugging_utils.h>
 #endif
@@ -21,8 +22,8 @@ Expression<DataType>::Expression( shared_ptr<vector< shared_ptr<BraKet_Base>>> b
                                   ACompute_map_(ACompute_map), gamma_info_map_(gamma_info_map), type_(expression_type) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_EXPRESSION
-cout << "Expression<DataType>::Expression (new constructor) " << endl;
-Debugging_Utils::print_names( braket_list, "brakets in expression" ); cout << endl;
+cout << "Expression<DataType>::Expression" << endl;
+Debugging_Utils::print_names( *braket_list, "brakets in expression" ); cout << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //Note that this G_to_A_map_ is expression specific
@@ -38,7 +39,6 @@ Debugging_Utils::print_names( braket_list, "brakets in expression" ); cout << en
   }
   name_.pop_back();
   name_.pop_back();
-
 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -2,10 +2,15 @@
 #include <src/prop/proptool/algebraic_manipulator/op_info.h>
 
 using namespace std;
+
+#define __DEBUG_PROPTOOL_MULTIOP_INFO
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 MultiOp_Info::MultiOp_Info( vector<string>& op_list, vector<char>& op_trans_list, shared_ptr<vector<vector<int>>> op_state_ids ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  //cout << "MultiOp_Info::MultiOp_Info" << endl;
+#ifdef __DEBUG_PROPTOOL_MULTIOP_INFO
+cout << "MultiOp_Info::MultiOp_Info" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   op_order_ = make_shared<vector<int>>(op_list.size());
   canonical_order_ = true;

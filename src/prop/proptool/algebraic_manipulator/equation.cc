@@ -1,6 +1,11 @@
 #include <src/prop/proptool/algebraic_manipulator/equation.h>
 #include <src/prop/proptool/algebraic_manipulator/op_info.h>
 
+#ifdef __DEBUG_PROPTOOL_EQUATION_BASE
+#include <src/prop/proptool/debugging_utils.h>
+#endif
+
+
 using namespace std;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
@@ -48,7 +53,7 @@ template<class DataType>
 void Equation_Base<DataType>::add_expression( string expression_name ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_EQUATION_BASE
-cout << "Equation_Base<DataType>::add_Expression : " << expression_name << " hey!" <<  endl;
+cout << "Equation_Base<DataType>::add_Expression : " << expression_name << endl ;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   shared_ptr<vector<pair<DataType, string>>> term_name_list = expression_term_map_->at(expression_name);
@@ -73,13 +78,11 @@ cout << "Equation_Base<DataType>::add_Expression : " << expression_name << " hey
 
   } else  if ( expression_type == "full"  ) {
     cout << "expression_type = " << expression_type <<  endl;
-
     shared_ptr<Expression_Full<DataType>>  new_exp = make_shared<Expression_Full<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type );
     new_exp->generate_algebraic_task_list();
     expression_map_->emplace( expression_name, new_exp );
   } else { 
-    throw std::logic_error( "have not implemented expression type... Aborting!!" );  
-  //  assert(false);
+    throw std::logic_error( "have not implemented expression type \"" + expression_type +"\" !  Aborting!!" );  
   } 
   return;
 }
@@ -92,7 +95,7 @@ string Equation_Base<DataType>::add_expression_info( shared_ptr<vector<shared_pt
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_EQUATION_BASE
 cout << "Equation_Base<DataType>::add_Expression_info  (bk input version)" << endl;
-Debugging_Utils::print_names( expr_bk_list, "BraKet_list for expression" ); cout << endl;
+Debugging_Utils::print_names( *expr_bk_list, "BraKet_list for expression" ); cout << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //TODO get these quantities from input 

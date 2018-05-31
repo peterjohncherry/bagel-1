@@ -1,5 +1,6 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 #include <src/util/f77.h>
 #include <src/prop/proptool/debugging_utils.h>
 using namespace std;
@@ -11,7 +12,34 @@ using namespace WickUtils;
 using namespace Debugging_Utils;
 
 #define __DEBUG_TENSOR_ARITHMETIC
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensors( shared_ptr<Tensor_<DataType>> tens_target,
+                                                                  shared_ptr<Tensor_<DataType>> tens_summand,
+                                                                  DataType factor                             ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC 
+cout << "Tensor_Arithmetic::add_tensors" <<endl;  
 
+vector<IndexRange> summand_ranges = tens_summand->indexrange();
+vector<IndexRange> target_ranges = tens_target->indexrange();
+
+assert ( summand_ranges.size() == target_ranges.size() );
+
+for ( int ii = 0 ; ii != summand_ranges.size(); ii++ ) {  
+  if ( target_ranges[ii].size() != summand_ranges[ii].size() ) { 
+    cout << "Ranges of summand and target and not the same : " << endl; 
+    print_sizes( target_ranges,  "tens_target_sizes" ); cout << endl;
+    print_sizes( summand_ranges, "tens_summand_sizes" ); cout << endl;
+    throw logic_error( "Aborting!" ); 
+  }
+}
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  tens_target->ax_plus_y ( factor, tens_summand ) ;
+  
+  return;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Specialized routine for summing over the whole tensor, should not be needed by handy for now
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -23,11 +51,9 @@ cout << "Tensor_Arithemetic_Utils::sum_tensor_elems" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<IndexRange> id_ranges = Tens_in->indexrange();
-  
-  vector<int> range_maxs  =  get_range_lengths( id_ranges ) ;
+  vector<int> range_maxs = get_range_lengths( id_ranges ) ;
   vector<int> block_pos(range_maxs.size(),0);  
   vector<int> mins(range_maxs.size(),0);  
-
   DataType sum_of_elems = (DataType)0.0;
 
   do { 
@@ -57,9 +83,7 @@ cout << "Tensor_Arithmetic::trace_tensor__number_return" << endl;
     assert( Tens_in->indexrange()[ii].size() == Tens_in->indexrange()[ii-1].size() ) ; 
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
   vector<IndexRange> id_ranges = Tens_in->indexrange();
-
   DataType Tens_trace = 0.0;
 
   for ( int ctr_block_pos = 0 ; ctr_block_pos != id_ranges[0].range().size(); ctr_block_pos++ ) {
@@ -108,13 +132,11 @@ cout << "Tensor_Arithmetic::trace_tensor__tensor_return" << endl;
     vector<Index> id_blocks( id_ranges.size() );
     for ( int qq = 0; qq != id_ranges.size(); qq++ ) 
       id_blocks[qq] = id_ranges[qq].range(ctr_block_pos);
-      
 
     int ctr_total_stride = 1;
     unique_ptr<DataType[]> data_block = Tens_in->get_block( id_blocks ) ; 
-    for ( int ctr_id = 0 ; ctr_id != id_blocks[0].size(); ctr_id++ ) {
+    for ( int ctr_id = 0 ; ctr_id != id_blocks[0].size(); ctr_id++ ) 
       Tens_trace += *(data_block.get() + (ctr_total_stride*ctr_id));
-    }
  
   } 
 
@@ -305,7 +327,6 @@ cout << "Tensor_Arithmetic::sum_over_idxs" << endl;
     int ctr_block_size = 1;
     for (int qq = 0 ; qq != summed_idxs_pos.size(); qq++ ) 
       ctr_block_size   *= unc_id_blocks[qq].size();
-
 
     unique_ptr<DataType[]> contracted_block(new DataType[unc_block_size]);
     fill_n(contracted_block.get(), unc_block_size, 0.0);

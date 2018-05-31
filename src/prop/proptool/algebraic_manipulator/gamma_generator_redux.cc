@@ -2,16 +2,16 @@
 #include <map>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_redux.h>
 
-//#define __DEBUG_GAMMA_GENERATOR_REDUX
-
 using namespace std;
 using namespace WickUtils;
 
+
+#define __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info> block_info, shared_ptr<vector<bool>> trans_aops ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_GAMMA_GENERATOR_REDUX
+#ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
 cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
@@ -41,7 +41,7 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name, string ket_name ){  // e.g. ++++----
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_GAMMA_GENERATOR_REDUX
+#ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
 cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -56,11 +56,14 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
                                                                     block_aops_, make_shared<const vector<string>>(chrvec_to_strvec(*block_aops_rngs_)),
                                                                     gint->ids_pos_, Gamma_map_ ) );
 
+  cout << "adding Acontrib for " << Gname_alt ; cout.flush();
 
   vector<pair<int,int>> idxs_deltas_pos = *(gint->deltas_pos_); 
   transform_to_canonical_ids_pos( idxs_deltas_pos ); 
 
   string Aname_alt = get_ctp_name( op_info_->op_state_name_canonical(), *std_ids_,  std_rngs_, idxs_deltas_pos );
+
+  cout << "    Acontrib name is " << Aname_alt << endl;
   
   if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) 
     total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_, op_info_ );
@@ -70,6 +73,8 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
 
   vector<int> Aid_order_new = get_Aid_order( standardized_ids_pos );
   pair<double,double> new_fac = bk_factor_; 
+  
+  print_vector( Aid_order_new , "Aid_order_new"); cout << endl;
 
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
@@ -92,13 +97,14 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
     }
   }
 
+  cout << "leaving" << endl;
   return;
 }
 ////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::block_trans_test( shared_ptr<GammaIntermediate_Base>& gint ){
 ////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_GAMMA_GENERATOR_REDUX
+#ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
 cout << "GammaGeneratorRedux<DataType>::block_trans_test " << endl;
 #endif /////////////////////////////////////////////////////////////////
 
@@ -139,7 +145,7 @@ cout << "GammaGeneratorRedux<DataType>::block_trans_test " << endl;
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::print_new_gamma_definition() {
 /////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_GAMMA_GENERATOR_REDUX
+#ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
 cout << "GammaGeneratorRedux<DataType>::print_new_gamma_block_definition" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////
 

@@ -32,6 +32,7 @@
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 
 using namespace std;
 using namespace bagel;
@@ -60,6 +61,7 @@ CASPT2::CASPT2::CASPT2(shared_ptr<const SMITH_Info<double>> ref) : SpinFreeMetho
 
 
 CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
+cout << "CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {" << endl;
   info_    = cas.info_;
   closed_  = cas.closed_;
   rvirt_   = cas.rvirt_;
@@ -79,13 +81,9 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   for (int i = 0; i != nstates_; ++i) {
     sall_.push_back(cas.sall_[i]->copy());
   }
-  //h1_ = cas.h1_;
-  //f1_ = cas.f1_;
+  h1_ = cas.h1_;
+  f1_ = cas.f1_;
   v2_ = cas.v2_;
-  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 0.0  );
-  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 0.0  );
-  //Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );  
-  cout << "CASPT2 init v2_->norm() = " << v2_->norm() << endl; 
   H_2el_ =  cas.H_2el_; 
 
   rdm0all_ = cas.rdm0all_;
@@ -149,9 +147,24 @@ void CASPT2::CASPT2::do_rdm_deriv(double factor) {
 
 
 void CASPT2::CASPT2::solve() {
+cout << "CASPT2::CASPT2::solve" << endl;
   Timer timer;
   print_iteration();
 
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 0.0  );
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 0.0  );
+  cout << "rdm2_->norm() = " << rdm2_->norm(); cout.flush();  cout << " rdm2_->size() = " << rdm2_->size_alloc() << endl;
+  
+  cout << "v2_->norm() = " << v2_->norm(); cout.flush();  cout << " v2_->size() = " << v2_->size_alloc() << endl;
+  vector<IndexRange> act4_ranges = rdm2_->indexrange();
+  auto v2_act = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, act4_ranges ); 
+  cout << "v2_act->norm() = " << v2_act->norm(); cout.flush();  cout << " v2_act->size() = " << v2_act->size_alloc() << endl;
+
+  double v2_act_dot_rdm = v2_act->dot_product( rdm2_ ); 
+  cout << "v2_act_dot_rdm =  " << v2_act_dot_rdm << endl; 
+   
+
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );  
   {// TEST
     set_rdm(0, 0);
     double norm = 0.0;

@@ -30,7 +30,6 @@ class Op_Info : public std::enable_shared_from_this<Op_Info>  {
     std::string op_state_name_;
     std::string op_full_name_;
     std::string name_;
-
  
     bool canonical_order_;
 

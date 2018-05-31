@@ -6,6 +6,8 @@ using namespace std;
 using namespace WickUtils;
 using namespace Algebra_Utils;
 
+#define __DEBUG_PROPTOOL_RANGE_BLOCK_INFO
+#define __DEBUG_PROPTOOL_SPLIT_RANGE_BLOCK_INFO
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Constructor for use when building Split_Range_Block_Info, note this does not calculate the inverse transformation; that is determined in SRBI_Helper,  and passed 
 // directly to Split_Range_Block_Info
@@ -17,7 +19,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), idxs_trans_(idxs_trans), factors_(factors), ReIm_factors_(ReIm_factors),
                                     op_info_(op_info) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_RANGE_BLOCK_INFO
+#ifdef __DEBUG_PROPTOOL_RANGE_BLOCK_INFO
 cout << "Range_Block_Info::Range_Block_Info 1" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -42,9 +44,11 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_(transform->idxs_trans(*orig_block)), factors_(factors),
                                     ReIm_factors_(ReIm_factors), transform_(transform), op_info_(op_info)  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_RANGE_BLOCK_INFO
+#ifdef __DEBUG_PROPTOOL_RANGE_BLOCK_INFO
 cout << "Range_Block_Info::Range_Block_Info 2" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  cout << "op_info_->name() = "; cout.flush(); cout << op_info_->name_ << endl;
 
   num_idxs_ = orig_rngs_->size();
   orig_rngs_ch_ = make_shared< vector<char>> ( strvec_to_chrvec ( *orig_rngs_ ) );
@@ -66,7 +70,7 @@ Range_Block_Info::Range_Block_Info( shared_ptr<const vector<string>> orig_block,
                                     orig_rngs_(orig_block), unique_block_(unique_block), idxs_trans_( idxs_trans ), factors_(factors),
                                     ReIm_factors_(ReIm_factors), op_info_(op_info)  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_RANGE_BLOCK_INFO
+#ifdef __DEBUG_PROPTOOL_RANGE_BLOCK_INFO
 cout << "Range_Block_Info::Range_Block_Info 3" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -86,7 +90,7 @@ cout << "Range_Block_Info::Range_Block_Info 3" << endl;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Range_Block_Info::set_transition_vars( const vector<bool>& aops ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_RANGE_BLOCK_INFO
+#ifdef __DEBUG_PROPTOOL_RANGE_BLOCK_INFO
 cout << "Range_Block_Info::set_transition_vars" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -114,15 +118,12 @@ cout << "Range_Block_Info::set_transition_vars" << endl;
 Split_Range_Block_Info::Split_Range_Block_Info( shared_ptr<vector<shared_ptr<Range_Block_Info>>> range_blocks, vector<int>& cml_sizes, 
                                                 shared_ptr<vector<bool>> aops, shared_ptr<Op_Info> op_info,  
                                                 shared_ptr<map<const vector<string>, shared_ptr<Range_Block_Info>>>& unique_split_ranges ) :
-                                                Range_Block_Info(), range_blocks_( range_blocks ) {
+                                                Range_Block_Info( make_pair(1.0, 0.0), make_pair(1.0, 0.0), op_info ),
+                                                range_blocks_( range_blocks ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_SPLIT_RANGE_BLOCK_INFO
+#ifdef __DEBUG_PROPTOOL_SPLIT_RANGE_BLOCK_INFO
 cout << "Split_Range_Block_Info::Split_Range_Block_Info" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  op_info_ =  op_info;
-  ReIm_factors_ = make_pair(1.0, 0.0); // TODO temporary hack
-  factors_ = make_pair(1.0,0.0);
 
   num_idxs_ = 0;
   for ( std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_it =  range_blocks_->begin() ; rb_it != range_blocks_->end(); rb_it++) 
@@ -162,7 +163,6 @@ cout << "Split_Range_Block_Info::Split_Range_Block_Info" << endl;
 
   set_transition_vars(*aops);
 
-  name_ = "";
   name_ = op_info->op_state_name_ + "_";
 
   for ( auto  elem : *orig_rngs_ch_ )
@@ -213,7 +213,7 @@ cout << "Split_Range_Block_Info::Split_Range_Block_Info" << endl;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool Split_Range_Block_Info::is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_RANGE_BLOCK_INFO
+#ifdef __DEBUG_PROPTOOL_SPLIT_RANGE_BLOCK_INFO
 cout << "Split_Range_Block_Info::is_sparse" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   std::vector<std::shared_ptr<Range_Block_Info>>::iterator rb_iter =  range_blocks_->begin();

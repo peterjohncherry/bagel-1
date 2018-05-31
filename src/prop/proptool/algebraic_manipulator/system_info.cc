@@ -3,6 +3,13 @@
 
 using namespace std;
 
+#define __DEBUG_PROPTOOL_SYSTEM_INFO
+#define __DEBUG_PROPTOOL_EQUATION_BASE
+#define __DEBUG_PROPTOOL_EXPRESSION_FULL
+#define __DEBUG_PROPTOOL_BRAKET_BASE
+#define __DEBUG_PROPTOOL_BRAKET_FULL
+#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
+#define __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Note, spinfree should tell us not just if the wavefunction is free, but whether or 
 //not the perturbation being applied is spin independent

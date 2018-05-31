@@ -26,6 +26,9 @@ class Tensor_Arithmetic {
     Tensor_Arithmetic(){};
     ~Tensor_Arithmetic(){};
 
+     static void
+     add_tensors( std::shared_ptr<SMITH::Tensor_<DataType>> tens_target, std::shared_ptr<SMITH::Tensor_<DataType>> tens_summand, DataType factor );
+
      static DataType
      sum_tensor_elems( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in) ;
 

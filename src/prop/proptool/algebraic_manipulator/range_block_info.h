@@ -51,7 +51,8 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     std::shared_ptr<const std::vector<std::string>> orig_rngs_;
     std::shared_ptr<Range_Block_Info> unique_block_;
 
-    Range_Block_Info(){};
+    Range_Block_Info( std::pair<double,double> factors, std::pair<double,double> ReIm_factors, std::shared_ptr<Op_Info>& op_info ) :
+                      factors_(factors), ReIm_factors_(ReIm_factors), op_info_(op_info) {} 
 
     Range_Block_Info( std::shared_ptr<const std::vector<std::string>> orig_block, 
                       std::shared_ptr<std::vector<int>> idxs_trans,  std::pair<double,double> factors, std::pair<double,double> ReIm_factors,
@@ -82,7 +83,7 @@ class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {
     std::shared_ptr<std::vector<int>> idxs_trans() const { return idxs_trans_; }
     std::shared_ptr<std::vector<int>> aops_trans() const { return aops_trans_; }
 
-    virtual std::shared_ptr<Op_Info> op_info() { return op_info_; } 
+    std::shared_ptr<Op_Info> op_info() { return op_info_; } 
 
     virtual std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks(){
       return std::make_shared<std::vector<std::shared_ptr<Range_Block_Info>>> ( 1, shared_from_this() );
@@ -115,8 +116,6 @@ class Split_Range_Block_Info : public  Range_Block_Info {
     std::shared_ptr<std::vector<std::shared_ptr<Range_Block_Info>>> range_blocks_canonical(){ return range_blocks_canonical_; }
     bool is_sparse( const std::shared_ptr<std::vector<std::vector<int>>> state_idxs );
     
-    std::shared_ptr<Op_Info> op_info() { return op_info_; } 
-
 };
 
 #endif
