@@ -29,6 +29,12 @@ class Tensor_Arithmetic {
      static void
      add_tensors( std::shared_ptr<SMITH::Tensor_<DataType>> tens_target, std::shared_ptr<SMITH::Tensor_<DataType>> tens_summand, DataType factor );
 
+     static void
+     add_list_of_reordered_tensors( std::shared_ptr<SMITH::Tensor_<DataType>> target,
+                                    std::shared_ptr<SMITH::Tensor_<DataType>> summand_orig_order,
+                                    std::vector<std::vector<int>>& summand_reorderings,
+                                    std::vector<DataType>& summand_factors                       );
+
      static DataType
      sum_tensor_elems( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in) ;
 

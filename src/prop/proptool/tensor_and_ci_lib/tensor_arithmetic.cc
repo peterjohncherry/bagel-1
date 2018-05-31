@@ -40,6 +40,54 @@ for ( int ii = 0 ; ii != summand_ranges.size(); ii++ ) {
   
   return;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Example Input : ( A_ijkl , B_wxyz, [ [ 0, 1, 2, 3] , [ 3, 2, 1, 0] ] , [ 1.0 , 2.0 ]   ) 
+//Then will do A_ijkl += (1.0 * B_wxyz) 
+//             A_ijkl += (2.0 * B_zyxw)
+//The target data is changed, the summand is unchanged
+//The inputs A and B must have equivalent ranges up to an reordering (e.g., A_[r1,r2] , B_r2,r1 is OK, A_[r1,r2,] 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_list_of_reordered_tensors( shared_ptr<Tensor_<DataType>> target,
+                                                                                    shared_ptr<Tensor_<DataType>> summand,
+                                                                                    vector<vector<int>>& summand_reorderings,
+                                                                                    vector<DataType>& summand_factors                      ){
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC 
+cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;  
+
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector<IndexRange> target_ranges  = target->indexrange();
+  vector<IndexRange> summand_ranges = summand->indexrange();
+
+  if ( target->size_alloc() != 1 ) {
+    vector<int> summand_maxs = get_num_index_blocks_vec( summand_ranges );
+    vector<int> summand_mins(summand_maxs.size(), 0 );  
+    vector<int> summand_block_pos(summand_maxs.size(), 0 );
+ 
+    do {
+
+      vector<Index> summand_block_ranges = get_rng_blocks( summand_block_pos, summand_ranges );
+      unique_ptr<DataType[]> summand_block_data  = summand->get_block(summand_block_ranges);
+
+
+      vector<vector<int>>::iterator sr_it = summand_reorderings.begin();
+      vector<Index> target_block_ranges = get_rng_blocks( *(get_ascending_order(*sr_it)), target_ranges ) ; 
+      unique_ptr<DataType[]> target_block_data  = target->get_block(target_block_ranges);
+
+      size_t summand_block_size  = summand->get_size( summand_block_ranges );    
+      for ( typename vector<DataType>::iterator sf_it = summand_factors.begin(); sf_it !=  summand_factors.end() ; sr_it++, sf_it++ ) {
+        unique_ptr<DataType[]> summand_block_data_reordered = reorder_tensor_data( summand_block_data.get(), *sr_it, summand_block_ranges );
+        blas::ax_plus_y_n( *sf_it, target_block_data.get(), summand_block_size, summand_block_data.get() );
+      }
+      target->put_block( target_block_data, target_block_ranges );
+
+    } while( fvec_cycle_skipper(summand_block_pos, summand_maxs, summand_mins) );
+  }
+  return;
+} 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Specialized routine for summing over the whole tensor, should not be needed by handy for now
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -263,7 +311,6 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
 #endif 
   return;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Sum over indexes on a tensor, is used for excitation operators. Note the output tensor may have an odd number of indexes,
 //as a rule, this may mess up some of the other routines....
