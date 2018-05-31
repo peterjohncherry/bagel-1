@@ -56,16 +56,9 @@ class Expression_Computer {
                          std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map,
                          std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map );
 
-    struct compare_string_length {
-      bool operator()(const std::string& first, const std::string& second) {
-          return first.size() > second.size();
-      }
-    };
-
-
 };
-}//end Expression_Computer namespace
 
+}//end Expression_Computer namespace
 }//end bagel namespace
 #endif
 

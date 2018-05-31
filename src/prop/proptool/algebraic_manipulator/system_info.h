@@ -110,12 +110,6 @@ class System_Info {
         
         std::shared_ptr< std::map< std::string, std::shared_ptr< CtrTensorPart_Base > >> CTP_map() { return CTP_map_;   }   
         
-        struct compare_string_length {
-          bool operator()(const std::string& first, const std::string& second) {
-              return first.size() > second.size();
-          }
-        };
-
 };
 
 #endif
