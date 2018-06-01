@@ -237,7 +237,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     // Loop through A-tensors needed for this gamma
     auto A_contrib_loc = expression->G_to_A_map()->find( gamma_name );
     if ( (A_contrib_loc != expression->G_to_A_map()->end()) &&  (A_contrib_loc->second->size() != 0) ) {
-      for ( auto&  A_contrib_map_elem : *A_contrib_loc->second ) {
+      for ( auto& A_contrib_map_elem : *A_contrib_loc->second ) {
       
         string  A_contrib_name = A_contrib_map_elem.first;    
         shared_ptr<AContribInfo_Base> A_contrib = A_contrib_map_elem.second;    
@@ -247,63 +247,10 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
       
 	print_AContraction_list( expression->ACompute_map_->at(A_contrib_name), A_contrib_name );
         TensOp_Machine->Calculate_CTP( *A_contrib );
-
-        if ( gamma_name != "ID" ) {
-          if ( tensop_data_map_->find(A_contrib_name) != tensop_data_map_->end() ) {
-
-            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
-              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, A_contrib->id_order(qq) );
-              
-              Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensors( A_combined_data, A_contrib_reordered, (DataType)(A_contrib->factor(qq).first));
-//              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered );
-            }
-
-        } else {
-
-           for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
-
-              shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
-              vector<string> sub_tensor_names(CTP_vec->size()); 
-
-              for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )  
-                sub_tensor_names[rr] = CTP_vec->at(rr)->name();
-              
-              shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );//TODO fix so uses piecewise contraction where possible 
-              tensop_data_map_->emplace( A_contrib_name, A_contrib_data );
-              shared_ptr<Tensor_<DataType>> A_contrib_reordered = TensOp_Machine->reorder_block_Tensor( A_contrib_name, A_contrib->id_order(qq) );
-
-              print_vector( A_contrib->id_order(qq) , A_contrib_name ); cout << endl;
-              cout << "A_contrib_reordered->norm() = " << A_contrib_reordered->norm() << endl;
-              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_reordered ); //TODO replace with interface function in tensop_computer
-              cout << "A_combined_data->norm() = " << A_combined_data->norm() << endl;     
-
-            }
-          }
-
-        } else {
-  
-          if ( tensop_data_map_->find(A_contrib_name) == tensop_data_map_->end() ) {
-
-            shared_ptr<vector<shared_ptr<CtrTensorPart_Base>>> CTP_vec = expression->CTP_map_->at(A_contrib_name)->CTP_vec() ;
-            vector<string> sub_tensor_names(CTP_vec->size()); 
-            for ( int rr = 0 ; rr != CTP_vec->size() ; rr++ )
-              sub_tensor_names[rr] = CTP_vec->at(rr)->name();
-            
-            shared_ptr<Tensor_<DataType>> A_contrib_data = TensOp_Machine->direct_product_tensors( sub_tensor_names );
-            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
-              cout << "A_combined_data->norm() = " << A_combined_data->norm() << endl;     
-              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), A_contrib_data );
-              cout << "A_combined_data->norm() = " << A_combined_data->norm() << endl;     
-            }
-          } else {
-            for ( int qq = 0 ; qq != A_contrib->id_orders().size(); qq++){
-              cout << "A_combined_data->norm() = " << A_combined_data->norm() << endl;     
-              A_combined_data->ax_plus_y( (DataType)(A_contrib->factor(qq).first), tensop_data_map_->at(A_contrib_name) );
-              cout << "A_combined_data->norm() = " << A_combined_data->norm() << endl;     
-            }
-            
-          }
-        }
+           
+        cout << "pre  A_combined_data->norm() = " << A_combined_data->norm() << endl;     
+        TensOp_Machine->sum_different_orderings( "a_combined_data" , A_contrib_name, A_contrib->factors(), A_contrib->id_orders() );
+        cout << "post A_combined_data->norm() = " << A_combined_data->norm() << endl;     
   
         cout << "added " << A_contrib_name << endl; 
         cout << "=========================================================================================================" << endl << endl;
@@ -314,7 +261,6 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 
         gamma_computer_->get_gamma( gamma_name );
         cout << "gamma_computer_->gamma_data_map()->at("+gamma_name+")->norm() = "; cout.flush(); cout << gamma_computer_->gamma_data_map()->at(gamma_name)->norm() << endl;
-        cout << "A_combined_data->norm() = " << A_combined_data->norm() << endl;     
         cout << " result = " << result << endl;
         DataType tmp_result = A_combined_data->dot_product( gamma_computer_->gamma_data_map()->at(gamma_name) );
         cout << " tmp_result = " << tmp_result << endl;

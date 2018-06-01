@@ -9,6 +9,7 @@ using namespace bagel::Tensor_Arithmetic;
 using namespace bagel::Tensor_Arithmetic_Utils; 
 using namespace WickUtils;
 
+#define __DEBUG_TENSOP_COMPUTER
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
@@ -30,23 +31,23 @@ cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP : "; cout.flush(); cou
        cout << A_contrib << " not in data_map, must calculate it " << endl;
        shared_ptr<Tensor_<DataType>>  New_Tdata; 
  
-      if ( ctr_op->ctr_type()[0] == 'g'){  cout << " : no contraction, fetch this tensor part" << endl; 
+      if ( ctr_op->ctr_type()[0] == 'g'){ 
         New_Tdata =  get_block_Tensor(ctr_op->Tout_name());
         tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
   
-      } else if ( ctr_op->ctr_type()[0] == 'd' ){ cout << " : contract different tensors" << endl; 
+      } else if ( ctr_op->ctr_type()[0] == 'd' ){
         New_Tdata = contract_different_tensors( ctr_op->T1name(), ctr_op->T2name(), ctr_op->Tout_name(), make_pair(ctr_op->T1_ctr_rel_pos(), ctr_op->T2_ctr_rel_pos()) );
         tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
       
-      } else if ( ctr_op->ctr_type()[0] == 's' ) { cout << " : contract on same tensor" <<  endl; 
+      } else if ( ctr_op->ctr_type()[0] == 's' ) {
         New_Tdata = contract_on_same_tensor( ctr_op->T1name(), ctr_op->Tout_name(), ctr_op->ctr_rel_pos() ); 
         tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
 
-      } else if ( ctr_op->ctr_type()[0] == 'r' ) { cout << " : reorder tensor" <<  endl; 
+      } else if ( ctr_op->ctr_type()[0] == 'r' ) {
         New_Tdata = reorder_block_Tensor( ctr_op->T1name(), *(ctr_op->new_order()) ); 
         tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata); 
 
-      } else if ( ctr_op->ctr_type()[0] == 'c' ) { cout << " : cartesian (direct) product tensors" <<  endl; 
+      } else if ( ctr_op->ctr_type()[0] == 'c' ) {
         New_Tdata = direct_product_tensors( *(ctr_op->tensor_list()) );
         tensop_data_map_->emplace(ctr_op->Tout_name(), New_Tdata);
 
@@ -70,17 +71,32 @@ cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP : "; cout.flush(); cou
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void TensOp_Computer::TensOp_Computer<DataType>::sum_different_orderings( string target_name, string summand_name, 
-                                                                          vector<DataType> factor_list, vector<vector<int>> id_orders  ){
+                                                                          vector<pair<double,double>> summand_factors,
+                                                                          vector<vector<int>> summand_reorderings  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
 cout << " TensOp_Computer::TensOp_Computer::sum_different_orderings " << endl;
+cout << "target_name  = " << target_name << endl;
+cout << "summand_name = " << summand_name << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  typename vector<DataType>::iterator fl_it = factor_list.begin();
-  for ( vector<vector<int>>::iterator io_it = id_orders.begin(); io_it != id_orders.end() ; io_it++ , fl_it++ ) { 
-    reorder_block_Tensor(summand_name, *io_it );
-    add_tensors( target_name, summand_name, *fl_it ); 
-  }  
+  shared_ptr<Tensor_<DataType>> target  = find_or_get_CTP_data( target_name );
+  shared_ptr<Tensor_<DataType>> summand_orig_order = find_or_get_CTP_data( summand_name );
+
+  //TODO remove this, and decide properly how you are going to deal with the real and complex factors
+  vector<DataType> summand_factors_re( summand_factors.size() );
+  vector<DataType> summand_factors_im( summand_factors.size() );
+  typename vector<DataType>::iterator sfr_it = summand_factors_re.begin(); 
+  for ( vector<pair<double,double>>::iterator sr_it = summand_factors.begin() ; sr_it != summand_factors.end() ; sr_it++ , sfr_it++ )
+    *sfr_it = (DataType)(sr_it->first); 
+
+  print_vector( summand_factors_re, "summand_factors_re" ); cout << endl;
+
+  cout << "target->norm() = " << target->norm() << endl;
+  cout << "summand->norm() = " << summand_orig_order->norm() << endl;
+  Tensor_Calc_->add_list_of_reordered_tensors( target, summand_orig_order, summand_reorderings, summand_factors_re );
+  cout << "target->norm() = " << target->norm() << endl;
+  cout << "summand->norm() = " << summand_orig_order->norm() << endl;
 
   return; 
 }
@@ -96,8 +112,6 @@ cout << " TensOp_Computer::TensOp_Computer::add_tensors " << endl;
 
    shared_ptr<Tensor_<DataType>> target_tens  = find_or_get_CTP_data( target_name );
    shared_ptr<Tensor_<DataType>> summand_tens = find_or_get_CTP_data( summand_name );
-   cout << " target_tens->norm() = " << target_tens->norm() << endl;
-   cout << " summand_tens->norm() = " << summand_tens->norm() << endl;
    Tensor_Calc_->add_tensors( target_tens, summand_tens, factor ); 
 
    return; 
@@ -125,22 +139,22 @@ void TensOp_Computer::TensOp_Computer<DataType>::build_tensor( string new_data_n
 cout << " TensOp_Computer::TensOp_Computer::divide_tensors " << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    shared_ptr<Tensor_<DataType>> new_data; 
-    if ( id_ranges.size()  != 0 ) {
-      new_data = make_shared<Tensor_<DataType>>( Get_Bagel_IndexRanges( id_ranges ) );
-    } else {
-      new_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
-    }  
-    new_data->allocate();
-    new_data->zero(); 
+  shared_ptr<Tensor_<DataType>> new_data; 
+  if ( id_ranges.size()  != 0 ) {
+    new_data = make_shared<Tensor_<DataType>>( Get_Bagel_IndexRanges( id_ranges ) );
+  } else {
+    new_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
+  }  
+  new_data->allocate();
+  new_data->zero(); 
  
-    auto new_data_loc = tensop_data_map_->find( new_data_name); 
-    if(  new_data_loc != tensop_data_map_->end()){
-      cout << "The tensor block " << new_data_name << "is already in the map.... overwriting " << endl;
-      new_data_loc->second = new_data;
-    } else { 
-      tensop_data_map_->emplace ( new_data_name , new_data ); 
-    } 
+  auto new_data_loc = tensop_data_map_->find( new_data_name); 
+  if(  new_data_loc != tensop_data_map_->end()){
+    cout << "The tensor block " << new_data_name << "is already in the map.... overwriting " << endl;
+    new_data_loc->second = new_data;
+  } else { 
+    tensop_data_map_->emplace ( new_data_name , new_data ); 
+  } 
  
   return;
 }
@@ -168,23 +182,21 @@ shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_bl
 cout << "TensOp_Computer::TensOp_Computer::get_block_Tensor : " << tens_block_name << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
-   shared_ptr<Tensor_<DataType>> tens; 
-   
-   if(  tensop_data_map_->find(tens_block_name) != tensop_data_map_->end()){
-     tens = tensop_data_map_->at(tens_block_name);
+  shared_ptr<Tensor_<DataType>> tens; 
+  
+  if(  tensop_data_map_->find(tens_block_name) != tensop_data_map_->end()){
+    tens = tensop_data_map_->at(tens_block_name);
 
-   } else {
-     cout <<"not in map ... " <<  tens_block_name << " must be formed from direct product tensor " << endl; 
+  } else {
+    cout <<"not in map ... " <<  tens_block_name << " must be formed from direct product tensor " << endl; 
+    vector<string> sub_tens_names(0);
+    for ( shared_ptr<CtrTensorPart_Base>& ctp : *(CTP_map_->at(tens_block_name)->CTP_vec()))
+      sub_tens_names.push_back(ctp->name());
+    
+    tens = direct_product_tensors( sub_tens_names ); 
 
-     vector<string> sub_tens_names(0);
-     for ( shared_ptr<CtrTensorPart_Base>& ctp : *(CTP_map_->at(tens_block_name)->CTP_vec()))
-       sub_tens_names.push_back(ctp->name());
-     
-     tens = direct_product_tensors( sub_tens_names ); 
-
-   }
-
-   return tens;
+  }
+  return tens;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //TODO this can end up copying a lot; ideally should call the integrals just for these blocks
@@ -393,7 +405,6 @@ print_vector(tensor_names, "tensor_names"); cout <<endl;
  
   return Tens_prod;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Returns a block of a tensor, defined as a new tensor, is copying needlessly, so find another way. 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -402,8 +413,8 @@ shared_ptr<Tensor_<DataType>>
 TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string tens_block_name, vector<int>& new_order){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER_VERBOSE
-  cout << "TensOp_Computer::TensOp_Computer::reorder_block_Tensor "; cout.flush();
-  cout << " : " << tens_block_name ; cout.flush();  WickUtils::print_vector( new_order, "    new_order"); cout << endl;
+ cout << "TensOp_Computer::TensOp_Computer::reorder_block_Tensor "; cout.flush();
+ cout << " : " << tens_block_name ; cout.flush();  WickUtils::print_vector( new_order, "    new_order"); cout << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   auto tensop_data_map_loc = tensop_data_map_->find( tens_block_name ); 
@@ -417,7 +428,6 @@ TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string tens_blo
 
   return Tensor_Calc_->reorder_block_Tensor( T_part , new_order );
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 pair<int,int>

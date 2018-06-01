@@ -27,7 +27,7 @@ cout << "MOInt_Computer<DataType>::get_v2" << endl;
   shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
 
   //TEST!!
-  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( v2.tensor(), (DataType)(1.0) );
+//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( v2.tensor(), (DataType)(1.0) );
 
   //TODO Why is this like this!?! Shouldn't you return v2_tens? Or just have the function in the return statement?
   return v2.tensor();

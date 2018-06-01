@@ -31,6 +31,7 @@ class AContribInfo_Base {
 
     virtual void add_id_order( std::vector<int>& new_id_order ) { assert(false); } 
     virtual std::pair<double,double> factor(int qq) { assert(false); return std::pair<double,double>(0.0,0.0); }
+    virtual std::vector<std::pair<double,double>> factors() { assert(false); return std::vector<std::pair<double,double>>(0); } ;
 
     virtual void add_factor( std::pair<double,double>& new_factor ) { throw std::logic_error("do not call add_factor from AContribInfo_Base"); }
     virtual void combine_factors( int qq, std::pair<double,double>& new_factor ) {throw std::logic_error("do not call combine_factors from AContribInfo_Base");  }
@@ -76,27 +77,28 @@ class AContribInfo_Full : public AContribInfo_Base {
 
   public :
     std::vector<std::vector<int>> id_orders_;
-    std::vector<std::pair<double,double>> factors;
+    std::vector<std::pair<double,double>> factors_;
     std::shared_ptr<std::vector<std::string>> post_reorder_rngs_;
 
     AContribInfo_Full( std::string name,  std::vector<int>& id_order , std::pair<double,double> factor ):
-                       AContribInfo_Base(name),  factors(std::vector<std::pair<double,double>>(1,factor)),
+                       AContribInfo_Base(name),  factors_(std::vector<std::pair<double,double>>(1,factor)),
                        id_orders_(std::vector<std::vector<int>>(1,id_order)) {};
 
     AContribInfo_Full( std::string name,  std::vector<int>& id_order, std::shared_ptr<std::vector<std::string>> post_reorder_rngs, std::pair<double,double> factor ):
-                       AContribInfo_Base(name),  factors(std::vector<std::pair<double,double>>(1,factor)),
+                       AContribInfo_Base(name),  factors_(std::vector<std::pair<double,double>>(1,factor)),
                        id_orders_(std::vector<std::vector<int>>(1,id_order)), post_reorder_rngs_(post_reorder_rngs) {};
 
     ~AContribInfo_Full(){};
 
-    std::pair<double,double> factor(int qq) {return factors[qq]; };
+    std::pair<double,double> factor(int qq) {return factors_[qq]; };
+    std::vector<std::pair<double,double>> factors() { return factors_; } ;
 
-    void add_factor( std::pair<double,double>& new_factor ) { factors.push_back(new_factor); };
+    void add_factor( std::pair<double,double>& new_factor ) { factors_.push_back(new_factor); };
     void add_id_order( std::vector<int>& new_id_order ) { id_orders_.push_back(new_id_order);}
  
     void combine_factors( int qq, std::pair<double,double>& new_factor )  {
-      factors[qq].first += new_factor.first;  
-      factors[qq].second += new_factor.second;  
+      factors_[qq].first += new_factor.first;  
+      factors_[qq].second += new_factor.second;  
     }
 
     std::vector<int>& id_order(int qq) { return id_orders_[qq]; };
@@ -132,7 +134,8 @@ class AContribInfo_OrbExcDeriv : public AContribInfo_Base {
 
     ~AContribInfo_OrbExcDeriv(){};
 
-    std::pair<double,double> factor( int qq ) { return factors_[qq]; } ;
+    std::vector<std::pair<double,double>> factors() { return factors_; }
+    std::pair<double,double> factor( int qq ) { return factors_[qq]; }
 
     void add_reordering( std::string ablock_name,  std::vector<int>& gamma_contraction_pos,
                          std::vector<int>& pre_contraction_reordering,

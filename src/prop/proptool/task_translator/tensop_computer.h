@@ -48,7 +48,7 @@ class TensOp_Computer {
 
     std::vector<SMITH::IndexRange> Get_Bagel_IndexRanges( std::vector<std::string>& ranges_str ); 
 
-    void sum_different_orderings( std::string target_name, std::string summand_name, std::vector<DataType> factor_list, std::vector<std::vector<int>> id_orders );
+    void sum_different_orderings( std::string target_name, std::string summand_name, std::vector<std::pair<double,double>> factor_list, std::vector<std::vector<int>> id_orders );
 
     //only for two contracted indexes
     std::shared_ptr<SMITH::Tensor_<DataType>> contract_on_same_tensor( std::string Tname, std::string Tout_name, std::pair<int,int> ctr_todo ) ;

@@ -9,6 +9,11 @@ namespace bagel {
 
 namespace Tensor_Arithmetic_Utils {  
 
+     double sum_elems( std::unique_ptr<double[]>& some_data, size_t length );
+     std::complex<double> sum_elems( std::unique_ptr<std::complex<double>[]>& some_data, size_t length );
+     double sum_elem_norms( std::unique_ptr<double[]>& some_data, size_t length );
+     double sum_elem_norms( std::unique_ptr<std::complex<double>[]>& some_data, size_t length );
+ 
      std::vector<int> get_Tens_strides ( const std::vector<int>& range_sizes);
      std::vector<int> get_Tens_strides_column_major( const std::vector<int>& range_sizes); 
  
