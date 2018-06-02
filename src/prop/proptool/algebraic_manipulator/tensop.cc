@@ -238,7 +238,7 @@ cout << "op_info->op_full_name_ = " << op_info->op_full_name_ <<   endl;
         apply_symmetry( *(*bl_it), *aops_, op_info ) ;  
       
       shared_ptr< map< const vector<string>, shared_ptr<Range_Block_Info> > > all_ranges_new = 
-                make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ( *all_ranges_tmp_ );
+                  make_shared< map< const vector<string>, shared_ptr<Range_Block_Info> > > ( *all_ranges_tmp_ );
       
       all_ranges_state_specific_->emplace( op_info->op_state_name_, all_ranges_new );
     } 

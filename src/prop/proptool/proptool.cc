@@ -87,6 +87,9 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
                                                      nfrozenvirt_, block_diag_fock_ );
 
   auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
+  
+  vector<string> free2 = { "free" , "free" };
+  moint_computer->get_fock( free2, true );
 
   //TODO should build gamma_computer inside system_computer, like this due to DVec class dependence of B_Gamma_Computer 
   auto gamma_computer = make_shared<B_Gamma_Computer::B_Gamma_Computer<double>>(civectors_); 

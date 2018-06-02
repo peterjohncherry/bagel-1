@@ -95,7 +95,31 @@ namespace Debugging_Utils {
     return total;
   } 
  
+  template<typename DataType>
+  void print_array( DataType* ptr , std::vector<size_t> dimensions, std::string name = " "  )  { 
+   
+    if ( name != " " )  
+      std::cout << std::endl << "============== " << name << " =============== " << std::endl;
 
-
+    size_t row_length = dimensions.back(); 
+    size_t block_size = dimensions[dimensions.size()-2];
+    DataType* ptr_buff = ptr;
+  
+    int num_blocks = 1;
+    if ( dimensions.size() > 2 )
+      for (int xx = 0 ; xx != dimensions.size()-2 ; xx++ ) 
+        num_blocks *= dimensions[xx];
+   
+    for ( int rr = 0; rr != num_blocks ; rr++ ) {
+      for ( int qq = 0 ; qq != block_size ; qq++ ) {
+        for ( int ii = 0; ii != row_length ; ptr_buff++, ii++ ){ 
+          std::cout << *ptr_buff << " "; std::cout.flush();
+        } 
+        std::cout << std::endl;
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl; 
+  }
 }
 #endif

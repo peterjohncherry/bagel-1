@@ -301,7 +301,7 @@ cout << "TensOp_Computer::TensOp_Computer::calculate_mo_integrals() : " << mo_te
 
     if ( f_loc == tensop_data_map_->end() ) {
       vector<string> free2 = { "free", "free" };
-      auto f1  =  moint_computer_->get_fock( free2 );
+      auto f1  =  moint_computer_->get_fock( free2, true );
       tensop_data_map_->emplace( "f_{00}" , f1 );
  
       if ( mo_tensor_name != "f_{00}" )

@@ -59,7 +59,12 @@ cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
 
   vector<IndexRange> target_ranges  = target->indexrange();
   vector<IndexRange> summand_ranges = summand->indexrange();
-
+ 
+  cout << endl << "--------summand_reorderings-------"  << endl;
+  for ( vector<int>& reordering : summand_reorderings ) {
+    print_vector( reordering, ""); cout<< "  " << endl;
+  }
+  
   cout << " target->norm() = " << target->norm(); cout.flush() ;  cout << "    summand->norm() = " << summand->norm() << endl;
 
   if ( target->size_alloc() != 1 ) {
@@ -67,10 +72,12 @@ cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
     vector<int> summand_mins(summand_maxs.size(), 0 );
     vector<int> summand_block_pos(summand_maxs.size(), 0 );
  
+    
     shared_ptr<vector<int>> target_reordering = get_ascending_order (summand_reorderings.front()) ;
     do {
-       
+      
       vector<Index> summand_block_ranges = get_rng_blocks( summand_block_pos, summand_ranges );
+      print_sizes( summand_block_ranges, " summand_block_ranges" ); cout << endl; 
       unique_ptr<DataType[]> summand_block_data  = summand->get_block(summand_block_ranges);
 
       vector<vector<int>>::iterator sr_it = summand_reorderings.begin();
@@ -80,7 +87,8 @@ cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
       for ( vector<Index>::iterator tbr_it = target_block_ranges.begin() ; tbr_it != target_block_ranges.end(); tbr_it++ , tr_it++ )
         *tbr_it = summand_block_ranges[*tr_it];
       }
-      
+      print_sizes( target_block_ranges, "target_block_ranges" ); cout << endl;
+
       unique_ptr<DataType[]> target_block_data  = target->get_block(target_block_ranges);
       size_t summand_block_size  = summand->get_size( summand_block_ranges );    
       for ( typename vector<DataType>::iterator sf_it = summand_factors.begin(); sf_it !=  summand_factors.end() ; sr_it++, sf_it++ ) {

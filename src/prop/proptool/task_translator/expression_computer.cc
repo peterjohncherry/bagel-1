@@ -291,6 +291,20 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
   } else {
     scalar_results_map->at( expression_name ) = result;
   }
+
+  { // TEST 
+    auto bob =  gamma_computer_->gamma_data_map();
+    for ( auto elem : *bob ) { 
+      if ( elem.second->rank() == 2 ) {      
+        cout << elem.first << "->norm() = " ; cout.flush(); cout << elem.second->norm() << endl;
+      } else if ( elem.second->rank() == 4 ) { 
+        cout << elem.first << "->norm() = " ; cout.flush(); cout << elem.second->norm() << endl;
+      }
+    }
+    cout << "tensop_data_map_->at(H_{00}_aaaa)->norm() = "; cout.flush(); cout << tensop_data_map_->at("H_{00}_aaaa")->norm() << endl;
+    Print_Tensor( tensop_data_map_->at("H_{00}_aaaa"), "H_{00}_aaaa" );  
+  } // END TEST 
+
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -151,20 +151,20 @@ cout << "CASPT2::CASPT2::solve" << endl;
   Timer timer;
   print_iteration();
 
-  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 0.0  );
-  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 0.0  );
+//  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( h1_ , 0.0  );
+//  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( f1_ , 0.0  );
   cout << "rdm2_->norm() = " << rdm2_->norm(); cout.flush();  cout << " rdm2_->size() = " << rdm2_->size_alloc() << endl;
   
   cout << "v2_->norm() = " << v2_->norm(); cout.flush();  cout << " v2_->size() = " << v2_->size_alloc() << endl;
   vector<IndexRange> act4_ranges = rdm2_->indexrange();
   auto v2_act = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, act4_ranges ); 
   cout << "v2_act->norm() = " << v2_act->norm(); cout.flush();  cout << " v2_act->size() = " << v2_act->size_alloc() << endl;
+  Tensor_Arithmetic_Utils::Print_Tensor( v2_act, "v2_act" );  
 
   double v2_act_dot_rdm = v2_act->dot_product( rdm2_ ); 
   cout << "v2_act_dot_rdm =  " << v2_act_dot_rdm << endl; 
-   
 
-  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );  
+  //Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_ , 1.0  );  
   {// TEST
     set_rdm(0, 0);
     double norm = 0.0;

@@ -58,7 +58,6 @@ cout << "System_Computer<DataType>::build_equation_computer : " << equation_name
     equation_computer->solve_equation();
    
   } else {
-  
     throw std::logic_error( "this type of equation has not been implemented yet! Aborting!!" );
   }
  
