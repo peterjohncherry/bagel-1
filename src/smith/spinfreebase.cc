@@ -48,11 +48,6 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
 
   const int ncore2 = info_->ncore()*(is_same<DataType,double>::value ? 1 : 2);
 
-  cout << "info_->ncore() = " << info_->ncore() << endl;
-  cout << "info_->nact() = " << info_->nact() << endl;
-  cout << "info_->nclosed() = " << info_->nclosed() << endl;
-  cout << "info_->nvirt() = " << info_->nvirt() << endl;
-
   closed_ = IndexRange(info_->nclosed()-info_->ncore(), max, 0, info_->ncore());
   if (is_same<DataType,complex<double>>::value)
     closed_.merge(IndexRange(info_->nclosed()-info_->ncore(), max, closed_.nblock(), ncore2+closed_.size(), info_->ncore()));
@@ -75,28 +70,26 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
 
  // build system computer (for computational task list construction/execution)
   auto moint_init = make_shared<MOInt_Init<double>>( info_->geom(), dynamic_pointer_cast<const Reference>(info_->ref()), closed_.size(), 0 , false );
-
- auto  range_conversion_map  = make_shared<map<string, shared_ptr<IndexRange>  > >();
- range_conversion_map->emplace("c", make_shared<IndexRange> (*rclosed_) ); 
- range_conversion_map->emplace("a", make_shared<IndexRange> (*ractive_) );
- range_conversion_map->emplace("v", make_shared<IndexRange> (*rvirt_) );
- range_conversion_map->emplace("all", make_shared<IndexRange> (all_) );
-
-  auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map );
-
-  vector<string> free2 = { "all" , "all" };
-  vector<string> free4 = { "all" , "all", "all", "all" };
-  vector<IndexRange> act4_ranges = { active_, active_, active_, active_ };
-  moint_computer->get_fock( free2, true );
-  auto h1_test  =  moint_computer->get_h1( free2 );
-  auto f1_test  =  moint_computer->get_fock( free2 );
-  auto v2_test  =  moint_computer->get_v2( free4 ) ;
-  auto v2_act_test = Tensor_Arithmetic_Utils::get_sub_tensor( v2_test, act4_ranges ); 
-  cout << "in spinfreebase v2_act_test->norm() = " << v2_act_test->norm(); cout.flush();  cout << " v2_act_test->size() = " << v2_act_test->size_alloc() << endl;
-  cout << "  f1_test->norm() = " <<  f1_test->norm() << endl;
-  cout << "  h1_test->norm() = " <<  h1_test->norm() << endl;
-  cout << "  v2_test->norm() = " <<  v2_test->norm() << endl;
-
+  {
+    auto range_conversion_map  = make_shared<map<string, shared_ptr<IndexRange>  > >();
+    range_conversion_map->emplace("c", make_shared<IndexRange> (*rclosed_) ); 
+    range_conversion_map->emplace("a", make_shared<IndexRange> (*ractive_) );
+    range_conversion_map->emplace("v", make_shared<IndexRange> (*rvirt_) );
+    range_conversion_map->emplace("free", make_shared<IndexRange> (all_) );
+    auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map );
+    vector<string> free2 = { "free" , "free" };
+    vector<string> free4 = { "free" , "free", "free", "free" };
+    vector<IndexRange> act4_ranges = { active_, active_, active_, active_ };
+    moint_computer->get_fock( free2, true );
+    auto h1_test  =  moint_computer->get_h1( free2 );
+    auto f1_test  =  moint_computer->get_fock( free2 );
+    auto v2_test  =  moint_computer->get_v2( free4 ) ;
+    auto v2_act_test = Tensor_Arithmetic_Utils::get_sub_tensor( v2_test, act4_ranges ); 
+    cout << " MOC f1_test->norm() = " <<  f1_test->norm() << endl;
+    cout << " MOC h1_test->norm() = " <<  h1_test->norm() << endl;
+    cout << " MOC v2_test->norm() = " <<  v2_test->norm() << endl;
+    cout << " MOC v2_act_test->norm() = " << v2_act_test->norm(); cout.flush();  cout << " v2_act_test->size() = " << v2_act_test->size_alloc() << endl;
+  }
   // f1 tensor.
   {
     MOFock<DataType> fock(info_, {all_, all_});
@@ -106,8 +99,6 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
     // canonical orbitals within closed and virtual subspaces
     coeff_ = fock.coeff();
   }
-  cout << "   f1_->norm()  = " << f1_->norm() << endl;
-  cout << "   h1_->norm()  = " << h1_->norm() << endl;
    
   // v2 tensor.
   {
@@ -119,21 +110,16 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
       occ = all_;
       virt = all_;
     }
-    cout << endl << "++++++++++++ IN SPINFREEBASE ++++++++++ " << endl;
-    cout << " occ.size() = " <<  occ.size() << endl;
-    cout << " virt.size() = " <<  virt.size() << endl;
     K2ext<DataType> v2k(info_, coeff_, {occ, virt, occ, virt}); // how does this work for MRCI; moint says it can only handle 2 externals? 
     v2_ = v2k.tensor();
-    cout << "in spinfreebase v2_->norm()->size_alloc()  = " <<  v2_->size_alloc() << endl;
-    cout << "in spinfreebase v2_->norm()  = " <<  v2_->norm() << endl;
     vector<IndexRange> act4_ranges = { active_, active_, active_, active_ }; 
     auto v2_act = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, act4_ranges ); 
-    cout << "in spinfreebase v2_act->norm() = " << v2_act->norm(); cout.flush();  cout << " v2_act->size() = " << v2_act->size_alloc() << endl;
+    cout << "SFB f1_->norm()  = " << f1_->norm() << endl;
+    cout << "SFB h1_->norm()  = " << h1_->norm() << endl;
+    cout << "SFB v2_->norm()  = " << v2_->norm() << endl; cout.flush();  cout << " v2_->size() = " << v2_->size_alloc() << endl;
+    cout << "SFB v2_act->norm() = " << v2_act->norm(); cout.flush();  cout << " v2_act->size() = " << v2_act->size_alloc() << endl;
   }
-  cout << "   f1_->norm()  = " << f1_->norm() << endl;
-  cout << "   h1_->norm()  = " << h1_->norm() << endl;
-  cout << "   v2_->norm()  = " << v2_->norm() << endl;
- 
+
   ////////////////////// temp H_2el tensor for testing//////////////////////////////////////////
 //  {
 //    K2ext<DataType> v2k(info_, coeff_, {all_, all_, all_, all_});
