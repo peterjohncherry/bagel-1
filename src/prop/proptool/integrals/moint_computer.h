@@ -49,6 +49,7 @@ namespace bagel {
       std::shared_ptr<SMITH::Tensor_<DataType>> get_fock( const std::vector<SMITH::IndexRange>& blocks, bool set_coeffs = false );
 
       // A test tensor 
+      std::shared_ptr<SMITH::Tensor_<DataType>> get_test_tensor( const std::vector<SMITH::IndexRange>& blocks  );
       std::shared_ptr<SMITH::Tensor_<DataType>> get_test_tensor( const std::vector<std::string>& blocks  );
   };
 }

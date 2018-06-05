@@ -100,6 +100,7 @@ class TensOp_Computer {
 
     void build_mo_tensor( std::string mo_tensor_name );
 
+    void build_test_tensor( std::string test_tensor_name, std::vector<size_t> dimensions, std::vector<size_t> max_blocks_sizes );
 
 };
 

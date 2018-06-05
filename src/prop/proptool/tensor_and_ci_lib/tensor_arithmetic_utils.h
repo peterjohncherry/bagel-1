@@ -46,6 +46,8 @@ namespace Tensor_Arithmetic_Utils {
 
      void check_contracted_indexes( std::vector<SMITH::IndexRange>&  idx_block, std::vector<int>& contracted_index_positions );
 
+     std::vector<SMITH::IndexRange> get_indexrange_from_dimension_vector( std::vector<size_t> dimensions, std::vector<size_t> maxblock  );
+
      template<typename DataType>
      void Print_Tensor(std::shared_ptr<SMITH::Tensor_<DataType>> Tens, std::string name = "") ;
      template<>

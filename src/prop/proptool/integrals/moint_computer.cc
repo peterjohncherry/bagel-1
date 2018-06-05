@@ -135,7 +135,15 @@ cout << "MOInt_Computer<DataType>::get_fock" << endl;
   return one_el_ints.fock();
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Dupe routine with string input
+template<typename DataType>
+shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_test_tensor( const vector<SMITH::IndexRange>& index_ranges ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
+cout << "MOInt_Computer<DataType>::get_test_tensor string ver" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  return  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_row_major( index_ranges );
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_test_tensor( const vector<string>& blocks_str ) {
@@ -144,11 +152,11 @@ shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_test_tensor( 
 cout << "MOInt_Computer<DataType>::get_test_tensor string ver" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<vector<SMITH::IndexRange>> blocks = make_shared<vector<SMITH::IndexRange>>(blocks_str.size());
+  vector<SMITH::IndexRange> blocks(blocks_str.size());
   for ( int ii = 0 ; ii != blocks_str.size(); ii++ ) 
-    blocks->at(ii) = *(range_conversion_map_->at(blocks_str[ii])); 
+    blocks[ii] = *(range_conversion_map_->at(blocks_str[ii])); 
 
-  return  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_Tensor_row_major( blocks );
+  return  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_row_major( blocks );
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class MOInt_Computer<double>;

@@ -113,10 +113,10 @@ class Tensor_Arithmetic {
      get_uniform_Tensor(std::shared_ptr<std::vector<SMITH::IndexRange>> T_id_ranges, DataType XX );
 
      static std::shared_ptr<SMITH::Tensor_<DataType>>
-     get_test_Tensor_row_major( std::shared_ptr<std::vector<SMITH::IndexRange>> T_id_ranges );
+     get_test_tensor_row_major( const std::vector<SMITH::IndexRange>& T_id_ranges );
 
      static std::shared_ptr<SMITH::Tensor_<DataType>>
-     get_test_Tensor_column_major( std::shared_ptr<std::vector<SMITH::IndexRange>> T_id_ranges );
+     get_test_tensor_column_major( const std::vector<SMITH::IndexRange>& T_id_ranges );
 
      static void 
      gemm( char op1, char op2, int size_i, int size_l, int size_j, DataType* A_data, DataType* B_data, DataType* C_data, DataType alpha, DataType beta ); 

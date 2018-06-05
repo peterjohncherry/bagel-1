@@ -257,7 +257,6 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
    } 
    return;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets ranges and factors from the input which will be used in definition of terms
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -283,11 +282,6 @@ cout << "TensOp_Computer::TensOp_Computer::calculate_mo_integrals() : " << mo_te
       tensop_data_map_->emplace( mo_tensor_name , H_loc->second );
 
     }
-  //TEST 
-  cout << "tensop_data_map_->at(\"H_{00}\")->norm() = "; cout.flush();
-  cout << tensop_data_map_->at("H_{00}")->norm()  ; cout.flush();
-  cout <<  " size = "  ; cout.flush();
-  cout << tensop_data_map_->at("H_{00}")->size_alloc()  << endl;
 
   } else if ( mo_tensor_name[0] == 'h' ) {   
     auto f_loc = tensop_data_map_->find( "h_{00}" );
@@ -555,6 +549,26 @@ cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(ranges_str,
     ranges_Bagel[ii] = *range_conversion_map_->at(ranges_str[ii]);
 
   return ranges_Bagel;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void TensOp_Computer::TensOp_Computer<DataType>::build_test_tensor( string test_tensor_name, vector<size_t> dimensions, vector<size_t> max_block_sizes ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOP_COMPUTER
+cout << "TensOp_Computer::TensOp_Computer::build_test_tensor : " << test_tensor_name <<  endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  auto tt_loc = tensop_data_map_->find( test_tensor_name );
+  if ( tt_loc != tensop_data_map_->end() )
+    throw logic_error("already a tensor with named \"" + test_tensor_name + "\" in the map! Aborting!" ); 
+
+  vector<IndexRange> index_ranges(dimensions.size()); 
+  for ( int ii = 0 ; ii != dimensions.size(); ii++ ) 
+    index_ranges[ii] = SMITH::IndexRange(dimensions[ii], max_block_sizes[ii] ); 
+
+  tensop_data_map_->emplace( test_tensor_name, Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_row_major( index_ranges )) ;
+
+  return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class TensOp_Computer::TensOp_Computer<double>;
