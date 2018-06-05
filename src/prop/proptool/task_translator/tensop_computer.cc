@@ -283,6 +283,11 @@ cout << "TensOp_Computer::TensOp_Computer::calculate_mo_integrals() : " << mo_te
       tensop_data_map_->emplace( mo_tensor_name , H_loc->second );
 
     }
+  //TEST 
+  cout << "tensop_data_map_->at(\"H_{00}\")->norm() = "; cout.flush();
+  cout << tensop_data_map_->at("H_{00}")->norm()  ; cout.flush();
+  cout <<  " size = "  ; cout.flush();
+  cout << tensop_data_map_->at("H_{00}")->size_alloc()  << endl;
 
   } else if ( mo_tensor_name[0] == 'h' ) {   
     auto f_loc = tensop_data_map_->find( "h_{00}" );

@@ -226,7 +226,7 @@ cout << "Tensor_Arithmetic::trace_tensor__tensor_return" << endl;
 template<class DataType>
 void
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( shared_ptr<Tensor_<DataType>> t_target, shared_ptr<Tensor_<DataType>> t_summand,
-                                                                        vector<int>& summand_pos ) {
+                                                                        vector<int>& summand_pos,  DataType factor ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(summand_pos , "   summand_pos"); cout << endl;
@@ -247,9 +247,13 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
 }
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  cout << "pre t_target->norm() = " ; cout.flush(); cout << t_target->norm() << endl; 
+  cout << "pre t_summand->norm() = " ; cout.flush(); cout << t_summand->norm() << endl; 
+
   vector<int> summand_reordering = *(get_ascending_order( summand_pos ));
   vector<IndexRange> t_target_ranges  = t_target->indexrange();
   vector<IndexRange> t_summand_ranges = t_summand->indexrange();
+  print_sizes (t_summand_ranges, "t_summand_ranges"); cout << endl;
 
   int num_ids  = t_target_ranges.size();
   int summand_rank = t_summand_ranges.size();
@@ -278,13 +282,18 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
          ++tip_s_it;
       }
   }
+  print_vector(traced ,"traced" ); cout << endl;
   vector<int> target_reordering_inverse = *(get_ascending_order( target_reordering ));
   vector<int> target_maxs = get_range_lengths( t_target_ranges );
   vector<int> summand_maxs = get_range_lengths( t_summand_ranges );
   vector<int> summand_mins(summand_rank, 0);
   vector<int> summand_block_pos(summand_rank,0);
+  print_vector( summand_mins , "summand_mins");  cout << endl;
+  print_vector( summand_maxs , "summand_maxs");  cout << endl;
 
   do {
+  
+    print_vector( summand_block_pos , "summand_block_pos"); cout << endl;
 
     vector<Index> summand_block_ranges = get_rng_blocks( summand_block_pos, t_summand_ranges );
     
@@ -292,21 +301,27 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
 
     size_t summand_block_size  = t_summand->get_size( summand_block_ranges );    
    
-    for ( int ii = 0; ii != target_maxs.front(); ii++ ) { 
+    for ( int ii = 0; ii != target_maxs.front()+1; ii++ ) { 
  
       vector<Index> target_block_ranges(num_ids);
       {
         vector<int>::iterator sr_it = summand_reordering.begin();
         vector<bool>::iterator t_it = traced.begin(); 
         int qq = 0; 
-        for ( vector<Index>::iterator tbr_it = target_block_ranges.begin(); tbr_it != target_block_ranges.end(); tbr_it++, qq++, t_it++ )
+        for ( vector<Index>::iterator tbr_it = target_block_ranges.begin(); tbr_it != target_block_ranges.end(); tbr_it++, qq++, t_it++ ){
           if (*t_it){ 
            *tbr_it = t_target_ranges[qq].range(ii);
           } else {
            *tbr_it = summand_block_ranges.at(*sr_it);
             sr_it++;
           }
+        }
       }
+      size_t target_block_size  = t_target->get_size( target_block_ranges ); 
+      size_t n_steps = target_block_size/summand_block_size;
+      cout << "target_block_size  = "<< target_block_size ; cout.flush(); cout << "  summand_block_size = "<< summand_block_size ;cout.flush(); cout << "    n_steps  = "<< n_steps  << endl;
+      assert( (target_block_size % summand_block_size) == 0 ); 
+
       vector<Index> target_block_ranges_reordered(num_ids);
       {
       vector<Index>::iterator tbrr_it = target_block_ranges_reordered.begin();
@@ -315,10 +330,15 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
          
       };
  
+      cout << "sum summand_block_data = "; cout.flush(); cout <<  Tensor_Arithmetic_Utils::sum_elems( summand_block_data, summand_block_size  ) << endl;
       unique_ptr<DataType[]> target_block_data = t_target->get_block(target_block_ranges);
       { 
         unique_ptr<DataType[]> target_block_data_reordered = reorder_tensor_data( target_block_data.get(), target_reordering, target_block_ranges );
-        blas::ax_plus_y_n(1.0, target_block_data_reordered.get(), summand_block_size, summand_block_data.get() );
+        DataType* pos_on_trace = target_block_data_reordered.get();
+        DataType* summand_ptr  = summand_block_data.get();
+        for ( size_t step = 0; step != target_block_size; step += summand_block_size , pos_on_trace +=summand_block_size) { 
+          ax_plus_y(summand_block_size, factor, summand_ptr, pos_on_trace );
+        }
         target_block_data = reorder_tensor_data( target_block_data_reordered.get(), target_reordering, target_block_ranges );
       }
     
@@ -326,7 +346,9 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
     }    
     
   } while( fvec_cycle_skipper(summand_block_pos, summand_maxs, summand_mins) );
-  
+  cout << "post t_target->norm() = " ; cout.flush(); cout << t_target->norm() << endl; 
+  cout << "post t_summand->norm() = " ; cout.flush(); cout << t_summand->norm() << endl;
+
 #ifdef __DEBUG_TENSOR_ARITHMETIC 
   cout << "TA:atat END t_target->norm()  = " << t_target->norm() << endl;  cout << "TA:atat END t_summand->norm() = " << t_summand->norm() << endl;  
 #endif 
@@ -1599,7 +1621,6 @@ cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size
   dscal_( T1_block_size, T2_data_ptr, Tout_data_ptr, 1); 
   return;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
 void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::scaler( int T1_block_size, std::complex<double> T2_data_ptr, std::complex<double>* Tout_data_ptr){  
@@ -1610,7 +1631,6 @@ cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size
   zscal_( T1_block_size, T2_data_ptr, Tout_data_ptr, 1); 
   return;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
 double
@@ -1630,6 +1650,35 @@ Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::dot_product( size_t 
 cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::dot_product " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   return zdotc_( vec_size, v1, 1, v2, 1 ); 
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// alpha+factor.beta, double version, assumes stride is one
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void Tensor_Arithmetic::Tensor_Arithmetic<double>::ax_plus_y( int array_length, double factor, double* target_ptr, double* summand_ptr ) { 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+cout << "Tensor_Arithmetic<double>::ax_plus_y "<< endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  int stride = 1 ; 
+  daxpy_( array_length, factor, target_ptr, stride, summand_ptr, stride);
+  return;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// alpha+factor.beta complex version, assumes stride is one
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::ax_plus_y( int array_length, std::complex<double> factor,
+                                                                            complex<double>* target_ptr, complex<double>* summand_ptr ) { 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+cout << "Tensor_Arithmetic<std::complex<double>>::ax_plus_y "<< endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  int stride = 1 ; 
+  zaxpy_( array_length, factor, target_ptr, stride, summand_ptr, stride);
+  return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Tensor_Arithmetic::Tensor_Arithmetic<double>;

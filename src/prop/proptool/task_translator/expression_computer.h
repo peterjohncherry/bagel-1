@@ -56,6 +56,7 @@ class Expression_Computer {
                          std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map,
                          std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map );
 
+    void test_trace_subtraction();
 };
 
 }//end Expression_Computer namespace

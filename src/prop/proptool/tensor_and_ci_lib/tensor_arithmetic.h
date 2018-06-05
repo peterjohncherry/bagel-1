@@ -138,7 +138,10 @@ class Tensor_Arithmetic {
     
      static void
      add_tensor_along_trace( std::shared_ptr<SMITH::Tensor_<DataType>> t_target, std::shared_ptr<SMITH::Tensor_<DataType>> t_summand,
-                             std::vector<int>& summand_pos );
+                             std::vector<int>& summand_pos, DataType factor );
+
+     static void
+     ax_plus_y( int array_length, DataType factor,  DataType* target_ptr, DataType* summand_ptr );
 
 }; 
  
@@ -162,6 +165,11 @@ template<> void Tensor_Arithmetic<std::complex<double>>::scaler( int T1_block_si
 template<> double Tensor_Arithmetic<double>::dot_product( size_t vec_size, double* v1, double* v2);
 
 template<> std::complex<double> Tensor_Arithmetic<std::complex<double>>::dot_product( size_t vec_size, std::complex<double>* v1, std::complex<double>* v2); 
+
+template<> void Tensor_Arithmetic<std::complex<double>>::ax_plus_y( int array_length, std::complex<double> factor, std::complex<double>* target_ptr, std::complex<double>* summand_ptr );
+
+template<> void Tensor_Arithmetic<double>::ax_plus_y( int array_length, double factor, double* target_ptr, double* summand_ptr );
+
 }
 }
 #endif

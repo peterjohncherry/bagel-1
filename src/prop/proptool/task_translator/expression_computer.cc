@@ -185,7 +185,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
             
           } else if ( a_intermediate_info->post_contraction_reordering()->size() != 0 ) { 
 
-            Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( target_block_data, post_a_gamma_contraction_data, *(a_intermediate_info->target_block_positions()) );
+            Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( target_block_data, post_a_gamma_contraction_data, *(a_intermediate_info->target_block_positions()), 1.0 );
             tensop_data_map_->at( target_block_name ) =  target_block_data ; 
             tensor_results_map_->at( target_block_name ) =  target_block_data ; 
 
@@ -248,9 +248,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 	print_AContraction_list( expression->ACompute_map_->at(A_contrib_name), A_contrib_name );
         TensOp_Machine->Calculate_CTP( *A_contrib );
            
-        cout << "pre  A_combined_data->norm() = " << A_combined_data->norm() << endl;     
         TensOp_Machine->sum_different_orderings( "a_combined_data" , A_contrib_name, A_contrib->factors(), A_contrib->id_orders() );
-        cout << "post A_combined_data->norm() = " << A_combined_data->norm() << endl;     
   
         cout << "added " << A_contrib_name << endl; 
         cout << "=========================================================================================================" << endl << endl;
@@ -294,17 +292,29 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 
   { // TEST 
     auto bob =  gamma_computer_->gamma_data_map();
+    shared_ptr<Tensor_<DataType>> rdm1;
+    shared_ptr<Tensor_<DataType>> rdm2;
+    auto v2_act =  tensop_data_map_->at("H_{00}_aaaa");
     for ( auto elem : *bob ) { 
       if ( elem.second->rank() == 2 ) {      
         cout << elem.first << "->norm() = " ; cout.flush(); cout << elem.second->norm() << endl;
+        rdm1 = elem.second;
+        tensop_data_map_->emplace("rdm1",  rdm1 );
       } else if ( elem.second->rank() == 4 ) { 
         cout << elem.first << "->norm() = " ; cout.flush(); cout << elem.second->norm() << endl;
+        rdm2 = make_shared<Tensor_<DataType>>(*(elem.second));
+        tensop_data_map_->emplace("rdm2",  rdm2 );
       }
     }
-    cout << "tensop_data_map_->at(H_{00}_aaaa)->norm() = "; cout.flush(); cout << tensop_data_map_->at("H_{00}_aaaa")->norm() << endl;
-    Print_Tensor( tensop_data_map_->at("H_{00}_aaaa"), "H_{00}_aaaa" );  
+    vector<int> id_pos = {1, 2};
+    cout << "rdm1->size_alloc() = " ; cout.flush() ; cout << rdm1->size_alloc() <<endl;
+    cout << "rdm2->size_alloc() = " ; cout.flush() ; cout << rdm2->size_alloc() <<endl;
+    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( rdm2, rdm1, id_pos, -1.0 ); 
+    cout << "rdm1->norm() = "; cout.flush(); cout << rdm1->norm() << endl;
+    cout << "rdm2->norm() = "; cout.flush(); cout << rdm2->norm() << endl;
   } // END TEST 
 
+  test_trace_subtraction();
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -374,6 +384,38 @@ cout << "Expression_Computer::Expression_Computer<DataType>::set_gamma_maps" << 
   gamma_computer_->set_maps(range_conversion_map_, expression_map_->at(expression_name)->gamma_info_map_, gamma_data_map, sigma_data_map, civec_data_map );
   return;
 } 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template < typename DataType >
+void Expression_Computer::Expression_Computer<DataType>::test_trace_subtraction(){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_EXPRESSION_COMPUTER 
+cout << "Expression_Computer::Expression_Computer<DataType>::test_trace_substraction()" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  IndexRange test_range(4, 2, 0, 4);
+  vector<IndexRange> test_range_vec4 = { test_range, test_range, test_range, test_range };
+  vector<IndexRange> test_range_vec2 = { test_range, test_range };
+
+  auto test_tens4 = make_shared<Tensor_<DataType>>( test_range_vec4 ) ;  
+  test_tens4->allocate();
+
+  auto test_tens2 = make_shared<Tensor_<DataType>>( test_range_vec2 ) ;  
+  test_tens2->allocate();
+ 
+
+  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens4, 4.0);
+  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens2, 2.0);
+  
+  cout << endl << endl;
+  Print_Tensor( test_tens4, "test_tens4" ); cout << endl << endl; 
+  Print_Tensor( test_tens2, "test_tens2" ); cout << endl << endl;
+   
+  vector<int> id_pos = { 1, 2 };  
+  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( test_tens4, test_tens2, id_pos, -1.0 ); 
+
+  Print_Tensor( test_tens4, "test_tens4" ); cout << endl << endl; 
+  return;
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Expression_Computer::Expression_Computer<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
