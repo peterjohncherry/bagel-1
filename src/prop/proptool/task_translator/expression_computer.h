@@ -24,6 +24,8 @@ class Expression_Computer {
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
     std::shared_ptr<MOInt_Computer<DataType>> moint_computer_;
 
+    std::shared_ptr<TensOp_Computer::TensOp_Computer<DataType>> tensop_machine_;
+                                                                                 
   public:
    
     std::shared_ptr<std::map< std::string, DataType>> scalar_results_map;

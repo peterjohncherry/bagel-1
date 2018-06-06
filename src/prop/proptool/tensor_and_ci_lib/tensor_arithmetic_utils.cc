@@ -754,3 +754,154 @@ vector<IndexRange> Tensor_Arithmetic_Utils::get_indexrange_from_dimension_vector
 
   return index_ranges;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
+void Tensor_Arithmetic_Utils::print_tensor_with_indexes( shared_ptr<Tensor_<double>> Tens, string name  ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "---------------------------- " << name <<  " ----------------------------" << endl;
+
+   vector<IndexRange> id_ranges = Tens->indexrange();
+  
+   if ( id_ranges.size() == 1 ) { 
+
+     assert( id_ranges[0].range(0).size() > 0 ); 
+
+     if ( name == "ID" || ( ( id_ranges[0].range().size() == 1 ) && ( id_ranges[0].range(0).size() == 1 ) ) ) { 
+       cout << "id_ranges[0].range(0).size() == 1  " << endl; 
+       unique_ptr<double[]> data = Tens->get_block( vector<Index> ( 1, id_ranges[0].range(0) ) );
+       cout << *data.get()  << endl;
+
+     } else { 
+
+         /// TODO add print vvector;
+
+     }
+
+   } else {
+
+     int  t_order =id_ranges.size();
+
+     vector<int> elem_pos_maxs( t_order );
+     {
+     vector<int>::iterator epm_it = elem_pos_maxs.begin();
+     for ( vector<IndexRange>::iterator ir_it = id_ranges.begin(); ir_it != id_ranges.end(); ir_it++, epm_it++  ) 
+       *epm_it = (ir_it->size())-1;
+     } 
+     vector<int> elem_pos_mins( t_order,0);  
+     vector<int> elem_pos( t_order,0);  
+      
+     vector<int> block_pos_maxs = get_range_lengths( id_ranges );
+     vector<int> block_pos_mins( t_order, 0);  
+     vector<int> block_pos(t_order, 0);  
+  
+      
+     do {
+      
+       vector<int> block_mins(t_order,0);     
+       vector<int> rel_elem_pos(t_order,0);     
+       
+       vector<Index> id_blocks = get_rng_blocks( block_pos, id_ranges );
+       assert(Tens->exists(id_blocks));
+      
+       vector<int> block_maxs(t_order);
+       { 
+       vector<Index>::iterator ib_it = id_blocks.begin();
+       for ( vector<int>::iterator bm_it = block_maxs.begin(); bm_it != block_maxs.end() ; bm_it++, ib_it++ )
+         *bm_it = (ib_it->size())-1;
+       }
+
+       unique_ptr<double[]> data_block = Tens->get_block( id_blocks );
+       double* ptr = data_block.get();
+       do {  
+         print_vector( elem_pos , "" );
+         cout << " : ";cout.flush(); cout << *ptr << endl;
+         ++ptr;
+         fvec_cycle_skipper ( elem_pos, elem_pos_maxs, elem_pos_mins);
+       } while( fvec_cycle_skipper(rel_elem_pos, block_maxs, block_mins) );
+     } while ( fvec_cycle_skipper( block_pos, block_pos_maxs, block_pos_mins ));
+   }  
+
+   return ;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
+void Tensor_Arithmetic_Utils::set_test_elems( shared_ptr<Tensor_<double>> Tens, string name  ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+cout << "Tensor_Arithmetic_Utils::get_test_elems" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   vector<IndexRange> id_ranges = Tens->indexrange();
+  
+   vector<double> factor_vec( id_ranges.size());
+   double exponent = 0.0;
+   for ( vector<double>::reverse_iterator fv_it = factor_vec.rbegin(); fv_it != factor_vec.rend(); fv_it++, exponent+=1.0 ) 
+     *fv_it = pow( 10.0, exponent ); 
+   
+   print_vector( factor_vec, "factor_vec"); cout << endl;
+
+   auto dot_vector = [&factor_vec]( vector<int>& elem_pos_vec ) { 
+                     double elem = 0.0;
+                     vector<int>::iterator epv_it = elem_pos_vec.begin(); 
+                     for ( vector<double>::iterator fv_it = factor_vec.begin(); fv_it != factor_vec.end(); fv_it++, epv_it++ )
+                       elem += (*fv_it) * (*epv_it);
+                     return elem;
+                     };
+ 
+   int t_order = id_ranges.size();
+
+   vector<int> elem_pos_maxs( t_order );
+   {
+   vector<int>::iterator epm_it = elem_pos_maxs.begin();
+   for ( vector<IndexRange>::iterator ir_it = id_ranges.begin(); ir_it != id_ranges.end(); ir_it++, epm_it++  ) 
+     *epm_it = (ir_it->size())-1;
+   } 
+   vector<int> elem_pos_mins( t_order,0);  
+   vector<int> elem_pos( t_order,0);  
+    
+   vector<int> block_pos_maxs = get_range_lengths( id_ranges );
+   vector<int> block_pos_mins( t_order, 0);  
+   vector<int> block_pos(t_order, 0);  
+    
+   do {
+    
+     vector<int> block_mins(t_order,0);     
+     vector<int> rel_elem_pos(t_order,0);     
+     
+     vector<Index> id_blocks = get_rng_blocks( block_pos, id_ranges );
+     assert(Tens->exists(id_blocks));
+    
+     vector<int> block_maxs(t_order);
+     { 
+     vector<Index>::iterator ib_it = id_blocks.begin();
+     for ( vector<int>::iterator bm_it = block_maxs.begin(); bm_it != block_maxs.end() ; bm_it++, ib_it++ )
+       *bm_it = (ib_it->size())-1;
+     }
+
+     unique_ptr<double[]> data_block = Tens->get_block( id_blocks );
+     double* ptr = data_block.get();
+     do {  
+       print_vector(elem_pos   , "elem_pos"); cout << endl; 
+       print_vector(factor_vec , "factor_vec");  cout << endl;
+       *ptr = dot_vector( elem_pos );
+       ++ptr;
+       fvec_cycle_skipper ( elem_pos, elem_pos_maxs, elem_pos_mins );
+     } while( fvec_cycle_skipper(rel_elem_pos, block_maxs, block_mins) );
+     Tens->put_block( data_block, id_blocks);
+   } while ( fvec_cycle_skipper( block_pos, block_pos_maxs, block_pos_mins ));
+
+   return ;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
+void Tensor_Arithmetic_Utils::set_test_elems( shared_ptr<Tensor_<complex<double>>> Tens, string name  ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+cout << "Tensor_Arithmetic_Utils::get_test_tensor" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  throw logic_error ( "cannot set complex test tensor" ); 
+  return;
+}  

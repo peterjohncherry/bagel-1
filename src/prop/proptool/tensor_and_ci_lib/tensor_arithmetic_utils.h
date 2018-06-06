@@ -88,6 +88,21 @@ namespace Tensor_Arithmetic_Utils {
      std::shared_ptr<SMITH::Tensor_<std::complex<double>>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> Tens_in,  std::vector<std::string>& range_names,
                                                       std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::IndexRange> >> range_conversion_map );
 
+
+     template<typename DataType>     
+     void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<DataType>> tens, std::string name  );
+     template<>
+     void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<double>> tens, std::string name  );
+//     template<>
+//     void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> tens, std::string name  ) { throw std::logic_error( " not printing for complex tensors!"); }
+
+      template<typename DataType>     
+      void set_test_elems( std::shared_ptr<SMITH::Tensor_<DataType>> Tens, std::string name  );
+      template<>
+      void set_test_elems( std::shared_ptr<SMITH::Tensor_<double>> Tens, std::string name  );
+      template<>
+      void set_test_elems( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> Tens, std::string name  );
+
      //Small, so define these in the header
      template<class vtype>
      std::shared_ptr<std::vector<vtype>> inverse_reorder_vector(std::shared_ptr<std::vector<int>> neworder , std::shared_ptr<std::vector<vtype>> origvec ) {

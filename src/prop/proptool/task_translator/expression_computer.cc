@@ -63,10 +63,10 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
 cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_deriv : " << expression->name() << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
+  tensop_machine_ = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
                                                                                  moint_computer_ );
  
-  TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
+  tensop_machine_->get_tensor_data_blocks( expression->required_blocks_ );
 
   // define seperate generic name for each of the required blocks in the target tensor.
   // Copy the results from the contractions into these places in the data map.
@@ -79,7 +79,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
     auto target_block_data_loc = tensor_results_map_->find( target_block_name ); 
     if ( target_block_data_loc == tensor_results_map_->end() ) {
       shared_ptr<vector<string>> target_block_ranges = expression->CTP_map_->at(target_block_name)->full_id_ranges();
-      target_block_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( target_block_ranges )));
+      target_block_data = make_shared<Tensor_<DataType>>( *(tensop_machine_->Get_Bagel_IndexRanges( target_block_ranges )));
       target_block_data->allocate();
       target_block_data->zero(); 
       tensor_results_map_->emplace( target_block_name, target_block_data );
@@ -105,7 +105,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
 
           shared_ptr<Tensor_<DataType>> post_a_gamma_contraction_data;
           if ( a_intermediate_info->post_gamma_contraction_ranges()->size() > 0 ) {
-            post_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( a_intermediate_info->post_gamma_contraction_ranges() )));
+            post_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(tensop_machine_->Get_Bagel_IndexRanges( a_intermediate_info->post_gamma_contraction_ranges() )));
             post_a_gamma_contraction_data->allocate();
             post_a_gamma_contraction_data->zero(); 
           } else {
@@ -140,7 +140,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
                 for ( vector<string>::iterator pagcr_it = pagc_ranges->begin(); pagcr_it != pagc_ranges->end() ; pagcr_it++, aio_it++ )
                   *pagcr_it = buff->at( *aio_it ) ;
                
-                pre_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(TensOp_Machine->Get_Bagel_IndexRanges( pagc_ranges ) ) );
+                pre_a_gamma_contraction_data = make_shared<Tensor_<DataType>>( *(tensop_machine_->Get_Bagel_IndexRanges( pagc_ranges ) ) );
                 pre_a_gamma_contraction_data->allocate();
                 pre_a_gamma_contraction_data->zero(); 
               }
@@ -148,10 +148,10 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
               if (check_AContrib_factors(*a_contrib))
                 continue;
 
-              TensOp_Machine->Calculate_CTP( *a_contrib );
+              tensop_machine_->Calculate_CTP( *a_contrib );
 
               for ( int qq = 0 ; qq != a_contrib->id_orders().size(); qq++){
-                shared_ptr<Tensor_<DataType>> a_contrib_reordered = TensOp_Machine->reorder_block_Tensor( a_contrib_name, a_contrib->id_order(qq));
+                shared_ptr<Tensor_<DataType>> a_contrib_reordered = tensop_machine_->reorder_block_Tensor( a_contrib_name, a_contrib->id_order(qq));
                 pre_a_gamma_contraction_data->ax_plus_y( (DataType)(a_contrib->factor(qq).first), a_contrib_reordered );
               }
 
@@ -218,10 +218,10 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
   if ( !new_result )  
     cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
 
-  auto TensOp_Machine = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
-                                                                                 moint_computer_ );
+  tensop_machine_ = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
+                                                                             moint_computer_ );
  
-  TensOp_Machine->get_tensor_data_blocks( expression->required_blocks_ );
+  tensop_machine_->get_tensor_data_blocks( expression->required_blocks_ );
 
   DataType result = 0.0;
   map< string, DataType > g_result_map;
@@ -231,7 +231,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 
     string gamma_name = AG_contrib.first; 
     
-    TensOp_Machine->build_tensor( "a_combined_data" , *(expression->gamma_info_map_->at(gamma_name)->id_ranges()) ); 
+    tensop_machine_->build_tensor( "a_combined_data" , *(expression->gamma_info_map_->at(gamma_name)->id_ranges()) ); 
     shared_ptr<Tensor_<DataType>> A_combined_data = tensop_data_map_->at("a_combined_data");
 
     // Loop through A-tensors needed for this gamma
@@ -246,9 +246,9 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
           continue;
       
 	print_AContraction_list( expression->ACompute_map_->at(A_contrib_name), A_contrib_name );
-        TensOp_Machine->Calculate_CTP( *A_contrib );
+        tensop_machine_->Calculate_CTP( *A_contrib );
            
-        TensOp_Machine->sum_different_orderings( "a_combined_data" , A_contrib_name, A_contrib->factors(), A_contrib->id_orders() );
+        tensop_machine_->sum_different_orderings( "a_combined_data" , A_contrib_name, A_contrib->factors(), A_contrib->id_orders() );
   
         cout << "added " << A_contrib_name << endl; 
         cout << "=========================================================================================================" << endl << endl;
@@ -392,30 +392,27 @@ void Expression_Computer::Expression_Computer<DataType>::test_trace_subtraction(
 cout << "Expression_Computer::Expression_Computer<DataType>::test_trace_substraction()" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  IndexRange test_range(4, 2, 0, 4);
-  vector<IndexRange> test_range_vec4 = { test_range, test_range, test_range, test_range };
-  vector<IndexRange> test_range_vec2 = { test_range, test_range };
 
-  auto test_tens4 = make_shared<Tensor_<DataType>>( test_range_vec4 ) ;  
-  test_tens4->allocate();
+  vector<size_t> test_range2 = { 4, 4 };
+  vector<size_t> max_blocks2 = { 2, 2 }; 
+  tensop_machine_->build_test_tensor( "test_tens2", test_range2, max_blocks2 );
+  shared_ptr<Tensor_<double>> test_tens2 = tensop_data_map_->at("test_tens2");
+  print_tensor_with_indexes( test_tens2, "test_tens2" ); cout << endl << endl; 
 
-  auto test_tens2 = make_shared<Tensor_<DataType>>( test_range_vec2 ) ;  
-  test_tens2->allocate();
- 
-
-  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens4, 4.0);
-  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens2, 2.0);
-  
-  cout << endl << endl;
-  Print_Tensor( test_tens4, "test_tens4" ); cout << endl << endl; 
-  Print_Tensor( test_tens2, "test_tens2" ); cout << endl << endl;
+  vector<size_t> test_range4 = { 4, 4, 4, 4 };
+  vector<size_t> max_blocks4 = { 2, 2, 2, 2 }; 
+  tensop_machine_->build_test_tensor( "test_tens4_new", test_range4, max_blocks4 );
+  shared_ptr<Tensor_<double>> test_tens4 = tensop_data_map_->at("test_tens4_new");
+//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens4, 0.0);
+  print_tensor_with_indexes( test_tens4, "test_tens4_new" ); cout << endl << endl; 
    
-  vector<int> id_pos = { 1, 2 };  
+  vector<int> id_pos = { 0, 1 };
   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( test_tens4, test_tens2, id_pos, -1.0 ); 
+  print_tensor_with_indexes( test_tens4, "test_tens4_minus"  );
 
-  Print_Tensor( test_tens4, "test_tens4" ); cout << endl << endl; 
   return;
 }
+//Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens4, 0.0);
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Expression_Computer::Expression_Computer<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

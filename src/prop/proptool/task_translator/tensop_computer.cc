@@ -90,13 +90,7 @@ cout << "summand_name = " << summand_name << endl;
   for ( vector<pair<double,double>>::iterator sr_it = summand_factors.begin() ; sr_it != summand_factors.end() ; sr_it++ , sfr_it++ )
     *sfr_it = (DataType)(sr_it->first); 
 
-  print_vector( summand_factors_re, "summand_factors_re" ); cout << endl;
-
-  cout << "target->norm() = " << target->norm() << endl;
-  cout << "summand->norm() = " << summand_orig_order->norm() << endl;
   Tensor_Calc_->add_list_of_reordered_tensors( target, summand_orig_order, summand_reorderings, summand_factors_re );
-  cout << "target->norm() = " << target->norm() << endl;
-  cout << "summand->norm() = " << summand_orig_order->norm() << endl;
 
   return; 
 }
@@ -566,7 +560,13 @@ cout << "TensOp_Computer::TensOp_Computer::build_test_tensor : " << test_tensor_
   for ( int ii = 0 ; ii != dimensions.size(); ii++ ) 
     index_ranges[ii] = SMITH::IndexRange(dimensions[ii], max_block_sizes[ii] ); 
 
-  tensop_data_map_->emplace( test_tensor_name, Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_row_major( index_ranges )) ;
+  shared_ptr<Tensor_<DataType>> test_tens = make_shared<Tensor_<DataType>>( index_ranges );
+  test_tens->allocate();
+
+  print_vector( max_block_sizes, "max_block_sizes"); cout.flush();   print_vector( dimensions, "   dimensions"); cout << endl;
+  set_test_elems( test_tens, test_tensor_name  );
+
+  tensop_data_map_->emplace( test_tensor_name, test_tens );
 
   return;
 }
