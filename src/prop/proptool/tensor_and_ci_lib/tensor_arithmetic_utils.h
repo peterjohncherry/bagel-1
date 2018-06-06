@@ -9,6 +9,11 @@ namespace bagel {
 
 namespace Tensor_Arithmetic_Utils {  
 
+     std::vector<size_t> get_strides( const std::vector<SMITH::Index>& block );
+
+     std::pair<std::vector<std::vector<size_t>>,std::vector<std::vector<size_t>>>
+     get_block_start_ends( const std::vector<SMITH::IndexRange>& ranges );
+
      double sum_elems( std::unique_ptr<double[]>& some_data, size_t length );
      std::complex<double> sum_elems( std::unique_ptr<std::complex<double>[]>& some_data, size_t length );
      double sum_elem_norms( std::unique_ptr<double[]>& some_data, size_t length );

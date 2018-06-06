@@ -7,7 +7,22 @@ using namespace bagel;
 using namespace bagel::SMITH;
 using namespace WickUtils;
 using namespace Debugging_Utils;
-   
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+vector<size_t> Tensor_Arithmetic_Utils::get_strides( const std::vector<Index>& block ) { 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+cout << "Tensor_Arithemetic_Utils::get_strides" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  vector<size_t> stride_vec( block.size() );
+  stride_vec.back() = 1 ;
+  vector<Index>::const_reverse_iterator b_it = block.crbegin();
+  for( vector<size_t>::reverse_iterator sv_it = stride_vec.rbegin()+1; sv_it != stride_vec.rend(); sv_it++ , b_it++ )
+    *sv_it = ( *(sv_it -1)) * b_it->size();
+
+  return stride_vec;
+} 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 double Tensor_Arithmetic_Utils::sum_elems( unique_ptr<double[]>& some_data, size_t length  ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -646,6 +661,33 @@ Tensor_Arithmetic_Utils::get_block_start( shared_ptr<vector<IndexRange>> id_rang
   return make_shared<vector<pair<size_t,size_t>>>(block_start_end);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+pair<vector<vector<size_t>>,vector<vector<size_t>>> Tensor_Arithmetic_Utils::get_block_start_ends( const vector<IndexRange>& ranges ) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+ cout << "Tensor_Arithmetic_Utils::get_block_start_ends" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  vector<vector<size_t>> block_starts(ranges.size());
+  vector<vector<size_t>> block_ends(ranges.size());
+   
+  for ( int  ii = 0 ; ii != ranges.size() ; ii++ ) { 
+    vector<Index> blocks = ranges[ii].range();
+    vector<size_t> cml_sizes(blocks.size()); 
+    cml_sizes[0] = blocks.front().size();
+    for ( int  jj = 1 ; jj != blocks.size(); jj++ ) { 
+      cml_sizes[jj] = cml_sizes[jj-1]+blocks[jj].size(); 
+    }    
+    vector<size_t> tmp_starts(cml_sizes.size());
+    tmp_starts.front() = 0;
+    if ( block_ends.size() > 1 )
+      copy(cml_sizes.begin(), (cml_sizes.end()-1), tmp_starts.begin()+1) ;
+    block_ends[ii] =  cml_sizes;
+    block_starts[ii] = tmp_starts;
+  }
+  
+  return make_pair( block_starts, block_ends ); 
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets( const vector<IndexRange>&  ranges ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
@@ -836,6 +878,14 @@ cout << "Tensor_Arithmetic_Utils::get_test_elems" << endl;
 
    vector<IndexRange> id_ranges = Tens->indexrange();
   
+   vector<vector<size_t>> block_starts;
+   vector<vector<size_t>> block_ends;
+   {
+     pair<vector<vector<size_t>>,vector<vector<size_t>>> block_start_ends =  get_block_start_ends( id_ranges );
+     block_starts = block_start_ends.first;
+     block_ends = block_start_ends.second;
+   }
+
    vector<double> factor_vec( id_ranges.size());
    double exponent = 0.0;
    for ( vector<double>::reverse_iterator fv_it = factor_vec.rbegin(); fv_it != factor_vec.rend(); fv_it++, exponent+=1.0 ) 
@@ -883,9 +933,10 @@ cout << "Tensor_Arithmetic_Utils::get_test_elems" << endl;
 
      unique_ptr<double[]> data_block = Tens->get_block( id_blocks );
      double* ptr = data_block.get();
+     print_vector(block_pos, "block_pos"); cout << endl;
      do {  
-       print_vector(elem_pos   , "elem_pos"); cout << endl; 
-       print_vector(factor_vec , "factor_vec");  cout << endl;
+       print_vector(rel_elem_pos, "rel_elem_pos"); cout.flush();
+       print_vector(elem_pos   , "   elem_pos"); cout << endl; 
        *ptr = dot_vector( elem_pos );
        ++ptr;
        fvec_cycle_skipper ( elem_pos, elem_pos_maxs, elem_pos_mins );
@@ -905,3 +956,4 @@ cout << "Tensor_Arithmetic_Utils::get_test_tensor" << endl;
   throw logic_error ( "cannot set complex test tensor" ); 
   return;
 }  
+

@@ -214,6 +214,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 
   string expression_name = expression->name();
 
+
   bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
   if ( !new_result )  
     cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
@@ -221,6 +222,11 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
   tensop_machine_ = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
                                                                              moint_computer_ );
  
+  test_trace_subtraction();
+  //TEST
+  throw logic_error("die here for testing");
+  //ENDTEST
+
   tensop_machine_->get_tensor_data_blocks( expression->required_blocks_ );
 
   DataType result = 0.0;
@@ -395,21 +401,47 @@ cout << "Expression_Computer::Expression_Computer<DataType>::test_trace_substrac
 
   vector<size_t> test_range2 = { 4, 4 };
   vector<size_t> max_blocks2 = { 2, 2 }; 
+  //vector<size_t> max_blocks2 = { 4, 4 }; 
   tensop_machine_->build_test_tensor( "test_tens2", test_range2, max_blocks2 );
   shared_ptr<Tensor_<double>> test_tens2 = tensop_data_map_->at("test_tens2");
+//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens2, 1.0);
   print_tensor_with_indexes( test_tens2, "test_tens2" ); cout << endl << endl; 
 
   vector<size_t> test_range4 = { 4, 4, 4, 4 };
+//  vector<size_t> max_blocks4 = { 4, 4, 4, 4 };
   vector<size_t> max_blocks4 = { 2, 2, 2, 2 }; 
   tensop_machine_->build_test_tensor( "test_tens4_new", test_range4, max_blocks4 );
   shared_ptr<Tensor_<double>> test_tens4 = tensop_data_map_->at("test_tens4_new");
-//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens4, 0.0);
   print_tensor_with_indexes( test_tens4, "test_tens4_new" ); cout << endl << endl; 
+  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens4, 0.0);
    
   vector<int> id_pos = { 0, 1 };
   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( test_tens4, test_tens2, id_pos, -1.0 ); 
   print_tensor_with_indexes( test_tens4, "test_tens4_minus"  );
 
+//  {
+//    unique_ptr<DataType[]> test = t_target->get_block(target_block_ranges);
+//    auto test_ptr = test.get();
+//    cout << "-----test 1 -------" << endl;
+//    for (int jj = 0 ; jj != target_block_size ; jj++, test_ptr++ ) { 
+//       cout << *test_ptr << endl;
+//    }
+//    cout << endl << endl;
+//    auto reordered_data = reorder_tensor_data( test.get(), target_reordering, target_block_ranges );
+//    test_ptr = reordered_data.get();
+//    cout << "-----test 2 -------" << endl;
+//    for (int jj = 0 ; jj != target_block_size ; jj++, test_ptr++ ) { 
+//       cout << *test_ptr << endl;
+//    }
+//    cout << endl << endl;
+//    auto reordered_data2 = reorder_tensor_data( reordered_data.get(), target_reordering_inverse, target_block_ranges );
+//    test_ptr = reordered_data2.get();
+//    cout << "-----test 3 -------" << endl;
+//    for (int jj = 0 ; jj != target_block_size ; jj++, test_ptr++ ) { 
+//       cout << *test_ptr << endl;
+//    }
+//    cout << endl << endl;
+//  }
   return;
 }
 //Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens4, 0.0);

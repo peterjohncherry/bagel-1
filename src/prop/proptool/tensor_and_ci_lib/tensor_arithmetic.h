@@ -143,6 +143,7 @@ class Tensor_Arithmetic {
      static void
      ax_plus_y( int array_length, DataType factor,  DataType* target_ptr, DataType* summand_ptr );
 
+
 }; 
  
 template<> void Tensor_Arithmetic<double>::gemm ( char op1, char op2, int size_i, int size_l, int size_j, 

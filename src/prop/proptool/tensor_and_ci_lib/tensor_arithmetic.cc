@@ -3,6 +3,12 @@
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 #include <src/util/f77.h>
 #include <src/prop/proptool/debugging_utils.h>
+
+#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
+#ifdef  __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_debug.h>
+#endif
+
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
@@ -11,29 +17,15 @@ using namespace bagel::Tensor_Arithmetic_Utils;
 using namespace WickUtils;
 using namespace Debugging_Utils;
 
-#define __DEBUG_TENSOR_ARITHMETIC
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensors( shared_ptr<Tensor_<DataType>> tens_target,
                                                                   shared_ptr<Tensor_<DataType>> tens_summand,
                                                                   DataType factor                             ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::add_tensors" <<endl;  
-
-vector<IndexRange> summand_ranges = tens_summand->indexrange();
-vector<IndexRange> target_ranges = tens_target->indexrange();
-
-assert ( summand_ranges.size() == target_ranges.size() );
-
-for ( int ii = 0 ; ii != summand_ranges.size(); ii++ ) {  
-  if ( target_ranges[ii].size() != summand_ranges[ii].size() ) { 
-    cout << "Ranges of summand and target and not the same : " << endl; 
-    print_sizes( target_ranges,  "tens_target_sizes" ); cout << endl;
-    print_sizes( summand_ranges, "tens_summand_sizes" ); cout << endl;
-    throw logic_error( "Aborting!" ); 
-  }
-}
+Tensor_Arithmetic_Debugger::check_ranges(tens_target, tens_summand);
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   tens_target->ax_plus_y ( factor, tens_summand ) ;
@@ -53,7 +45,7 @@ void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_list_of_reordered_tenso
                                                                                     vector<vector<int>>& summand_reorderings,
                                                                                     vector<DataType>& summand_factors                      ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;  
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -115,7 +107,7 @@ cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
 template<class DataType>
 DataType Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_tensor_elems( shared_ptr<Tensor_<DataType>> Tens_in) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithemetic_Utils::sum_tensor_elems" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -145,11 +137,9 @@ template<class DataType>
 DataType
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__number_return( shared_ptr<Tensor_<DataType>> Tens_in ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::trace_tensor__number_return" << endl;
-  assert ( Tens_in->indexrange().size() > 0 );
-  for ( int ii =1 ; ii != Tens_in->indexrange().size(); ii++ ) 
-    assert( Tens_in->indexrange()[ii].size() == Tens_in->indexrange()[ii-1].size() ) ; 
+Tensor_Arithmetic_Debugger::check_all_same_ranges( Tens_in);
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<IndexRange> id_ranges = Tens_in->indexrange();
@@ -170,7 +160,6 @@ cout << "Tensor_Arithmetic::trace_tensor__number_return" << endl;
 
   return Tens_trace;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Full takes the trace of the tensor, i.e. sets all indexes equal. Use different routine as reordering of indexes is not necessary here.
 // Returns Tensor
@@ -179,7 +168,7 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__tensor_return( shared_ptr<Tensor_<DataType>> Tens_in ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::trace_tensor__tensor_return" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   assert ( Tens_in->indexrange().size() > 1 );
@@ -228,23 +217,9 @@ void
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( shared_ptr<Tensor_<DataType>> t_target, shared_ptr<Tensor_<DataType>> t_summand,
                                                                         vector<int>& summand_pos,  DataType factor ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
-cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(summand_pos , "   summand_pos"); cout << endl;
-{
-  vector<IndexRange> t_target_ranges_tmp  = t_target->indexrange();
-  vector<IndexRange> t_summand_ranges_tmp = t_summand->indexrange();
-  {
-  vector<int>::iterator sp_it = summand_pos.begin();
-  for (vector<IndexRange>::iterator tsr_it = t_summand_ranges_tmp.begin(); tsr_it != t_summand_ranges_tmp.end(); tsr_it++, sp_it++  )
-    if  ( tsr_it->size() != t_target_ranges_tmp[*sp_it].size() ){
-      cout << "t_summand range_block->size() = " << tsr_it->size() << " != " << t_target_ranges_tmp[*sp_it].size() << "  t_target_ranges[" << *sp_it <<"].size() "<< endl; 
-      print_vector( summand_pos, "summand_pos") ; cout << endl;
-      print_sizes( t_target->indexrange(), "t_target_ranges_tmp" ); cout << endl;
-      print_sizes( t_summand->indexrange(), "t_summand_ranges_tmp" ); cout << endl;
-      throw logic_error( "mismatched index range sizes in add_tensor_along_trace ! Aborting ! " ); 
-    } 
-  }
-}
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
+cout << "Tensor_Arithmetic::add_tensor_along_trace"  << endl;
+Tensor_Arithmetic_Debugger::add_tensor_along_trace_debug( t_target, t_summand, summand_pos, factor );
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<IndexRange> t_target_ranges  = t_target->indexrange();
@@ -284,6 +259,7 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
   print_vector( target_reordering ,         " target_reordering        "); cout <<endl;
   print_vector( target_reordering_inverse , " target_reordering_inverse"); cout <<endl;
 
+  size_t num_traced_index_blocks = target_maxs[target_reordering.front()];
 
   do {
   
@@ -291,7 +267,7 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
     unique_ptr<DataType[]> summand_block_data  = t_summand->get_block(summand_block_ranges);
     size_t summand_block_size  = t_summand->get_size( summand_block_ranges );    
 
-    for ( int ii = 0; ii != target_maxs.front()+1; ii++ ) {
+    for ( int ii = 0; ii != num_traced_index_blocks+1; ii++ ) {
       vector<int> target_block_pos(target_maxs.size());
       {
         vector<bool>::iterator t_it = traced.begin();
@@ -299,14 +275,15 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
         int rr = 0;
         for ( vector<int>::iterator tbp_it = target_block_pos.begin(); tbp_it != target_block_pos.end(); tbp_it++, qq++, t_it++ ){
           if (*t_it){
+           *tbp_it = ii;
+          } else {
            *tbp_it = summand_block_pos[rr];
             rr++;
-          } else {
-           *tbp_it = ii;
           }
         }
       }
       print_vector( target_block_pos , " target_block_pos"); cout <<endl;
+      print_vector( summand_block_pos , " summand_block_pos"); cout <<endl;
 
       vector<Index> target_block_ranges = get_rng_blocks( target_block_pos, t_target_ranges );
       vector<Index> target_block_ranges_reordered(num_ids);
@@ -315,45 +292,18 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
       for ( vector<int>::iterator tbr_it =  target_reordering.begin(); tbr_it != target_reordering.end(); tbr_it++ , tbrr_it++ )
         *tbrr_it = target_block_ranges[*tbr_it];
       };
+
       size_t stride = 0;
       {
-        vector<size_t> stride_vec( target_block_ranges.size() );
-        stride_vec.back() = 1 ;
-        vector<Index>::reverse_iterator tbrr_it = target_block_ranges_reordered.rbegin();
-        for( vector<size_t>::reverse_iterator sv_it = stride_vec.rbegin()+1; sv_it != stride_vec.rend(); sv_it++ , tbrr_it++ )
-          *sv_it = ( *(sv_it -1)) * tbrr_it->size();
+      vector<size_t> stride_vec = get_strides( target_block_ranges_reordered );
+      for ( int qq = 0 ; qq != (stride_vec.size() - summand_pos.size()) ; qq++ )
+        stride += stride_vec[qq];
 
-        for ( int qq = 0 ; qq != (stride_vec.size() - summand_pos.size()) ; qq++ )
-          stride += stride_vec[qq];
-
-        print_vector(stride_vec, "stride_vec"); cout << endl;
-      }
+      print_vector(stride_vec, "stride_vec"); cout << endl;
       cout << "stride = "<< stride << endl;
+      }
 
       auto target_block_size = t_target->get_size(target_block_ranges);
-      {
-        unique_ptr<DataType[]> test = t_target->get_block(target_block_ranges);
-        auto test_ptr = test.get();
-        cout << "-----test 1 -------" << endl;
-        for (int jj = 0 ; jj != target_block_size ; jj++, test_ptr++ ) { 
-           cout << *test_ptr << endl;
-        }
-        cout << endl << endl;
-        auto reordered_data = reorder_tensor_data( test.get(), target_reordering, target_block_ranges );
-        test_ptr = reordered_data.get();
-        cout << "-----test 2 -------" << endl;
-        for (int jj = 0 ; jj != target_block_size ; jj++, test_ptr++ ) { 
-           cout << *test_ptr << endl;
-        }
-        cout << endl << endl;
-        auto reordered_data2 = reorder_tensor_data( reordered_data.get(), target_reordering_inverse, target_block_ranges );
-        test_ptr = reordered_data2.get();
-        cout << "-----test 3 -------" << endl;
-        for (int jj = 0 ; jj != target_block_size ; jj++, test_ptr++ ) { 
-           cout << *test_ptr << endl;
-        }
-        cout << endl << endl;
-      }
       unique_ptr<DataType[]> target_block_data = t_target->get_block(target_block_ranges);
       unique_ptr<DataType[]> target_block_data_new = reorder_tensor_data( target_block_data.get(), target_reordering_inverse, target_block_ranges );
       {
@@ -370,7 +320,7 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"; cout.flush(); print_vector(
 
   } while( fvec_cycle_skipper(summand_block_pos, summand_maxs, summand_mins) );
 
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
   cout << "TA:atat END t_target->norm()  = " << t_target->norm() << endl;  cout << "TA:atat END t_summand->norm() = " << t_summand->norm() << endl;  
 #endif 
   return;
@@ -384,7 +334,7 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_over_idxs( shared_ptr<Tensor_<DataType>> Tens_in, vector<int>& summed_idxs_pos) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::sum_over_idxs" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   assert ( Tens_in->indexrange().size() > 0 );
@@ -481,22 +431,9 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_ptr<Tensor_<DataType>> Tens_in,  vector<int>& ctrs_pos) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::contract_on_same_tensor" << endl;
-print_vector( ctrs_pos, "ctr_pos");cout << endl; 
-print_sizes( Tens_in->indexrange() , "Tens_in->indexrange()" ) ;cout << endl;
-{ 
-  vector<IndexRange> id_ranges_in_tmp = Tens_in->indexrange();
-  for ( int ii =1 ; ii != ctrs_pos.size(); ii++ ) {
-    cout << id_ranges_in_tmp[ctrs_pos[ii]].size() << " " ;
-    if( id_ranges_in_tmp[ctrs_pos[ii]].size() != id_ranges_in_tmp[ctrs_pos[ii-1]].size() ){
-      cout << " trying to contract two index blocks of unequal lengths : " << endl;
-      cout << " index at position  " <<  ctrs_pos[ii] << " has length " <<  id_ranges_in_tmp[ctrs_pos[ii]].size()  << endl; 
-      cout << " index at position  " <<  ctrs_pos[ii-1] << " has length " <<  id_ranges_in_tmp[ctrs_pos[ii-1]].size() << endl;
-      throw logic_error( "Aborting" ) ;
-    } 
-  } 
-}
+Tensor_Arithmetic_Debugger::contract_on_same_tensor_debug( Tens_in, ctrs_pos);
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   assert ( Tens_in->indexrange().size() > 0 );
 
@@ -595,7 +532,7 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_ptr<Tensor_<DataType>> Tens_in,  pair<int,int> ctrs_pair) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::contract_on_same_tensor , pair " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    vector<int> ctrs_pos = { ctrs_pair.first, ctrs_pair.second };
@@ -610,7 +547,7 @@ template<class DataType>
 DataType Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_vectors( shared_ptr<Tensor_<DataType>> Tens1_in,
                                                                            shared_ptr<Tensor_<DataType>> Tens2_in ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::contract_vectors" <<endl; 
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -645,7 +582,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_tensor_with_vector( sha
                                                                              shared_ptr<Tensor_<DataType>> VecIn,
                                                                              int ctr_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl; 
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -729,7 +666,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( shar
                                                                             shared_ptr<Tensor_<DataType>> Tens2_in,
                                                                             pair<int,int> ctr_todo){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl; 
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -820,23 +757,9 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( shar
                                                                             shared_ptr<Tensor_<DataType>> Tens2_in,
                                                                             pair< vector<int>, vector<int> >& ctrs_todo){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::contract_different_tensors" <<endl;
-  {   
-    if (  ctrs_todo.first.size() !=  ctrs_todo.second.size() ) {
-     cout << "  ctrs_todo.first.size() = " <<  ctrs_todo.first.size() << " != " <<  ctrs_todo.second.size() << " = ctrs_todo.second.size() " << endl;
-     throw logic_error( "different number of contracted indexes on each tensor! Aborting! "); 
-    } 
-    vector<IndexRange> T1_org_rngs_tmp = Tens1_in->indexrange();
-    vector<IndexRange> T2_org_rngs_tmp = Tens2_in->indexrange();
-    for ( int ii = 0 ; ii != ctrs_todo.first.size(); ii++ ) {
-      if (T1_org_rngs_tmp[ctrs_todo.first[ii]].size() !=  T2_org_rngs_tmp[ctrs_todo.second[ii]].size() ){
-       cout << " ctr1_size = " << T1_org_rngs_tmp[ctrs_todo.first[ii]].size();  cout.flush(); cout << " ctr1_pos = " << ctrs_todo.first[ii]  << endl;
-       cout << " ctr2_size = " << T2_org_rngs_tmp[ctrs_todo.second[ii]].size(); cout.flush(); cout << " ctr2_pos = " << ctrs_todo.second[ii] << endl;
-       throw logic_error("Extents of ranges to be contracted do not match!! Aborting");
-      }
-    }
-  }
+Tensor_Arithmetic_Debugger::contract_different_tensors_debug( Tens1_in, Tens2_in, ctrs_todo );
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
@@ -935,7 +858,7 @@ cout << "Tensor_Arithmetic::contract_different_tensors" <<endl;
 template<class DataType>
 void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems(shared_ptr<Tensor_<DataType>> Tens, DataType elem_val  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::set_tensor_elems all " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -962,13 +885,9 @@ template<class DataType>
 void
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::divide_tensors_in_place( shared_ptr<Tensor_<DataType>> T1, shared_ptr<Tensor_<DataType>> T2 ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
-cout << "Tensor_Arithmetic<DataType>::divide_tensors " << endl;
- if ( T1->indexrange() != T2->indexrange()) {
-   Debugging_Utils::print_sizes( T1->indexrange() , "T1->indexrange()"); cout << endl;
-   Debugging_Utils::print_sizes( T2->indexrange() , "T2->indexrange()"); cout << endl;
-   throw logic_error( "Trying to do elementwise division of two arrays with different dimensions!! Aborting" ); 
- }
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
+cout << "Tensor_Arithmetic<DataType>::divide_tensors_in_place" << endl;
+Tensor_Arithmetic_Debugger::check_ranges( T1, T2 );
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
    vector<IndexRange> id_ranges = T1->indexrange();
@@ -1005,10 +924,10 @@ template<class DataType>
 shared_ptr<SMITH::Tensor_<DataType>> 
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::divide_tensors( shared_ptr<Tensor_<DataType>> T1, shared_ptr<Tensor_<DataType>> T2 ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic<DataType>::divide_tensors " << endl;
+Tensor_Arithmetic_Debugger::check_ranges( T1, T2 );
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   assert (T1->indexrange() == T2->indexrange()); 
  
    vector<IndexRange> id_ranges = T1->indexrange();
 
@@ -1048,7 +967,7 @@ template<class DataType>
 void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( shared_ptr<Tensor_<DataType>> Tens, vector<IndexRange>& id_ranges,
                                                                        DataType elem_val  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::set_tensor_elems range_block_specific  " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -1066,14 +985,13 @@ cout << "Tensor_Arithmetic::set_tensor_elems range_block_specific  " << endl;
 
    return;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Copies the data of Tens_sub into the appropriate block of Tens_main
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( shared_ptr<Tensor_<DataType>> Tens_sub, shared_ptr<Tensor_<DataType>> Tens_main ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::put_sub_tensor range_block_specific  " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -1099,7 +1017,7 @@ template<class DataType>
 void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_tensor_range_block( shared_ptr<Tensor_<DataType>> Tens1, shared_ptr<Tensor_<DataType>> Tens2,
                                                                              vector<IndexRange>& id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::put_sub_tensor range_block_specific  " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -1126,7 +1044,7 @@ void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_reordered_range_block( 
                                                                                 shared_ptr<Tensor_<DataType>> T2, vector<IndexRange>& id_ranges_T2,
                                                                                 shared_ptr<vector<int>> new_order ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::put_reordered_range_block range_block_specific  " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -1163,7 +1081,7 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( shared_ptr<Tensor_<DataType>> Tens_in, vector<int>& new_order ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic::reorder_block_Tensor " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1201,7 +1119,7 @@ unique_ptr<DataType[]>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data( const DataType* orig_data, vector<int>&  new_order_vec,
                                                                      vector<Index>& orig_index_blocks ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1244,7 +1162,7 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor(shared_ptr<vector<IndexRange>> T_id_ranges, DataType XX ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
    cout << "Tensor_Arithmetic::get_uniform_Tensor" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1285,7 +1203,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor(shared_ptr<ve
 template<class DataType>
 shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_row_major(const vector<IndexRange>& T_id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
    cout << "Tensor_Arithmetic::get_test_tensor_row_major" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1332,7 +1250,7 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
 template<class DataType>
 shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_column_major( const vector<IndexRange>& T_id_ranges ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE  
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE  
 cout << "Tensor_Arithmetic::get_test_tensor_column_major" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1399,7 +1317,7 @@ unique_ptr<DataType[]>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_block_of_data( DataType* data_ptr, shared_ptr<vector<IndexRange>> id_ranges, 
                                                                    shared_ptr<vector<int>> block_pos) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::get_block_of_data" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1452,7 +1370,7 @@ shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::direct_tensor_product( shared_ptr<Tensor_<DataType>> Tens1,
                                                                        shared_ptr<Tensor_<DataType>> Tens2  ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_
 cout << "Tensor_Arithmetic::direct_tensor_product" <<endl; 
 cout << " Tens1->rank() = "; cout.flush(); cout << Tens1->rank() ; cout.flush(); cout << " Tens1->size_alloc() = "; cout.flush(); cout << Tens1->size_alloc() << endl;
 cout << " Tens2->rank() = "; cout.flush(); cout << Tens2->rank() ; cout.flush(); cout << " Tens2->size_alloc() = "; cout.flush(); cout << Tens2->size_alloc() << endl;
@@ -1541,7 +1459,7 @@ template<class DataType>
 DataType
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_tensor_element( shared_ptr<Tensor_<DataType>> Tens, vector<int>& id_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic::get_tensor_element" ; cout.flush(); print_vector(id_pos, "id_pos"); cout << endl; 
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1577,7 +1495,7 @@ template<>
 void Tensor_Arithmetic::Tensor_Arithmetic<double>::gemm( char op1, char op2, int size_i, int size_l, int size_j, 
                                                          double* A_data, double* B_data, double* C_data, double alpha, double beta ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
   cout << "Tensor_Arithmetic<double>::gemm_interface( shared_ptr<Tensor_<double>> Tens, vector<int>& id_pos)" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1593,7 +1511,7 @@ void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::gemm( char op1,
                                                                        std::complex<double>* C_data,
                                                                        std::complex<double> alpha, std::complex<double> beta ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
   cout << "Tensor_Arithmetic<std::complex<double>>::gemm_interface( shared_ptr<Tensor_<double>> Tens, vector<int>& id_pos)" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1607,7 +1525,7 @@ void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::gemm( char op1,
 template<>
 void Tensor_Arithmetic::Tensor_Arithmetic<double>::gemv( char op1, int size_i, int size_j, double* A_data, double* B_data, double* C_data, double alpha, double beta ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic<double>::gemv( shared_ptr<Tensor_<double>> Tens, vector<int>& id_pos)" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1624,7 +1542,7 @@ void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::gemv( char op1,
                                                                        std::complex<double>* B_data, std::complex<double>* C_data, 
                                                                        std::complex<double> alpha, std::complex<double> beta ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic<std::complex<double>>::gemv( shared_ptr<Tensor_<std::complex<double>>> Tens, vector<int>& id_pos)" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1637,7 +1555,7 @@ cout << "Tensor_Arithmetic<std::complex<double>>::gemv( shared_ptr<Tensor_<std::
 template<>
 void Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, double T2_data_ptr, double* Tout_data_ptr){  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, double* T2_data_ptr, double* Tout_data_ptr) " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1648,7 +1566,7 @@ cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size
 template<>
 void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::scaler( int T1_block_size, std::complex<double> T2_data_ptr, std::complex<double>* Tout_data_ptr){  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::scaler( int T1_block_size, complex<double>* T2_data_ptr, complex<double>* Tout_data_ptr) " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   zscal_( T1_block_size, T2_data_ptr, Tout_data_ptr, 1); 
@@ -1659,7 +1577,7 @@ template<>
 double
 Tensor_Arithmetic::Tensor_Arithmetic<double>::dot_product( size_t vec_size, double* v1, double* v2){  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::dot_product " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   return ddot_( vec_size, v1, 1, v2, 1 ); 
@@ -1669,7 +1587,7 @@ template<>
 std::complex<double>
 Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::dot_product( size_t vec_size, std::complex<double>* v1, std::complex<double>* v2){  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::dot_product " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   return zdotc_( vec_size, v1, 1, v2, 1 ); 
@@ -1680,7 +1598,7 @@ cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::dot_product " << endl;
 template<>
 void Tensor_Arithmetic::Tensor_Arithmetic<double>::ax_plus_y( int array_length, double factor, double* target_ptr, double* summand_ptr ) { 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic<double>::ax_plus_y "<< endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1695,7 +1613,7 @@ template<>
 void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::ax_plus_y( int array_length, std::complex<double> factor,
                                                                             complex<double>* target_ptr, complex<double>* summand_ptr ) { 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_VERBOSE 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic<std::complex<double>>::ax_plus_y "<< endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1703,6 +1621,7 @@ cout << "Tensor_Arithmetic<std::complex<double>>::ax_plus_y "<< endl;
   zaxpy_( array_length, factor, target_ptr, stride, summand_ptr, stride);
   return;
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Tensor_Arithmetic::Tensor_Arithmetic<double>;
 template class Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>;
