@@ -886,9 +886,9 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
        do {  
          print_vector( elem_pos , "" ); cout << " : ";cout.flush(); cout << *ptr << endl;
          ++ptr;
-         fvec_cycle_skipper ( elem_pos, elem_pos_maxs, elem_pos_mins);
-       } while( fvec_cycle_skipper(rel_elem_pos, block_maxs, block_mins) );
-     } while ( fvec_cycle_skipper( block_pos, block_pos_maxs, block_pos_mins ));
+         fvec_cycle_skipper_f2b( elem_pos, elem_pos_maxs, elem_pos_mins);
+       } while( fvec_cycle_skipper_f2b(rel_elem_pos, block_maxs, block_mins) );
+     } while ( fvec_cycle_skipper_f2b( block_pos, block_pos_maxs, block_pos_mins ));
    }  
 
    return ;
@@ -969,10 +969,10 @@ cout << "Tensor_Arithmetic_Utils::set_test_elems" << endl;
      do {  
        *ptr = dot_vector( elem_pos );
        ++ptr;
-       fvec_cycle_skipper ( elem_pos, elem_pos_maxs, elem_pos_mins );
-     } while( fvec_cycle_skipper(rel_elem_pos, block_maxs, block_mins) );
+       fvec_cycle_skipper_f2b( elem_pos, elem_pos_maxs, elem_pos_mins );
+     } while( fvec_cycle_skipper_f2b(rel_elem_pos, block_maxs, block_mins) );
      Tens->put_block( data_block, id_blocks);
-   } while ( fvec_cycle_skipper( block_pos, block_pos_maxs, block_pos_mins ));
+   } while ( fvec_cycle_skipper_f2b( block_pos, block_pos_maxs, block_pos_mins ));
 
    return ;
 }

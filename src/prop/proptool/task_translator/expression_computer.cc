@@ -400,7 +400,7 @@ cout << "Expression_Computer::Expression_Computer<DataType>::test_trace_substrac
 
 
   vector<size_t> test_range2 = { 6, 6 };
-  vector<size_t> max_blocks2 = { 2, 2 }; 
+  vector<size_t> max_blocks2 = { 4, 4 }; 
   //vector<size_t> max_blocks2 = { 4, 4 }; 
   tensop_machine_->build_test_tensor( "test_tens2", test_range2, max_blocks2 );
   shared_ptr<Tensor_<double>> test_tens2 = tensop_data_map_->at("test_tens2");
@@ -408,15 +408,15 @@ cout << "Expression_Computer::Expression_Computer<DataType>::test_trace_substrac
 
   vector<size_t> test_range4 = { 6, 6, 4, 4 };
 //  vector<size_t> max_blocks4 = { 4, 4, 4, 4 };
-  vector<size_t> max_blocks4 = { 2, 2, 2, 2 }; 
+  vector<size_t> max_blocks4 = { 4, 4, 4, 4 }; 
   tensop_machine_->build_test_tensor( "test_tens4_new", test_range4, max_blocks4 );
   shared_ptr<Tensor_<double>> test_tens4 = tensop_data_map_->at("test_tens4_new");
   print_tensor_with_indexes( test_tens4, "test_tens4_new" ); cout << endl << endl; 
   Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( test_tens4, 0.0);
    
-  vector<int> id_pos = { 0, 1 };
-  Tensor_Arithmetic::Tensor_Arithmetic<double>::add_tensor_along_trace( test_tens4, test_tens2, id_pos, -1.0 ); 
-  print_tensor_with_indexes( test_tens4, "test_tens4_minus"  );
+//  vector<int> id_pos = { 0, 1 };
+//  Tensor_Arithmetic::Tensor_Arithmetic<double>::add_tensor_along_trace( test_tens4, test_tens2, id_pos, -1.0 ); 
+//  print_tensor_with_indexes( test_tens4, "test_tens4_minus"  );
 
   {
 
