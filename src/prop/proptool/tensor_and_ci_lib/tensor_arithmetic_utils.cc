@@ -671,20 +671,31 @@ pair<vector<vector<size_t>>,vector<vector<size_t>>> Tensor_Arithmetic_Utils::get
   vector<vector<size_t>> block_ends(ranges.size());
    
   for ( int  ii = 0 ; ii != ranges.size() ; ii++ ) { 
+
     vector<Index> blocks = ranges[ii].range();
     vector<size_t> cml_sizes(blocks.size()); 
-    cml_sizes[0] = blocks.front().size();
-    for ( int  jj = 1 ; jj != blocks.size(); jj++ ) { 
+    cml_sizes[0] = blocks.front().size()-1;
+
+    for ( int  jj = 1 ; jj != blocks.size(); jj++ ) 
       cml_sizes[jj] = cml_sizes[jj-1]+blocks[jj].size(); 
-    }    
+
+ 
     vector<size_t> tmp_starts(cml_sizes.size());
     tmp_starts.front() = 0;
-    if ( block_ends.size() > 1 )
-      copy(cml_sizes.begin(), (cml_sizes.end()-1), tmp_starts.begin()+1) ;
+
+    for ( int qq = 1 ; qq != cml_sizes.size() ; qq++ ) 
+      tmp_starts[qq] = cml_sizes[qq-1]+1;          
+
     block_ends[ii] =  cml_sizes;
     block_starts[ii] = tmp_starts;
+
   }
-  
+
+  for ( int qq = 0 ; qq != block_starts.size() ; qq++ ) { 
+    cout << "block_starts["<< qq <<"] = "; cout.flush();  print_vector( block_starts[qq], ""); cout << endl;
+    cout << "block_ends["<< qq <<"] = "; cout.flush();  print_vector( block_ends[qq], ""); cout << endl;
+  }
+
   return make_pair( block_starts, block_ends ); 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -822,21 +833,23 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
 
    } else {
 
-     int  t_order =id_ranges.size();
+     int t_order = id_ranges.size();
+
+     vector<vector<size_t>> block_starts;
+     vector<vector<size_t>> block_ends;
+     {
+       pair<vector<vector<size_t>>,vector<vector<size_t>>> block_start_ends =  get_block_start_ends( id_ranges );
+       block_starts = block_start_ends.first;
+       block_ends = block_start_ends.second;
+     }
 
      vector<int> elem_pos_maxs( t_order );
-     {
-     vector<int>::iterator epm_it = elem_pos_maxs.begin();
-     for ( vector<IndexRange>::iterator ir_it = id_ranges.begin(); ir_it != id_ranges.end(); ir_it++, epm_it++  ) 
-       *epm_it = (ir_it->size())-1;
-     } 
      vector<int> elem_pos_mins( t_order,0);  
      vector<int> elem_pos( t_order,0);  
       
      vector<int> block_pos_maxs = get_range_lengths( id_ranges );
      vector<int> block_pos_mins( t_order, 0);  
      vector<int> block_pos(t_order, 0);  
-  
       
      do {
       
@@ -853,11 +866,25 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
          *bm_it = (ib_it->size())-1;
        }
 
+       {
+       vector<int>::iterator epmn_it = elem_pos_mins.begin();
+       vector<int>::iterator epmx_it = elem_pos_maxs.begin();
+       vector<vector<size_t>>::iterator bs_it =  block_starts.begin();
+       vector<vector<size_t>>::iterator be_it =  block_ends.begin();
+       for ( vector<int>::iterator bp_it = block_pos.begin(); bp_it != block_pos.end(); bp_it++, epmn_it++, epmx_it++, bs_it++, be_it++ ) {
+         *epmn_it = (*bs_it)[*bp_it];
+         *epmx_it = (*be_it)[*bp_it];
+       }
+       }
+       elem_pos = elem_pos_mins;
+
+       print_vector(block_pos, "block_pos"); cout.flush(); print_sizes(id_blocks, "   id_blocks" ); cout << endl;
+       print_vector(elem_pos_mins, "elem_pos_mins" ); cout.flush(); print_vector(elem_pos_maxs, "   elem_pos_maxs" ); cout.flush();
+       print_vector(elem_pos, "   elem_pos" ); cout << endl;
        unique_ptr<double[]> data_block = Tens->get_block( id_blocks );
        double* ptr = data_block.get();
        do {  
-         print_vector( elem_pos , "" );
-         cout << " : ";cout.flush(); cout << *ptr << endl;
+         print_vector( elem_pos , "" ); cout << " : ";cout.flush(); cout << *ptr << endl;
          ++ptr;
          fvec_cycle_skipper ( elem_pos, elem_pos_maxs, elem_pos_mins);
        } while( fvec_cycle_skipper(rel_elem_pos, block_maxs, block_mins) );
@@ -871,7 +898,7 @@ template<>
 void Tensor_Arithmetic_Utils::set_test_elems( shared_ptr<Tensor_<double>> Tens, string name  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
-cout << "Tensor_Arithmetic_Utils::get_test_elems" << endl;
+cout << "Tensor_Arithmetic_Utils::set_test_elems" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    vector<IndexRange> id_ranges = Tens->indexrange();
@@ -902,12 +929,7 @@ cout << "Tensor_Arithmetic_Utils::get_test_elems" << endl;
    int t_order = id_ranges.size();
 
    vector<int> elem_pos_maxs( t_order );
-   {
-   vector<int>::iterator epm_it = elem_pos_maxs.begin();
-   for ( vector<IndexRange>::iterator ir_it = id_ranges.begin(); ir_it != id_ranges.end(); ir_it++, epm_it++  ) 
-     *epm_it = (ir_it->size())-1;
-   } 
-   vector<int> elem_pos_mins( t_order,0);  
+   vector<int> elem_pos_mins( t_order );  
    vector<int> elem_pos( t_order,0);  
     
    vector<int> block_pos_maxs = get_range_lengths( id_ranges );
@@ -929,12 +951,22 @@ cout << "Tensor_Arithmetic_Utils::get_test_elems" << endl;
        *bm_it = (ib_it->size())-1;
      }
 
+     {
+     vector<int>::iterator epmn_it = elem_pos_mins.begin();
+     vector<int>::iterator epmx_it = elem_pos_maxs.begin();
+     vector<vector<size_t>>::iterator bs_it =  block_starts.begin();
+     vector<vector<size_t>>::iterator be_it =  block_ends.begin();
+     for ( vector<int>::iterator bp_it = block_pos.begin(); bp_it != block_pos.end(); bp_it++, epmn_it++, epmx_it++, bs_it++, be_it++ ) {
+       *epmn_it = (*bs_it)[*bp_it];
+       *epmx_it = (*be_it)[*bp_it];
+     }
+     }
+     elem_pos = elem_pos_mins;
+
      unique_ptr<double[]> data_block = Tens->get_block( id_blocks );
      double* ptr = data_block.get();
      print_vector(block_pos, "block_pos"); cout << endl;
      do {  
-       print_vector(rel_elem_pos, "rel_elem_pos"); cout.flush();
-       print_vector(elem_pos   , "   elem_pos"); cout << endl; 
        *ptr = dot_vector( elem_pos );
        ++ptr;
        fvec_cycle_skipper ( elem_pos, elem_pos_maxs, elem_pos_mins );

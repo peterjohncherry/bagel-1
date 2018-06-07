@@ -399,49 +399,51 @@ cout << "Expression_Computer::Expression_Computer<DataType>::test_trace_substrac
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  vector<size_t> test_range2 = { 4, 4 };
+  vector<size_t> test_range2 = { 6, 6 };
   vector<size_t> max_blocks2 = { 2, 2 }; 
   //vector<size_t> max_blocks2 = { 4, 4 }; 
   tensop_machine_->build_test_tensor( "test_tens2", test_range2, max_blocks2 );
   shared_ptr<Tensor_<double>> test_tens2 = tensop_data_map_->at("test_tens2");
-//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens2, 1.0);
   print_tensor_with_indexes( test_tens2, "test_tens2" ); cout << endl << endl; 
 
-  vector<size_t> test_range4 = { 4, 4, 4, 4 };
+  vector<size_t> test_range4 = { 6, 6, 4, 4 };
 //  vector<size_t> max_blocks4 = { 4, 4, 4, 4 };
   vector<size_t> max_blocks4 = { 2, 2, 2, 2 }; 
   tensop_machine_->build_test_tensor( "test_tens4_new", test_range4, max_blocks4 );
   shared_ptr<Tensor_<double>> test_tens4 = tensop_data_map_->at("test_tens4_new");
   print_tensor_with_indexes( test_tens4, "test_tens4_new" ); cout << endl << endl; 
-  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens4, 0.0);
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( test_tens4, 0.0);
    
   vector<int> id_pos = { 0, 1 };
-  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( test_tens4, test_tens2, id_pos, -1.0 ); 
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::add_tensor_along_trace( test_tens4, test_tens2, id_pos, -1.0 ); 
   print_tensor_with_indexes( test_tens4, "test_tens4_minus"  );
 
-//  {
-//    unique_ptr<DataType[]> test = t_target->get_block(target_block_ranges);
-//    auto test_ptr = test.get();
-//    cout << "-----test 1 -------" << endl;
-//    for (int jj = 0 ; jj != target_block_size ; jj++, test_ptr++ ) { 
-//       cout << *test_ptr << endl;
-//    }
-//    cout << endl << endl;
-//    auto reordered_data = reorder_tensor_data( test.get(), target_reordering, target_block_ranges );
-//    test_ptr = reordered_data.get();
-//    cout << "-----test 2 -------" << endl;
-//    for (int jj = 0 ; jj != target_block_size ; jj++, test_ptr++ ) { 
-//       cout << *test_ptr << endl;
-//    }
-//    cout << endl << endl;
-//    auto reordered_data2 = reorder_tensor_data( reordered_data.get(), target_reordering_inverse, target_block_ranges );
-//    test_ptr = reordered_data2.get();
-//    cout << "-----test 3 -------" << endl;
-//    for (int jj = 0 ; jj != target_block_size ; jj++, test_ptr++ ) { 
-//       cout << *test_ptr << endl;
-//    }
-//    cout << endl << endl;
-//  }
+  {
+
+    tensop_machine_->build_test_tensor( "tester", test_range4, max_blocks4 );
+    shared_ptr<Tensor_<double>> tester = tensop_data_map_->at("tester");
+    print_tensor_with_indexes( tester, "tester pre reordering" ); cout << endl << endl;
+    vector<int> reordering = { 0, 2, 1, 3 };
+
+    shared_ptr<Tensor_<double>> tester_reordered = tensop_machine_->reorder_block_Tensor( "tester", reordering );
+    tensop_data_map_->emplace( "tester_reordered", tester_reordered );
+    print_tensor_with_indexes( tester_reordered, "tester_reordered { 0, 2, 1, 3 } " ); cout << endl << endl;
+
+    shared_ptr<Tensor_<double>> tester_orig = tensop_machine_->reorder_block_Tensor( "tester_reordered", reordering );
+    
+    tensop_data_map_->emplace( "tester_orig", tester_orig );
+    print_tensor_with_indexes( tester_orig, "tester_orig" ); cout << endl << endl;
+
+    tensop_machine_->build_test_tensor( "tester2", test_range2, max_blocks2 );
+    shared_ptr<Tensor_<double>> tester2 = tensop_data_map_->at("tester2");
+    print_tensor_with_indexes( tester2, "tester2 pre reordering" ); cout << endl << endl;
+    vector<int> reordering2 = { 1, 0 };
+
+    shared_ptr<Tensor_<double>> tester2_reordered = tensop_machine_->reorder_block_Tensor( "tester2", reordering2 );
+    tensop_data_map_->emplace( "tester2_reordered", tester2_reordered );
+    print_tensor_with_indexes( tester2_reordered, "tester2_reordered {1, 0}" ); cout << endl << endl;
+
+  }
   return;
 }
 //Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens4, 0.0);

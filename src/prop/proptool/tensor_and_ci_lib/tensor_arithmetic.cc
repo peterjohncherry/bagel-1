@@ -1085,33 +1085,33 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( shared_ptr
 cout << "Tensor_Arithmetic::reorder_block_Tensor " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   vector<IndexRange> T_id_ranges = Tens_in->indexrange();
-   vector<int> range_lengths = get_range_lengths( T_id_ranges ); 
-   
-   vector<IndexRange> reordered_ranges  = Tensor_Arithmetic_Utils::reorder_vector( new_order, T_id_ranges ) ;
-   shared_ptr<Tensor_<DataType>>  reordered_block_tensor = make_shared<Tensor_<DataType>>(reordered_ranges);
-   reordered_block_tensor->allocate();
-   reordered_block_tensor->zero();
+  vector<IndexRange> T_id_ranges = Tens_in->indexrange();
+  vector<int> range_lengths = get_range_lengths( T_id_ranges ); 
+  
+  vector<IndexRange> reordered_ranges  = Tensor_Arithmetic_Utils::reorder_vector( new_order, T_id_ranges ) ;
+  shared_ptr<Tensor_<DataType>>  reordered_block_tensor = make_shared<Tensor_<DataType>>(reordered_ranges);
+  reordered_block_tensor->allocate();
+  reordered_block_tensor->zero();
 
-   vector<int> block_pos(T_id_ranges.size(),0);  
-   vector<int> mins(T_id_ranges.size(),0);  
-   do {
+  vector<int> block_pos(T_id_ranges.size(),0);  
+  vector<int> mins(T_id_ranges.size(),0);  
+  do {
  
-     vector<Index> orig_id_blocks = get_rng_blocks( block_pos, T_id_ranges );
+    vector<Index> orig_id_blocks = get_rng_blocks( block_pos, T_id_ranges );
 
-     if ( Tens_in->exists(orig_id_blocks) ){
-       unique_ptr<DataType[]> reordered_data_block;
-       {
-       unique_ptr<DataType[]> orig_data_block = Tens_in->get_block( orig_id_blocks );
-       reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks );
-       }
-       vector<Index> reordered_id_blocks = Tensor_Arithmetic_Utils::reorder_vector( new_order, orig_id_blocks );
-       reordered_block_tensor->put_block( reordered_data_block, reordered_id_blocks );
-     }
+    if ( Tens_in->exists(orig_id_blocks) ){
+      unique_ptr<DataType[]> reordered_data_block;
+      {
+      unique_ptr<DataType[]> orig_data_block = Tens_in->get_block( orig_id_blocks );
+      reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks );
+      }
+      vector<Index> reordered_id_blocks = Tensor_Arithmetic_Utils::reorder_vector( new_order, orig_id_blocks );
+      reordered_block_tensor->put_block( reordered_data_block, reordered_id_blocks );
+    }
 
-   } while ( fvec_cycle_skipper( block_pos, range_lengths, mins ) );
+  } while ( fvec_cycle_skipper( block_pos, range_lengths, mins ) );
 
-   return reordered_block_tensor;
+  return reordered_block_tensor;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
@@ -1618,7 +1618,6 @@ cout << "Tensor_Arithmetic<std::complex<double>>::ax_plus_y "<< endl;
   zaxpy_( array_length, factor, target_ptr, stride, summand_ptr, stride);
   return;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Tensor_Arithmetic::Tensor_Arithmetic<double>;
 template class Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>;
