@@ -35,7 +35,7 @@ GammaInfo<DataType>::GammaInfo ( shared_ptr<CIVecInfo_Base> Bra_info, shared_ptr
   for ( int  ii = 1 ; ii != sigma_id_ranges_->size() ; ii++ )
     sigma_id_ranges_->at(ii) = id_ranges_->at(ii-1);
 
-  name_ = get_gamma_name( full_idx_ranges, full_aops_vec, idxs_pos, Bra_info_->name(), Ket_info_->name() ); 
+  name_ = get_gamma_name( *full_idx_ranges, *full_aops_vec, *idxs_pos, Bra_info_->name(), Ket_info_->name() ); 
   sigma_name_ = "S_"+name_;
 
   if ( (idxs_pos->size() > 2 ) && ( idxs_pos->size() % 2 == 0 ) ) {
@@ -46,7 +46,7 @@ GammaInfo<DataType>::GammaInfo ( shared_ptr<CIVecInfo_Base> Bra_info, shared_ptr
     for (int ii = 2 ; ii != idxs_pos->size() ; ii+=2 ){
 
       shared_ptr<vector<int>> prev_gamma_idxs_pos = make_shared<vector<int>> ( idxs_pos->begin()+ii, idxs_pos->end());
-      prev_gammas_[(ii/2)-1] = get_gamma_name( full_idx_ranges, full_aops_vec, prev_gamma_idxs_pos, Bra_info_->name(), Ket_info_->name());
+      prev_gammas_[(ii/2)-1] = get_gamma_name( *full_idx_ranges, *full_aops_vec, *prev_gamma_idxs_pos, Bra_info_->name(), Ket_info_->name());
       prev_sigmas_[(ii/2)-1] = "S_"+prev_gammas_[(ii/2)-1];
 
       if ( Gamma_map->find( prev_gammas_[(ii/2)-1] )  == Gamma_map->end() ){ //TODO fix Bra_info for rel case

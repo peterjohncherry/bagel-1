@@ -90,7 +90,6 @@ class CtrTensorPart_Base  {
     
     int size() { return full_idxs_->size() ; } 
   
-    void get_name();
     void get_ctp_idxs_ranges();
 
     std::string get_next_name(std::shared_ptr<std::vector<std::pair<int,int>>> new_ctrs_pos);

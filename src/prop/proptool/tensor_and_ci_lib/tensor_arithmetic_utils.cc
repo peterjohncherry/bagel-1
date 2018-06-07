@@ -817,9 +817,7 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
        cout << *data.get()  << endl;
 
      } else { 
-
-         /// TODO add print vvector;
-
+       /// TODO add print vvector;
      }
 
    } else {

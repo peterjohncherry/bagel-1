@@ -3,30 +3,6 @@
 #include <src/prop/proptool/proputils.h>
 #include <cassert>
 using namespace std;
-///////////////////////////////////////////////////////////////////////////
-void CtrTensorPart_Base::get_name(){
-///////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_CTR_TENSOR_PART
-cout << "CtrTensorPart_Base" << endl;
-#endif ////////////////////////////////////////////////////////////////////
-  name_ = "";
-  for(string id : *full_idxs_)
-    name_ += id;
-  name_ +="_"; 
-
-  for(string id : *full_id_ranges_)
-    name_ += id[0];
-
-  shared_ptr<vector<pair<int,int>>> ctrs_buff = make_shared<vector<pair<int,int>>>(*ctrs_pos_);
-  shared_ptr<vector<pair<int,int>>> ctrs_buff_standard = WickUtils::standardize_delta_ordering_generic(*ctrs_buff, *full_idxs_ ) ;
-
-  if (ctrs_buff_standard->size() !=0){
-    name_ +="_"; 
-    for(pair<int,int> ctr : *ctrs_buff_standard)
-      name_ += to_string(ctr.first)+to_string(ctr.second);
-  }
-  return;
-};
 /////////////////////////////////////////////////////////////////////////////////////////////
 string CtrTensorPart_Base::get_next_name(shared_ptr<vector<pair<int,int>>> new_ctrs_pos ){
 /////////////////////////////////////////////////////////////////////////////////////////////

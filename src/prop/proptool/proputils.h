@@ -21,31 +21,16 @@
 #include <functional>
 #include <cctype>
 namespace WickUtils {  
-
-  using pint_vec = std::vector<std::pair<int,int>>;
-  using pstr_vec = std::vector<std::pair<std::string,std::string>>;
-  using pbool_vec = std::vector<std::pair<bool,bool>>;
  
+  void pair_fac_mult( const std::pair<double,double>& factor_fixed , std::pair<double,double>& factor_changing );
+
   // routines for mimicking for loop of arbitrary depth
   // TODO TRIM THIS DOWN !!! you can't need all of these
-  void fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max ) ;
-
-  bool fvec_cycle_test(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max ) ;
-
-  bool fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max , std::shared_ptr<std::vector<int>> min) ;
-
-  bool constrained_fvec_cycle(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max) ;
- 
   bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max,
                           std::shared_ptr<std::vector<int>> min,  int fixed_index_position );
  
-  bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max, int fixed_index_position );
-
   bool fvec_cycle_skipper(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max ,
                           std::shared_ptr<std::vector<int>> min ) ;
-
-  bool fvec_cycle_skipper_f2b(std::shared_ptr<std::vector<int>> forvec, std::shared_ptr<std::vector<int>> max,
-                              std::shared_ptr<std::vector<int>> min ) ;
 
   bool fvec_cycle_skipper_f2b( std::vector<int>& forvec, std::vector<int>& max , std::vector<int>& min );
 
@@ -53,66 +38,20 @@ namespace WickUtils {
 
   bool fvec_cycle_skipper( std::vector<int>& forvec, std::vector<int>::reverse_iterator max_it, std::vector<int>::reverse_iterator min_it ); 
 
-  template<class T1>
-  std::shared_ptr<std::vector<std::shared_ptr<std::vector<T1>>>> combgen( std::shared_ptr<std::vector<T1>> invec);
-
-  std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<std::vector<int>> vec1, int NN );
-
-  std::shared_ptr<std::vector<std::shared_ptr<std::vector<int>>>> get_N_in_M_combsX( std::shared_ptr<const std::vector<int>> vec1, int NN );
- 
-  std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
-  get_unique_pairs(std::shared_ptr<std::vector<int>> ids1 , std::shared_ptr<std::vector<int>> ids2 , int num_pairs);
- 
-  std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
-  get_unique_pairs(std::shared_ptr<std::vector<int>> ids1 , std::shared_ptr<std::vector<int>> ids2 ); 
- 
-  std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::pair<int,int>>>>>
-  get_unique_pairs(std::shared_ptr< const std::vector<int>> ids1 , std::shared_ptr< const std::vector<int>> ids2 , int num_pairs);
-  std::shared_ptr<std::vector<int>> reorder_vector(std::vector<int>& neworder , const std::vector<int>& origvec ) ;
-
-  std::shared_ptr<std::vector<int>> get_unc_ids_from_deltas_ids_comparison(std::shared_ptr<std::vector<int>> ids , std::shared_ptr<std::vector<std::pair<int,int>>> deltas );
-
-  std::shared_ptr<std::vector<int>> get_unc_ids_from_deltas_ids(std::shared_ptr<std::vector<int>> ids , std::shared_ptr<std::vector<std::pair<int,int>>> deltas );
-
-  std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges );
-
-  std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges,
-                         const std::vector<char>& proj_names );
-
-  std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges, 
-                         const std::vector<std::pair<int,int>>& all_ctrs_pos  );
- 
-  std::string get_Aname( const std::vector<std::string>& full_idxs, const std::vector<std::string>& full_idx_ranges,
-                         const std::vector<std::pair<int,int>>& all_ctrs_pos, const std::vector<char>& proj_names );
-
   std::string get_civec_name( const int state_num,  const int norb,  const int nalpha, const int nbeta);
-
-  std::string get_gamma_name( std::shared_ptr<std::vector<std::string>> full_idx_ranges,  std::shared_ptr<std::vector<bool>> aops_vec,
-                              std::shared_ptr<std::vector<int>> idxs_pos, std::string Bra_name, std::string Ket_name );
-
-  std::string get_gamma_name( std::shared_ptr<const std::vector<std::string>> full_idx_ranges,  std::shared_ptr<const std::vector<bool>> aops_vec,
-                              std::shared_ptr<std::vector<int>> idxs_pos, std::string Bra_name, std::string Ket_name );
 
   std::string get_gamma_name( const std::vector<std::string>& full_idx_ranges, const std::vector<bool>& aops_vec,
                               const std::vector<int>& idxs_pos, std::string Bra_name, std::string Ket_name );
-
-  std::shared_ptr<std::vector<pint_vec>>  
-  get_cross_pairs( std::shared_ptr<std::vector<int>> vec1 , std::shared_ptr<std::vector<int>> vec2, std::shared_ptr<std::vector<std::string>> id_names );
 
   bool RangeCheck(const std::vector<std::string>& id_ranges, const std::vector<bool>& aops ) ;
   
   std::shared_ptr<std::vector<std::pair<int,int>>>
   standardize_delta_ordering_generic( const std::vector<std::pair<int,int>>& deltas_pos, const std::vector<std::string>& idxs  );
 
-  std::string get_ctp_name( const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges, const std::vector<std::pair<int,int>>& ctrs_pos ); 
-
-  std::string get_ctp_name( const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges );
-
-  std::string get_ctp_name( const std::string op_state_name, const std::vector<std::string>& id_ranges, const std::vector<std::pair<int,int>>& ctrs_pos );
-
   std::string get_ctp_name( const std::string op_state_name, const std::vector<std::string>& idxs, const std::vector<std::string>& id_ranges, const std::vector<std::pair<int,int>>& ctrs_pos );
 
   unsigned int range_to_prime(char range );
+
   unsigned int range_to_prime_spinfree(char range );
 
   std::vector<char> strvec_to_chrvec( const std::vector<std::string>& strvec );
@@ -121,24 +60,19 @@ namespace WickUtils {
 
   unsigned int get_block_hash( const std::vector<std::string>&  block  );
 
-  void pair_fac_mult( const std::pair<double,double>& factor_fixed , std::pair<double,double>& factor_changing );
+  std::shared_ptr<std::vector<int>> reorder_vector(std::vector<int>& neworder , const std::vector<int>& origvec ) ;
 
   std::shared_ptr<std::vector<int>> get_ascending_order( const std::vector<int>& scrambled_vec );
 
   template<class DataType>  
   void reorder_vector_inplace(const std::vector<int>& new_order, std::vector<DataType>& orig_vec ){
-
-  std::vector<DataType> reordered_vec(orig_vec.size());
-  auto rv_it = reordered_vec.begin();
-
-  for( std::vector<int>::const_iterator no_it = new_order.begin(); no_it != new_order.end(); no_it++, rv_it++ )
-     *rv_it = orig_vec[*no_it];
-
-  orig_vec =  std::move(reordered_vec); 
-
-  return;
+    std::vector<DataType> reordered_vec(orig_vec.size());
+    auto rv_it = reordered_vec.begin();
+    for( std::vector<int>::const_iterator no_it = new_order.begin(); no_it != new_order.end(); no_it++, rv_it++ )
+       *rv_it = orig_vec[*no_it];
+    orig_vec =  std::move(reordered_vec); 
+    return;
   }
-
 
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
