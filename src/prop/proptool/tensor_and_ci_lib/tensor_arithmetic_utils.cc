@@ -9,7 +9,7 @@ using namespace WickUtils;
 using namespace Debugging_Utils;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-vector<size_t> Tensor_Arithmetic_Utils::get_strides( const std::vector<Index>& block ) { 
+vector<size_t> Tensor_Arithmetic_Utils::get_strides_row_major( const std::vector<Index>& block ) { 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
 cout << "Tensor_Arithemetic_Utils::get_strides" << endl;
@@ -23,6 +23,22 @@ cout << "Tensor_Arithemetic_Utils::get_strides" << endl;
 
   return stride_vec;
 } 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+vector<size_t> Tensor_Arithmetic_Utils::get_strides_column_major( const std::vector<Index>& block ) { 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+cout << "Tensor_Arithemetic_Utils::get_strides" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  vector<size_t> stride_vec( block.size() );
+  stride_vec.front() = 1 ;
+  vector<Index>::const_iterator b_it = block.begin();
+  for( vector<size_t>::iterator sv_it = stride_vec.begin()+1; sv_it != stride_vec.end(); sv_it++ , b_it++ )
+    *sv_it = ( *(sv_it -1)) * b_it->size();
+
+  return stride_vec;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 double Tensor_Arithmetic_Utils::sum_elems( unique_ptr<double[]>& some_data, size_t length  ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -888,6 +904,7 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
          ++ptr;
          fvec_cycle_skipper_f2b( elem_pos, elem_pos_maxs, elem_pos_mins);
        } while( fvec_cycle_skipper_f2b(rel_elem_pos, block_maxs, block_mins) );
+       ptr -= Tens->get_size( id_blocks );
      } while ( fvec_cycle_skipper_f2b( block_pos, block_pos_maxs, block_pos_mins ));
    }  
 

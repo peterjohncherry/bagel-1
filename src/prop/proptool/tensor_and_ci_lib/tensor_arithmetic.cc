@@ -4,6 +4,7 @@
 #include <src/util/f77.h>
 #include <src/prop/proptool/debugging_utils.h>
 
+#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE
 #define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
 #ifdef  __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_debug.h>
@@ -83,6 +84,7 @@ cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
 
       unique_ptr<DataType[]> target_block_data  = target->get_block(target_block_ranges);
       size_t summand_block_size  = summand->get_size( summand_block_ranges );    
+      DataType* summand_block_ptr = summand_block_data.get();
       for ( typename vector<DataType>::iterator sf_it = summand_factors.begin(); sf_it !=  summand_factors.end() ; sr_it++, sf_it++ ) {
         unique_ptr<DataType[]> summand_block_data_reordered = reorder_tensor_data( summand_block_data.get(), *sr_it, summand_block_ranges );
         cout << "summand block data reordered total = " << sum_elem_norms( summand_block_data_reordered, summand_block_size );  
@@ -204,7 +206,6 @@ cout << "Tensor_Arithmetic::trace_tensor__tensor_return" << endl;
   vector<Index> unit_index_block = { unit_range[0].range(0) }; 
   Tens_out->put_block( data_block, unit_index_block );
 
-  cout << " out of Tensor trace contract" << endl;
   return Tens_out;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -214,13 +215,20 @@ cout << "Tensor_Arithmetic::trace_tensor__tensor_return" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( shared_ptr<Tensor_<DataType>> t_target, shared_ptr<Tensor_<DataType>> t_summand,
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( shared_ptr<Tensor_<DataType>>& t_target, shared_ptr<Tensor_<DataType>>& t_summand,
                                                                         vector<int>& summand_pos,  DataType factor ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::add_tensor_along_trace"  << endl;
-Tensor_Arithmetic_Debugger::add_tensor_along_trace_debug( t_target, t_summand, summand_pos, factor );
+//Tensor_Arithmetic_Debugger::add_tensor_along_trace_debug( t_target, t_summand, summand_pos, factor );
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  auto printer = []( DataType* ptr , int array_length, string name ) { 
+      cout << name << " = [ "; cout.flush();
+        for ( int qq = 0; qq != array_length; qq++, ptr++ )
+          cout << *ptr  << " ";
+        cout << " ]" << endl;
+   };
 
   vector<IndexRange> t_target_ranges  = t_target->indexrange();
   vector<IndexRange> t_summand_ranges = t_summand->indexrange();
@@ -231,25 +239,25 @@ Tensor_Arithmetic_Debugger::add_tensor_along_trace_debug( t_target, t_summand, s
 
   vector<int> target_reordering(num_ids);
 
-  // ensures ranges at back (Fortran ordering!) of target are those of _reordered_ summand 
+  // ensures indexes at front of target are those of _reordered_ summand ( column major ordering! )
+  vector<int> summand_reordering = {0,1};
   vector<bool> traced(t_target_ranges.size(), true ); 
   {
     vector<int>::iterator sp_it = summand_pos.begin();
     for ( ; sp_it !=summand_pos.end(); sp_it++ ) 
       traced[*sp_it] = false; 
 
-    int qq = 0;
     vector<int>::iterator tr_it = target_reordering.begin(); 
+    for (vector<int>::iterator sr_it = summand_reordering.begin(); sr_it !=summand_reordering.end(); sr_it++, tr_it++ ) 
+      *tr_it = summand_pos[*sr_it];
+
+    int qq = 0;
     for ( vector<bool>::iterator t_it = traced.begin(); qq != num_ids; qq++, t_it++ ) 
       if ( *t_it ) {
         *tr_it = qq;
         ++tr_it;
       }
-
-    for ( sp_it = summand_pos.begin(); sp_it !=summand_pos.end(); sp_it++, tr_it++ ) 
-      *tr_it = *sp_it;
   }
- 
 
   vector<int> target_reordering_inverse = *(get_ascending_order( target_reordering ));
   vector<int> target_maxs = get_range_lengths( t_target_ranges );
@@ -257,36 +265,34 @@ Tensor_Arithmetic_Debugger::add_tensor_along_trace_debug( t_target, t_summand, s
   vector<int> summand_mins(summand_rank, 0);
   vector<int> summand_block_pos(summand_rank,0);
   print_vector( target_reordering ,         " target_reordering        "); cout <<endl;
-  print_vector( target_reordering_inverse , " target_reordering_inverse"); cout <<endl;
+  print_vector( target_reordering_inverse , " target_reordering_inverse"); cout << endl; 
+  print_vector( summand_reordering ,        " summand_reordering        "); cout <<endl; 
 
-  size_t num_traced_index_blocks = target_maxs[target_reordering.front()];
+  size_t num_traced_index_blocks = target_maxs[target_reordering.back()];
 
   do {
   
     vector<Index> summand_block_ranges = get_rng_blocks( summand_block_pos, t_summand_ranges );
-    unique_ptr<DataType[]> summand_block_data  = t_summand->get_block(summand_block_ranges);
     size_t summand_block_size  = t_summand->get_size( summand_block_ranges );    
+    unique_ptr<DataType[]> summand_block_data = t_summand->get_block(summand_block_ranges);
 
     for ( int ii = 0; ii != num_traced_index_blocks+1; ii++ ) {
       vector<int> target_block_pos(target_maxs.size());
       {
         vector<bool>::iterator t_it = traced.begin();
         int qq = 0;
-        int rr = 0;
-        for ( vector<int>::iterator tbp_it = target_block_pos.begin(); tbp_it != target_block_pos.end(); tbp_it++, qq++, t_it++ ){
-          if (*t_it){
+        for ( vector<int>::iterator tbp_it = target_block_pos.begin(); tbp_it != target_block_pos.end(); tbp_it++, qq++, t_it++ )
+          if (*t_it)
            *tbp_it = ii;
-          } else {
-           *tbp_it = summand_block_pos[rr];
-            rr++;
-          }
-        }
+
+        for ( int rr = 0; rr != summand_block_pos.size(); rr++ )
+          target_block_pos[summand_pos[rr]] = summand_block_pos[rr];
+        
       }
-      print_vector( target_block_pos , " target_block_pos"); cout <<endl;
-      print_vector( summand_block_pos , " summand_block_pos"); cout <<endl;
 
       vector<Index> target_block_ranges = get_rng_blocks( target_block_pos, t_target_ranges );
       vector<Index> target_block_ranges_reordered(num_ids);
+      print_vector( target_block_pos, "target_block_pos"); print_vector( summand_block_pos , " summand_block_pos"); print_sizes( target_block_ranges, "target_block_ranges" ); cout << endl;
       {
       vector<Index>::iterator tbrr_it = target_block_ranges_reordered.begin();
       for ( vector<int>::iterator tbr_it =  target_reordering.begin(); tbr_it != target_reordering.end(); tbr_it++ , tbrr_it++ )
@@ -295,34 +301,31 @@ Tensor_Arithmetic_Debugger::add_tensor_along_trace_debug( t_target, t_summand, s
 
       size_t stride = 0;
       {
-      vector<size_t> stride_vec = get_strides( target_block_ranges_reordered );
-      for ( int qq = 0 ; qq != (stride_vec.size() - summand_pos.size()) ; qq++ )
-        stride += stride_vec[qq];
+      vector<size_t> stride_vec = get_strides_column_major( target_block_ranges_reordered );
+      for ( vector<size_t>::iterator sv_it = stride_vec.begin()+summand_pos.size(); sv_it != stride_vec.end(); sv_it++ )
+        stride += *sv_it;
 
-      print_vector(stride_vec, "stride_vec"); cout << endl;
-      cout << "stride = "<< stride << endl;
+      print_vector(stride_vec, "stride_vec"); cout << endl;  cout << "stride = "<< stride << endl;
       }
 
       auto target_block_size = t_target->get_size(target_block_ranges);
-      unique_ptr<DataType[]> target_block_data = t_target->get_block(target_block_ranges);
-      unique_ptr<DataType[]> target_block_data_new = reorder_tensor_data( target_block_data.get(), target_reordering_inverse, target_block_ranges );
-      {
-        unique_ptr<DataType[]> target_block_data_reordered = reorder_tensor_data( target_block_data.get(), target_reordering, target_block_ranges );
-        DataType* pos_on_trace = target_block_data_reordered.get();
-        DataType* summand_ptr  = summand_block_data.get();
-        for ( size_t nsteps = 0; nsteps != target_block_ranges_reordered.front().size(); nsteps++ , pos_on_trace += stride )
-          ax_plus_y(summand_block_size, factor, summand_ptr, pos_on_trace );
 
-        target_block_data_new = reorder_tensor_data( target_block_data_reordered.get(), target_reordering_inverse, target_block_ranges );
-      }
-      t_target->put_block( target_block_data_new, target_block_ranges );
+      unique_ptr<DataType[]> target_block_data = t_target->get_block( target_block_ranges );
+      unique_ptr<DataType[]> target_block_data_reordered = reorder_tensor_data( target_block_data.get(), target_reordering, target_block_ranges );
+      DataType* pos_on_trace = target_block_data_reordered.get();
+      DataType* summand_ptr  = summand_block_data.get();
+      size_t pos = 0;
+      for ( size_t nsteps = 0; nsteps != target_block_ranges_reordered.back().size(); nsteps++ , pos_on_trace += stride, pos += stride ) 
+        ax_plus_y(summand_block_size, factor, summand_ptr, pos_on_trace );
+      
+      pos_on_trace = target_block_data_reordered.get();
+      target_block_data = reorder_tensor_data( pos_on_trace, target_reordering_inverse, target_block_ranges_reordered );
+      t_target->put_block( target_block_data, target_block_ranges );
+      
     }
-
+    t_summand->put_block( summand_block_data, summand_block_ranges );
+    
   } while( fvec_cycle_skipper(summand_block_pos, summand_maxs, summand_mins) );
-
-#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
-  cout << "TA:atat END t_target->norm()  = " << t_target->norm() << endl;  cout << "TA:atat END t_summand->norm() = " << t_summand->norm() << endl;  
-#endif 
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1593,14 +1596,14 @@ cout << "Tensor_Arithmetic::Tensor_Arithmetic<double>::dot_product " << endl;
 // alpha+factor.beta, double version, assumes stride is one
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
-void Tensor_Arithmetic::Tensor_Arithmetic<double>::ax_plus_y( int array_length, double factor, double* target_ptr, double* summand_ptr ) { 
+void Tensor_Arithmetic::Tensor_Arithmetic<double>::ax_plus_y( int array_length, double factor, double* summand_ptr, double* target_ptr) { 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic<double>::ax_plus_y "<< endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   int stride = 1 ; 
-  daxpy_( array_length, factor, target_ptr, stride, summand_ptr, stride);
+  daxpy_( array_length, factor, summand_ptr, stride, target_ptr, stride);
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

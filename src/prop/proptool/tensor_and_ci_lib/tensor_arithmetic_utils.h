@@ -9,7 +9,9 @@ namespace bagel {
 
 namespace Tensor_Arithmetic_Utils {  
 
-     std::vector<size_t> get_strides( const std::vector<SMITH::Index>& block );
+     std::vector<size_t> get_strides_row_major( const std::vector<SMITH::Index>& block ); // C ordering
+
+     std::vector<size_t> get_strides_column_major( const std::vector<SMITH::Index>& block ); // Fortran (SMITH::Tensor ordering)
 
      std::pair<std::vector<std::vector<size_t>>,std::vector<std::vector<size_t>>>
      get_block_start_ends( const std::vector<SMITH::IndexRange>& ranges );

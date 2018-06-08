@@ -137,7 +137,7 @@ class Tensor_Arithmetic {
      divide_tensors_in_place( std::shared_ptr<SMITH::Tensor_<DataType>> T1, std::shared_ptr<SMITH::Tensor_<DataType>> T2 );
     
      static void
-     add_tensor_along_trace( std::shared_ptr<SMITH::Tensor_<DataType>> t_target, std::shared_ptr<SMITH::Tensor_<DataType>> t_summand,
+     add_tensor_along_trace( std::shared_ptr<SMITH::Tensor_<DataType>>& t_target, std::shared_ptr<SMITH::Tensor_<DataType>>& t_summand,
                              std::vector<int>& summand_pos, DataType factor );
 
      static void

@@ -10,6 +10,7 @@ using namespace Tensor_Arithmetic_Utils;
 using namespace WickUtils;
 using namespace Debugging_Utils;
 
+#define __DEBUG_EXPRESSION_COMPUTER
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
 Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>>   gamma_computer,
@@ -223,12 +224,9 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
                                                                              moint_computer_ );
  
   test_trace_subtraction();
-  //TEST
-  throw logic_error("die here for testing");
-  //ENDTEST
 
   tensop_machine_->get_tensor_data_blocks( expression->required_blocks_ );
-
+  throw logic_error("die here for testing");
   DataType result = 0.0;
   map< string, DataType > g_result_map;
 
@@ -320,7 +318,6 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     cout << "rdm2->norm() = "; cout.flush(); cout << rdm2->norm() << endl;
   } // END TEST 
 
-  test_trace_subtraction();
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -399,50 +396,34 @@ cout << "Expression_Computer::Expression_Computer<DataType>::test_trace_substrac
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  vector<size_t> test_range2 = { 6, 6 };
+  vector<size_t> test_range2 = { 6, 7 };
   vector<size_t> max_blocks2 = { 4, 4 }; 
-  //vector<size_t> max_blocks2 = { 4, 4 }; 
   tensop_machine_->build_test_tensor( "test_tens2", test_range2, max_blocks2 );
   shared_ptr<Tensor_<double>> test_tens2 = tensop_data_map_->at("test_tens2");
   print_tensor_with_indexes( test_tens2, "test_tens2" ); cout << endl << endl; 
 
-  vector<size_t> test_range4 = { 6, 6, 4, 4 };
-//  vector<size_t> max_blocks4 = { 4, 4, 4, 4 };
-  vector<size_t> max_blocks4 = { 4, 4, 4, 4 }; 
+  vector<size_t> test_range4 = { 4, 6, 4, 7 };
+  vector<size_t> max_blocks4 = { 2, 4, 2, 4 }; 
   tensop_machine_->build_test_tensor( "test_tens4_new", test_range4, max_blocks4 );
   shared_ptr<Tensor_<double>> test_tens4 = tensop_data_map_->at("test_tens4_new");
   print_tensor_with_indexes( test_tens4, "test_tens4_new" ); cout << endl << endl; 
   Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( test_tens4, 0.0);
    
-//  vector<int> id_pos = { 0, 1 };
-//  Tensor_Arithmetic::Tensor_Arithmetic<double>::add_tensor_along_trace( test_tens4, test_tens2, id_pos, -1.0 ); 
-//  print_tensor_with_indexes( test_tens4, "test_tens4_minus"  );
+  vector<int> id_pos = { 1, 3 };
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::add_tensor_along_trace( test_tens4, test_tens2, id_pos, -1.0 ); 
+  print_tensor_with_indexes( test_tens4, "test_tens4_minus {1,3}"  );
 
   {
-
-    tensop_machine_->build_test_tensor( "tester", test_range4, max_blocks4 );
-    shared_ptr<Tensor_<double>> tester = tensop_data_map_->at("tester");
-    print_tensor_with_indexes( tester, "tester pre reordering" ); cout << endl << endl;
-    vector<int> reordering = { 0, 2, 1, 3 };
-
-    shared_ptr<Tensor_<double>> tester_reordered = tensop_machine_->reorder_block_Tensor( "tester", reordering );
-    tensop_data_map_->emplace( "tester_reordered", tester_reordered );
-    print_tensor_with_indexes( tester_reordered, "tester_reordered { 0, 2, 1, 3 } " ); cout << endl << endl;
-
-    shared_ptr<Tensor_<double>> tester_orig = tensop_machine_->reorder_block_Tensor( "tester_reordered", reordering );
-    
-    tensop_data_map_->emplace( "tester_orig", tester_orig );
-    print_tensor_with_indexes( tester_orig, "tester_orig" ); cout << endl << endl;
-
-    tensop_machine_->build_test_tensor( "tester2", test_range2, max_blocks2 );
-    shared_ptr<Tensor_<double>> tester2 = tensop_data_map_->at("tester2");
-    print_tensor_with_indexes( tester2, "tester2 pre reordering" ); cout << endl << endl;
-    vector<int> reordering2 = { 1, 0 };
-
-    shared_ptr<Tensor_<double>> tester2_reordered = tensop_machine_->reorder_block_Tensor( "tester2", reordering2 );
-    tensop_data_map_->emplace( "tester2_reordered", tester2_reordered );
-    print_tensor_with_indexes( tester2_reordered, "tester2_reordered {1, 0}" ); cout << endl << endl;
-
+  vector<size_t> test_range4746 = { 4, 7, 4, 6 };
+  vector<size_t> max_blocks2424 = { 2, 4, 2, 4 }; 
+  tensop_machine_->build_test_tensor( "test_tens_4746", test_range4746, max_blocks2424 );
+  shared_ptr<Tensor_<double>> test_tens4746 = tensop_data_map_->at("test_tens_4746");
+  print_tensor_with_indexes( test_tens4746, "test_tens_4746" ); cout << endl << endl; 
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( test_tens4746, 0.0);
+  
+  vector<int> id_pos2 = { 3, 1 };
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::add_tensor_along_trace( test_tens4746, test_tens2, id_pos2, -1.0 ); 
+  print_tensor_with_indexes( test_tens4746, "test_tens4_minus {3,1}"  );
   }
   return;
 }
@@ -450,3 +431,29 @@ cout << "Expression_Computer::Expression_Computer<DataType>::test_trace_substrac
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Expression_Computer::Expression_Computer<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+////  {
+  //
+  //    tensop_machine_->build_test_tensor( "tester", test_range4, max_blocks4 );
+  //    shared_ptr<Tensor_<double>> tester = tensop_data_map_->at("tester");
+  //    print_tensor_with_indexes( tester, "tester pre reordering" ); cout << endl << endl;
+  //    vector<int> reordering = { 0, 2, 1, 3 };
+  //
+  //    shared_ptr<Tensor_<double>> tester_reordered = tensop_machine_->reorder_block_Tensor( "tester", reordering );
+  //    tensop_data_map_->emplace( "tester_reordered", tester_reordered );
+  //    print_tensor_with_indexes( tester_reordered, "tester_reordered { 0, 2, 1, 3 } " ); cout << endl << endl;
+  //
+  //    shared_ptr<Tensor_<double>> tester_orig = tensop_machine_->reorder_block_Tensor( "tester_reordered", reordering );
+  //    
+  //    tensop_data_map_->emplace( "tester_orig", tester_orig );
+  //    print_tensor_with_indexes( tester_orig, "tester_orig" ); cout << endl << endl;
+  //
+  //    tensop_machine_->build_test_tensor( "tester2", test_range2, max_blocks2 );
+  //    shared_ptr<Tensor_<double>> tester2 = tensop_data_map_->at("tester2");
+  //    print_tensor_with_indexes( tester2, "tester2 pre reordering" ); cout << endl << endl;
+  //    vector<int> reordering2 = { 1, 0 };
+  //
+  //    shared_ptr<Tensor_<double>> tester2_reordered = tensop_machine_->reorder_block_Tensor( "tester2", reordering2 );
+  //    tensop_data_map_->emplace( "tester2_reordered", tester2_reordered );
+  //    print_tensor_with_indexes( tester2_reordered, "tester2_reordered {1, 0}" ); cout << endl << endl;
+  //
+  //  }
