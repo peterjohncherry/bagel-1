@@ -121,5 +121,14 @@ namespace Debugging_Utils {
     }
     std::cout << std::endl; 
   }
+ 
+  template<typename DataType>
+  void print_1d_array( DataType* ptr , int array_length, std::string name ) { 
+    std::cout << name << " = [ "; std::cout.flush();
+    for ( int qq = 0; qq != array_length; qq++, ptr++ )
+      std::cout << *ptr  << " ";
+    std::cout << " ]" << std::endl;
+  }
+
 }
 #endif

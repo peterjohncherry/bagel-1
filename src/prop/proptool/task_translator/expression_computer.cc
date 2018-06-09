@@ -223,10 +223,11 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
   tensop_machine_ = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
                                                                              moint_computer_ );
  
-  test_trace_subtraction();
+//  test_trace_subtraction();
+  test_sum_reordered_tensor_list();
+  throw logic_error("die here for testing");
 
   tensop_machine_->get_tensor_data_blocks( expression->required_blocks_ );
-  throw logic_error("die here for testing");
   DataType result = 0.0;
   map< string, DataType > g_result_map;
 
@@ -427,33 +428,110 @@ cout << "Expression_Computer::Expression_Computer<DataType>::test_trace_substrac
   }
   return;
 }
-//Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( test_tens4, 0.0);
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template < typename DataType >
+void Expression_Computer::Expression_Computer<DataType>::test_sum_reordered_tensor_list(){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_EXPRESSION_COMPUTER 
+cout << "Expression_Computer::Expression_Computer<DataType>::test_sum_reordered_tensor_list()" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector<size_t> test_ranges_64 = { 6, 4 };
+  vector<size_t> test_ranges_46 = { 4, 6 };
+  vector<size_t> test_ranges_444 = { 4, 4, 4 };
+  vector<size_t> test_ranges_446 = { 4, 4, 6 };
+  vector<size_t> test_ranges_644 = { 6, 4, 4 };
+  vector<size_t> test_ranges_345 = { 3, 4, 5 };
+  vector<size_t> test_ranges_543 = { 5, 4, 3 };
+  vector<size_t> test_ranges_4444 = { 4, 4, 4, 4 };
+  vector<size_t> test_ranges_4422 = { 4, 4, 2, 2 };
+  vector<size_t> test_ranges_2244 = { 2, 2, 4, 4 };
+  vector<size_t> test_ranges_3355 = { 3, 3, 5, 5 }; 
+  vector<size_t> test_ranges_5533 = { 5, 5, 3, 3 }; 
+  
+  vector<size_t> test_ranges_6325 = { 6, 3, 2, 5 }; 
+  vector<size_t> test_ranges_2536 = { 2, 5, 3, 6 }; 
+
+  vector<size_t> max_blocks_46 = { 4, 6 };
+  vector<size_t> max_blocks_22 = { 2, 2 };
+  vector<size_t> max_blocks_24 = { 2, 4 };
+  vector<size_t> max_blocks_42 = { 4, 2 };
+  vector<size_t> max_blocks_222 = { 2, 2, 2 }; 
+  vector<size_t> max_blocks_224 = { 2, 2, 4 }; 
+  vector<size_t> max_blocks_422 = { 4, 2, 2 }; 
+  vector<size_t> max_blocks_4444 = { 4, 4, 4, 4 }; 
+  vector<size_t> max_blocks_4422 = { 4, 4, 2, 2 }; 
+  vector<size_t> max_blocks_2244 = { 2, 2, 4, 4 }; 
+  vector<size_t> max_blocks_3322 = { 3, 3, 2, 2 }; 
+  vector<size_t> max_blocks_2233 = { 2, 2, 3, 3 }; 
+  
+  vector<size_t> max_blocks_1524 = { 1, 5, 2, 4 }; 
+  vector<size_t> max_blocks_2451 = { 2, 4, 5, 1 }; 
+
+  vector<int> ord_01 = { 0, 1 };
+  vector<int> ord_10 = { 1, 0 };
+  vector<int> ord_012 = { 0, 1, 2 };
+  vector<int> ord_210 = { 2, 1, 0 };
+  vector<int> ord_0123 = { 0, 1, 2, 3 };
+  vector<int> ord_3210 = { 3, 2, 1, 0 };
+  vector<int> ord_3201 = { 3, 2, 0, 1 };
+  vector<int> ord_2301 = { 2, 3, 0, 1 };
+  vector<int> ord_2310 = { 2, 3, 1, 0 };
+
+  vector<size_t> target_ranges  = test_ranges_2536;
+  vector<size_t> summand_ranges = test_ranges_6325;
+
+  vector<size_t> target_max_blocks  = max_blocks_2451;
+  vector<size_t> summand_max_blocks = max_blocks_1524;
+
+  vector<vector<int>> summand_reorderings = { ord_2310 };
+  vector<double> summand_factors = { -1.0 };
+
+  tensop_machine_->build_test_tensor( "target", target_ranges, target_max_blocks );
+  shared_ptr<Tensor_<double>> target = tensop_data_map_->at("target");
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( target, 0.0);
+  print_tensor_with_indexes( target, "target" ); cout << endl << endl; 
+
+  tensop_machine_->build_test_tensor( "summand", summand_ranges, summand_max_blocks );
+  shared_ptr<Tensor_<double>> summand = tensop_data_map_->at("summand");
+  print_tensor_with_indexes( summand, "summand" ); cout << endl << endl; 
+
+  Tensor_Arithmetic::Tensor_Arithmetic<double>::add_list_of_reordered_tensors( target, summand, summand_reorderings, summand_factors );
+  print_tensor_with_indexes( target, "post target" ); cout << endl << endl; 
+ 
+  {
+
+  vector<int> summand_reordering_inverse = *( get_ascending_order(summand_reorderings[0]) );
+  shared_ptr<Tensor_<double>> summand_reordered = tensop_machine_->reorder_block_Tensor( "summand", summand_reorderings[0] );
+  print_tensor_with_indexes( summand_reordered, "summand_reordered" ); cout << endl << endl; 
+
+  summand_reordered->ax_plus_y ( 1.0 , target ); 
+  print_tensor_with_indexes( summand_reordered, "summand-post target" ); cout << endl << endl; 
+  } 
+  throw logic_error("dumb"); 
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Expression_Computer::Expression_Computer<double>;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-////  {
-  //
-  //    tensop_machine_->build_test_tensor( "tester", test_range4, max_blocks4 );
-  //    shared_ptr<Tensor_<double>> tester = tensop_data_map_->at("tester");
-  //    print_tensor_with_indexes( tester, "tester pre reordering" ); cout << endl << endl;
-  //    vector<int> reordering = { 0, 2, 1, 3 };
-  //
-  //    shared_ptr<Tensor_<double>> tester_reordered = tensop_machine_->reorder_block_Tensor( "tester", reordering );
-  //    tensop_data_map_->emplace( "tester_reordered", tester_reordered );
-  //    print_tensor_with_indexes( tester_reordered, "tester_reordered { 0, 2, 1, 3 } " ); cout << endl << endl;
-  //
-  //    shared_ptr<Tensor_<double>> tester_orig = tensop_machine_->reorder_block_Tensor( "tester_reordered", reordering );
-  //    
-  //    tensop_data_map_->emplace( "tester_orig", tester_orig );
-  //    print_tensor_with_indexes( tester_orig, "tester_orig" ); cout << endl << endl;
-  //
-  //    tensop_machine_->build_test_tensor( "tester2", test_range2, max_blocks2 );
-  //    shared_ptr<Tensor_<double>> tester2 = tensop_data_map_->at("tester2");
-  //    print_tensor_with_indexes( tester2, "tester2 pre reordering" ); cout << endl << endl;
-  //    vector<int> reordering2 = { 1, 0 };
-  //
-  //    shared_ptr<Tensor_<double>> tester2_reordered = tensop_machine_->reorder_block_Tensor( "tester2", reordering2 );
-  //    tensop_data_map_->emplace( "tester2_reordered", tester2_reordered );
-  //    print_tensor_with_indexes( tester2_reordered, "tester2_reordered {1, 0}" ); cout << endl << endl;
-  //
-  //  }
+//    tensop_machine_->build_test_tensor( "tester", test_range4, max_blocks4 );
+//    shared_ptr<Tensor_<double>> tester = tensop_data_map_->at("tester");
+//    print_tensor_with_indexes( tester, "tester pre reordering" ); cout << endl << endl;
+//    vector<int> reordering = { 0, 2, 1, 3 };
+//
+//    shared_ptr<Tensor_<double>> tester_reordered = tensop_machine_->reorder_block_Tensor( "tester", reordering );
+//    tensop_data_map_->emplace( "tester_reordered", tester_reordered );
+//    print_tensor_with_indexes( tester_reordered, "tester_reordered { 0, 2, 1, 3 } " ); cout << endl << endl;
+//
+//    shared_ptr<Tensor_<double>> tester_orig = tensop_machine_->reorder_block_Tensor( "tester_reordered", reordering );
+//    
+//    tensop_data_map_->emplace( "tester_orig", tester_orig );
+//    print_tensor_with_indexes( tester_orig, "tester_orig" ); cout << endl << endl;
+//
+//    tensop_machine_->build_test_tensor( "tester2", test_range2, max_blocks2 );
+//    shared_ptr<Tensor_<double>> tester2 = tensop_data_map_->at("tester2");
+//    print_tensor_with_indexes( tester2, "tester2 pre reordering" ); cout << endl << endl;
+//    vector<int> reordering2 = { 1, 0 };
+//
+//    shared_ptr<Tensor_<double>> tester2_reordered = tensop_machine_->reorder_block_Tensor( "tester2", reordering2 );
+//    tensop_data_map_->emplace( "tester2_reordered", tester2_reordered );
+//    print_tensor_with_indexes( tester2_reordered, "tester2_reordered {1, 0}" ); cout << endl << endl;
