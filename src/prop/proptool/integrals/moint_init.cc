@@ -3,18 +3,6 @@
 
 using namespace std;
 using namespace bagel;
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-MOInt_Init<double>::MOInt_Init(std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref,
-                            int ncore, int nfrozenvirt, bool block_diag_fock ) :  geom_(geom), ref_(ref), 
-                            ncore_(ncore), nfrozenvirt_(nfrozenvirt), block_diag_fock_(block_diag_fock) {}  
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-MOInt_Init<std::complex<double>>::MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const RelReference> ref,
-                                              int ncore, int nfrozenvirt, bool block_diag_fock ) : geom_(geom), ref_(ref),
-                                              ncore_(ncore), nfrozenvirt_(nfrozenvirt), block_diag_fock_(block_diag_fock) {}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////
 shared_ptr<const ZMatrix> MOInt_Init<complex<double>>::coeff() const {

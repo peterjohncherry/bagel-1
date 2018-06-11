@@ -83,8 +83,6 @@ namespace Tensor_Arithmetic_Utils {
      template<> 
      std::shared_ptr<SMITH::Tensor_<std::complex<double>>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> Tens_in,  std::vector<SMITH::IndexRange>& range_names );
 
-
-
      template<typename DataType> 
      std::shared_ptr<SMITH::Tensor_<DataType>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in,  std::vector<std::string>& range_names,
                                                       std::shared_ptr< std::map< std::string, std::shared_ptr<SMITH::IndexRange> >> range_conversion_map );
@@ -100,8 +98,8 @@ namespace Tensor_Arithmetic_Utils {
      void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<DataType>> tens, std::string name  );
      template<>
      void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<double>> tens, std::string name  );
-//     template<>
-//     void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> tens, std::string name  ) { throw std::logic_error( " not printing for complex tensors!"); }
+     template<>
+     void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> tens, std::string name  );
 
       template<typename DataType>     
       void set_test_elems( std::shared_ptr<SMITH::Tensor_<DataType>> Tens, std::string name  );

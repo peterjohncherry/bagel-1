@@ -154,7 +154,7 @@ cout << "CASPT2::CASPT2::solve" << endl;
   cout << "rdm2_->norm() = " << rdm2_->norm(); cout.flush();  cout << " rdm2_->size() = " << rdm2_->size_alloc() << endl;
   vector<IndexRange> act4_ranges = rdm2_->indexrange();
   auto v2_act = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, act4_ranges ); 
-  Tensor_Arithmetic_Utils::Print_Tensor( v2_act, "v2_act" );  
+  Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_act, "v2_act" );  
   double v2_act_dot_rdm = v2_act->dot_product( rdm2_ ); 
   cout << "v2_act_dot_rdm =  " << v2_act_dot_rdm << endl; 
 

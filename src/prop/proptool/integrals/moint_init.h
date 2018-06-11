@@ -33,8 +33,11 @@ namespace bagel {
       std::shared_ptr<const Reference> ref_;
 
     public:
-      MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref, 
-                  int ncore, int nfrozenvirt, bool block_diag_fock );
+      MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref, int ncore, int nfrozenvirt, bool block_diag_fock ):
+                  geom_(geom), ref_(ref), ncore_(ncore), nfrozenvirt_(nfrozenvirt), block_diag_fock_(block_diag_fock) {} 
+    
+      MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const RelReference> ref, int ncore, int nfrozenvirt, bool block_diag_fock ) :
+                  geom_(geom), ref_(ref), ncore_(ncore), nfrozenvirt_(nfrozenvirt), block_diag_fock_(block_diag_fock) {}
 
       ~MOInt_Init(){};
 
@@ -73,7 +76,8 @@ namespace bagel {
 
     public:
       MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref, 
-                  int ncore, int nfrozenvirt, bool block_diag_fock );
+                  int ncore, int nfrozenvirt, bool block_diag_fock ) :
+                  geom_(geom), ref_(ref), ncore_(ncore), nfrozenvirt_(nfrozenvirt), block_diag_fock_(block_diag_fock) {} 
 
       ~MOInt_Init(){};
 
@@ -114,8 +118,14 @@ namespace bagel {
       std::string method_;
 
     public:
+      MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const Reference> ref, 
+                  int ncore, int nfrozenvirt, bool block_diag_fock ) {
+                     throw std::logic_error(" You seem to be passing a complex<double> version of a non-relativistic reference to the MOInt_Computer. I doubt this is what you want so I will abort now..." );
+                  }
+
       MOInt_Init( std::shared_ptr<const Geometry> geom,  std::shared_ptr<const RelReference> ref, 
-                  int ncore, int nfrozenvirt, bool block_diag_fock );
+                  int ncore, int nfrozenvirt, bool block_diag_fock ):
+                  geom_(geom), ref_(ref), ncore_(ncore), nfrozenvirt_(nfrozenvirt), block_diag_fock_(block_diag_fock) {} 
 
       ~MOInt_Init(){};
 

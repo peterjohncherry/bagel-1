@@ -215,7 +215,6 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 
   string expression_name = expression->name();
 
-
   bool new_result = ( scalar_results_map->find( expression_name ) == scalar_results_map->end() ); 
   if ( !new_result )  
     cout << "WARNING : You have already calculated this expression....." << expression_name << " = " << scalar_results_map->at( expression_name ) << endl;
@@ -224,8 +223,8 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
                                                                              moint_computer_ );
  
 //  test_trace_subtraction();
-  test_sum_reordered_tensor_list();
-  throw logic_error("die here for testing");
+//  test_sum_reordered_tensor_list();
+//  throw logic_error("die here for testing");
 
   tensop_machine_->get_tensor_data_blocks( expression->required_blocks_ );
   DataType result = 0.0;
@@ -311,12 +310,13 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
         tensop_data_map_->emplace("rdm2",  rdm2 );
       }
     }
+    cout <<"v2_act->norm() = "<< v2_act->norm() << endl; 
+    print_tensor_with_indexes( v2_act, "v2_act" );  
+    print_tensor_with_indexes( rdm1 , "rdm1"); cout << endl;
+    print_tensor_with_indexes( rdm2 , "rdm2"); cout << endl;
     vector<int> id_pos = {1, 2};
-    cout << "rdm1->size_alloc() = " ; cout.flush() ; cout << rdm1->size_alloc() <<endl;
-    cout << "rdm2->size_alloc() = " ; cout.flush() ; cout << rdm2->size_alloc() <<endl;
     Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( rdm2, rdm1, id_pos, -1.0 ); 
-    cout << "rdm1->norm() = "; cout.flush(); cout << rdm1->norm() << endl;
-    cout << "rdm2->norm() = "; cout.flush(); cout << rdm2->norm() << endl;
+    print_tensor_with_indexes( rdm2 , "rdm2 - rdm1"); cout << endl;
   } // END TEST 
 
   return;

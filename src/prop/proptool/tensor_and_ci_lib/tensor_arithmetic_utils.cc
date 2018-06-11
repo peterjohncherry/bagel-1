@@ -831,6 +831,7 @@ void Tensor_Arithmetic_Utils::print_tensor_with_indexes( shared_ptr<Tensor_<doub
 cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    cout << "---------------------------- " << name <<  " ----------------------------" << endl;
+   cout.precision(12);
 
    vector<IndexRange> id_ranges = Tens->indexrange();
   
@@ -908,6 +909,17 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
      } while ( fvec_cycle_skipper_f2b( block_pos, block_pos_maxs, block_pos_mins ));
    }  
 
+   return ;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
+void Tensor_Arithmetic_Utils::print_tensor_with_indexes( shared_ptr<Tensor_<std::complex<double>>> Tens, string name  ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   cout << "---------------------------- " << name <<  " ----------------------------" << endl;
+   throw logic_error( " no printing for complex tensors yet" ); 
    return ;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

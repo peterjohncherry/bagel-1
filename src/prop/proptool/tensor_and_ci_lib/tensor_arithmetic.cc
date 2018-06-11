@@ -153,13 +153,8 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::trace_tensor__tensor_return( sha
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
 cout << "Tensor_Arithmetic::trace_tensor__tensor_return" << endl;
+Tensor_Arithmetic_Debugger::check_all_same_ranges( Tens_in ); 
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  assert ( Tens_in->indexrange().size() > 1 );
-
-#ifndef NDEBUG
-  for ( int ii =1 ; ii != Tens_in->indexrange().size(); ii++ ) 
-    assert( Tens_in->indexrange()[ii].size() == Tens_in->indexrange()[ii-1].size() ) ; 
-# endif 
 
   vector<IndexRange> id_ranges = Tens_in->indexrange();
   vector<IndexRange> unit_range = { IndexRange( 1, 1, 0, 1 ) };
@@ -392,7 +387,6 @@ cout << "Tensor_Arithmetic::sum_over_idxs" << endl;
 
   return Tens_out;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Bad routine using reordering because I just want something which works
 // TODO Write (small) routine to optimize ordering of ctrs_pos and call at start of routine.

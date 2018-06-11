@@ -12,10 +12,10 @@ using namespace bagel::Tensor_Arithmetic;
 //note, this does not have the diagonal component
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_v2(const  vector<SMITH::IndexRange>& blocks ) { 
+shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_v2(const vector<SMITH::IndexRange>& blocks ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
-cout << "MOInt_Computer<DataType>::get_v2" << endl;
+cout << "MOInt_Computer<DataType>::get_v2 IndexRange_ver" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //flipping of indexes due to conflicting order definitions with current moint routine
@@ -24,12 +24,14 @@ cout << "MOInt_Computer<DataType>::get_v2" << endl;
   MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, alt_ordered_blocks );
 
   // again for flipping indexes
-  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
+//  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
+  vector<int> alt_to_norm_order = { 0, 1, 2, 3 };
   auto Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
   shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order );
 
   //TODO Why is this like this!?! Shouldn't you return v2_tens? Or just have the function in the return statement?
   cout << "MO_comp  v2_tens->norm() = " <<   v2_tens->norm() << endl;
+
   return v2_tens;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,8 +54,20 @@ cout << "MOInt_Computer<DataType>::get_v2 string ver" << endl;
   MOInt::K2ext_new<DataType> v2 =  MOInt::K2ext_new<DataType>( info_, coeffs_, blocks );
 
   // again for flipping indexes
-  vector<int> alt_to_norm_order =  { 3, 1, 2, 0 };
-  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
+//  vector<int> alt_to_norm_order =  { 3, 1, 2, 0 };
+  vector<int> alt_to_norm_order =  { 0, 1, 2, 3 };
+//  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
+  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = v2.tensor();
+  {
+    vector<SMITH::IndexRange> blocks_act(blocks_str.size());
+    string act_name = "a";
+    for ( int ii = 0 ; ii != blocks_str.size(); ii++ )
+      blocks_act[ii] =  *(range_conversion_map_->at(act_name)); 
+
+    shared_ptr<SMITH::Tensor_<DataType>> v2_act = 
+    Tensor_Arithmetic_Utils::get_sub_tensor( v2_tens, blocks_act );
+    Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_act, " INT COMPUTER v2_act" );  cout << endl;
+  }
 
   return  v2_tens; 
 }
