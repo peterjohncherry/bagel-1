@@ -61,6 +61,7 @@ class Expression_Computer {
     //TESTING
     void test_trace_subtraction();
     void test_sum_reordered_tensor_list();
+    void check_rdms();
 };
 
 }//end Expression_Computer namespace

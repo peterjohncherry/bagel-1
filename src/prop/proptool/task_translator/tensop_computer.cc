@@ -76,8 +76,7 @@ void TensOp_Computer::TensOp_Computer<DataType>::sum_different_orderings( string
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
 cout << " TensOp_Computer::TensOp_Computer::sum_different_orderings " << endl;
-cout << "target_name  = " << target_name << endl;
-cout << "summand_name = " << summand_name << endl;
+cout << "target_name  = " << target_name << endl; cout << "summand_name = " << summand_name << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<Tensor_<DataType>> target  = find_or_get_CTP_data( target_name );
@@ -265,12 +264,18 @@ cout << "TensOp_Computer::TensOp_Computer::calculate_mo_integrals() : " << mo_te
     auto H_loc = tensop_data_map_->find( "H_{00}" );
 
     if ( H_loc == tensop_data_map_->end() ) {
+      if ( ! moint_computer_->got_fock_coeffs() ) {
+        vector<string> free2 = { "free", "free" };
+        moint_computer_->calculate_fock( free2, true, true );
+        tensop_data_map_->emplace( "f_{00}" , moint_computer_->f1() );
+      }
+
       vector<string> free4 = { "free", "free", "free", "free" };
-      auto v2  =  moint_computer_->get_v2( free4 ) ;
-      tensop_data_map_->emplace( "H_{00}" , v2 );
+      moint_computer_->calculate_v2( free4 ) ;
+      tensop_data_map_->emplace( "H_{00}" , moint_computer_->v2() );
  
       if ( mo_tensor_name != "H_{00}" ) 
-        tensop_data_map_->emplace( mo_tensor_name , v2 );
+        tensop_data_map_->emplace( mo_tensor_name , moint_computer_->v2() );
 
     } else { 
       tensop_data_map_->emplace( mo_tensor_name , H_loc->second );
@@ -282,11 +287,11 @@ cout << "TensOp_Computer::TensOp_Computer::calculate_mo_integrals() : " << mo_te
 
     if ( f_loc == tensop_data_map_->end() ) {
       vector<string> free2 = { "free", "free" };
-      auto h1  =  moint_computer_->get_h1( free2 );
-      tensop_data_map_->emplace( "h_{00}" , h1 );
+      moint_computer_->calculate_h1( free2, false );
+      tensop_data_map_->emplace( "h_{00}" , moint_computer_->h1() );
  
       if ( mo_tensor_name != "h_{00}" )
-        tensop_data_map_->emplace( mo_tensor_name , h1 );
+        tensop_data_map_->emplace( mo_tensor_name , moint_computer_->h1() );
     }
 
   } else if ( mo_tensor_name[0] == 'f' ) {   
@@ -294,11 +299,12 @@ cout << "TensOp_Computer::TensOp_Computer::calculate_mo_integrals() : " << mo_te
 
     if ( f_loc == tensop_data_map_->end() ) {
       vector<string> free2 = { "free", "free" };
-      auto f1  =  moint_computer_->get_fock( free2, true );
-      tensop_data_map_->emplace( "f_{00}" , f1 );
- 
+      moint_computer_->calculate_fock( free2, true, true );
+      tensop_data_map_->emplace( "f_{00}" , moint_computer_->f1() );
+
+      //TODO fix this properly for different states 
       if ( mo_tensor_name != "f_{00}" )
-        tensop_data_map_->emplace( mo_tensor_name , f1 );
+        tensop_data_map_->emplace( mo_tensor_name , moint_computer_->f1() );
     }
   }
   

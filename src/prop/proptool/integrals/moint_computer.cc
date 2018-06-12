@@ -12,141 +12,152 @@ using namespace bagel::Tensor_Arithmetic;
 //note, this does not have the diagonal component
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_v2(const vector<SMITH::IndexRange>& blocks ) { 
+void  MOInt_Computer<DataType>::calculate_v2(const vector<SMITH::IndexRange>& blocks ) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
-cout << "MOInt_Computer<DataType>::get_v2 IndexRange_ver" << endl;
+cout << "MOInt_Computer<DataType>::calculate_v2 IndexRange_ver" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  // TODO for annoying const issue; change arg.
+  vector<SMITH::IndexRange>  blocks_buff = blocks;
+  MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks_buff );
+  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
 
-  //flipping of indexes due to conflicting order definitions with current moint routine
-  vector<SMITH::IndexRange>  alt_ordered_blocks = blocks;
-
-  MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, alt_ordered_blocks );
-
-  // again for flipping indexes
-//  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
-  vector<int> alt_to_norm_order = { 0, 1, 2, 3 };
   auto Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
-  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order );
+  v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order );
 
-  //TODO Why is this like this!?! Shouldn't you return v2_tens? Or just have the function in the return statement?
-  cout << "MO_comp  v2_tens->norm() = " <<   v2_tens->norm() << endl;
-
-  return v2_tens;
+  return;
 }
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Dupe routine with string input
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_v2(const vector<string>& blocks_str ) {
+void MOInt_Computer<DataType>::calculate_v2(const vector<string>& blocks_str ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
-cout << "MOInt_Computer<DataType>::get_v2 string ver" << endl;
+cout << "MOInt_Computer<DataType>::calculate_v2 string ver" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  //flipping of indexes due to conflicting order definitions with current moint routine
-  vector<string>  alt_ordered_blocks = {  blocks_str[0], blocks_str[1], blocks_str[2] , blocks_str[3] } ;
 
   vector<SMITH::IndexRange> blocks(blocks_str.size());
   for ( int ii = 0 ; ii != blocks_str.size(); ii++ )
-    blocks[ii] =  *(range_conversion_map_->at(alt_ordered_blocks[ii])); 
+    blocks[ii] =  *(range_conversion_map_->at(blocks_str[ii])); 
   
-  MOInt::K2ext_new<DataType> v2 =  MOInt::K2ext_new<DataType>( info_, coeffs_, blocks );
+  calculate_v2( blocks );
 
-  // again for flipping indexes
-//  vector<int> alt_to_norm_order =  { 3, 1, 2, 0 };
-  vector<int> alt_to_norm_order =  { 0, 1, 2, 3 };
-//  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order);
-  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = v2.tensor();
-  {
-    vector<SMITH::IndexRange> blocks_act(blocks_str.size());
-    string act_name = "a";
-    for ( int ii = 0 ; ii != blocks_str.size(); ii++ )
-      blocks_act[ii] =  *(range_conversion_map_->at(act_name)); 
-
-    shared_ptr<SMITH::Tensor_<DataType>> v2_act = 
-    Tensor_Arithmetic_Utils::get_sub_tensor( v2_tens, blocks_act );
-    Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_act, " INT COMPUTER v2_act" );  cout << endl;
-  }
-
-  return  v2_tens; 
+  return; 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //is the core ham minus diagonal component from above
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_h1( const vector<SMITH::IndexRange>& blocks, bool set_coeffs ) {
+void MOInt_Computer<DataType>::calculate_h1( const vector<SMITH::IndexRange>& blocks, bool set_coeffs, bool set_fock ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
-cout << "MOInt_Computer<DataType>::get_h1" << endl;
+cout << "MOInt_Computer<DataType>::calculate_h1" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  using MatType = typename std::conditional<std::is_same<DataType,double>::value,Matrix,ZMatrix>::type;
   MOInt::MOFock_new<DataType> one_el_ints( info_, blocks );
-  if ( set_coeffs ) 
-    coeffs_ = one_el_ints.coeff();  
-
-  return one_el_ints.h1();
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Dupe routine with string input
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_h1( const vector<string>& blocks_str, bool set_coeffs ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
-cout << "MOInt_Computer<DataType>::get_h1 string ver" << endl;
-#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  using MatType = typename std::conditional<std::is_same<DataType,double>::value,Matrix,ZMatrix>::type;
-  vector<SMITH::IndexRange> blocks(blocks_str.size());
-  for ( int ii = 0 ; ii != blocks_str.size(); ii++ ) 
-    blocks[ii] = *(range_conversion_map_->at(blocks_str[ii])); 
-     
-  MOInt::MOFock_new<DataType> one_el_ints( info_, blocks );
-  if ( set_coeffs ) 
-    coeffs_ = one_el_ints.coeff();  
-
-  return one_el_ints.h1();
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Dupe routine with string input
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_fock( const vector<string>& blocks_str, bool set_coeffs ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
-cout << "MOInt_Computer<DataType>::get_fock string ver" << endl;
-#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  using MatType = typename std::conditional<std::is_same<DataType,double>::value,Matrix,ZMatrix>::type;
-  vector<SMITH::IndexRange> blocks(blocks_str.size());
-  for ( int ii = 0 ; ii != blocks_str.size(); ii++ ) 
-    blocks[ii] = *(range_conversion_map_->at(blocks_str[ii])); 
+  h1_ = one_el_ints.h1();
   
-  MOInt::MOFock_new<DataType> one_el_ints( info_, blocks );
+  if ( set_fock ) 
+    f1_ = one_el_ints.fock();  
+
   if ( set_coeffs ) 
     coeffs_ = one_el_ints.coeff();  
+  
+  return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Dupe routine with string input
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void MOInt_Computer<DataType>::calculate_h1( const vector<string>& blocks_str, bool set_coeffs, bool set_fock ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
+cout << "MOInt_Computer<DataType>::calculate_h1 string ver" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  return one_el_ints.fock();
+  vector<SMITH::IndexRange> blocks(blocks_str.size());
+  for ( int ii = 0 ; ii != blocks_str.size(); ii++ ) 
+    blocks[ii] = *(range_conversion_map_->at(blocks_str[ii])); 
+
+  calculate_h1( blocks, set_coeffs, set_fock);
+
+  return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //is core_fock minus diagonal component from above
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_fock( const vector<SMITH::IndexRange>& blocks, bool set_coeffs ) {
+void MOInt_Computer<DataType>::calculate_fock( const vector<SMITH::IndexRange>& blocks, bool set_coeffs, bool set_h1 ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
-cout << "MOInt_Computer<DataType>::get_fock" << endl;
+cout << "MOInt_Computer<DataType>::calculate_fock   : set_coeffs = " << set_coeffs << endl ;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  using MatType = typename std::conditional<std::is_same<DataType,double>::value,Matrix,ZMatrix>::type;
   MOInt::MOFock_new<DataType> one_el_ints( info_, blocks );
+  f1_ = one_el_ints.fock();
 
-  if ( set_coeffs ) 
+  if ( set_coeffs ) {  
     coeffs_ = one_el_ints.coeff();  
+    got_fock_coeffs_ = true;
+  }
 
-  return one_el_ints.fock();
+  if ( set_h1 ) 
+    h1_ = one_el_ints.h1();
+
+  return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Dupe routine with string input
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void MOInt_Computer<DataType>::calculate_fock( const vector<string>& blocks_str, bool set_coeffs, bool set_h1 ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
+cout << "MOInt_Computer<DataType>::calculate_fock string ver : set_coeffs = "<< set_coeffs << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector<SMITH::IndexRange> blocks(blocks_str.size());
+  for ( int ii = 0 ; ii != blocks_str.size(); ii++ ) 
+    blocks[ii] = *(range_conversion_map_->at(blocks_str[ii])); 
+ 
+  calculate_fock( blocks, set_coeffs, set_h1); 
+
+  return;
+}
+/////////////////////////////////////////////////TESTING////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::calculate_v2_smith(const vector<string>& blocks_str ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
+cout << "MOInt_Computer<DataType>::calculate_v2_smith string ver" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  vector<SMITH::IndexRange> blocks(blocks_str.size());
+  for ( int ii = 0 ; ii != blocks_str.size(); ii++ )
+    blocks[ii] =  *(range_conversion_map_->at(blocks_str[ii])); 
+  
+  return calculate_v2_smith( blocks );
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//note, this does not have the diagonal component
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+shared_ptr<SMITH::Tensor_<DataType>>  MOInt_Computer<DataType>::calculate_v2_smith(const vector<SMITH::IndexRange>& blocks ) { 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
+cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  // TODO for annoying const issue; change arg.
+  vector<SMITH::IndexRange>  blocks_buff = blocks;
+  MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks_buff );
+
+  return v2.tensor();
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>

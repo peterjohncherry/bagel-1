@@ -6,8 +6,8 @@ using namespace std;
 using namespace WickUtils;
 using namespace Algebra_Utils;
 
-#define __DEBUG_PROPTOOL_RANGE_BLOCK_INFO
-#define __DEBUG_PROPTOOL_SPLIT_RANGE_BLOCK_INFO
+//#define __DEBUG_PROPTOOL_RANGE_BLOCK_INFO
+//#define __DEBUG_PROPTOOL_SPLIT_RANGE_BLOCK_INFO
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Constructor for use when building Split_Range_Block_Info, note this does not calculate the inverse transformation; that is determined in SRBI_Helper,  and passed 
 // directly to Split_Range_Block_Info

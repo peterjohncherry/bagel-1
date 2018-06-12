@@ -4,8 +4,8 @@
 #include <src/util/f77.h>
 #include <src/prop/proptool/debugging_utils.h>
 
-#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE
-#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
+//#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE
+//#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
 #ifdef  __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_debug.h>
 #endif
@@ -79,7 +79,9 @@ cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
     } while( fvec_cycle_skipper_f2b(summand_block_pos, summand_maxs, summand_mins) );
 
   } else { 
+
     target->ax_plus_y( summand_factors.front() , summand ); 
+
   } 
 
   return;
@@ -1422,7 +1424,7 @@ DataType
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_tensor_element( shared_ptr<Tensor_<DataType>> Tens, vector<int>& id_pos){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
-cout << "Tensor_Arithmetic::get_tensor_element" ; cout.flush(); print_vector(id_pos, "id_pos"); cout << endl; 
+cout << "Tensor_Arithmetic::get_tensor_element "; cout.flush(); print_vector(id_pos, "id_pos"); cout << endl; 
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    vector<IndexRange> id_ranges = Tens->indexrange();

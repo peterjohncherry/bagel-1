@@ -293,31 +293,57 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
   } else {
     scalar_results_map->at( expression_name ) = result;
   }
+  
+//  check_rdms();
+  
+  return ;
 
-  { // TEST 
-    auto bob =  gamma_computer_->gamma_data_map();
-    shared_ptr<Tensor_<DataType>> rdm1;
-    shared_ptr<Tensor_<DataType>> rdm2;
-    auto v2_act =  tensop_data_map_->at("H_{00}_aaaa");
-    for ( auto elem : *bob ) { 
-      if ( elem.second->rank() == 2 ) {      
-        cout << elem.first << "->norm() = " ; cout.flush(); cout << elem.second->norm() << endl;
-        rdm1 = elem.second;
-        tensop_data_map_->emplace("rdm1",  rdm1 );
-      } else if ( elem.second->rank() == 4 ) { 
-        cout << elem.first << "->norm() = " ; cout.flush(); cout << elem.second->norm() << endl;
-        rdm2 = make_shared<Tensor_<DataType>>(*(elem.second));
-        tensop_data_map_->emplace("rdm2",  rdm2 );
-      }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template < typename DataType >
+void Expression_Computer::Expression_Computer<DataType>::check_rdms() {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_EXPRESSION_COMPUTER
+cout << "Expression_Computer::check_rdms" << endl;  
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+  auto bob =  gamma_computer_->gamma_data_map();
+  shared_ptr<Tensor_<DataType>> rdm1;
+  shared_ptr<Tensor_<DataType>> rdm2;
+  auto v2_act =  tensop_data_map_->at("H_{00}_aaaa");
+  bool got_rdm1 = false;
+  bool got_rdm2 = false;
+
+  for ( auto elem : *bob ) { 
+    if ( elem.second->rank() == 2 ) {      
+      cout << elem.first << "->norm() = " ; cout.flush(); cout << elem.second->norm() << endl;
+      rdm1 = elem.second;
+      tensop_data_map_->emplace("rdm1",  rdm1 );
+      got_rdm1 = true;
+      print_tensor_with_indexes( rdm1 , "rdm1"); cout << endl;
+    } else if ( elem.second->rank() == 4 ) { 
+      cout << elem.first << "->norm() = " ; cout.flush(); cout << elem.second->norm() << endl;
+      rdm2 = make_shared<Tensor_<DataType>>(*(elem.second));
+      tensop_data_map_->emplace("rdm2",  rdm2 );
+      got_rdm2 = true;
+      print_tensor_with_indexes( rdm2 , "rdm2"); cout << endl;
     }
-    cout <<"v2_act->norm() = "<< v2_act->norm() << endl; 
-    print_tensor_with_indexes( v2_act, "v2_act" );  
-    print_tensor_with_indexes( rdm1 , "rdm1"); cout << endl;
-    print_tensor_with_indexes( rdm2 , "rdm2"); cout << endl;
-    vector<int> id_pos = {1, 2};
-    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( rdm2, rdm1, id_pos, -1.0 ); 
-    print_tensor_with_indexes( rdm2 , "rdm2 - rdm1"); cout << endl;
-  } // END TEST 
+  }
+  if ( got_rdm1 && got_rdm2 ) {
+    
+    vector<int> id_pos = { 1, 2 };
+    vector<int> reorder_vector = { 2, 3, 0, 1 };
+    tensop_data_map_->emplace( "rdm1_test" ,  make_shared<Tensor_<DataType>>(*(tensop_data_map_->at("rdm1"))));
+    tensop_data_map_->emplace( "rdm2_test" ,  make_shared<Tensor_<DataType>>(*(tensop_data_map_->at("rdm2"))));
+    shared_ptr<Tensor_<DataType>> rdm2_klij =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( tensop_data_map_->at("rdm2_test" ), reorder_vector  );
+
+    tensop_data_map_->emplace( "rdm2_klij", rdm2_klij);
+    
+    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( tensop_data_map_->at("rdm2_klij"), tensop_data_map_->at("rdm1_test"), id_pos, -1.0 ); 
+    print_tensor_with_indexes(  tensop_data_map_->at("rdm2_klij"), "rdm2_klij - rdm1_kj" ); cout << endl;
+
+  }
 
   return;
 }
