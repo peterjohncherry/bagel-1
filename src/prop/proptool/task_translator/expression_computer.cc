@@ -294,7 +294,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     scalar_results_map->at( expression_name ) = result;
   }
   
-//  check_rdms();
+  check_rdms();
   
   return ;
 
@@ -307,7 +307,7 @@ void Expression_Computer::Expression_Computer<DataType>::check_rdms() {
 #ifdef __DEBUG_EXPRESSION_COMPUTER
 cout << "Expression_Computer::check_rdms" << endl;  
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+    
   auto bob =  gamma_computer_->gamma_data_map();
   shared_ptr<Tensor_<DataType>> rdm1;
   shared_ptr<Tensor_<DataType>> rdm2;
@@ -330,8 +330,9 @@ cout << "Expression_Computer::check_rdms" << endl;
       print_tensor_with_indexes( rdm2 , "rdm2"); cout << endl;
     }
   }
+
   if ( got_rdm1 && got_rdm2 ) {
-    
+
     vector<int> id_pos = { 1, 2 };
     vector<int> reorder_vector = { 2, 3, 0, 1 };
     tensop_data_map_->emplace( "rdm1_test" ,  make_shared<Tensor_<DataType>>(*(tensop_data_map_->at("rdm1"))));
@@ -342,6 +343,14 @@ cout << "Expression_Computer::check_rdms" << endl;
     
     Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( tensop_data_map_->at("rdm2_klij"), tensop_data_map_->at("rdm1_test"), id_pos, -1.0 ); 
     print_tensor_with_indexes(  tensop_data_map_->at("rdm2_klij"), "rdm2_klij - rdm1_kj" ); cout << endl;
+
+    vector<string> free4 = { "free", "free", "free", "free" }; 
+    tensop_data_map_->emplace( "v2_smith_order", moint_computer_->calculate_v2_smith( free4 ) );
+    vector<string> act4 = { "a", "a", "a", "a" }; 
+    tensop_machine_->get_sub_tensor( "v2_smith_order", "v2_smith_order_act",  act4 );
+    print_tensor_with_indexes( tensop_data_map_->at("v2_smith_order_act") , "v2_smith_order_act" ); cout << endl;
+
+    cout << " rdm2_klij->dot_product( tensop_data_map_->at(\"v2_smith_order_act\") ) = "; cout.flush(); cout << rdm2_klij->dot_product( tensop_data_map_->at("v2_smith_order_act") ) << endl;  
 
   }
 
@@ -421,7 +430,6 @@ void Expression_Computer::Expression_Computer<DataType>::test_trace_subtraction(
 #ifdef __DEBUG_EXPRESSION_COMPUTER 
 cout << "Expression_Computer::Expression_Computer<DataType>::test_trace_substraction()" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
   vector<size_t> test_range2 = { 6, 7 };
   vector<size_t> max_blocks2 = { 4, 4 }; 

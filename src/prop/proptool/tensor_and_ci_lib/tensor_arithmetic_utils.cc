@@ -491,10 +491,7 @@ vector<int> Tensor_Arithmetic_Utils::put_ctr_at_back( const vector<int>& orig_po
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<int> new_pos = orig_pos;
-  if (ctr_pos == orig_pos.back()){
-   return new_pos;
- 
-  } else {
+  if (ctr_pos != orig_pos.back()){
    
    int ii =0;
    for (  ; ii != orig_pos.size(); ii++)
@@ -507,9 +504,8 @@ vector<int> Tensor_Arithmetic_Utils::put_ctr_at_back( const vector<int>& orig_po
    if (new_pos.size() != orig_pos.size())
      throw runtime_error("something has gone wrong in index reshuffling");
  
-   return new_pos;
- 
   }
+  return new_pos;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //rearranges position vector to have ctr pos at front
@@ -646,7 +642,7 @@ cout << "Tensor_Arithmetic_Utils::check_contracted_indexes " << endl;
     if (block_len != idx_block[idx_pos[ii]].range().size()){
       cout << "ranges of contracted indexes " << idx_pos[ii] << " and " <<  idx_pos[ii-1]  << "have same lengths but different number of index blocks";
       assert(block_len == idx_block[idx_pos[ii]].range().size());
-     }
+    }
 
   return;
 

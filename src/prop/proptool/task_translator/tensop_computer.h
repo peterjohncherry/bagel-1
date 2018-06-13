@@ -44,9 +44,9 @@ class TensOp_Computer {
 
     void add_tensors( std::string target_name, std::string summand_name, DataType factor );
  
-    void build_tensor( std::string new_data_name, std::vector<std::string> id_ranges ); 
+    void build_tensor( std::string new_data_name, std::vector<std::string> id_ranges, DataType init_val = (DataType)(0.0) ); 
 
-    std::vector<SMITH::IndexRange> Get_Bagel_IndexRanges( std::vector<std::string>& ranges_str ); 
+    std::vector<SMITH::IndexRange> Get_Bagel_IndexRanges( const std::vector<std::string>& ranges_str ); 
 
     void sum_different_orderings( std::string target_name, std::string summand_name, std::vector<std::pair<double,double>> factor_list, std::vector<std::vector<int>> id_orders );
 
@@ -75,6 +75,7 @@ class TensOp_Computer {
 
     void divide_tensors_in_place( std::string T1_name, std::string T2_name );
 
+
     /////////// Utility routines /////////////////////////
 
     void Calculate_CTP( AContribInfo_Base& A_contrib_name );
@@ -91,7 +92,7 @@ class TensOp_Computer {
     void
     build_index_conversion_map(std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<SMITH::IndexRange>>>> range_conversion_pairs );
 
-    std::shared_ptr<SMITH::Tensor_<DataType>>
+    std::shared_ptr<SMITH::Tensor_<DataType>> 
     find_or_get_CTP_data(std::string CTP_name);
 
     std::pair<int,int>
@@ -99,6 +100,8 @@ class TensOp_Computer {
                                                            std::shared_ptr<CtrTensorPart_Base>  CTP2);
 
     void build_mo_tensor( std::string mo_tensor_name );
+
+    void get_sub_tensor( std::string full_tens_name, std::string block_name,  const std::vector<std::string>& range_names );
 
     void build_test_tensor( std::string test_tensor_name, std::vector<size_t> dimensions, std::vector<size_t> max_blocks_sizes );
 

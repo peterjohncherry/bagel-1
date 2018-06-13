@@ -126,27 +126,32 @@ cout << " TensOp_Computer::TensOp_Computer::divide_tensors " << endl;
 //Intended for intermediate and temporary tensors
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void TensOp_Computer::TensOp_Computer<DataType>::build_tensor( string new_data_name , std::vector<string> id_ranges ){ 
+void TensOp_Computer::TensOp_Computer<DataType>::build_tensor( string new_tens_name , std::vector<string> id_ranges, DataType init_val ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
-cout << " TensOp_Computer::TensOp_Computer::divide_tensors " << endl;
+cout << " TensOp_Computer::TensOp_Computer::build_tensor " << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<Tensor_<DataType>> new_data; 
+  shared_ptr<Tensor_<DataType>> new_tens; 
   if ( id_ranges.size()  != 0 ) {
-    new_data = make_shared<Tensor_<DataType>>( Get_Bagel_IndexRanges( id_ranges ) );
+    new_tens = make_shared<Tensor_<DataType>>( Get_Bagel_IndexRanges( id_ranges ) );
   } else {
-    new_data = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
+    new_tens = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
   }  
-  new_data->allocate();
-  new_data->zero(); 
- 
-  auto new_data_loc = tensop_data_map_->find( new_data_name); 
-  if(  new_data_loc != tensop_data_map_->end()){
-    cout << "The tensor block " << new_data_name << "is already in the map.... overwriting " << endl;
-    new_data_loc->second = new_data;
+  new_tens->allocate();
+
+  if ( init_val == (DataType)(0.0) ) {
+    new_tens->zero(); 
+  } else {
+    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( new_tens, init_val );
+  }  
+
+  auto new_tens_loc = tensop_data_map_->find( new_tens_name); 
+  if(  new_tens_loc != tensop_data_map_->end()){
+    cout << "The tensor block " << new_tens_name << "is already in the map.... overwriting " << endl;
+    new_tens_loc->second = new_tens;
   } else { 
-    tensop_data_map_->emplace ( new_data_name , new_data ); 
+    tensop_data_map_->emplace ( new_tens_name , new_tens ); 
   } 
  
   return;
@@ -205,8 +210,6 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
  
      string block_name = block->name();
      cout << "fetching block " << block_name ; cout.flush(); 
-    
-     shared_ptr<Tensor_<DataType>> tens; 
      
      if(  tensop_data_map_->find(block_name) != tensop_data_map_->end()){
         cout << " .. already in map" <<  endl;
@@ -215,38 +218,28 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
 
        string full_tens_name = block->op_info_->op_state_name_;
 
-       shared_ptr<vector<IndexRange>> id_block = Get_Bagel_IndexRanges( CTP_map_->at(block_name)->unc_id_ranges() ) ;
+       shared_ptr<vector<string>> id_ranges = CTP_map_->at(block_name)->unc_id_ranges() ;
      
        if( tensop_data_map_->find(full_tens_name) == tensop_data_map_->end()){
 
          // TODO This will get the whole tensor, really, we should just get the blocks we want
          if ( full_tens_name[0] == 'H' || full_tens_name[0] == 'h' || full_tens_name[0] == 'f' ) {  
-           cout << "getting the full mo tensor for " << full_tens_name ; cout.flush();
            build_mo_tensor( full_tens_name ); 
-           cout << "    initializing block " << block_name << " using full tensor \"" << full_tens_name << "\"" << endl;
-           tens = get_sub_tensor( tensop_data_map_->at(full_tens_name), *id_block );
-         }
-    
-         else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't' || full_tens_name[0] == 'S'  ) {  
-           cout << "new tensor block : " << full_tens_name << " is being initialized to 1.0" << endl; 
-           tens = make_shared<Tensor_<DataType>>(*id_block);
-           tens->allocate();
-           Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( tens, 1.0);
+           get_sub_tensor( full_tens_name, block_name, *id_ranges );
+
+         } else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't' || full_tens_name[0] == 'S'  ) {  
+           build_tensor( block_name, *id_ranges, (DataType)(1.0) );
          
          } else {  
-           cout << "new tensor block : " << full_tens_name << " is being initialized to zero" << endl; 
-           tens = make_shared<Tensor_<DataType>>(*id_block);
-           tens->allocate();
-           tens->zero();
+           build_tensor( block_name, *id_ranges, (DataType)(0.0) );
          }
  
        } else {
        
-         tens = get_sub_tensor( tensop_data_map_->at(full_tens_name), *id_block );
+         get_sub_tensor( full_tens_name, block_name, *id_ranges );
   
        }
      }
-     tensop_data_map_->emplace(block_name, tens) ;
    } 
    return;
 }
@@ -431,8 +424,8 @@ TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string tens_blo
 template<class DataType>
 pair<int,int>
 TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,int> ctr_todo, 
-                                                            shared_ptr<CtrTensorPart_Base> CTP1,
-                                                            shared_ptr<CtrTensorPart_Base> CTP2 ){
+                                                                      shared_ptr<CtrTensorPart_Base> ctp1,
+                                                                      shared_ptr<CtrTensorPart_Base> ctp2 ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
  cout << "TensOp_Computer::TensOp_Computer::relativize_ctr_positions" << endl;
@@ -440,8 +433,8 @@ TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,
 
    pair<int,int> rel_ctr;
 
-   int T1_orig_size = CTP1->full_id_ranges()->size();
-   int T2_orig_size = CTP2->full_id_ranges()->size();
+   int T1_orig_size = ctp1->full_id_ranges()->size();
+   int T2_orig_size = ctp2->full_id_ranges()->size();
 
    if (ctr_todo.first >= T1_orig_size ){
      rel_ctr = make_pair(ctr_todo.second, ctr_todo.first-T2_orig_size);
@@ -449,14 +442,14 @@ TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,
      rel_ctr = make_pair(ctr_todo.first, ctr_todo.second-T1_orig_size);
    }
 
-  for ( int ii = 0 ; ii != CTP1->unc_pos()->size() ; ii++ )
-     if ( CTP1->unc_pos(ii) == rel_ctr.first){
+  for ( int ii = 0 ; ii != ctp1->unc_pos()->size() ; ii++ )
+     if ( ctp1->unc_pos(ii) == rel_ctr.first){
        rel_ctr.first = ii;
        break;
      }
 
-  for ( int ii = 0 ; ii != CTP2->unc_pos()->size() ; ii++ )
-     if (CTP2->unc_pos(ii) == rel_ctr.second){ 
+  for ( int ii = 0 ; ii != ctp2->unc_pos()->size() ; ii++ )
+     if (ctp2->unc_pos(ii) == rel_ctr.second){ 
        rel_ctr.second = ii;
        break;
      }
@@ -478,16 +471,16 @@ TensOp_Computer::TensOp_Computer<DataType>::find_or_get_CTP_data(string CTP_name
  cout << "TensOp_Computer::TensOp_Computer::find_or_get_CTP_data  : " <<  CTP_name <<  endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<Tensor_<DataType>> CTP_data;
-  auto Data_loc =  tensop_data_map_->find(CTP_name); 
-  if ( Data_loc == tensop_data_map_->end() ){
-    CTP_data = get_block_Tensor(CTP_name);   
-    tensop_data_map_->emplace(CTP_name, CTP_data);   
+  shared_ptr<Tensor_<DataType>> tensor_block;
+  auto data_loc =  tensop_data_map_->find(CTP_name); 
+  if ( data_loc == tensop_data_map_->end() ){
+    tensor_block = get_block_Tensor(CTP_name);   
+    tensop_data_map_->emplace(CTP_name, tensor_block);   
   } else {
-    CTP_data = Data_loc->second;
+    tensor_block = data_loc->second;
   }
   
-  return CTP_data;
+  return tensor_block;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
@@ -538,7 +531,7 @@ cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 vector<IndexRange>
-TensOp_Computer::TensOp_Computer<DataType>::Get_Bagel_IndexRanges( vector<string>& ranges_str ){ 
+TensOp_Computer::TensOp_Computer<DataType>::Get_Bagel_IndexRanges( const vector<string>& ranges_str ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
 cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(ranges_str, "ranges_str" ) ; cout << endl;
@@ -574,6 +567,24 @@ cout << "TensOp_Computer::TensOp_Computer::build_test_tensor : " << test_tensor_
 
   tensop_data_map_->emplace( test_tensor_name, test_tens );
 
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void
+TensOp_Computer::TensOp_Computer<DataType>::get_sub_tensor( std::string full_tens_name, std::string block_name,
+                                                            const vector<string>& range_names ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_TENSOP_COMPUTER
+cout << "Tensop_Computer::get_sub_tensor" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  shared_ptr<Tensor_<DataType>> full_tens = find_or_get_CTP_data( full_tens_name );
+
+  vector<IndexRange> block = Get_Bagel_IndexRanges( range_names ); 
+
+  tensop_data_map_->emplace( block_name , Tensor_Arithmetic_Utils::get_sub_tensor( full_tens, block ) );
+  
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

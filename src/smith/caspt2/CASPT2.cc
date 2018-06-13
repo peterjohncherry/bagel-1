@@ -173,7 +173,7 @@ cout << "CASPT2::CASPT2::solve" << endl;
     cout << "executed norm compute list " << endl;
     norm += dot_product_transpose(n, t2);
     cout << "----------------------------------TEST-------------------------------" << endl;
-    cout << "norm = "<<  norm << endl;
+    cout << "norm = "<< norm << endl;
     cout << "---------------------------------------------------------------------" << endl;
   }
 
