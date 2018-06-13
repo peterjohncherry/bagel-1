@@ -1685,6 +1685,38 @@ cout << "Tensor_Arithmetic<complex<double>>::diagonalize_matrix_symmetric " << e
    
   return;
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// orig_data_ptr is the address of the first element of the array to be diagonalized. On output it is filled with the eigenvectors.
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void
+Tensor_Arithmetic::Tensor_Arithmetic<double>::half_inverse_matrix_hermitian( int nrows, double* orig_data_ptr ) { 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
+cout << "Tensor_Arithmetic<complex<double>>::diagonalize_matrix_symmetric " << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  //TODO  decide how and where to set this.
+  double thresh = 0.000000001; 
+
+  unique<double[]> eigenvalues( new double[ nrows ] );
+
+  unique<double[]> half_inverse_data( new double[ nrows*nrows ] );
+  copy_n( orig_data_ptr, orig_data_ptr+(nrows*nrows), half_inverse_data.get() ); 
+
+  diagonalize_matrix_hermitian(nrows, half_inverse_data.get(), eigenvalues.get() );
+ 
+  double* eval_ptr = eigenvalues.get();   
+  double* orig_data_ptr = half_inverse_data.get();
+  for (int ii = 0; ii != nrows; ++ii, ++eval_ptr, orig_data_ptr+=nrows ) {
+    double sfac = *eval_ptr > thresh ? 1.0/std::sqrt(std::sqrt( *eval_ptr ) ) : 0.0;
+    
+    blas::scale_n( sfac, orig_data_ptr, nrows );
+  }
+
+  dger_ ( nrows, nrows, 1.0, double, dimension(*) X, 1, double  dimension(*) Y, 1, double precision, dimension(lda,*)  A, nrows );
+
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Tensor_Arithmetic::Tensor_Arithmetic<double>;
 template class Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>;
