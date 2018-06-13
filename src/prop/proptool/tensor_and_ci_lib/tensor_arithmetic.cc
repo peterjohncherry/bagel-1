@@ -1585,7 +1585,107 @@ cout << "Tensor_Arithmetic<std::complex<double>>::ax_plus_y "<< endl;
   zaxpy_( array_length, factor, target_ptr, stride, summand_ptr, stride);
   return;
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void Tensor_Arithmetic::Tensor_Arithmetic<double>::invert_matrix_general( int nrows, int ncols, double* data_ptr ) { 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
+cout << "Tensor_Arithmetic<double>::invert_matrix " << endl;
+if ( nrows != ncols ) throw logic_error( " matrix is not square ! Not what you want for the time begin");  
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  unique_ptr<int[]> pivot_array( new int[nrows] );
+  int err_num = 0;  
+ 
+  // TODO include the routines for general ( no symmetry ) matrices
+  //  dgetrf_( nrows, ncols, data_ptr, nrows, pivot_array.get(), err_num );
+  
+  if (err_num != 0 ) {
+    char err_num_char = ('0' + err_num) ;
+    throw logic_error( "call to dgetrf_ in invert_matrix gives error number : " + err_num  );
+  }
+
+  unique_ptr<double[]> workspace( new double[ nrows*ncols ] );
+  // TODO include the routines for general ( no symmetry ) matrices
+  //dgetri_( nrows, data_ptr, nrows, pivot_array.get(), nrows*ncols, workspace.get(), err_num );
+
+  if (err_num != 0 ) {
+    char err_num_char = '0' + err_num ;
+    throw logic_error( "call to dgetri_ in invert_matrix gives error number : " + err_num  );
+  }
+
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// orig_data_ptr is the address of the first element of the array to be diagonalized. On output it is filled with the eigenvectors.
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void Tensor_Arithmetic::Tensor_Arithmetic<double>::diagonalize_matrix_hermitian( int nrows, double* orig_data_ptr, double* eigenvalues_ptr ) { 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
+cout << "Tensor_Arithmetic<double>::diagonalize_matrix_hermitian " << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  unique_ptr<double[]> eigenvalues( new double[nrows] );
+  int err_num = 0;  
+  
+  { // Find best size of work space; -1  means workspace query is requested
+    unique_ptr<double[]> workspace_dummy( new double[1] );
+    dsyev_( "V" , "L",  nrows, orig_data_ptr, nrows, eigenvalues.get(), workspace_dummy.get(), -1, err_num );  
+
+    fill_n( eigenvalues.get(), nrows, 0.0 );
+
+    const int workspace_size = (int)( *(workspace_dummy.get()) );
+    unique_ptr<double[]> workspace ( new double[workspace_size] );
+    dsyev_( "V" , "L",  nrows, orig_data_ptr, nrows, eigenvalues.get(), workspace.get(), workspace_size, err_num );  
+
+  }
+  
+  if ( err_num != 0 ) {
+    char err_num_char = '0' + err_num; 
+    throw logic_error( " in diagonalize_matrix_hermitian dsyev is giving error number " + err_num_char ); 
+  }
+   
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// orig_data_ptr is the address of the first element of the array to be diagonalized. On output it is filled with the eigenvectors.
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>
+void
+Tensor_Arithmetic::Tensor_Arithmetic<complex<double>>::diagonalize_matrix_hermitian( int nrows, complex<double>* orig_data_ptr,
+                                                                                     double* eigenvalues_ptr ) { 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
+cout << "Tensor_Arithmetic<complex<double>>::diagonalize_matrix_symmetric " << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  int err_num = 0;  
+  
+  { // Find best size of work space; -1  means workspace query is requested
+    int cplx_work_size;
+    unique_ptr<double[]> real_work(new double[3*nrows -2]);
+
+    {
+    unique_ptr<complex<double>[]> cplx_work_dummy(new complex<double>[1]);
+    zheev_("V", "L", nrows, orig_data_ptr, nrows, eigenvalues_ptr, cplx_work_dummy.get(), -1, real_work.get(), err_num);
+    cplx_work_size = (int)( cplx_work_dummy.get()->real() );
+    } 
+     
+    fill_n( eigenvalues_ptr, nrows, 0.0 );
+    unique_ptr<complex<double>[]> cplx_work ( new complex<double>[cplx_work_size] );
+    zheev_("V", "L", nrows, orig_data_ptr, nrows, eigenvalues_ptr, cplx_work.get(), cplx_work_size, real_work.get(), err_num);
+
+  }
+  
+  if ( err_num != 0 ) {
+    char err_num_char = '0' + err_num; 
+    throw logic_error( " in diagonalize_matrix_hermitian zheev is giving error number " + err_num_char ); 
+  }
+   
+  return;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Tensor_Arithmetic::Tensor_Arithmetic<double>;
 template class Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>;
-/////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

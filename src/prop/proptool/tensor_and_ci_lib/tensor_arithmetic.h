@@ -143,9 +143,14 @@ class Tensor_Arithmetic {
      static void
      ax_plus_y( int array_length, DataType factor,  DataType* target_ptr, DataType* summand_ptr );
 
+     static void
+     invert_matrix_general( int nrows, int ncols, DataType* data_ptr );
 
+     static void
+     diagonalize_matrix_hermitian( int nrows, DataType* orig_data_ptr, double* eigenvalues_ptr ); 
 }; 
  
+
 template<> void Tensor_Arithmetic<double>::gemm ( char op1, char op2, int size_i, int size_l, int size_j, 
                                                   double* A_data, double* B_data, double* C_data, double alpha, double beta );
 
@@ -171,6 +176,11 @@ template<> void Tensor_Arithmetic<std::complex<double>>::ax_plus_y( int array_le
 
 template<> void Tensor_Arithmetic<double>::ax_plus_y( int array_length, double factor, double* target_ptr, double* summand_ptr );
 
+template<> void Tensor_Arithmetic<double>::diagonalize_matrix_hermitian( int nrows, double* orig_data_ptr, double* eigenvalues_ptr ); 
+
+template<> void Tensor_Arithmetic<std::complex<double>>::diagonalize_matrix_hermitian( int nrows, std::complex<double>* orig_data_ptr, double* eigenvalues_ptr ); 
+
+template<> void Tensor_Arithmetic<double>::invert_matrix_general( int nrows, int ncols, double* data_ptr );
 }
 }
 #endif
