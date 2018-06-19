@@ -187,6 +187,10 @@ template<> void Tensor_Arithmetic<std::complex<double>>::diagonalize_matrix_herm
 template<> void Tensor_Arithmetic<double>::invert_matrix_general( int nrows, int ncols, double* data_ptr );
 
 template<> void Tensor_Arithmetic<double>::half_inverse_matrix_hermitian( int nrows, std::unique_ptr<double[]>& orig_data_ptr ); 
+
+//template<> void Tensor_Arithmetic<double>::put_sub_tensor( std::shared_ptr<SMITH::Tensor_<double>> Tens1, std::shared_ptr<SMITH::Tensor_<double>> Tens2 );
+
+//template<> void Tensor_Arithmetic<std::complex<double>>::put_sub_tensor( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> Tens1, std::shared_ptr<SMITH::Tensor_<std::complex<double>>> Tens2 );
 }
 }
 #endif

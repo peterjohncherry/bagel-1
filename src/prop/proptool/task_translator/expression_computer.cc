@@ -294,7 +294,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     scalar_results_map->at( expression_name ) = result;
   }
   
-  check_rdms();
+  //check_rdms();
   
   return ;
 
@@ -330,6 +330,8 @@ cout << "Expression_Computer::check_rdms" << endl;
       print_tensor_with_indexes( rdm2 , "rdm2"); cout << endl;
     }
   }
+
+  
 
   if ( got_rdm1 && got_rdm2 ) {
 

@@ -266,13 +266,13 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
 
     int state_dep =  op_def_inp->get<int>("state dependence");
 
-    string                             op_name = op_def_inp->get<string>( "name" );
-    double                             factor = op_def_inp->get<double>( "factor", 1.0 );
     shared_ptr<vector<string>>         idxs_ptr = make_shared<vector<string>>( idxs );
     shared_ptr<vector<bool>>           aops_ptr = make_shared<vector<bool>>( aops );
     shared_ptr<vector<vector<string>>> ranges_ptr = make_shared<vector<vector<string>>>( ranges );
-    string                             TimeSymm = op_def_inp->get<string>( "TimeSymm", "none" );
-    bool                               hconj = conv_to_bool(op_def_inp->get<int>( "HermConj", false ));
+    string TimeSymm = op_def_inp->get<string>( "TimeSymm", "none" );
+    bool   hconj = conv_to_bool(op_def_inp->get<int>( "HermConj", false ));
+    string op_name = op_def_inp->get<string>( "name" );
+    double factor = op_def_inp->get<double>( "factor", 1.0 );
       
     vector<shared_ptr<Transformation>> symmfuncs(0);
     vector<shared_ptr<Constraint>> constraints(0);

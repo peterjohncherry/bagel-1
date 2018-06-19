@@ -25,7 +25,28 @@ cout << "MOInt_Computer<DataType>::calculate_v2 IndexRange_ver" << endl;
 
   auto Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
   v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order );
+  
+  { // TEST Block zeroing
+    SMITH::IndexRange act_block = *(range_conversion_map_->at("a")); 
+    SMITH::IndexRange core_block = *(range_conversion_map_->at("c")); 
+    SMITH::IndexRange virt_block = *(range_conversion_map_->at("v")); 
 
+    // Block to keep 
+    vector<SMITH::IndexRange> act4 = { act_block, act_block, act_block, act_block };   
+
+    shared_ptr<SMITH::Tensor_<DataType>> v2_tens_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, act4 );
+    cout << endl << endl;
+    cout << "======================= v2_->norm() ========================" << endl;
+    cout  << " v2_->norm() = " << v2_->norm() << endl;
+    cout  << " v2_tens_keep->norm() = " << v2_tens_keep->norm() << endl;
+    v2_->zero();
+    cout << "POST ZEROING" << endl;
+    cout << " v2_->norm() = " << v2_tens_keep->norm() <<  endl;
+    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_tens_keep, v2_ );
+    cout << "POST PUTTING" << endl;
+    cout  << " v2_->norm() = " << v2_->norm() << "     post put v2_tens_keep" << endl;
+    cout  << " v2_tens_keep->norm() = " << v2_tens_keep->norm() << "     post put v2_tens_keep" << endl << endl;
+  }
   return;
 }
 
@@ -140,7 +161,9 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith string ver" << endl;
   vector<SMITH::IndexRange> blocks(blocks_str.size());
   for ( int ii = 0 ; ii != blocks_str.size(); ii++ )
     blocks[ii] =  *(range_conversion_map_->at(blocks_str[ii])); 
-  
+ 
+
+ 
   return calculate_v2_smith( blocks );
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -156,8 +179,21 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
   // TODO for annoying const issue; change arg.
   vector<SMITH::IndexRange>  blocks_buff = blocks;
   MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks_buff );
+  
+  shared_ptr<SMITH::Tensor_<DataType>>  v2_tens = calculate_v2_smith( blocks );
+  { // TEST Block zeroing
+    SMITH::IndexRange act_block = *(range_conversion_map_->at("a")); 
+    SMITH::IndexRange core_block = *(range_conversion_map_->at("c")); 
+    SMITH::IndexRange virt_block = *(range_conversion_map_->at("v")); 
 
-  return v2.tensor();
+    // Block to keep 
+    vector<SMITH::IndexRange> act4 = { act_block, act_block, act_block, act_block };   
+
+    shared_ptr<SMITH::Tensor_<DataType>> v2_tens_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_tens, act4 );
+    v2_tens->zero();
+    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_tens_keep, v2_tens );
+  }
+  return v2_tens;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>

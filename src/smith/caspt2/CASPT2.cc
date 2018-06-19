@@ -151,45 +151,31 @@ cout << "CASPT2::CASPT2::solve" << endl;
   Timer timer;
   print_iteration();
 
-  cout << "rdm2_->norm() = " << rdm2_->norm(); cout.flush();  cout << " rdm2_->size() = " << rdm2_->size_alloc() << endl;
-  vector<IndexRange> act4_ranges = rdm2_->indexrange();
-  auto v2_act = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, act4_ranges ); 
-  Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_act, "v2_act" );  
-  double v2_act_dot_rdm = v2_act->dot_product( rdm2_ ); 
-  cout << "v2_act_dot_rdm =  " << v2_act_dot_rdm << endl; 
-
-  {// TEST
-    set_rdm(0, 0);
-    double norm = 0.0;
-    n = init_residual();
-    shared_ptr<Tensor_<double>> dummy = t2all_[0]->at(0)->clone();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( dummy, 1.0  );
-    t2 = dummy;
-    cout << "t2->norm() = " << t2->norm() ; cout.flush(); cout << "     n->norm() = " << n->norm() << endl;
-    cout << "set t2all" << endl;
-    shared_ptr<Queue> normq = make_normq(false, true);
-    while(!normq->done())
-      normq->next_compute();
-    cout << "executed norm compute list " << endl;
-    norm += dot_product_transpose(n, t2);
-    cout << "----------------------------------TEST-------------------------------" << endl;
-    cout << "norm = "<< norm << endl;
-    cout << "---------------------------------------------------------------------" << endl;
-  }
-
   {// TEST source
     set_rdm(0, 0);
     double source_norm = 0.0;
-    shared_ptr<Tensor_<double>> dummy = v2_->clone();
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( dummy, 1.0  );
-    v2_ = dummy;
-    cout << "post v2_->norm() = " << v2_->norm() << endl;
+    cout << "==================== Source test =====================" << endl;
+    cout << "Pre vals  " << endl;
+    cout << "v2_->norm() = " << v2_->norm() << endl;
+
+    vector<IndexRange> act4_ranges = rdm2_->indexrange();
+    auto v2_act = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, act4_ranges ); 
+    cout << "v2_act->norm() = "<<  v2_act->norm() << endl;
+    v2_->zero();
+    cout << "Post zero " << endl;
+    cout << "v2_->norm() = "<<  v2_->norm() << endl;
+    cout << "v2_act->norm() = "<<  v2_act->norm() << endl << endl;
+
+    cout << "Post putting " << endl;
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_sub_tensor( v2_act, v2_ );
+    cout << "post v2_->norm()    = " << v2_->norm() << endl;
+    cout << "post v2_act->norm() = " << v2_act->norm() << endl;
+
     s = init_residual();
     s->zero();
     shared_ptr<Queue> source_task_list = make_sourceq(false, true);
     while(!source_task_list->done())
       source_task_list->next_compute();
-    cout << "executed source task list " << endl;
     cout << "----------------------------------TEST-------------------------------" << endl;
     cout << "source_norm = "<<  s->norm() << endl;
     cout << "---------------------------------------------------------------------" << endl;
