@@ -146,8 +146,12 @@ class Tensor_Arithmetic {
      static void
      invert_matrix_general( int nrows, int ncols, DataType* data_ptr );
 
+     static void 
+     half_inverse_matrix_hermitian( int nrows, std::unique_ptr<DataType[]>& orig_data_ptr );
+
      static void
      diagonalize_matrix_hermitian( int nrows, DataType* orig_data_ptr, double* eigenvalues_ptr ); 
+
 }; 
  
 
@@ -181,6 +185,8 @@ template<> void Tensor_Arithmetic<double>::diagonalize_matrix_hermitian( int nro
 template<> void Tensor_Arithmetic<std::complex<double>>::diagonalize_matrix_hermitian( int nrows, std::complex<double>* orig_data_ptr, double* eigenvalues_ptr ); 
 
 template<> void Tensor_Arithmetic<double>::invert_matrix_general( int nrows, int ncols, double* data_ptr );
+
+template<> void Tensor_Arithmetic<double>::half_inverse_matrix_hermitian( int nrows, std::unique_ptr<double[]>& orig_data_ptr ); 
 }
 }
 #endif

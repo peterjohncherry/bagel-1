@@ -1690,32 +1690,35 @@ cout << "Tensor_Arithmetic<complex<double>>::diagonalize_matrix_symmetric " << e
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
 void
-Tensor_Arithmetic::Tensor_Arithmetic<double>::half_inverse_matrix_hermitian( int nrows, double* orig_data_ptr ) { 
+Tensor_Arithmetic::Tensor_Arithmetic<double>::half_inverse_matrix_hermitian( int nrows, unique_ptr<double[]>& orig_data_ptr ) { 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
-cout << "Tensor_Arithmetic<complex<double>>::diagonalize_matrix_symmetric " << endl;
+cout << "Tensor_Arithmetic<double>::half_inverse_matrix_hermitian " << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   //TODO  decide how and where to set this.
   double thresh = 0.000000001; 
 
-  unique<double[]> eigenvalues( new double[ nrows ] );
+  unique_ptr<double[]> eigenvalues( new double[ nrows ] );
 
-  unique<double[]> half_inverse_data( new double[ nrows*nrows ] );
-  copy_n( orig_data_ptr, orig_data_ptr+(nrows*nrows), half_inverse_data.get() ); 
-
-  diagonalize_matrix_hermitian(nrows, half_inverse_data.get(), eigenvalues.get() );
- 
+  diagonalize_matrix_hermitian(nrows, orig_data_ptr.get(), eigenvalues.get() );
   double* eval_ptr = eigenvalues.get();   
-  double* orig_data_ptr = half_inverse_data.get();
-  for (int ii = 0; ii != nrows; ++ii, ++eval_ptr, orig_data_ptr+=nrows ) {
+  {
+  double* evec_data_ptr = orig_data_ptr.get();
+  for (int ii = 0; ii != nrows; ++ii, ++eval_ptr, evec_data_ptr+=nrows ) {
     double sfac = *eval_ptr > thresh ? 1.0/std::sqrt(std::sqrt( *eval_ptr ) ) : 0.0;
-    
-    blas::scale_n( sfac, orig_data_ptr, nrows );
+    blas::scale_n( sfac, evec_data_ptr, nrows );
   }
+  unique_ptr<double[]> evec_data( new double[ nrows*nrows ] );
+  copy_n( orig_data_ptr.get(), nrows*nrows, evec_data.get() ); 
 
-  dger_ ( nrows, nrows, 1.0, double, dimension(*) X, 1, double  dimension(*) Y, 1, double precision, dimension(lda,*)  A, nrows );
+  unique_ptr<double[]> half_inverse( new double[nrows*nrows]);
+  gemm( 'N', 'T', nrows, nrows, nrows,  evec_data.get(), orig_data_ptr.get(), half_inverse.get(), 1.0, 0.0 );
 
+  orig_data_ptr = move( half_inverse );
+ 
+  }
+  return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Tensor_Arithmetic::Tensor_Arithmetic<double>;
