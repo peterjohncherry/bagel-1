@@ -72,7 +72,7 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
   transform_to_canonical_ids_pos( standardized_ids_pos ); 
 
   vector<int> Aid_order_new = get_Aid_order( standardized_ids_pos );
-  pair<double,double> new_fac = bk_factor_; 
+  pair<double,double> new_fac = gint->factors_; 
   
   print_vector( Aid_order_new , "Aid_order_new"); cout << endl;
 

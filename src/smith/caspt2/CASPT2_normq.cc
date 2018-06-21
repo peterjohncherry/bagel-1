@@ -197,7 +197,6 @@ shared_ptr<Queue> CASPT2::CASPT2::make_normq(const bool reset, const bool diagon
   task264->add_dep(task242);
   normq->add_task(task264);
  
-  cout << "hello" << endl;
   return normq;
 }
 

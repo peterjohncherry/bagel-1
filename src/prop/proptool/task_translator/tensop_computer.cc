@@ -9,7 +9,7 @@ using namespace bagel::Tensor_Arithmetic;
 using namespace bagel::Tensor_Arithmetic_Utils; 
 using namespace WickUtils;
 
-#define __DEBUG_TENSOP_COMPUTER
+//#define __DEBUG_TENSOP_COMPUTER
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
@@ -76,11 +76,14 @@ void TensOp_Computer::TensOp_Computer<DataType>::sum_different_orderings( string
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
 cout << " TensOp_Computer::TensOp_Computer::sum_different_orderings " << endl;
-cout << "target_name  = " << target_name << endl; cout << "summand_name = " << summand_name << endl;
+cout << "target_name  = " << target_name ; cout.flush(); cout << "  summand_name = " << summand_name << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<Tensor_<DataType>> target  = find_or_get_CTP_data( target_name );
   shared_ptr<Tensor_<DataType>> summand_orig_order = find_or_get_CTP_data( summand_name );
+
+  cout << endl <<  "======== BEFORE ========" << endl;
+  cout << "target->norm() = " <<  target->norm(); cout.flush(); cout << "   summand_orig_order->norm() = " <<  summand_orig_order->norm() << endl;
 
   //TODO remove this, and decide properly how you are going to deal with the real and complex factors
   vector<DataType> summand_factors_re( summand_factors.size() );
@@ -90,7 +93,12 @@ cout << "target_name  = " << target_name << endl; cout << "summand_name = " << s
     *sfr_it = (DataType)(sr_it->first); 
 
   Tensor_Calc_->add_list_of_reordered_tensors( target, summand_orig_order, summand_reorderings, summand_factors_re );
-
+ 
+  tensop_data_map_->at(target_name ) = target;
+ 
+  cout << "======== END ========" << endl;
+  cout << "target->norm() = " << setprecision(13) <<  target->norm(); cout.flush();
+  cout << "   summand_orig_order->norm() = " << setprecision(13) <<   summand_orig_order->norm() << endl;
   return; 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

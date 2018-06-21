@@ -158,24 +158,12 @@ cout << "CASPT2::CASPT2::solve" << endl;
     cout << "Pre vals  " << endl;
     cout << "v2_->norm() = " << v2_->norm() << endl;
 
-    vector<IndexRange> act4_ranges = rdm2_->indexrange();
-    auto v2_act = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, act4_ranges ); 
-    cout << "v2_act->norm() = "<<  v2_act->norm() << endl;
-    v2_->zero();
-    cout << "Post zero " << endl;
-    cout << "v2_->norm() = "<<  v2_->norm() << endl;
-    cout << "v2_act->norm() = "<<  v2_act->norm() << endl << endl;
-
-    cout << "Post putting " << endl;
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_sub_tensor( v2_act, v2_ );
-    cout << "post v2_->norm()    = " << v2_->norm() << endl;
-    cout << "post v2_act->norm() = " << v2_act->norm() << endl;
-
     s = init_residual();
     s->zero();
     shared_ptr<Queue> source_task_list = make_sourceq(false, true);
     while(!source_task_list->done())
       source_task_list->next_compute();
+
     cout << "----------------------------------TEST-------------------------------" << endl;
     cout << "source_norm = "<<  s->norm() << endl;
     cout << "---------------------------------------------------------------------" << endl;

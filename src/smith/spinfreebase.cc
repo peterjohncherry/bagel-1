@@ -96,19 +96,23 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
     cout << " ================== SPIN FREE BASE ================== " << endl;
     cout << " v2_->norm() = " << v2_->norm() << endl; 
     
-    vector<IndexRange> act4_ranges = {active_, active_, active_, active_};
-    auto v2_act = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, act4_ranges ); 
-    cout << "v2_act->norm() = "<<  v2_act->norm() << endl;
+    vector<IndexRange> keep_ranges = {active_, virt_, active_, virt_};
+    cout <<
+    "vector<IndexRange> keep_ranges = {active_, virt_, active_, virt_};"
+     << endl;
+
+    auto v2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, keep_ranges ); 
+    cout << "v2_keep->norm() = "<<  v2_keep->norm() << endl;
     v2_->zero();
     cout << "Post zero " << endl;
     cout << "v2_->norm() = "<<  v2_->norm() << endl;
-    cout << "v2_act->norm() = "<<  v2_act->norm() << endl << endl;
+    cout << "v2_keep->norm() = "<<  v2_keep->norm() << endl << endl;
 
     cout << "Post putting " << endl;
     auto tens_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
-    tens_calc->put_sub_tensor( v2_act, v2_ );
+    tens_calc->put_sub_tensor( v2_keep, v2_ );
     cout << "post v2_->norm()    = " << v2_->norm() << endl;
-    cout << "post v2_act->norm() = " << v2_act->norm() << endl;
+    cout << "post v2_keep->norm() = " << v2_keep->norm() << endl;
 
   }
   ////////////////////// temp H_2el tensor for testing//////////////////////////////////////////

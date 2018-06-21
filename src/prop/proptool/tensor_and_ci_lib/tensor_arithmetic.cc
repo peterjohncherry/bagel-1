@@ -41,8 +41,8 @@ Tensor_Arithmetic_Debugger::check_ranges(tens_target, tens_summand);
 //The inputs A and B must have equivalent ranges up to an reordering (e.g., A_[r1,r2] , B_r2,r1 is OK, A_[r1,r2,] 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_list_of_reordered_tensors( shared_ptr<Tensor_<DataType>> target,
-                                                                                    shared_ptr<Tensor_<DataType>> summand,
+void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_list_of_reordered_tensors( shared_ptr<Tensor_<DataType>>& target,
+                                                                                    shared_ptr<Tensor_<DataType>>& summand,
                                                                                     vector<vector<int>>& summand_reorderings,
                                                                                     vector<DataType>& summand_factors                      ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +79,6 @@ cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
     } while( fvec_cycle_skipper_f2b(summand_block_pos, summand_maxs, summand_mins) );
 
   } else { 
-
     target->ax_plus_y( summand_factors.front() , summand ); 
 
   } 

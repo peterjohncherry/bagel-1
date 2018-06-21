@@ -198,9 +198,10 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
     }
   }                  
 
+ 
   cout << endl << "Contributions from different gamma terms " << endl;
   for ( auto elem : *tensor_results_map_ )
-    cout << elem.first << "->norm() = " << elem.second->norm() << endl; 
+    cout << elem.first << "->norm() = " << setprecision(13) << elem.second->norm() << endl; 
   
  
   return;  
@@ -244,16 +245,22 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
       for ( auto& A_contrib_map_elem : *A_contrib_loc->second ) {
       
         string  A_contrib_name = A_contrib_map_elem.first;    
-        shared_ptr<AContribInfo_Base> A_contrib = A_contrib_map_elem.second;    
+        shared_ptr<AContribInfo_Base> a_contrib = A_contrib_map_elem.second;    
 
-        if (check_AContrib_factors(*A_contrib))
+        if (check_AContrib_factors(*a_contrib))
           continue;
       
 	print_AContraction_list( expression->ACompute_map_->at(A_contrib_name), A_contrib_name );
-        tensop_machine_->Calculate_CTP( *A_contrib );
-           
-        tensop_machine_->sum_different_orderings( "a_combined_data" , A_contrib_name, A_contrib->factors(), A_contrib->id_orders() );
+        tensop_machine_->Calculate_CTP( *a_contrib );
+     
+        cout << " A_contrib_name = " << A_contrib_name << endl; 
+        print_pair_vector( a_contrib->factors(), "a_contrib_factors"); cout << endl;
+        for ( auto elem : a_contrib->id_orders() ){ 
+          print_vector( elem, ""); cout << "  " ;cout.flush(); 
+        }  
+        tensop_machine_->sum_different_orderings( "a_combined_data" , A_contrib_name, a_contrib->factors(), a_contrib->id_orders() );
   
+        //shared_ptr<Tensor_<DataType>> A_combined_data = tensop_data_map_->at("a_combined_data");
         cout << "added " << A_contrib_name << endl; 
         cout << "=========================================================================================================" << endl << endl;
       }
@@ -264,13 +271,14 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
         gamma_computer_->get_gamma( gamma_name );
         cout << "gamma_computer_->gamma_data_map()->at("+gamma_name+")->norm() = "; cout.flush(); cout << gamma_computer_->gamma_data_map()->at(gamma_name)->norm() << endl;
         cout << " result = " << result << endl;
+        cout << "A_combined_data->norm() = " << A_combined_data->norm() << endl;
         DataType tmp_result = A_combined_data->dot_product( gamma_computer_->gamma_data_map()->at(gamma_name) );
         cout << " tmp_result = " << tmp_result << endl;
         g_result_map.emplace(gamma_name, tmp_result) ;
         result += tmp_result;
 
       } else {
-
+        cout << " gamma_name = " << gamma_name << endl;
         DataType tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_tensor_elems( A_combined_data ) ;
         g_result_map.emplace(gamma_name, tmp_result) ;
         result += tmp_result ; 
@@ -281,7 +289,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 
   cout << endl << "Contributions from different gamma terms " << endl;
   for ( auto elem : g_result_map ) 
-    cout << elem.first << " :  " << elem.second << endl; 
+    cout << elem.first << " :  " << setprecision(13) << elem.second << endl; 
 
   cout << "=========================================================================================================" << endl;
   cout << "                             RESULT FOR " << expression_name << " = " << result <<  endl;
@@ -294,7 +302,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     scalar_results_map->at( expression_name ) = result;
   }
   
-  //check_rdms();
+  check_rdms();
   
   return ;
 
@@ -312,47 +320,43 @@ cout << "Expression_Computer::check_rdms" << endl;
   shared_ptr<Tensor_<DataType>> rdm1;
   shared_ptr<Tensor_<DataType>> rdm2;
   auto v2_act =  tensop_data_map_->at("H_{00}_aaaa");
+  cout << "v2_act->norm() = "<< v2_act->norm() << endl;
   bool got_rdm1 = false;
   bool got_rdm2 = false;
 
   for ( auto elem : *bob ) { 
     if ( elem.second->rank() == 2 ) {      
-      cout << elem.first << "->norm() = " ; cout.flush(); cout << elem.second->norm() << endl;
       rdm1 = elem.second;
       tensop_data_map_->emplace("rdm1",  rdm1 );
       got_rdm1 = true;
-      print_tensor_with_indexes( rdm1 , "rdm1"); cout << endl;
     } else if ( elem.second->rank() == 4 ) { 
-      cout << elem.first << "->norm() = " ; cout.flush(); cout << elem.second->norm() << endl;
       rdm2 = make_shared<Tensor_<DataType>>(*(elem.second));
       tensop_data_map_->emplace("rdm2",  rdm2 );
       got_rdm2 = true;
-      print_tensor_with_indexes( rdm2 , "rdm2"); cout << endl;
     }
   }
-
-  
 
   if ( got_rdm1 && got_rdm2 ) {
 
     vector<int> id_pos = { 1, 2 };
     vector<int> reorder_vector = { 2, 3, 0, 1 };
-    tensop_data_map_->emplace( "rdm1_test" ,  make_shared<Tensor_<DataType>>(*(tensop_data_map_->at("rdm1"))));
-    tensop_data_map_->emplace( "rdm2_test" ,  make_shared<Tensor_<DataType>>(*(tensop_data_map_->at("rdm2"))));
+    tensop_data_map_->emplace( "rdm1_test", make_shared<Tensor_<DataType>>(*(tensop_data_map_->at("rdm1"))) );
+    tensop_data_map_->emplace( "rdm2_test", make_shared<Tensor_<DataType>>(*(tensop_data_map_->at("rdm2"))) );
     shared_ptr<Tensor_<DataType>> rdm2_klij =  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( tensop_data_map_->at("rdm2_test" ), reorder_vector  );
 
     tensop_data_map_->emplace( "rdm2_klij", rdm2_klij);
-    
-    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( tensop_data_map_->at("rdm2_klij"), tensop_data_map_->at("rdm1_test"), id_pos, -1.0 ); 
-    print_tensor_with_indexes(  tensop_data_map_->at("rdm2_klij"), "rdm2_klij - rdm1_kj" ); cout << endl;
 
-    vector<string> free4 = { "free", "free", "free", "free" }; 
+    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( tensop_data_map_->at("rdm2_klij"), tensop_data_map_->at("rdm1_test"), id_pos, -1.0 );
+
+    vector<string> free4 = { "free", "free", "free", "free" };
     tensop_data_map_->emplace( "v2_smith_order", moint_computer_->calculate_v2_smith( free4 ) );
-    vector<string> act4 = { "a", "a", "a", "a" }; 
+    vector<string> act4 = { "a", "a", "a", "a" };
     tensop_machine_->get_sub_tensor( "v2_smith_order", "v2_smith_order_act",  act4 );
-    print_tensor_with_indexes( tensop_data_map_->at("v2_smith_order_act") , "v2_smith_order_act" ); cout << endl;
 
-    cout << " rdm2_klij->dot_product( tensop_data_map_->at(\"v2_smith_order_act\") ) = "; cout.flush(); cout << rdm2_klij->dot_product( tensop_data_map_->at("v2_smith_order_act") ) << endl;  
+    cout << "tensop_data_map_->at(\"v2_smith_order_act\")->norm() = " << tensop_data_map_->at("v2_smith_order_act")->norm()  << endl;
+
+    cout << " rdm2_klij->dot_product( tensop_data_map_->at(\"v2_smith_order_act\") ) = "; cout.flush();
+    cout << rdm2_klij->dot_product( tensop_data_map_->at("v2_smith_order_act") ) << endl;
 
   }
 
@@ -379,7 +383,7 @@ cout << "Expression_Computer::print_AContraction_list" << endl;
       cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;   cout << ctr_op->ctr_type()  << endl;
 
     } else { 
-      cout << ctr_op->ctr_type() << endl;
+      cout << ctr_op->ctr_type() << " " << ctr_op->Tout_name() <<  endl;
     }
     
   }

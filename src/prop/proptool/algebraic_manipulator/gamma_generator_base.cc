@@ -313,10 +313,10 @@ cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " <<
       }
     }
  
+//    pair<double,double> new_gamma_factor =   make_pair( -(gint->factors_.first) , -(gint->factors_.second ));
     shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, gint->factors_ );
- 
+//    shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, new_gamma_factor );
     gamma_vec_->push_back(new_gamma);
- 
   }
   gint->factors_.first  *= -1.0;
   gint->factors_.second *= -1.0;
@@ -558,7 +558,6 @@ cout << "GammaGenerator_Base::transformation_tester" << endl;
   }
 
   if ( gint->target_A_deltas_pos()->size() != 0 ) { 
-
  
     vector<pair<string,string>> T_A_deltas_rngs;
     for ( pair<int,int>& ctr :  *(gint->target_A_deltas_pos()) )
