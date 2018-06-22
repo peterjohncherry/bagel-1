@@ -135,8 +135,10 @@ cout << "TensOp::TensOp<DataType>::get_transformed_range_block : " <<  name_ << 
   switch ( op_transformation ) { 
 
     case 'i' : // inverse
-      for_each( new_aops.begin(), new_aops.end(), [] ( bool aop ) { return !aop; } ); 
-      assert ( hermitian_inverse_ ); // TODO in principal, this should go to an op specific function.
+//      for_each( new_aops.begin(), new_aops.end(), [] ( bool aop ) { return !aop; } ); 
+      std::reverse( new_orig_rngs->begin(), new_orig_rngs->end() );
+      std::reverse( new_idxs_trans->begin(), new_idxs_trans->end() );
+      assert ( hermitian_inverse_ ); // TODO this should go to an op specific function, but OK for now as the only thing you inverse is the projector
       trans_factors = make_pair(1.0, 1.0);
       break;
 
@@ -316,11 +318,11 @@ cout << "TensOp::TensOp<DataType>::transform_aops " << name_ << endl;
   char bob = tolower(op_trans);
   switch ( bob ) { 
     case 'i' : // inverse
-      for_each( aops.begin(), aops.end(), [] ( decltype(aops)::reference aop ) { aop = !aop; } ); 
+      //for_each( aops.begin(), aops.end(), [] ( decltype(aops)::reference aop ) { aop = !aop; } ); 
       break;
 
     case 'h' : // hconj
-      for_each( aops.begin(), aops.end(), [] ( decltype(aops)::reference aop ) { aop = !aop; } ); 
+      //for_each( aops.begin(), aops.end(), [] ( decltype(aops)::reference aop ) { aop = !aop; } ); 
       break;
 
     case 't' : // time reversal

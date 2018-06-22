@@ -190,8 +190,8 @@ cout << "Split_Range_Block_Info::Split_Range_Block_Info" << endl;
       vector<int> cml_sizes_canonical( range_blocks_->size() );
       vector<int>::iterator csc_it  = cml_sizes_canonical.begin();
 
-      shared_ptr<vector<shared_ptr<Range_Block_Info>>> range_blocks_canonical = make_shared<vector<shared_ptr<Range_Block_Info>>>( range_blocks_->size() );
-      vector<shared_ptr<Range_Block_Info>>::iterator rbc_it = range_blocks_canonical->begin();
+      range_blocks_canonical_ = make_shared<vector<shared_ptr<Range_Block_Info>>>( range_blocks_->size() );
+      vector<shared_ptr<Range_Block_Info>>::iterator rbc_it = range_blocks_canonical_->begin();
 
       vector<string> unique_ranges_canonical( num_idxs_ );
       vector<string>::iterator urc_it = unique_ranges_canonical.begin();
@@ -205,8 +205,11 @@ cout << "Split_Range_Block_Info::Split_Range_Block_Info" << endl;
         copy( (*rb_it)->unique_block_->orig_rngs_->begin(), (*rb_it)->unique_block_->orig_rngs_->end(), urc_it  );
       }
       
-      unique_block_ = make_shared<Split_Range_Block_Info>( range_blocks_canonical, cml_sizes_canonical, aops, op_info_->op_info_canonical(),  unique_split_ranges );
+      unique_block_ = make_shared<Split_Range_Block_Info>( range_blocks_canonical_, cml_sizes_canonical, aops, op_info_->op_info_canonical(),  unique_split_ranges );
     }
+  } else {
+    range_blocks_canonical_ =  range_blocks_;
+
   }
 
 }

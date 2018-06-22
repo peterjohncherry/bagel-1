@@ -92,7 +92,9 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
       virt = all_;
     }
     K2ext<DataType> v2k(info_, coeff_, {occ, virt, occ, virt}); // how does this work for MRCI; moint says it can only handle 2 externals? 
-    v2_ = v2k.tensor();
+    vector<IndexRange> new_ranges = { occ, virt, occ, virt }; 
+ 
+    v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_row_major( new_ranges );
     cout << " ================== SPIN FREE BASE ================== " << endl;
     cout << " v2_->norm() = " << v2_->norm() << endl; 
     

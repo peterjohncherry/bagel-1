@@ -22,6 +22,53 @@ cout << "BraKet_Base::BraKet_Base" << endl;
   }
   name_ += "<" + to_string(bra_num)+ "| " + multiop_info->op_full_name_  + " |" + to_string(ket_num) + ">";
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void BraKet_Base::BraKet_Base::print_braket_block( std::shared_ptr<Op_Info> multiop_info, std::shared_ptr<Range_Block_Info>  range_block ) { 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_BRAKET_BASE
+cout <<  "BraKet_Base::print_braket_block()" << endl; 
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+
+   cout << endl <<  "op_info in actual order :" ; cout.flush();
+   for ( auto op_info : *(multiop_info->op_info_vec()) ) { 
+     cout << op_info->op_full_name_ << " "; cout.flush();
+   } 
+
+   cout << endl << "op_info in canonical order : "; cout.flush();
+   for ( auto op_info : *(multiop_info->op_info_canonical()->op_info_vec()) ) { 
+     cout << op_info->op_state_name_ << " "; cout.flush();
+   } 
+   cout << " =?= " << multiop_info->op_state_name_canonical() << endl << endl;
+
+   cout << "orig ranges in braket order  : "; cout.flush();
+   for ( auto block : *(range_block->range_blocks() )){
+     print_vector( *(block->orig_rngs()) ) ;cout.flush();
+   } 
+   cout << endl;
+
+   cout << "idxs_trans in braket order   : "; cout.flush();
+   for ( auto block : *(range_block->range_blocks() )){
+     print_vector( *(block->idxs_trans()) ) ;cout.flush();
+   }
+   cout << endl;
+   
+   cout << "orig ranges in canonical order  : "; cout.flush();
+   for ( auto block : *(range_block->range_blocks_canonical() )){
+     cout << "Hello" << endl;
+     print_vector( *(block->orig_rngs()) ) ;cout.flush();
+   }
+   cout << endl;
+
+   cout << "idxs_trans in canonical order   : "; cout.flush(); 
+   for ( auto block : *(range_block->range_blocks_canonical() )){
+     print_vector( *(block->idxs_trans()) ) ;cout.flush();
+   }
+   cout << endl;
+
+   return ;
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void BraKet_Base::print_gamma_Atensor_contractions(shared_ptr<map<string, shared_ptr< map<string, shared_ptr<AContribInfo_Base> >>>> G_to_A_map,
 		                                        bool has_orb_exc ){ 

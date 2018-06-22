@@ -46,6 +46,8 @@ class BraKet_Base{
 
     void print_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> G_to_A_map, bool has_orb_exc );
 
+    void print_braket_block( std::shared_ptr<Op_Info> multiop_info, std::shared_ptr<Range_Block_Info>  range_block );
+
     virtual void generate_gamma_Atensor_contractions( std::shared_ptr<std::map<std::string,std::shared_ptr<TensOp_Base>>> MT_map,                
                                                       std::shared_ptr<std::map<std::string, std::shared_ptr< std::map<std::string, std::shared_ptr<AContribInfo_Base> >>>> G_to_A_map,
                                                       std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> gamma_info_map,

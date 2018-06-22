@@ -284,17 +284,19 @@ cout << "GammaGenerator_Base::alternating_order" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator_Base::swap( int ii, int jj, int kk ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
 cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
- shared_ptr<GammaIntermediate_Base> gint =  gamma_vec_->at(kk);
-
+  shared_ptr<GammaIntermediate_Base> gint =  gamma_vec_->at(kk);
+ 
   int i_pos = (*(gint->ids_pos_))[ii];
   int j_pos = (*(gint->ids_pos_))[jj];
+ 
+  (*(gint->ids_pos_))[ii] = j_pos;
+  (*(gint->ids_pos_))[jj] = i_pos;
 
- (*(gint->ids_pos_))[ii] = j_pos;
- (*(gint->ids_pos_))[jj] = i_pos;
+  cout <<"gint_factor_pre_swap = (" << gint->factors_.first  << "," <<   gint->factors_.second  <<" )" <<   endl;
 
   if ( ( (*block_aops_rngs_)[j_pos] == (*block_aops_rngs_)[i_pos]) && (*block_aops_)[i_pos] != (*block_aops_)[ j_pos ] ){
 
@@ -303,8 +305,8 @@ cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " <<
 
     new_deltas_tmp->push_back( new_delta );
 
-   shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>( gint->ids_pos_->size()-2);
-   vector<int>::iterator nip_it = new_ids_pos->begin();
+    shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>( gint->ids_pos_->size()-2);
+    vector<int>::iterator nip_it = new_ids_pos->begin();
     vector<int>::iterator gip_it = gint->ids_pos_->begin();
     for( int qq = 0 ; qq != gint->ids_pos_->size(); ++qq, ++gip_it ) {
       if ( (qq != ii) && (qq != jj)){
@@ -313,13 +315,18 @@ cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " <<
       }
     }
  
+      cout <<"gint_factor_in_swap = ("<< gint->factors_.first  << "," <<   gint->factors_.second  <<" )" <<   endl;
 //    pair<double,double> new_gamma_factor =   make_pair( -(gint->factors_.first) , -(gint->factors_.second ));
     shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, gint->factors_ );
 //    shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, new_gamma_factor );
     gamma_vec_->push_back(new_gamma);
   }
+
   gint->factors_.first  *= -1.0;
   gint->factors_.second *= -1.0;
+  cout <<"gint_factor_post_swap = (" << gint->factors_.first  << "," <<   gint->factors_.second  <<" )" <<   endl;
+  cout <<"gamma_vec_back_post_swap = (" <<  gamma_vec_->back()->factors_.first  << "," <<   gamma_vec_->back()->factors_.second  <<" )" <<   endl;
+   
  
   return;
 }

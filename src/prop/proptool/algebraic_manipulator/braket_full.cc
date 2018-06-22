@@ -23,6 +23,7 @@ cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
   Total_Op_ = MT_map->at( multiop_info_->op_name_ );
 
   shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( *(multiop_info_->op_order_),  *(multiop_info_->transformations_) );
+  print_vector( *trans_aops,  "trans_aops" ) ;cout << endl;
 
   Total_Op_->generate_ranges( multiop_info_ );
 
@@ -35,6 +36,8 @@ cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
   if ( multiop_info_->op_info_vec()->size() > 1 ) { 
  
     for ( auto range_map_it = all_ranges->begin(); range_map_it != all_ranges->end(); range_map_it++ ){
+   
+     print_braket_block( multiop_info_, range_map_it->second ); 
   
       // TODO if is only here for non-relativistic case ; constraints should be specified in input
       if ( !(range_map_it->second->ci_sector_transition_ ) ) {

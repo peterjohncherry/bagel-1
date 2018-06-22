@@ -24,7 +24,7 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   std_rngs_ = *(block_info_->unique_block_->orig_rngs_);
   standard_order_ = *(block_info_->idxs_trans());
 
-#ifdef __DEBUG_GAMMA_GENERATOR_REDUX
+#ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
   print_new_gamma_definition(); 
 #endif
 
@@ -46,7 +46,7 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<GammaIntermediate_Base> gint = gamma_vec_->at(kk);
-  
+ 
   string Gname_alt = get_gamma_name(chrvec_to_strvec(*block_aops_rngs_), *block_aops_, *(gint->ids_pos_), bra_name, ket_name );
 
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
@@ -56,26 +56,20 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
                                                                     block_aops_, make_shared<const vector<string>>(chrvec_to_strvec(*block_aops_rngs_)),
                                                                     gint->ids_pos_, Gamma_map_ ) );
 
-  cout << "adding Acontrib for " << Gname_alt ; cout.flush();
-
   vector<pair<int,int>> idxs_deltas_pos = *(gint->deltas_pos_); 
   transform_to_canonical_ids_pos( idxs_deltas_pos ); 
 
   string Aname_alt = get_ctp_name( op_info_->op_state_name_canonical(), *std_ids_,  std_rngs_, idxs_deltas_pos );
 
-  cout << "    Acontrib name is " << Aname_alt << endl;
-  
   if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) 
     total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_, op_info_ );
 
   vector<int> standardized_ids_pos = *(gint->ids_pos_);  
   transform_to_canonical_ids_pos( standardized_ids_pos ); 
-
+ 
   vector<int> Aid_order_new = get_Aid_order( standardized_ids_pos );
   pair<double,double> new_fac = gint->factors_; 
   
-  print_vector( Aid_order_new , "Aid_order_new"); cout << endl;
-
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
     auto AInfo = make_shared<AContribInfo_Full<DataType>>( Aname_alt, Aid_order_new, new_fac );
