@@ -23,12 +23,10 @@ cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
   Total_Op_ = MT_map->at( multiop_info_->op_name_ );
 
   shared_ptr<vector<bool>> trans_aops = Total_Op_->transform_aops( *(multiop_info_->op_order_),  *(multiop_info_->transformations_) );
-  print_vector( *trans_aops,  "trans_aops" ) ;cout << endl;
-
   Total_Op_->generate_ranges( multiop_info_ );
 
-  factor_.first *= 0.5; 
-  factor_.second *= 0.5; 
+  factor_.first = 0.5; 
+  factor_.second = 0.0; 
   shared_ptr<GammaGeneratorRedux<DataType>> GGen = make_shared<GammaGeneratorRedux<DataType>>( target_states, bra_num_, ket_num_, Total_Op_, gamma_info_map, G_to_A_map, factor_ );
 
   auto all_ranges = Total_Op_->all_ranges_state_specific_->at( multiop_info_->name_ );

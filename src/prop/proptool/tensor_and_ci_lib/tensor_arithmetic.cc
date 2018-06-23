@@ -271,7 +271,8 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"  << endl;
       auto target_block_size = target_tens->get_size(target_block_ranges);
 
       { 
-      unique_ptr<DataType[]> target_block_data_reordered;
+      unique_ptr<DataType[]> target_block_data_reordered( new DataType[target_block_size] ) ;
+      fill_n( target_block_data_reordered.get(), target_block_size, (DataType)(0.0) );
       { 
       unique_ptr<DataType[]> target_block_data = target_tens->get_block( target_block_ranges );
       target_block_data_reordered = reorder_tensor_data( target_block_data.get(), target_reordering, target_block_ranges );
@@ -1375,6 +1376,7 @@ cout << " Tens2->rank() = "; cout.flush(); cout << Tens2->rank() ; cout.flush();
         std::unique_ptr<DataType[]> T1_data = Tens1->get_block( T1_id_blocks ); 
    
         std::unique_ptr<DataType[]> Tout_data(new DataType[T2_block_size*T1_block_size]);
+        fill_n(Tout_data.get(), T1_block_size*T2_block_size, (DataType)(0.0) );
         
         vector<Index> Tout_id_blocks( T2_id_blocks.size() + T1_id_blocks.size() );
         copy( T2_id_blocks.begin(), T2_id_blocks.end(), Tout_id_blocks.begin() );
@@ -1605,6 +1607,7 @@ if ( nrows != ncols ) throw logic_error( " matrix is not square ! Not what you w
   }
 
   unique_ptr<double[]> workspace( new double[ nrows*ncols ] );
+  fill_n(workspace.get(), nrows*ncols, 0.0);
   // TODO include the routines for general ( no symmetry ) matrices
   //dgetri_( nrows, data_ptr, nrows, pivot_array.get(), nrows*ncols, workspace.get(), err_num );
 
@@ -1636,6 +1639,7 @@ cout << "Tensor_Arithmetic<double>::diagonalize_matrix_hermitian " << endl;
 
     const int workspace_size = (int)( *(workspace_dummy.get()) );
     unique_ptr<double[]> workspace ( new double[workspace_size] );
+    fill_n(workspace.get(), workspace_size, 0.0 );
     dsyev_( "V" , "L",  nrows, orig_data_ptr, nrows, eigenvalues.get(), workspace.get(), workspace_size, err_num );  
 
   }
@@ -1664,6 +1668,7 @@ cout << "Tensor_Arithmetic<complex<double>>::diagonalize_matrix_symmetric " << e
   { // Find best size of work space; -1  means workspace query is requested
     int cplx_work_size;
     unique_ptr<double[]> real_work(new double[3*nrows -2]);
+    fill_n(real_work.get(), 3*nrows -2, 0.0);
 
     {
     unique_ptr<complex<double>[]> cplx_work_dummy(new complex<double>[1]);
@@ -1673,6 +1678,7 @@ cout << "Tensor_Arithmetic<complex<double>>::diagonalize_matrix_symmetric " << e
      
     fill_n( eigenvalues_ptr, nrows, 0.0 );
     unique_ptr<complex<double>[]> cplx_work ( new complex<double>[cplx_work_size] );
+    fill_n(cplx_work.get(), cplx_work_size, (complex<double>(0.0)) );
     zheev_("V", "L", nrows, orig_data_ptr, nrows, eigenvalues_ptr, cplx_work.get(), cplx_work_size, real_work.get(), err_num);
 
   }
@@ -1699,6 +1705,7 @@ cout << "Tensor_Arithmetic<double>::half_inverse_matrix_hermitian " << endl;
   double thresh = 0.000000001; 
 
   unique_ptr<double[]> eigenvalues( new double[ nrows ] );
+  fill_n( eigenvalues.get(), nrows, 0.0 );
 
   diagonalize_matrix_hermitian(nrows, orig_data_ptr.get(), eigenvalues.get() );
   double* eval_ptr = eigenvalues.get();   
@@ -1709,9 +1716,11 @@ cout << "Tensor_Arithmetic<double>::half_inverse_matrix_hermitian " << endl;
     blas::scale_n( sfac, evec_data_ptr, nrows );
   }
   unique_ptr<double[]> evec_data( new double[ nrows*nrows ] );
+  fill_n(evec_data.get(), nrows*nrows, 0.0);
   copy_n( orig_data_ptr.get(), nrows*nrows, evec_data.get() ); 
 
   unique_ptr<double[]> half_inverse( new double[nrows*nrows]);
+  fill_n(half_inverse.get(), nrows*nrows, 0.0);
   gemm( 'N', 'T', nrows, nrows, nrows,  evec_data.get(), orig_data_ptr.get(), half_inverse.get(), 1.0, 0.0 );
 
   orig_data_ptr = move( half_inverse );
@@ -1719,6 +1728,20 @@ cout << "Tensor_Arithmetic<double>::half_inverse_matrix_hermitian " << endl;
   }
   return;
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::zero_all_but_block( shared_ptr<SMITH::Tensor_<DataType>>& tens,
+                                                                    const vector<SMITH::IndexRange>& nonzero_block ) { 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
+cout << "Tensor_Arithmetic<DataType>::zero_all_but_block " << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  shared_ptr<SMITH::Tensor_<DataType>> tens_keep = Tensor_Arithmetic_Utils::get_sub_tensor( tens, nonzero_block );
+  tens->zero();
+  put_sub_tensor( tens_keep, tens );
+  return;
+} 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Tensor_Arithmetic::Tensor_Arithmetic<double>;
 template class Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>;

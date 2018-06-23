@@ -127,6 +127,7 @@ cout << "B_Gamma_Computer::Convert_to_sigma_dvec_tensor :" << gamma_info->sigma_
       block_size *= sigma_id_blocks[ii].size(); 
     }    
     unique_ptr<DataType[]> sigma_block( new DataType[block_size] );
+    fill_n( sigma_block.get(), block_size, DataType(0.0) );
     DataType* sigma_block_ptr = sigma_block.get();
 
     int ci_block_size = sigma_id_blocks[0].size();
@@ -193,6 +194,7 @@ cout << "B_Gamma_Computer::get_gammaN_from_sigmaN : " << gammaN_info->name() << 
     }    
 
     unique_ptr<DataType[]> gammaN_block( new DataType[block_size] );
+    fill_n( gammaN_block.get(), block_size, DataType(0.0) );
     DataType* gammaN_block_ptr = gammaN_block.get();
 
     for (int ii = orb_pos; ii != orb_pos+block_size; ii++ )  
@@ -307,39 +309,35 @@ cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1(DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<Determinants> dets  ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                  
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 #ifdef __DEBUG_B_GAMMA_COMPUTER
-cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1" << endl;                                                                                          
+cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a1" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  const int lb = dets->lenb();                                                                                            
-  const int ij = dets->norb()*dets->norb();                                                                               
-                                                                                                                          
-  for (int ip = 0; ip != ij; ++ip) {                                                                                      
-    DataType* target_base = sigma_ptr+dets->size()*ip;                                                                              
-    for (auto& iter : dets->phia(ip)) {                                                                                   
-      const DataType sign = static_cast<DataType>(iter.sign);                                                                 
-      DataType* const target_array = target_base + iter.source*lb;                                                          
-      blas::ax_plus_y_n(sign, cvec_ptr + iter.target*lb, lb, target_array);                                               
-    }                                                                                                                     
-  }                                                                                                                       
-}                                                                                                                         
+  const int lb = dets->lenb();
+  const int ij = dets->norb()*dets->norb();
+  for (int ip = 0; ip != ij; ++ip) {
+    DataType* target_base = sigma_ptr+dets->size()*ip;
+    for (auto& iter : dets->phia(ip)) {
+      const DataType sign = static_cast<DataType>(iter.sign);
+      DataType* const target_array = target_base + iter.source*lb;
+      blas::ax_plus_y_n(sign, cvec_ptr + iter.target*lb, lb, target_array);
+    }
+  }
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a2( DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<Determinants> dets) { 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////                             
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a2( DataType* cvec_ptr, DataType* sigma_ptr, shared_ptr<Determinants> dets) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 #ifdef __DEBUG_B_GAMMA_COMPUTER
 cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a2" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   const int la = dets->lena();
   const int lb = dets->lenb();
   const int ij = dets->norb()*dets->norb();
-
   for (int i = 0; i < la; ++i) {
     DataType* source_array0 = cvec_ptr+i*lb;
-
     for (int ip = 0; ip != ij; ++ip) {
       DataType* target_array0 = sigma_ptr + (ip * dets->size()) + i*lb;
-
       for (auto& iter : dets->phib(ip)) {
         const DataType sign = static_cast<DataType>(iter.sign);
         target_array0[iter.source] += sign * source_array0[iter.target];
@@ -377,30 +375,23 @@ cout << "B_Gamma_Computer::convert_civec_to_tensor" << endl;
 
   if ( civec_data_map_->find(civec_name) == civec_data_map_->end()){
  
-    vector<IndexRange> civec_idxrng(1, *(range_conversion_map->at(civec_name)) );  
-    
+    vector<IndexRange> civec_idxrng(1, *(range_conversion_map->at(civec_name)) );
     cout <<" civec_name = " << civec_name << endl;
     shared_ptr<Tensor_<DataType>> civec_tensor = make_shared<Tensor_<DataType>>( civec_idxrng );
     civec_tensor->allocate();
     civec_tensor->zero();
-    
     size_t idx_position = 0;
-    cout << "looking for old civec " << civec_name << " ....." ; cout.flush(); 
-    shared_ptr<Civec> civector = cvec_old_map->at(civec_name); 
+    cout << "looking for old civec " << civec_name << " ....." ; cout.flush();
+    shared_ptr<Civec> civector = cvec_old_map->at(civec_name);
     cout << "found it!! " << endl;
     for ( Index idx_block : civec_idxrng[0].range() ){
-
        unique_ptr<DataType[]> civec_block(new DataType[idx_block.size()]);
-       std::fill_n(civec_block.get(), idx_block.size(), 0.0);
+       std::fill_n(civec_block.get(), idx_block.size(), DataType(0.0) );
        copy_n( civector->data() + idx_position, idx_block.size(), civec_block.get());
-    
-       civec_tensor->put_block(civec_block, vector<Index>({ idx_block })) ;  
-       idx_position += idx_block.size();  
-
+       civec_tensor->put_block(civec_block, vector<Index>({ idx_block })) ;
+       idx_position += idx_block.size();
     }
-    
-    civec_data_map_->emplace( civec_name, civec_tensor); 
-
+    civec_data_map_->emplace( civec_name, civec_tensor);
   }
   return;
 }

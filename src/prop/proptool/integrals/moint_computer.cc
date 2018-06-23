@@ -21,41 +21,23 @@ cout << "MOInt_Computer<DataType>::calculate_v2 IndexRange_ver" << endl;
   // TODO for annoying const issue; change arg.
   vector<SMITH::IndexRange>  blocks_buff = blocks;
   MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks_buff );
-  shared_ptr<SMITH::Tensor_<DataType>> v2_new = get_test_tensor( blocks_buff );
-  
-  
-   if ( false ){ // TEST Block zeroing
-    SMITH::IndexRange active_ = *(range_conversion_map_->at("a")); 
-    SMITH::IndexRange core_ = *(range_conversion_map_->at("c")); 
-    SMITH::IndexRange virt_ = *(range_conversion_map_->at("v")); 
 
-    // Block to keep 
-    vector<SMITH::IndexRange> keep_ranges = {active_, virt_, active_, virt_};
-
-    shared_ptr<SMITH::Tensor_<DataType>> v2_tens_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_new, keep_ranges );
-    cout << endl << endl;
-    cout << "======================= v2_->norm() ========================" << endl;
-    cout  << " v2_->norm() = " << v2_new->norm() << endl;
-    cout  << " v2_tens_keep->norm() = " << v2_tens_keep->norm() << endl;
-    v2_new->zero();
-    cout << "POST ZEROING" << endl;
-    cout << " v2_->norm() = " << v2_tens_keep->norm() <<  endl;
-    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_tens_keep, v2.tensor() );
-    cout << "POST PUTTING" << endl;
-    cout  << " v2.tensor()->norm()  = " << v2_new->norm() << endl;
-    cout  << " v2_tens_keep->norm() = " << v2_tens_keep->norm() << endl << endl;
-  }
-
-  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
-
+#ifndef __DEBUG_PROPTOOL_MOINT_COMPUTER
+  MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks_buff );
   auto Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
-//  Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_new, "v2 test"  );
+  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
   v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order );
-//  Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_new, "v2 test post reorder"  );
-//  v2_->scale((DataType)(-1.0));
+#endif
+
+#ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
+  shared_ptr<SMITH::Tensor_<DataType>> v2_tens =   MOInt_Computer<DataType>::calculate_v2_smith( blocks_buff ) ;
+  auto Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
+  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
+  v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2_tens, alt_to_norm_order );
+#endif
+
   return;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Dupe routine with string input
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -168,8 +150,6 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith string ver" << endl;
   for ( int ii = 0 ; ii != blocks_str.size(); ii++ )
     blocks[ii] =  *(range_conversion_map_->at(blocks_str[ii])); 
  
-
- 
   return calculate_v2_smith( blocks );
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,20 +165,37 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
   // TODO for annoying const issue; change arg.
   vector<SMITH::IndexRange>  blocks_buff = blocks;
   MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks_buff );
+
+  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = v2.tensor();
+#ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
   
-  shared_ptr<SMITH::Tensor_<DataType>>  v2_tens = v2.tensor();
-  { // TEST Block zeroing
-    SMITH::IndexRange act_block = *(range_conversion_map_->at("a")); 
-    SMITH::IndexRange core_block = *(range_conversion_map_->at("c")); 
-    SMITH::IndexRange virt_block = *(range_conversion_map_->at("v")); 
+    shared_ptr<SMITH::Tensor_<DataType>> v2_new = get_test_tensor( blocks_buff );
+    SMITH::IndexRange active_ = *(range_conversion_map_->at("a")); 
+    SMITH::IndexRange core_ = *(range_conversion_map_->at("c")); 
+    SMITH::IndexRange virt_ = *(range_conversion_map_->at("v")); 
 
     // Block to keep 
-    vector<SMITH::IndexRange> act4 = { act_block, act_block, act_block, act_block };   
+    vector<SMITH::IndexRange> keep_ranges = {active_, virt_, active_, virt_};
 
-    shared_ptr<SMITH::Tensor_<DataType>> v2_tens_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_tens, act4 );
-    v2_tens->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_tens_keep, v2_tens );
-  }
+    shared_ptr<SMITH::Tensor_<DataType>> v2_tens_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_new, keep_ranges );
+
+    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( v2_tens_keep, 0.5 );
+
+    cout << endl << endl;
+    cout << "======================= v2_->norm() ========================" << endl;
+    cout  << " v2_->norm() = " << v2_new->norm() << endl;
+    cout  << " v2_tens_keep->norm() = " << v2_tens_keep->norm() << endl;
+    v2_new->zero();
+    cout << "POST ZEROING" << endl;
+    cout << " v2_->norm() = " << v2_tens_keep->norm() <<  endl;
+    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_tens_keep, v2_new );
+    cout << "POST PUTTING" << endl;
+    cout  << " v2.tensor()->norm()  = " << v2_new->norm() << endl;
+    cout  << " v2_tens_keep->norm() = " << v2_tens_keep->norm() << endl << endl;
+    
+    v2_tens = v2_new;
+#endif
+
   return v2_tens;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -33,6 +33,7 @@
 #include <src/smith/caspt2/MSCASPT2.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
+#include <src/prop/proptool/integrals/moint_computer.h>
 
 using namespace std;
 using namespace bagel;
@@ -151,11 +152,41 @@ cout << "CASPT2::CASPT2::solve" << endl;
   Timer timer;
   print_iteration();
 
+  const int ncore = info_->ncore();
+  const int nclosed = info_->nclosed()-info_->ncore();
+  const int nact = info_->nact();
+ 
+
   {// TEST source
+
+    auto closed_rng_  = make_shared<SMITH::IndexRange>(*rclosed_); 
+    auto active_rng_  = make_shared<SMITH::IndexRange>(*ractive_);
+    auto virtual_rng_ = make_shared<SMITH::IndexRange>(*rvirt_);
+    auto free_rng_    = make_shared<SMITH::IndexRange>(*closed_rng_); free_rng_->merge(*active_rng_); free_rng_->merge(*virtual_rng_);
+  
+    auto not_closed_rng_  = make_shared<SMITH::IndexRange>(*active_rng_); not_closed_rng_->merge(*virtual_rng_);
+    auto not_active_rng_  = make_shared<SMITH::IndexRange>(*closed_rng_); not_active_rng_->merge(*virtual_rng_);
+    auto not_virtual_rng_ = make_shared<SMITH::IndexRange>(*closed_rng_); not_virtual_rng_->merge(*active_rng_);
+ 
+    auto  range_conversion_map_ = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
+    range_conversion_map_->emplace("c", closed_rng_); 
+    range_conversion_map_->emplace("a", active_rng_);
+    range_conversion_map_->emplace("v", virtual_rng_);
+    range_conversion_map_->emplace("free", free_rng_);
+ 
+    range_conversion_map_->emplace("notcor", not_closed_rng_);
+    range_conversion_map_->emplace("notact", not_active_rng_);
+    range_conversion_map_->emplace("notvir", not_virtual_rng_); 
+
+    auto moint_init = make_shared<MOInt_Init<double>>( info_->geom(),  info_->ref() , info_->ncore(),  info_->nfrozenvirt(), true );
+    
+    auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
+
     set_rdm(0, 0);
     double source_norm = 0.0;
     cout << "==================== Source test =====================" << endl;
-    cout << "Pre vals  " << endl;
+    vector<SMITH::IndexRange> test_range = { *free_rng_,*free_rng_,*free_rng_, *free_rng_} ; 
+    v2_ = moint_computer->calculate_v2_smith( test_range );
     cout << "v2_->norm() = " << v2_->norm() << endl;
 
     s = init_residual();
@@ -167,6 +198,13 @@ cout << "CASPT2::CASPT2::solve" << endl;
     cout << "----------------------------------TEST-------------------------------" << endl;
     cout << "source_norm = "<<  s->norm() << endl;
     cout << "---------------------------------------------------------------------" << endl;
+ 
+    shared_ptr<Tensor_<double>> t2_one = t2all_[0]->at(0)->copy();
+
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one, 1.0 );
+    vector<SMITH::IndexRange> keep_ranges = { active_, virt_, active_, virt_ };
+    Tensor_Arithmetic::Tensor_Arithmetic<double>::zero_all_but_block( t2_one, keep_ranges );  
+    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2_one)<< endl; // + (*eref_)(0, 0);
   }
 
   throw logic_error( "die here for testing purposes!" ); 

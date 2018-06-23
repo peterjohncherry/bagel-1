@@ -43,7 +43,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
   static vector<string> act_b      = {"A"};
   static vector<string> virt_b     = {"V"};
 
-  pair<double,double>                factor = make_pair(0.5, 0.0);
+  pair<double,double>                factor = make_pair(1.0, 0.0);
   shared_ptr<vector<string>>         idxs;
   shared_ptr<vector<bool>>           aops;
   shared_ptr<vector<vector<string>>> idx_ranges;
@@ -109,19 +109,20 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
 
     idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} );
-    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
+    //idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
+    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt_a, virt_a, act_a, act_a } );
     time_symm = "none";
-    state_dep = 2;
+    state_dep = 0;
  
   } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
 
     idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
-    symmfuncs = { hconj }; 
+//    symmfuncs = { hconj }; 
 //    constraints = { spin_neutral, not_all_act }; 
-    constraints = { not_all_act }; 
+//    constraints = { not_all_act }; 
 //    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt  });
-    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {   virt_a, virt_a, act_a, act_a });
+    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { act_a, act_a, virt_a, virt_a } );
 //    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  act_a, act_a,  virt_a, virt_a });
 //    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_b, not_core_b, not_virt_b, not_virt_b  });
 //    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_a, not_core_a, not_virt_a, not_virt_a  });

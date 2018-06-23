@@ -90,8 +90,6 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
       }
     }
   }
-
-  cout << "leaving" << endl;
   return;
 }
 ////////////////////////////////////////////////////////////////////////

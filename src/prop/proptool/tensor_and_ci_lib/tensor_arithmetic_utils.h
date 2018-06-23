@@ -77,11 +77,11 @@ namespace Tensor_Arithmetic_Utils {
      void Print_Vector_Tensor_Format( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> VecIn, std::string name );
 
      template<typename DataType> 
-     std::shared_ptr<SMITH::Tensor_<DataType>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in,  std::vector<SMITH::IndexRange>& range_names );
+     std::shared_ptr<SMITH::Tensor_<DataType>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in, const std::vector<SMITH::IndexRange>& range_names );
      template<> 
-     std::shared_ptr<SMITH::Tensor_<double>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<double>> Tens_in,  std::vector<SMITH::IndexRange>& range_names );
+     std::shared_ptr<SMITH::Tensor_<double>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<double>> Tens_in,  const std::vector<SMITH::IndexRange>& range_names );
      template<> 
-     std::shared_ptr<SMITH::Tensor_<std::complex<double>>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> Tens_in,  std::vector<SMITH::IndexRange>& range_names );
+     std::shared_ptr<SMITH::Tensor_<std::complex<double>>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> Tens_in, const std::vector<SMITH::IndexRange>& range_names );
 
      template<typename DataType> 
      std::shared_ptr<SMITH::Tensor_<DataType>> get_sub_tensor( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in,  std::vector<std::string>& range_names,

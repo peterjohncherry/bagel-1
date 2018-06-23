@@ -296,8 +296,6 @@ cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " <<
   (*(gint->ids_pos_))[ii] = j_pos;
   (*(gint->ids_pos_))[jj] = i_pos;
 
-  cout <<"gint_factor_pre_swap = (" << gint->factors_.first  << "," <<   gint->factors_.second  <<" )" <<   endl;
-
   if ( ( (*block_aops_rngs_)[j_pos] == (*block_aops_rngs_)[i_pos]) && (*block_aops_)[i_pos] != (*block_aops_)[ j_pos ] ){
 
     shared_ptr<pint_vec> new_deltas_tmp = make_shared<pint_vec>( *(gint->deltas_pos_) );
@@ -315,18 +313,13 @@ cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " <<
       }
     }
  
-      cout <<"gint_factor_in_swap = ("<< gint->factors_.first  << "," <<   gint->factors_.second  <<" )" <<   endl;
-//    pair<double,double> new_gamma_factor =   make_pair( -(gint->factors_.first) , -(gint->factors_.second ));
-    shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, gint->factors_ );
-//    shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, new_gamma_factor );
+    auto new_fac =  make_pair( gint->factors_.first  * -1.0 ,  gint->factors_.second *  -1.0 );
+    shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, new_fac );
     gamma_vec_->push_back(new_gamma);
   }
 
-  gint->factors_.first  *= -1.0;
-  gint->factors_.second *= -1.0;
-  cout <<"gint_factor_post_swap = (" << gint->factors_.first  << "," <<   gint->factors_.second  <<" )" <<   endl;
-  cout <<"gamma_vec_back_post_swap = (" <<  gamma_vec_->back()->factors_.first  << "," <<   gamma_vec_->back()->factors_.second  <<" )" <<   endl;
-   
+//  gint->factors_.first  *= -1.0;
+//  gint->factors_.second *= -1.0;
  
   return;
 }

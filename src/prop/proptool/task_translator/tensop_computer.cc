@@ -194,6 +194,7 @@ cout << "TensOp_Computer::TensOp_Computer::get_block_Tensor : " << tens_block_na
     tens = tensop_data_map_->at(tens_block_name);
 
   } else {
+    assert( false );
     cout <<"not in map ... " <<  tens_block_name << " must be formed from direct product tensor " << endl; 
     vector<string> sub_tens_names(0);
     for ( shared_ptr<CtrTensorPart_Base>& ctp : *(CTP_map_->at(tens_block_name)->CTP_vec()))
@@ -237,8 +238,8 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
 
          } else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't' || full_tens_name[0] == 'S'  ) {  
            build_tensor( block_name, *id_ranges, (DataType)(1.0) );
-           shared_ptr<Tensor_<DataType>> test_block = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_row_major( tensop_data_map_->at(block_name)->indexrange() ); 
-           tensop_data_map_->at(block_name) = test_block;
+ //          shared_ptr<Tensor_<DataType>> test_block = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_row_major( tensop_data_map_->at(block_name)->indexrange() ); 
+ //          tensop_data_map_->at(block_name) = test_block;
             
          } else {  
            build_tensor( block_name, *id_ranges, (DataType)(0.0) );

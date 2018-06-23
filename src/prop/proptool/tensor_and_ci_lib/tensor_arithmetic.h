@@ -152,6 +152,10 @@ class Tensor_Arithmetic {
      static void
      diagonalize_matrix_hermitian( int nrows, DataType* orig_data_ptr, double* eigenvalues_ptr ); 
 
+     static void
+     zero_all_but_block( std::shared_ptr<SMITH::Tensor_<DataType>>& tens, const std::vector<SMITH::IndexRange>& nonzero_block );
+
+
 }; 
  
 
