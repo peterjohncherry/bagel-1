@@ -322,4 +322,26 @@ shared_ptr<vector<int>> WickUtils::get_ascending_order( const vector<int>& scram
 
   return new_order;
 } 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::string WickUtils::get_det_name( char name_range1, int num_range1, char name_range2, int num_range2, int norb ){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   char num_range1_char = '0'+ num_range1;
+   char num_range2_char = '0'+ num_range2;
+   char norb_char = '0'+ norb;
+
+   string det_name = "(";
+   det_name += num_range1_char;
+   det_name += name_range1;
+   det_name += ", ";
+   det_name += num_range2_char;
+   det_name += name_range2;
+   det_name += " | ";
+   det_name +=  norb_char;
+   det_name += "o ) ";  
+
+   return det_name;
+}
+
 #endif

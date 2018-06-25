@@ -61,6 +61,12 @@ class B_Gamma_Computer {
       
       void sigma_2a2( DataType* cvec_ptr, DataType* sigma_ptr, std::shared_ptr<Determinants> dets ) ;
       
+      void sigma_2ab( DataType* cvec_ptr, DataType* sigma_ptr, std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+
+      void sigma_2aa_alt( DataType* cvec_ptr, DataType* sigma_ptr, std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+
+      void fill_and_link_determinant_map( int nelec, int norb ); 
+
       /////////// Utility routines /////////////////////////
       
       std::shared_ptr<std::vector<SMITH::IndexRange>>  Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);

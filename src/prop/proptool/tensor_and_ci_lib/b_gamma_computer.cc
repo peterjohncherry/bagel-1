@@ -22,7 +22,67 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::B_Gamma_Computer" << endl
   dvec_sigma_map = make_shared<std::map< std::string, std::shared_ptr<Dvec>>>();
   det_old_map    = make_shared<std::map< std::string, std::shared_ptr<Determinants>>>();
   cvec_old_map   = make_shared<std::map< std::string, std::shared_ptr<Civec>>>();
-}  
+
+  fill_and_link_determinant_map( cc_->det()->nelea() + cc_->det()->neleb(), cc_->det()->norb() );
+
+} 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void
+B_Gamma_Computer::B_Gamma_Computer<DataType>::fill_and_link_determinant_map( int nelec, int norb ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_B_GAMMA_COMPUTER
+cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::fill_and_link_determinant_map" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // if spin == 0 we are changing alphas, if spin == 1 we are changing betas
+  // plusdet is the determinant with more of the kind of electron we are annihilating
+  int min_spin = nelec < norb ? 0 : (nelec - norb) ; 
+  int max_spin = nelec > norb ? norb : nelec; 
+  
+  int num_a = min_spin;
+  int num_b = max_spin;
+
+  if (min_spin != max_spin ) {
+    shared_ptr<Determinants> det = make_shared<Determinants>( norb, num_a, num_b, false /*compress*/, true /*mute*/);
+    for ( ;  num_a != max_spin; num_a++, num_b-- ) { 
+      shared_ptr<Determinants> plus_det = make_shared<Determinants>( norb, num_a+1, num_b-1, false /*compress*/, true /*mute*/);
+     
+      cout << " det->nelea()  = " << det->nelea() ; cout.flush(); cout << " det->neleb()  = " << det->neleb() <<endl;
+      cout << " plus_det->nelea() = " << plus_det->nelea(); cout.flush(); cout << " plus_det->neleb() = " << plus_det->neleb() << endl;
+
+      if ( plus_det->nelea() != 0 && det->nelea() != norb )  { 
+
+        CIStringSpace<CIStringSet<FCIString>> space({ plus_det->stringspacea(), det->stringspacea() } );
+      
+        space.build_linkage(1);
+      
+        plus_det->set_remalpha(det);
+        plus_det->set_phidowna(space.phidown(plus_det->stringspacea()));
+      
+        det->set_addalpha(plus_det);
+        det->set_phiupa(space.phiup(det->stringspacea()));
+
+      }
+      if ( det->neleb() != 0 && plus_det->neleb() != norb )  { 
+
+        //  if the number of alpha electrons are uneven, set factor to -1; 
+        const int fac = ( plus_det->nelea() & 1 ) ? -1 : 1;
+        CIStringSpace<CIStringSet<FCIString>> space( { det->stringspaceb(), plus_det->stringspaceb() } );
+        space.build_linkage(fac);
+    
+        det->set_rembeta(plus_det);
+        det->set_phidownb(space.phidown(det->stringspaceb()));
+      
+        plus_det->set_addbeta(det);
+        plus_det->set_phiupb(space.phiup(plus_det->stringspaceb()));
+      }
+      det_old_map->emplace( get_det_name( 'a', det->nelea(), 'A' , det->neleb(), det->norb() ), det ); 
+      det = plus_det; 
+    }
+  }
+  return;
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Temporary function; ideally B_Gamma_Computer should be constructed inside System_Computer, but the dependence on the Dvecs is preventing this
 // So for the time being construct B_gamma_computer with the old maps in proptool, feed this to system computer, and then alter the Gamma_info_map
@@ -208,7 +268,7 @@ cout << "B_Gamma_Computer::get_gammaN_from_sigmaN : " << gammaN_info->name() << 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This assumes all orbitals have the same size of range, OK for alpha beta spins, not OK 
-//if different active spaces.
+// if different active spaces.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigmaN( shared_ptr<GammaInfo_Base> gammaN_info )  {
@@ -217,42 +277,53 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigmaN( shared_ptr<Ga
 cout << "B_Gamma_Computer::compute_sigmaN : " << gammaN_info->sigma_name() ;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  string Bra_name = gammaN_info->Bra_name();     
-  string Ket_name = gammaN_info->Prev_Bra_name();
+  string bra_name = gammaN_info->Bra_name();     
+  string ket_name = gammaN_info->Prev_Bra_name();
+  get_wfn_data( gammaN_info->prev_Bra_info() );
+  shared_ptr<Determinants> ket_det = det_old_map->at( ket_name );  
+
+  int sorder  = gammaN_info->order(); 
+  int orb_dim = pow(ket_det->norb(), sorder-2);
+  int orb2    = ket_det->norb()*ket_det->norb();
+
+  if ( dvec_sigma_map->find(gammaN_info->prev_sigma_name()) == dvec_sigma_map->end() ) {
+    if ( sorder > 4 ) {
+      compute_sigmaN( Gamma_info_map->at(gammaN_info->prev_gamma_name()) ); 
+    } else { 
+      compute_sigma2( Gamma_info_map->at(gammaN_info->prev_gamma_name()) ); 
+    }
+  } 
+  shared_ptr<Dvec> prev_sigma = dvec_sigma_map->at( gammaN_info->prev_sigma_name() ); 
+  shared_ptr<Dvec> sigmaN     = make_shared<Dvec>( ket_det, orb_dim*orb2  );
 
   if ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha() ){ 
 
-    get_wfn_data( gammaN_info->prev_Bra_info() );
-    shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name );  
-
-    int sorder  = gammaN_info->order(); 
-    int orb_dim = pow(Ket_det->norb(), sorder-2);
-    int orb2    = Ket_det->norb()*Ket_det->norb();
-
-    if ( dvec_sigma_map->find(gammaN_info->prev_sigma_name()) == dvec_sigma_map->end() ) {
-      if (gammaN_info->order() > 4 ) {
-        compute_sigmaN( Gamma_info_map->at(gammaN_info->prev_gamma_name()) ); 
-      } else { 
-        compute_sigma2( Gamma_info_map->at(gammaN_info->prev_gamma_name()) ); 
-      }
-    } 
-    shared_ptr<Dvec> prev_sigma = dvec_sigma_map->at( gammaN_info->prev_sigma_name() ); 
-    shared_ptr<Dvec> sigmaN     = make_shared<Dvec>( Ket_det, orb_dim*orb2  );
-
     for ( int  ii = 0; ii != orb_dim; ii++) {
-      sigma_2a1( prev_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), Ket_det );
-      sigma_2a2( prev_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), Ket_det );
+      sigma_2a1( prev_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), ket_det );
+      sigma_2a2( prev_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), ket_det );
     }
 
     dvec_sigma_map->emplace( gammaN_info->sigma_name(), sigmaN );
 
-    shared_ptr<Civec>  Ket = cvec_old_map->at( Ket_name );  
+  } else if ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha()+1 ){ 
 
-  } else {
+    shared_ptr<Determinants> bra_det = det_old_map->at( bra_name );  
+    for ( int  ii = 0; ii != orb_dim; ii++) 
+      sigma_2ab( prev_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), bra_det, ket_det );
   
-    throw logic_error( "spin flipping sigmas not implemented yet! Aborting!! ");  
-  
+  } else if ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha()-1 ){ 
+    
+    throw logic_error( " sigma for (+a,-b) not implemented yet " ) ; 
+
+  } else { 
+    cout << "The density matrix transition required by the following is not implemented " << endl;
+    cout << "gammaN_info->Bra_nalpha()       = "; cout.flush(); cout << gammaN_info->Bra_nalpha() << endl;
+    cout << "gammaN_info->prev_Bra_nalpha()  = "; cout.flush(); cout << gammaN_info->prev_Bra_nalpha()<< endl; 
+    cout << "gammaN_info->Bra_nbeta()       = "; cout.flush(); cout << gammaN_info->Bra_nbeta() << endl;
+    cout << "gammaN_info->prev_Bra_nbeta()  = "; cout.flush(); cout << gammaN_info->prev_Bra_nbeta()<< endl; 
+    throw logic_error(" aborting" );
   }
+  
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -281,29 +352,70 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<Ga
 cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  string Bra_name = gamma2_info->Bra_name();
-  string Ket_name = gamma2_info->Ket_name();
+  string ket_name = gamma2_info->Ket_name();
 
   get_wfn_data( gamma2_info->Ket_info() );
-  get_wfn_data( gamma2_info->Bra_info() );
 
+  shared_ptr<Determinants> ket_det = det_old_map->at( ket_name ); 
+  shared_ptr<Civec>        ket = cvec_old_map->at( ket_name );
+  
+  shared_ptr<Dvec> sigma2;
+    
   if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha() ) { 
 
-    shared_ptr<Determinants> Ket_det = det_old_map->at( Ket_name ); 
-    shared_ptr<Civec>        Ket = cvec_old_map->at( Ket_name );
+    sigma2 = make_shared<Dvec>( ket_det, ket_det->norb()*ket_det->norb() );
+
+    sigma_2a1( ket->data(), sigma2->data(0)->data(), ket_det );
+    { //TEST
+
+      cout << endl <<  "--------sigma_2a1---------" << endl;
+      for ( int qq = 0 ; qq != ket_det->lena()*ket_det->lenb() ; qq++ ) {
+        for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
+          for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
+            cout << sigma2->data(rr*ket_det->norb()+ss)->data(qq) << "    "; cout.flush();
+          }
+        cout << endl;
+      }
+      
+      shared_ptr<Dvec> sigma2_test = make_shared<Dvec>( ket_det, ket_det->norb()*ket_det->norb() );
+      cout << endl << endl << "---------- sigma_2aa_alt ---------" << endl;
+      sigma_2aa_alt( ket->data(), sigma2_test->data(0)->data(), ket_det, ket_det );
+      cout << endl << endl << "---------- sigma_2aa_alt ---------" << endl;
+      for ( int qq = 0 ; qq != ket_det->lena()*ket_det->lenb() ; qq++ ) {
+        for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
+          for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
+            cout << sigma2_test->data(rr*ket_det->norb()+ss)->data(qq) << "    "; cout.flush();
+          }
+        cout << endl;
+      }
+
+
+    }
+
+    cout << endl;
+    sigma_2a2( ket->data(), sigma2->data(0)->data(), ket_det );
     
-    shared_ptr<Dvec> sigma2 = make_shared<Dvec>( Ket_det, Ket_det->norb()*Ket_det->norb() );
-    
-    sigma_2a1( Ket->data(), sigma2->data(0)->data(), Ket_det );
-    sigma_2a2( Ket->data(), sigma2->data(0)->data(), Ket_det );
-     
-    dvec_sigma_map->emplace( gamma2_info->sigma_name(), sigma2 );
-    
+  } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()+1 ) { 
+
+     shared_ptr<Determinants> bra_det = det_old_map->at( gamma2_info->Bra_name() );
+
+     sigma2 = make_shared<Dvec>( bra_det, bra_det->norb()*bra_det->norb() );
+
+     sigma_2ab( ket->data(), sigma2->data(0)->data(), bra_det, ket_det );
+  
+  } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()-1 ) { 
+
+    throw logic_error( "(-a,+b) sigmas not implemented yet. Aborting !!  ");  
+
   } else {
 
-    throw logic_error( "spin flipping sigmas not implemented yet! Aborting !!  ");  
+    cout << "this sigma : "; cout.flush(); cout << gamma2_info->sigma_name() << " is not implemented" << endl;
+    throw logic_error( "Aborting !!  ");  
 
   }
+
+  dvec_sigma_map->emplace( gamma2_info->sigma_name(), sigma2 );
+
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -344,6 +456,85 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a2" << endl;
       }
     }
   }
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2aa_alt( DataType* cvec_ptr, DataType* sigma_ptr, 
+                                                                  shared_ptr<Determinants> bra_det, shared_ptr<Determinants> ket_det ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+#ifdef __DEBUG_B_GAMMA_COMPUTER
+cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2aa_alt" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //get pointer in target tensor
+  size_t bra_civec_length = bra_det->lena()* bra_det->lenb();
+  size_t bra_lenb = bra_det->lenb();
+  size_t ket_lenb = ket_det->lenb();
+
+  size_t norb = bra_det->norb();
+  for (unsigned int ii =0 ; ii!=norb ; ii++) { 
+    for (unsigned int jj =0 ; jj!=norb ; jj++) {
+      DataType* sigma_ij_0_ptr = sigma_ptr + (ii*norb+jj)*bra_civec_length;
+
+      cout << " ii = " << ii ; cout.flush() ; cout << "  jj = " << jj ; cout.flush(); cout << endl;
+      cout << "*sigma_ij_0_ptr = "; cout.flush();  cout << *sigma_ij_0_ptr << endl;
+
+      //get position in bra vec by doing the opposite of the operation you are going to do on the ket
+      for ( auto& a1 : bra_det->phidowna(ii)){
+        cout << "X1a" << endl;
+        for ( auto& b1 : bra_det->phiupa(jj)  ){
+          cout << "X1b" << endl;
+          DataType* sigma_aj_bi_ptr = sigma_ij_0_ptr + (a1.source*ket_lenb + b1.source);
+          cout << " *sigma_aj_ai_ptr  = " ; cout.flush(); cout << *sigma_aj_bi_ptr << endl;
+          //get position in ket by standard approach
+          for ( auto& a2 : ket_det->phiupa(ii)){     
+            cout << "X2" << endl;
+            for ( auto& b2 : ket_det->phidowna(jj)) { 
+             cout << "X3" << endl;
+              *sigma_aj_bi_ptr += *(cvec_ptr + a2.source*ket_lenb + b2.source);
+             cout << "X4" << endl;
+            }
+          }
+        }
+      }
+    }
+  }
+  return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2ab( DataType* cvec_ptr, DataType* sigma_ptr, 
+                                                              shared_ptr<Determinants> bra_det, shared_ptr<Determinants> ket_det ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+#ifdef __DEBUG_B_GAMMA_COMPUTER
+cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2ab" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  //get pointer in target tensor
+  size_t bra_civec_length = bra_det->lena()* bra_det->lenb();
+  size_t bra_lenb = bra_det->lenb();
+  size_t ket_lenb = ket_det->lenb();
+  size_t norb = bra_det->norb();
+  for (unsigned int ii =0 ; ii!=norb ; ii++) { 
+    for (unsigned int jj =0 ; jj!=norb ; jj++) {
+      DataType* sigma_ij_0_ptr = sigma_ptr + (ii*norb+jj)*bra_civec_length;
+
+      //get position in bra vec by doing the opposite of the operation you are going to do on the ket
+      for ( auto& a1 : bra_det->phidowna(ii)){
+        for ( auto& b1 : bra_det->phiupb(jj)  ){
+          DataType* sigma_aj_bi_ptr = sigma_ij_0_ptr + (a1.source*bra_lenb + b1.source);
+
+          //get position in ket by standard approach
+          for ( auto& a2 : ket_det->phiupa(ii)){     
+            for ( auto& b2 : ket_det->phidownb(jj)) { 
+              *sigma_aj_bi_ptr += *(cvec_ptr + a2.source*ket_lenb + b2.source);
+            }
+          }
+        }
+      }
+    }
+  }
+  return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>

@@ -63,6 +63,8 @@ namespace WickUtils {
   std::shared_ptr<std::vector<int>> reorder_vector(std::vector<int>& neworder , const std::vector<int>& origvec ) ;
 
   std::shared_ptr<std::vector<int>> get_ascending_order( const std::vector<int>& scrambled_vec );
+ 
+  std::string get_det_name( char name_range1, int num_range1, char name_range2, int num_range2, int norb );
 
   template<class DataType>  
   void reorder_vector_inplace(const std::vector<int>& new_order, std::vector<DataType>& orig_vec ){

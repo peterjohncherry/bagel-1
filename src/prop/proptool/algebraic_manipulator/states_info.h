@@ -11,6 +11,7 @@ class CIVecInfo_Base {
      const int nele_;
      const int state_number_;
      const std::string name_;
+     const std::string det_name_;
      std::shared_ptr<std::map< char ,int>> hole_range_map_;
      std::shared_ptr<std::map< char ,int>> elec_range_map_;
 
@@ -21,12 +22,14 @@ class CIVecInfo_Base {
 
      bool sparse_;
 
+
      CIVecInfo_Base( int state_number, std::string name , std::shared_ptr<std::map< char , int >> elec_range_map,
                      std::shared_ptr<std::map< char , int >> hole_range_map ) :
      nalpha_( elec_range_map->at('a') ), nbeta_( elec_range_map->at('A') ),
      nact_(nalpha_ + hole_range_map->at('a')), nele_(nalpha_ + elec_range_map->at('A')), 
-     state_number_(state_number), name_(name), elec_range_map_(elec_range_map),
-     hole_range_map_(hole_range_map), sparse_(false) {};
+     state_number_(state_number), name_(name), 
+     det_name_( WickUtils::get_det_name( 'a', nalpha_, 'A', nbeta_, nact_ ) ),
+     elec_range_map_(elec_range_map), hole_range_map_(hole_range_map),  sparse_(false) {};
 
      ~CIVecInfo_Base(){};
       
@@ -35,6 +38,7 @@ class CIVecInfo_Base {
      int nbeta()  { return nbeta_;  };
      int nact()   { return nact_;   };
      std::string name() { return name_;};
+     std::string det_name() { return det_name_;};
      int state_num() { return state_number_;};
      bool sparse() { return sparse_;}
      std::shared_ptr<std::map< char, int>> hole_range_map() { return hole_range_map_; } 
