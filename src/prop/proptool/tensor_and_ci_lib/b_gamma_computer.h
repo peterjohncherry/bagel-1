@@ -19,26 +19,26 @@ class B_Gamma_Computer {
     private: 
 
       std::shared_ptr<const Dvec> cc_; 
-      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> Gamma_info_map;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map_;
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map_;
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map_;
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map_;
 
-      std::shared_ptr<std::map< std::string, std::shared_ptr<Dvec>>> dvec_sigma_map;
-      std::shared_ptr<std::map< std::string, std::shared_ptr<Civec>>> cvec_old_map; 
-      std::shared_ptr<std::map< std::string, std::shared_ptr<Determinants>>> det_old_map;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<Dvec>>> dvec_sigma_map_;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<Civec>>> cvec_old_map_; 
+      std::shared_ptr<std::map< std::string, std::shared_ptr<Determinants>>> det_old_map_;
 
-      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
       
-      std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<DataType>> Tensor_Calc;
+      std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<DataType>> tensor_calc_;
  
     public: 
 
       B_Gamma_Computer( std::shared_ptr<const Dvec> cc_in ); 
       ~B_Gamma_Computer(){};
       
-      void set_maps( std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_in,
-                     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> Gamma_info_map_in,
+      void set_maps( std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map__in,
+                     std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map__in,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map,  
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map );
@@ -63,9 +63,9 @@ class B_Gamma_Computer {
       
       void sigma_2ab( DataType* cvec_ptr, DataType* sigma_ptr, std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
 
-      void sigma_2aa_alt( DataType* cvec_ptr, DataType* sigma_ptr, std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
-
       void fill_and_link_determinant_map( int nelec, int norb ); 
+
+      void sigma_ab( std::shared_ptr<GammaInfo_Base> gamma_info ) ; 
 
       /////////// Utility routines /////////////////////////
       
@@ -77,7 +77,7 @@ class B_Gamma_Computer {
       
       /////////// Varaible access /////////////////////////
       
-      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map() { return Gamma_info_map ; };
+      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map() { return gamma_info_map_ ; };
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map() {return gamma_data_map_; }
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map() {return sigma_data_map_; }
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map() {return civec_data_map_; }

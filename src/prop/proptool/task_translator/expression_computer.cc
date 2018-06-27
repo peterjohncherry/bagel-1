@@ -302,7 +302,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     scalar_results_map->at( expression_name ) = result;
   }
   
-  check_rdms();
+  //check_rdms();
   
   return ;
 

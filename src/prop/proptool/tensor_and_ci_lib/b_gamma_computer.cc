@@ -8,6 +8,7 @@ using namespace bagel::SMITH;
 using namespace Tensor_Arithmetic;
 using namespace Tensor_Arithmetic_Utils;
 using namespace WickUtils;
+#define __DEBUG_B_GAMMA_COMPUTER
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //TODO this version is non-relativistic, must switch back to relativistic version with tensors at some point
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -18,10 +19,10 @@ B_Gamma_Computer::B_Gamma_Computer<DataType>::B_Gamma_Computer( std::shared_ptr<
 cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::B_Gamma_Computer" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
-  dvec_sigma_map = make_shared<std::map< std::string, std::shared_ptr<Dvec>>>();
-  det_old_map    = make_shared<std::map< std::string, std::shared_ptr<Determinants>>>();
-  cvec_old_map   = make_shared<std::map< std::string, std::shared_ptr<Civec>>>();
+  tensor_calc_ = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
+  dvec_sigma_map_ = make_shared<std::map< std::string, std::shared_ptr<Dvec>>>();
+  det_old_map_    = make_shared<std::map< std::string, std::shared_ptr<Determinants>>>();
+  cvec_old_map_   = make_shared<std::map< std::string, std::shared_ptr<Civec>>>();
 
   fill_and_link_determinant_map( cc_->det()->nelea() + cc_->det()->neleb(), cc_->det()->norb() );
 
@@ -77,7 +78,7 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::fill_and_link_determinant
         plus_det->set_addbeta(det);
         plus_det->set_phiupb(space.phiup(plus_det->stringspaceb()));
       }
-      det_old_map->emplace( get_det_name( 'a', det->nelea(), 'A' , det->neleb(), det->norb() ), det ); 
+      det_old_map_->emplace( get_det_name( 'a', det->nelea(), 'A' , det->neleb(), det->norb() ), det ); 
       det = plus_det; 
     }
   }
@@ -85,23 +86,23 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::fill_and_link_determinant
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Temporary function; ideally B_Gamma_Computer should be constructed inside System_Computer, but the dependence on the Dvecs is preventing this
-// So for the time being construct B_gamma_computer with the old maps in proptool, feed this to system computer, and then alter the Gamma_info_map
+// So for the time being construct B_gamma_computer with the old maps in proptool, feed this to system computer, and then alter the gamma_info_map_
 // as appropriate. 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void
-B_Gamma_Computer::B_Gamma_Computer<DataType>::set_maps( std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_in,
-                                              std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> Gamma_info_map_in,
-                                              std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> gamma_data_map,
-                                              std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> sigma_data_map,  
-                                              std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> civec_data_map ){
+B_Gamma_Computer::B_Gamma_Computer<DataType>::set_maps( std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map,
+                                                        std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map,
+                                                        std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> gamma_data_map,
+                                                        std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> sigma_data_map,  
+                                                        std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> civec_data_map ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_B_GAMMA_COMPUTER
 cout << " B_Gamma_Computer::B_Gamma_Computer<DataType>::Set_maps" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  range_conversion_map = range_conversion_map_in;
-  Gamma_info_map = Gamma_info_map_in;
+  range_conversion_map_ = range_conversion_map;
+  gamma_info_map_ = gamma_info_map;
   gamma_data_map_ = gamma_data_map;
   sigma_data_map_ = sigma_data_map;
   civec_data_map_ = civec_data_map;
@@ -120,7 +121,7 @@ cout << "B_Gamma_Computer::get_gamma :  " <<  gamma_name << endl;
 
   if ( gamma_data_map_->find( gamma_name ) == gamma_data_map_->end()) {
 
-    shared_ptr<GammaInfo_Base> gamma_info = Gamma_info_map->at(gamma_name);
+    shared_ptr<GammaInfo_Base> gamma_info = gamma_info_map_->at(gamma_name);
 
     //note this has reverse iterators!
     if (gamma_info->order() > 2 ) { 
@@ -154,7 +155,7 @@ cout << "B_Gamma_Computer::Convert_to_sigma_dvec_tensor :" << gamma_info->sigma_
 
   string sigma_name = gamma_info->sigma_name();
   int order = gamma_info->order();
-  shared_ptr<Dvec> Dvec_sigma = dvec_sigma_map->at( sigma_name ) ;
+  shared_ptr<Dvec> Dvec_sigma = dvec_sigma_map_->at( sigma_name ) ;
 
   shared_ptr<vector<IndexRange>> sigma_ranges = Get_Bagel_IndexRanges( gamma_info->sigma_id_ranges() ); 
 
@@ -216,10 +217,10 @@ cout << "B_Gamma_Computer::get_gammaN_from_sigmaN : " << gammaN_info->name() << 
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   string gammaN_name = gammaN_info->name();
-  shared_ptr<Dvec> sigmaN = dvec_sigma_map->at(gammaN_info->sigma_name());
+  shared_ptr<Dvec> sigmaN = dvec_sigma_map_->at(gammaN_info->sigma_name());
   string Bra_name = gammaN_info->Bra_name();
-  shared_ptr<Civec> Bra = cvec_old_map->at( Bra_name );      
-  shared_ptr<Determinants> Bra_det = det_old_map->at( Bra_name ) ; 
+  shared_ptr<Civec> Bra = cvec_old_map_->at( Bra_name );      
+  shared_ptr<Determinants> Bra_det = det_old_map_->at( Bra_name ) ; 
 
   int orb_dim = pow(Bra_det->norb(), (gammaN_info->order() - 2) );
   int norb    = Bra_det->norb();
@@ -280,20 +281,20 @@ cout << "B_Gamma_Computer::compute_sigmaN : " << gammaN_info->sigma_name() ;
   string bra_name = gammaN_info->Bra_name();     
   string ket_name = gammaN_info->Prev_Bra_name();
   get_wfn_data( gammaN_info->prev_Bra_info() );
-  shared_ptr<Determinants> ket_det = det_old_map->at( ket_name );  
+  shared_ptr<Determinants> ket_det = det_old_map_->at( ket_name );  
 
   int sorder  = gammaN_info->order(); 
   int orb_dim = pow(ket_det->norb(), sorder-2);
   int orb2    = ket_det->norb()*ket_det->norb();
 
-  if ( dvec_sigma_map->find(gammaN_info->prev_sigma_name()) == dvec_sigma_map->end() ) {
+  if ( dvec_sigma_map_->find(gammaN_info->prev_sigma_name()) == dvec_sigma_map_->end() ) {
     if ( sorder > 4 ) {
-      compute_sigmaN( Gamma_info_map->at(gammaN_info->prev_gamma_name()) ); 
+      compute_sigmaN( gamma_info_map_->at(gammaN_info->prev_gamma_name()) ); 
     } else { 
-      compute_sigma2( Gamma_info_map->at(gammaN_info->prev_gamma_name()) ); 
+      compute_sigma2( gamma_info_map_->at(gammaN_info->prev_gamma_name()) ); 
     }
   } 
-  shared_ptr<Dvec> prev_sigma = dvec_sigma_map->at( gammaN_info->prev_sigma_name() ); 
+  shared_ptr<Dvec> prev_sigma = dvec_sigma_map_->at( gammaN_info->prev_sigma_name() ); 
   shared_ptr<Dvec> sigmaN     = make_shared<Dvec>( ket_det, orb_dim*orb2  );
 
   if ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha() ){ 
@@ -303,11 +304,11 @@ cout << "B_Gamma_Computer::compute_sigmaN : " << gammaN_info->sigma_name() ;
       sigma_2a2( prev_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), ket_det );
     }
 
-    dvec_sigma_map->emplace( gammaN_info->sigma_name(), sigmaN );
+    dvec_sigma_map_->emplace( gammaN_info->sigma_name(), sigmaN );
 
   } else if ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha()+1 ){ 
 
-    shared_ptr<Determinants> bra_det = det_old_map->at( bra_name );  
+    shared_ptr<Determinants> bra_det = det_old_map_->at( bra_name );  
     for ( int  ii = 0; ii != orb_dim; ii++) 
       sigma_2ab( prev_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), bra_det, ket_det );
   
@@ -335,12 +336,12 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   string sigma2_name =  gamma2_info->sigma_name();
-  string Bra_name    =  gamma2_info->Bra_name();
+  string bra_name    =  gamma2_info->Bra_name();
  
-  convert_civec_to_tensor( Bra_name );
+  convert_civec_to_tensor( bra_name );
 
-  shared_ptr<Tensor_<DataType>> Tens_gamma2 = Tensor_Calc->contract_tensor_with_vector( sigma_data_map_->at( sigma2_name ), civec_data_map_->at( Bra_name ), 0 );
-  gamma_data_map_->emplace( gamma2_info->name(), Tens_gamma2 ); 
+  shared_ptr<Tensor_<DataType>> gamma2_tens = tensor_calc_->contract_tensor_with_vector( sigma_data_map_->at( sigma2_name ), civec_data_map_->at( bra_name ), 0 );
+  gamma_data_map_->emplace( gamma2_info->name(), gamma2_tens ); 
 
   return; 
 }
@@ -356,8 +357,8 @@ cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
 
   get_wfn_data( gamma2_info->Ket_info() );
 
-  shared_ptr<Determinants> ket_det = det_old_map->at( ket_name ); 
-  shared_ptr<Civec>        ket = cvec_old_map->at( ket_name );
+  shared_ptr<Determinants> ket_det = det_old_map_->at( ket_name ); 
+  shared_ptr<Civec>        ket = cvec_old_map_->at( ket_name );
   
   shared_ptr<Dvec> sigma2;
     
@@ -376,20 +377,6 @@ cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
           }
         cout << endl;
       }
-      
-      shared_ptr<Dvec> sigma2_test = make_shared<Dvec>( ket_det, ket_det->norb()*ket_det->norb() );
-      cout << endl << endl << "---------- sigma_2aa_alt ---------" << endl;
-      sigma_2aa_alt( ket->data(), sigma2_test->data(0)->data(), ket_det, ket_det );
-      cout << endl << endl << "---------- sigma_2aa_alt ---------" << endl;
-      for ( int qq = 0 ; qq != ket_det->lena()*ket_det->lenb() ; qq++ ) {
-        for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
-          for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
-            cout << sigma2_test->data(rr*ket_det->norb()+ss)->data(qq) << "    "; cout.flush();
-          }
-        cout << endl;
-      }
-
-
     }
 
     cout << endl;
@@ -397,7 +384,7 @@ cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
     
   } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()+1 ) { 
 
-     shared_ptr<Determinants> bra_det = det_old_map->at( gamma2_info->Bra_name() );
+     shared_ptr<Determinants> bra_det = det_old_map_->at( gamma2_info->Bra_name() );
 
      sigma2 = make_shared<Dvec>( bra_det, bra_det->norb()*bra_det->norb() );
 
@@ -414,7 +401,7 @@ cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
 
   }
 
-  dvec_sigma_map->emplace( gamma2_info->sigma_name(), sigma2 );
+  dvec_sigma_map_->emplace( gamma2_info->sigma_name(), sigma2 );
 
   return;
 }
@@ -459,46 +446,63 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2a2" << endl;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2aa_alt( DataType* cvec_ptr, DataType* sigma_ptr, 
-                                                                  shared_ptr<Determinants> bra_det, shared_ptr<Determinants> ket_det ) {
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ab( shared_ptr<GammaInfo_Base> gamma_info ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_B_GAMMA_COMPUTER
-cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2aa_alt" << endl;
+cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ab" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //get pointer in target tensor
-  size_t bra_civec_length = bra_det->lena()* bra_det->lenb();
-  size_t bra_lenb = bra_det->lenb();
-  size_t ket_lenb = ket_det->lenb();
+  string bra_name = gamma_info->Bra_name();
+  shared_ptr<Determinants>  bra_det = det_old_map_->at(bra_name);
 
-  size_t norb = bra_det->norb();
-  for (unsigned int ii =0 ; ii!=norb ; ii++) { 
-    for (unsigned int jj =0 ; jj!=norb ; jj++) {
-      DataType* sigma_ij_0_ptr = sigma_ptr + (ii*norb+jj)*bra_civec_length;
+  string ket_name = gamma_info->Ket_name();
+  shared_ptr<Determinants>  ket_det = det_old_map_->at(ket_name);
 
-      cout << " ii = " << ii ; cout.flush() ; cout << "  jj = " << jj ; cout.flush(); cout << endl;
-      cout << "*sigma_ij_0_ptr = "; cout.flush();  cout << *sigma_ij_0_ptr << endl;
+  assert(ket_det->nelea() == bra_det->nelea()-1 && ket_det->neleb()-1 == bra_det->neleb());
 
-      //get position in bra vec by doing the opposite of the operation you are going to do on the ket
-      for ( auto& a1 : bra_det->phidowna(ii)){
-        cout << "X1a" << endl;
-        for ( auto& b1 : bra_det->phiupa(jj)  ){
-          cout << "X1b" << endl;
-          DataType* sigma_aj_bi_ptr = sigma_ij_0_ptr + (a1.source*ket_lenb + b1.source);
-          cout << " *sigma_aj_ai_ptr  = " ; cout.flush(); cout << *sigma_aj_bi_ptr << endl;
-          //get position in ket by standard approach
-          for ( auto& a2 : ket_det->phiupa(ii)){     
-            cout << "X2" << endl;
-            for ( auto& b2 : ket_det->phidowna(jj)) { 
-             cout << "X3" << endl;
-              *sigma_aj_bi_ptr += *(cvec_ptr + a2.source*ket_lenb + b2.source);
-             cout << "X4" << endl;
-            }
+  auto ket = cvec_old_map_->find(ket_name); 
+
+//  shared_ptr<Tensor_<DataType>> civec_tensor = make_shared<Tensor_<DataType>>( civec_idxrng );
+//  {
+//  vector<IndexRange> bra_idxrng(1, *(range_conversion_map_->at(civec_name)) );
+//  civec_tensor->allocate();
+//  civec_tensor->zero();
+//  }
+
+
+  const int norb = ket_det->norb();
+  const int ket_lena = ket_det->lena();
+  const int ket_lenb = ket_det->lenb();
+  const int bra_lena = bra_det->lena();
+  const int bra_lenb = bra_det->lenb();
+  size_t bra_length = bra_det->lena()*bra_det->lenb();
+
+  shared_ptr<Dvec> sigma_ab = make_shared<Dvec>( bra_det, bra_det->norb()*bra_det->norb() );
+  DataType* ket_ptr_buff = cvec_old_map_->at(ket_name)->data();
+  for (int ii = 0; ii < norb; ++ii) {
+    for (int jj = 0; jj < norb; ++jj) {
+      unique_ptr<DataType[]> bra_data( new DataType[bra_length] );
+      fill_n( bra_data.get() , bra_length, (DataType)(0.0) );
+      DataType* bra_ptr = bra_data.get();
+      DataType* ket_ptr = ket_ptr_buff;
+      for ( vector<bitset<nbit__>>::const_iterator abit_it = ket_det->string_bits_a().begin(); abit_it != ket_det->string_bits_a().end(); ++abit_it ) {
+        for ( vector<bitset<nbit__>>::const_iterator bbit_it = ket_det->string_bits_b().begin(); bbit_it != ket_det->string_bits_b().end(); ++bbit_it, ++ket_ptr ) {
+          if ( (*abit_it)[ii] && !(*bbit_it)[jj] ) {
+            bitset<nbit__> abit_bra = *abit_it;
+            bitset<nbit__> bbit_bra = *bbit_it;
+            abit_bra.set(ii);
+            bbit_bra.reset(jj);
+            const double abphase =  ket_det->sign<0>( (*abit_it), ii) * ket_det->sign<1>( (*bbit_it), jj);
+            *(bra_ptr + bra_det->lexical<0>(abit_bra)*bra_lenb + bra_det->lexical<1>(bbit_bra)) += abphase * (*ket_ptr);
           }
         }
       }
+      move( bra_ptr, bra_ptr+bra_length, sigma_ab->data(ii*norb + jj)->data() );
     }
   }
+
+  dvec_sigma_map_->emplace( gamma_info->name(), sigma_ab );
+  
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -545,15 +549,14 @@ cout << " B_Gamma_Computer::get_wfn_data " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////
   
   string cvec_name = cvec_info->name();
-  auto cvec_det_loc = det_old_map->find(cvec_name); 
-  if( cvec_det_loc == det_old_map->end()){
-    int II = cvec_info->state_num();
-    shared_ptr<const Determinants> det_cvec_orig = cc_->data(II)->det();
-    shared_ptr<Determinants> det_cvec = make_shared<Determinants>(det_cvec_orig->norb(), det_cvec_orig->nelea(), det_cvec_orig->neleb(), false, /*mute=*/true);
-    det_old_map->emplace( cvec_name, det_cvec);
-    cvec_old_map->emplace( cvec_name, make_shared<Civec>(*(cc_->data(II))) );
+  string det_name = cvec_info->det_name();
+  auto cvec_det_loc = det_old_map_->find(cvec_name); 
+  if( cvec_det_loc == det_old_map_->end()){
+    det_old_map_->emplace( cvec_name, det_old_map_->at( det_name ) );
+    cvec_old_map_->emplace( cvec_name, make_shared<Civec>(*(cc_->data( cvec_info->state_num() ))) );
   }  
-  cout << "got " << cvec_name << " in cvec_old_map " <<endl; 
+  cout << "got " << cvec_name << " in cvec_old_map_ " <<endl; 
+  cout << "got " << det_name << " in det_old_map " <<endl; 
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -566,15 +569,13 @@ cout << "B_Gamma_Computer::convert_civec_to_tensor" << endl;
 
   if ( civec_data_map_->find(civec_name) == civec_data_map_->end()){
  
-    vector<IndexRange> civec_idxrng(1, *(range_conversion_map->at(civec_name)) );
-    cout <<" civec_name = " << civec_name << endl;
+    vector<IndexRange> civec_idxrng(1, *(range_conversion_map_->at(civec_name)) );
+
     shared_ptr<Tensor_<DataType>> civec_tensor = make_shared<Tensor_<DataType>>( civec_idxrng );
     civec_tensor->allocate();
     civec_tensor->zero();
     size_t idx_position = 0;
-    cout << "looking for old civec " << civec_name << " ....." ; cout.flush();
-    shared_ptr<Civec> civector = cvec_old_map->at(civec_name);
-    cout << "found it!! " << endl;
+    shared_ptr<Civec> civector = cvec_old_map_->at(civec_name);
     for ( Index idx_block : civec_idxrng[0].range() ){
        unique_ptr<DataType[]> civec_block(new DataType[idx_block.size()]);
        std::fill_n(civec_block.get(), idx_block.size(), DataType(0.0) );
@@ -596,7 +597,7 @@ cout << "B_Gamma_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_st
 
   auto ranges_Bagel = make_shared<vector<IndexRange>>(0);
   for ( auto rng : *ranges_str) 
-    ranges_Bagel->push_back(*range_conversion_map->at(rng));
+    ranges_Bagel->push_back(*range_conversion_map_->at(rng));
 
   return ranges_Bagel;
 }

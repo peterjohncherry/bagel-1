@@ -24,14 +24,14 @@ cout << "MOInt_Computer<DataType>::calculate_v2 IndexRange_ver" << endl;
 
 #ifndef __DEBUG_PROPTOOL_MOINT_COMPUTER
   MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks_buff );
-  auto Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
+  //auto Tensor_Calc_ = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
   vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
   v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order );
 #endif
 
 #ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
   shared_ptr<SMITH::Tensor_<DataType>> v2_tens =   MOInt_Computer<DataType>::calculate_v2_smith( blocks_buff ) ;
-  auto Tensor_Calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
+  //auto Tensor_Calc_ = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
   vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
   v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2_tens, alt_to_norm_order );
 #endif
