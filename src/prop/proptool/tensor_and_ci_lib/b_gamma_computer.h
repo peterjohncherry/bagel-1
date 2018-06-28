@@ -67,6 +67,16 @@ class B_Gamma_Computer {
 
       void sigma_ab( std::shared_ptr<GammaInfo_Base> gamma_info ) ; 
 
+      void sigma_aa_test( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma = true );
+
+      void sigma_bb_test( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma = false );
+
+      void sigma2_test( std::shared_ptr<GammaInfo_Base> gamma_info );
+
+      void sigma_ab_test( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
+
+      void sigma_ba_test( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
+
       /////////// Utility routines /////////////////////////
       
       std::shared_ptr<std::vector<SMITH::IndexRange>>  Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
