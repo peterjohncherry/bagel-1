@@ -107,6 +107,8 @@ cout << " B_Gamma_Computer::B_Gamma_Computer<DataType>::Set_maps" << endl;
   sigma_data_map_ = sigma_data_map;
   civec_data_map_ = civec_data_map;
  
+  new_sigma_data_map_ = make_shared<map<string, shared_ptr<Vector_Bundle<DataType>> >>();
+
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////
@@ -350,6 +352,38 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2" << endl;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2_vb( shared_ptr<GammaInfo_Base> gamma2_info ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_B_GAMMA_COMPUTER
+cout << "B_Gamma_Computer::compute_sigma2_vb : " << gamma2_info->name() << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  size_t civec_maxtile = 10000;
+ 
+  string ket_name = gamma2_info->Ket_name();
+  get_wfn_data( gamma2_info->Ket_info() );
+
+  shared_ptr<Determinants> ket_det = det_old_map_->at( ket_name ); 
+  shared_ptr<Civec>        ket = cvec_old_map_->at( ket_name );
+
+  convert_civec_to_tensor( ket_name );
+
+  if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha() ) { 
+   //aa     
+    
+  } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()+1 ) { 
+    // ab 
+  } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()-1 ) { 
+    // ba 
+  } else {
+    throw logic_error( "this sigma: " + gamma2_info->sigma_name() + " is not implemented" ); 
+  }
+
+  return;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<GammaInfo_Base> gamma2_info ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_B_GAMMA_COMPUTER
@@ -364,14 +398,15 @@ cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
   shared_ptr<Civec>        ket = cvec_old_map_->at( ket_name );
   
   shared_ptr<Dvec> sigma2;
-    
+     
+ 
   if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha() ) { 
 
     sigma2 = make_shared<Dvec>( ket_det, ket_det->norb()*ket_det->norb() );
     sigma_2a1( ket->data(), sigma2->data(0)->data(), ket_det );
     sigma_2a2( ket->data(), sigma2->data(0)->data(), ket_det );
 
-    sigma2_test( gamma2_info );
+    //sigma2_test( gamma2_info );
    
     
   } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()+1 ) { 
@@ -642,9 +677,7 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ab_test" << endl;
   shared_ptr<Determinants> ket_det = det_old_map_->at(ket_name);
   shared_ptr<Determinants> bra_det = det_old_map_->at(bra_name);
 
-  { //TEST
-    bra_det = make_shared<Determinants>(ket_det->norb(), ket_det->nelea()+1, ket_det->neleb()-1, false, false);
-  }
+  assert ( bra_det->nelea() == ket_det->nelea()+1  && bra_det->neleb() == ket_det->neleb()-1 );
 
   auto ket = cvec_old_map_->at(ket_name); 
   DataType* ket_ptr_orig = ket->data();
@@ -706,9 +739,7 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ba_test" << endl;
   shared_ptr<Determinants> ket_det = det_old_map_->at(ket_name);
   shared_ptr<Determinants> bra_det = det_old_map_->at(bra_name);
 
-  { //TEST
-    bra_det = make_shared<Determinants>(ket_det->norb(), ket_det->nelea()-1, ket_det->neleb()+1, false, true);
-  }
+  assert ( bra_det->nelea() == ket_det->nelea()-1  && bra_det->neleb() == ket_det->neleb()+1 );
 
   auto ket = cvec_old_map_->at(ket_name); 
   DataType* ket_ptr_orig = ket->data();
@@ -752,12 +783,10 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ba_test" << endl;
     }
   }
 
-  dvec_sigma_map_->emplace( "sigma_ba_test", sigma_ba );
+  dvec_sigma_map_->emplace( gamma_info->sigma_name(), sigma_ba );
   
   return;
 }
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_2ab( DataType* cvec_ptr, DataType* sigma_ptr, 
@@ -838,6 +867,106 @@ cout << "B_Gamma_Computer::convert_civec_to_tensor" << endl;
     }
     civec_data_map_->emplace( civec_name, civec_tensor);
   }
+  return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_aa_vb( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_B_GAMMA_COMPUTER
+cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_aa_test_vb" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  size_t civec_maxtile = 100000;// TODO set these elsewhere
+  DataType thresh = 1.0e-12;
+
+  string bra_name = gamma_info->Bra_name();
+  string ket_name = gamma_info->Ket_name();
+  
+  shared_ptr<Determinants> ket_det = det_old_map_->at(ket_name);
+  shared_ptr<Determinants> bra_det = ket_det;
+
+  const int norb = ket_det->norb();
+  const int ket_lenb = ket_det->lenb();
+  const int bra_lenb = bra_det->lenb();
+  size_t bra_length = bra_det->lena()*bra_det->lenb();
+
+  shared_ptr<Vector_Bundle<DataType>> sigma2_aa;
+  if ( new_sigma ) {
+    vector<int> orb_id_ranges = { bra_det->norb(), bra_det->norb() };
+    sigma2_aa = make_shared<Vector_Bundle<DataType>>( orb_id_ranges, bra_length, civec_maxtile, true, true, true );
+  } else {
+    sigma2_aa = new_sigma_data_map_->at( gamma_info->sigma_name() );
+  }
+
+  {   
+    shared_ptr<SMITH::Tensor_<DataType>> ket_tensor = civec_data_map_->at(ket_name);
+    vector<SMITH::IndexRange> ket_idx_range =  ket_tensor->indexrange();
+
+    assert ( ket_idx_range.front().range().size() == 1 ) ; // TODO : will not work if ci block is split
+    for ( SMITH::Index block : ket_idx_range.front().range() ) {
+      vector<SMITH::Index> ket_block_id = { block };
+      unique_ptr<DataType[]> ket_data = ket_tensor->get_block( ket_block_id ) ;
+      DataType* ket_ptr_buff = ket_data.get();
+   
+ 
+      for (int ii = 0; ii != norb; ii++) {
+        for (int jj = 0; jj != norb; jj++) {
+          
+          vector<int> sigma_orb_ids = { ii, jj }; 
+          shared_ptr<SMITH::Tensor_<DataType>> sigma_ij_vec = make_shared<SMITH::Tensor_<DataType>>( sigma2_aa->index_range_vec_ );  
+          sigma_ij_vec->allocate();
+          sigma_ij_vec->zero();
+
+          assert ( sigma2_aa->index_range_vec_[0].range().size() == 1 ) ; //TODO : will not work if ci block is split
+
+          bool ij_vec_sparse = true;
+          for ( SMITH::Index& block : sigma2_aa->index_range_vec_[0] ) {
+            vector<SMITH::Index> sigma_ij_block_id = { block };
+            unique_ptr<DataType[]> sigma_ij_block_data = ket_tensor->get_block( ket_block_id ) ;
+            DataType* sigma_ij_block_ptr_buff = sigma_ij_block_data.get();
+
+            bool block_sparse = true;
+            for ( vector<bitset<nbit__>>::const_iterator abit_it = ket_det->string_bits_a().begin(); abit_it != ket_det->string_bits_a().end(); ++abit_it ) {
+              bool possible_exc = ( jj == ii ) ? (*abit_it)[jj] : !(*abit_it)[ii] && (*abit_it)[jj]; 
+              if ( possible_exc ) {
+                  
+                DataType* aiaj_ket_section_start = ket_ptr_buff + ket_det->lexical<0>( *abit_it ) * ket_lenb;
+            
+                bitset<nbit__> abit_bra = *abit_it;
+                DataType op_phase =  ket_det->sign<0>( abit_bra, jj);
+                abit_bra.reset(jj);
+                op_phase *= ket_det->sign<0>( abit_bra, ii);
+                abit_bra.set(ii);
+            
+                DataType* bra_section_start = sigma_ij_block_ptr_buff +  bra_det->lexical<0>( abit_bra ) * bra_lenb;
+                blas::ax_plus_y_n( op_phase, aiaj_ket_section_start, bra_lenb, bra_section_start);
+
+              }
+            }
+            if ( block_sparse ) {
+              if ( abs(*(max_element(sigma_ij_block_data.get() , sigma_ij_block_data.get() + sigma_ij_block_id.front().size() ) )) > thresh ) { 
+                block_sparse = false; 
+                ij_vec_sparse = false;
+                sigma_ij_vec->put_block( sigma_ij_block_data, sigma_ij_block_id ); 
+              } else if ( abs(*(min_element(sigma_ij_block_data.get() , sigma_ij_block_data.get() + sigma_ij_block_id.front().size() ))) > thresh ) { 
+                block_sparse = false;
+                ij_vec_sparse = false;
+                sigma_ij_vec->put_block( sigma_ij_block_data, sigma_ij_block_id ); 
+              }
+            }
+          }
+          sigma2_aa->set_sparsity( sigma_orb_ids, ij_vec_sparse);
+          if ( !ij_vec_sparse )
+            sigma2_aa->set_vector( sigma_orb_ids , sigma_ij_vec, /*overwrite*/ true ); 
+        }
+      }
+      ket_tensor->put_block( ket_data );
+    }
+  }
+
+  new_sigma_data_map_->emplace( "sigma_aa_test", sigma2_aa );
+
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

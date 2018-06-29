@@ -8,6 +8,7 @@
 #include <src/util/f77.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_sorter.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
+#include <src/prop/proptool/tensor_and_ci_lib/vector_bundle.h>
 #include <src/prop/proptool/algebraic_manipulator/gamma_info.h>
 
 namespace bagel {
@@ -32,6 +33,8 @@ class B_Gamma_Computer {
       
       std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<DataType>> tensor_calc_;
  
+      std::shared_ptr<std::map< std::string, std::shared_ptr<Vector_Bundle<DataType>>>> new_sigma_data_map_;
+
     public: 
 
       B_Gamma_Computer( std::shared_ptr<const Dvec> cc_in ); 
@@ -76,6 +79,10 @@ class B_Gamma_Computer {
       void sigma_ab_test( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
 
       void sigma_ba_test( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
+
+      void sigma_aa_vb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
+   
+      void compute_sigma2_vb( std::shared_ptr<GammaInfo_Base> gamma2_info );
 
       /////////// Utility routines /////////////////////////
       
