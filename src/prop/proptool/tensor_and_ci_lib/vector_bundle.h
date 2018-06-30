@@ -34,6 +34,14 @@ class Vector_Bundle {
 
       void init( std::vector<int> id_range_sizes, size_t vec_len, size_t vec_maxtile, bool all_sparse, bool alloc, bool zero ); 
 
+      std::shared_ptr<SMITH::Tensor_<DataType>> get_new_vector( bool zero = true ) { 
+        std::shared_ptr<SMITH::Tensor_<DataType>> new_vec = std::make_shared<SMITH::Tensor_<DataType>>( index_range_vec_ );
+        new_vec->allocate();
+        if ( zero ) 
+          new_vec->zero();
+        return new_vec;   
+      } 
+
       void set_vector( std::vector<int>& ids , std::shared_ptr<SMITH::Tensor_<DataType>> vec, bool overwrite = true ) { 
 
         auto vmap_loc = vector_map_->find( ids ); 
@@ -72,8 +80,17 @@ class Vector_Bundle {
         return;
       } 
 
-
       std::shared_ptr<SMITH::Tensor_<DataType>> vector_map(const std::vector<int>& ids ) const { return vector_map_->at(ids); } 
+
+      std::unique_ptr<DataType[]> get_vector_ij_block(const std::vector<int>& ids, int block_pos ) const {
+        std::vector<SMITH::Index> idx_block = std::vector<SMITH::Index>( 1, idx_range_.range(block_pos) );
+        return vector_map_->at(ids)->get_block( idx_block );
+      } 
+
+      void put_vector_ij_block(const std::vector<int>& ids, std::unique_ptr<DataType[]>& vec_data_block, int block_pos ) const {
+        std::vector<SMITH::Index> block_idx = std::vector<SMITH::Index>( 1, idx_range_.range(block_pos) );
+        return vector_map_->at(ids)->put_block( vec_data_block, block_idx );
+      } 
 
       bool sparsity_map(const std::vector<int>& ids ) const {
         auto smap_loc = sparsity_map_->find( ids ); 
