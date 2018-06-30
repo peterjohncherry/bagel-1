@@ -406,7 +406,7 @@ cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
     sigma_2a1( ket->data(), sigma2->data(0)->data(), ket_det );
     sigma_2a2( ket->data(), sigma2->data(0)->data(), ket_det );
 
-    //sigma2_test( gamma2_info );
+    sigma2_test( gamma2_info );
    
     
   } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()+1 ) { 
@@ -622,8 +622,9 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_bb_test" << endl;
     sigma_bb = dvec_sigma_map_->at( "sigma_bb_test" ) ;
   }
 
-  DataType trans_factor = (ket_det->nelea()*ket_det->neleb() & 1)  ? (DataType)(1.0) : (DataType)(-1.0);  
+//  DataType trans_factor = (ket_det->nelea()*ket_det->neleb() & 1)  ? (DataType)(-1.0) : (DataType)(1.0);
   unique_ptr<DataType[]> ket_transposed_data( new DataType[ket_lena*ket_lenb] );
+  fill_n( ket_transposed_data.get(), ket_lena*ket_lenb, (DataType)(0.0) );
   DataType* ket_ptr_buff = ket_transposed_data.get();
   blas::transpose( cvec_old_map_->at(ket_name)->data() , ket_lenb, ket_lena, ket_ptr_buff);
 
@@ -635,26 +636,21 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_bb_test" << endl;
       
       for ( vector<bitset<nbit__>>::const_iterator bbit_it = ket_det->string_bits_b().begin(); bbit_it != ket_det->string_bits_b().end(); ++bbit_it ) { // loop through a strings
         bool possible_exc = ( jj == ii ) ? (*bbit_it)[jj] : !(*bbit_it)[ii] && (*bbit_it)[jj]; 
-        if ( possible_exc ) {                                   // if we can annihilate aj and create ai
+        if ( possible_exc ) {
             
-          DataType* bibj_ket_section_start = ket_ptr_buff + ket_det->lexical<1>( *bbit_it ) * ket_lena;  // addresses of this section in the ket
+          DataType* bibj_ket_section_start = ket_ptr_buff + ket_det->lexical<0>( *bbit_it ) * ket_lena;
 
-          bitset<nbit__> bbit_bra = *bbit_it;                   //new bit set altered according to aiaj operation
-          DataType op_phase =  ket_det->sign<1>( bbit_bra, jj); // sign associated with annihilating ai and creating aj in ket
+          bitset<nbit__> bbit_bra = *bbit_it;                   
+          DataType op_phase =  ket_det->sign<0>( bbit_bra, jj); // using sign<0> instead of sign<1> to avoid scaling of ket_data
           bbit_bra.reset(jj);
-          op_phase *= ket_det->sign<1>( bbit_bra, ii);
+          op_phase *= ket_det->sign<0>( bbit_bra, ii);
           bbit_bra.set(ii);
 
-          DataType* bra_section_start = bb_ket_ptr + bra_det->lexical<1>( bbit_bra ) * bra_lena;  // positions of this section in the bra
+          DataType* bra_section_start = bb_ket_ptr + bra_det->lexical<0>( bbit_bra ) * bra_lena;  // positions of this section in the bra
           blas::ax_plus_y_n( (op_phase*trans_factor), bibj_ket_section_start, bra_lena, bra_section_start);
         }
       }
-
-      {
-      unique_ptr<DataType[]> bibj_ket_data_transposed( new DataType[bra_length] ) ;
-      blas::transpose(bibj_ket_data.get(), bra_lenb, bra_lena, sigma_bb->data(ii + norb*jj)->data() );
-      }
-
+      blas::transpose(bibj_ket_data.get(), bra_lena, bra_lenb, sigma_bb->data(ii+norb*jj)->data() );
     }
   }
 
@@ -677,6 +673,7 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ab_test" << endl;
   shared_ptr<Determinants> ket_det = det_old_map_->at(ket_name);
   shared_ptr<Determinants> bra_det = det_old_map_->at(bra_name);
 
+  bra_det = make_shared<Determinants>( ket_det->norb(), ket_det->nelea()+1, ket_det->neleb()-1, false /*compress*/, true /*mute*/);
   assert ( bra_det->nelea() == ket_det->nelea()+1  && bra_det->neleb() == ket_det->neleb()-1 );
 
   auto ket = cvec_old_map_->at(ket_name); 
@@ -691,7 +688,7 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ab_test" << endl;
   if ( new_sigma) {
     sigma_ab = make_shared<Dvec>( bra_det, bra_det->norb()*bra_det->norb() );
   } else { 
-    sigma_ab = dvec_sigma_map_->at( gamma_info->sigma_name()) ;
+    sigma_ab = dvec_sigma_map_->at( gamma_info->sigma_name() ) ;
   }
 
   // Slow, but simple to check and parallelize
@@ -739,6 +736,7 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ba_test" << endl;
   shared_ptr<Determinants> ket_det = det_old_map_->at(ket_name);
   shared_ptr<Determinants> bra_det = det_old_map_->at(bra_name);
 
+  bra_det = make_shared<Determinants>( ket_det->norb(), ket_det->nelea()-1, ket_det->neleb()+1, false /*compress*/, true /*mute*/);
   assert ( bra_det->nelea() == ket_det->nelea()-1  && bra_det->neleb() == ket_det->neleb()+1 );
 
   auto ket = cvec_old_map_->at(ket_name); 
@@ -753,7 +751,7 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ba_test" << endl;
   if ( new_sigma) {
     sigma_ba = make_shared<Dvec>( bra_det, bra_det->norb()*bra_det->norb() );
   } else { 
-    sigma_ba = dvec_sigma_map_->at( gamma_info->sigma_name()) ;
+//    sigma_ba = dvec_sigma_map_->at( gamma_info->sigma_name()) ;
   }
 
   // Slow, but simple to check and parallelize
@@ -763,15 +761,15 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ba_test" << endl;
       DataType* ket_ptr = ket_ptr_orig; 
       for ( vector<bitset<nbit__>>::const_iterator abit_it = ket_det->string_bits_a().begin(); abit_it != ket_det->string_bits_a().end(); ++abit_it ) {
         for ( vector<bitset<nbit__>>::const_iterator bbit_it = ket_det->string_bits_b().begin(); bbit_it != ket_det->string_bits_b().end(); ++bbit_it, ++ket_ptr ) {
-          if ( (*abit_it)[ii] && !(*bbit_it)[jj] ) {
+          if (  !(*bbit_it)[ii] && (*abit_it)[jj]) {
 
             bitset<nbit__> abit_bra = *abit_it;
-            DataType op_phase = ket_det->sign<0>( abit_bra, ii);
-            abit_bra.reset(ii);
+            DataType op_phase = ket_det->sign<0>( abit_bra, jj);
+            abit_bra.reset(jj);
 
             bitset<nbit__> bbit_bra = *bbit_it;
-            op_phase *= ket_det->sign<1>( bbit_bra, jj);
-            bbit_bra.set(jj);
+            op_phase *= ket_det->sign<1>( bbit_bra, ii);
+            bbit_bra.set(ii);
 
             { 
               DataType* bra_ptr = sigma_ba_ij_ptr + bra_det->lexical<0>( abit_bra ) * bra_lenb + bra_det->lexical<1>( bbit_bra ); 
@@ -784,6 +782,7 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ba_test" << endl;
   }
 
   dvec_sigma_map_->emplace( gamma_info->sigma_name(), sigma_ba );
+  dvec_sigma_map_->emplace( "sigma_ba_test", sigma_ba );
   
   return;
 }
@@ -998,6 +997,7 @@ cout << "B_Gamma_Computer::sigma2_test : " << gamma2_info->name() << endl;
   shared_ptr<Determinants> ket_det = det_old_map_->at( ket_name ); 
   shared_ptr<Civec>        ket = cvec_old_map_->at( ket_name );
   
+  int norb = ket_det->norb();
   shared_ptr<Dvec> sigma2;
     
   if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha() ) { 
@@ -1014,14 +1014,49 @@ cout << "B_Gamma_Computer::sigma2_test : " << gamma2_info->name() << endl;
 
       sigma_aa_test( gamma2_info, true );
       shared_ptr<Dvec> sigma2_aa_test = dvec_sigma_map_->at("sigma_aa_test");
-
+      vector<tuple<int,int,int>> failed_ids(0);
       cout << endl <<  "--------sigma2_aa_orig - sigma_test---------" << endl;
       for ( int qq = 0 ; qq != ket_det->lena()*ket_det->lenb() ; qq++ ) {
         for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
           for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
-            cout << sigma2_aa_orig->data(rr*ket_det->norb()+ss)->data(qq) - sigma2_aa_test->data(rr*ket_det->norb()+ss)->data(qq) << "    "; cout.flush();
+            DataType saa_diff = sigma2_aa_orig->data(rr*ket_det->norb()+ss)->data(qq) - sigma2_aa_test->data(rr*ket_det->norb()+ss)->data(qq) ;
+            cout << saa_diff << "    "; cout.flush();
+            if ( saa_diff != 0 ) {  
+              int rrnss = rr*norb+ss;
+              failed_ids.push_back( tie(rr, ss, rrnss )  );
+            }
           }
         cout << endl;
+      }
+ 
+      if ( failed_ids.size() > 0 ) {
+        cout << endl;
+        cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+        cout << "!!!!!!!!!!!!!!!!!!!!!!!!  sigma2_aa FAILED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+        cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+        cout << endl <<  "--------sigma2_aa_orig ---------" << endl;
+        for ( int qq = 0 ; qq != ket_det->lena()*ket_det->lenb() ; qq++ ) {
+          for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
+            for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
+              DataType saa_diff = sigma2_aa_orig->data(rr*ket_det->norb()+ss)->data(qq);
+              cout << saa_diff << "    "; cout.flush();
+            }
+          cout << endl;
+        }
+        cout << endl;
+        cout << endl <<  "--------sigma_aa_test---------" << endl;
+        for ( int qq = 0 ; qq != ket_det->lena()*ket_det->lenb() ; qq++ ) {
+          for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
+            for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
+              DataType saa_diff = sigma2_aa_test->data(rr*ket_det->norb()+ss)->data(qq) ;
+              cout << saa_diff << "    "; cout.flush();
+            }
+          cout << endl;
+        }
+        cout << endl << "++++++++++++++++++++ failed id pos ++++++++++++++++++++++++" << endl;
+        for ( tuple<int,int,int>& fid : failed_ids ) 
+          cout << "[ " << get<0>(fid) << " " << get<1>(fid) << " " << get<2>(fid) << " ]" << endl; 
+ 
       }
       }
       {
@@ -1030,15 +1065,53 @@ cout << "B_Gamma_Computer::sigma2_test : " << gamma2_info->name() << endl;
 
       sigma_bb_test( gamma2_info, true );
       shared_ptr<Dvec> sigma2_bb_test = dvec_sigma_map_->at("sigma_bb_test");
+      vector<tuple<int,int,int>> failed_ids(0);
       cout << endl <<  "--------sigma2_bb_orig - sigma_bb_test---------" << endl;
       for ( int qq = 0 ; qq != ket_det->lena()*ket_det->lenb() ; qq++ ) {
         for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
           for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
-            cout << sigma2_bb_orig->data(rr*ket_det->norb()+ss)->data(qq) - sigma2_bb_test->data(rr*ket_det->norb()+ss)->data(qq) << "    "; cout.flush();
+            DataType sbb_diff = sigma2_bb_orig->data(rr*ket_det->norb()+ss)->data(qq) - sigma2_bb_test->data(rr*ket_det->norb()+ss)->data(qq) ;
+            cout << sbb_diff << "    "; cout.flush();
+            if ( sbb_diff != 0 ) { 
+              int rrnss = rr*norb+ss;
+              failed_ids.push_back( tie(rr, ss, rrnss )  );
+            }
           }
         cout << endl;
       }
+ 
+      if ( failed_ids.size() > 0 ) {
+        cout << endl;
+        cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+        cout << "!!!!!!!!!!!!!!!!!!!!!!!!  sigma2_bb FAILED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+        cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << endl;
+        cout << endl <<  "--------sigma2_bb_orig ---------" << endl;
+        for ( int qq = 0 ; qq != ket_det->lena()*ket_det->lenb() ; qq++ ) {
+          for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
+            for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
+              DataType sbb_diff = sigma2_bb_orig->data(rr*ket_det->norb()+ss)->data(qq);
+              cout << sbb_diff << "    "; cout.flush();
+            }
+          cout << endl;
+        }
+        cout << endl;
+        cout << endl <<  "--------sigma_bb_test---------" << endl;
+        for ( int qq = 0 ; qq != ket_det->lena()*ket_det->lenb() ; qq++ ) {
+          for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
+            for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
+              DataType sbb_diff = sigma2_bb_test->data(rr*ket_det->norb()+ss)->data(qq) ;
+              cout << sbb_diff << "    "; cout.flush();
+            }
+          cout << endl;
+        }
+        cout << endl << "++++++++++++++++++++ failed id pos ++++++++++++++++++++++++" << endl;
+        for ( tuple<int,int,int>& fid : failed_ids ) 
+          cout << "[ " << get<0>(fid) << " " << get<1>(fid) << " " << get<2>(fid) << " ]" << endl; 
+ 
+
       }
+      }
+
       { 
         sigma_ab_test( gamma2_info, true ) ;
         shared_ptr<Dvec> sigma2_ab = dvec_sigma_map_->at("sigma_ab_test");
@@ -1050,19 +1123,26 @@ cout << "B_Gamma_Computer::sigma2_test : " << gamma2_info->name() << endl;
             }
           cout << endl;
         }
-      }
-      { 
         sigma_ba_test( gamma2_info, true ) ;
         shared_ptr<Dvec> sigma2_ba = dvec_sigma_map_->at("sigma_ba_test");
         cout << endl <<  "-------- sigma_ba_test---------" << endl;
         for ( int qq = 0 ; qq != ket_det->lena()*ket_det->lenb() ; qq++ ) {
           for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
             for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
-              cout << sigma2_ba->data(rr*ket_det->norb()+ss)->data(qq) << "    "; cout.flush();
+              cout << sigma2_ba->data(rr * ket_det->norb() + ss )->data(qq) << "    "; cout.flush();
+            }
+          cout << endl;
+        }
+        cout << endl <<  "-------- sigma_ba_test_ji + sigma_ab_test_ij ---------" << endl;
+        for ( int qq = 0 ; qq != ket_det->lena()*ket_det->lenb() ; qq++ ) {
+          for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
+            for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
+              cout << sigma2_ba->data(rr * ket_det->norb() + ss )->data(qq) - sigma2_ab->data(rr * ket_det->norb()+ ss)->data(qq) << "    "; cout.flush();
             }
           cout << endl;
         }
       }
+
     }
   }
   return; 
