@@ -1053,6 +1053,192 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_bb_test_vb" << endl
 
   return;
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ab_vb( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_B_GAMMA_COMPUTER
+cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ab_vb" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  size_t civec_maxtile = 100000;// TODO set these elsewhere
+  DataType thresh = 1.0e-12;
+
+  string bra_name = gamma_info->Bra_name();
+  string ket_name = gamma_info->Ket_name();
+  
+  shared_ptr<Determinants> ket_det = det_old_map_->at(ket_name);
+  shared_ptr<Determinants> bra_det = det_old_map_->at(bra_name);
+
+  bra_det = make_shared<Determinants>( ket_det->norb(), ket_det->nelea()+1, ket_det->neleb()-1, false /*compress*/, true /*mute*/);
+  assert ( bra_det->nelea() == ket_det->nelea()+1  && bra_det->neleb() == ket_det->neleb()-1 );
+
+  const int norb = ket_det->norb();
+  const int ket_lenb = ket_det->lenb();
+  const int bra_lenb = bra_det->lenb();
+  size_t bra_length = bra_det->lena()*bra_det->lenb();
+
+  shared_ptr<Vector_Bundle<DataType>> sigma_ab;
+  if ( new_sigma) {
+    vector<int> orb_id_ranges = { bra_det->norb(), bra_det->norb() };
+    sigma_ab = make_shared<Vector_Bundle<DataType>>( orb_id_ranges, bra_length, civec_maxtile, true, true, true );
+  } else { 
+    sigma_ab = new_sigma_data_map_->at( gamma_info->sigma_name() ) ;
+  }
+  assert( sigma_ab->index_range_vec_[0].range().size() == 1 ) ; // TODO : catch for split CI block; must fix, but OK for now (for loops over blocks redundant)
+
+  convert_civec_to_tensor( ket_name ); 
+  shared_ptr<SMITH::Tensor_<DataType>> ket_tensor = civec_data_map_->at(ket_name); 
+  SMITH::IndexRange ket_idx_range = ket_tensor->indexrange().front();
+  for ( SMITH::Index block : ket_idx_range.range() )  {
+    vector<SMITH::Index> ket_block_id = { block };
+    unique_ptr<DataType[]> ket_data = ket_tensor->get_block( ket_block_id); 
+    DataType* ket_ptr_orig = ket_data.get();
+   
+    // Slow, but simple to check and parallelize
+    for (int ii = 0; ii != norb; ii++) {
+      for (int jj = 0; jj != norb; jj++) {
+    
+        vector<int> orb_ids = { ii, jj };
+        shared_ptr<SMITH::Tensor_<DataType>> sigma_ij_vec = sigma_ab->get_new_vector( true );
+
+        bool ij_vec_sparse = true;
+        for ( SMITH::Index& ij_block_id : sigma_ab->index_range_vec_[0] ) {
+          
+          DataType* ket_ptr = ket_ptr_orig;
+          vector<SMITH::Index> sigma_ij_block_id = { ij_block_id };
+          unique_ptr<DataType[]> sigma_ij_block_data = sigma_ij_vec->get_block( sigma_ij_block_id );
+          DataType* sigma_ab_ij_ptr = sigma_ij_block_data.get();
+          
+
+          for ( vector<bitset<nbit__>>::const_iterator abit_it = ket_det->string_bits_a().begin(); abit_it != ket_det->string_bits_a().end(); ++abit_it ) {
+            for ( vector<bitset<nbit__>>::const_iterator bbit_it = ket_det->string_bits_b().begin(); bbit_it != ket_det->string_bits_b().end(); ++bbit_it, ++ket_ptr ) {
+              if ( !(*abit_it)[ii] && (*bbit_it)[jj] ) {
+          
+                bitset<nbit__> bbit_bra = *bbit_it;
+                DataType op_phase =  ket_det->sign<1>( bbit_bra, jj);
+                bbit_bra.reset(jj);
+          
+                bitset<nbit__> abit_bra = *abit_it;
+                op_phase *= ket_det->sign<0>( abit_bra, ii);
+                abit_bra.set(ii);
+                {
+                  DataType* bra_ptr = sigma_ab_ij_ptr + bra_det->lexical<0>( abit_bra ) * bra_lenb + bra_det->lexical<1>( bbit_bra ); 
+                  *bra_ptr += op_phase* (*ket_ptr);
+                }
+              }
+            }
+          }
+          
+          if ( ( abs(*(max_element(sigma_ij_block_data.get() , sigma_ij_block_data.get() + sigma_ij_block_id.front().size() ))) > thresh ) ||
+               ( abs(*(min_element(sigma_ij_block_data.get() , sigma_ij_block_data.get() + sigma_ij_block_id.front().size() ))) > thresh )    ) { 
+            ij_vec_sparse = false;
+            sigma_ij_vec->put_block( sigma_ij_block_data, sigma_ij_block_id ); 
+          }
+        }
+        sigma_ab->set_sparsity( orb_ids, ij_vec_sparse );
+        if ( !ij_vec_sparse )
+          sigma_ab->set_vector( orb_ids , sigma_ij_vec, /*overwrite*/ true ); 
+      }
+    }
+  } // end ket block loop
+  
+  new_sigma_data_map_->emplace( "sigma_ab_vb", sigma_ab );
+  
+  return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ba_vb( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_B_GAMMA_COMPUTER
+cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_ba_vb" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  size_t civec_maxtile = 100000;// TODO set these elsewhere
+  DataType thresh = 1.0e-12;
+
+  string bra_name = gamma_info->Bra_name();
+  string ket_name = gamma_info->Ket_name();
+  
+  shared_ptr<Determinants> ket_det = det_old_map_->at(ket_name);
+  shared_ptr<Determinants> bra_det = det_old_map_->at(bra_name);
+
+  bra_det = make_shared<Determinants>( ket_det->norb(), ket_det->nelea()-1, ket_det->neleb()+1, false /*compress*/, true /*mute*/);
+  assert ( bra_det->nelea() == ket_det->nelea()-1  && bra_det->neleb() == ket_det->neleb()+1 );
+
+  const int norb = ket_det->norb();
+  const int ket_lenb = ket_det->lenb();
+  const int bra_lenb = bra_det->lenb();
+  size_t bra_length = bra_det->lena()*bra_det->lenb();
+
+  shared_ptr<Vector_Bundle<DataType>> sigma_ba;
+  if ( new_sigma) {
+    vector<int> orb_id_ranges = { bra_det->norb(), bra_det->norb() };
+    sigma_ba = make_shared<Vector_Bundle<DataType>>( orb_id_ranges, bra_length, civec_maxtile, true, true, true );
+  } else { 
+    sigma_ba = new_sigma_data_map_->at( gamma_info->sigma_name() ) ;
+  }
+  assert( sigma_ba->index_range_vec_[0].range().size() == 1 ) ; // TODO : catch for split CI block; must fix, but OK for now (for loops over blocks redundant)
+
+   
+  convert_civec_to_tensor( ket_name ); 
+  shared_ptr<SMITH::Tensor_<DataType>> ket_tensor = civec_data_map_->at(ket_name); 
+  SMITH::IndexRange ket_idx_range = ket_tensor->indexrange().front();
+  for ( SMITH::Index block : ket_idx_range.range() )  {
+    vector<SMITH::Index> ket_block_id = { block };
+    unique_ptr<DataType[]> ket_data = ket_tensor->get_block( ket_block_id); 
+    DataType* ket_ptr_orig = ket_data.get();
+   
+    // Slow, but simple to check and parallelize
+    for (int ii = 0; ii != norb; ii++) {
+      for (int jj = 0; jj != norb; jj++) {
+    
+        vector<int> orb_ids = { ii, jj };
+        shared_ptr<SMITH::Tensor_<DataType>> sigma_ij_vec = sigma_ba->get_new_vector( true );
+
+        bool ij_vec_sparse = true;
+        for ( SMITH::Index& ij_block_id : sigma_ba->index_range_vec_[0] ) {
+          vector<SMITH::Index> sigma_ij_block_id = { ij_block_id };
+          unique_ptr<DataType[]> sigma_ij_block_data = sigma_ij_vec->get_block( sigma_ij_block_id );
+          DataType* sigma_ba_ij_ptr = sigma_ij_block_data.get();
+
+          DataType* ket_ptr = ket_ptr_orig;
+          for ( vector<bitset<nbit__>>::const_iterator abit_it = ket_det->string_bits_a().begin(); abit_it != ket_det->string_bits_a().end(); ++abit_it ) {
+            for ( vector<bitset<nbit__>>::const_iterator bbit_it = ket_det->string_bits_b().begin(); bbit_it != ket_det->string_bits_b().end(); ++bbit_it, ++ket_ptr ) {
+              if ( !(*bbit_it)[ii] && (*abit_it)[jj] ) {
+          
+                bitset<nbit__> abit_bra = *abit_it;
+                DataType op_phase =  ket_det->sign<0>( abit_bra, jj);
+                abit_bra.reset(jj);
+          
+                bitset<nbit__> bbit_bra = *bbit_it;
+                op_phase *= ket_det->sign<1>( bbit_bra, ii);
+                bbit_bra.set(ii);
+                { 
+                  DataType* bra_ptr = sigma_ba_ij_ptr + bra_det->lexical<0>( abit_bra ) * bra_lenb + bra_det->lexical<1>( bbit_bra ); 
+                  *bra_ptr += op_phase* (*ket_ptr);
+                }
+              }
+            }
+          }
+          
+          if ( ( abs(*(max_element(sigma_ij_block_data.get() , sigma_ij_block_data.get() + sigma_ij_block_id.front().size() ))) > thresh ) ||
+               ( abs(*(min_element(sigma_ij_block_data.get() , sigma_ij_block_data.get() + sigma_ij_block_id.front().size() ))) > thresh )    ) { 
+            ij_vec_sparse = false;
+            sigma_ij_vec->put_block( sigma_ij_block_data, sigma_ij_block_id ); 
+          }
+        }
+        sigma_ba->set_sparsity( orb_ids, ij_vec_sparse );
+        if ( !ij_vec_sparse )
+          sigma_ba->set_vector( orb_ids , sigma_ij_vec, /*overwrite*/ true ); 
+      }
+    }
+  } // end ket block loop
+  
+  new_sigma_data_map_->emplace( "sigma_ba_vb", sigma_ba );
+  return;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 shared_ptr<vector<IndexRange>> B_Gamma_Computer::B_Gamma_Computer<DataType>::Get_Bagel_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
@@ -1258,6 +1444,87 @@ cout << "B_Gamma_Computer::sigma2_test : " << gamma2_info->name() << endl;
             for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
               cout << sigma2_ba->data(rr * ket_det->norb() + ss )->data(qq) - sigma2_ab->data(rr * ket_det->norb()+ ss)->data(qq) << "    "; cout.flush();
             }
+          cout << endl;
+        }
+      }
+    
+      {
+ 
+      shared_ptr<Dvec> sigma2_ab_orig = dvec_sigma_map_->at("sigma_ab_test");
+      shared_ptr<const Determinants> bra_det = sigma2_ab_orig->det();      
+      cout << endl <<  "--------sigma2_ab_orig ---------" << endl;
+      for ( int rr = 0 ; rr != norb; rr++ ) 
+        for ( int ss = 0 ; ss != norb; ss++ ) {
+          DataType* ij_orig_ptr = sigma2_ab_orig->data(rr+norb*ss)->data(); 
+          for ( int qq = 0 ; qq != bra_det->lena()*bra_det->lenb() ; qq++, ij_orig_ptr++ )
+            cout << *ij_orig_ptr << "    ";
+          cout << endl;
+        }
+
+      sigma_ab_vb( gamma2_info, true );
+      shared_ptr<Vector_Bundle<DataType>> sigma_ab_vb =  new_sigma_data_map_->at("sigma_ab_vb"); 
+      cout << endl <<  "-------- sigma_ab_vb---------" << endl;
+      for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
+        for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
+          DataType* ij_orig_ptr = sigma2_ab_orig->data(rr+norb*ss)->data(); 
+          std::unique_ptr<DataType[]> ij_vec = sigma_ab_vb->get_vector_ij_block( {rr, ss}, 0 );
+          DataType* ij_vb_ptr = ij_vec.get();
+          for ( int qq = 0 ; qq != bra_det->lena()*bra_det->lenb() ; qq++, ij_vb_ptr++, ij_orig_ptr++ )
+            cout << *ij_vb_ptr << "    ";
+          sigma_ab_vb->put_vector_ij_block({rr,ss}, ij_vec, 0 );
+          cout << endl;
+        }
+
+    
+      cout << endl <<  "-------- sigma_ab_vb - sigma_ab_orig---------" << endl;
+      for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
+        for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
+          DataType* ij_orig_ptr = sigma2_ab_orig->data(rr+norb*ss)->data(); 
+          std::unique_ptr<DataType[]> ij_vec = sigma_ab_vb->get_vector_ij_block( {rr, ss}, 0 );
+          DataType* ij_vb_ptr = ij_vec.get();
+          for ( int qq = 0 ; qq != bra_det->lena()*bra_det->lenb() ; qq++, ij_vb_ptr++, ij_orig_ptr++ )
+            cout << *ij_vb_ptr - *ij_orig_ptr << "    ";
+          sigma_ab_vb->put_vector_ij_block({rr,ss}, ij_vec, 0 );
+          cout << endl;
+        }
+      }
+      {
+ 
+      shared_ptr<Dvec> sigma2_ba_orig = dvec_sigma_map_->at("sigma_ba_test");
+      shared_ptr<const Determinants> bra_det = sigma2_ba_orig->det();      
+      cout << endl <<  "--------sigma2_ba_orig ---------" << endl;
+      for ( int rr = 0 ; rr != norb; rr++ ) 
+        for ( int ss = 0 ; ss != norb; ss++ ) {
+          DataType* ij_orig_ptr = sigma2_ba_orig->data(rr+norb*ss)->data(); 
+          for ( int qq = 0 ; qq != bra_det->lena()*bra_det->lenb() ; qq++, ij_orig_ptr++ )
+            cout << *ij_orig_ptr << "    ";
+          cout << endl;
+        }
+
+      sigma_ba_vb( gamma2_info, true );
+      shared_ptr<Vector_Bundle<DataType>> sigma_ba_vb =  new_sigma_data_map_->at("sigma_ba_vb"); 
+      cout << endl <<  "-------- sigma_ba_vb---------" << endl;
+      for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
+        for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
+          DataType* ij_orig_ptr = sigma2_ba_orig->data(rr+norb*ss)->data(); 
+          std::unique_ptr<DataType[]> ij_vec = sigma_ba_vb->get_vector_ij_block( {rr, ss}, 0 );
+          DataType* ij_vb_ptr = ij_vec.get();
+          for ( int qq = 0 ; qq != bra_det->lena()*bra_det->lenb() ; qq++, ij_vb_ptr++, ij_orig_ptr++ )
+            cout << *ij_vb_ptr << "    ";
+          sigma_ba_vb->put_vector_ij_block({rr,ss}, ij_vec, 0 );
+          cout << endl;
+        }
+
+    
+      cout << endl <<  "-------- sigma_ba_vb - sigma_ba_orig---------" << endl;
+      for ( int rr = 0 ; rr != ket_det->norb() ; rr++ ) 
+        for ( int ss = 0 ; ss != ket_det->norb() ; ss++ ) {
+          DataType* ij_orig_ptr = sigma2_ba_orig->data(rr+norb*ss)->data(); 
+          std::unique_ptr<DataType[]> ij_vec = sigma_ba_vb->get_vector_ij_block( {rr, ss}, 0 );
+          DataType* ij_vb_ptr = ij_vec.get();
+          for ( int qq = 0 ; qq != bra_det->lena()*bra_det->lenb() ; qq++, ij_vb_ptr++, ij_orig_ptr++ )
+            cout << *ij_vb_ptr - *ij_orig_ptr << "    ";
+          sigma_ba_vb->put_vector_ij_block({rr,ss}, ij_vec, 0 );
           cout << endl;
         }
       }
