@@ -89,6 +89,46 @@ if ( zero && !alloc )
    }
    return;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void
+Vector_Bundle<DataType>::merge_fixed_ids( shared_ptr<Vector_Bundle> bundle_to_merge, vector<int>& fixed_ids, vector<bool> ids_overwrite_pattern,
+                                          bool overwrite ) { 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//if fixed_ids = [1,2,3] , ids_overwrite_pattern = [ 0, 1, 1, 0, 0]
+//then vector at [4, 9] in bundle_to_merge->vector_map_ is put at  [ 1, 4, 9, 2, 3] in current map 
+#ifdef __DEBUG_PROPTOOL_VECTOR_BUNDLE
+cout << "Vector_Bundle<DataType>::merge_fixed_ids" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  for ( auto& new_bundle_elem : *(bundle_to_merge->vector_map()) ) {
+    vector<int> new_ids(new_bundle_elem.first.size());
+    {
+    vector<int>::iterator ni_it = new_ids.begin();
+    vector<int>::iterator fi_it = fixed_ids.begin();
+    vector<int>::const_iterator mi_it = new_bundle_elem.first.begin();
+    for ( auto change_id : ids_overwrite_pattern ){
+      if( !change_id ) { 
+        *ni_it = *mi_it;
+         ++mi_it;
+      } else { 
+        *ni_it = *fi_it;
+        ++fi_it;
+      }
+      ++ni_it;
+    }
+    }
+    auto new_ids_loc = vector_map_->find( new_ids );
+    if ( new_ids_loc ==vector_map_->end() ) {
+      vector_map_->emplace(new_ids, new_bundle_elem.second );
+    } else if (overwrite) { 
+      new_ids_loc->second = new_bundle_elem.second; 
+    } else { 
+      cout << "did not overwrite; vector " ;cout.flush(); WickUtils::print_vector( new_ids ); cout << " is already in map" << endl; 
+    }
+  }
+  return;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Vector_Bundle<double>;
 template class Vector_Bundle<std::complex<double>>;

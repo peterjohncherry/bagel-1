@@ -361,8 +361,6 @@ void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2_vb( shared_ptr
 cout << "B_Gamma_Computer::compute_sigma2_vb : " << gamma2_info->name() << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  size_t civec_maxtile = 10000;
- 
   string ket_name = gamma2_info->Ket_name();
   get_wfn_data( gamma2_info->Ket_info() );
 
@@ -372,19 +370,22 @@ cout << "B_Gamma_Computer::compute_sigma2_vb : " << gamma2_info->name() << endl;
   convert_civec_to_tensor( ket_name );
 
   if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha() ) { 
-   //aa     
+
+   sigma_aa_vb( gamma2_info, true  );
+   sigma_bb_vb( gamma2_info, false );
     
   } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()+1 ) { 
-    // ab 
+   sigma_ab_vb( gamma2_info, true );
+
   } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()-1 ) { 
-    // ba 
+   sigma_ba_vb( gamma2_info, true );
+
   } else {
     throw logic_error( "this sigma: " + gamma2_info->sigma_name() + " is not implemented" ); 
   }
 
   return;
 }
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigma2( shared_ptr<GammaInfo_Base> gamma2_info ) {
@@ -401,7 +402,6 @@ cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
   shared_ptr<Civec>        ket = cvec_old_map_->at( ket_name );
   
   shared_ptr<Dvec> sigma2;
-     
  
   if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha() ) { 
 
@@ -863,6 +863,118 @@ cout << "B_Gamma_Computer::convert_civec_to_tensor" << endl;
   }
   return;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigmaN_vb( shared_ptr<GammaInfo_Base> gammaN_info )  {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_B_GAMMA_COMPUTER
+cout << "B_Gamma_Computer::compute_sigmaN_vb : " << gammaN_info->sigma_name() ;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  int sorder  = gammaN_info->order(); 
+  // check to see if previous sigma has been calculated, if not calculate it (recursive call here) 
+  if ( new_sigma_data_map_->find(gammaN_info->prev_sigma_name()) == new_sigma_data_map_->end() ) {
+    if ( sorder > 4 ) {
+      compute_sigmaN( gamma_info_map_->at(gammaN_info->prev_gamma_name()) ); 
+    } else { 
+      compute_sigma2( gamma_info_map_->at(gammaN_info->prev_gamma_name()) ); 
+    }
+  }
+
+  shared_ptr<Determinants> ket_det = det_old_map_->at( gammaN_info->Bra_name() );  
+  shared_ptr<Determinants> bra_det = det_old_map_->at( gammaN_info->Prev_Bra_name() );  
+
+  size_t bra_length = bra_det->lena()*bra_det->lenb();
+  int norb = ket_det->norb();
+ 
+  vector<int> orb_ranges_sigma_n(sorder, norb );
+  shared_ptr<Vector_Bundle<DataType>> sigma_n = make_shared<Vector_Bundle<DataType>>( orb_ranges_sigma_n, bra_length, civec_maxtile_, true, false, false );
+
+  // TODO  should define norb so can be variable from gamma_info..
+  vector<int> maxs_prev_sigma(sorder-2, norb);
+  vector<int> mins_prev_sigma(sorder-2, 0);
+  vector<int> orb_ids_prev_sigma = mins_prev_sigma;
+   
+
+  if ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha() ){ 
+    vector<bool> sigma_overwrite_pattern(sorder,false);
+    sigma_overwrite_pattern[0] = true;//lazy...
+    sigma_overwrite_pattern[1] = true; 
+
+    do {  
+    
+      vector<int> maxs_sigma2(2, norb);
+      vector<int> mins_sigma2(2, 0);
+      vector<int> orb_ids_sigma2 = mins_prev_sigma;
+     
+      do {  
+         auto tmp_sigma = make_shared<Vector_Bundle<DataType>>( orb_ids_sigma2, bra_length, civec_maxtile_, true, false, false );
+          
+         compute_eiej_on_ket( tmp_sigma, sigma_n->vector_map(orb_ids_prev_sigma), bra_det, ket_det, "AA" ); 
+         compute_eiej_on_ket( tmp_sigma, sigma_n->vector_map(orb_ids_prev_sigma), bra_det, ket_det, "BB" ); 
+
+         sigma_n-> merge_fixed_ids( tmp_sigma, orb_ids_prev_sigma, sigma_overwrite_pattern, true );
+
+      } while(fvec_cycle_skipper( orb_ids_sigma2, maxs_sigma2, mins_sigma2) );
+
+    } while(fvec_cycle_skipper( orb_ids_prev_sigma, maxs_prev_sigma, mins_prev_sigma) );
+
+  } else if ( ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha()+1 ) &&
+              ( gammaN_info->Bra_nbeta() ==  gammaN_info->prev_Bra_nbeta()-1 ) ){ 
+
+    cout << "hello" << endl;
+    //sigma_vb ab
+
+  } else if ( ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha()-1 ) &&
+              ( gammaN_info->Bra_nbeta()  ==  gammaN_info->prev_Bra_nbeta()+1 ) ){ 
+    
+    cout << "hello" << endl;
+    //sigma_vb ba
+
+  } else { 
+    throw logic_error( gammaN_info->prev_gamma_name() + " is not yet implemented! Aborting!!" );
+  }
+  
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void
+B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_eiej_on_ket( shared_ptr<Vector_Bundle<DataType>> eiej_on_ket,
+                                                                   shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
+                                                                   shared_ptr<Determinants> bra_det,
+                                                                   shared_ptr<Determinants> ket_det,
+                                                                   string transition_name ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_B_GAMMA_COMPUTER
+cout << "B_Gamma_Computer::compute_eiej_on_ket ";
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  if ( transition_name == "AA") {
+    assert( (bra_det->nelea() == ket_det->nelea()) && ( bra_det->neleb() == ket_det->neleb()));
+    sigma2_aa_vb( eiej_on_ket, ket_tensor, bra_det, ket_det );
+  
+  } else if ( transition_name == "BB") {
+    assert( (bra_det->nelea() == ket_det->nelea()) && ( bra_det->neleb() == ket_det->neleb()));
+    sigma2_bb_vb( eiej_on_ket, ket_tensor, bra_det, ket_det );
+    
+  } else if ( transition_name == "AB") {
+    assert( (bra_det->nelea()+1 == ket_det->nelea()) && ( bra_det->neleb()-1 == ket_det->neleb()));
+    sigma2_ab_vb( eiej_on_ket, ket_tensor, bra_det, ket_det );
+
+  } else if ( transition_name == "BA") {
+    assert( (bra_det->nelea()-1 == ket_det->nelea()) && ( bra_det->neleb()+1 == ket_det->neleb()));
+    sigma2_ba_vb( eiej_on_ket, ket_tensor, bra_det, ket_det );
+
+  } else {
+    throw logic_error( "B_Gamma_Computer::compute_eiej_on_ket : Aborted as this sigma is not implemented; not aa , bb, ab or ba" ); 
+  }
+
+  return;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma_aa_vb( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ) {

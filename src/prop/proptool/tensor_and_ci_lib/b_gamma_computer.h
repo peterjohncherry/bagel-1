@@ -83,6 +83,8 @@ class B_Gamma_Computer {
 
       void sigma_ba_test( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
 
+      void compute_sigmaN_vb( std::shared_ptr<GammaInfo_Base> gammaN_info );
+
       void sigma_aa_vb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
    
       void sigma2_aa_vb( std::shared_ptr<Vector_Bundle<DataType>> sigma_aa, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
@@ -105,6 +107,8 @@ class B_Gamma_Computer {
       void sigma2_ba_vb( std::shared_ptr<Vector_Bundle<DataType>> sigma_ba, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
                          std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
 
+      void compute_eiej_on_ket( std::shared_ptr<Vector_Bundle<DataType>> eiej_on_ket, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
+                                std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det, std::string transition_type );
 
       /////////// Utility routines /////////////////////////
       
