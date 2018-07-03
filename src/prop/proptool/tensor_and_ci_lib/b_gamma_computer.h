@@ -35,6 +35,9 @@ class B_Gamma_Computer {
  
       std::shared_ptr<std::map< std::string, std::shared_ptr<Vector_Bundle<DataType>>>> new_sigma_data_map_;
 
+      double thresh_;
+      size_t civec_maxtile_;
+
     public: 
 
       B_Gamma_Computer( std::shared_ptr<const Dvec> cc_in ); 
@@ -82,13 +85,26 @@ class B_Gamma_Computer {
 
       void sigma_aa_vb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
    
+      void sigma2_aa_vb( std::shared_ptr<Vector_Bundle<DataType>> sigma_aa, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
+                         std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+
       void compute_sigma2_vb( std::shared_ptr<GammaInfo_Base> gamma2_info );
 
       void sigma_bb_vb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ); 
 
+      void sigma2_bb_vb( std::shared_ptr<Vector_Bundle<DataType>> sigma_bb, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
+                         std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+
       void sigma_ab_vb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
 
+      void sigma2_ab_vb( std::shared_ptr<Vector_Bundle<DataType>> sigma_ba, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
+                         std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+
       void sigma_ba_vb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
+
+      void sigma2_ba_vb( std::shared_ptr<Vector_Bundle<DataType>> sigma_ba, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
+                         std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+
 
       /////////// Utility routines /////////////////////////
       
