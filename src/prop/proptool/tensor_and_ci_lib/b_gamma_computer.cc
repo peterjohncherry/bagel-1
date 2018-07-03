@@ -864,7 +864,53 @@ cout << "B_Gamma_Computer::convert_civec_to_tensor" << endl;
   return;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_gammaN_vb( shared_ptr<GammaInfo_Base> gamma_n_info )  {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_B_GAMMA_COMPUTER
+cout << "B_Gamma_Computer::compute_gammaN_vb : " << gamma_n_info->name() ;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  compute_sigmaN_vb(gamma_n_info);
+  shared_ptr<Vector_Bundle<DataType>> sigma_n = new_sigma_data_map_->at( gamma_n_info->sigma_name() ); 
+  shared_ptr<Tensor_<DataType>> bra = civec_data_map_->at(gamma_n_info->Bra_name());
+
+  int order = gamma_n_info->order();
+
+  shared_ptr<vector<IndexRange>> id_ranges = Get_Bagel_IndexRanges( gamma_n_info->id_ranges() ); 
+  shared_ptr<Tensor_<DataType>> gamma_n_tens = make_shared<Tensor_<DataType>>( *id_ranges ); 
+  gamma_n_tens->allocate();
+  gamma_n_tens->zero();
+
+
+  vector<int> range_lengths = get_range_lengths( *id_ranges ) ;
+  vector<int> block_pos(order,0);  
+  vector<int> mins(order,0);  
+
+  do {
+      
+    vector<Index> id_blocks = get_rng_blocks( block_pos, *id_ranges );
+
+    unique_ptr<DataType[]> gamma_block = gamma_n_tens->get_block( id_blocks);
+    DataType* gamma_block_ptr = gamma_block.get(); 
+
+    vector<int> gamma_ids(order);  // should be sizes  of id blocks 
+    vector<int> block_start(order); // should be starting offset
+    vector<int> block_end(order); // should be finishing offset
+
+    do {
+
+     shared_ptr<Tensor_<DataType>> ket = sigma_n->vector_map(gamma_ids); 
+     *gamma_block_ptr = ket->dot_product(bra);
+     ++gamma_block_ptr;
+
+    } while (fvec_cycle_skipper(gamma_ids, block_end, block_start ));
+
+  } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
+
+  return;
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void B_Gamma_Computer::B_Gamma_Computer<DataType>::compute_sigmaN_vb( shared_ptr<GammaInfo_Base> gammaN_info )  {
@@ -891,47 +937,57 @@ cout << "B_Gamma_Computer::compute_sigmaN_vb : " << gammaN_info->sigma_name() ;
  
   vector<int> orb_ranges_sigma_n(sorder, norb );
   shared_ptr<Vector_Bundle<DataType>> sigma_n = make_shared<Vector_Bundle<DataType>>( orb_ranges_sigma_n, bra_length, civec_maxtile_, true, false, false );
+  new_sigma_data_map_->emplace( gammaN_info->sigma_name(), sigma_n );
 
   // TODO  should define norb so can be variable from gamma_info..
   vector<int> maxs_prev_sigma(sorder-2, norb);
   vector<int> mins_prev_sigma(sorder-2, 0);
   vector<int> orb_ids_prev_sigma = mins_prev_sigma;
-   
+
+  vector<bool> sigma_overwrite_pattern(sorder,false);
+  sigma_overwrite_pattern[0] = true;//lazy...
+  sigma_overwrite_pattern[1] = true; 
 
   if ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha() ){ 
-    vector<bool> sigma_overwrite_pattern(sorder,false);
-    sigma_overwrite_pattern[0] = true;//lazy...
-    sigma_overwrite_pattern[1] = true; 
 
     do {  
-    
       vector<int> maxs_sigma2(2, norb);
       vector<int> mins_sigma2(2, 0);
       vector<int> orb_ids_sigma2 = mins_prev_sigma;
-     
       do {  
-         auto tmp_sigma = make_shared<Vector_Bundle<DataType>>( orb_ids_sigma2, bra_length, civec_maxtile_, true, false, false );
-          
-         compute_eiej_on_ket( tmp_sigma, sigma_n->vector_map(orb_ids_prev_sigma), bra_det, ket_det, "AA" ); 
-         compute_eiej_on_ket( tmp_sigma, sigma_n->vector_map(orb_ids_prev_sigma), bra_det, ket_det, "BB" ); 
-
-         sigma_n-> merge_fixed_ids( tmp_sigma, orb_ids_prev_sigma, sigma_overwrite_pattern, true );
-
+        auto tmp_sigma = make_shared<Vector_Bundle<DataType>>( orb_ids_sigma2, bra_length, civec_maxtile_, true, false, false );
+        compute_eiej_on_ket( tmp_sigma, sigma_n->vector_map(orb_ids_prev_sigma), bra_det, ket_det, "AA" ); 
+        compute_eiej_on_ket( tmp_sigma, sigma_n->vector_map(orb_ids_prev_sigma), bra_det, ket_det, "BB" ); 
+        sigma_n-> merge_fixed_ids( tmp_sigma, orb_ids_prev_sigma, sigma_overwrite_pattern, true );
       } while(fvec_cycle_skipper( orb_ids_sigma2, maxs_sigma2, mins_sigma2) );
-
     } while(fvec_cycle_skipper( orb_ids_prev_sigma, maxs_prev_sigma, mins_prev_sigma) );
 
   } else if ( ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha()+1 ) &&
               ( gammaN_info->Bra_nbeta() ==  gammaN_info->prev_Bra_nbeta()-1 ) ){ 
-
-    cout << "hello" << endl;
-    //sigma_vb ab
+    do {  
+      vector<int> maxs_sigma2(2, norb);
+      vector<int> mins_sigma2(2, 0);
+      vector<int> orb_ids_sigma2 = mins_prev_sigma;
+      do {  
+         auto tmp_sigma = make_shared<Vector_Bundle<DataType>>( orb_ids_sigma2, bra_length, civec_maxtile_, true, false, false );
+         compute_eiej_on_ket( tmp_sigma, sigma_n->vector_map(orb_ids_prev_sigma), bra_det, ket_det, "AB" ); 
+         sigma_n-> merge_fixed_ids( tmp_sigma, orb_ids_prev_sigma, sigma_overwrite_pattern, true );
+      } while(fvec_cycle_skipper( orb_ids_sigma2, maxs_sigma2, mins_sigma2) );
+    } while(fvec_cycle_skipper( orb_ids_prev_sigma, maxs_prev_sigma, mins_prev_sigma) );
 
   } else if ( ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha()-1 ) &&
               ( gammaN_info->Bra_nbeta()  ==  gammaN_info->prev_Bra_nbeta()+1 ) ){ 
-    
-    cout << "hello" << endl;
-    //sigma_vb ba
+   
+    do {  
+      vector<int> maxs_sigma2(2, norb);
+      vector<int> mins_sigma2(2, 0);
+      vector<int> orb_ids_sigma2 = mins_prev_sigma;
+      do {  
+        auto tmp_sigma = make_shared<Vector_Bundle<DataType>>( orb_ids_sigma2, bra_length, civec_maxtile_, true, false, false );
+        compute_eiej_on_ket( tmp_sigma, sigma_n->vector_map(orb_ids_prev_sigma), bra_det, ket_det, "BA" ); 
+        sigma_n-> merge_fixed_ids( tmp_sigma, orb_ids_prev_sigma, sigma_overwrite_pattern, true );
+      } while(fvec_cycle_skipper( orb_ids_sigma2, maxs_sigma2, mins_sigma2) );
+    } while(fvec_cycle_skipper( orb_ids_prev_sigma, maxs_prev_sigma, mins_prev_sigma) );
 
   } else { 
     throw logic_error( gammaN_info->prev_gamma_name() + " is not yet implemented! Aborting!!" );

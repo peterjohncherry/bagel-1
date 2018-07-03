@@ -110,6 +110,8 @@ class B_Gamma_Computer {
       void compute_eiej_on_ket( std::shared_ptr<Vector_Bundle<DataType>> eiej_on_ket, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
                                 std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det, std::string transition_type );
 
+      void compute_gammaN_vb( std::shared_ptr<GammaInfo_Base> gammaN_info );
+
       /////////// Utility routines /////////////////////////
       
       std::shared_ptr<std::vector<SMITH::IndexRange>>  Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
