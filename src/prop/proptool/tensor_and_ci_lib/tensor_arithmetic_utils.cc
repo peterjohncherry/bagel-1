@@ -234,7 +234,7 @@ void Tensor_Arithmetic_Utils::Print_Tensor( shared_ptr<Tensor_<double>> Tens, st
 
    } else {
 
-     shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( Bagel_id_ranges) ;
+     shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets_sp( Bagel_id_ranges) ;
      
      vector<int> range_lengths  = get_range_lengths( Bagel_id_ranges );
      vector<int> block_pos(range_lengths.size(),0);  
@@ -370,7 +370,7 @@ void Tensor_Arithmetic_Utils::Print_Tensor_row_major( shared_ptr<Tensor_<double>
    cout << "---------------------------- " << name <<  " ----------------------------" << endl;
 
    vector<IndexRange> Bagel_id_ranges = Tens->indexrange();
-   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( Bagel_id_ranges) ;
+   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets_sp( Bagel_id_ranges) ;
 
    vector<int> range_lengths = get_range_lengths( Bagel_id_ranges ) ;
    vector<int> block_pos (range_lengths.size(),0);  
@@ -570,14 +570,55 @@ cout << "TensOp_Computer::get_num_index_blocks" << endl;
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<vector<size_t>>
-Tensor_Arithmetic_Utils::get_sizes(const vector<Index>& Idvec) {
+Tensor_Arithmetic_Utils::get_sizes_sp(const vector<Index>& Idvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS_VERBOSE
-cout << "Tensor_Arithmetic_Utils::get_sizes" << endl;
+cout << "Tensor_Arithmetic_Utils::get_sizes_sp" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   shared_ptr<vector<size_t>> size_vec = make_shared<vector<size_t>>(Idvec.size()); 
   for( int ii = 0 ; ii != Idvec.size() ; ii++ ) 
      (*size_vec)[ii] = Idvec[ii].size();
+  return size_vec;
+}
+////////////////////////////////////////////////////////////////////////////////////////
+vector<size_t>
+Tensor_Arithmetic_Utils::get_sizes(const vector<Index>& index_block) {
+////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS_VERBOSE
+cout << "Tensor_Arithmetic_Utils::get_sizes" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  vector<size_t> size_vec(index_block.size()); 
+  vector<Index>::const_iterator ib_it = index_block.begin();
+  for( vector<size_t>::iterator sv_it = size_vec.begin(); sv_it != size_vec.end(); ++sv_it, ++ib_it ) 
+     *sv_it = ib_it->size();
+  return size_vec;
+}
+////////////////////////////////////////////////////////////////////////////////////////
+template<typename T = size_t> 
+vector<T>
+Tensor_Arithmetic_Utils::get_sizes_m1(const vector<Index>& index_block) {
+////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS_VERBOSE
+cout << "Tensor_Arithmetic_Utils::get_sizes_m1" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  vector<T> size_vec(index_block.size()); 
+  vector<Index>::const_iterator ib_it = index_block.begin();
+  for( typename vector<T>::iterator sv_it = size_vec.begin(); sv_it != size_vec.end(); ++sv_it, ++ib_it ) 
+     *sv_it = ib_it->size()-1;
+  return size_vec;
+}
+////////////////////////////////////////////////////////////////////////////////////////
+template<>
+vector<int>
+Tensor_Arithmetic_Utils::get_sizes_m1(const vector<Index>& index_block) {
+////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS_VERBOSE
+cout << "Tensor_Arithmetic_Utils::get_sizes_m1" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  vector<int> size_vec(index_block.size()); 
+  vector<Index>::const_iterator ib_it = index_block.begin();
+  for( vector<int>::iterator sv_it = size_vec.begin(); sv_it != size_vec.end(); ++sv_it, ++ib_it ) 
+     *sv_it = ib_it->size()-1;
   return size_vec;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -711,10 +752,10 @@ pair<vector<vector<size_t>>,vector<vector<size_t>>> Tensor_Arithmetic_Utils::get
   return make_pair( block_starts, block_ends ); 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets( const vector<IndexRange>&  ranges ) { 
+shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets_sp( const vector<IndexRange>&  ranges ) { 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
- cout << "Tensor_Arithmetic_Utils::get_block_offsets" << endl;
+ cout << "Tensor_Arithmetic_Utils::get_block_offsets_sp" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   shared_ptr<vector<vector<int>>> block_offsets = make_shared<vector<vector<int>>>(ranges.size());
@@ -726,6 +767,27 @@ shared_ptr<vector<vector<int>>> Tensor_Arithmetic_Utils::get_block_offsets( cons
       block_offset[jj] = block_offset[jj-1]+ranges[ii].range(jj).size(); 
     }    
     block_offsets->at(ii) =  block_offset;
+  }
+  
+  return block_offsets ; 
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+vector<vector<int>> Tensor_Arithmetic_Utils::get_block_offsets( const vector<IndexRange>&  ranges ) { 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+ cout << "Tensor_Arithmetic_Utils::get_block_offsets" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  vector<vector<int>> block_offsets(ranges.size());
+  vector<vector<int>>::iterator bos_it = block_offsets.begin();
+   
+  for ( vector<IndexRange>::const_iterator r_it = ranges.begin(); r_it != ranges.end(); ++r_it, ++bos_it ){
+    vector<int> block_offset(r_it->range().size()); 
+    block_offset.front() = 0;
+    for ( int  jj = 1 ; jj != r_it->range().size() ; jj++ ) { 
+      block_offset[jj] = block_offset[jj-1]+r_it->range(jj).size(); 
+    }    
+    *bos_it =  block_offset;
   }
   
   return block_offsets ; 

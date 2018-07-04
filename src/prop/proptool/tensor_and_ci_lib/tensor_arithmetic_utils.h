@@ -29,7 +29,15 @@ namespace Tensor_Arithmetic_Utils {
 
      std::vector<int>  get_num_index_blocks_vec(std::vector<SMITH::IndexRange>& rngvec);
 
-     std::shared_ptr<std::vector<size_t>> get_sizes(const std::vector<SMITH::Index>& Idvec);
+     std::shared_ptr<std::vector<size_t>> get_sizes_sp(const std::vector<SMITH::Index>& Idvec);
+
+     std::vector<size_t> get_sizes(const std::vector<SMITH::Index>& Idvec);
+
+     template< typename T = size_t >
+     std::vector<T> get_sizes_m1(const std::vector<SMITH::Index>& Idvec); // routine for fvec_cycle (maxs = size-1)
+
+     template<>
+     std::vector<int> get_sizes_m1(const std::vector<SMITH::Index>& Idvec); // routine for fvec_cycle (maxs = size-1)
  
      std::vector<int>  get_range_lengths( const std::vector<SMITH::IndexRange>& id_ranges ) ;
  
@@ -49,7 +57,9 @@ namespace Tensor_Arithmetic_Utils {
 
      std::shared_ptr<std::vector<std::pair<size_t,size_t>>> get_block_start( std::shared_ptr<std::vector<SMITH::IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos ) ;
 
-     std::shared_ptr<std::vector<std::vector<int>>> get_block_offsets(const std::vector<SMITH::IndexRange>&  ranges ) ;
+     std::shared_ptr<std::vector<std::vector<int>>> get_block_offsets_sp(const std::vector<SMITH::IndexRange>&  ranges ) ;
+
+     std::vector<std::vector<int>> get_block_offsets(const std::vector<SMITH::IndexRange>& ranges ) ;
 
      void check_contracted_indexes( std::vector<SMITH::IndexRange>&  idx_block, std::vector<int>& contracted_index_positions );
 

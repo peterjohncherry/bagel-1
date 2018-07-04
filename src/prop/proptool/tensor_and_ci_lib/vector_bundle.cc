@@ -51,7 +51,6 @@ if ( zero && !alloc )
 
      vector<int> mins(id_range_sizes_.size(), 0);
      vector<int> maxs(id_range_sizes_.size());
-     
      {
      vector<int>::iterator mx_it = maxs.begin();
      for ( vector<int>::iterator irs_it = id_range_sizes_.begin(); irs_it != id_range_sizes_.end(); ++irs_it, ++mx_it ) 
@@ -62,12 +61,15 @@ if ( zero && !alloc )
      vector<int> ids;
 
      if ( all_sparse ) {
+       cout << "all_sparse" << endl;
        ids = mins;
+//     print_vector( maxs, "maxs"); print_vector( mins, "mins"); cout << endl;
        do { 
          sparsity_map_->emplace( ids, true );
+//       print_vector(ids, "ids"); cout << endl;
        } while ( fvec_cycle_skipper( ids, maxs, mins) );
      }
-   
+     
      if (alloc && !zero) {
        ids = mins;
        do { 
@@ -87,6 +89,7 @@ if ( zero && !alloc )
        } while ( fvec_cycle_skipper( ids, maxs, mins) );
      }
    }
+   cout << "leaving init" << endl;
    return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

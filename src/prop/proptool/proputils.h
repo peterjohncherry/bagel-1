@@ -66,6 +66,24 @@ namespace WickUtils {
  
   std::string get_det_name( char name_range1, int num_range1, char name_range2, int num_range2, int norb );
 
+  template<typename DataType> 
+  bool fvec_cycle_skipper( std::vector<DataType>& forvec, const std::vector<DataType>& max, const std::vector<DataType>& min ) {
+    for(int ii = forvec.size()-1; ii!=-1 ; ii--) {
+      if ( max[ii] == min[ii] ) {
+        if ( ii == 0 )
+          return false;
+      } else if (forvec[ii] == max[ii]) {
+        if (ii == 0) 
+          return false;    
+        forvec[ii] = min[ii];
+      } else {
+        forvec[ii] = forvec[ii]+ 1;
+        break;
+      }
+    }
+    return true;
+  }
+
   template<class DataType>  
   void reorder_vector_inplace(const std::vector<int>& new_order, std::vector<DataType>& orig_vec ){
     std::vector<DataType> reordered_vec(orig_vec.size());
@@ -142,8 +160,6 @@ namespace WickUtils {
     return new_order;
   }
 
-
-  //TODO you need type name here, but why ? Find out, it could be a problem.
   template<typename DataType>
   std::shared_ptr<std::vector<DataType>> dereference_vector(std::vector<DataType*>& invec){
     std::shared_ptr<std::vector<DataType>> dereffed_vec = std::make_shared<std::vector<DataType>>(invec.size());
@@ -167,6 +183,19 @@ namespace WickUtils {
         return ci_sector_hash;
     }
   }; 
+  template < typename DataType> 
+  std::vector< DataType> get_1d_from_2d ( const std::vector<std::vector<DataType>>&  source_2d, const std::vector<int>& pos_vec ) { 
+
+    std::vector<DataType> out_vec( pos_vec.size() );
+    typename std::vector<DataType>::iterator ov_it = out_vec.begin(); 
+    typename std::vector<std::vector<DataType>>::const_iterator s2_it = source_2d.begin(); 
+
+    for ( std::vector<int>::const_iterator pv_it = pos_vec.begin(); pv_it != pos_vec.end() ; ++pv_it, ++ov_it, ++s2_it ) 
+      *ov_it = (*s2_it)[*pv_it];
+    
+    return out_vec;      
+  } 
+      
 
 }
 

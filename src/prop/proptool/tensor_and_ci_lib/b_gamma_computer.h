@@ -34,6 +34,7 @@ class B_Gamma_Computer {
       std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<DataType>> tensor_calc_;
  
       std::shared_ptr<std::map< std::string, std::shared_ptr<Vector_Bundle<DataType>>>> new_sigma_data_map_;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> new_gamma_data_map_;
 
       double thresh_;
       size_t civec_maxtile_;
@@ -62,6 +63,10 @@ class B_Gamma_Computer {
       void get_gamma2_from_sigma2( std::shared_ptr<GammaInfo_Base> gamma_info );
       
       void get_gammaN_from_sigmaN( std::shared_ptr<GammaInfo_Base> gammaN_info );
+   
+      void get_gammaN_from_sigmaN_vb( std::shared_ptr<GammaInfo_Base> gamma_n_info );
+
+      void get_gamma_vb( std::string gamma_name );
       
       void sigma_2a1( DataType* cvec_ptr, DataType* sigma_ptr, std::shared_ptr<Determinants> dets );
       

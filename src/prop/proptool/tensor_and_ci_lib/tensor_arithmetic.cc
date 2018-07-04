@@ -1090,7 +1090,8 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data( const DataT
 cout << "Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<vector<size_t>> rlen = get_sizes(orig_index_blocks);
+  //TODO change all tensor sortees to not use shared_ptrs; it's pointless
+  shared_ptr<vector<size_t>> rlen = get_sizes_sp(orig_index_blocks);
   shared_ptr<vector<size_t>> new_order_st = make_shared<vector<size_t>>(new_order_vec.size());   
   size_t block_size = get_block_size(orig_index_blocks.begin(), orig_index_blocks.end());
   array<int,4> sort_options = {0,1,1,1};
@@ -1221,7 +1222,7 @@ shared_ptr<Tensor_<DataType>> Tensor_Arithmetic::Tensor_Arithmetic<DataType>::ge
 cout << "Tensor_Arithmetic::get_test_tensor_column_major" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( T_id_ranges) ;
+   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets_sp( T_id_ranges) ;
 
    shared_ptr<Tensor_<DataType>> Tens = make_shared<Tensor_<DataType>>( T_id_ranges);
    Tens->allocate();
@@ -1429,7 +1430,7 @@ cout << "Tensor_Arithmetic::get_tensor_element "; cout.flush(); print_vector(id_
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    vector<IndexRange> id_ranges = Tens->indexrange();
-   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets( id_ranges ) ;
+   shared_ptr<vector<vector<int>>> block_offsets = get_block_offsets_sp( id_ranges ) ;
  
    vector<int> block_pos(id_pos.size());  
    vector<int> rel_id_pos(id_pos.size());  

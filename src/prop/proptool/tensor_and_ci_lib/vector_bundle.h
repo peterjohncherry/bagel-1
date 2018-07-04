@@ -59,12 +59,12 @@ class Vector_Bundle {
         return new_vec;   
       } 
 
-      std::shared_ptr<SMITH::Tensor_<DataType>> get_vector( const std::vector<int>& ids, bool get_zero_vec_if_not_found ) { 
+      std::shared_ptr<SMITH::Tensor_<DataType>> get_vector( const std::vector<int>& ids, bool get_zero_vec_if_not_found = true ) { 
         auto vec_loc = vector_map_->find(ids);
         if (vec_loc != vector_map_->end()){
           return vec_loc->second; 
         } else if ( get_zero_vec_if_not_found ) {
-          get_new_vector( true );
+          return get_new_vector( true );
         } else { 
           throw std::logic_error( " vector not found in map, and no new vector requested " ); 
           return std::make_shared<SMITH::Tensor_<DataType>>( index_range_vec_ );
