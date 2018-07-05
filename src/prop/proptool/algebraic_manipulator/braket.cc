@@ -56,7 +56,6 @@ cout <<  "BraKet_Base::print_braket_block()" << endl;
    
    cout << "orig ranges in canonical order  : "; cout.flush();
    for ( auto block : *(range_block->range_blocks_canonical() )){
-     cout << "Hello" << endl;
      print_vector( *(block->orig_rngs()) ) ;cout.flush();
    }
    cout << endl;

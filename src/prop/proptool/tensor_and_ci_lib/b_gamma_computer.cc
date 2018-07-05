@@ -1,6 +1,7 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/tensor_and_ci_lib/b_gamma_computer.h>
 #include <src/util/prim_op.h>
+#include <src/prop/proptool/debugging_utils.h>
 
 using namespace std;
 using namespace bagel;
@@ -980,8 +981,7 @@ cout << "B_Gamma_Computer::compute_sigmaN_vb : " << gammaN_info->sigma_name() <<
  
   vector<int> orb_ranges_sigma_n(sorder, norb );
 
-  shared_ptr<Vector_Bundle<DataType>> prev_sigma_n = new_sigma_data_map_->at(gammaN_info->prev_sigma_name());
-  shared_ptr<Vector_Bundle<DataType>> sigma_n = make_shared<Vector_Bundle<DataType>>( orb_ranges_sigma_n, bra_length, civec_maxtile_, true, true, true );
+  shared_ptr<Vector_Bundle<DataType>> sigma_n = make_shared<Vector_Bundle<DataType>>( orb_ranges_sigma_n, bra_length, civec_maxtile_, true, true, false );
  
   new_sigma_data_map_->emplace( gammaN_info->sigma_name(), sigma_n );
 
@@ -998,21 +998,46 @@ cout << "B_Gamma_Computer::compute_sigmaN_vb : " << gammaN_info->sigma_name() <<
 
   if ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha() ){ 
 
+    { 
+    vector<int> maxs_tb4(2, 2);
+    vector<int> mins_tb4(2, 0);
+    vector<int> ids_tb4 = mins_tb4;
+    vector<int> tb_ranges = { 2, 2, 2, 2};
+ 
+    shared_ptr<Vector_Bundle<DataType>> tbundle = make_shared<Vector_Bundle<DataType>>( tb_ranges, 10, 100, true, false, false );
+    do {  
+      vector<int> maxs_tb2(2, 2);
+      vector<int> mins_tb2(2, 0);
+      vector<int> ids_tb2 = mins_tb2;
+      
+//      shared_ptr<Tensor_<DataType>> ket = prev_sigma->get(tb4) ;
+      do {  
+        auto tb2 = make_shared<Vector_Bundle<DataType>>( maxs_tb2, 10, 100, true, true, true );
+        tb2->set_vectors( 1.0 );
+        tbundle->merge_fixed_ids( tb2, ids_tb2, sigma_overwrite_pattern, 'O' );
+      } while(fvec_cycle_skipper( ids_tb2, maxs_tb2, mins_tb2 ) );
+      
+    } while(fvec_cycle_skipper( ids_tb4, maxs_tb4, mins_tb4) );
+    tbundle->print( "test_bundle", norb );
+    }
+
+    throw logic_error(" kill for testing" );
+
+
     do {  
       vector<int> maxs_sigma2(2, norb-1);
       vector<int> mins_sigma2(2, 0);
       vector<int> orb_ids_sigma2 = mins_sigma2;
       shared_ptr<Tensor_<DataType>> ket = prev_sigma->vector_map(orb_ids_prev_sigma);
       do {  
-
         auto tmp_sigma = make_shared<Vector_Bundle<DataType>>( maxs_sigma2, bra_length, civec_maxtile_, true, false, false );
         compute_eiej_on_ket( tmp_sigma, ket, bra_det, ket_det, "AA" ); 
-        compute_eiej_on_ket( tmp_sigma, ket, bra_det, ket_det, "BB" ); 
-        sigma_n->merge_fixed_ids( tmp_sigma, orb_ids_sigma2, sigma_overwrite_pattern, true );
-
+        //compute_eiej_on_ket( tmp_sigma, ket, bra_det, ket_det, "BB" ); 
+        sigma_n->merge_fixed_ids( tmp_sigma, orb_ids_sigma2, sigma_overwrite_pattern, 'O' );
       } while(fvec_cycle_skipper( orb_ids_sigma2, maxs_sigma2, mins_sigma2 ) );
       
     } while(fvec_cycle_skipper( orb_ids_prev_sigma, maxs_prev_sigma, mins_prev_sigma) );
+    sigma_n->print( "sigma_n", norb );
 
  
   } else if ( ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha()+1 ) &&
@@ -1028,7 +1053,7 @@ cout << "B_Gamma_Computer::compute_sigmaN_vb : " << gammaN_info->sigma_name() <<
 
          auto tmp_sigma = make_shared<Vector_Bundle<DataType>>( maxs_sigma2, bra_length, civec_maxtile_, true, false, false );
          compute_eiej_on_ket( tmp_sigma, ket, bra_det, ket_det, "AB" ); 
-         sigma_n-> merge_fixed_ids( tmp_sigma, orb_ids_prev_sigma, sigma_overwrite_pattern, true );
+         sigma_n-> merge_fixed_ids( tmp_sigma, orb_ids_prev_sigma, sigma_overwrite_pattern, 'O' );
 
       } while(fvec_cycle_skipper( orb_ids_sigma2, maxs_sigma2, mins_sigma2) );
 
@@ -1047,7 +1072,7 @@ cout << "B_Gamma_Computer::compute_sigmaN_vb : " << gammaN_info->sigma_name() <<
 
         auto tmp_sigma = make_shared<Vector_Bundle<DataType>>( maxs_sigma2, bra_length, civec_maxtile_, true, false, false );
         compute_eiej_on_ket( tmp_sigma, ket, bra_det, ket_det, "BA" ); 
-        sigma_n-> merge_fixed_ids( tmp_sigma, orb_ids_prev_sigma, sigma_overwrite_pattern, true );
+        sigma_n-> merge_fixed_ids( tmp_sigma, orb_ids_prev_sigma, sigma_overwrite_pattern, 'O' );
 
       } while(fvec_cycle_skipper( orb_ids_sigma2, maxs_sigma2, mins_sigma2) );
 

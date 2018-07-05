@@ -34,11 +34,13 @@ class Vector_Bundle {
 
       void init( std::vector<int> id_range_sizes, size_t vec_len, size_t vec_maxtile, bool all_sparse, bool alloc, bool zero ); 
 
-      void merge_fixed_ids( std::shared_ptr<Vector_Bundle> bundle_to_merge, std::vector<int>& fixed_ids,
-                            std::vector<bool> ids_overwrite_pattern, bool overwrite = true );
+      void merge_fixed_ids( std::shared_ptr<Vector_Bundle<DataType>> bundle_to_merge, std::vector<int>& fixed_ids,
+                            std::vector<bool> ids_overwrite_pattern, char option = 'O', DataType factor = 1.0 );
 
       std::shared_ptr< std::map< std::vector<int>, bool>> sparsity_map() { return sparsity_map_; }
       std::shared_ptr< std::map< std::vector<int>, std::shared_ptr<SMITH::Tensor_<DataType>> >> vector_map() { return vector_map_; }
+
+      void set_vectors( DataType value );
 
       std::shared_ptr<SMITH::Tensor_<DataType>> vector_map(const std::vector<int>& ids ) const { return vector_map_->at(ids); } 
 
@@ -118,7 +120,10 @@ class Vector_Bundle {
         std::vector<SMITH::Index> block_idx = std::vector<SMITH::Index>( 1, idx_range_.range(block_pos) );
         return vector_map_->at(ids)->put_block( vec_data_block, block_idx );
       } 
-};
+    
+      void print(std::string name = "", int line_max = 8 );
 
+};
+      
 }
 #endif
