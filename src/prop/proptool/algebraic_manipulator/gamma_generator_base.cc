@@ -313,14 +313,14 @@ cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " <<
       }
     }
  
-//    auto new_fac =  make_pair( gint->factors_.first  * -1.0 ,  gint->factors_.second *  -1.0 );
-    auto new_fac =  make_pair( gint->factors_.first,  gint->factors_.second );
+    auto new_fac =  make_pair( gint->factors_.first  * -1.0 ,  gint->factors_.second *  -1.0 );
+//    auto new_fac =  make_pair( gint->factors_.first,  gint->factors_.second );
     shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, new_fac );
     gamma_vec_->push_back(new_gamma);
   }
 
-  gint->factors_.first  *= -1.0;
-  gint->factors_.second *= -1.0;
+//  gint->factors_.first  *= -1.0;
+//  gint->factors_.second *= -1.0;
  
   return;
 }

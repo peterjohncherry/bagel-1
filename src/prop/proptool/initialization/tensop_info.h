@@ -107,8 +107,8 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
 
     idxs = make_shared<vector<string>>(vector<string>{"T0", "T1", "T2", "T3"}  );
     aops = make_shared<vector<bool>>  (vector<bool>  {true, true, false, false} );
-    //idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
-    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt_a, virt_a, act_a, act_a } );
+    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt });
+    //idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt_a, virt_a, act_a, act_a } );
     time_symm = "none";
     state_dep = 0;
  

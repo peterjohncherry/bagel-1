@@ -36,11 +36,12 @@ cout <<  "BraKet_Base::print_braket_block()" << endl;
      cout << op_info->op_full_name_ << " "; cout.flush();
    } 
 
-   cout << endl << "op_info in canonical order : "; cout.flush();
+   cout << endl << "op_state_names_ from op_info_canonical : "; cout.flush();
    for ( auto op_info : *(multiop_info->op_info_canonical()->op_info_vec()) ) { 
      cout << op_info->op_state_name_ << " "; cout.flush();
    } 
-   cout << " =?= " << multiop_info->op_state_name_canonical() << endl << endl;
+   cout << " =?= " << multiop_info->op_state_name_canonical(); cout.flush();
+   cout << " : multiop_info->op_state_name_canonical() " << endl << endl;
 
    cout << "orig ranges in braket order  : "; cout.flush();
    for ( auto block : *(range_block->range_blocks() )){

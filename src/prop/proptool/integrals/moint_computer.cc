@@ -24,18 +24,14 @@ cout << "MOInt_Computer<DataType>::calculate_v2 IndexRange_ver" << endl;
 
 #ifndef __DEBUG_PROPTOOL_MOINT_COMPUTER
   MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks_buff );
-//  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
-//  vector<int> alt_to_norm_order = { 2, 0, 3, 1 };
-//  vector<int> alt_to_norm_order = { 2, 1, 3, 0 };
+  vector<int> alt_to_norm_order = { 3, 1, 2, 0 } /* { 2, 0, 3, 1 } */ /* { 2, 1, 3, 0 } */;
   v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order );
   assert(v2_->norm() != 0.0 ) ;
 #endif
 
 #ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
   shared_ptr<SMITH::Tensor_<DataType>> v2_tens =   MOInt_Computer<DataType>::calculate_v2_smith( blocks_buff ) ;
-//  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
-  vector<int> alt_to_norm_order = { 2, 0, 3, 1 };
-//  vector<int> alt_to_norm_order = { 2, 1, 3, 0 };
+  vector<int> alt_to_norm_order = { 3, 1, 2, 0 } /* { 2, 0, 3, 1 } */ /*{ 2, 1, 3, 0 } */ ;
   v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2_tens, alt_to_norm_order );
   assert(v2_->norm() != 0.0 ) ;
 #endif

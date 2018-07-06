@@ -185,6 +185,7 @@ cout << "Split_Range_Block_Info::Split_Range_Block_Info" << endl;
     auto  sssr_loc = unique_split_ranges->find( unique_rngs );
     if ( sssr_loc != unique_split_ranges->end() ) {
       unique_block_ = sssr_loc->second;
+      range_blocks_canonical_ = unique_block_->range_blocks_canonical();
 
     } else { 
       vector<int> cml_sizes_canonical( range_blocks_->size() );

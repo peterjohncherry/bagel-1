@@ -7,7 +7,7 @@ using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 using namespace WickUtils;
-#define __DEBUG_PROPTOOL_VECTOR_BUNDLE
+//#define __DEBUG_PROPTOOL_VECTOR_BUNDLE
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
@@ -63,12 +63,8 @@ cout << "Vector_Bundle<DataType>::set_test_vectors" << endl;
 
    for ( auto& elem : *vector_map_ ){
      DataType value = (DataType)(inner_product( elem.first.begin(), elem.first.end(), powers_of_ten.begin(), 0));
-     print_vector( elem.first , " ids " ) ; cout << "value = " << value << endl; 
-     cout << "elem.second.sizealloc() = " << elem.second->size_alloc() << endl;
      Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( elem.second , value);
-     Tensor_Arithmetic_Utils::print_tensor_with_indexes( elem.second , "test");
    }  
-   print("test");
    return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +97,6 @@ if ( zero && !alloc )
      vector<int> ids;
 
      if ( all_sparse ) {
-       cout << "all_sparse" << endl;
        ids = mins;
        do {
          sparsity_map_->emplace( ids, true );
@@ -127,7 +122,6 @@ if ( zero && !alloc )
        } while ( fvec_cycle_skipper( ids, maxs, mins) );
      }
    }
-   cout << "leaving init" << endl;
    return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,7 +153,6 @@ cout << "Vector_Bundle<DataType>::merge_fixed_ids" << endl;
       ++ni_it;
     }
     }
-    print_vector(fixed_ids, "fixed_ids"); print_vector( new_ids , "new_ids" ); print_vector(ids_overwrite_pattern, "overwrite_pattern"); cout << endl;
 
     auto new_ids_loc = vector_map_->find( new_ids );
     if ( new_ids_loc == vector_map_->end() ) {
@@ -183,7 +176,7 @@ Vector_Bundle<std::complex<double>>::print(string name, int line_max) {
 cout << "Vector_Bundle<std::complex<double>>::print" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-   throw logic_error( " Cannot print Vector_Bundle<DataType> when DataType is complex! Aborting; " );
+   throw logic_error( " Cannot print Vector_Bundle<DataType> when DataType is complex<double>! Aborting; " );
    return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
