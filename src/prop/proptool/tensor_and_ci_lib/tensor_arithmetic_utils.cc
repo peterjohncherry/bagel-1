@@ -902,9 +902,15 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
        unique_ptr<double[]> data = Tens->get_block( vector<Index> ( 1, id_ranges[0].range(0) ) );
        cout << *data.get()  << endl;
 
-     } else { 
-       /// TODO add print vvector;
-     }
+     } else {
+       size_t elem_num = 0;
+       for ( const Index& block : id_ranges[0].range() ){
+         unique_ptr<double[]> data = Tens->get_block( vector<Index> ( 1, block  ) );
+         size_t endpos = elem_num+block.size();
+         for ( double* d_it = data.get() ; elem_num !=  endpos; ++elem_num, ++d_it )
+           cout << "[ " << elem_num << " ] : " << *d_it << endl;
+       }
+     } cout <<endl;
 
    } else {
 

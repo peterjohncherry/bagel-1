@@ -30,64 +30,8 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::B_Gamma_Computer" << endl
 
   fill_and_link_determinant_map( cc_->det()->nelea() + cc_->det()->neleb(), cc_->det()->norb() );
 
+
 } 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-void
-B_Gamma_Computer::B_Gamma_Computer<DataType>::fill_and_link_determinant_map( int nelec, int norb ){
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_B_GAMMA_COMPUTER
-cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::fill_and_link_determinant_map" << endl;
-#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  // if spin == 0 we are changing alphas, if spin == 1 we are changing betas
-  // plusdet is the determinant with more of the kind of electron we are annihilating
-  int min_spin = nelec < norb ? 0 : (nelec - norb) ; 
-  int max_spin = nelec > norb ? norb : nelec; 
-  
-  int num_a = min_spin;
-  int num_b = max_spin;
-
-  if (min_spin != max_spin ) {
-    shared_ptr<Determinants> det = make_shared<Determinants>( norb, num_a, num_b, false /*compress*/, true /*mute*/);
-    for ( ;  num_a != max_spin; num_a++, num_b-- ) { 
-      shared_ptr<Determinants> plus_det = make_shared<Determinants>( norb, num_a+1, num_b-1, false /*compress*/, true /*mute*/);
-     
-      cout << " det->nelea()  = " << det->nelea() ; cout.flush(); cout << " det->neleb()  = " << det->neleb() <<endl;
-      cout << " plus_det->nelea() = " << plus_det->nelea(); cout.flush(); cout << " plus_det->neleb() = " << plus_det->neleb() << endl;
-
-      if ( plus_det->nelea() != 0 && det->nelea() != norb )  { 
-
-        CIStringSpace<CIStringSet<FCIString>> space({ plus_det->stringspacea(), det->stringspacea() } );
-      
-        space.build_linkage(1);
-      
-        plus_det->set_remalpha(det);
-        plus_det->set_phidowna(space.phidown(plus_det->stringspacea()));
-      
-        det->set_addalpha(plus_det);
-        det->set_phiupa(space.phiup(det->stringspacea()));
-
-      }
-      if ( det->neleb() != 0 && plus_det->neleb() != norb )  { 
-
-        //  if the number of alpha electrons are uneven, set factor to -1; 
-        const int fac = ( plus_det->nelea() & 1 ) ? -1 : 1;
-        CIStringSpace<CIStringSet<FCIString>> space( { det->stringspaceb(), plus_det->stringspaceb() } );
-        space.build_linkage(fac);
-    
-        det->set_rembeta(plus_det);
-        det->set_phidownb(space.phidown(det->stringspaceb()));
-      
-        plus_det->set_addbeta(det);
-        plus_det->set_phiupb(space.phiup(plus_det->stringspaceb()));
-      }
-      det_old_map_->emplace( get_det_name( 'a', det->nelea(), 'A' , det->neleb(), det->norb() ), det ); 
-      det = plus_det; 
-    }
-  }
-  return;
-}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Temporary function; ideally B_Gamma_Computer should be constructed inside System_Computer, but the dependence on the Dvecs is preventing this
 // So for the time being construct B_gamma_computer with the old maps in proptool, feed this to system computer, and then alter the gamma_info_map_
@@ -129,7 +73,7 @@ cout << "B_Gamma_Computer::get_gamma :  " <<  gamma_name << endl;
   get_gamma_vb( gamma_name );
 
   if ( gamma_data_map_->find( gamma_name ) == gamma_data_map_->end()) {
-  
+
 
     shared_ptr<GammaInfo_Base> gamma_info = gamma_info_map_->at(gamma_name);
 
@@ -149,17 +93,19 @@ cout << "B_Gamma_Computer::get_gamma :  " <<  gamma_name << endl;
 
     }
   }
+  cout << "gamma_name =  "<< gamma_name << endl;
+  cout << "got gamma_name =  "<< gamma_name << endl;
 
   print_tensor_with_indexes( gamma_data_map_->at(gamma_name), gamma_name+" old"  );
+  cout << "printing new gamma_name =  "<< gamma_name << endl;
   print_tensor_with_indexes( new_gamma_data_map_->at(gamma_name), gamma_name+" new"  );
+  cout << "printed new gamma_name =  "<< gamma_name << endl;
   { 
-    shared_ptr<Tensor_<DataType>> test_tensor = new_gamma_data_map_->at(gamma_name);
+    shared_ptr<Tensor_<DataType>> test_tensor = new_gamma_data_map_->at(gamma_name)->copy();
     test_tensor->ax_plus_y( -1.0 , gamma_data_map_->at(gamma_name )); 
     print_tensor_with_indexes( test_tensor, " new - old "  );
   }  
 
-
-  //throw logic_error( "this is thing");
   return;                              
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -346,7 +292,7 @@ cout << "B_Gamma_Computer::compute_sigmaN : " << gammaN_info->sigma_name() ;
   if ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha() ){ 
 
     for ( int  ii = 0; ii != orb_dim; ii++) {
-      sigma_2a1( prev_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), ket_det );
+      sigma_2a1( prev_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), ket_det ); // new indexes run slower than old
       sigma_2a2( prev_sigma->data(ii)->data(), sigmaN->data(ii*orb2)->data(), ket_det );
     }
 
@@ -446,9 +392,6 @@ cout << "B_Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
     sigma2 = make_shared<Dvec>( ket_det, ket_det->norb()*ket_det->norb() );
     sigma_2a1( ket->data(), sigma2->data(0)->data(), ket_det );
     sigma_2a2( ket->data(), sigma2->data(0)->data(), ket_det );
-
-    //sigma2_test( gamma2_info );
-   
     
   } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()+1 ) { 
 
@@ -981,7 +924,7 @@ cout << "B_Gamma_Computer::compute_sigmaN_vb : " << gammaN_info->sigma_name() <<
  
   vector<int> orb_ranges_sigma_n(sorder, norb );
 
-  shared_ptr<Vector_Bundle<DataType>> sigma_n = make_shared<Vector_Bundle<DataType>>( orb_ranges_sigma_n, bra_length, civec_maxtile_, true, true, false );
+  shared_ptr<Vector_Bundle<DataType>> sigma_n = make_shared<Vector_Bundle<DataType>>( orb_ranges_sigma_n, bra_length, civec_maxtile_, true, true, true );
  
   new_sigma_data_map_->emplace( gammaN_info->sigma_name(), sigma_n );
 
@@ -993,51 +936,25 @@ cout << "B_Gamma_Computer::compute_sigmaN_vb : " << gammaN_info->sigma_name() <<
   shared_ptr<Vector_Bundle<DataType>> prev_sigma = new_sigma_data_map_->at( gammaN_info->prev_sigma_name() );
   
   vector<bool> sigma_overwrite_pattern(sorder,false);
-  sigma_overwrite_pattern[0] = true;//lazy...
-  sigma_overwrite_pattern[1] = true; 
+  sigma_overwrite_pattern[sorder-1] = true;
+  sigma_overwrite_pattern[sorder-2] = true; 
 
   if ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha() ){ 
 
-    { 
-    vector<int> maxs_tb4(2, 2);
-    vector<int> mins_tb4(2, 0);
-    vector<int> ids_tb4 = mins_tb4;
-    vector<int> tb_ranges = { 2, 2, 2, 2};
- 
-    shared_ptr<Vector_Bundle<DataType>> tbundle = make_shared<Vector_Bundle<DataType>>( tb_ranges, 10, 100, true, false, false );
-    do {  
-      vector<int> maxs_tb2(2, 2);
-      vector<int> mins_tb2(2, 0);
-      vector<int> ids_tb2 = mins_tb2;
-      
-//      shared_ptr<Tensor_<DataType>> ket = prev_sigma->get(tb4) ;
-      do {  
-        auto tb2 = make_shared<Vector_Bundle<DataType>>( maxs_tb2, 10, 100, true, true, true );
-        tb2->set_vectors( 1.0 );
-        tbundle->merge_fixed_ids( tb2, ids_tb2, sigma_overwrite_pattern, 'O' );
-      } while(fvec_cycle_skipper( ids_tb2, maxs_tb2, mins_tb2 ) );
-      
-    } while(fvec_cycle_skipper( ids_tb4, maxs_tb4, mins_tb4) );
-    tbundle->print( "test_bundle", norb );
-    }
-
-    throw logic_error(" kill for testing" );
-
-
     do {  
       vector<int> maxs_sigma2(2, norb-1);
-      vector<int> mins_sigma2(2, 0);
-      vector<int> orb_ids_sigma2 = mins_sigma2;
+//      vector<int> mins_sigma2(2, 0);
+//      vector<int> orb_ids_sigma2 = mins_sigma2;
       shared_ptr<Tensor_<DataType>> ket = prev_sigma->vector_map(orb_ids_prev_sigma);
-      do {  
-        auto tmp_sigma = make_shared<Vector_Bundle<DataType>>( maxs_sigma2, bra_length, civec_maxtile_, true, false, false );
+//      do {  
+        auto tmp_sigma = make_shared<Vector_Bundle<DataType>>( maxs_sigma2, bra_length, civec_maxtile_, true, true, true );
         compute_eiej_on_ket( tmp_sigma, ket, bra_det, ket_det, "AA" ); 
-        //compute_eiej_on_ket( tmp_sigma, ket, bra_det, ket_det, "BB" ); 
-        sigma_n->merge_fixed_ids( tmp_sigma, orb_ids_sigma2, sigma_overwrite_pattern, 'O' );
-      } while(fvec_cycle_skipper( orb_ids_sigma2, maxs_sigma2, mins_sigma2 ) );
+        compute_eiej_on_ket( tmp_sigma, ket, bra_det, ket_det, "BB" ); 
+        sigma_n->merge_fixed_ids( tmp_sigma, orb_ids_prev_sigma, sigma_overwrite_pattern, 'O' );
+//      } while(fvec_cycle_skipper( orb_ids_sigma2, maxs_sigma2, mins_sigma2 ) );
       
     } while(fvec_cycle_skipper( orb_ids_prev_sigma, maxs_prev_sigma, mins_prev_sigma) );
-    sigma_n->print( "sigma_n", norb );
+//    sigma_n->print( "sigma_n", norb );
 
  
   } else if ( ( gammaN_info->Bra_nalpha() ==  gammaN_info->prev_Bra_nalpha()+1 ) &&
@@ -1182,7 +1099,8 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma2_aa_vb" << endl;
       for (int jj = 0; jj != norb; jj++) {
         
         vector<int> orb_ids = { ii, jj }; 
-        std::shared_ptr<SMITH::Tensor_<DataType>> sigma_ij_vec = sigma_aa->get_vector( orb_ids, true );
+        //std::shared_ptr<SMITH::Tensor_<DataType>> sigma_ij_vec = sigma_aa->get_vector( orb_ids, true );
+        std::shared_ptr<SMITH::Tensor_<DataType>> sigma_ij_vec = sigma_aa->get_new_vector( true );
 
         assert ( sigma_aa->index_range_vec_[0].range().size() == 1 ) ; //TODO : will not work if ci block is split
 
@@ -1213,9 +1131,15 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma2_aa_vb" << endl;
             sigma_ij_vec->put_block( sigma_ij_block_data, sigma_ij_block_id ); 
           }
         }
-        sigma_aa->set_sparsity( orb_ids, ij_vec_sparse );
-        if ( !ij_vec_sparse )
-          sigma_aa->set_vector( orb_ids , sigma_ij_vec, /*overwrite*/ true ); 
+        
+        if ( sigma_aa->sparsity_map(orb_ids) ) { 
+          sigma_aa->set_sparsity( orb_ids, ij_vec_sparse ); 
+          if ( !ij_vec_sparse )
+            sigma_aa->set_vector( orb_ids , sigma_ij_vec, /*overwrite*/ true ); 
+        } else if (!ij_vec_sparse) { 
+          sigma_aa->vector_map(orb_ids)->ax_plus_y(1.0, sigma_ij_vec); 
+        }
+
       }
     }
     ket_tensor->put_block( ket_data );
@@ -1298,7 +1222,7 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma2_bb_vb" << endl;
       for (int jj = 0; jj != norb; jj++) {
         
         vector<int> orb_ids = { ii, jj }; 
-        shared_ptr<SMITH::Tensor_<DataType>> sigma_ij_vec = sigma_bb->get_vector(orb_ids, true);  
+        shared_ptr<SMITH::Tensor_<DataType>> sigma_ij_vec = sigma_bb->get_new_vector(true);  
 
         assert ( sigma_bb->index_range_vec_[0].range().size() == 1 ) ; //TODO : will not work if ci block is split
 
@@ -1309,10 +1233,6 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma2_bb_vb" << endl;
           unique_ptr<DataType[]> ij_block_t( new DataType[ij_block_id.size()] ); 
           fill_n( ij_block_t.get(), ij_block_id.size(), (DataType)(0.0) ); 
           vector<SMITH::Index> ij_block_id_vec = { ij_block_id };
-          {
-          unique_ptr<DataType[]> ij_block_orig = sigma_ij_vec->get_block( ij_block_id_vec ); 
-          blas::transpose( ij_block_orig.get(), bra_lenb, bra_lena, ij_block_t.get() ); 
-          }
       
           for ( vector<bitset<nbit__>>::const_iterator bbit_it = ket_det->string_bits_b().begin(); bbit_it != ket_det->string_bits_b().end(); ++bbit_it ) {
             bool possible_exc = ( jj == ii ) ? (*bbit_it)[jj] : !(*bbit_it)[ii] && (*bbit_it)[jj]; 
@@ -1333,19 +1253,25 @@ cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::sigma2_bb_vb" << endl;
           }
 
           if ( (abs(*(max_element(ij_block_t.get() , ij_block_t.get() + ij_block_id.size() ) )) > thresh_ ) || 
-               (abs(*(min_element(ij_block_t.get() , ij_block_t.get() + ij_block_id.size() ))) > thresh_ )     ) { 
+               (abs(*(min_element(ij_block_t.get() , ij_block_t.get() + ij_block_id.size() ))) > thresh_ )     ) {
 
             ij_vec_sparse = false;
             unique_ptr<DataType[]> ij_block( new DataType[ij_block_id.size()] );
             fill_n( ij_block.get(), ij_block_id.size(), (DataType)(0.0) );
             blas::transpose( ij_block_t.get(), bra_lena, bra_lenb, ij_block.get() ); //TODO : will not work if ci block is split
             sigma_ij_vec->put_block( ij_block, ij_block_id_vec ); 
+
           }
 
         }
-        sigma_bb->set_sparsity( orb_ids, ij_vec_sparse );
-        if ( !ij_vec_sparse )
-          sigma_bb->set_vector( orb_ids , sigma_ij_vec, /*overwrite*/ true ); 
+        
+        if ( sigma_bb->sparsity_map(orb_ids) ) { 
+          sigma_bb->set_sparsity( orb_ids, ij_vec_sparse ); 
+          if ( !ij_vec_sparse )
+            sigma_bb->set_vector( orb_ids , sigma_ij_vec, /*overwrite*/ true ); 
+        } else if (!ij_vec_sparse) { 
+          sigma_bb->vector_map(orb_ids)->ax_plus_y(1.0, sigma_ij_vec); 
+        }
       }
     }
   }
@@ -1874,6 +1800,102 @@ cout << "B_Gamma_Computer::sigma2_test : " << gamma2_info->name() << endl;
   }
   return; 
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void
+B_Gamma_Computer::B_Gamma_Computer<DataType>::fill_and_link_determinant_map( int nelec, int norb ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_B_GAMMA_COMPUTER
+cout << "B_Gamma_Computer::B_Gamma_Computer<DataType>::fill_and_link_determinant_map" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // if spin == 0 we are changing alphas, if spin == 1 we are changing betas
+  // plusdet is the determinant with more of the kind of electron we are annihilating
+  int min_spin = nelec < norb ? 0 : (nelec - norb) ; 
+  int max_spin = nelec > norb ? norb : nelec; 
+  
+  int num_a = min_spin;
+  int num_b = max_spin;
+
+  if (min_spin != max_spin ) {
+    shared_ptr<Determinants> det = make_shared<Determinants>( norb, num_a, num_b, false /*compress*/, true /*mute*/);
+    for ( ;  num_a != max_spin; num_a++, num_b-- ) { 
+      shared_ptr<Determinants> plus_det = make_shared<Determinants>( norb, num_a+1, num_b-1, false /*compress*/, true /*mute*/);
+     
+      cout << " det->nelea()  = " << det->nelea() ; cout.flush(); cout << " det->neleb()  = " << det->neleb() <<endl;
+      cout << " plus_det->nelea() = " << plus_det->nelea(); cout.flush(); cout << " plus_det->neleb() = " << plus_det->neleb() << endl;
+
+      if ( plus_det->nelea() != 0 && det->nelea() != norb )  { 
+
+        CIStringSpace<CIStringSet<FCIString>> space({ plus_det->stringspacea(), det->stringspacea() } );
+      
+        space.build_linkage(1);
+      
+        plus_det->set_remalpha(det);
+        plus_det->set_phidowna(space.phidown(plus_det->stringspacea()));
+      
+        det->set_addalpha(plus_det);
+        det->set_phiupa(space.phiup(det->stringspacea()));
+
+      }
+      if ( det->neleb() != 0 && plus_det->neleb() != norb )  { 
+
+        //  if the number of alpha electrons are uneven, set factor to -1; 
+        const int fac = ( plus_det->nelea() & 1 ) ? -1 : 1;
+        CIStringSpace<CIStringSet<FCIString>> space( { det->stringspaceb(), plus_det->stringspaceb() } );
+        space.build_linkage(fac);
+    
+        det->set_rembeta(plus_det);
+        det->set_phidownb(space.phidown(det->stringspaceb()));
+      
+        plus_det->set_addbeta(det);
+        plus_det->set_phiupb(space.phiup(plus_det->stringspaceb()));
+      }
+      det_old_map_->emplace( get_det_name( 'a', det->nelea(), 'A' , det->neleb(), det->norb() ), det ); 
+      det = plus_det; 
+    }
+  }
+  return;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class B_Gamma_Computer::B_Gamma_Computer<double>;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//      { //TEST indexes run slower on right
+//        cout << endl <<  "================ old dvector 4 ==============="<< endl;
+//        auto sigmaN = dvec_sigma_map_->at(gamma_info->sigma_name());
+//        int norb = sigmaN->det()->norb();
+//        int civec_len = sigmaN->det()->lena()* sigmaN->det()->lenb();
+//
+//        auto sigmaN_new = new_sigma_data_map_->at(gamma_info->sigma_name());
+//
+//        auto d_ptr= sigmaN->data(0)->data();
+//        for ( int ii1 = 0 ; ii1 != norb ; ii1++ ) {
+//        for ( int ii2 = 0 ; ii2 != norb ; ii2++ ) {
+//        for ( int ii3 = 0 ; ii3 != norb ; ii3++ ) {
+//        for ( int ii4 = 0 ; ii4 != norb ; ii4++ ) {
+//          {
+//          cout << " [ " << ii4 << " " << ii3 << " " << ii2 << " " << ii1 << " ] : "; cout.flush();  
+//            vector<int> orb_ids = { ii4, ii3, ii2, ii1 };
+//            auto ijkl_vec = sigmaN_new->vector_map( orb_ids );
+//            vector<Index> idx_block = {1, ijkl_vec->indexrange()[0].range(0) }; 
+//            unique_ptr<DataType[]> block = ijkl_vec->get_block(idx_block );
+//            DataType* b_ptr = block.get();
+//            DataType* b_end_ptr = block.get() + civec_len;
+//            for ( ; b_ptr != b_end_ptr ; ++b_ptr )
+//              cout << *b_ptr << "  "; 
+//            cout << endl;
+//            ijkl_vec->put_block( block , idx_block ); 
+//          } 
+//          cout << " [ " << ii4 << " " << ii3 << " " << ii2 << " " << ii1 << " ] : "; cout.flush();  
+//          auto end_ptr = d_ptr+ civec_len;
+//          for ( ; d_ptr != end_ptr ; ++d_ptr )
+//            cout << *d_ptr << "  "; 
+//          cout << endl << endl;
+//       }}}} cout << endl << endl;
+
+//      } //END
+
+
+

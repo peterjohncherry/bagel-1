@@ -41,6 +41,7 @@ class Vector_Bundle {
       std::shared_ptr< std::map< std::vector<int>, std::shared_ptr<SMITH::Tensor_<DataType>> >> vector_map() { return vector_map_; }
 
       void set_vectors( DataType value );
+      void set_test_vectors();
 
       std::shared_ptr<SMITH::Tensor_<DataType>> vector_map(const std::vector<int>& ids ) const { return vector_map_->at(ids); } 
 

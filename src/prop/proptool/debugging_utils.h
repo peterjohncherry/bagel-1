@@ -129,6 +129,19 @@ namespace Debugging_Utils {
       std::cout << *ptr  << " ";
     std::cout << " ]" << std::endl;
   }
+ 
+  template<typename DataType1, typename DataType2>
+  void vector_to_num_in_base( const std::vector<DataType1>& vec , DataType2 base = 10.0 ) { 
+
+   DataType1 num = (DataType1)(0.0);
+   DataType2 basis_elem = (DataType2)(1.0);
+   for ( typename std::vector<DataType1>::const_reverse_iterator v_rit = vec.crbegin(); v_rit != vec.crend(); v_rit++ ) {
+     num += basis_elem* (*v_rit);
+     basis_elem*=base;
+   }
+   return num;
+  }
+
 
 }
 #endif
