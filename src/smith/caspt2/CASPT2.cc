@@ -188,23 +188,46 @@ cout << "CASPT2::CASPT2::solve" << endl;
     vector<SMITH::IndexRange> test_range = { *free_rng_,*free_rng_,*free_rng_, *free_rng_} ; 
     v2_ = moint_computer->calculate_v2_smith( test_range );
     cout << "v2_->norm() = " << v2_->norm() << endl;
+    shared_ptr<Tensor> t2_tester = t2all_[0]->at(0)->clone();
+    t2_tester->zero();
+    {
+      vector<IndexRange> keep_ranges = {*active_rng_, *virtual_rng_, *active_rng_, *virtual_rng_};
+      vector<IndexRange> keep_ranges2 = { *virtual_rng_, *active_rng_, *virtual_rng_, *active_rng_, };
+      
+      auto tens_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
+      
+      tens_calc->set_tensor_elems( t2all_[0]->at(0), keep_ranges, 1.0 );
+      tens_calc->set_tensor_elems( t2_tester, keep_ranges2, 1.0 );
+      auto v2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, keep_ranges ); 
+      auto t2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( t2all_[0]->at(0), keep_ranges ); 
+      v2_->zero();
+      t2all_[0]->at(0)->zero(); 
+      cout << "Post zero " << endl;
+      cout << "v2_->norm() = "<<  v2_->norm() << endl;
+      cout << "v2_keep->norm() = "<<  v2_keep->norm() << endl << endl;
+      
+      cout << "Post putting " << endl;
+      tens_calc->put_sub_tensor( v2_keep, v2_ );
+      tens_calc->put_sub_tensor( t2_keep, t2all_[0]->at(0) );
+      cout << "post v2_->norm()    = " << v2_->norm() << endl;
+      cout << "post v2_keep->norm() = " << v2_keep->norm() << endl;
+    }
+
+
 
     s = init_residual();
     s->zero();
     shared_ptr<Queue> source_task_list = make_sourceq(false, true);
     while(!source_task_list->done())
       source_task_list->next_compute();
+    
+    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
+    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0) ) << endl;// + (*eref_)(0, 0);
 
     cout << "----------------------------------TEST-------------------------------" << endl;
     cout << "source_norm = "<<  s->norm() << endl;
     cout << "---------------------------------------------------------------------" << endl;
  
-    shared_ptr<Tensor_<double>> t2_one = t2all_[0]->at(0)->copy();
-
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one, 1.0 );
-    vector<SMITH::IndexRange> keep_ranges = { active_, virt_, active_, virt_ };
-    Tensor_Arithmetic::Tensor_Arithmetic<double>::zero_all_but_block( t2_one, keep_ranges );  
-    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2_one)<< endl; // + (*eref_)(0, 0);
   }
 
   throw logic_error( "die here for testing purposes!" ); 

@@ -118,11 +118,9 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
     aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
 //    symmfuncs = { hconj }; 
 //    constraints = { spin_neutral, not_all_act }; 
-//    constraints = { not_all_act }; 
-//    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt  });
+    constraints = { not_all_act }; 
     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { act_a, act_a, virt_a, virt_a } );
-//    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_b, not_core_b, not_virt_b, not_virt_b  });
-//    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_a, not_core_a, not_virt_a, not_virt_a  });
+//    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt_a, not_virt_a, not_core_a, not_core_a});
     time_symm = "none";
     state_dep = 0;
 

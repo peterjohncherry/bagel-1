@@ -50,11 +50,10 @@ class B_Gamma_Computer {
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map,  
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map );
      
-      ////////////Gamma routines (RDM class based) //////////////////
+
+      ////////////Gamma routines (Dvec based) //////////////////
       
       void get_gamma( std::string gamma_name );
-      
-      void get_wfn_data( std::shared_ptr<CIVecInfo_Base>  cvec_info );
       
       void compute_sigma2( std::shared_ptr<GammaInfo_Base> gamma_info );
       
@@ -63,31 +62,19 @@ class B_Gamma_Computer {
       void get_gamma2_from_sigma2( std::shared_ptr<GammaInfo_Base> gamma_info );
       
       void get_gammaN_from_sigmaN( std::shared_ptr<GammaInfo_Base> gammaN_info );
-   
-      void get_gammaN_from_sigmaN_vb( std::shared_ptr<GammaInfo_Base> gamma_n_info );
-
-      void get_gamma_vb( std::string gamma_name );
-      
+    
       void sigma_2a1( DataType* cvec_ptr, DataType* sigma_ptr, std::shared_ptr<Determinants> dets );
       
       void sigma_2a2( DataType* cvec_ptr, DataType* sigma_ptr, std::shared_ptr<Determinants> dets ) ;
+
+      ////////////Gamma routines (Vector Bundle based) //////////////////
       
-      void sigma_2ab( DataType* cvec_ptr, DataType* sigma_ptr, std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+      void get_gamma_vb( std::string gamma_name );
 
-      void fill_and_link_determinant_map( int nelec, int norb ); 
+      void get_gammaN_from_sigmaN_vb( std::shared_ptr<GammaInfo_Base> gamma_n_info );
 
-      void sigma_ab( std::shared_ptr<GammaInfo_Base> gamma_info ) ; 
-
-      void sigma_aa_test( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma = true );
-
-      void sigma_bb_test( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma = false );
-
-      void sigma2_test( std::shared_ptr<GammaInfo_Base> gamma_info );
-
-      void sigma_ab_test( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
-
-      void sigma_ba_test( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
-
+      void compute_gammaN_vb( std::shared_ptr<GammaInfo_Base> gammaN_info );
+     
       void compute_sigmaN_vb( std::shared_ptr<GammaInfo_Base> gammaN_info );
 
       void sigma_aa_vb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
@@ -115,17 +102,19 @@ class B_Gamma_Computer {
       void compute_eiej_on_ket( std::shared_ptr<Vector_Bundle<DataType>> eiej_on_ket, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
                                 std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det, std::string transition_type );
 
-      void compute_gammaN_vb( std::shared_ptr<GammaInfo_Base> gammaN_info );
-
       /////////// Utility routines /////////////////////////
       
       std::shared_ptr<std::vector<SMITH::IndexRange>>  Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
       
       void convert_Dvec_sigma_to_tensor( std::shared_ptr<GammaInfo_Base> gammaN_info );
       
+      void get_wfn_data( std::shared_ptr<CIVecInfo_Base>  cvec_info );
+
       void convert_civec_to_tensor( std::string civec_name ) ;
-      
-      /////////// Varaible access /////////////////////////
+  
+      void fill_and_link_determinant_map( int nele , int norb  );
+
+      /////////// Variable access /////////////////////////
       
       std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map() { return gamma_info_map_ ; };
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map() {return gamma_data_map_; }

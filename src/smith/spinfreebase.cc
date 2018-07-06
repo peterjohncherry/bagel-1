@@ -98,9 +98,7 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
     cout << " v2_->norm() = " << v2_->norm() << endl; 
     
     vector<IndexRange> keep_ranges = {active_, virt_, active_, virt_};
-    cout <<
-    "vector<IndexRange> keep_ranges = {active_, virt_, active_, virt_};"
-     << endl;
+    cout << "vector<IndexRange> keep_ranges = {active_, virt_, active_, virt_}" << endl;
 
     auto v2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, keep_ranges ); 
     cout << "v2_keep->norm() = "<<  v2_keep->norm() << endl;
