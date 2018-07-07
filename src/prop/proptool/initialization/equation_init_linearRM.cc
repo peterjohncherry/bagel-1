@@ -32,20 +32,20 @@ cout << endl;
       shared_ptr<map< string, int>> term_idx_val_map = term_init->idx_val_map_;
     
       //build stuff for forvec loop in advance to simplify initialization
-      shared_ptr<vector<int>> fvec = make_shared<vector<int>>(term_idx_val_map->size(), 0) ;
-      shared_ptr<vector<int>> mins = make_shared<vector<int>>(term_idx_val_map->size(), 0) ;
-      shared_ptr<vector<int>> maxs = make_shared<vector<int>>(term_idx_val_map->size(), 0) ;
+      vector<int> fvec(term_idx_val_map->size(), 0) ;
+      vector<int> mins(term_idx_val_map->size(), 0) ;
+      vector<int> maxs(term_idx_val_map->size(), 0) ;
    
       //for summations.
-      shared_ptr<vector<int>> fvec_summer = make_shared<vector<int>>(*fvec);
-      shared_ptr<vector<int>> mins_summer = make_shared<vector<int>>(*mins);
-      shared_ptr<vector<int>> maxs_summer = make_shared<vector<int>>(*maxs) ;
+      vector<int> fvec_summer = fvec;
+      vector<int> mins_summer = mins;
+      vector<int> maxs_summer = maxs;
    
       //build stuff for forvec loop in advance to simplify initialization
       // NOTE : because ordering of term_init->idx_val_map is not necessarily same as term_idrange_map; latter can have more entries
       map<string, shared_ptr<vector<int>>> term_range_map;
       vector<string> idx_ordered_names(term_idrange_map->size()); 
-      vector<int>::iterator maxs_it = maxs->begin();
+      vector<int>::iterator maxs_it = maxs.begin();
       vector<string>::iterator ion_it = idx_ordered_names.begin();
       for ( auto elem : *term_idx_val_map ){
         shared_ptr<vector<int>> range = range_map_->at(term_idrange_map->at(elem.first).second);
@@ -60,7 +60,7 @@ cout << endl;
       for ( auto& elem : *term_idrange_map ) {
         if ( term_idx_val_map->find(elem.first) != term_idx_val_map->end() ) { // TODO neaten this up 
           if ( !elem.second.first ){ 
-            maxs_summer->at(qq) = maxs->at(qq);
+            maxs_summer[qq] = maxs[qq];
             summed_indexes[qq] = true;
           }
           qq++;
@@ -72,13 +72,13 @@ cout << endl;
         // setting mins and maxs the same will prevent these indexes from being iterated in the fvec_cycler,
         // the resulting braket_list will be contain terms when all indexes but these "frozen" ones 
         // have been summed over. 
-        for ( int rr = 0 ; rr != fvec->size() ;rr++ ) {
+        for ( int rr = 0 ; rr != fvec.size() ;rr++ ) {
           if ( summed_indexes[rr] ) {
-            mins->at(rr) = fvec_summer->at(rr);
-            maxs->at(rr) = fvec_summer->at(rr);
+            mins[rr] = fvec_summer[rr];
+            maxs[rr] = fvec_summer[rr];
           }
         }
-        copy_n(mins->begin(), mins->size(), fvec->begin());
+        copy_n(mins.begin(), mins.size(), fvec.begin());
     
         shared_ptr<map<string, int>> summed_map = make_shared<map<string,int>>();
         string state_ids_name = "summed : [ " ;
@@ -109,7 +109,7 @@ cout << endl;
         vector<shared_ptr<BraKet_Base>> braket_list;
         do {
           int kk = 0 ;
-          vector<int>::iterator fvec_it = fvec->begin();
+          vector<int>::iterator fvec_it = fvec.begin();
           for ( auto tiv_it = term_idx_val_map->begin() ; tiv_it != term_idx_val_map->end(); tiv_it++ ) {
             if (tiv_it->first == "none" ) { continue ; }
             tiv_it->second = term_range_map.at(tiv_it->first)->at(*fvec_it);
@@ -135,7 +135,7 @@ cout << endl;
          
         vector<pair<string,int>> fixed_id_vals; 
         state_ids_name += " fixed:[";
-        for ( int rr = 0 ; rr != fvec->size() ;rr++ ) {
+        for ( int rr = 0 ; rr != fvec.size() ;rr++ ) {
           if ( summed_indexes[rr] && idx_ordered_names[rr] != "none" ){ 
              state_ids_name += "( " + idx_ordered_names[rr] + " : " + to_string(term_idx_val_map->at(idx_ordered_names[rr])) +" ),"; 
              fixed_id_vals.push_back(make_pair(idx_ordered_names[rr], term_idx_val_map->at(idx_ordered_names[rr]) ));
@@ -201,15 +201,15 @@ cout << endl;
       shared_ptr<map< string, int>> term_idx_val_map = term_init->idx_val_map_;
     
       // build stuff for forvec loop in advance to simplify initialization
-      shared_ptr<vector<int>> fvec = make_shared<vector<int>>(term_idx_val_map->size(), 0) ;
-      shared_ptr<vector<int>> mins = make_shared<vector<int>>(term_idx_val_map->size(), 0) ;
-      shared_ptr<vector<int>> maxs = make_shared<vector<int>>(term_idx_val_map->size(), 0) ;
+      vector<int> fvec(term_idx_val_map->size(), 0) ;
+      vector<int> mins(term_idx_val_map->size(), 0) ;
+      vector<int> maxs(term_idx_val_map->size(), 0) ;
    
       // build stuff for forvec loop in advance to simplify initialization
       // NOTE : because ordering of term_init->idx_val_map is not necessarily same as term_idrange_map; latter can have more entries
       map< string, shared_ptr<vector<int>> > term_range_map;
       vector<string> idx_ordered_names( term_idrange_map->size() ); 
-      vector<int>::iterator maxs_it = maxs->begin();
+      vector<int>::iterator maxs_it = maxs.begin();
       vector<string>::iterator ion_it = idx_ordered_names.begin();
       for ( auto elem : *term_idx_val_map ){
         shared_ptr<vector<int>> range = range_map_->at(term_idrange_map->at(elem.first).second);
@@ -222,7 +222,7 @@ cout << endl;
     
         //print_vector( *fvec, "fvec" ) ; cout.flush();
         int kk = 0 ;
-        vector<int>::iterator fvec_it = fvec->begin();
+        vector<int>::iterator fvec_it = fvec.begin();
         for ( auto tiv_it = term_idx_val_map->begin() ; tiv_it != term_idx_val_map->end(); tiv_it++ ) {
           if (tiv_it->first == "none" ) { continue ; }
           tiv_it->second = term_range_map.at(tiv_it->first)->at(*fvec_it);
@@ -248,7 +248,7 @@ cout << endl;
         } 
         
         vector<pair<string,int>> fixed_id_vals; 
-        for ( int rr = 0 ; rr != fvec->size() ;rr++ )
+        for ( int rr = 0 ; rr != fvec.size() ;rr++ )
           fixed_id_vals.push_back(make_pair( idx_ordered_names[rr], term_idx_val_map->at(idx_ordered_names[rr]) ));
         
         sort(fixed_id_vals.begin(), fixed_id_vals.end()); 

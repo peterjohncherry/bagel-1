@@ -7,9 +7,8 @@
 #include <set> 
 #include <vector>
 #include <memory>
-#include <src/prop/proptool/proputils.h>
-#include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
 #include <src/prop/proptool/algebraic_manipulator/op_info.h>
+#include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
  
 class Split_Range_Block_Info; 
 class Range_Block_Info : public std::enable_shared_from_this<Range_Block_Info> {

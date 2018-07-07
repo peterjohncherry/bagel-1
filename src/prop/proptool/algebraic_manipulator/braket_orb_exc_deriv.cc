@@ -1,6 +1,7 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/braket_orb_exc_deriv.h>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_orb_exc_deriv.h>
+#include <src/prop/proptool/proputils.h>
 
 using namespace std;
 using namespace WickUtils;

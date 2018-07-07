@@ -4,10 +4,9 @@
 #include <vector>
 #include <memory>
 #include <string>
-
+#include <cassert>
 #include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
 #include <src/prop/proptool/algebraic_manipulator/constraints.h>
-#include <src/prop/proptool/proputils.h>
 
 // Small class to label state specfic operator and connected symmetries
 // Necessary for generation of appropriate range blocks.

@@ -1,7 +1,5 @@
 #include <bagel_config.h>
-#ifdef COMPILE_SMITH
 #include <src/prop/proptool/proputils.h>
- // #include "wickutils.h"
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -19,104 +17,31 @@ void WickUtils::pair_fac_mult( const std::pair<double,double>& factor_fixed , st
  
   return; 
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-//same as  fvec_cycle, but allows skipping. Should be included everywhere to guard against max==min problem};
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool WickUtils::fvec_cycle_skipper(shared_ptr<vector<int>> forvec, shared_ptr<vector<int>> max , shared_ptr<vector<int>> min ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  for(int ii = forvec->size()-1; ii!=-1 ; ii--) {
-    if ( max->at(ii) == min->at(ii) ) {
-      if ( ii == 0 )
-        return false;
-    } else if (forvec->at(ii) == max->at(ii)) {
-      if (ii == 0) 
-        return false;    
-      forvec->at(ii) = min->at(ii);
-    } else {
-      forvec->at(ii) = forvec->at(ii)+ 1;
-      break;
-    }
-  }
-  return true;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-//NO SHARED PTR VERSION, SHOULD BE BETTER THAN SHARED POINTERS
-//same as fvec_cycle, but allows skipping. Should be included everywhere to guard against max==min problem};
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool WickUtils::fvec_cycle_skipper( vector<int>& forvec, vector<int>& max, vector<int>& min ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  for(int ii = forvec.size()-1; ii!=-1 ; ii--) {
-    if ( max[ii] == min[ii] ) {
-      if ( ii == 0 )
-        return false;
-    } else if (forvec[ii] == max[ii]) {
-      if (ii == 0) 
-        return false;    
-      forvec[ii] = min[ii];
-    } else {
-      forvec[ii] = forvec[ii]+ 1;
-      break;
-    }
-  }
-  return true;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////  
-//REVERSE ITERATOR VERSION, SHOULD BE FASTEST, BUT CHECK 
-//TODO TEMPLATE (AND MAYBE MODIFY) SO IT WORKS FOR DIFFERENT TYPES OF CONTAINER
-//same as fvec_cycle, but allows skipping. Should be included everywhere to guard against max==min problem};
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool WickUtils::fvec_cycle_skipper( vector<int>& forvec, vector<int>::reverse_iterator max_it, vector<int>::reverse_iterator min_it ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  for(vector<int>::reverse_iterator f_it = forvec.rbegin(); f_it !=forvec.rend(); f_it++,  max_it++, min_it++ ) {
-    if ( *max_it == *min_it ) {
-      if ( f_it == (forvec.rend()-1) )
-        return false;
-    } else if (*f_it == *max_it ) {
-      if ( f_it == (forvec.rend()-1) )
-        return false;    
-      *f_it = *min_it;
-    } else {
-      (*f_it) += 1;
-      break;
-    }
-  }
-  return true;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool WickUtils::fvec_cycle_skipper_f2b( vector<int>& forvec, vector<int>& max , vector<int>& min ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  for(int ii = 0; ii!=forvec.size(); ii++) {
-    if ( max[ii] == min[ii] ) {
-      if ( ii == forvec.size()-1 )
-        return false;
-    } else if (forvec[ii] == max[ii]) {
-      if (ii == forvec.size()-1) 
-        return false;    
-      forvec[ii] = min[ii];
-    } else {
-      forvec[ii] = forvec[ii]+ 1;
-      break;
-    }
-  }
-  return true;
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> WickUtils::reorder_vector(vector<int>& neworder , const vector<int>& origvec ) {
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  vector<int> newvec(origvec.size());
-  vector<int>::iterator newvec_it = newvec.begin();
-
-  for( int pos : neworder )
-     *newvec_it++ = origvec[pos];
-
-  return make_shared<vector<int>>(newvec);
-}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 string WickUtils::get_civec_name(const int state_num, const int norb, const int nalpha, const int nbeta)  { 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   string name = to_string(state_num) + "_["+ to_string(norb)+"o{" + to_string(nalpha) + "a," + to_string(nbeta) + "b}]" ;
   return name ;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+std::string WickUtils::get_det_name( char name_range1, int num_range1, char name_range2, int num_range2, int norb ){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   char num_range1_char = '0'+ num_range1;
+   char num_range2_char = '0'+ num_range2;
+   char norb_char = '0'+ norb;
+
+   string det_name = "(";
+   det_name += num_range1_char;
+   det_name += name_range1;
+   det_name += ", ";
+   det_name += num_range2_char;
+   det_name += name_range2;
+   det_name += " | ";
+   det_name +=  norb_char;
+   det_name += "o ) ";  
+
+   return det_name;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 string WickUtils::get_gamma_name( const vector<string>& full_idx_ranges,  const vector<bool>& aops_vec,
@@ -202,7 +127,6 @@ string WickUtils::get_ctp_name( const string op_state_name, const vector<string>
 //  cout << "WickUtils::get_ctp_name" << endl; 
 
   string ctp_name = op_state_name+"_";
-
   for (string id : id_ranges ) 
     ctp_name += id[0];
 
@@ -273,20 +197,7 @@ unsigned int WickUtils::range_to_prime_spinfree(char range ) {
       throw std::logic_error( " unknown range " ); return 9999999;
   }
 }
-//////////////////////////////////////////////////////////////////////////////////
-unsigned int WickUtils::get_block_hash( const std::vector<std::string>& block  ) {
-//////////////////////////////////////////////////////////////////////////////////
- 
-  int max_range_num = 13; // should set this in main proptool
-  int range_id = 0;
-  int ii = 0;
-  for ( vector<string>::const_reverse_iterator b_it = block.crbegin() ; b_it != block.crend() ;  b_it++, ii++ ) 
-     range_id += range_to_prime( (*b_it)[0] ) * pow( max_range_num, ii ); 
- 
-  assert( range_id >  -1 );
 
-  return range_id; 
-}
 //////////////////////////////////////////////////////////////////////////////////////
 vector<char> WickUtils::strvec_to_chrvec( const vector<string>& strvec ) {
 //////////////////////////////////////////////////////////////////////////////////////
@@ -312,36 +223,13 @@ vector<string> WickUtils::chrvec_to_strvec( const vector<char>& chrvec ) {
 
   return strvec;
 } 
+
 //////////////////////////////////////////////////////////////////////////////////////
-shared_ptr<vector<int>> WickUtils::get_ascending_order( const vector<int>& scrambled_vec ) {
+std::vector<int> WickUtils::get_ascending_order( const std::vector<int>& scrambled_vec ) {
 //////////////////////////////////////////////////////////////////////////////////////
- 
-  shared_ptr<vector<int>> new_order = make_shared<vector<int>>(scrambled_vec.size());
-  iota(new_order->begin(), new_order->end() , 0 );
-  sort ( new_order->begin(), new_order->end(), [&scrambled_vec]( int& i1, int& i2 ){ return (bool)( scrambled_vec[i1] < scrambled_vec[i2] );}); 
+    std::vector<int> new_order(scrambled_vec.size());
+    std::iota( new_order.begin(), new_order.end() , 0 );
+    std::sort( new_order.begin(), new_order.end(), [&scrambled_vec]( int& i1, int& i2 ){ return (bool)( scrambled_vec[i1] < scrambled_vec[i2] );}); 
+    return new_order;
+  }; 
 
-  return new_order;
-} 
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-std::string WickUtils::get_det_name( char name_range1, int num_range1, char name_range2, int num_range2, int norb ){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-   char num_range1_char = '0'+ num_range1;
-   char num_range2_char = '0'+ num_range2;
-   char norb_char = '0'+ norb;
-
-   string det_name = "(";
-   det_name += num_range1_char;
-   det_name += name_range1;
-   det_name += ", ";
-   det_name += num_range2_char;
-   det_name += name_range2;
-   det_name += " | ";
-   det_name +=  norb_char;
-   det_name += "o ) ";  
-
-   return det_name;
-}
-
-#endif

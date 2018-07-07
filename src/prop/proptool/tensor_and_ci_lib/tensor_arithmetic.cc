@@ -2,10 +2,12 @@
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 #include <src/util/f77.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_sorter.h>
+#include <src/prop/proptool/proputils.h>
 #include <src/prop/proptool/debugging_utils.h>
 
 //#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE
-//#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
+#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
 #ifdef  __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_debug.h>
 #endif
@@ -61,7 +63,7 @@ cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
     do {
       
       vector<Index> summand_block_ranges = get_rng_blocks( summand_block_pos, summand_ranges );
-      vector<Index> target_block_ranges = Tensor_Arithmetic_Utils::reorder_vector( summand_reorderings.front(), summand_block_ranges ) ;
+      vector<Index> target_block_ranges = reorder_vector( summand_reorderings.front(), summand_block_ranges ) ;
 
       unique_ptr<DataType[]> target_block_data  = target->get_block(target_block_ranges);
       size_t summand_block_size  = summand->get_size( summand_block_ranges );    
@@ -224,7 +226,7 @@ cout << "Tensor_Arithmetic::add_tensor_along_trace"  << endl;
       }
   }
 
-  vector<int> target_reordering_inverse = *(get_ascending_order( target_reordering ));
+  vector<int> target_reordering_inverse = get_ascending_order( target_reordering );
   vector<int> target_maxs = get_range_lengths( target_ranges );
   vector<int> summand_maxs = get_range_lengths( summand_ranges );
   vector<int> summand_mins(summand_ranges.size(), 0);
@@ -561,7 +563,7 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
 
   //Fortran column-major ordering, swap indexes here, not later... 
   vector<int>        TensIn_new_order = put_ctr_at_back( TensIn_org_order, ctr_pos);
-  vector<IndexRange> TensIn_new_rngs  = Tensor_Arithmetic_Utils::reorder_vector(TensIn_new_order, TensIn_org_rngs);
+  vector<IndexRange> TensIn_new_rngs  = reorder_vector(TensIn_new_order, TensIn_org_rngs);
 
   vector<IndexRange> TensOut_rngs(TensIn_new_rngs.begin(), TensIn_new_rngs.end()-1);
 
@@ -595,7 +597,7 @@ cout << "Tensor_Arithmetic::contract_tensor_with_vector" <<endl;
        mins.front() = ii;
        block_pos.front() = ii;
 
-       vector<Index> TensIn_org_rng_blocks = Tensor_Arithmetic_Utils::inverse_reorder_vector( TensIn_new_order, TensIn_new_rng_blocks); 
+       vector<Index> TensIn_org_rng_blocks = inverse_reorder_vector( TensIn_new_order, TensIn_new_rng_blocks); 
        
        int TensIn_block_size = get_block_size( TensIn_org_rng_blocks.begin(), TensIn_org_rng_blocks.end()); 
        int ctr_block_size    = TensIn_new_rng_blocks.back().size();  
@@ -649,12 +651,12 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
  
   //note column major ordering
   vector<int>        T1_new_order = put_ctr_at_back( T1_org_order, ctr_todo.first);
-  vector<IndexRange> T1_new_rngs  = Tensor_Arithmetic_Utils::reorder_vector(T1_new_order, T1_org_rngs);
+  vector<IndexRange> T1_new_rngs  = reorder_vector(T1_new_order, T1_org_rngs);
   vector<int> maxs1 = get_num_index_blocks_vec(T1_new_rngs);
   vector<int> mins1( maxs1.size(), 0 );  
 
   vector<int>        T2_new_order = put_ctr_at_front( T2_org_order, ctr_todo.second);
-  vector<IndexRange> T2_new_rngs  = Tensor_Arithmetic_Utils::reorder_vector(T2_new_order, T2_org_rngs);
+  vector<IndexRange> T2_new_rngs  = reorder_vector(T2_new_order, T2_org_rngs);
   vector<int> maxs2 = get_num_index_blocks_vec(T2_new_rngs);
   vector<int> mins2( maxs2.size(), 0 );  
 
@@ -671,7 +673,7 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
   do { 
     
     vector<Index> T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, T1_new_rngs); 
-    vector<Index> T1_org_rng_blocks = Tensor_Arithmetic_Utils::inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
+    vector<Index> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
     
     size_t ctr_block_size    = T1_new_rng_blocks.back().size(); 
     size_t T1_unc_block_size = get_block_size( T1_new_rng_blocks.begin(), T1_new_rng_blocks.end()-1); 
@@ -690,7 +692,7 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
     do { 
 
       vector<Index> T2_new_rng_blocks = get_rng_blocks( T2_rng_block_pos, T2_new_rngs); 
-      vector<Index> T2_org_rng_blocks = Tensor_Arithmetic_Utils::inverse_reorder_vector( T2_new_order, T2_new_rng_blocks); 
+      vector<Index> T2_org_rng_blocks = inverse_reorder_vector( T2_new_order, T2_new_rng_blocks); 
       size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks.begin()+1, T2_new_rng_blocks.end());
 
       std::unique_ptr<DataType[]> T2_data_new;   
@@ -739,7 +741,7 @@ Tensor_Arithmetic_Debugger::contract_different_tensors_debug( Tens1_in, Tens2_in
   vector<int> T1_new_order =  T1_org_order ;
   put_ctrs_at_back( T1_new_order, ctrs_todo.first);
 
-  vector<IndexRange> T1_new_rngs  = Tensor_Arithmetic_Utils::reorder_vector(T1_new_order, T1_org_rngs);
+  vector<IndexRange> T1_new_rngs  = reorder_vector(T1_new_order, T1_org_rngs);
   vector<int> maxs1 = get_num_index_blocks_vec(T1_new_rngs) ;
   vector<int> mins1(maxs1.size(), 0 );  
 
@@ -749,7 +751,7 @@ Tensor_Arithmetic_Debugger::contract_different_tensors_debug( Tens1_in, Tens2_in
   vector<int> T2_new_order =  T2_org_order ;
   put_reversed_ctrs_at_front( T2_new_order, ctrs_todo.second);
 
-  vector<IndexRange> T2_new_rngs  = Tensor_Arithmetic_Utils::reorder_vector(T2_new_order, T2_org_rngs);
+  vector<IndexRange> T2_new_rngs  = reorder_vector(T2_new_order, T2_org_rngs);
   vector<int> maxs2 = get_num_index_blocks_vec(T2_new_rngs);
   vector<int> mins2(maxs2.size(), 0 );  
 
@@ -768,7 +770,7 @@ Tensor_Arithmetic_Debugger::contract_different_tensors_debug( Tens1_in, Tens2_in
   do { 
     
     vector<Index> T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, T1_new_rngs); 
-    vector<Index> T1_org_rng_blocks = Tensor_Arithmetic_Utils::inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
+    vector<Index> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
     
     size_t ctr_block_size    = 1;
     for ( vector<Index>::reverse_iterator ctr_id_it = T1_new_rng_blocks.rbegin() ; ctr_id_it != T1_new_rng_blocks.rbegin()+num_ctrs; ctr_id_it++) 
@@ -794,7 +796,7 @@ Tensor_Arithmetic_Debugger::contract_different_tensors_debug( Tens1_in, Tens2_in
     do { 
 
       vector<Index> T2_new_rng_blocks = get_rng_blocks(T2_rng_block_pos, T2_new_rngs); 
-      vector<Index> T2_org_rng_blocks = Tensor_Arithmetic_Utils::inverse_reorder_vector( T2_new_order, T2_new_rng_blocks); 
+      vector<Index> T2_org_rng_blocks = inverse_reorder_vector( T2_new_order, T2_new_rng_blocks); 
       size_t T2_unc_block_size = get_block_size(T2_new_rng_blocks.begin()+num_ctrs, T2_new_rng_blocks.end());
 
       std::unique_ptr<DataType[]> T2_data_new;   
@@ -1022,7 +1024,7 @@ cout << "Tensor_Arithmetic::put_reordered_range_block range_block_specific  " <<
 
      vector<Index> id_blocks_T1 = get_rng_blocks( block_pos_T1, id_ranges_T1 );
 
-     vector<int> block_pos_T2 = Tensor_Arithmetic_Utils::reorder_vector( *new_order, block_pos_T1 );
+     vector<int> block_pos_T2 = reorder_vector( *new_order, block_pos_T1 );
      vector<Index> id_blocks_T2 = get_rng_blocks( block_pos_T2, id_ranges_T2 );
 
      assert( T1->exists( id_blocks_T1 ) );
@@ -1055,7 +1057,7 @@ cout << "Tensor_Arithmetic::reorder_block_Tensor " << endl;
   vector<IndexRange> T_id_ranges = Tens_in->indexrange();
   vector<int> range_lengths = get_range_lengths( T_id_ranges ); 
   
-  vector<IndexRange> reordered_ranges  = Tensor_Arithmetic_Utils::reorder_vector( new_order, T_id_ranges ) ;
+  vector<IndexRange> reordered_ranges  = reorder_vector( new_order, T_id_ranges ) ;
   shared_ptr<Tensor_<DataType>>  reordered_block_tensor = make_shared<Tensor_<DataType>>(reordered_ranges);
   reordered_block_tensor->allocate();
   reordered_block_tensor->zero();
@@ -1072,7 +1074,7 @@ cout << "Tensor_Arithmetic::reorder_block_Tensor " << endl;
       unique_ptr<DataType[]> orig_data_block = Tens_in->get_block( orig_id_blocks );
       reordered_data_block = reorder_tensor_data( orig_data_block.get(), new_order, orig_id_blocks );
       }
-      vector<Index> reordered_id_blocks = Tensor_Arithmetic_Utils::reorder_vector( new_order, orig_id_blocks );
+      vector<Index> reordered_id_blocks = reorder_vector( new_order, orig_id_blocks );
       reordered_block_tensor->put_block( reordered_data_block, reordered_id_blocks );
     }
 
@@ -1128,26 +1130,26 @@ cout << "Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data" <<
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor(shared_ptr<vector<IndexRange>> T_id_ranges, DataType XX ){
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_Tensor(const vector<IndexRange>& T_id_ranges, DataType XX ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
    cout << "Tensor_Arithmetic::get_uniform_Tensor" << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    vector<int>  range_lengths(0);
-   for ( IndexRange idrng : *T_id_ranges )
+   for ( IndexRange idrng : T_id_ranges )
       range_lengths.push_back(idrng.range().size()-1); 
 
-   shared_ptr<Tensor_<DataType>> block_tensor = make_shared<Tensor_<DataType>>(*T_id_ranges);
+   shared_ptr<Tensor_<DataType>> block_tensor = make_shared<Tensor_<DataType>>(T_id_ranges);
    block_tensor->allocate();
 
-   vector<int> block_pos(T_id_ranges->size(),0);  
-   vector<int> mins(T_id_ranges->size(),0);  
+   vector<int> block_pos(T_id_ranges.size(),0);  
+   vector<int> mins(T_id_ranges.size(),0);  
    do {
 
-     vector<Index> T_id_blocks(T_id_ranges->size());
+     vector<Index> T_id_blocks(T_id_ranges.size());
      for( int ii = 0 ;  ii != T_id_blocks.size(); ii++)
-       T_id_blocks[ii] =  T_id_ranges->at(ii).range(block_pos.at(ii));
+       T_id_blocks[ii] =  T_id_ranges[ii].range(block_pos.at(ii));
      
      int out_size = 1;
      for ( Index id : T_id_blocks)

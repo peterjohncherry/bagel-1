@@ -9,7 +9,6 @@
 #include <src/prop/proptool/tensor_and_ci_lib/b_gamma_computer.h>
 #include <src/prop/proptool/integrals/moint_computer.h>
 
-
 namespace bagel {
 
 namespace Expression_Computer{

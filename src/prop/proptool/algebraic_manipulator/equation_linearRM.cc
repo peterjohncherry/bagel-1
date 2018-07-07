@@ -1,4 +1,5 @@
 #include <src/prop/proptool/algebraic_manipulator/equation_linearRM.h>
+#include <src/prop/proptool/proputils.h>
 
 using namespace std;
 

@@ -1,9 +1,8 @@
 #ifndef __SRC_PROP_PROPTOOL_a_contrib_info_H
 #define __SRC_PROP_PROPTOOL_a_contrib_info_H
 
+#include <bagel_config.h>
 #include <src/prop/proptool/proputils.h>
-
-using namespace WickUtils;
 
 class AContribInfo_Base {
 
@@ -108,19 +107,6 @@ class AContribInfo_Full : public AContribInfo_Base {
  
     std::shared_ptr<std::vector<std::string>> a_block_ranges() { return post_reorder_rngs_ ; } 
 
-    void print_info() {
-      std::cout << " a_contrib_name = " << name_ << std::endl; 
-      print_pair_vector( factors_, "a_contrib_factors"); std::cout << std::endl;
-      if (id_orders_.front().size() != 0 ) {
-        std::cout << "a_contrib_reorderings = " ;std::cout.flush();
-        for ( const auto& elem :id_orders_ ){ 
-          print_vector( elem ); std::cout << "  " ;std::cout.flush(); 
-        }
-      }  
-      std::cout << std::endl;
-    }
-
-
 };
 
 template<typename DataType>
@@ -137,13 +123,12 @@ class AContribInfo_OrbExcDeriv : public AContribInfo_Base {
     // key : rearrangement before gamma contraction
     std::shared_ptr<std::map<std::vector<int>, std::shared_ptr<std::map<std::string , std::shared_ptr<AContribInfo_Base>>>>>  gamma_pos_map_;
 
-
     AContribInfo_OrbExcDeriv( std::string ablock_name, std::string target_block_name, 
                               std::shared_ptr<std::vector<int>> target_block_positions, std::shared_ptr<std::vector<std::string>> post_gamma_contraction_ranges ):
                               AContribInfo_Base(ablock_name), target_block_name_( target_block_name ), target_block_positions_(target_block_positions),
                               post_gamma_contraction_ranges_(post_gamma_contraction_ranges) { 
                                 gamma_pos_map_=std::make_shared<std::map<std::vector<int>, std::shared_ptr<std::map<std::string,std::shared_ptr<AContribInfo_Base>>>>>();
-                                post_contraction_reordering_ = get_ascending_order( *target_block_positions_ );
+                                post_contraction_reordering_ = std::make_shared<std::vector<int>>(WickUtils::get_ascending_order( *target_block_positions_ ));
                                 assert(post_gamma_contraction_ranges_->size() == post_contraction_reordering_->size());
                               };
 

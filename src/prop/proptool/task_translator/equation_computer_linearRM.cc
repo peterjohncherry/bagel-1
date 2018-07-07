@@ -1,5 +1,6 @@
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 #include <src/prop/proptool/task_translator/equation_computer_linearRM.h>
+#include <src/prop/proptool/proputils.h>
 
 using namespace std;
 using namespace bagel;

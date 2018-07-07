@@ -3,7 +3,6 @@
 
 #include <cstdarg>
 #include <src/util/math/matrix.h>
-#include <src/prop/proptool/proputils.h>
 #include <src/smith/tensor.h>
 #include <src/smith/multitensor.h>
 #include <src/smith/indexrange.h>

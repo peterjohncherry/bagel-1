@@ -141,6 +141,23 @@ namespace Debugging_Utils {
    }
    return num;
   }
+ 
+  template<typename DataType>
+  void print_vec_elem_names( std::vector<std::shared_ptr<DataType>>& invec, std::string name = "" ) {
+    std::cout <<  name << " = [ " ; std::cout.flush();
+    for ( const auto& elem : invec )
+      std::cout << elem->name() << " " ; std::cout.flush();
+    std::cout << " ] "; std::cout.flush();
+  }
+ 
+  template<typename DataType>
+  void print_vec_elem_names( std::vector<DataType>& invec, std::string name = "" ) {
+    std::cout <<  name << " = [ " ; std::cout.flush();
+    for ( const auto& elem : invec )
+      std::cout << elem.name() << " " ; std::cout.flush();
+    std::cout << " ] "; std::cout.flush();
+  }
+
 
 
 }

@@ -1,5 +1,7 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/op_info.h>
+#include <src/prop/proptool/proputils.h>
+
 
 using namespace std;
 

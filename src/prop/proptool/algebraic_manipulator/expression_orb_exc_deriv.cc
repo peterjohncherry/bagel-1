@@ -1,5 +1,6 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/expression_orb_exc_deriv.h>
+#include <src/prop/proptool/proputils.h>
 
 using namespace std;
 

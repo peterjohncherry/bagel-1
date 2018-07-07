@@ -1,8 +1,5 @@
 #ifndef __SRC_PROP_PROPTOOL_Spin_Manager_H
 #define __SRC_PROP_PROPTOOL_Spin_Manager_H
- #include <src/prop/proptool/proputils.h>
-
- //#include "proputils.h"
 
 class Spin_Manager  {
   using pint_vec = std::vector<std::pair<int,int>>;

@@ -1,7 +1,6 @@
 #ifndef __SRC_PROP_PROPTOOL_gamma_info_H
 #define __SRC_PROP_PROPTOOL_gamma_info_H
 
-#include <src/prop/proptool/proputils.h>
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
 #include <src/prop/proptool/algebraic_manipulator/range_block_info.h>
 

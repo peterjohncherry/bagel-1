@@ -1,6 +1,7 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 #include <src/prop/proptool/debugging_utils.h>
+#include <src/prop/proptool/proputils.h>
 
 using namespace std;
 using namespace bagel;
@@ -8,6 +9,7 @@ using namespace bagel::SMITH;
 using namespace WickUtils;
 using namespace Debugging_Utils;
 
+#define __DEBUG_TENSOR_ARITHMETIC_UTILS
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 vector<size_t> Tensor_Arithmetic_Utils::get_strides_row_major( const std::vector<Index>& block ) { 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,7 +46,7 @@ double Tensor_Arithmetic_Utils::sum_elems( unique_ptr<double[]>& some_data, size
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
 cout << "Tensor_Arithemetic_Utils::sum_elems double" << endl;
-if ( length == 0 ) { throw logic_error ( "this array has no size! Aborting!" ) };  
+if ( length == 0 ) { throw logic_error ( "this array has no size! Aborting!" ); };  
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
    double* ptr = some_data.get();
@@ -59,7 +61,7 @@ complex<double> Tensor_Arithmetic_Utils::sum_elems( unique_ptr<complex<double>[]
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
 cout << "Tensor_Arithemetic_Utils::sum_elems complex<double>" << endl;
-if ( length == 0 ) { throw logic_error ( "this array has no size! Aborting!" ) };  
+if ( length == 0 ) { throw logic_error ( "this array has no size! Aborting!" ); };  
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
    complex<double>* ptr = some_data.get();
@@ -75,7 +77,7 @@ double Tensor_Arithmetic_Utils::sum_elem_norms( unique_ptr<double[]>& some_data,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
 cout << "Tensor_Arithemetic_Utils::sum_elems double" << endl;
-if ( length == 0 ) { throw logic_error ( "this array has no size! Aborting!" ) };  
+if ( length == 0 ) { throw logic_error ( "this array has no size! Aborting!" ); };  
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
    return sum_elems( some_data, length ); 
@@ -85,7 +87,7 @@ double Tensor_Arithmetic_Utils::sum_elem_norms( unique_ptr<complex<double>[]>& s
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
 cout << "Tensor_Arithemetic_Utils::sum_elems complex<double>" << endl;
-if ( length == 0 ) { throw logic_error ( "this array has no size! Aborting!" ) };  
+if ( length == 0 ) { throw logic_error ( "this array has no size! Aborting!" ); };  
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
    complex<double>* ptr = some_data.get();
@@ -542,7 +544,7 @@ vector<Index>
 Tensor_Arithmetic_Utils::get_rng_blocks( const vector<int>& block_pos, const vector<IndexRange>& id_ranges) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
-  cout << "TensOp_Computer::get_rng_blocks " << endl;
+  cout << "TensOp_Arithemetic_Utils::get_rng_blocks " << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<Index> id_blocks(block_pos.size());
@@ -555,7 +557,7 @@ vector<int>
 Tensor_Arithmetic_Utils::get_num_index_blocks_vec(vector<IndexRange>& rngvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
-cout << "TensOp_Computer::get_num_index_blocks" << endl;
+cout << "TensOp_Arithemetic_Utils::get_num_index_blocks" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<int> num_id_blocks_vec(rngvec.size()); 

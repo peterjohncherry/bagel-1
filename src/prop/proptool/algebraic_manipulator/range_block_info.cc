@@ -1,6 +1,7 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/range_block_info.h>
 #include <src/prop/proptool/algebraic_manipulator/algebra_utils.h>
+#include <src/prop/proptool/proputils.h>
 
 using namespace std;
 using namespace WickUtils;

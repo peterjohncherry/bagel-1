@@ -1,5 +1,6 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/expression.h>
+#include <src/prop/proptool/proputils.h>
 
 #define __DEBUG_PROPTOOL_EXPRESSION
 #ifdef __DEBUG_PROPTOOL_EXPRESSION

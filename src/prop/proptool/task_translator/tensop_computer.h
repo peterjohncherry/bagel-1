@@ -4,8 +4,6 @@
 #include <tuple>
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
-#include <src/util/f77.h>
-#include <src/prop/proptool/tensor_and_ci_lib/tensor_sorter.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
 #include <src/prop/proptool/algebraic_manipulator/ctrtensop.h>
@@ -43,68 +41,58 @@ class TensOp_Computer {
     /////////// Tensor contraction routines /////////////////////////
 
     void add_tensors( std::string target_name, std::string summand_name, DataType factor );
- 
-    void build_tensor( std::string new_data_name, std::vector<std::string> id_ranges, DataType init_val = (DataType)(0.0) ); 
-
-    std::vector<SMITH::IndexRange> Get_Bagel_IndexRanges( const std::vector<std::string>& ranges_str ); 
-
-    void add_acontrib_to_target(std::string target_name, const std::shared_ptr<AContribInfo_Base>& a_contrib );
-    void sum_different_orderings( std::string target_name, std::string summand_name, std::vector<std::pair<double,double>> factor_list, std::vector<std::vector<int>> id_orders );
 
     //only for two contracted indexes
     std::shared_ptr<SMITH::Tensor_<DataType>> contract_on_same_tensor( std::string Tname, std::string Tout_name, std::pair<int,int> ctr_todo ) ;
-
     //for an arbitrary number of contracted indexes
     std::shared_ptr<SMITH::Tensor_<DataType>> contract_on_same_tensor( std::string Tens_in, std::shared_ptr<std::vector<int>> contracted_index_positions ) ;
 
     std::shared_ptr<SMITH::Tensor_<DataType>> contract_different_tensors( std::string T1name, std::string T2name, std::string Tout_name, std::pair<int,int> ctr_todo );
 
     std::shared_ptr<SMITH::Tensor_<DataType>> contract_different_tensors( std::string T1_in_name, std::string T2_in_name, std::string T_out_name,
-                                                                 std::pair<std::vector<int>,std::vector<int>> ctrs_todo                  );
+                                                                          std::pair<std::vector<int>,std::vector<int>> ctrs_todo                  );
 
     std::shared_ptr<SMITH::Tensor_<DataType>> direct_product_tensors( std::vector<std::string>& Tensor_names );
 
     std::shared_ptr<SMITH::Tensor_<DataType>> reorder_block_Tensor(std::string Tname, std::vector<int>& new_order);
 
-    std::shared_ptr<SMITH::Tensor_<DataType>> get_block_Tensor(std::string Tname);
-
-    void get_tensor_data_blocks(std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks );
-  
-    std::shared_ptr<SMITH::Tensor_<DataType>> get_uniform_Tensor(std::shared_ptr<std::vector<std::string>> unc_ranges, DataType XX );
-
     std::shared_ptr<SMITH::Tensor_<DataType>> divide_tensors( std::string T1_name, std::string T2_name );
 
     void divide_tensors_in_place( std::string T1_name, std::string T2_name );
 
+    void sum_different_orderings( std::string target_name, std::string summand_name, std::vector<std::pair<double,double>> factor_list, std::vector<std::vector<int>> id_orders );
 
-    /////////// Utility routines /////////////////////////
+    /////////// AContrib routines /////////////////////////
 
     void Calculate_CTP( AContribInfo_Base& A_contrib_name );
+ 
+    void add_acontrib_to_target(std::string target_name, const std::shared_ptr<AContribInfo_Base>& a_contrib );
 
-    std::shared_ptr<std::vector<SMITH::IndexRange>>
-    Get_Bagel_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
+    std::shared_ptr<SMITH::Tensor_<DataType>> find_or_get_CTP_data(std::string CTP_name);
 
-    std::shared_ptr<std::vector<std::shared_ptr<const SMITH::IndexRange>>>
-    Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str);
+    std::pair<int,int> relativize_ctr_positions(std::pair <int,int> ctr_todo, std::shared_ptr<CtrTensorPart_Base>  CTP1, std::shared_ptr<CtrTensorPart_Base>  CTP2);
 
-    std::shared_ptr<std::vector<std::shared_ptr<const SMITH::IndexRange>>>
-    Get_Bagel_const_IndexRanges(std::shared_ptr<std::vector<std::string>> ranges_str, std::shared_ptr<std::vector<int>> unc_pos);
+    /////////// Index routines (TODO remove some of these ) /////////////////////////
 
-    void
-    build_index_conversion_map(std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<SMITH::IndexRange>>>> range_conversion_pairs );
+    std::vector<SMITH::IndexRange> Get_Bagel_IndexRanges( const std::vector<std::string>& ranges_str ); 
+   
+    void build_index_conversion_map(std::shared_ptr<std::vector<std::pair<std::string, std::shared_ptr<SMITH::IndexRange>>>> range_conversion_pairs );
 
-    std::shared_ptr<SMITH::Tensor_<DataType>> 
-    find_or_get_CTP_data(std::string CTP_name);
+    //////////////// Tensor fetching and construction routines ///////////////////////////////////////
+ 
+    std::shared_ptr<SMITH::Tensor_<DataType>> get_block_Tensor(std::string Tname);
 
-    std::pair<int,int>
-    relativize_ctr_positions(std::pair <int,int> ctr_todo, std::shared_ptr<CtrTensorPart_Base>  CTP1,
-                                                           std::shared_ptr<CtrTensorPart_Base>  CTP2);
-
-    void build_mo_tensor( std::string mo_tensor_name );
+    std::shared_ptr<SMITH::Tensor_<DataType>> get_tensor( const std::vector<std::string>& id_ranges, bool set_elems = true,  DataType init_val = (DataType)(0.0) );
 
     void get_sub_tensor( std::string full_tens_name, std::string block_name,  const std::vector<std::string>& range_names );
 
+    void build_tensor( std::string new_data_name, const std::vector<std::string>& id_ranges, DataType init_val = (DataType)(0.0) ); 
+
+    void build_mo_tensor( std::string mo_tensor_name );
+
     void build_test_tensor( std::string test_tensor_name, std::vector<size_t> dimensions, std::vector<size_t> max_blocks_sizes );
+
+    void get_tensor_data_blocks(std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks );
 
     void print_compute_list( std::string output_name );
 };

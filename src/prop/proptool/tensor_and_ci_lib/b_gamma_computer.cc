@@ -1,5 +1,6 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/tensor_and_ci_lib/b_gamma_computer.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 #include <src/util/prim_op.h>
 #include <src/prop/proptool/debugging_utils.h>
 

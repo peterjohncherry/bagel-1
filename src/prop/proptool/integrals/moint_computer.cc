@@ -1,6 +1,7 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/integrals/moint.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 #include <src/prop/proptool/integrals/moint_computer.h>
 #include <src/prop/proptool/debugging_utils.h>
 

@@ -1,11 +1,11 @@
 #ifndef __SRC_PROP_PROPTOOL_CtrTensOp_H
 #define __SRC_PROP_PROPTOOL_CtrTensOp_H
 
+#include <unordered_set>
 #include <src/prop/proptool/task_translator/tensor_algop_info.h>
 #include <src/prop/proptool/algebraic_manipulator/a_contrib_info.h>
-#include <src/prop/proptool/proputils.h>
 #include <src/prop/proptool/algebraic_manipulator/op_info.h>
-#include <unordered_set>
+#include <src/prop/proptool/proputils.h>
 
 class CtrTensorPart_Base  {
   public : //TODO change to private

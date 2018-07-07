@@ -1,15 +1,17 @@
 #include <bagel_config.h>
+#include <src/util/f77.h>
 #include <src/prop/proptool/task_translator/tensop_computer.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
+#include <src/prop/proptool/proputils.h>
 
 using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
-using namespace bagel::Tensor_Sorter;
 using namespace bagel::Tensor_Arithmetic; 
 using namespace bagel::Tensor_Arithmetic_Utils; 
 using namespace WickUtils;
 
-//#define __DEBUG_TENSOP_COMPUTER
+#define __DEBUG_TENSOP_COMPUTER
 #define __DEBUG_TENSOP_COMPUTER_X
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
@@ -149,25 +151,43 @@ cout << " TensOp_Computer::TensOp_Computer::divide_tensors " << endl;
 //Intended for intermediate and temporary tensors
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void TensOp_Computer::TensOp_Computer<DataType>::build_tensor( string new_tens_name , std::vector<string> id_ranges, DataType init_val ){ 
+shared_ptr<Tensor_<DataType>> TensOp_Computer::TensOp_Computer<DataType>::get_tensor( const std::vector<string>& id_ranges, bool set_elems, 
+                                                                                      DataType init_val ){ 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
-cout << " TensOp_Computer::TensOp_Computer::build_tensor " << endl;
+cout << " TensOp_Computer::TensOp_Computer::get_tensor " << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<Tensor_<DataType>> new_tens; 
-  if ( id_ranges.size()  != 0 ) {
+  if ( id_ranges.size() != 0 ) {
     new_tens = make_shared<Tensor_<DataType>>( Get_Bagel_IndexRanges( id_ranges ) );
   } else {
     new_tens = make_shared<Tensor_<DataType>>( vector<IndexRange>( 1, IndexRange(1,1,0,1) ) );
   }  
   new_tens->allocate();
+  
+  if ( set_elems ) {
+    if ( init_val == (DataType)(0.0) ) {
+      new_tens->zero(); 
+    } else {
+      Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( new_tens, init_val );
+    }  
+  }
+ 
+  return new_tens;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Builds a tensor with the relevant ranges and puts it into the map at the name
+//Intended for intermediate and temporary tensors
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void TensOp_Computer::TensOp_Computer<DataType>::build_tensor( string new_tens_name , const std::vector<string>& id_ranges, DataType init_val ){ 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOP_COMPUTER
+cout << " TensOp_Computer::TensOp_Computer::build_tensor " << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  if ( init_val == (DataType)(0.0) ) {
-    new_tens->zero(); 
-  } else {
-    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( new_tens, init_val );
-  }  
+  shared_ptr<Tensor_<DataType>> new_tens = get_tensor( id_ranges, true /* = set_elems */, init_val );
 
   auto new_tens_loc = tensop_data_map_->find( new_tens_name); 
   if(  new_tens_loc != tensop_data_map_->end()){
@@ -328,22 +348,6 @@ cout << "TensOp_Computer::TensOp_Computer::calculate_mo_integrals() : " << mo_te
   }
   
   return;
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Returns a tensor with ranges specified by unc_ranges, where all values are equal to XX  
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-shared_ptr<Tensor_<DataType>>
-TensOp_Computer::TensOp_Computer<DataType>::get_uniform_Tensor(shared_ptr<vector<string>> unc_ranges, DataType XX ){
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOP_COMPUTER
-cout << "TensOp_Computer::TensOp_Computer::get_uniform_Tensor" << endl;
-#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-   shared_ptr<vector<IndexRange>> T_id_ranges = Get_Bagel_IndexRanges(unc_ranges);
-
-   return Tensor_Calc_->get_uniform_Tensor(T_id_ranges, XX);
-
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
@@ -508,52 +512,7 @@ TensOp_Computer::TensOp_Computer<DataType>::find_or_get_CTP_data(string CTP_name
   
   return tensor_block;
 }
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-shared_ptr<vector<shared_ptr<const IndexRange>>>
-TensOp_Computer::TensOp_Computer<DataType>::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str){ 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOP_COMPUTER
-cout << "Get_Bagel_const_IndexRanges 1arg" << endl;
-#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<vector<shared_ptr<const IndexRange>>> ranges_Bagel = make_shared<vector<shared_ptr<const IndexRange>>>(0);
-  for ( auto rng : *ranges_str) 
-    ranges_Bagel->push_back(make_shared<const IndexRange>(*range_conversion_map_->at(rng)));
-
-  return ranges_Bagel;
-}
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-shared_ptr<vector<shared_ptr<const IndexRange>>>
-TensOp_Computer::TensOp_Computer<DataType>::Get_Bagel_const_IndexRanges(shared_ptr<vector<string>> ranges_str, shared_ptr<vector<int>> unc_pos){ 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOP_COMPUTER
-cout << "TensOp_Computer::Get_Bagel_const_IndexRanges 2arg" ; print_vector(*ranges_str, "ranges_str" ) ;
-cout <<  "  "; cout.flush();  print_vector(*unc_pos, "unc_pos" ) ; cout << endl;
-#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  vector<shared_ptr<const IndexRange>>  ranges_Bagel(unc_pos->size());
-  for ( int ii = 0 ; ii != unc_pos->size() ; ii++) 
-    ranges_Bagel[ii]=(make_shared<const IndexRange>(*range_conversion_map_->at(ranges_str->at(unc_pos->at(ii)))));
-
-  return make_shared<vector<shared_ptr<const IndexRange>>>(ranges_Bagel);
-}
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<class DataType>
-shared_ptr<vector<IndexRange>>
-TensOp_Computer::TensOp_Computer<DataType>::Get_Bagel_IndexRanges( shared_ptr<vector<string>> ranges_str ){ 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOP_COMPUTER
-cout << "TensOp_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str, "ranges_str" ) ; cout << endl;
-#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  shared_ptr<vector<IndexRange>> ranges_Bagel = make_shared<vector<IndexRange>>(ranges_str->size());
-  for ( int ii = 0 ; ii != ranges_str->size(); ii++)
-    ranges_Bagel->at(ii) = *range_conversion_map_->at(ranges_str->at(ii));
-
-  return ranges_Bagel;
-}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 vector<IndexRange>

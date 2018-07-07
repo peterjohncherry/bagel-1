@@ -1,15 +1,12 @@
 #ifndef __SRC_PROP_PROPTOOL_Gamma_Generator_Redux_H
 #define __SRC_PROP_PROPTOOL_Gamma_Generator_Redux_H
 
-#include <src/prop/proptool/proputils.h>
 #include <src/prop/proptool/algebraic_manipulator/tensop.h>
 #include <src/prop/proptool/algebraic_manipulator/states_info.h>
 #include <src/prop/proptool/algebraic_manipulator/range_block_info.h>
 #include <src/prop/proptool/algebraic_manipulator/gamma_info.h>
 #include <src/prop/proptool/algebraic_manipulator/a_contrib_info.h>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_base.h>
-
-using namespace WickUtils;
 
 template<typename DataType> 
 class GammaIntermediateRedux : public GammaIntermediate_Base {

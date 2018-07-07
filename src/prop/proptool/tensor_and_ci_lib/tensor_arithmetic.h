@@ -1,12 +1,8 @@
 #ifndef __SRC_PROP_PROPTOOL_WICKTOOL_TENSOR_ARITH_H
 #define __SRC_PROP_PROPTOOL_WICKTOOL_TENSOR_ARITH_H
 
-#include <src/prop/proptool/proputils.h>
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
-#include <src/util/f77.h>
-#include <src/prop/proptool/tensor_and_ci_lib/tensor_sorter.h>
-#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 
 //Seems ridiculous as all members are static. However, it is simpler to template a class than a name space.
 //TODO At the moment I assume that all indexes running similar ranges are defined using IndexRange objects 
@@ -110,7 +106,7 @@ class Tensor_Arithmetic {
      set_tensor_elems(std::shared_ptr<SMITH::Tensor_<DataType>> Tens, std::vector<SMITH::IndexRange>& id_ranges, DataType elem_val );
 
      static std::shared_ptr<SMITH::Tensor_<DataType>>
-     get_uniform_Tensor(std::shared_ptr<std::vector<SMITH::IndexRange>> T_id_ranges, DataType XX );
+     get_uniform_Tensor( const std::vector<SMITH::IndexRange>& T_id_ranges, DataType XX );
 
      static std::shared_ptr<SMITH::Tensor_<DataType>>
      get_test_tensor_row_major( const std::vector<SMITH::IndexRange>& T_id_ranges );

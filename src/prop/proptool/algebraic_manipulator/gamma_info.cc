@@ -1,5 +1,6 @@
 #include <bagel_config.h>
 #include <map>
+#include <src/prop/proptool/proputils.h>
 #include <src/prop/proptool/algebraic_manipulator/gamma_info.h>
 
 using namespace std;

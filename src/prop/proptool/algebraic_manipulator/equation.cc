@@ -1,5 +1,6 @@
 #include <src/prop/proptool/algebraic_manipulator/equation.h>
 #include <src/prop/proptool/algebraic_manipulator/op_info.h>
+#include <src/prop/proptool/proputils.h>
 
 #ifdef __DEBUG_PROPTOOL_EQUATION_BASE
 #include <src/prop/proptool/debugging_utils.h>

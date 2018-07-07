@@ -1,6 +1,7 @@
 #include <bagel_config.h>
 #include <src/prop/proptool/algebraic_manipulator/tensop.h>
 #include <src/prop/proptool/algebraic_manipulator/algebra_utils.h>
+#include <src/prop/proptool/proputils.h>
 #include <tuple> 
 using namespace std;
 using namespace WickUtils;
