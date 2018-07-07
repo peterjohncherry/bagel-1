@@ -70,6 +70,8 @@ class AContribInfo_Base {
     std::shared_ptr<std::vector<int>> target_block_positions() { 
       throw std::logic_error( "Should not access target_block_positions from AContribInfo_Base" );
     return std::make_shared<std::vector<int>>(); }
+
+    virtual void print_info(){return;};
 };
 
 template<typename DataType>
@@ -105,6 +107,19 @@ class AContribInfo_Full : public AContribInfo_Base {
     std::vector<std::vector<int>> id_orders() { return id_orders_; };
  
     std::shared_ptr<std::vector<std::string>> a_block_ranges() { return post_reorder_rngs_ ; } 
+
+    void print_info() {
+      std::cout << " a_contrib_name = " << name_ << std::endl; 
+      print_pair_vector( factors_, "a_contrib_factors"); std::cout << std::endl;
+      if (id_orders_.front().size() != 0 ) {
+        std::cout << "a_contrib_reorderings = " ;std::cout.flush();
+        for ( const auto& elem :id_orders_ ){ 
+          print_vector( elem ); std::cout << "  " ;std::cout.flush(); 
+        }
+      }  
+      std::cout << std::endl;
+    }
+
 
 };
 
@@ -191,6 +206,7 @@ class AContribInfo_OrbExcDeriv : public AContribInfo_Base {
     std::shared_ptr<std::vector<int>> post_contraction_reordering() { return post_contraction_reordering_; }
     std::shared_ptr<std::vector<int>> target_block_positions() { return target_block_positions_; }
     std::vector<int>& id_order(int qq) { return *target_block_positions_; };
+
 
 };
 #endif

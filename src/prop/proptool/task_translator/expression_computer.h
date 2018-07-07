@@ -32,6 +32,8 @@ class Expression_Computer {
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensor_results_map_;
 
+    std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<std::string, DataType>>>> gamma_contrib_maps_; 
+
     std::shared_ptr<StatesInfo<DataType>> TargetsInfo;
 
     Expression_Computer( std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> b_gamma_computer,
@@ -49,14 +51,14 @@ class Expression_Computer {
 
     void evaluate_expression_full( std::shared_ptr<Expression<DataType>> expression );
 
-    void print_AContraction_list(std::shared_ptr<std::vector<std::shared_ptr<CtrOp_base>>> ACompute_list, std::string A_Contrib_name );
-
-    bool check_AContrib_factors(AContribInfo_Base& AC_info );
+    bool check_acontrib_factors(AContribInfo_Base& AC_info );
    
     void set_gamma_maps( std::string expression_name,
                          std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map,
                          std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> sigma_data_map,
                          std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map );
+
+    void print_scalar_result( std::string expression_name, bool print_gamma_contribs = true );
 
     //TESTING
     void test_trace_subtraction();

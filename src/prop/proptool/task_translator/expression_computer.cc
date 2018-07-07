@@ -21,8 +21,10 @@ Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_
   gamma_computer_(gamma_computer), expression_map_(expression_map), range_conversion_map_(range_conversion_map), tensop_data_map_(tensop_data_map),
   moint_computer_(moint_computer) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-  scalar_results_map = make_shared<map< string, DataType >>(); //TODO dumb, check why not in header and fix  
-  tensor_results_map_ = make_shared<map< string, shared_ptr<Tensor_<DataType>>>>(); 
+
+  scalar_results_map   = make_shared<map<string, DataType >>(); //TODO dumb, check why not in header and fix  
+  tensor_results_map_  = make_shared<map<string, shared_ptr<Tensor_<DataType>>>>(); 
+  gamma_contrib_maps_ = make_shared<map<string, shared_ptr<map<string, DataType> >>>(); 
 }  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
@@ -64,8 +66,8 @@ void Expression_Computer::Expression_Computer<DataType>::evaluate_expression_orb
 cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_deriv : " << expression->name() << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  tensop_machine_ = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
-                                                                                 moint_computer_ );
+  tensop_machine_ = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_,
+                                                                             tensop_data_map_, moint_computer_ );
  
   tensop_machine_->get_tensor_data_blocks( expression->required_blocks_ );
 
@@ -146,7 +148,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
                 pre_a_gamma_contraction_data->zero(); 
               }
  
-              if (check_AContrib_factors(*a_contrib))
+              if (!check_acontrib_factors(*a_contrib))
                 continue;
 
               tensop_machine_->Calculate_CTP( *a_contrib );
@@ -197,12 +199,10 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
       }
     }
   }                  
-
  
   cout << endl << "Contributions from different gamma terms " << endl;
   for ( auto elem : *tensor_results_map_ )
     cout << elem.first << "->norm() = " << setprecision(13) << elem.second->norm() << endl; 
-  
  
   return;  
 }
@@ -222,14 +222,10 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 
   tensop_machine_ = make_shared<TensOp_Computer::TensOp_Computer<DataType>>( expression->ACompute_map_, expression->CTP_map_, range_conversion_map_, tensop_data_map_,
                                                                              moint_computer_ );
- 
-//  test_trace_subtraction();
-//  test_sum_reordered_tensor_list();
-//  throw logic_error("die here for testing");
 
   tensop_machine_->get_tensor_data_blocks( expression->required_blocks_ );
   DataType result = 0.0;
-  map< string, DataType > g_result_map;
+  shared_ptr<map< string, DataType >> g_result_map = make_shared<map< string, DataType >>();
 
   //Loop through gamma names in map, ultimately the order should be defined so as to be maximally efficient, but leave this for now.
   for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
@@ -244,70 +240,63 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     if ( (A_contrib_loc != expression->G_to_A_map()->end()) &&  (A_contrib_loc->second->size() != 0) ) {
       for ( auto& A_contrib_map_elem : *A_contrib_loc->second ) {
       
-        string  A_contrib_name = A_contrib_map_elem.first;    
+        string  a_contrib_name = A_contrib_map_elem.first;    
         shared_ptr<AContribInfo_Base> a_contrib = A_contrib_map_elem.second;    
 
-        if (check_AContrib_factors(*a_contrib))
+        if (check_acontrib_factors(*a_contrib)){
+          tensop_machine_->Calculate_CTP( *a_contrib );
+          tensop_machine_->add_acontrib_to_target( "a_combined_data", a_contrib );
+        } else { 
           continue;
-      
-	print_AContraction_list( expression->ACompute_map_->at(A_contrib_name), A_contrib_name );
-        tensop_machine_->Calculate_CTP( *a_contrib );
-     
-        cout << " A_contrib_name = " << A_contrib_name << endl; 
-        print_pair_vector( a_contrib->factors(), "a_contrib_factors"); cout << endl;
-        for ( auto elem : a_contrib->id_orders() ){ 
-          print_vector( elem, ""); cout << "  " ;cout.flush(); 
-        }  
-        tensop_machine_->sum_different_orderings( "a_combined_data" , A_contrib_name, a_contrib->factors(), a_contrib->id_orders() );
-  
-        //shared_ptr<Tensor_<DataType>> A_combined_data = tensop_data_map_->at("a_combined_data");
-        cout << "added " << A_contrib_name << endl; 
-        cout << "=========================================================================================================" << endl << endl;
+        }
       }
 
-
       if ( gamma_name != "ID" ) {
-
         gamma_computer_->get_gamma( gamma_name );
-        cout << "gamma_computer_->gamma_data_map()->at("+gamma_name+")->norm() = "; cout.flush(); cout << gamma_computer_->gamma_data_map()->at(gamma_name)->norm() << endl;
-        cout << " result = " << result << endl;
-        cout << "A_combined_data->norm() = " << A_combined_data->norm() << endl;
         DataType tmp_result = A_combined_data->dot_product( gamma_computer_->gamma_data_map()->at(gamma_name) );
-        cout << " tmp_result = " << tmp_result << endl;
-        g_result_map.emplace(gamma_name, tmp_result) ;
+        g_result_map->emplace(gamma_name, tmp_result) ;
         result += tmp_result;
 
       } else {
-        cout << " gamma_name = " << gamma_name << endl;
         DataType tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_tensor_elems( A_combined_data ) ;
-        g_result_map.emplace(gamma_name, tmp_result) ;
+        g_result_map->emplace(gamma_name, tmp_result) ;
         result += tmp_result ; 
-
       }
     }
   }
-
-  cout << endl << "Contributions from different gamma terms " << endl;
-  for ( auto elem : g_result_map ) 
-    cout << elem.first << " :  " << setprecision(13) << elem.second << endl; 
-
-  cout << "=========================================================================================================" << endl;
-  cout << "                             RESULT FOR " << expression_name << " = " << result <<  endl;
-  cout << "=========================================================================================================" << endl;
-  cout << endl; 
+    
 
   if (new_result ) {
     scalar_results_map->emplace( expression_name, result );
+    gamma_contrib_maps_->emplace( expression_name, g_result_map );
   } else {
     scalar_results_map->at( expression_name ) = result;
+    gamma_contrib_maps_->at( expression_name ) = g_result_map;
   }
-  
-  //check_rdms();
-  
+  print_scalar_result( expression_name, true );  
   return ;
-
 }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template < typename DataType >
+void
+Expression_Computer::Expression_Computer<DataType>::print_scalar_result( std::string expression_name,
+                                                                         bool print_gamma_contribs    ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_EXPRESSION_COMPUTER
+cout << "Expression_Computer::print_scalar_result" << endl;  
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  shared_ptr< map<string, DataType >> g_result_map = gamma_contrib_maps_->at(expression_name);
+  cout << endl << "Contributions from different gamma terms " << endl;
+  for ( auto elem : *g_result_map ) 
+    cout << elem.first << " :  " << setprecision(13) << elem.second << endl; 
 
+  cout << "=========================================================================================================" << endl;
+  cout << "                             RESULT FOR " << expression_name << " = " << scalar_results_map->at(expression_name) <<  endl;
+  cout << "=========================================================================================================" << endl;
+  cout << endl; 
+  return;
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::check_rdms() {
@@ -364,39 +353,10 @@ cout << "Expression_Computer::check_rdms" << endl;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
-void Expression_Computer::Expression_Computer<DataType>::print_AContraction_list(shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list, string A_contrib_name ) {
+bool Expression_Computer::Expression_Computer<DataType>::check_acontrib_factors(AContribInfo_Base& AC_info ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_EXPRESSION_COMPUTER
-cout << "Expression_Computer::print_AContraction_list" << endl;  
-#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  cout << "=========================================================================================================" << endl;
-  cout << A_contrib_name << endl;
-  cout << "=========================================================================================================" << endl;
-  for (shared_ptr<CtrOp_base> ctr_op : *ACompute_list ){
-    if ( ctr_op->ctr_type()[0] == 'd' ){
-      cout << "[" << ctr_op->T1name() << " , " << ctr_op->T2name() << " , (";
-      cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T2_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ; cout << ctr_op->ctr_type() << endl;
-  
-    } else if (ctr_op->ctr_type()[0] == 's' ){
-      cout << "[" << ctr_op->T1name() << " , " << ctr_op->T1name() << " , (";
-      cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;   cout << ctr_op->ctr_type()  << endl;
-
-    } else { 
-      cout << ctr_op->ctr_type() << " " << ctr_op->Tout_name() <<  endl;
-    }
-    
-  }
-  cout << "=========================================================================================================" << endl;
- 
-  return;
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template < typename DataType >
-bool Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors(AContribInfo_Base& AC_info ) {
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_EXPRESSION_COMPUTER
-cout << "Expression_Computer::Expression_Computer<DataType>::check_AContrib_factors" << endl;
+cout << "Expression_Computer::Expression_Computer<DataType>::check_acontrib_factors" << endl;
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
   bool  skip = false;
@@ -413,7 +373,7 @@ cout << "Expression_Computer::Expression_Computer<DataType>::check_AContrib_fact
        skip =true;
      }
   } 
-  return skip;
+  return !skip;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >

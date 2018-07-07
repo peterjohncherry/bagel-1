@@ -10,13 +10,15 @@ using namespace bagel::Tensor_Arithmetic_Utils;
 using namespace WickUtils;
 
 //#define __DEBUG_TENSOP_COMPUTER
+#define __DEBUG_TENSOP_COMPUTER_X
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
 TensOp_Computer::TensOp_Computer<DataType>::Calculate_CTP( AContribInfo_Base& AInfo ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOP_COMPUTER
+#ifdef __DEBUG_TENSOP_COMPUTER_X
 cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP : "; cout.flush(); cout <<  AInfo.name_ << endl;
+print_compute_list( AInfo.name_ );
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////
   string A_contrib = AInfo.name_;
 
@@ -66,6 +68,20 @@ cout << " TensOp_Computer::TensOp_Computer::Calculate_CTP : "; cout.flush(); cou
   }
   return;
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+void TensOp_Computer::TensOp_Computer<DataType>::add_acontrib_to_target( string target_name, const shared_ptr<AContribInfo_Base>& a_contrib ) {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOP_COMPUTER
+cout << " TensOp_Computer::TensOp_Computer::add_acontrib_to_target " << endl;
+a_contrib->print_info(); cout << endl;
+cout << "====================================================================================================" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  sum_different_orderings( target_name , a_contrib->name(), a_contrib->factors(), a_contrib->id_orders() );
+
+  return;
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Adds summand name factor to target name 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -77,13 +93,12 @@ void TensOp_Computer::TensOp_Computer<DataType>::sum_different_orderings( string
 #ifdef __DEBUG_TENSOP_COMPUTER
 cout << " TensOp_Computer::TensOp_Computer::sum_different_orderings " << endl;
 cout << "target_name  = " << target_name ; cout.flush(); cout << "  summand_name = " << summand_name << endl;
+cout << "target->norm() +  summand_orig_order->norm() : "; cout.flush();
+cout <<  find_or_get_CTP_data( target_name )->norm(); cout.flush(); cout << " + " << find_or_get_CTP_data( summand_name )->norm(); cout.flush(); 
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<Tensor_<DataType>> target  = find_or_get_CTP_data( target_name );
   shared_ptr<Tensor_<DataType>> summand_orig_order = find_or_get_CTP_data( summand_name );
-
-  cout << endl <<  "======== BEFORE ========" << endl;
-  cout << "target->norm() = " <<  target->norm(); cout.flush(); cout << "   summand_orig_order->norm() = " <<  summand_orig_order->norm() << endl;
 
   //TODO remove this, and decide properly how you are going to deal with the real and complex factors
   vector<DataType> summand_factors_re( summand_factors.size() );
@@ -96,9 +111,9 @@ cout << "target_name  = " << target_name ; cout.flush(); cout << "  summand_name
  
   tensop_data_map_->at(target_name ) = target;
  
-  cout << "======== END ========" << endl;
-  cout << "target->norm() = " << setprecision(13) <<  target->norm(); cout.flush();
-  cout << "   summand_orig_order->norm() = " << setprecision(13) <<   summand_orig_order->norm() << endl;
+#ifdef __DEBUG_TENSOP_COMPUTER
+  cout << "(post_summation) target->norm() = " << setprecision(13) <<  target->norm(); cout.flush();
+#endif
   return; 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -596,6 +611,41 @@ cout << "Tensop_Computer::get_sub_tensor" << endl;
 
   tensop_data_map_->emplace( block_name , Tensor_Arithmetic_Utils::get_sub_tensor( full_tens, block ) );
   
+  return;
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template < typename DataType >
+void TensOp_Computer::TensOp_Computer<DataType>::print_compute_list(string output_name ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_TENSOP_COMPUTER
+cout << "TensOp_Computer::print_contraction_list" << endl;  
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  auto compute_map_loc = ACompute_map_->find(output_name); 
+  if ( compute_map_loc == ACompute_map_->end() )
+    throw logic_error("compute list for " + output_name + " not in the map" ); 
+  
+  shared_ptr<vector<shared_ptr<CtrOp_base>>> compute_list = compute_map_loc->second; 
+
+  cout << "=========================================================================================================" << endl;
+  cout << output_name << endl;
+  cout << "=========================================================================================================" << endl;
+  for (shared_ptr<CtrOp_base> ctr_op : *compute_list ){
+    if ( ctr_op->ctr_type()[0] == 'd' ){
+      cout << "[" << ctr_op->T1name() << " , " << ctr_op->T2name() << " , (";
+      cout << ctr_op->T1_ctr_abs_pos() << "," <<  ctr_op->T2_ctr_abs_pos() << ")" << " , " << ctr_op->Tout_name() << " ] " ; cout << ctr_op->ctr_type() << endl;
+  
+    } else if (ctr_op->ctr_type()[0] == 's' ){
+      cout << "[" << ctr_op->T1name() << " , " << ctr_op->T1name() << " , (";
+      cout << ctr_op->ctr_abs_pos().first << "," <<  ctr_op->ctr_abs_pos().second << ")" << " , " << ctr_op->Tout_name() << " ] " ;   cout << ctr_op->ctr_type()  << endl;
+
+    } else { 
+      cout << ctr_op->ctr_type() << " " << ctr_op->Tout_name() <<  endl;
+    }
+    
+  }
+  cout << "=========================================================================================================" << endl;
+ 
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

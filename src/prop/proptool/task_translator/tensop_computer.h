@@ -48,6 +48,7 @@ class TensOp_Computer {
 
     std::vector<SMITH::IndexRange> Get_Bagel_IndexRanges( const std::vector<std::string>& ranges_str ); 
 
+    void add_acontrib_to_target(std::string target_name, const std::shared_ptr<AContribInfo_Base>& a_contrib );
     void sum_different_orderings( std::string target_name, std::string summand_name, std::vector<std::pair<double,double>> factor_list, std::vector<std::vector<int>> id_orders );
 
     //only for two contracted indexes
@@ -105,6 +106,7 @@ class TensOp_Computer {
 
     void build_test_tensor( std::string test_tensor_name, std::vector<size_t> dimensions, std::vector<size_t> max_blocks_sizes );
 
+    void print_compute_list( std::string output_name );
 };
 
 }
