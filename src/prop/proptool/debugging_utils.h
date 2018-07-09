@@ -12,7 +12,7 @@
 namespace Debugging_Utils {  
 
   template<typename DataType>
-  void print_sizes( const std::vector<DataType> vec, std::string name ) {
+  void print_sizes( const std::vector<DataType>& vec, std::string name ) {
  
     if ( name != "" ) { 
      std::cout << name << " sizes : " ; std::cout.flush();
@@ -27,7 +27,7 @@ namespace Debugging_Utils {
   }
  
   template<typename DataType>
-  void print_sizes( const std::vector<std::shared_ptr<DataType>> vec, std::string name ) {
+  void print_sizes( const std::vector<std::shared_ptr<DataType>>& vec, std::string name ) {
  
     if ( name != "" ) { 
      std::cout << name << " sizes : " ; std::cout.flush();

@@ -135,21 +135,21 @@ namespace WickUtils {
   }
 
   template<typename vtype>
-  std::vector<vtype> inverse_reorder_vector(const std::vector<int>& neworder, const std::vector<vtype>& origvec ) {
-    std::vector<int> new_order = get_ascending_order( new_order );
+  std::vector<vtype> inverse_reorder_vector(const std::vector<int>& reordering, const std::vector<vtype>& origvec ) {
+    std::vector<int> inverse_reordering = get_ascending_order( reordering );
     std::vector<vtype> newvec(origvec.size());
     typename std::vector<vtype>::iterator nv_it = newvec.begin();
-    for( std::vector<int>::const_iterator no_it = neworder.begin(); no_it != neworder.end(); nv_it++, no_it++ )
-      *nv_it = origvec[*no_it];
+    for( std::vector<int>::const_iterator ir_it = inverse_reordering.begin(); ir_it != inverse_reordering.end(); nv_it++, ir_it++ )
+      *nv_it = origvec[*ir_it];
     return newvec;
   };
 
   template<typename vtype>
-  std::vector<vtype> reorder_vector(const std::vector<int>& neworder , const std::vector<vtype>& origvec ) {
+  std::vector<vtype> reorder_vector(const std::vector<int>& reordering , const std::vector<vtype>& origvec ) {
     std::vector<vtype> newvec(origvec.size());
     typename std::vector<vtype>::iterator nv_it = newvec.begin();
-    for( std::vector<int>::const_iterator no_it = neworder.begin(); no_it != neworder.end(); nv_it++, no_it++ )
-      *nv_it = origvec[*no_it];
+    for( std::vector<int>::const_iterator r_it = reordering.begin(); r_it != reordering.end(); nv_it++, r_it++ )
+      *nv_it = origvec[*r_it];
     return newvec;
   };
 

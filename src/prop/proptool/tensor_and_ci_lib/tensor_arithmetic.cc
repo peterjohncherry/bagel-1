@@ -659,7 +659,7 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
   vector<IndexRange> T2_new_rngs  = reorder_vector(T2_new_order, T2_org_rngs);
   vector<int> maxs2 = get_num_index_blocks_vec(T2_new_rngs);
   vector<int> mins2( maxs2.size(), 0 );  
-
+  
   vector<IndexRange> Tout_unc_rngs(T1_new_rngs.begin(), T1_new_rngs.end()-1);
   Tout_unc_rngs.insert(Tout_unc_rngs.end(), T2_new_rngs.begin()+1, T2_new_rngs.end());
 
@@ -671,10 +671,9 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
   vector<int> T1_rng_block_pos(T1_new_order.size(),0);
 
   do { 
-    
     vector<Index> T1_new_rng_blocks = get_rng_blocks( T1_rng_block_pos, T1_new_rngs); 
     vector<Index> T1_org_rng_blocks = inverse_reorder_vector( T1_new_order, T1_new_rng_blocks); 
-    
+   
     size_t ctr_block_size    = T1_new_rng_blocks.back().size(); 
     size_t T1_unc_block_size = get_block_size( T1_new_rng_blocks.begin(), T1_new_rng_blocks.end()-1); 
     size_t T1_block_size     = get_block_size( T1_org_rng_blocks.begin(), T1_org_rng_blocks.end()); 
@@ -713,12 +712,9 @@ cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl;
     } while(fvec_cycle_skipper(T2_rng_block_pos, maxs2, mins2 ));
 
   } while (fvec_cycle_skipper(T1_rng_block_pos, maxs1, mins1 ));
-
   
   return Tens_out;
 }
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
