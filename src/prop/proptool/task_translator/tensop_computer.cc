@@ -376,7 +376,7 @@ cout << "TensOp_Computer::TensOp_Computer::contract_on_same_tensor" << ": "  << 
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
 TensOp_Computer::TensOp_Computer<DataType>::contract_different_tensors( std::string T1_in_name, std::string T2_in_name, std::string T_out_name,
-                                                                  pair<int,int> ctr_todo ){
+                                                                        pair<int,int> ctr_todo ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
 cout << "TensOp_Computer::contract_on_different_tensor" << endl;
@@ -396,6 +396,14 @@ TensOp_Computer::TensOp_Computer<DataType>::contract_different_tensors( std::str
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
 cout << "TensOp_Computer::contract_on_different_tensor" << endl; 
+cout << "T1_in_name = " << T1_in_name; cout.flush();
+cout << "  T2_in_name = " << T2_in_name; cout.flush();
+cout << "  T_out_name = " << T_out_name << endl;
+cout << "contractions : [ " ; cout.flush(); 
+for ( int qq = 0; qq != ctrs_todo.first.size(); qq++ )
+  cout << "[ " << ctrs_todo.first[qq] << ", " << ctrs_todo.second[qq] << " ]" << endl;
+cout << " ] " << endl;
+assert( ctrs_todo.first.size() != ctrs_todo.second.size() );
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<Tensor_<DataType>> Tens1_in = find_or_get_CTP_data(T1_in_name);

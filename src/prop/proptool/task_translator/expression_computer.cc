@@ -131,14 +131,8 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
               if ( first_a_contrib ) {  
                 first_a_contrib = false;
                 shared_ptr<vector<string>> buff = a_contrib->a_block_ranges();
-                vector<int> aid_order = a_contrib->id_orders().front();
-                vector<int>::iterator aio_it = aid_order.begin();
-                vector<string> pagc_ranges(buff->size()) ;
-                for ( vector<string>::iterator pagcr_it = pagc_ranges.begin(); pagcr_it != pagc_ranges.end() ; pagcr_it++, aio_it++ )
-                  *pagcr_it = buff->at( *aio_it ) ;
-            
-                //std::vector<string> reorder_vector( *(a_contrib-id_orders().front() ) , *(a_contrib->a_block_ranges()) );
-                pre_a_gamma_contraction_data = tensop_machine_->get_tensor( pagc_ranges, true, 0.0 );
+                vector<string> pagc_ranges = get_subvector( *(a_contrib->a_block_ranges()), a_contrib->id_orders().front() );
+                tensop_machine_->build_tensor( "pre_a_gamma_contraction_data" , pagc_ranges, 0.0 );
               }
  
               if (!check_acontrib_factors(*a_contrib))
@@ -147,12 +141,7 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
               tensop_machine_->Calculate_CTP( *a_contrib );
 
               string  a_contrib_name = a_contrib_elem.first;    
-              for ( int qq = 0 ; qq != a_contrib->id_orders().size(); qq++){
-                shared_ptr<Tensor_<DataType>> a_contrib_reordered = tensop_machine_->reorder_block_Tensor( a_contrib_name, a_contrib->id_order(qq));
-                pre_a_gamma_contraction_data->ax_plus_y( (DataType)(a_contrib->factor(qq).first), a_contrib_reordered );
-              }
-
-              tensop_data_map_->emplace( "pre_a_gamma_contraction_data", pre_a_gamma_contraction_data );
+              tensop_machine_->sum_different_orderings(  "pre_a_gamma_contraction_data", a_contrib_name, a_contrib->factors(), a_contrib->id_orders() ); 
             }
 
             if ( gamma_name != "ID" ) {

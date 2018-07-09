@@ -86,7 +86,7 @@ namespace Tensor_Arithmetic_Debugger {
     template<typename DataType>
     void contract_different_tensors_debug( std::shared_ptr<SMITH::Tensor_<DataType>> Tens1_in, std::shared_ptr<SMITH::Tensor_<DataType>> Tens2_in,
                                            std::pair< std::vector<int>, std::vector<int> >& ctrs_todo ) {
-       
+      std::cout << "Tensor_Arithmetic_Debugger::contract_different_tensors_debug" << std::endl;
       if (  ctrs_todo.first.size() !=  ctrs_todo.second.size() ) {
        std::cout << "  ctrs_todo.first.size() = " <<  ctrs_todo.first.size() << " != " <<  ctrs_todo.second.size() << " = ctrs_todo.second.size() " << std::endl;
        throw std::logic_error( "different number of contracted indexes on each tensor! Aborting! ");

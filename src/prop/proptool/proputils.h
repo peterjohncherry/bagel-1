@@ -172,5 +172,15 @@ namespace WickUtils {
       *ov_it = (*s2_it)[*pv_it];
     return out_vec;      
   };
+
+  template < typename DataType> 
+  std::vector< DataType> get_subvector ( const std::vector<DataType>& main_vec, const std::vector<int>& sub_vec_pos ) { 
+    std::vector<int>::const_iterator svp_it = sub_vec_pos.begin();
+    std::vector<DataType> sub_vec(sub_vec_pos.size()) ;
+    for ( typename std::vector<DataType>::iterator sv_it = sub_vec.begin(); sv_it != sub_vec.end() ; sv_it++, svp_it++ )
+      *sv_it = main_vec[*svp_it];
+    return sub_vec;
+  };
+
 };
 #endif
