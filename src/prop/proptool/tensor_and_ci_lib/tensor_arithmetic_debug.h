@@ -15,7 +15,7 @@ namespace Tensor_Arithmetic_Debugger {
      template<typename DataType> 
      void add_tensor_along_trace_debug( std::shared_ptr<SMITH::Tensor_<DataType>> t_target, std::shared_ptr<SMITH::Tensor_<DataType>> t_summand,
                                         std::vector<int>& summand_pos, DataType factor ){ 
-       std::cout << "Tensor_Arithmetic::add_tensor_along_trace_debug"; std::cout.flush();
+       std::cout <<  std::endl << "Tensor_Arithmetic::add_tensor_along_trace_debug" << std::endl;
        WickUtils::print_vector(summand_pos , "   summand_pos"); std::cout << std::endl;
        
        std::vector<SMITH::IndexRange> t_target_ranges_tmp  = t_target->indexrange();
@@ -36,6 +36,7 @@ namespace Tensor_Arithmetic_Debugger {
   
      template<typename DataType> 
      void check_ranges( std::shared_ptr<SMITH::Tensor_<DataType>> t1, std::shared_ptr<SMITH::Tensor_<DataType>> t2 ) {
+       std::cout <<  std::endl << "Tensor_Arithmetic::add_tensor_along_trace_debug" << std::endl;
     
        std::vector<SMITH::IndexRange> t1_ranges = t1->indexrange();
        std::vector<SMITH::IndexRange> t2_ranges = t2->indexrange();
@@ -53,6 +54,7 @@ namespace Tensor_Arithmetic_Debugger {
 
      template<class DataType>
      void check_all_same_ranges( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in ) { 
+       std::cout << "Tensor_Arithmetic::check_all_same_ranges" << std::endl;
        if ( Tens_in->indexrange().size() == 0  )
          throw std::logic_error(" trying to take tensor of trace with no elements! Aborting!" );
  
@@ -66,7 +68,7 @@ namespace Tensor_Arithmetic_Debugger {
 
      template<class DataType>
      void contract_on_same_tensor_debug( std::shared_ptr<SMITH::Tensor_<DataType>> Tens_in,  std::vector<int>& ctrs_pos) {
-     std::cout << "Tensor_Arithmetic::contract_on_same_tensor" << std::endl;
+     std::cout <<  std::endl << "Tensor_Arithmetic::contract_on_same_tensor" << std::endl;
      WickUtils::print_vector( ctrs_pos, "ctr_pos"); std::cout << std::endl; 
      Debugging_Utils::print_sizes( Tens_in->indexrange() , "Tens_in->indexrange()" ) ;std::cout << std::endl;
      { 
@@ -85,8 +87,29 @@ namespace Tensor_Arithmetic_Debugger {
     }
     template<typename DataType>
     void contract_different_tensors_debug( std::shared_ptr<SMITH::Tensor_<DataType>> Tens1_in, std::shared_ptr<SMITH::Tensor_<DataType>> Tens2_in,
+                                           const std::pair< int, int >& ctrs_todo ) {
+      std::cout << std::endl <<  "Tensor_Arithmetic_Debugger::contract_different_tensors_debug single ctr" << std::endl;
+      std::cout << "Tens1_in->norm() =  "; std::cout.flush();  std::cout << Tens1_in->norm() << std::endl;
+      std::cout << "Tens2_in->norm() =  "; std::cout.flush();  std::cout << Tens2_in->norm() << std::endl;
+      std::vector<SMITH::IndexRange> T1_org_rngs_tmp = Tens1_in->indexrange();
+      std::vector<SMITH::IndexRange> T2_org_rngs_tmp = Tens2_in->indexrange();
+      if ( T1_org_rngs_tmp[ctrs_todo.first].size() !=  T2_org_rngs_tmp[ctrs_todo.second].size() ){
+        std::cout << " ctr1_size = " << T1_org_rngs_tmp[ctrs_todo.first].size();  std::cout.flush();
+        std::cout << " ctr1_pos = " << ctrs_todo.first  << std::endl;
+        std::cout << " ctr2_size = " << T2_org_rngs_tmp[ctrs_todo.second].size(); std::cout.flush();
+        std::cout << " ctr2_pos = " << ctrs_todo.second << std::endl;
+        throw std::logic_error("Extents of ranges to be contracted do not match!! Aborting");
+      }
+      
+    }
+
+
+    template<typename DataType>
+    void contract_different_tensors_debug( std::shared_ptr<SMITH::Tensor_<DataType>> Tens1_in, std::shared_ptr<SMITH::Tensor_<DataType>> Tens2_in,
                                            std::pair< std::vector<int>, std::vector<int> >& ctrs_todo ) {
-      std::cout << "Tensor_Arithmetic_Debugger::contract_different_tensors_debug" << std::endl;
+      std::cout << std::endl <<  "Tensor_Arithmetic_Debugger::contract_different_tensors_debug multi ctr" << std::endl;
+      std::cout << "Tens1_in->norm() =  "; std::cout.flush();  std::cout << Tens1_in->norm() << std::endl;
+      std::cout << "Tens2_in->norm() =  "; std::cout.flush();  std::cout << Tens2_in->norm() << std::endl;
       if (  ctrs_todo.first.size() !=  ctrs_todo.second.size() ) {
        std::cout << "  ctrs_todo.first.size() = " <<  ctrs_todo.first.size() << " != " <<  ctrs_todo.second.size() << " = ctrs_todo.second.size() " << std::endl;
        throw std::logic_error( "different number of contracted indexes on each tensor! Aborting! ");

@@ -636,7 +636,8 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( shar
                                                                             pair<int,int> ctr_todo){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
-cout << "Tensor_Arithmetic::contract_on_different_tensor_column_major" <<endl; 
+cout << "Tensor_Arithmetic::contract_on_different_tensors single ctr" << endl; 
+Tensor_Arithmetic_Debugger::contract_different_tensors_debug( Tens1_in, Tens2_in, ctr_todo );
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<IndexRange> T1_org_rngs = Tens1_in->indexrange();
@@ -723,7 +724,7 @@ Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_different_tensors( shar
                                                                             pair< vector<int>, vector<int> >& ctrs_todo){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
-cout << "Tensor_Arithmetic::contract_different_tensors" <<endl;
+cout << "Tensor_Arithmetic::contract_different_tensors multi_ctr" <<endl;
 Tensor_Arithmetic_Debugger::contract_different_tensors_debug( Tens1_in, Tens2_in, ctrs_todo );
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -814,6 +815,7 @@ Tensor_Arithmetic_Debugger::contract_different_tensors_debug( Tens1_in, Tens2_in
 
   } while (fvec_cycle_skipper(T1_rng_block_pos, maxs1, mins1 ));
 
+  cout << "Tens_out->norm() = "; cout.flush(); cout << Tens_out->norm() << endl;
   
   return Tens_out;
 }

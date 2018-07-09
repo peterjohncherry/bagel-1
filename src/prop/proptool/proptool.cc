@@ -137,6 +137,13 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   nocc_     = nclosed_ + nact_; 
   nfrozenvirt_ = idata_->get<int>( "nfrozenvirt", 0 );
 
+  cout << "nclosed_  =      "<< nclosed_  << endl; 
+  cout << "nact_     =      "<< nact_     << endl;
+  cout << "nvirt_    =      "<< nvirt_    << endl;
+  cout << "nocc_     =      "<< nocc_     << endl;
+  cout << "nfrozenvirt_ =   "<< nfrozenvirt_ << endl;
+
+
   // TODO : should be determined from summation ranges in expression
   nstates_ = idata_->get<int>( "nstates" , ciwfn_->nstates() );
   target_states_ = vector<int>(nstates_); 

@@ -10,7 +10,7 @@ void Equation_Init_Value<DataType>::initialize_expressions() {
 cout << "Equation_Init_Value<DataType>::initialize_expressions()" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////
 
-  pair<double,double> bk_factor_dummy  = make_pair( 1.0, 1.0);
+  pair<double,double> bk_factor_dummy  = make_pair( 1.0, 0.0);
   //TODO The looping through the terms should be on the inside, and the summation on the outside,
   for ( int ii = 0 ; ii != master_expression_->term_list_->size(); ii++  ){
 

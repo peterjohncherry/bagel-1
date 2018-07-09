@@ -32,8 +32,9 @@ cout << "MOInt_Computer<DataType>::calculate_v2 IndexRange_ver" << endl;
 
 #ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
   shared_ptr<SMITH::Tensor_<DataType>> v2_tens =   MOInt_Computer<DataType>::calculate_v2_smith( blocks_buff ) ;
-  vector<int> alt_to_norm_order = { 3, 1, 2, 0 } /* { 2, 0, 3, 1 } */ /*{ 2, 1, 3, 0 } */ ;
+  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
   v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2_tens, alt_to_norm_order );
+  v2_->scale(-1.0);
   assert(v2_->norm() != 0.0 ) ;
 #endif
 
@@ -176,11 +177,11 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
     SMITH::IndexRange virt_ = *(range_conversion_map_->at("v")); 
 
     // Block to keep 
-    vector<SMITH::IndexRange> keep_ranges = {active_, virt_, active_, virt_};
+    vector<SMITH::IndexRange> keep_ranges = {core_, virt_, core_, virt_};
 
     shared_ptr<SMITH::Tensor_<DataType>> v2_tens_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_new, keep_ranges );
 
-    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( v2_tens_keep, 0.5 );
+    //Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( v2_tens_keep, 1.0 );
 
     cout << endl << endl;
     cout << "======================= v2_->norm() ========================" << endl;

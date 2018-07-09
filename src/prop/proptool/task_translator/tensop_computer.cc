@@ -196,6 +196,8 @@ cout << " TensOp_Computer::TensOp_Computer::build_tensor " << endl;
   } else { 
     tensop_data_map_->emplace ( new_tens_name , new_tens ); 
   } 
+
+  cout << "new_tens_name->norm() = "  << tensop_data_map_->at(new_tens_name) << endl;
  
   return;
 }
@@ -271,13 +273,20 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
            build_mo_tensor( full_tens_name ); 
            get_sub_tensor( full_tens_name, block_name, *id_ranges );
 
-         } else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't' || full_tens_name[0] == 'S'  ) {  
+         } else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't'  ) {  
            build_tensor( block_name, *id_ranges, (DataType)(1.0) );
  //          shared_ptr<Tensor_<DataType>> test_block = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_row_major( tensop_data_map_->at(block_name)->indexrange() ); 
  //          tensop_data_map_->at(block_name) = test_block;
             
-         } else {  
-           build_tensor( block_name, *id_ranges, (DataType)(0.0) );
+         } else if ( full_tens_name[0] == 'S') {  
+           vector<string> test_block = { "c", "c", "v", "v" };
+           cout << "setting S QQQQQQQQQQQQQQ" << endl;
+           if ( *id_ranges == test_block ){ 
+             build_tensor( block_name, *id_ranges, (DataType)(1.0) );
+           } else { 
+             build_tensor( block_name, *id_ranges, (DataType)(0.0) );
+           }
+         
          }
  
        } else {

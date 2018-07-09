@@ -191,13 +191,13 @@ cout << "CASPT2::CASPT2::solve" << endl;
     shared_ptr<Tensor> t2_tester = t2all_[0]->at(0)->clone();
     t2_tester->zero();
     {
-      vector<IndexRange> keep_ranges = {*active_rng_, *virtual_rng_, *active_rng_, *virtual_rng_};
+      vector<IndexRange> keep_ranges = {*closed_rng_, *virtual_rng_, *closed_rng_, *virtual_rng_};
       vector<IndexRange> keep_ranges2 = { *virtual_rng_, *active_rng_, *virtual_rng_, *active_rng_, };
       
       auto tens_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
       
       tens_calc->set_tensor_elems( t2all_[0]->at(0), keep_ranges, 1.0 );
-      tens_calc->set_tensor_elems( t2_tester, keep_ranges2, 1.0 );
+//      tens_calc->set_tensor_elems( t2_tester, keep_ranges2, 1.0 );
       auto v2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, keep_ranges ); 
       auto t2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( t2all_[0]->at(0), keep_ranges ); 
       v2_->zero();
@@ -211,6 +211,8 @@ cout << "CASPT2::CASPT2::solve" << endl;
       tens_calc->put_sub_tensor( t2_keep, t2all_[0]->at(0) );
       cout << "post v2_->norm()    = " << v2_->norm() << endl;
       cout << "post v2_keep->norm() = " << v2_keep->norm() << endl;
+      cout << "post t2all_[0]->at(0)->norm()    = " << t2all_[0]->at(0)->norm() << endl;
+      cout << "post t2_keep->norm() = " << t2_keep->norm() << endl;
     }
 
 
