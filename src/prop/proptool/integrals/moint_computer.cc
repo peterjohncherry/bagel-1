@@ -178,7 +178,8 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
 
     // Block to keep {3, 1, 2, 0}  
 //    vector<SMITH::IndexRange> keep_ranges = {core_, virt_, core_, virt_};
-    vector<SMITH::IndexRange> keep_ranges = {active_, virt_, core_, virt_};
+//    vector<SMITH::IndexRange> keep_ranges = {active_, virt_, core_, virt_};
+    vector<SMITH::IndexRange> keep_ranges = {virt_, active_, core_, virt_};
 
     shared_ptr<SMITH::Tensor_<DataType>> v2_tens_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_new, keep_ranges );
 

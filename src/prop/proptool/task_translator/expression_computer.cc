@@ -233,15 +233,15 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 
       if ( gamma_name != "ID" ) {
         gamma_computer_->get_gamma( gamma_name );
-        DataType tmp_result = A_combined_data->dot_product( gamma_computer_->gamma_data_map()->at(gamma_name) );
-        g_result_map->emplace(gamma_name, tmp_result) ;
+        DataType tmp_result = tensop_machine_->dot_tensors( gamma_name, "a_combined_data" );
+//        g_result_map->emplace(gamma_name, tmp_result) ;
         cout << "result +=  tmp_result : " << result << " += " << tmp_result ; cout.flush(); 
         result += tmp_result;
         cout << " --> result = " << result << endl;
 
       } else {
         DataType tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_tensor_elems( A_combined_data ) ;
-        g_result_map->emplace(gamma_name, tmp_result) ;
+ //       g_result_map->emplace(gamma_name, tmp_result) ;
         cout << "result +=  tmp_result : " << result << " += " << tmp_result ; cout.flush(); 
         result += tmp_result ; 
         cout << " --> result = " << result << endl;

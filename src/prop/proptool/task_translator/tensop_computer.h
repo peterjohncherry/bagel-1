@@ -62,6 +62,10 @@ class TensOp_Computer {
 
     void sum_different_orderings( std::string target_name, std::string summand_name, std::vector<std::pair<double,double>> factor_list, std::vector<std::vector<int>> id_orders );
 
+    DataType dot_tensors( std::string T1_name, std::string T2_name ); 
+    
+    DataType sum_elems( std::string tens_name ); 
+
     /////////// AContrib routines /////////////////////////
 
     void Calculate_CTP( AContribInfo_Base& A_contrib_name );

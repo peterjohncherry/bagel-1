@@ -7,7 +7,7 @@
 #include <src/prop/proptool/debugging_utils.h>
 
 //#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE
-#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
+//#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
 #ifdef  __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_debug.h>
 #endif
