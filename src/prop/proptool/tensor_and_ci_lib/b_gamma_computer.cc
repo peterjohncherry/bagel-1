@@ -328,6 +328,10 @@ cout << "B_Gamma_Computer::get_gamma2_from_sigma2" << endl;
   convert_civec_to_tensor( bra_name );
 
   shared_ptr<Tensor_<DataType>> gamma2_tens = tensor_calc_->contract_tensor_with_vector( sigma_data_map_->at( sigma2_name ), civec_data_map_->at( bra_name ), 0 );
+//  {  
+    //DataType one_over_nele = ((DataType)(1.0))/ ((DataType)(gamma2_info->Bra_nalpha()+gamma2_info->Bra_nbeta()));
+//    gamma2_tens->scale(1/6.0 );
+//  }
   gamma_data_map_->emplace( gamma2_info->name(), gamma2_tens ); 
 
   return; 

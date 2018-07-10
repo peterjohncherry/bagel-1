@@ -191,14 +191,25 @@ cout << "CASPT2::CASPT2::solve" << endl;
     shared_ptr<Tensor> t2_tester = t2all_[0]->at(0)->clone();
     t2_tester->zero();
     {
-      vector<IndexRange> keep_ranges = {*closed_rng_, *virtual_rng_, *closed_rng_, *virtual_rng_};
-      vector<IndexRange> keep_ranges2 = { *virtual_rng_, *active_rng_, *virtual_rng_, *active_rng_, };
+//      vector<IndexRange> keep_ranges = {*closed_rng_, *virtual_rng_, *closed_rng_, *virtual_rng_};
+      vector<IndexRange> keep_ranges = {*active_rng_, *virtual_rng_, *closed_rng_, *virtual_rng_};
       
       auto tens_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
-      
+      cout << "closed_rng_->size() = " <<  closed_rng_->size() << endl; 
+      cout << "active_rng_->size() = " <<  active_rng_->size() << endl; 
+      cout << "virtual_rng_->size() = " <<  virtual_rng_->size() << endl; 
+      cout << "t2all_[0]->at(0) index range sizes = ["; cout.flush();
+      for ( auto elem : t2all_[0]->at(0)->indexrange() ) 
+        cout << elem.size() << " " ;
+      cout << "]" << endl;
+      cout << "setting t2all_[0]->at(0) subblock " << endl;
       tens_calc->set_tensor_elems( t2all_[0]->at(0), keep_ranges, 1.0 );
 //      tens_calc->set_tensor_elems( t2_tester, keep_ranges2, 1.0 );
+//
+      cout << "getting v2_keep " << endl;
       auto v2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, keep_ranges ); 
+
+      cout << "getting t2all_[0]->at(0) subblock " << endl;
       auto t2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( t2all_[0]->at(0), keep_ranges ); 
       v2_->zero();
       t2all_[0]->at(0)->zero(); 
@@ -215,19 +226,20 @@ cout << "CASPT2::CASPT2::solve" << endl;
       cout << "post t2_keep->norm() = " << t2_keep->norm() << endl;
     }
 
-
-
     s = init_residual();
     s->zero();
     shared_ptr<Queue> source_task_list = make_sourceq(false, true);
     while(!source_task_list->done())
       source_task_list->next_compute();
-    
-    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
-    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0) ) << endl;// + (*eref_)(0, 0);
 
     cout << "----------------------------------TEST-------------------------------" << endl;
-    cout << "source_norm = "<<  s->norm() << endl;
+    cout << "pre dot source_norm = "<<  s->norm() << endl;
+    cout << "---------------------------------------------------------------------" << endl;
+   
+    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
+
+    cout << "----------------------------------TEST-------------------------------" << endl;
+    cout << "post dot source_norm = "<<  s->norm() << endl;
     cout << "---------------------------------------------------------------------" << endl;
  
   }

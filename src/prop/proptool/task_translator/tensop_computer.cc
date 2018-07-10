@@ -93,7 +93,7 @@ void TensOp_Computer::TensOp_Computer<DataType>::sum_different_orderings( string
                                                                           vector<vector<int>> summand_reorderings  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
-cout << " TensOp_Computer::TensOp_Computer::sum_different_orderings " << endl;
+cout << endl <<  "TensOp_Computer::TensOp_Computer::sum_different_orderings " << endl;
 cout << "target_name  = " << target_name ; cout.flush(); cout << "  summand_name = " << summand_name << endl;
 cout << "target->norm() +  summand_orig_order->norm() : "; cout.flush();
 cout <<  find_or_get_CTP_data( target_name )->norm(); cout.flush(); cout << " + " << find_or_get_CTP_data( summand_name )->norm(); cout.flush(); 
@@ -114,7 +114,7 @@ cout <<  find_or_get_CTP_data( target_name )->norm(); cout.flush(); cout << " + 
   tensop_data_map_->at(target_name ) = target;
  
 #ifdef __DEBUG_TENSOP_COMPUTER
-  cout << "(post_summation) target->norm() = " << setprecision(13) <<  target->norm(); cout.flush();
+  cout << "(post_summation) target->norm() = " << setprecision(13) <<  target->norm(); cout << endl << endl;
 #endif
   return; 
 }
@@ -279,9 +279,10 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
  //          tensop_data_map_->at(block_name) = test_block;
             
          } else if ( full_tens_name[0] == 'S') {  
-           vector<string> test_block = { "c", "c", "v", "v" };
-           cout << "setting S QQQQQQQQQQQQQQ" << endl;
+          vector<string> test_block = { "a", "c", "v", "v" };
+          // vector<string> test_block = { "c", "c", "v", "v" };
            if ( *id_ranges == test_block ){ 
+             cout << "setting S QQQQQQQQQQQQQQ" << endl;
              build_tensor( block_name, *id_ranges, (DataType)(1.0) );
            } else { 
              build_tensor( block_name, *id_ranges, (DataType)(0.0) );
