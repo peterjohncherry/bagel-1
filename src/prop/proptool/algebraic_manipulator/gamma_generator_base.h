@@ -137,7 +137,7 @@ class GammaGenerator_Base{
 
     virtual void swap( int ii, int jj, int kk );
 
-    void print_gamma_intermediate( std::shared_ptr<GammaIntermediate_Base> gint );
+    void print_gamma_intermediate( const std::shared_ptr<GammaIntermediate_Base>& gint , std::string gamma_name = "" );
 
     virtual void add_Acontrib_to_map( int gamma_vec_position, std::string bra_name, std::string ket_name ) { assert(false); } 
   

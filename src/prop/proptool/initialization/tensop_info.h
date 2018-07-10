@@ -80,7 +80,18 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
 //  constraints = { all_same_spin };
    time_symm = "none";
    state_dep = 0;
-   factor = make_pair( 0.5, 0.0);
+   factor = make_pair( -0.5, 0.0);
+
+  } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
+
+    idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
+    aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
+    constraints = { not_all_act }; 
+//    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { act_a, core_a, virt_a, virt_a } );
+//    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { core_a, core_a, virt_a, virt_a } );
+    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { act_a, core_a, virt_a, virt_a } );
+    time_symm = "none";
+    state_dep = 0;
 
  
   //} else if ( op_name == "Q" ) {  /*TEST*/
@@ -116,21 +127,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
     //idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt_a, virt_a, act_a, act_a } );
     time_symm = "none";
     state_dep = 0;
- 
-  } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
-
-    idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
-    aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
-//    symmfuncs = { hconj }; 
-//    constraints = { spin_neutral, not_all_act }; 
-    constraints = { not_all_act }; 
-//    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { act_a, core_a, virt_a, virt_a } );
-    idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { core_a, act_a, virt_a, virt_a } );
-    //idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { core_a, core_a, virt_a, virt_a } );
-    time_symm = "none";
-    state_dep = 0;
-
-  } else if ( op_name == "X" ) {
+   } else if ( op_name == "X" ) {
 
     idxs = make_shared<vector<string>>( vector<string> {"X3", "X2", "X1", "X0"} );
     aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );

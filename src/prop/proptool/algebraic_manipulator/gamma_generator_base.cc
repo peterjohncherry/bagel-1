@@ -3,9 +3,8 @@
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_orb_exc_deriv.h>
 #include <src/prop/proptool/proputils.h>
 
-
-
 #define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
+#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
 using namespace std;
 using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,7 +34,7 @@ cout << "GammaGenerator_Base::generic_reorderer" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator_Base::generic_reorderer_different_sector( string reordering_name, bool final_reordering ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
 cout << "GammaGenerator_Base::generic_reorderer_different_sector" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +66,8 @@ cout << "GammaGenerator_Base::generic_reorderer_different_sector" << endl;
       ++gv_it;
     }
   }
+  cout << " ====  gammas left after transformation to " << reordering_name << " ===== " << endl;
+  for ( const auto& gint : *final_gamma_vec_ ) { print_gamma_intermediate( gint , "" ); }
 
   gamma_vec_ = final_gamma_vec_;
   bool does_it_contribute = ( gamma_vec_->size() > 0 );
@@ -88,7 +89,7 @@ bool GammaGenerator_Base::proj_onto_map( shared_ptr<GammaIntermediate_Base> gint
 //Grossly inefficient, but totally generic, should write seperate routines for normal and antinormal
 //ordering; consecutive operators means can just count.
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
 cout << "GammaGenerator_Base::proj_onto_map" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -287,8 +288,9 @@ cout << "GammaGenerator_Base::alternating_order" << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator_Base::swap( int ii, int jj, int kk ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
 cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
+print_gamma_intermediate (gamma_vec_->at(kk) , "pre_swap gamma" );
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<GammaIntermediate_Base> gint =  gamma_vec_->at(kk);
@@ -316,16 +318,20 @@ cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " <<
       }
     }
  
-//    auto new_fac =  make_pair( gint->factors_.first  * -1.0 ,  0.0);
     auto new_fac =  make_pair( gint->factors_.first * -1.0,  0.0 );
     shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, new_fac );
     gamma_vec_->push_back(new_gamma);
-  }
 
-//  gint->factors_.first  *= -1.0;
-//  gint->factors_.second *= -0.0;
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
+    print_gamma_intermediate (new_gamma , "new gamma" );
+  }
+  print_gamma_intermediate (gamma_vec_->at(kk) , "post_swap gamma" );
+#else
+  }
+#endif
  
   return;
+
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 shared_ptr<pint_vec>
@@ -464,16 +470,29 @@ cout << "GammaGenerator_Base::transform_to_canonical_ids_pos" << endl;
 } 
 /////////////////////////////////////////////////////////////////////////////////////////////
 void
-GammaGenerator_Base::print_gamma_intermediate( shared_ptr<GammaIntermediate_Base> gint ) { 
+GammaGenerator_Base::print_gamma_intermediate( const shared_ptr<GammaIntermediate_Base>& gint, string gamma_name ) { 
 /////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
 cout << "GammaGenerator_Base::print_gamma_intermediate" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////
-     print_vector( *(gint->ids_pos_), "gint_ids_pos" ); cout  << endl;
-     cout << "gint_aops = [ "; cout.flush();  for ( auto pos : *(gint->ids_pos_) ) { cout << block_aops_->at(pos) << " " ; cout.flush();  }  cout << "] " << endl;
-     cout << "gint_rngs = [ "; cout.flush();  for ( auto pos : *(gint->ids_pos_) ) { cout << (*block_aops_rngs_)[pos] << " " ; cout.flush();  }   cout << "]" << endl;
-     cout << "gint_ids  = [ "; cout.flush();   for ( auto pos : *(gint->ids_pos_) ) { cout << block_idxs_[pos] << " " ; cout.flush();  }   cout << "] " <<  endl;
-    return;
+
+  if ( gamma_name != "" ) 
+    cout << "-------- " << gamma_name << " -------" << endl;
+
+  cout << "gint_ids_pos = [ ";
+  cout.flush(); for(const auto& pos : *(gint->ids_pos_)){ cout << pos << "  " ; cout.flush();  }  cout << "] " << endl;
+  cout << "gint_aops    = [ ";
+  cout.flush(); for(const auto& pos : *(gint->ids_pos_)){ cout << block_aops_->at(pos) << "  " ; cout.flush();  }  cout << "] " << endl;
+  cout << "gint_rngs    = [ ";
+  cout.flush(); for(const auto& pos : *(gint->ids_pos_)){ cout << (*block_aops_rngs_)[pos] << "  " ; cout.flush();  }   cout << "]" << endl;
+  cout << "gint_ids     = [ ";
+  cout.flush(); for(const auto& pos : *(gint->ids_pos_)){ cout << block_idxs_[pos] << " " ; cout.flush();  }   cout << "] " <<  endl;
+  cout << "gint_deltas_pos   = [ ";
+  cout.flush(); for(const auto& dta : *(gint->deltas_pos_)){ cout << "("<< dta.first << "," << dta.second << ")"; cout.flush();  }cout << "] " <<  endl;
+  cout << "gint_deltas_idxs  = [ ";
+  cout.flush(); for(const auto& dta : *(gint->deltas_pos_)){ cout << "("<< block_idxs_[dta.first] << "," << block_idxs_[dta.second] << ")"; cout.flush();  }cout << "] " <<  endl;
+  cout << "factor  = ( " ; cout.flush(); cout << gint->factors_.first << ", " << gint->factors_.second << " )" << endl << endl;
+  return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator_Base::transformation_tester( shared_ptr<GammaIntermediate_Base>& gint  ){  // e.g. ++++----

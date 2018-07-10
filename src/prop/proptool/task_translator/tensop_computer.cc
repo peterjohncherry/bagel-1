@@ -197,7 +197,7 @@ cout << " TensOp_Computer::TensOp_Computer::build_tensor " << endl;
     tensop_data_map_->emplace ( new_tens_name , new_tens ); 
   } 
 
-  cout << "new_tens_name->norm() = "  << tensop_data_map_->at(new_tens_name) << endl;
+  cout << new_tens_name << "->norm() = "  << tensop_data_map_->at(new_tens_name) << endl;
  
   return;
 }
@@ -252,52 +252,47 @@ void TensOp_Computer::TensOp_Computer<DataType>::get_tensor_data_blocks(shared_p
 cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-   for ( auto& block : *required_blocks ) { 
+  for ( auto& block : *required_blocks ) { 
  
-     string block_name = block->name();
-     cout << "fetching block " << block_name ; cout.flush(); 
-     
-     if(  tensop_data_map_->find(block_name) != tensop_data_map_->end()){
-        cout << " .. already in map" <<  endl;
+    string block_name = block->name();
+    cout << "fetching block " << block_name ; cout.flush(); 
+    
+    if(  tensop_data_map_->find(block_name) != tensop_data_map_->end()){
+       cout << " .. already in map" <<  endl;
 
-     } else {
+    } else {
 
-       string full_tens_name = block->op_info_->op_state_name_;
+      string full_tens_name = block->op_info_->op_state_name_;
 
-       shared_ptr<vector<string>> id_ranges = CTP_map_->at(block_name)->unc_id_ranges() ;
-     
-       if( tensop_data_map_->find(full_tens_name) == tensop_data_map_->end()){
+      shared_ptr<vector<string>> id_ranges = CTP_map_->at(block_name)->unc_id_ranges() ;
+    
+      if( tensop_data_map_->find(full_tens_name) == tensop_data_map_->end()){
 
-         // TODO This will get the whole tensor, really, we should just get the blocks we want
-         if ( full_tens_name[0] == 'H' || full_tens_name[0] == 'h' || full_tens_name[0] == 'f' ) {  
-           build_mo_tensor( full_tens_name ); 
-           get_sub_tensor( full_tens_name, block_name, *id_ranges );
+        // TODO This will get the whole tensor, really, we should just get the blocks we want
+        if ( full_tens_name[0] == 'H' || full_tens_name[0] == 'h' || full_tens_name[0] == 'f' ) {  
+          build_mo_tensor( full_tens_name ); 
+          get_sub_tensor( full_tens_name, block_name, *id_ranges );
 
-         } else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't'  ) {  
-           build_tensor( block_name, *id_ranges, (DataType)(1.0) );
- //          shared_ptr<Tensor_<DataType>> test_block = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_row_major( tensop_data_map_->at(block_name)->indexrange() ); 
- //          tensop_data_map_->at(block_name) = test_block;
-            
-         } else if ( full_tens_name[0] == 'S') {  
-          vector<string> test_block = { "c", "a", "v", "v" };
-//          vector<string> test_block = { "a", "c", "v", "v" };
-          // vector<string> test_block = { "c", "c", "v", "v" };
-           if ( *id_ranges == test_block ){ 
-             cout << "setting S QQQQQQQQQQQQQQ" << endl;
-             build_tensor( block_name, *id_ranges, (DataType)(1.0) );
-           } else { 
-             build_tensor( block_name, *id_ranges, (DataType)(0.0) );
-           }
-         
-         }
+        } else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't'  ) {  
+          build_tensor( block_name, *id_ranges, (DataType)(1.0) );
+           
+        } else if ( full_tens_name[0] == 'S') {  
+         // vector<string> test_block = { "c", "a", "v", "v" };
+         // vector<string> test_block = { "c", "c", "v", "v" };
+         vector<string> test_block = { "a", "c", "v", "v" };
+          if ( *id_ranges == test_block ){ 
+            cout << "setting S block : "; print_vector( test_block ) ; cout << " to 1.0 " << endl;
+            build_tensor( block_name, *id_ranges, (DataType)(1.0) );
+          } else { 
+            build_tensor( block_name, *id_ranges, (DataType)(0.0) );
+          }
+        }
  
-       } else {
-       
-         get_sub_tensor( full_tens_name, block_name, *id_ranges );
-  
-       }
-     }
-   } 
+      } else {
+        get_sub_tensor( full_tens_name, block_name, *id_ranges );
+      }
+    }
+  } 
    return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -397,7 +392,21 @@ cout << ": "  << Tens_name <<  endl;
 
   return Tens->norm();
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+DataType
+TensOp_Computer::TensOp_Computer<DataType>::dot_arg1_with_gamma( std::string tens_name, std::string gamma_name ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOP_COMPUTER
+cout << "TensOp_Computer::dot_arg1_with_gamma" << endl;
+cout << ": "  << tens_name << " dot " << gamma_name <<  endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  shared_ptr<Tensor_<DataType>> tens = find_or_get_CTP_data(tens_name);
+  shared_ptr<Tensor_<DataType>> gamma = gamma_data_map_->at(gamma_name);
 
+  return tens->dot_product( gamma );
+}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 DataType

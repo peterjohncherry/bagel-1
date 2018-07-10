@@ -34,6 +34,7 @@ class TensOp_Computer {
     std::shared_ptr<std::map< std::string, std::shared_ptr<CtrTensorPart_Base>>> CTP_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map_;
+    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map_;
 
     std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<DataType>> Tensor_Calc_;
     std::shared_ptr<MOInt_Computer<DataType>> moint_computer_;
@@ -64,6 +65,8 @@ class TensOp_Computer {
 
     DataType dot_tensors( std::string T1_name, std::string T2_name ); 
     
+    DataType dot_arg1_with_gamma( std::string tens_name, std::string gamma_name );
+
     DataType sum_elems( std::string tens_name ); 
 
     /////////// AContrib routines /////////////////////////

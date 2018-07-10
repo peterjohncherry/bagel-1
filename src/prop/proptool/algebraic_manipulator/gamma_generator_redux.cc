@@ -21,21 +21,32 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   block_aops_rngs_ = block_info->orig_rngs_ch();
 
   op_info_ = block_info_->op_info();
+
+  for ( auto op : *( op_info_->op_info_vec()) ) { cout << op->name_ << " " ; cout.flush(); } cout << endl;
+  cout << "block factors = [ "; cout.flush(); 
+  for ( auto rb : *(block_info_->range_blocks()) ) { cout << "(" << rb->factors().first << ", " << rb->factors().second << ") " ; cout.flush();}
+  cout << "] " << endl;
+   
+
   idxs_trans_ = block_info_->idxs_trans();
   std_rngs_ = *(block_info_->unique_block_->orig_rngs_);
   standard_order_ = *(block_info_->idxs_trans());
-
-#ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
-  print_new_gamma_definition(); 
-#endif
 
   shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( std_rngs_.size() );
   iota( ids_pos->begin(), ids_pos->end(), 0 );
 
   gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>( 1 );
-  gamma_vec_->at(0) = make_shared<GammaIntermediateRedux<DataType>>( ids_pos, make_shared<vector<pair<int,int>>>(0), block_info_->factors() );
+  gamma_vec_->front() = make_shared<GammaIntermediateRedux<DataType>>( ids_pos, make_shared<vector<pair<int,int>>>(0), block_info_->factors() );
   final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>(0);
  
+#ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
+  block_idxs_ = vector<string>( std_ids_->size() );
+  vector<int>::iterator it_it = block_info_->idxs_trans()->begin();
+  for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ ) 
+    *bi_it = (*std_ids_)[ *it_it ];
+  print_gamma_intermediate(gamma_vec_->front(), "initial gamma intermediate" );  
+#endif
+
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

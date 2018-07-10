@@ -57,7 +57,8 @@ cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
         }
       }
     }
-  } else { 
+  } else {  
+
     for ( auto range_map_it = all_ranges->begin(); range_map_it != all_ranges->end(); range_map_it++ ){
   
       if ( !(range_map_it->second->ci_sector_transition_ ) ) {

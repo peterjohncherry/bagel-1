@@ -204,6 +204,8 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
                                                                              moint_computer_ );
 
   tensop_machine_->get_tensor_data_blocks( expression->required_blocks_ );
+  tensop_machine_->gamma_data_map_ = gamma_computer_->gamma_data_map(); 
+
   DataType result = 0.0;
   shared_ptr<map< string, DataType >> g_result_map = make_shared<map< string, DataType >>();
 
@@ -233,18 +235,32 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
 
       if ( gamma_name != "ID" ) {
         gamma_computer_->get_gamma( gamma_name );
-        DataType tmp_result = tensop_machine_->dot_tensors( gamma_name, "a_combined_data" );
-//        g_result_map->emplace(gamma_name, tmp_result) ;
+        DataType tmp_result = tensop_machine_->dot_arg1_with_gamma( "a_combined_data", gamma_name );
+
+        auto grm_loc = g_result_map->find( gamma_name);
+        if ( grm_loc == g_result_map->end() ) {
+          g_result_map->emplace(gamma_name, tmp_result);
+        } else { 
+          grm_loc->second += tmp_result;
+        }
+
         cout << "result +=  tmp_result : " << result << " += " << tmp_result ; cout.flush(); 
         result += tmp_result;
         cout << " --> result = " << result << endl;
 
       } else {
         DataType tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_tensor_elems( A_combined_data ) ;
- //       g_result_map->emplace(gamma_name, tmp_result) ;
+        auto grm_loc = g_result_map->find( gamma_name);
+        if ( grm_loc == g_result_map->end() ) {
+          g_result_map->emplace(gamma_name, tmp_result);
+        } else { 
+          grm_loc->second += tmp_result;
+        }
+
         cout << "result +=  tmp_result : " << result << " += " << tmp_result ; cout.flush(); 
         result += tmp_result ; 
         cout << " --> result = " << result << endl;
+
       }
     }
   }
