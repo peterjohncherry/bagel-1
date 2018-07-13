@@ -185,45 +185,21 @@ cout << "CASPT2::CASPT2::solve" << endl;
     set_rdm(0, 0);
     double source_norm = 0.0;
     cout << "==================== Source test =====================" << endl;
-    vector<SMITH::IndexRange> test_range = { *free_rng_,*free_rng_,*free_rng_, *free_rng_} ; 
-    v2_ = moint_computer->calculate_v2_smith( test_range );
-    cout << "v2_->norm() = " << v2_->norm() << endl;
-    shared_ptr<Tensor> t2_tester = t2all_[0]->at(0)->clone();
-    t2_tester->zero();
     {
-//      vector<IndexRange> keep_ranges = {*closed_rng_, *virtual_rng_, *closed_rng_, *virtual_rng_};
-      vector<IndexRange> keep_ranges = {*active_rng_, *virtual_rng_, *closed_rng_, *virtual_rng_};
-      
-      auto tens_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
-      cout << "closed_rng_->size() = " <<  closed_rng_->size() << endl; 
-      cout << "active_rng_->size() = " <<  active_rng_->size() << endl; 
-      cout << "virtual_rng_->size() = " <<  virtual_rng_->size() << endl; 
-      cout << "t2all_[0]->at(0) index range sizes = ["; cout.flush();
-      for ( auto elem : t2all_[0]->at(0)->indexrange() ) 
-        cout << elem.size() << " " ;
-      cout << "]" << endl;
-      cout << "setting t2all_[0]->at(0) subblock " << endl;
-      tens_calc->set_tensor_elems( t2all_[0]->at(0), keep_ranges, 1.0 );
-//      tens_calc->set_tensor_elems( t2_tester, keep_ranges2, 1.0 );
-//
-      cout << "getting v2_keep " << endl;
-      auto v2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, keep_ranges ); 
+      cout << "t2all_[0]->at(0)->size_alloc() = "; cout.flush() ; cout <<   t2all_[0]->at(0)->size_alloc()  << endl;
 
-      cout << "getting t2all_[0]->at(0) subblock " << endl;
-      auto t2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( t2all_[0]->at(0), keep_ranges ); 
-      v2_->zero();
-      t2all_[0]->at(0)->zero(); 
-      cout << "Post zero " << endl;
-      cout << "v2_->norm() = "<<  v2_->norm() << endl;
-      cout << "v2_keep->norm() = "<<  v2_keep->norm() << endl << endl;
+      auto tens_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
+      vector<int> smith_order = {3, 1, 2, 0};
+
+      t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order );
+
+      v2_ = moint_computer->calculate_v2_smith();
+
+      cout <<" v2_->size_alloc() = "; cout.flush() ; cout << v2_->size_alloc()  << endl;
+
+      cout << "Post zeroing t2all_[0]->at(0)->norm()    = " << t2all_[0]->at(0)->norm() << endl;
+      cout << "Post zero v2_->norm() = "<<  v2_->norm() << "    " << "v2_keep->norm() = "<<  v2_->norm() << endl << endl;
       
-      cout << "Post putting " << endl;
-      tens_calc->put_sub_tensor( v2_keep, v2_ );
-      tens_calc->put_sub_tensor( t2_keep, t2all_[0]->at(0) );
-      cout << "post v2_->norm()    = " << v2_->norm() << endl;
-      cout << "post v2_keep->norm() = " << v2_keep->norm() << endl;
-      cout << "post t2all_[0]->at(0)->norm()    = " << t2all_[0]->at(0)->norm() << endl;
-      cout << "post t2_keep->norm() = " << t2_keep->norm() << endl;
     }
 
     s = init_residual();

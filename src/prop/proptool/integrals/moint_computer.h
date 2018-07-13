@@ -60,10 +60,10 @@ namespace bagel {
 
       bool got_fock_coeffs() const { return got_fock_coeffs_; }
 
+      std::shared_ptr<SMITH::Tensor_<DataType>> build_s_test_tensor( const std::vector<int>& ordering);
 
       //TESTING ROUTINES
-      std::shared_ptr<SMITH::Tensor_<DataType>> calculate_v2_smith( const std::vector<SMITH::IndexRange>& blocks  );
-      std::shared_ptr<SMITH::Tensor_<DataType>> calculate_v2_smith( const std::vector<std::string>& blocks  );
+      std::shared_ptr<SMITH::Tensor_<DataType>> calculate_v2_smith();
       std::shared_ptr<SMITH::Tensor_<DataType>> get_test_tensor( const std::vector<SMITH::IndexRange>& blocks  );
       std::shared_ptr<SMITH::Tensor_<DataType>> get_test_tensor( const std::vector<std::string>& blocks  );
       // END TESTING ROUTINES

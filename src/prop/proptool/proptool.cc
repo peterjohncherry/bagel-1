@@ -143,7 +143,6 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   cout << "nocc_     =      "<< nocc_     << endl;
   cout << "nfrozenvirt_ =   "<< nfrozenvirt_ << endl;
 
-
   // TODO : should be determined from summation ranges in expression
   nstates_ = idata_->get<int>( "nstates" , ciwfn_->nstates() );
   target_states_ = vector<int>(nstates_); 
@@ -529,7 +528,6 @@ cout << "PropTool::PropTool::set_ao_range_info" << endl;
   range_conversion_map_->emplace("notcor", not_closed_rng_);
   range_conversion_map_->emplace("notact", not_active_rng_);
   range_conversion_map_->emplace("notvir", not_virtual_rng_); 
-
 
   // TODO  sort this out properly
   vector<char> range_list;

@@ -67,7 +67,7 @@ class TensOp_Computer {
     
     DataType dot_arg1_with_gamma( std::string tens_name, std::string gamma_name );
 
-    DataType sum_elems( std::string tens_name ); 
+    DataType sum_tensor_elems( std::string tens_name ); 
 
     /////////// AContrib routines /////////////////////////
 
@@ -98,6 +98,8 @@ class TensOp_Computer {
     void build_mo_tensor( std::string mo_tensor_name );
 
     void build_test_tensor( std::string test_tensor_name, std::vector<size_t> dimensions, std::vector<size_t> max_blocks_sizes );
+
+    void build_s_test_tensor( std::string tensor_name , const std::vector<int>& ordering );
 
     void get_tensor_data_blocks(std::shared_ptr<std::set<std::shared_ptr<Range_Block_Info>>> required_blocks );
 

@@ -213,9 +213,9 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
   for ( auto AG_contrib : *(expression->gamma_info_map_) ) {
 
     string gamma_name = AG_contrib.first; 
+    cout << endl << "gamma_name = " << gamma_name << endl;
     
     tensop_machine_->build_tensor( "a_combined_data" , *(expression->gamma_info_map_->at(gamma_name)->id_ranges()) ); 
-    shared_ptr<Tensor_<DataType>> A_combined_data = tensop_data_map_->at("a_combined_data");
 
     // Loop through A-tensors needed for this gamma
     auto A_contrib_loc = expression->G_to_A_map()->find( gamma_name );
@@ -224,7 +224,9 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
       
         string  a_contrib_name = A_contrib_map_elem.first;    
         shared_ptr<AContribInfo_Base> a_contrib = A_contrib_map_elem.second;    
-
+ 
+        cout << "==================================================================================================================" << endl;
+        cout << endl <<  "tensop_data_map_->at(\"a_combined_data\")->norm() = "; cout.flush(); cout << tensop_data_map_->at("a_combined_data")->norm() << endl;
         if (check_acontrib_factors(*a_contrib)){
           tensop_machine_->Calculate_CTP( *a_contrib );
           tensop_machine_->add_acontrib_to_target( "a_combined_data", a_contrib );
@@ -232,16 +234,19 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
           continue;
         }
       }
+      cout << endl << "tensop_data_map_->at(\"a_combined_data\")->norm() = "; cout.flush(); cout << tensop_data_map_->at("a_combined_data")->norm() << endl;
+      cout << "==================================================================================================================" << endl;
 
       if ( gamma_name != "ID" ) {
         gamma_computer_->get_gamma( gamma_name );
+        cout << "gamma_name->norm() = "; cout.flush(); cout << gamma_computer_->gamma_data(gamma_name)->norm() << endl;
         DataType tmp_result = tensop_machine_->dot_arg1_with_gamma( "a_combined_data", gamma_name );
-
         auto grm_loc = g_result_map->find( gamma_name);
         if ( grm_loc == g_result_map->end() ) {
           g_result_map->emplace(gamma_name, tmp_result);
         } else { 
           grm_loc->second += tmp_result;
+          cout << " grm_loc->second += tmp_result; = "; cout.flush(); cout <<  grm_loc->second << " += " << tmp_result << endl; 
         }
 
         cout << "result +=  tmp_result : " << result << " += " << tmp_result ; cout.flush(); 
@@ -249,12 +254,13 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
         cout << " --> result = " << result << endl;
 
       } else {
-        DataType tmp_result = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::sum_tensor_elems( A_combined_data ) ;
+        DataType tmp_result = tensop_machine_->sum_tensor_elems( "a_combined_data" ) ;
         auto grm_loc = g_result_map->find( gamma_name);
         if ( grm_loc == g_result_map->end() ) {
           g_result_map->emplace(gamma_name, tmp_result);
         } else { 
           grm_loc->second += tmp_result;
+          cout << " grm_loc->second += tmp_result; = "; cout.flush(); cout <<  grm_loc->second << " += " << tmp_result << endl; 
         }
 
         cout << "result +=  tmp_result : " << result << " += " << tmp_result ; cout.flush(); 
@@ -337,7 +343,7 @@ cout << "Expression_Computer::check_rdms" << endl;
     Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_tensor_along_trace( tensop_data_map_->at("rdm2_klij"), tensop_data_map_->at("rdm1_test"), id_pos, -1.0 );
 
     vector<string> free4 = { "free", "free", "free", "free" };
-    tensop_data_map_->emplace( "v2_smith_order", moint_computer_->calculate_v2_smith( free4 ) );
+    tensop_data_map_->emplace( "v2_smith_order", moint_computer_->calculate_v2_smith( ) );
     vector<string> act4 = { "a", "a", "a", "a" };
     tensop_machine_->get_sub_tensor( "v2_smith_order", "v2_smith_order_act",  act4 );
 

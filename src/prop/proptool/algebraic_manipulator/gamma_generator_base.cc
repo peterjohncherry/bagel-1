@@ -318,18 +318,20 @@ print_gamma_intermediate (gamma_vec_->at(kk) , "pre_swap gamma" );
       }
     }
  
-    auto new_fac =  make_pair( gint->factors_.first * -1.0,  0.0 );
+    //auto new_fac =  make_pair( gint->factors_.first * -1.0,  0.0 );
+    auto new_fac =  make_pair( gint->factors_.first * 1.0,  0.0 );
     shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, new_fac );
     gamma_vec_->push_back(new_gamma);
-
+    
 #ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
     print_gamma_intermediate (new_gamma , "new gamma" );
   }
   print_gamma_intermediate (gamma_vec_->at(kk) , "post_swap gamma" );
 #else
+  
   }
 #endif
- 
+  gint->factors_ =  make_pair( gint->factors_.first * -1.0,  0.0 );
   return;
 
 }

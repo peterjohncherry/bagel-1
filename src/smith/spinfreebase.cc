@@ -93,25 +93,7 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
     K2ext<DataType> v2k(info_, coeff_, {occ, virt, occ, virt}); // how does this work for MRCI; moint says it can only handle 2 externals? 
     vector<IndexRange> new_ranges = { occ, virt, occ, virt }; 
  
-    v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_test_tensor_row_major( new_ranges );
-    cout << " ================== SPIN FREE BASE ================== " << endl;
-    cout << " v2_->norm() = " << v2_->norm() << endl; 
-    
-    vector<IndexRange> keep_ranges = {active_, virt_, active_, virt_};
-    cout << "vector<IndexRange> keep_ranges = {active_, virt_, active_, virt_}" << endl;
-
-    auto v2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, keep_ranges ); 
-    cout << "v2_keep->norm() = "<<  v2_keep->norm() << endl;
-    v2_->zero();
-    cout << "Post zero " << endl;
-    cout << "v2_->norm() = "<<  v2_->norm() << endl;
-    cout << "v2_keep->norm() = "<<  v2_keep->norm() << endl << endl;
-
-    cout << "Post putting " << endl;
-    auto tens_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
-    tens_calc->put_sub_tensor( v2_keep, v2_ );
-    cout << "post v2_->norm()    = " << v2_->norm() << endl;
-    cout << "post v2_keep->norm() = " << v2_keep->norm() << endl;
+    v2_ = v2k.tensor();
 
   }
   ////////////////////// temp H_2el tensor for testing//////////////////////////////////////////

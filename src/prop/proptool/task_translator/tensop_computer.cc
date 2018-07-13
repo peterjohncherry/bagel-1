@@ -3,6 +3,7 @@
 #include <src/prop/proptool/task_translator/tensop_computer.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 #include <src/prop/proptool/proputils.h>
+#include <src/prop/proptool/debugging_utils.h>
 
 using namespace std;
 using namespace bagel;
@@ -10,9 +11,10 @@ using namespace bagel::SMITH;
 using namespace bagel::Tensor_Arithmetic; 
 using namespace bagel::Tensor_Arithmetic_Utils; 
 using namespace WickUtils;
+using namespace Debugging_Utils;
 
-#define __DEBUG_TENSOP_COMPUTER
-#define __DEBUG_TENSOP_COMPUTER_X
+//#define __DEBUG_TENSOP_COMPUTER
+//#define __DEBUG_TENSOP_COMPUTER_X
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 void
@@ -75,7 +77,7 @@ template<class DataType>
 void TensOp_Computer::TensOp_Computer<DataType>::add_acontrib_to_target( string target_name, const shared_ptr<AContribInfo_Base>& a_contrib ) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
-cout << " TensOp_Computer::TensOp_Computer::add_acontrib_to_target " << endl;
+cout << endl << " TensOp_Computer::TensOp_Computer::add_acontrib_to_target " << endl;
 a_contrib->print_info(); cout << endl;
 cout << "====================================================================================================" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -191,13 +193,13 @@ cout << " TensOp_Computer::TensOp_Computer::build_tensor " << endl;
 
   auto new_tens_loc = tensop_data_map_->find( new_tens_name); 
   if(  new_tens_loc != tensop_data_map_->end()){
-    cout << "The tensor block " << new_tens_name << "is already in the map.... overwriting " << endl;
+    cout << "The tensor block " << new_tens_name << " is already in the map.... overwriting " << endl;
     new_tens_loc->second = new_tens;
   } else { 
     tensop_data_map_->emplace ( new_tens_name , new_tens ); 
   } 
 
-  cout << new_tens_name << "->norm() = "  << tensop_data_map_->at(new_tens_name) << endl;
+  cout << new_tens_name << "->norm() = "  << tensop_data_map_->at(new_tens_name)->norm() << endl;
  
   return;
 }
@@ -277,15 +279,9 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
           build_tensor( block_name, *id_ranges, (DataType)(1.0) );
            
         } else if ( full_tens_name[0] == 'S') {  
-         // vector<string> test_block = { "c", "a", "v", "v" };
-         // vector<string> test_block = { "c", "c", "v", "v" };
-         vector<string> test_block = { "a", "c", "v", "v" };
-          if ( *id_ranges == test_block ){ 
-            cout << "setting S block : "; print_vector( test_block ) ; cout << " to 1.0 " << endl;
-            build_tensor( block_name, *id_ranges, (DataType)(1.0) );
-          } else { 
-            build_tensor( block_name, *id_ranges, (DataType)(0.0) );
-          }
+          vector<int> s_ordering = { 3, 2, 1, 0};
+          build_s_test_tensor(full_tens_name, s_ordering ); 
+          get_sub_tensor( full_tens_name, block_name, *id_ranges );
         }
  
       } else {
@@ -294,6 +290,25 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
     }
   } 
    return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Gets ranges and factors from the input which will be used in definition of terms
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType>
+void TensOp_Computer::TensOp_Computer<DataType>::build_s_test_tensor( string tensor_name , const vector<int>& ordering ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOP_COMPUTER
+cout << "TensOp_Computer::TensOp_Computer::build_s_test_tensor " << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  auto tdm_loc = tensop_data_map_->find(tensor_name);
+  if ( tdm_loc == tensop_data_map_->end() ){ 
+    tensop_data_map_->emplace( tensor_name, moint_computer_->build_s_test_tensor(ordering) );
+  } else {  
+    tdm_loc->second = moint_computer_->build_s_test_tensor(ordering);
+  }
+    
+  return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets ranges and factors from the input which will be used in definition of terms
@@ -364,7 +379,6 @@ TensOp_Computer::TensOp_Computer<DataType>::contract_on_same_tensor( std::string
    cout << "TensOp_Computer::TensOp_Computer::contract_on_same_tensor "; cout.flush();
    cout << ": "  << T_in_name << " over (" << ctr_todo.first << ", " << ctr_todo.second << ") to get " << T_out_name <<  endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
    return Tensor_Calc_->contract_on_same_tensor( find_or_get_CTP_data(T_in_name), ctr_todo  ); 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -375,22 +389,17 @@ TensOp_Computer::TensOp_Computer<DataType>::contract_on_same_tensor( string T_in
 #ifdef __DEBUG_TENSOP_COMPUTER
 cout << "TensOp_Computer::TensOp_Computer::contract_on_same_tensor" << ": "  << T_in_name << " over "; print_vector( *ctrs_pos) ; cout << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
    return Tensor_Calc_->contract_on_same_tensor( find_or_get_CTP_data(T_in_name), *ctrs_pos  ); 
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 DataType
-TensOp_Computer::TensOp_Computer<DataType>::sum_elems( std::string Tens_name ){
+TensOp_Computer::TensOp_Computer<DataType>::sum_tensor_elems( std::string Tens_name ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
-cout << "TensOp_Computer::dot_different_tensors" << endl;
-cout << ": "  << Tens_name <<  endl;
+cout << "TensOp_Computer::sum_tensor_elems"; cout.flush(); cout << " : " << Tens_name <<  endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- 
-  shared_ptr<Tensor_<DataType>> Tens = find_or_get_CTP_data(Tens_name);
-
-  return Tens->norm();
+  return Tensor_Calc_->sum_tensor_elems ( find_or_get_CTP_data(Tens_name) );
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
@@ -398,8 +407,7 @@ DataType
 TensOp_Computer::TensOp_Computer<DataType>::dot_arg1_with_gamma( std::string tens_name, std::string gamma_name ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
-cout << "TensOp_Computer::dot_arg1_with_gamma" << endl;
-cout << ": "  << tens_name << " dot " << gamma_name <<  endl;
+cout << "TensOp_Computer::dot_arg1_with_gamma : "; cout.flush(); cout << tens_name << " dot " << gamma_name <<  endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   shared_ptr<Tensor_<DataType>> tens = find_or_get_CTP_data(tens_name);
@@ -413,8 +421,7 @@ DataType
 TensOp_Computer::TensOp_Computer<DataType>::dot_tensors( std::string T1_name, std::string T2_name ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
-cout << "TensOp_Computer::dot_different_tensors" << endl;
-cout << ": "  << T1_name << " dot " << T2_name <<  endl;
+cout << "TensOp_Computer::dot_different_tensors : "; cout.flush(); cout << T1_name << " dot " << T2_name <<  endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   shared_ptr<Tensor_<DataType>> T1 = find_or_get_CTP_data(T1_name);
@@ -429,8 +436,8 @@ TensOp_Computer::TensOp_Computer<DataType>::contract_different_tensors( std::str
                                                                         pair<int,int> ctr_todo ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
-cout << "TensOp_Computer::contract_on_different_tensor" << endl;
-cout << ": "  << T1_in_name << " and " << T2_in_name << " over T1[" << ctr_todo.first << "] and T2[" << ctr_todo.second << "] to get " << T_out_name <<  endl;
+cout << "TensOp_Computer::contract_on_different_tensor : " ; cout.flush();
+cout << T1_in_name << " and " << T2_in_name << " over T1[" << ctr_todo.first << "] and T2[" << ctr_todo.second << "] to get " << T_out_name <<  endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   shared_ptr<Tensor_<DataType>> Tens1_in = find_or_get_CTP_data(T1_in_name);
@@ -445,14 +452,12 @@ TensOp_Computer::TensOp_Computer<DataType>::contract_different_tensors( std::str
                                                                         std::pair<std::vector<int>,std::vector<int>> ctrs_todo                  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
-cout << "TensOp_Computer::contract_on_different_tensor" << endl; 
-cout << "T1_in_name = " << T1_in_name; cout.flush();
-cout << "  T2_in_name = " << T2_in_name; cout.flush();
-cout << "  T_out_name = " << T_out_name << endl;
+cout << endl << "TensOp_Computer::contract_on_different_tensor" << endl; 
+cout << "T1_in_name = " << T1_in_name; cout.flush(); cout << "  T2_in_name = " << T2_in_name; cout.flush();cout << "  T_out_name = " << T_out_name << endl;
 cout << "contractions : [ " ; cout.flush(); 
 for ( int qq = 0; qq != ctrs_todo.first.size(); qq++ )
   cout << "[ " << ctrs_todo.first[qq] << ", " << ctrs_todo.second[qq] << " ]" << endl;
-cout << " ] " << endl;
+cout << " ] " << endl << endl;
 assert( ctrs_todo.first.size() != ctrs_todo.second.size() );
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -467,8 +472,7 @@ shared_ptr<Tensor_<DataType>>
 TensOp_Computer::TensOp_Computer<DataType>::direct_product_tensors( std::vector<std::string>& tensor_names ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
-cout << "TensOp_Computer::direct_product_tensors" << endl; 
-print_vector(tensor_names, "tensor_names"); cout <<endl; 
+cout <<  endl << "TensOp_Computer::direct_product_tensors : "; cout.flush(); print_vector(tensor_names, "tensor_names"); cout << endl << endl; 
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   assert(tensor_names.size() > 1 );
@@ -493,8 +497,8 @@ shared_ptr<Tensor_<DataType>>
 TensOp_Computer::TensOp_Computer<DataType>::reorder_block_Tensor(string tens_block_name, vector<int>& new_order){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER_VERBOSE
- cout << "TensOp_Computer::TensOp_Computer::reorder_block_Tensor "; cout.flush();
- cout << " : " << tens_block_name ; cout.flush();  WickUtils::print_vector( new_order, "    new_order"); cout << endl;
+ cout << endl << "TensOp_Computer::TensOp_Computer::reorder_block_Tensor "; cout.flush();
+ cout << " : " << tens_block_name ; cout.flush();  WickUtils::print_vector( new_order, "    new_order"); cout << endl << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   auto tensop_data_map_loc = tensop_data_map_->find( tens_block_name ); 
@@ -516,7 +520,7 @@ TensOp_Computer::TensOp_Computer<DataType>::relativize_ctr_positions( pair <int,
                                                                       shared_ptr<CtrTensorPart_Base> ctp2 ){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
- cout << "TensOp_Computer::TensOp_Computer::relativize_ctr_positions" << endl;
+cout << "TensOp_Computer::TensOp_Computer::relativize_ctr_positions" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
    pair<int,int> rel_ctr;
@@ -626,7 +630,12 @@ cout << "Tensop_Computer::get_sub_tensor" << endl;
 
   vector<IndexRange> block = Get_Bagel_IndexRanges( range_names ); 
 
-  tensop_data_map_->emplace( block_name , Tensor_Arithmetic_Utils::get_sub_tensor( full_tens, block ) );
+  auto tdm_loc = tensop_data_map_->find( block_name );
+  if ( tdm_loc == tensop_data_map_->end() ){
+    tensop_data_map_->emplace( block_name, Tensor_Arithmetic_Utils::get_sub_tensor( full_tens, block ) );
+  } else { 
+    tdm_loc->second =  Tensor_Arithmetic_Utils::get_sub_tensor( full_tens, block );
+  }
   
   return;
 }

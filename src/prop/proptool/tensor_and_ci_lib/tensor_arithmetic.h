@@ -103,7 +103,7 @@ class Tensor_Arithmetic {
                                 std::shared_ptr<std::vector<int>> new_order );
 
      static void
-     set_tensor_elems(std::shared_ptr<SMITH::Tensor_<DataType>> Tens, std::vector<SMITH::IndexRange>& id_ranges, DataType elem_val );
+     set_tensor_elems(std::shared_ptr<SMITH::Tensor_<DataType>> Tens, const std::vector<SMITH::IndexRange>& id_ranges, DataType elem_val );
 
      static std::shared_ptr<SMITH::Tensor_<DataType>>
      get_uniform_Tensor( const std::vector<SMITH::IndexRange>& T_id_ranges, DataType XX );

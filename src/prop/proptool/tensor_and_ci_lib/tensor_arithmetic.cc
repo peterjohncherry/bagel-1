@@ -7,7 +7,7 @@
 #include <src/prop/proptool/debugging_utils.h>
 
 //#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE
-//#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
+#define __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
 #ifdef  __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_debug.h>
 #endif
@@ -49,11 +49,15 @@ void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::add_list_of_reordered_tenso
                                                                                     vector<DataType>& summand_factors                      ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
-cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;  
+cout << endl <<  "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;  
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   vector<IndexRange> target_ranges  = target->indexrange();
   vector<IndexRange> summand_ranges = summand->indexrange();
+
+  cout.precision(13);
+  cout << "summand->norm() = "; cout.flush(); cout << summand->norm() << endl;
+  cout << "target->norm() = "; cout.flush(); cout << target->norm() << endl;
 
   if ( target->size_alloc() != 1 ) {
     vector<int> summand_maxs = get_num_index_blocks_vec( summand_ranges );
@@ -67,13 +71,19 @@ cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
 
       unique_ptr<DataType[]> target_block_data  = target->get_block(target_block_ranges);
       size_t summand_block_size  = summand->get_size( summand_block_ranges );    
+      cout << " pre target_block sum = " << sum_unique_ptr_elems( target_block_data, summand_block_size); cout << endl;
 
       unique_ptr<DataType[]> summand_block_data  = summand->get_block(summand_block_ranges);
       DataType* summand_block_ptr = summand_block_data.get();
       vector<vector<int>>::iterator sr_it = summand_reorderings.begin();
       for ( typename vector<DataType>::iterator sf_it = summand_factors.begin(); sf_it !=  summand_factors.end() ; sr_it++, sf_it++ ) {
+        print_vector( *sr_it , " summand_reordering" ); cout << "   summand_factor = " << *sf_it << endl;
         unique_ptr<DataType[]> summand_block_data_reordered = reorder_tensor_data( summand_block_ptr, *sr_it, summand_block_ranges );
+        cout << " pre summand_block sum  = " << sum_unique_ptr_elems( summand_block_data_reordered, summand_block_size); cout.flush();
+        cout << " pre target_block sum   = " << sum_unique_ptr_elems( target_block_data, summand_block_size); cout << endl;
         ax_plus_y( summand_block_size, *sf_it, summand_block_data_reordered.get(), target_block_data.get() );
+        cout << " post summand_block sum = " << sum_unique_ptr_elems( summand_block_data_reordered, summand_block_size); cout.flush();
+        cout << " post target_block sum  = " << sum_unique_ptr_elems( target_block_data, summand_block_size); cout << endl;
       }
 
       target->put_block( target_block_data, target_block_ranges );
@@ -84,6 +94,9 @@ cout << "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
     target->ax_plus_y( summand_factors.front() , summand ); 
 
   } 
+
+  cout << "summand->norm() = "; cout.flush(); cout << summand->norm() << endl;
+  cout << "target->norm() = "; cout.flush(); cout << target->norm() << endl;
 
   return;
 } 
@@ -108,8 +121,8 @@ cout << "Tensor_Arithemetic_Utils::sum_tensor_elems" << endl;
      vector<Index> id_blocks = get_rng_blocks( block_pos, id_ranges );
      unique_ptr<DataType[]> block = Tens_in->get_block( id_blocks );
      Tens_in->get_size(id_blocks);
-     DataType* bob = block.get();
-     sum_of_elems += *bob++;
+     DataType* tmp = block.get();
+     sum_of_elems += *tmp++;
 
   } while (fvec_cycle_skipper( block_pos, range_maxs, mins ) ); 
 
@@ -931,7 +944,7 @@ Tensor_Arithmetic_Debugger::check_ranges( T1, T2 );
 //Sets all elements of input tensor Tens to the value specified by elem_val 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
-void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( shared_ptr<Tensor_<DataType>> Tens, vector<IndexRange>& id_ranges,
+void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( shared_ptr<Tensor_<DataType>> Tens, const vector<IndexRange>& id_ranges,
                                                                        DataType elem_val  ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
