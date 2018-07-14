@@ -190,15 +190,20 @@ cout << "CASPT2::CASPT2::solve" << endl;
 
       auto tens_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
       vector<int> smith_order = {3, 1, 2, 0};
-
+      //vector<int> smith_order = {0, 2, 1, 3};
+      
+      cout << "t2all indexranges = [ " ; cout.flush();      for (auto elem : t2all_[0]->at(0)->indexrange() ) {        cout << elem.size() << " " ; cout.flush();      } cout << " ] " << endl; 
+ 
+      t2all_[0]->at(0)->zero();
       t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order );
+      cout << "t2all indexranges = [ " ; cout.flush();      for (auto elem : t2all_[0]->at(0)->indexrange() ) {        cout << elem.size() << " " ; cout.flush();      } cout << " ] " << endl; 
 
       v2_ = moint_computer->calculate_v2_smith();
 
       cout <<" v2_->size_alloc() = "; cout.flush() ; cout << v2_->size_alloc()  << endl;
 
-      cout << "Post zeroing t2all_[0]->at(0)->norm()    = " << t2all_[0]->at(0)->norm() << endl;
-      cout << "Post zero v2_->norm() = "<<  v2_->norm() << "    " << "v2_keep->norm() = "<<  v2_->norm() << endl << endl;
+      cout << "post t2all_[0]->at(0)->norm()    = " << t2all_[0]->at(0)->norm() << endl;
+      cout << "post v2_->norm() = "<<  v2_->norm() << "    " << "v2_keep->norm() = "<<  v2_->norm() << endl << endl;
       
     }
 

@@ -13,7 +13,7 @@ using namespace bagel::Tensor_Arithmetic_Utils;
 using namespace WickUtils;
 using namespace Debugging_Utils;
 
-//#define __DEBUG_TENSOP_COMPUTER
+#define __DEBUG_TENSOP_COMPUTER
 //#define __DEBUG_TENSOP_COMPUTER_X
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
@@ -254,6 +254,8 @@ void TensOp_Computer::TensOp_Computer<DataType>::get_tensor_data_blocks(shared_p
 cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  vector<int> s_ordering = { 0, 1, 2, 3};
+  //vector<int> s_ordering = { 3, 2, 1, 0};
   for ( auto& block : *required_blocks ) { 
  
     string block_name = block->name();
@@ -279,11 +281,13 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
           build_tensor( block_name, *id_ranges, (DataType)(1.0) );
            
         } else if ( full_tens_name[0] == 'S') {  
-          vector<int> s_ordering = { 3, 2, 1, 0};
           build_s_test_tensor(full_tens_name, s_ordering ); 
-          get_sub_tensor( full_tens_name, block_name, *id_ranges );
+          WickUtils::print_vector( *id_ranges, "id_ranges" ); cout << endl;
+          get_sub_tensor( full_tens_name, block_name, *id_ranges ); 
         }
  
+      } else if ( full_tens_name[0] == 'S') {  
+        get_sub_tensor( full_tens_name, block_name, *id_ranges );
       } else {
         get_sub_tensor( full_tens_name, block_name, *id_ranges );
       }
@@ -299,6 +303,7 @@ void TensOp_Computer::TensOp_Computer<DataType>::build_s_test_tensor( string ten
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOP_COMPUTER
 cout << "TensOp_Computer::TensOp_Computer::build_s_test_tensor " << endl;
+WickUtils::print_vector( ordering , " s_tensor_reordering" ); cout << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   auto tdm_loc = tensop_data_map_->find(tensor_name);
@@ -623,11 +628,11 @@ TensOp_Computer::TensOp_Computer<DataType>::get_sub_tensor( std::string full_ten
                                                             const vector<string>& range_names ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOP_COMPUTER
-cout << "Tensop_Computer::get_sub_tensor" << endl;
+cout << endl << "Tensop_Computer::get_sub_tensor : "; cout.flush(); cout << "block_name = " << block_name; cout.flush();
+WickUtils::print_vector( range_names, "range_names"); cout << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<Tensor_<DataType>> full_tens = find_or_get_CTP_data( full_tens_name );
-
   vector<IndexRange> block = Get_Bagel_IndexRanges( range_names ); 
 
   auto tdm_loc = tensop_data_map_->find( block_name );

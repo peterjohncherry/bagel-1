@@ -166,7 +166,8 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
   auto v2_tens = v2.tensor();
   
   //////////////////////////////////////////////////////////////////////
-  vector<SMITH::IndexRange> keep_ranges = { virt, virt, core, core };
+  //vector<SMITH::IndexRange> keep_ranges = { virt, virt, core, core };
+  vector<SMITH::IndexRange> keep_ranges = { core, core, virt, virt };
   //////////////////////////////////////////////////////////////////////
 
   {
@@ -175,9 +176,9 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
     v2_tens->zero();
     Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
   }
+  cout << setprecision(13) <<  "v2_tens->norm() = "; cout.flush(); cout << v2_tens->norm() << endl;
   return v2_tens;
 }
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 shared_ptr<SMITH::Tensor_<DataType>> MOInt_Computer<DataType>::get_test_tensor( const vector<SMITH::IndexRange>& index_ranges ) {
@@ -194,7 +195,8 @@ shared_ptr<SMITH::Tensor_<DataType>>
 MOInt_Computer<DataType>::build_s_test_tensor( const vector<int>& ordering) { 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
-cout << "MOInt_Computer<DataType>::build_s_test_tensor" << endl;
+cout << endl << "MOInt_Computer<DataType>::build_s_test_tensor "; cout.flush(); 
+WickUtils::print_vector( ordering, "_s_test_tensor_ordering"); cout << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   SMITH::IndexRange active = *(range_conversion_map_->at("a")); 
@@ -207,8 +209,9 @@ cout << "MOInt_Computer<DataType>::build_s_test_tensor" << endl;
   SMITH::IndexRange not_virt = core; not_virt.merge(active);
 
   // Smith order : {3, 1, 2, 0}  
-  vector<SMITH::IndexRange> full_block = { not_core, not_core, not_virt, not_virt };
-  // vector<SMITH::IndexRange> full_block = { not_virt, not_virt, not_core, not_core };
+//  vector<SMITH::IndexRange> full_block = { not_virt, not_virt, not_core, not_core };
+  vector<SMITH::IndexRange> full_block = {  not_core, not_core, not_virt, not_virt };
+  Debugging_Utils::print_sizes( WickUtils::reorder_vector( ordering, full_block ), "WickUtils::reorder_vector( ordering, full_block ) " ); cout << endl;
   shared_ptr<SMITH::Tensor_<DataType>> s_test_tensor =  make_shared<SMITH::Tensor_<DataType>>( WickUtils::reorder_vector( ordering, full_block ) ); 
   s_test_tensor->allocate();
   s_test_tensor->zero();
@@ -224,7 +227,9 @@ cout << "MOInt_Computer<DataType>::build_s_test_tensor" << endl;
 //  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( s_test_tensor, WickUtils::reorder_vector( ordering, non_zero_block ), (DataType)(0.0) );
 //  }
   {
-  vector<SMITH::IndexRange> non_zero_block = { virt, virt, core, core }; 
+  //vector<SMITH::IndexRange> non_zero_block = { core, core, virt, virt }; 
+  vector<SMITH::IndexRange> non_zero_block = {  virt, virt, core, core }; 
+  Debugging_Utils::print_sizes( WickUtils::reorder_vector( ordering, non_zero_block ), "WickUtils::reorder_vector( ordering, non_zero_block ) " ); cout << endl;
   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( s_test_tensor, WickUtils::reorder_vector( ordering, non_zero_block ), (DataType)(1.0) );
   }
   cout << "  s_test_tensor->norm() = " ; cout.flush(); cout <<  s_test_tensor->norm() <<  endl;
