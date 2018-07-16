@@ -256,6 +256,7 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
 
   vector<int> s_ordering = { 0, 1, 2, 3};
   //vector<int> s_ordering = { 3, 2, 1, 0};
+  
   for ( auto& block : *required_blocks ) { 
  
     string block_name = block->name();

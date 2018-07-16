@@ -178,6 +178,8 @@ cout << "CASPT2::CASPT2::solve" << endl;
     range_conversion_map_->emplace("notact", not_active_rng_);
     range_conversion_map_->emplace("notvir", not_virtual_rng_); 
 
+    cout << "info_->ncore() = " << info_->ncore() << endl;
+    cout << "closed_rng_->size() = " << closed_rng_->size() << "active_rng_->size() = " << active_rng_->size() << "virtual_rng_->size() = " << virtual_rng_->size() << endl;
     auto moint_init = make_shared<MOInt_Init<double>>( info_->geom(),  info_->ref() , info_->ncore(),  info_->nfrozenvirt(), true );
     
     auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
@@ -187,21 +189,18 @@ cout << "CASPT2::CASPT2::solve" << endl;
     cout << "==================== Source test =====================" << endl;
     {
       cout << "t2all_[0]->at(0)->size_alloc() = "; cout.flush() ; cout <<   t2all_[0]->at(0)->size_alloc()  << endl;
+      cout << "pre t2all ranges = [ ";cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
 
       auto tens_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
-      vector<int> smith_order = {3, 1, 2, 0};
-      //vector<int> smith_order = {0, 2, 1, 3};
-      
-      cout << "t2all indexranges = [ " ; cout.flush();      for (auto elem : t2all_[0]->at(0)->indexrange() ) {        cout << elem.size() << " " ; cout.flush();      } cout << " ] " << endl; 
- 
+      vector<int> smith_order = { 0, 2, 1, 3 };
       t2all_[0]->at(0)->zero();
       t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order );
-      cout << "t2all indexranges = [ " ; cout.flush();      for (auto elem : t2all_[0]->at(0)->indexrange() ) {        cout << elem.size() << " " ; cout.flush();      } cout << " ] " << endl; 
-
+      cout << "post t2all ranges = [ ";cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
+      h1_->zero();
+      f1_->zero();
       v2_ = moint_computer->calculate_v2_smith();
 
       cout <<" v2_->size_alloc() = "; cout.flush() ; cout << v2_->size_alloc()  << endl;
-
       cout << "post t2all_[0]->at(0)->norm()    = " << t2all_[0]->at(0)->norm() << endl;
       cout << "post v2_->norm() = "<<  v2_->norm() << "    " << "v2_keep->norm() = "<<  v2_->norm() << endl << endl;
       
@@ -212,17 +211,26 @@ cout << "CASPT2::CASPT2::solve" << endl;
     shared_ptr<Queue> source_task_list = make_sourceq(false, true);
     while(!source_task_list->done())
       source_task_list->next_compute();
+ 
+    cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
 
     cout << "----------------------------------TEST-------------------------------" << endl;
+    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
+    cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
+    cout << "post dot source_norm = "<<  s->norm() << endl;
+    cout << "---------------------------------------------------------------------" << endl;
+
+    vector<int> smith_order_3120 = { 1, 3, 0, 2 };
+    t2all_[0]->at(0)->zero();
+    t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_3120 );
+    cout << "t2all ranges = [ " ; cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
+
+    cout << "----------------------------------TEST-------------------------------" << endl;
+    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
+    cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
     cout << "pre dot source_norm = "<<  s->norm() << endl;
     cout << "---------------------------------------------------------------------" << endl;
    
-    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
-
-    cout << "----------------------------------TEST-------------------------------" << endl;
-    cout << "post dot source_norm = "<<  s->norm() << endl;
-    cout << "---------------------------------------------------------------------" << endl;
- 
   }
 
   throw logic_error( "die here for testing purposes!" ); 
