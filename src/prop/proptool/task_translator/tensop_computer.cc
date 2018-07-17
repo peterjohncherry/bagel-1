@@ -254,8 +254,8 @@ void TensOp_Computer::TensOp_Computer<DataType>::get_tensor_data_blocks(shared_p
 cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  vector<int> s_ordering = { 0, 1, 2, 3};
-  //vector<int> s_ordering = { 3, 2, 1, 0};
+  //vector<int> s_ordering = { 0, 1, 2, 3};
+  vector<int> s_ordering = { 3, 2, 1, 0};
   
   for ( auto& block : *required_blocks ) { 
  
@@ -270,6 +270,7 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
       string full_tens_name = block->op_info_->op_state_name_;
 
       shared_ptr<vector<string>> id_ranges = CTP_map_->at(block_name)->unc_id_ranges() ;
+      WickUtils::print_vector( *id_ranges, "id_ranges" ); cout << endl;
     
       if( tensop_data_map_->find(full_tens_name) == tensop_data_map_->end()){
 
@@ -283,7 +284,6 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
            
         } else if ( full_tens_name[0] == 'S') {  
           build_s_test_tensor(full_tens_name, s_ordering ); 
-          WickUtils::print_vector( *id_ranges, "id_ranges" ); cout << endl;
           get_sub_tensor( full_tens_name, block_name, *id_ranges ); 
         }
  
@@ -480,7 +480,6 @@ TensOp_Computer::TensOp_Computer<DataType>::direct_product_tensors( std::vector<
 #ifdef __DEBUG_TENSOP_COMPUTER
 cout <<  endl << "TensOp_Computer::direct_product_tensors : "; cout.flush(); print_vector(tensor_names, "tensor_names"); cout << endl << endl; 
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
   assert(tensor_names.size() > 1 );
 
   string Tname_comp = tensor_names.front();
@@ -492,7 +491,6 @@ cout <<  endl << "TensOp_Computer::direct_product_tensors : "; cout.flush(); pri
     Tens_prod = std::move(Tens_intermediate);
     Tname_comp += *tn_it;
   }           
- 
   return Tens_prod;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -565,7 +563,7 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 TensOp_Computer::TensOp_Computer<DataType>::find_or_get_CTP_data(string CTP_name){
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOP_COMPUTER
+#ifdef __DEBUG_TENSOP_COMPUTER_VERBOSE
  cout << "TensOp_Computer::TensOp_Computer::find_or_get_CTP_data  : " <<  CTP_name <<  endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

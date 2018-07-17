@@ -104,11 +104,11 @@ namespace Tensor_Arithmetic_Utils {
 
 
      template<typename DataType>     
-     void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<DataType>> tens, std::string name  );
+     void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<DataType>> tens, std::string name, bool print_zero_blocks = false  );
      template<>
-     void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<double>> tens, std::string name  );
+     void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<double>> tens, std::string name, bool print_zero_blocks  );
      template<>
-     void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> tens, std::string name  );
+     void print_tensor_with_indexes( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> tens, std::string name, bool print_zero_blocks );
 
      template<typename DataType>     
      void set_test_elems( std::shared_ptr<SMITH::Tensor_<DataType>> Tens, std::string name  );

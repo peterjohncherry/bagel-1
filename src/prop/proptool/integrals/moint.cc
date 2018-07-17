@@ -87,9 +87,9 @@ void MOInt::K2ext_new<double>::init() {
     for (auto& i1 : blocks_[1]) {
       for (auto& i2 : blocks_[2]) {
         for (auto& i3 : blocks_[3]) {
-          const size_t hashkey01 = generate_hash_key(i0, i1);
-          const size_t hashkey23 = generate_hash_key(i2, i3);
-          if (hashkey23 > hashkey01) continue;
+          //const size_t hashkey01 = generate_hash_key(i0, i1);
+          //const size_t hashkey23 = generate_hash_key(i2, i3);
+          //if (hashkey23 > hashkey01) continue;
           if (!data_->is_local(i0, i1, i2, i3)) continue;
 
           const size_t bufsize = data_->get_size(i0, i1, i2, i3);
@@ -107,11 +107,11 @@ void MOInt::K2ext_new<double>::init() {
           // put in place
           data_->put_block(buf0, i0, i1, i2, i3);
 
-          if (hashkey23 != hashkey01) {
-            unique_ptr<double[]> buf1(new double[bufsize]);
-            blas::transpose(buf0.get(), i0.size()*i1.size(), i2.size()*i3.size(), buf1.get());
-            data_->put_block(buf1, i2, i3, i0, i1);
-          }
+//          if (hashkey23 != hashkey01) {
+//            unique_ptr<double[]> buf1(new double[bufsize]);
+//            blas::transpose(buf0.get(), i0.size()*i1.size(), i2.size()*i3.size(), buf1.get());
+//            data_->put_block(buf1, i2, i3, i0, i1);
+//          }
         }
       }
     }

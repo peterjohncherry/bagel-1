@@ -884,7 +884,7 @@ vector<IndexRange> Tensor_Arithmetic_Utils::get_indexrange_from_dimension_vector
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>     
-void Tensor_Arithmetic_Utils::print_tensor_with_indexes( shared_ptr<Tensor_<double>> Tens, string name  ) {
+void Tensor_Arithmetic_Utils::print_tensor_with_indexes( shared_ptr<Tensor_<double>> Tens, string name , bool print_zero_blocks ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
 cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
@@ -905,11 +905,18 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
 
      } else {
        size_t elem_num = 0;
+       auto compare_abs = []( int aa, int bb ) { return (abs(aa) < abs(bb)); };
        for ( const Index& block : id_ranges[0].range() ){
          unique_ptr<double[]> data = Tens->get_block( vector<Index> ( 1, block  ) );
-         size_t endpos = elem_num+block.size();
-         for ( double* d_it = data.get() ; elem_num !=  endpos; ++elem_num, ++d_it )
-           cout << "[ " << elem_num << " ] : " << *d_it << endl;
+         if ( print_zero_blocks || ( *(max_element(data.get(), data.get()+block.size(), compare_abs ))  > ( 1.0e-14 ) ) ) { 
+           size_t endpos = elem_num+block.size();
+           for ( double* d_it = data.get() ; elem_num !=  endpos; ++elem_num, ++d_it )
+             cout << "[ " << elem_num << " ] : " << *d_it << endl;
+         } else {
+           cout << endl <<  "-------- elems from "<<  elem_num << " to "; cout.flush();
+           elem_num += block.size();
+           cout << elem_num << " are zero; not printing ----------------" << endl << endl;
+         }
        }
      } cout <<endl;
 
@@ -932,7 +939,10 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
      vector<int> block_pos_maxs = get_range_lengths( id_ranges );
      vector<int> block_pos_mins( t_order, 0);  
      vector<int> block_pos(t_order, 0);  
-      
+    
+     //TODO will not work if set to bool, find out why 
+     auto compare_abs = []( int aa, int bb ) { return  (abs(aa) < abs(bb)) ; };
+ 
      do {
       
        vector<int> block_mins(t_order,0);     
@@ -960,17 +970,26 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
        }
        elem_pos = elem_pos_mins;
 
-       print_vector(block_pos, "block_pos"); cout.flush(); print_sizes(id_blocks, "   id_blocks" ); cout << endl;
        print_vector(elem_pos_mins, "elem_pos_mins" ); cout.flush(); print_vector(elem_pos_maxs, "   elem_pos_maxs" ); cout.flush();
-       print_vector(elem_pos, "   elem_pos" ); cout << endl;
+       print_vector(block_pos, "block_pos"); cout.flush(); print_sizes(id_blocks, "   id_blocks" );
        unique_ptr<double[]> data_block = Tens->get_block( id_blocks );
        double* ptr = data_block.get();
-       do {  
-         print_vector( elem_pos , "" ); cout << " : ";cout.flush(); cout << *ptr << endl;
-         ++ptr;
-         fvec_cycle_skipper_f2b( elem_pos, elem_pos_maxs, elem_pos_mins);
-       } while( fvec_cycle_skipper_f2b(rel_elem_pos, block_maxs, block_mins) );
-       ptr -= Tens->get_size( id_blocks );
+       if ( print_zero_blocks || ( *(max_element(data_block.get(), data_block.get()+Tens->get_size(id_blocks), compare_abs )) > ( 1.0e-14 ) ) ) { 
+         cout << endl;
+         do {  
+           print_vector( elem_pos , "" ); cout << " : ";cout.flush(); cout << *ptr << endl;
+           ++ptr;
+           fvec_cycle_skipper_f2b( elem_pos, elem_pos_maxs, elem_pos_mins);
+         } while( fvec_cycle_skipper_f2b(rel_elem_pos, block_maxs, block_mins) );
+         ptr -= Tens->get_size( id_blocks );
+
+       } else { 
+         cout << " !!! No non-zero elements; not printing !!! " << endl;
+         do {  
+           fvec_cycle_skipper_f2b( elem_pos, elem_pos_maxs, elem_pos_mins);
+         } while( fvec_cycle_skipper_f2b(rel_elem_pos, block_maxs, block_mins) );
+       } 
+       
      } while ( fvec_cycle_skipper_f2b( block_pos, block_pos_maxs, block_pos_mins ));
    }  
 
@@ -978,7 +997,7 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>     
-void Tensor_Arithmetic_Utils::print_tensor_with_indexes( shared_ptr<Tensor_<std::complex<double>>> Tens, string name  ) {
+void Tensor_Arithmetic_Utils::print_tensor_with_indexes( shared_ptr<Tensor_<std::complex<double>>> Tens, string name , bool print_zero_blocks ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
 cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
