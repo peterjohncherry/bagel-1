@@ -118,7 +118,7 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //Initializing range sizes either from idate or reference wfn 
-  maxtile_   = idata_->get<int>("maxtile", 10);
+  maxtile_   = idata_->get<int>("maxtile", 10000);
 
   //cimaxtile_ = idata_->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
   cimaxtile_ = 100000; //TODO fix this so it uses the above statement, issue in b_gamma_computer means must use large cimaxblock for now
@@ -510,8 +510,11 @@ cout << "PropTool::PropTool::set_ao_range_info" << endl;
 
   //TODO should also read user defined ranges from input!
   closed_rng_  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nclosed_-ncore_, maxtile_, 0, ncore_));
-  active_rng_  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact_, min((size_t)10,maxtile_), closed_rng_->nblock(), ncore_ + closed_rng_->size()));
+  //active_rng_  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact_, min((size_t)10,maxtile_), closed_rng_->nblock(), ncore_ + closed_rng_->size()));
+  active_rng_  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact_, maxtile_, closed_rng_->nblock(), ncore_ + closed_rng_->size()));
   virtual_rng_ = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nvirt_, maxtile_, closed_rng_->nblock()+ active_rng_->nblock(), ncore_+closed_rng_->size()+active_rng_->size()));
+
+
   free_rng_    = make_shared<SMITH::IndexRange>(*closed_rng_);
   free_rng_->merge(*active_rng_);
   free_rng_->merge(*virtual_rng_);
@@ -589,6 +592,9 @@ void PropTool::PropTool::set_target_state_info() {
 cout << "PropTool::PropTool::set_target_info" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   targets_info_ = make_shared<StatesInfo<double>> ( target_states_ ) ;
+
+  cout << "nclosed_ = " << nclosed_ << endl;
+  cout << "ncore_ = " << ncore_ << endl;
 
   for ( int state_num : target_states_ ){ 
      shared_ptr<map<char,int>> elec_range_map = make_shared<map<char,int>>(); 

@@ -82,14 +82,23 @@ void MOInt::K2ext_new<double>::init() {
   // wait for other nodes
   ext.fence();
 
+  
   // form four-index integrals
+  cout << "block_vec = [" ; cout.flush(); cout << blocks_[0].size() <<" "<< blocks_[1].size() <<" "<< blocks_[2].size() <<" "<< blocks_[3].size() << " ]" << endl;
+
+  cout << "block_vec_nblocks = [ " ; cout.flush();
+  for ( auto elem : blocks_ ) {
+    cout << elem.range().size() << " "; cout.flush();
+  } cout << "] " << endl; 
+
   for (auto& i0 : blocks_[0]) {
     for (auto& i1 : blocks_[1]) {
       for (auto& i2 : blocks_[2]) {
         for (auto& i3 : blocks_[3]) {
-          //const size_t hashkey01 = generate_hash_key(i0, i1);
-          //const size_t hashkey23 = generate_hash_key(i2, i3);
-          //if (hashkey23 > hashkey01) continue;
+          cout << "v2 block_sizes = [" ; cout.flush(); cout << i0.size()<<" "<< i1.size() <<" "<< i2.size() <<" "<< i3.size() << " ]" << endl;
+          const size_t hashkey01 = generate_hash_key(i0, i1);
+          const size_t hashkey23 = generate_hash_key(i2, i3);
+          if (hashkey23 > hashkey01) continue;
           if (!data_->is_local(i0, i1, i2, i3)) continue;
 
           const size_t bufsize = data_->get_size(i0, i1, i2, i3);
@@ -99,7 +108,8 @@ void MOInt::K2ext_new<double>::init() {
           for (auto& a : aux) {
             unique_ptr<double[]> data01 = ext.get_block(a, i0, i1);
             unique_ptr<double[]> data23 = ext.get_block(a, i2, i3);
-            // contract and accumulate
+  
+            // contract and accumulate : buf0 += data01^{T}*data23  : += \sum_{v}(ji|v)(v|kl)
             btas::gemm_impl<true>::call(CblasColMajor, CblasTrans, CblasNoTrans, i0.size()*i1.size(), i2.size()*i3.size(), a.size(),
                                         1.0, data01.get(), a.size(), data23.get(), a.size(), 1.0, buf0.get(), i0.size()*i1.size());
           }
@@ -107,11 +117,11 @@ void MOInt::K2ext_new<double>::init() {
           // put in place
           data_->put_block(buf0, i0, i1, i2, i3);
 
-//          if (hashkey23 != hashkey01) {
-//            unique_ptr<double[]> buf1(new double[bufsize]);
-//            blas::transpose(buf0.get(), i0.size()*i1.size(), i2.size()*i3.size(), buf1.get());
-//            data_->put_block(buf1, i2, i3, i0, i1);
-//          }
+          if (hashkey23 != hashkey01) {
+            unique_ptr<double[]> buf1(new double[bufsize]);
+            blas::transpose(buf0.get(), i0.size()*i1.size(), i2.size()*i3.size(), buf1.get());
+            data_->put_block(buf1, i2, i3, i0, i1);
+          }
         }
       }
     }

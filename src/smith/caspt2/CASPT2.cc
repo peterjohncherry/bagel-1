@@ -155,34 +155,41 @@ cout << "CASPT2::CASPT2::solve" << endl;
   const int ncore = info_->ncore();
   const int nclosed = info_->nclosed()-info_->ncore();
   const int nact = info_->nact();
- 
+  const int nvirt = info_->nvirt() + info_->nfrozenvirt();
 
+
+ 
   {// TEST source
 
-    auto closed_rng_  = make_shared<SMITH::IndexRange>(*rclosed_); 
-    auto active_rng_  = make_shared<SMITH::IndexRange>(*ractive_);
-    auto virtual_rng_ = make_shared<SMITH::IndexRange>(*rvirt_);
-    auto free_rng_    = make_shared<SMITH::IndexRange>(*closed_rng_); free_rng_->merge(*active_rng_); free_rng_->merge(*virtual_rng_);
-  
-    auto not_closed_rng_  = make_shared<SMITH::IndexRange>(*active_rng_); not_closed_rng_->merge(*virtual_rng_);
-    auto not_active_rng_  = make_shared<SMITH::IndexRange>(*closed_rng_); not_active_rng_->merge(*virtual_rng_);
-    auto not_virtual_rng_ = make_shared<SMITH::IndexRange>(*closed_rng_); not_virtual_rng_->merge(*active_rng_);
- 
-    auto  range_conversion_map_ = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
-    range_conversion_map_->emplace("c", closed_rng_); 
-    range_conversion_map_->emplace("a", active_rng_);
-    range_conversion_map_->emplace("v", virtual_rng_);
-    range_conversion_map_->emplace("free", free_rng_);
- 
-    range_conversion_map_->emplace("notcor", not_closed_rng_);
-    range_conversion_map_->emplace("notact", not_active_rng_);
-    range_conversion_map_->emplace("notvir", not_virtual_rng_); 
+    int maxtile = min( 10,  info_->maxtile() );
+    cout << "maxtile = " << maxtile << endl;
+    int nfrozenvirt = 0;
 
-    cout << "info_->ncore() = " << info_->ncore() << endl;
-    cout << "closed_rng_->size() = " << closed_rng_->size() << "active_rng_->size() = " << active_rng_->size() << "virtual_rng_->size() = " << virtual_rng_->size() << endl;
-    auto moint_init = make_shared<MOInt_Init<double>>( info_->geom(),  info_->ref() , info_->ncore(),  info_->nfrozenvirt(), true );
+    auto closed_rng  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nclosed-ncore, maxtile, 0, ncore));
+    auto active_rng  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact, maxtile, closed_rng->nblock(), ncore + nclosed  ) );
+    auto virtual_rng = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nvirt, maxtile, closed_rng->nblock()+ active_rng->nblock(), ncore + nclosed + nact ));
+    auto free_rng    = make_shared<SMITH::IndexRange>(*closed_rng); free_rng->merge(*active_rng); free_rng->merge(*virtual_rng);
+
+    cout << "nclosed = " << nclosed << "  ncore = " << ncore  << "  nact = " << nact << "  nvirt = " << nvirt << endl; 
     
-    auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
+    auto not_closed_rng  = make_shared<SMITH::IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
+    auto not_active_rng  = make_shared<SMITH::IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
+    auto not_virtual_rng = make_shared<SMITH::IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
+ 
+    auto  range_conversion_map = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
+    range_conversion_map->emplace("c", closed_rng); 
+    range_conversion_map->emplace("a", active_rng);
+    range_conversion_map->emplace("v", virtual_rng);
+    range_conversion_map->emplace("free", free_rng);
+ 
+    range_conversion_map->emplace("notcor", not_closed_rng);
+    range_conversion_map->emplace("notact", not_active_rng);
+    range_conversion_map->emplace("notvir", not_virtual_rng); 
+    
+    auto moint_init = make_shared<MOInt_Init<double>>( info_->geom(),  info_->ref(), ncore, nfrozenvirt, true );
+    
+    auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map );
+   // v2_ = moint_computer->calculate_v2_smith();
 
     set_rdm(0, 0);
     double source_norm = 0.0;
@@ -194,11 +201,10 @@ cout << "CASPT2::CASPT2::solve" << endl;
       auto tens_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
       vector<int> smith_order = { 0, 2, 1, 3 };
       t2all_[0]->at(0)->zero();
-      t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order );
+   //   t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order );
       cout << "post t2all ranges = [ ";cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
       h1_->zero();
       f1_->zero();
-      v2_ = moint_computer->calculate_v2_smith();
 
       cout <<" v2_->size_alloc() = "; cout.flush() ; cout << v2_->size_alloc()  << endl;
       cout << "post t2all_[0]->at(0)->norm()    = " << t2all_[0]->at(0)->norm() << endl;
@@ -206,12 +212,16 @@ cout << "CASPT2::CASPT2::solve" << endl;
       
     }
 
+    cout << "X1" << endl;
     s = init_residual();
     s->zero();
+    cout << "X2" << endl;
     shared_ptr<Queue> source_task_list = make_sourceq(false, true);
+    cout << "X3" << endl;
     while(!source_task_list->done())
       source_task_list->next_compute();
  
+    cout << "X4" << endl;
     cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
 
     cout << "----------------------------------TEST-------------------------------" << endl;
