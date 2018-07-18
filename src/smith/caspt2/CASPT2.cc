@@ -189,58 +189,63 @@ cout << "CASPT2::CASPT2::solve" << endl;
     auto moint_init = make_shared<MOInt_Init<double>>( info_->geom(),  info_->ref(), ncore, nfrozenvirt, true );
     
     auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map );
-   // v2_ = moint_computer->calculate_v2_smith();
+    cout << "pre t2all ranges = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
+    cout << "v2 sm range sizes = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
 
+    {
+    cout << endl << endl;
     set_rdm(0, 0);
     double source_norm = 0.0;
-    cout << "==================== Source test =====================" << endl;
-    {
-      cout << "t2all_[0]->at(0)->size_alloc() = "; cout.flush() ; cout <<   t2all_[0]->at(0)->size_alloc()  << endl;
-      cout << "pre t2all ranges = [ ";cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
+    h1_->zero();
+    f1_->zero();
 
-      auto tens_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
-      vector<int> smith_order = { 0, 2, 1, 3 };
-      t2all_[0]->at(0)->zero();
-   //   t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order );
-      cout << "post t2all ranges = [ ";cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
-      h1_->zero();
-      f1_->zero();
-
-      cout <<" v2_->size_alloc() = "; cout.flush() ; cout << v2_->size_alloc()  << endl;
-      cout << "post t2all_[0]->at(0)->norm()    = " << t2all_[0]->at(0)->norm() << endl;
-      cout << "post v2_->norm() = "<<  v2_->norm() << "    " << "v2_keep->norm() = "<<  v2_->norm() << endl << endl;
-      
-    }
-
-    cout << "X1" << endl;
     s = init_residual();
     s->zero();
-    cout << "X2" << endl;
     shared_ptr<Queue> source_task_list = make_sourceq(false, true);
-    cout << "X3" << endl;
     while(!source_task_list->done())
       source_task_list->next_compute();
  
-    cout << "X4" << endl;
     cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
 
-    cout << "----------------------------------TEST-------------------------------" << endl;
+    cout << endl; Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_ ,  "v2_smith",  true ); cout << endl;
+    cout << "----------------------------------TEST SMITH-------------------------------" << endl;
+    vector<int> smith_order_0213 = { 0, 2, 1, 3 };
+    t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_0213 );
     cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
     cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
     cout << "post dot source_norm = "<<  s->norm() << endl;
-    cout << "---------------------------------------------------------------------" << endl;
+    cout << "---------------------------------------------------------------------------" << endl;
+    } 
 
-    vector<int> smith_order_3120 = { 1, 3, 0, 2 };
+    {
+    cout << endl << endl;
+    set_rdm(0, 0);
+    v2_->zero();
+    v2_ = moint_computer->calculate_v2_smith();
+    cout << "v2 mc range sizes = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
+    h1_->zero();
+    f1_->zero();
+
+    s = init_residual();
+    s->zero();
+    double source_norm = 0.0;
+    shared_ptr<Queue> source_task_list = make_sourceq(false, true);
+    while(!source_task_list->done())
+      source_task_list->next_compute();
+
+    cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
+    vector<int> smith_order_0213 = { 0, 2, 1, 3 };
     t2all_[0]->at(0)->zero();
-    t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_3120 );
+    t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_0213 );
     cout << "t2all ranges = [ " ; cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
 
-    cout << "----------------------------------TEST-------------------------------" << endl;
+    cout << endl; Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_, "v2_moint",  true ); cout << endl;
+    cout << "----------------------------------TEST MOINT-------------------------------" << endl;
     cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
     cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
     cout << "pre dot source_norm = "<<  s->norm() << endl;
-    cout << "---------------------------------------------------------------------" << endl;
-   
+    cout << "---------------------------------------------------------------------------" << endl;
+    }
   }
 
   throw logic_error( "die here for testing purposes!" ); 

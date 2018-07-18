@@ -168,26 +168,30 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
   SMITH::IndexRange active = *(range_conversion_map_->at("a")); 
   SMITH::IndexRange core = *(range_conversion_map_->at("c")); 
   SMITH::IndexRange virt = *(range_conversion_map_->at("v")); 
+  SMITH::IndexRange not_core = *(range_conversion_map_->at("notcor")); 
+  SMITH::IndexRange not_virt = *(range_conversion_map_->at("notvir")); 
   SMITH::IndexRange free = core; free.merge(active); free.merge(virt);
    
+  if ( !got_fock_coeffs_ )
+    calculate_fock( {free, free}, true, true);
+
   // TODO for annoying const issue; change arg.
-  vector<SMITH::IndexRange>  blocks = { free, free, free, free };
+  vector<SMITH::IndexRange>  blocks = { not_virt, not_core, not_virt, not_core };
   MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks );
 
   auto v2_tens = v2.tensor();
   cout << "v2 ranges : core.size() = " << core.size() ; cout << " active.size() = " << active.size(); cout << " virt.size() = " << virt.size() << endl;
-
   //////////////////////////////////////////////////////////////////////
   //vector<SMITH::IndexRange> keep_ranges = { virt, virt, core, core };
-  vector<SMITH::IndexRange> keep_ranges = { core, virt, core, virt };
+  //vector<SMITH::IndexRange> keep_ranges = { core, virt, core, virt };
   //////////////////////////////////////////////////////////////////////
 
-  {
-    vector<SMITH::IndexRange>  keep_ranges_smith_order = {  keep_ranges[0], keep_ranges[1], keep_ranges[2], keep_ranges[3] };
-    auto v2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_tens, keep_ranges_smith_order ); 
-    v2_tens->zero();
-    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
-  }
+  //{
+  //  vector<SMITH::IndexRange>  keep_ranges_smith_order = {  keep_ranges[0], keep_ranges[1], keep_ranges[2], keep_ranges[3] };
+  //  auto v2_keep = Tensor_Arithmetic_Utils::get_sub_tensor( v2_tens, keep_ranges_smith_order ); 
+  //  v2_tens->zero();
+  //  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
+ // }
   cout << setprecision(13) <<  "v2_tens->norm() = "; cout.flush(); cout << v2_tens->norm() << endl;
   return v2_tens;
 }

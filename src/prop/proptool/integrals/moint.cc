@@ -82,7 +82,6 @@ void MOInt::K2ext_new<double>::init() {
   // wait for other nodes
   ext.fence();
 
-  
   // form four-index integrals
   cout << "block_vec = [" ; cout.flush(); cout << blocks_[0].size() <<" "<< blocks_[1].size() <<" "<< blocks_[2].size() <<" "<< blocks_[3].size() << " ]" << endl;
 
@@ -95,7 +94,6 @@ void MOInt::K2ext_new<double>::init() {
     for (auto& i1 : blocks_[1]) {
       for (auto& i2 : blocks_[2]) {
         for (auto& i3 : blocks_[3]) {
-          cout << "v2 block_sizes = [" ; cout.flush(); cout << i0.size()<<" "<< i1.size() <<" "<< i2.size() <<" "<< i3.size() << " ]" << endl;
           const size_t hashkey01 = generate_hash_key(i0, i1);
           const size_t hashkey23 = generate_hash_key(i2, i3);
           if (hashkey23 > hashkey01) continue;
