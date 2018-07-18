@@ -207,7 +207,7 @@ cout << "CASPT2::CASPT2::solve" << endl;
  
     cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
 
-    cout << endl; Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_ ,  "v2_smith",  true ); cout << endl;
+//    cout << endl; Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_ ,  "v2_smith",  true ); cout << endl;
     cout << "----------------------------------TEST SMITH-------------------------------" << endl;
     vector<int> smith_order_0213 = { 0, 2, 1, 3 };
     t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_0213 );
@@ -239,7 +239,7 @@ cout << "CASPT2::CASPT2::solve" << endl;
     t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_0213 );
     cout << "t2all ranges = [ " ; cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
 
-    cout << endl; Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_, "v2_moint",  true ); cout << endl;
+//    cout << endl; Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_, "v2_moint",  true ); cout << endl;
     cout << "----------------------------------TEST MOINT-------------------------------" << endl;
     cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
     cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
