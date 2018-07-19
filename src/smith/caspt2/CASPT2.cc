@@ -156,8 +156,6 @@ cout << "CASPT2::CASPT2::solve" << endl;
   const int nclosed = info_->nclosed()-info_->ncore();
   const int nact = info_->nact();
   const int nvirt = info_->nvirt() + info_->nfrozenvirt();
-
-
  
   {// TEST source
 
@@ -207,7 +205,6 @@ cout << "CASPT2::CASPT2::solve" << endl;
  
     cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
 
-//    cout << endl; Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_ ,  "v2_smith",  true ); cout << endl;
     cout << "----------------------------------TEST SMITH-------------------------------" << endl;
     vector<int> smith_order_0213 = { 0, 2, 1, 3 };
     t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_0213 );

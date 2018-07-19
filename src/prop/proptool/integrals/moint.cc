@@ -45,11 +45,10 @@ cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::MOFock_new<double>::get_v2_pa
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   data_ = make_shared<Tensor>(blocks_);
-  data_->allocate();
-  data_->zero();
   // so far MOInt can be called for 2-external K integral and all-internals.
   if (blocks_[0] != blocks_[2] || blocks_[1] != blocks_[3])
     throw logic_error("MOInt called with wrong blocks");
+  
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
@@ -154,7 +153,6 @@ cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<double>::get_v2_par
           
           // put in place
           v2_part->put_block(v2_data_block, i_block, j_block, k_block, l_block);
-          
           //TODO should make use of symmetry here; cycle symmfuncs on blocs and do appropriate transposes
         }
       }
