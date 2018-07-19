@@ -35,21 +35,30 @@
 using namespace std;
 using namespace bagel;
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 MOInt::K2ext_new<DataType>::K2ext_new(shared_ptr<const MOInt_Init<DataType>> r , shared_ptr<const MatType> c, const vector<IndexRange>& b)
   : info_(r), coeff_(c), blocks_(b) {
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_MOINT
+cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::MOFock_new<double>::get_v2_part() " << endl;
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   data_ = make_shared<Tensor>(blocks_);
   data_->allocate();
+  data_->zero();
   // so far MOInt can be called for 2-external K integral and all-internals.
   if (blocks_[0] != blocks_[2] || blocks_[1] != blocks_[3])
     throw logic_error("MOInt called with wrong blocks");
-  init();
 }
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
 shared_ptr<SMITH::Tensor_<complex<double>>>
 MOInt::K2ext_new<complex<double>>::get_v2_part( const vector<SMITH::IndexRange>& id_range ){ 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_MOINT
+cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::MOFock_new<complex<double>>::get_v2_part " << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   throw logic_error ("build_v2_part not yet done for complex K2ext_new" );
 
@@ -57,93 +66,95 @@ MOInt::K2ext_new<complex<double>>::get_v2_part( const vector<SMITH::IndexRange>&
 
   return test;
 }
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
-shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<double>::get_v2_part( const vector<SMITH::IndexRange>& id_range ) {
-  shared_ptr<Tensor> v2_part = make_shared<Tensor>(id_range);
+shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<double>::get_v2_part( const vector<SMITH::IndexRange>& id_ranges ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_MOINT
+cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<double>::get_v2_part " << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  shared_ptr<Tensor> v2_part = make_shared<Tensor>(id_ranges);
   v2_part->allocate();
 
   shared_ptr<const DFDist> df = info_->geom()->df();
 
   // It is the easiest to do integral transformation for each blocks.
-  assert(id_range.size() == 4);
+  assert(id_ranges.size() == 4);
   // AO dimension
   assert(df->nbasis0() == df->nbasis1());
 
   // Aux index blocking
   const IndexRange aux_range(df->adist_now());
-  const IndexRange i_range = id_range[0];
-  const IndexRange j_range = id_range[1];
 
-  // create an intermediate array (\mu | ij ) 
-  Tensor mu_ij(vector<IndexRange>{aux_range, i_range, j_range});
-  mu_ij.allocate();
-  // occ loop
-  for (const auto& i_block : i_range) {
-    shared_ptr<DFHalfDist> df_half = df->compute_half_transform(coeff_->slice(i_block.offset(), i_block.offset()+i_block.size()))->apply_J();
-    // virtual loop
-    for (const auto& j_block : j_range ) {
-      shared_ptr<DFFullDist> df_full = df_half->compute_second_transform(coeff_->slice(j_block.offset(), j_block.offset()+j_block.size()));
-      const size_t bufsize = df_full->block(0)->size();
-      unique_ptr<double[]> buf(new double[bufsize]);
-      copy_n(df_full->block(0)->data(), bufsize, buf.get());
+ // find which block numbers are on the node; avoids ridiculous looping later
+  vector<bool> i_on_node(id_ranges[0].nblock(), false);
+  vector<bool> ij_on_node(id_ranges[0].nblock()*id_ranges[1].nblock(), false);
+  vector<bool> ijk_on_node(id_ranges[0].nblock()*id_ranges[1].nblock()*id_ranges[2].nblock(), false);
 
-      for (auto& aux_block : aux_range)
-        if (aux_block.offset() == df->block(0)->astart())
-          mu_ij.put_block(buf, aux_block, i_block, j_block);
+  vector<bool>::iterator ion_it = i_on_node.begin(); 
+  vector<bool>::iterator ijon_it = ij_on_node.begin();
+  vector<bool>::iterator ijkon_it = ijk_on_node.begin();
+
+  for ( const auto& i_block : id_ranges[0] ) {
+    for ( const auto& j_block : id_ranges[1] ) {
+      for ( const auto& k_block : id_ranges[2] ) {
+        for ( const auto& l_block : id_ranges[3] ) {
+          if( v2_part->is_local( vector<SMITH::Index> { i_block, j_block, k_block, l_block } ) ) {
+            if ( !(*ion_it) )   *(ion_it) = true;
+            if ( !(*ijon_it) )  *(ijon_it) = true;
+            if ( !(*ijkon_it) ) *(ijkon_it) = true;
+          }
+        }
+        ijkon_it++;
+      }
+      ijon_it++;
     }
-  }
-  
-  // wait for other nodes
-  mu_ij.fence();
-
-  // create an intermediate array (\nu | kl ) 
-  const IndexRange k_range = id_range[2];
-  const IndexRange l_range = id_range[3];
-  Tensor nu_kl(vector<IndexRange>{aux_range, k_range, l_range});
-  nu_kl.allocate();
-  // occ loop
-  for (const auto& k_block : k_range) {
-    shared_ptr<DFHalfDist> df_half = df->compute_half_transform(coeff_->slice(k_block.offset(), k_block.offset()+k_block.size()))->apply_J();
-    // virtual loop
-    for (const auto& l_block : l_range ) {
-      shared_ptr<DFFullDist> df_full = df_half->compute_second_transform(coeff_->slice(l_block.offset(), l_block.offset()+l_block.size()));
-      const size_t bufsize = df_full->block(0)->size();
-      unique_ptr<double[]> buf(new double[bufsize]);
-      copy_n(df_full->block(0)->data(), bufsize, buf.get());
-
-      for (auto& aux_block : aux_range)
-        if (aux_block.offset() == df->block(0)->astart())
-          nu_kl.put_block(buf, aux_block, k_block, l_block);
-    }
-  }
-  
-  // wait for other nodes
-  nu_kl.fence();
+    ion_it++;
+  } 
 
   // form four-index integrals
-  for (auto& i_block : i_range) {
-    for (auto& j_block : j_range) {
-      for (auto& k_block : k_range) {
-        for (auto& l_block : l_range) {
-          if (!v2_part->is_local(i_block, j_block, k_block, l_block)) continue;
+  ion_it = i_on_node.begin(); 
+  ijon_it = ij_on_node.begin();
+  ijkon_it = ijk_on_node.begin();
 
-          const size_t bufsize = v2_part->get_size(i_block, j_block, k_block, l_block);
-          unique_ptr<double[]> buf0(new double[bufsize]);
-          fill_n(buf0.get(), bufsize, 0.0);
+  for ( const auto& i_block : id_ranges[0] ) {
+    if ( !(*ion_it++) )
+      continue; 
+    shared_ptr<DFHalfDist> ij_df_half = df->compute_half_transform(coeff_->slice(i_block.offset(), i_block.offset()+i_block.size()))->apply_J();
 
+    for ( const auto& j_block : id_ranges[1] ) {
+      if ( !(*ijon_it++) )
+         continue; 
+      int ij_len = i_block.size() * j_block.size();
+      shared_ptr<DFFullDist> ij_df_full = ij_df_half->compute_second_transform(coeff_->slice(j_block.offset(), j_block.offset()+j_block.size()));
+
+      for ( const auto& k_block : id_ranges[2] ) {
+        if ( !(*ijkon_it++) )
+           continue; 
+        shared_ptr<DFHalfDist> kl_df_half = df->compute_half_transform(coeff_->slice(k_block.offset(), k_block.offset()+k_block.size()))->apply_J();
+
+        for ( const auto& l_block : id_ranges[3] ) {
+          if( !(v2_part->is_local( vector<SMITH::Index> { i_block, j_block, k_block, l_block } )) ) continue;
+
+          int kl_len = k_block.size() * l_block.size();
+
+          shared_ptr<DFFullDist> kl_df_full = kl_df_half->compute_second_transform(coeff_->slice(l_block.offset(), l_block.offset()+l_block.size() ));
+          const size_t bufsize = kl_df_full->block(0)->size();
+          
+          const size_t ijkl_len = ij_len*kl_len;
+          unique_ptr<double[]> v2_data_block(new double[ijkl_len]);
+          fill_n(v2_data_block.get(), ijkl_len, 0.0);
+   
           for (const auto& aux_block : aux_range) {
-            unique_ptr<double[]> mu_ij_buff = mu_ij.get_block(aux_block, i_block, j_block);
-            unique_ptr<double[]> mu_kl_buff = nu_kl.get_block(aux_block, k_block, l_block);
-  
-            // contract and accumulate : buf0 += data01^{T}*data23  : += \sum_{v}(ji|v)(v|kl)
-            btas::gemm_impl<true>::call(CblasColMajor, CblasTrans, CblasNoTrans, i_block.size()*j_block.size(), k_block.size()*l_block.size(), aux_block.size(),
-                                        1.0, mu_ij_buff.get(), aux_block.size(), mu_kl_buff.get(), aux_block.size(), 1.0, buf0.get(), i_block.size()*j_block.size());
+            if (aux_block.offset() == df->block(0)->astart())
+              btas::gemm_impl<true>::call( CblasColMajor, CblasTrans, CblasNoTrans, ij_len, kl_len, aux_block.size(),
+                                           1.0, ij_df_full->block(0)->data(), aux_block.size(), kl_df_full->block(0)->data(),
+                                           aux_block.size(), 1.0, v2_data_block.get(), ij_len );
           }
-
+          
           // put in place
-          v2_part->put_block(buf0, i_block, j_block, k_block, l_block);
-
+          v2_part->put_block(v2_data_block, i_block, j_block, k_block, l_block);
+          
           //TODO should make use of symmetry here; cycle symmfuncs on blocs and do appropriate transposes
         }
       }
@@ -153,10 +164,14 @@ shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<double>::get_v2_part( const 
 
   return v2_part;
 }
-
-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
 void MOInt::K2ext_new<double>::init() {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_MOINT
+cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<double>::init()" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
   data_ = make_shared<Tensor>(blocks_);
   data_->allocate();
 
@@ -237,8 +252,13 @@ void MOInt::K2ext_new<double>::init() {
   data_->fence();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
 void MOInt::K2ext_new<complex<double>>::init() {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_MOINT
+cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<complex<double>>::init() " << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // bits to store
   const bool braket = blocks_[0] == blocks_[1] && blocks_[2] == blocks_[3];
   const list<vector<int>> cblocks_int = braket ?
@@ -365,8 +385,13 @@ void MOInt::K2ext_new<complex<double>>::init() {
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
 void MOInt::MOFock_new<double>::init() {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_MOINT
+cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::MOFock_new<double>::init() " << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // for simplicity, I assume that the Fock matrix is formed at once (may not be needed).
   const int ncore   = info_->ncore();
   const int nclosed = info_->nclosed() - ncore;
@@ -566,4 +591,3 @@ template class MOInt::K2ext_new<complex<double>>;
 template class MOInt::MOFock_new<double>;
 template class MOInt::MOFock_new<complex<double>>;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-

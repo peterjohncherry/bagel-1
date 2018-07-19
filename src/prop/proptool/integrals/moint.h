@@ -56,11 +56,10 @@ namespace MOInt {
       std::vector<IndexRange> blocks_;
       std::shared_ptr<Tensor> data_;
   
-      // some handwritten drivers
-      void init() { assert(false); }// TODO gets full v2; should be replaced by build_v2_part
   
     public:
       K2ext_new(std::shared_ptr<const MOInt_Init<DataType>> r, std::shared_ptr<const MatType> c, const std::vector<SMITH::IndexRange>& b);
+      void init() { assert(false); }// TODO gets full v2; should be replaced by build_v2_part
       std::shared_ptr<Tensor> get_v2_part( const std::vector<SMITH::IndexRange>& id_range );
   
       std::shared_ptr<Tensor> tensor() { return data_; }

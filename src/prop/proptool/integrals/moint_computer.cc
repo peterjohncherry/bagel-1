@@ -20,40 +20,9 @@ void  MOInt_Computer<DataType>::calculate_v2(const vector<SMITH::IndexRange>& bl
 cout << "MOInt_Computer<DataType>::calculate_v2 IndexRange_ver" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  // TODO for annoying const issue; change arg.
-  vector<SMITH::IndexRange>  blocks_buff = blocks;
-  MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks_buff );
-
-//#ifndef __DEBUG_PROPTOOL_MOINT_COMPUTER
-//  MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks_buff );
-//  vector<int> alt_to_norm_order = { 3, 1, 2, 0 } /* { 2, 0, 3, 1 } */  /* { 2, 1, 3, 0 } */;
-//  v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2.tensor(), alt_to_norm_order );
-//  assert(v2_->norm() != 0.0 ) ;
-//
-//  vector<int> alt_to_norm_order = { 2, 1, 3, 0 };
-//  vector<int> alt_to_norm_order = { 3, 0, 2, 1 };
-//  vector<int> alt_to_norm_order = { 2, 0, 3, 1 };
-//#endif
-
-//#ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
-  shared_ptr<SMITH::Tensor_<DataType>> v2_tens =   MOInt_Computer<DataType>::calculate_v2_smith() ;
+  shared_ptr<SMITH::Tensor_<DataType>> v2_tens = calculate_v2_smith() ;
   vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
   v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2_tens, alt_to_norm_order );
-  cout << " v2_->norm() = " << v2_->norm() << endl; 
-
-  { 
-    SMITH::IndexRange active = *(range_conversion_map_->at("a")); 
-    SMITH::IndexRange core = *(range_conversion_map_->at("c")); 
-    SMITH::IndexRange virt = *(range_conversion_map_->at("v")); 
-   
-    vector<SMITH::IndexRange> r_block = { virt, virt, core, core } ;
-    //vector<SMITH::IndexRange> r_block = { core, core, virt, virt } ;
-    auto v2_test = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, r_block ); 
-    cout << " v2_test->norm() = " << v2_test->norm() << endl;
-    
-  } 
-  assert(v2_->norm() != 0.0 ) ;
-//#endif
 
   return;
 }
@@ -177,17 +146,15 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
   if ( !got_fock_coeffs_ )
     calculate_fock( {free, free}, true, true);
 
-  // TODO for annoying const issue; change arg.
-  vector<SMITH::IndexRange> blocks = { not_virt, not_core, not_virt, not_core };
-  vector<SMITH::IndexRange> keep_ranges = { core, virt, core, virt };
+  vector<SMITH::IndexRange>  blocks = { free, free, free, free };
   MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks );
   auto v2_tens = v2.tensor();
+  v2_tens->allocate();
+  v2_tens->zero();
 
   {
-//    auto v2_keep_orig = Tensor_Arithmetic_Utils::get_sub_tensor( v2_tens, keep_ranges_smith_order ); 
+    vector<SMITH::IndexRange> keep_ranges = { core, virt, core, virt };
     shared_ptr<SMITH::Tensor_<DataType>> v2_keep =  v2.get_v2_part( keep_ranges ); 
-    v2_tens->zero();
-
     Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
   }
   cout << setprecision(13) <<  "v2_tens->norm() = "; cout.flush(); cout << v2_tens->norm() << endl;
