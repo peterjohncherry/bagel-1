@@ -1066,7 +1066,7 @@ cout << "Tensor_Arithmetic::put_reordered_range_block range_block_specific  " <<
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 shared_ptr<Tensor_<DataType>>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( shared_ptr<Tensor_<DataType>> Tens_in, vector<int>& new_order ){
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( shared_ptr<Tensor_<DataType>> Tens_in, const vector<int>& new_order ){
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic::reorder_block_Tensor " << endl;
@@ -1103,7 +1103,7 @@ cout << "Tensor_Arithmetic::reorder_block_Tensor " << endl;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 unique_ptr<DataType[]>
-Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data( const DataType* orig_data, vector<int>&  new_order_vec,
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_tensor_data( const DataType* orig_data, const vector<int>&  new_order_vec,
                                                                      vector<Index>& orig_index_blocks ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
@@ -1763,6 +1763,132 @@ cout << "Tensor_Arithmetic<DataType>::zero_all_but_block " << endl;
   put_sub_tensor( tens_keep, tens );
   return;
 } 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Returns an anti-symmetric tensor; satisfies T_ijkl = -T_jikl = -T_{ijlk} = T_{jilk}; appropriate for normal ordered test ops
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<class DataType>
+shared_ptr<Tensor_<DataType>>
+Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_tensor_antisymmetric(const vector<IndexRange>& T_id_ranges, DataType init_val ){
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC
+ cout << "Tensor_Arithmetic::get_uniform_tensor_antisymmetric" << endl;
+#endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   shared_ptr<Tensor_<DataType>> Tens = make_shared<Tensor_<DataType>>(T_id_ranges);
+   Tens->allocate();
+
+   vector<int> block_pos(T_id_ranges.size(),0);  
+   vector<int> mins(T_id_ranges.size(),0);  
+   vector<int> range_lengths = get_range_lengths( T_id_ranges ); 
+
+   do {
+     
+     vector<Index> T_id_blocks = get_rng_blocks( block_pos, T_id_ranges ); 
+     size_t block_size = Tens->get_size(T_id_blocks); 
+
+     vector<size_t> block_sizes = { T_id_blocks[0].size(), T_id_blocks[1].size(), T_id_blocks[2].size(), T_id_blocks[3].size() };
+     unique_ptr<DataType[]> T_block_data( new DataType[block_size] );
+     cout << "block_size = " << block_size << endl;
+     fill_n(T_block_data.get(), block_size, (DataType)(0.0) );
+
+     vector<size_t>  offsets = { T_id_blocks[0].offset() , T_id_blocks[1].offset(), T_id_blocks[2].offset(), T_id_blocks[3].offset() };
+     DataType bp01_fac =  ( offsets[0] <= offsets[1])  ? (DataType)(1.0) : (DataType)(-1.0);
+     DataType bp23_fac =  ( offsets[2] <= offsets[3])  ? (DataType)(1.0) : (DataType)(-1.0); 
+
+     cout << " bp01_fac = " << bp01_fac << " bp23_fac = " << bp23_fac << endl;
+     WickUtils::print_vector( offsets, " offsets " ); cout << endl;
+
+     if ( (offsets[0] == offsets[1])  &&  (offsets[2] == offsets[3]) ) {
+       cout << " ( (offsets[0] == offsets[1])  &&  (offsets[2] == offsets[3]) )" << endl;
+       DataType tmp_value = init_val;
+       DataType* t_ptr = T_block_data.get();
+       int ij_row_size = block_sizes[0]*block_sizes[1]; 
+       int kl_row_size = block_sizes[2]*block_sizes[3]; 
+       for ( int ll = 0 ; ll != block_sizes[3] ; ++ll ) {
+         for ( int kk = 0 ; kk != block_sizes[2] ; ++kk ) {
+           if ( kk == ll ){
+             fill_n( t_ptr, ij_row_size, (DataType)(0.0));
+             tmp_value = (DataType)(-1.0) * tmp_value;
+             t_ptr+= ij_row_size;
+             continue;
+           }
+           for ( int jj = 1 ; jj != block_sizes[1]; ++jj ) {
+             *t_ptr = (DataType)(0.0);
+             ++t_ptr;
+             fill_n( t_ptr, block_sizes[0]-jj, tmp_value );
+             t_ptr += (block_sizes[0]-jj);
+	     tmp_value = (DataType)(-1.0) * tmp_value;
+             fill_n( t_ptr, jj, tmp_value );
+             t_ptr += jj;
+	     tmp_value = (DataType)(-1.0) * tmp_value;
+           }
+           *t_ptr = (DataType)(0.0);
+           ++t_ptr;
+         }
+       }
+       Tens->put_block(T_block_data, T_id_blocks);
+          
+     } else if ( (offsets[0] == offsets[1])  &&  (offsets[2] != offsets[3]) ) {
+       cout << " ( (offsets[0] == offsets[1])  &&  (offsets[2] != offsets[3]) )" << endl;
+       DataType tmp_value = bp01_fac*init_val;
+       int ij_row_size = block_sizes[0]*block_sizes[1]; 
+       int kl_row_size = block_sizes[2]*block_sizes[3]; 
+       DataType* t_ptr = T_block_data.get();
+       for ( int ll = 0 ; ll != block_sizes[3] ; ++ll ) {
+         for ( int kk = 0 ; kk != block_sizes[2] ; ++kk ) {
+           for ( int jj = 1 ; jj != block_sizes[1]; ++jj ) {
+             *t_ptr = (DataType)(0.0);
+             ++t_ptr;
+             fill_n( t_ptr, block_sizes[0]-jj, tmp_value );
+             t_ptr += (block_sizes[0]-jj);
+	     tmp_value = (DataType)(-1.0) * tmp_value;
+             fill_n( t_ptr, jj, tmp_value );
+             t_ptr += jj;
+	     tmp_value = (DataType)(-1.0) * tmp_value;
+           }
+           *t_ptr = (DataType)(0.0);
+           ++t_ptr;
+         }
+       }
+       Tens->put_block(T_block_data, T_id_blocks);
+
+     } else if ( (offsets[0] != offsets[1])  &&  (offsets[2] == offsets[3]) ) {
+       cout << "( (offsets[0] != offsets[1])  &&  (offsets[2] == offsets[3]) )  " << endl;
+       DataType* t_ptr = T_block_data.get();
+       DataType tmp_value = -bp23_fac*init_val;
+       unique_ptr<DataType[]> buff(new DataType[block_size]);
+       DataType* buff_ptr = buff.get();
+       int ij_row_size = block_sizes[0]*block_sizes[1]; 
+       int kl_row_size = block_sizes[2]*block_sizes[3]; 
+       for ( int ii = 0 ; ii != block_sizes[0] ; ++ii ) {
+         for ( int jj = 0 ; jj != block_sizes[1] ; ++jj ) {
+           for ( int kk = 1 ; kk != block_sizes[2]; ++kk ) {
+             *buff_ptr = (DataType)(0.0);
+             ++buff_ptr;
+             fill_n( buff_ptr, block_sizes[3]-kk, tmp_value );
+             buff_ptr += (block_sizes[3]-kk);
+	     tmp_value = (DataType)(-1.0) * tmp_value;
+             fill_n( buff_ptr, kk, tmp_value );
+             buff_ptr += kk;
+	     tmp_value = (DataType)(-1.0) * tmp_value;
+           }
+           *buff_ptr = (DataType)(0.0);
+           ++buff_ptr;
+         }
+       }
+       blas::transpose(buff.get(), kl_row_size, ij_row_size, t_ptr);
+       Tens->put_block(T_block_data, T_id_blocks);
+
+     } else if ( (offsets[0] != offsets[1])  &&  (offsets[2] != offsets[3]) ) {
+       DataType* t_ptr = T_block_data.get();
+       fill_n(t_ptr, block_size, init_val*bp01_fac*bp23_fac );
+       Tens->put_block(T_block_data, T_id_blocks);
+     }
+     
+   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
+
+   return Tens;
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Tensor_Arithmetic::Tensor_Arithmetic<double>;
 template class Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>;

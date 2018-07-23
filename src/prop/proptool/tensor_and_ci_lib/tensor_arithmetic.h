@@ -71,11 +71,11 @@ class Tensor_Arithmetic {
      contract_vectors( std::shared_ptr<SMITH::Tensor_<DataType>> Tens1_in,  std::shared_ptr<SMITH::Tensor_<DataType>> Tens2_in);
 
      static std::shared_ptr<SMITH::Tensor_<DataType>>
-     reorder_block_Tensor(std::shared_ptr<SMITH::Tensor_<DataType>> T_in_name, std::vector<int>& new_order);
+     reorder_block_Tensor(std::shared_ptr<SMITH::Tensor_<DataType>> T_in_name, const std::vector<int>& new_order);
 
      //Note the reordering assums column major ordering
      static std::unique_ptr<DataType[]>
-     reorder_tensor_data( const DataType* orig_data,  std::vector<int>& new_order_vec, std::vector<SMITH::Index>& orig_index_blocks ) ;
+     reorder_tensor_data( const DataType* orig_data, const std::vector<int>& new_order_vec, std::vector<SMITH::Index>& orig_index_blocks ) ;
 
      static std::unique_ptr<DataType[]>
      get_block_of_data( DataType* data_ptr , std::shared_ptr<std::vector<SMITH::IndexRange>> id_ranges, std::shared_ptr<std::vector<int>> block_pos) ;
@@ -151,6 +151,9 @@ class Tensor_Arithmetic {
      static void
      zero_all_but_block( std::shared_ptr<SMITH::Tensor_<DataType>>& tens, const std::vector<SMITH::IndexRange>& nonzero_block );
 
+     static 
+     std::shared_ptr<SMITH::Tensor_<DataType>>
+     get_uniform_tensor_antisymmetric(const std::vector<SMITH::IndexRange>& T_id_ranges, DataType init_val ); 
 
 }; 
  

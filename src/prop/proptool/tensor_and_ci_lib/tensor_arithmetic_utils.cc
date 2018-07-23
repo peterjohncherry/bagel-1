@@ -908,7 +908,7 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
        auto compare_abs = []( int aa, int bb ) { return (abs(aa) < abs(bb)); };
        for ( const Index& block : id_ranges[0].range() ){
          unique_ptr<double[]> data = Tens->get_block( vector<Index> ( 1, block  ) );
-         if ( print_zero_blocks || ( *(max_element(data.get(), data.get()+block.size(), compare_abs ))  > ( 1.0e-14 ) ) ) { 
+         if ( print_zero_blocks || ( abs(*(max_element(data.get(), data.get()+block.size(), compare_abs )))  > ( 1.0e-14 ) ) ) { 
            size_t endpos = elem_num+block.size();
            for ( double* d_it = data.get() ; elem_num !=  endpos; ++elem_num, ++d_it )
              cout << "[ " << elem_num << " ] : " << *d_it << endl;
@@ -974,7 +974,7 @@ cout << "Tensor_Arithmetic_Utils::print_tensor_with_indexes " << endl;
        print_vector(block_pos, "block_pos"); cout.flush(); print_sizes(id_blocks, "   id_blocks" );
        unique_ptr<double[]> data_block = Tens->get_block( id_blocks );
        double* ptr = data_block.get();
-       if ( print_zero_blocks || ( *(max_element(data_block.get(), data_block.get()+Tens->get_size(id_blocks), compare_abs )) > ( 1.0e-14 ) ) ) { 
+       if ( print_zero_blocks || ( abs(*(max_element(data_block.get(), data_block.get()+Tens->get_size(id_blocks), compare_abs ))) > ( 1.0e-14 ) ) ) { 
          cout << endl;
          do {  
            print_vector( elem_pos , "" ); cout << " : ";cout.flush(); cout << *ptr << endl;
