@@ -3,8 +3,8 @@
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_orb_exc_deriv.h>
 #include <src/prop/proptool/proputils.h>
 
-#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
-#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
+//#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
+//#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
 using namespace std;
 using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +71,6 @@ cout << "GammaGenerator_Base::generic_reorderer_different_sector" << endl;
   for ( const auto& gint : *final_gamma_vec_ ) { print_gamma_intermediate( gint , "" ); }
 
   gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>(*final_gamma_vec_);
- 
   bool does_it_contribute = ( gamma_vec_->size() > 0 );
 
   int kk = 0;
@@ -320,17 +319,17 @@ print_gamma_intermediate (gamma_vec_->at(kk) , "pre_swap gamma" );
       }
     }
  
-    auto new_fac =  make_pair( gint->factors_.first * -1.0,  0.0 );
+    auto new_fac =  make_pair( gint->factors_.first * 1.0,  0.0 );
     shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, new_fac );
     gamma_vec_->push_back(new_gamma);
     
 #ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
     print_gamma_intermediate (new_gamma , "new gamma" );
   }
-  gint->factors_ =  make_pair( gint->factors_.first * 1.0,  0.0 );
+  gint->factors_ =  make_pair( gint->factors_.first * -1.0,  0.0 );
   print_gamma_intermediate (gamma_vec_->at(kk) , "post_swap gamma" );
 #else
-  gint->factors_ =  make_pair( gint->factors_.first * 1.0,  0.0 );
+  gint->factors_ =  make_pair( gint->factors_.first * -1.0,  0.0 );
   }
 #endif
   return;

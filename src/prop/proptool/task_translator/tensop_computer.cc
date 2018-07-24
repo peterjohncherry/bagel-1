@@ -255,7 +255,10 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //vector<int> s_ordering = { 0, 1, 2, 3};
-  vector<int> s_ordering = { 3, 2, 1, 0};
+  //vector<int> s_ordering = { 3, 2, 1, 0};
+//  vector<int> s_ordering = { 0, 2, 1, 3 };
+
+  vector<int> s_ordering = { 0, 2, 1, 3 };
   
   for ( auto& block : *required_blocks ) { 
  
@@ -283,7 +286,9 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
           build_tensor( block_name, *id_ranges, (DataType)(1.0) );
            
         } else if ( full_tens_name[0] == 'S') {  
-          build_s_test_tensor(full_tens_name, s_ordering ); 
+          build_s_test_tensor(full_tens_name, s_ordering );
+          cout << endl; WickUtils::print_vector( *id_ranges, "id_ranges"); cout << endl; 
+          Debugging_Utils::print_sizes( tensop_data_map_->at(full_tens_name)->indexrange(), "S indexrange()" ); cout << endl;
           get_sub_tensor( full_tens_name, block_name, *id_ranges ); 
         }
  

@@ -21,8 +21,9 @@ cout << "MOInt_Computer<DataType>::calculate_v2 IndexRange_ver" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
   shared_ptr<SMITH::Tensor_<DataType>> v2_tens = calculate_v2_smith() ;
-  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
-  v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2_tens, alt_to_norm_order );
+  v2_ = v2_tens;
+//  vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
+//  v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2_tens, alt_to_norm_order );
 
   return;
 }
@@ -159,12 +160,12 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
     shared_ptr<SMITH::Tensor_<DataType>> v2_keep =  v2.get_v2_part( keep_ranges_sorder ); 
     Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
   }
-//  {
-//    vector<SMITH::IndexRange> keep_ranges_norder = { virt, virt, act, core };
-//    vector<SMITH::IndexRange> keep_ranges_sorder = { keep_ranges_norder[3], keep_ranges_norder[1], keep_ranges_norder[2], keep_ranges_norder[0] };
-//    shared_ptr<SMITH::Tensor_<DataType>> v2_keep =  v2.get_v2_part( keep_ranges_sorder ); 
-//    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
-//  }
+  {
+    vector<SMITH::IndexRange> keep_ranges_norder = { virt, virt, act, core };
+    vector<SMITH::IndexRange> keep_ranges_sorder = { keep_ranges_norder[3], keep_ranges_norder[1], keep_ranges_norder[2], keep_ranges_norder[0] };
+    shared_ptr<SMITH::Tensor_<DataType>> v2_keep =  v2.get_v2_part( keep_ranges_sorder ); 
+    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
+  }
 
   cout << setprecision(13) <<  "v2_tens->norm() = "; cout.flush(); cout << v2_tens->norm() << endl;
   return v2_tens;
@@ -207,25 +208,28 @@ WickUtils::print_vector( ordering, "s_test_tensor_ordering"); cout << endl;
   s_test_tensor->allocate();
   s_test_tensor->zero();
 
+  Debugging_Utils::print_sizes( full_block,                  " full_block                "); cout << endl;
+  Debugging_Utils::print_sizes( s_test_tensor->indexrange(), " s_test_tensor->id_ranges()"); cout << endl;
+
   {
   vector<SMITH::IndexRange> non_zero_block = { act, core, virt, virt }; 
   Debugging_Utils::print_sizes( WickUtils::reorder_vector( ordering, non_zero_block ), "WickUtils::reorder_vector( ordering, non_zero_block ) " ); cout << endl;
-  shared_ptr<SMITH::Tensor_<DataType>> s_tmp =  make_shared<SMITH::Tensor_<DataType>>( WickUtils::reorder_vector( ordering, non_zero_block ) ); 
-  s_tmp->allocate();
-  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( s_tmp, (DataType)(1.0) );
-// std::shared_ptr<SMITH::Tensor_<DataType>> s_tmp_as = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_tensor_antisymmetric( non_zero_block, (DataType)(-1.0));
-// std::shared_ptr<SMITH::Tensor_<DataType>> s_tmp = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(s_tmp_as, ordering );
+//  shared_ptr<SMITH::Tensor_<DataType>> s_tmp =  make_shared<SMITH::Tensor_<DataType>>( WickUtils::reorder_vector( ordering, non_zero_block ) ); 
+//  s_tmp->allocate();
+//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( s_tmp, (DataType)(1.0) );
+ std::shared_ptr<SMITH::Tensor_<DataType>> s_tmp_as = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_tensor_antisymmetric( non_zero_block, (DataType)(1.0));
+ std::shared_ptr<SMITH::Tensor_<DataType>> s_tmp = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(s_tmp_as, ordering );
   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( s_tmp, s_test_tensor ); 
   cout << " s_test_tensor->norm() * s_test_tensor->norm() = " <<  s_test_tensor->norm() * s_test_tensor->norm() <<endl;
   }
  {
   vector<SMITH::IndexRange> non_zero_block = { core, act, virt, virt }; 
   Debugging_Utils::print_sizes( WickUtils::reorder_vector( ordering, non_zero_block ), "WickUtils::reorder_vector( ordering, non_zero_block ) " ); cout << endl;
-  shared_ptr<SMITH::Tensor_<DataType>> s_tmp =  make_shared<SMITH::Tensor_<DataType>>( WickUtils::reorder_vector( ordering, non_zero_block ) ); 
-  s_tmp->allocate();
-  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( s_tmp, (DataType)(1.0) );
-//  std::shared_ptr<SMITH::Tensor_<DataType>> s_tmp_as = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_tensor_antisymmetric( non_zero_block, (DataType)(-1.0));
-//  std::shared_ptr<SMITH::Tensor_<DataType>> s_tmp = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(s_tmp_as, ordering );
+//  shared_ptr<SMITH::Tensor_<DataType>> s_tmp =  make_shared<SMITH::Tensor_<DataType>>( WickUtils::reorder_vector( ordering, non_zero_block ) ); 
+//  s_tmp->allocate();
+//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( s_tmp, (DataType)(1.0) );
+  std::shared_ptr<SMITH::Tensor_<DataType>> s_tmp_as = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::get_uniform_tensor_antisymmetric( non_zero_block, (DataType)(1.0));
+  std::shared_ptr<SMITH::Tensor_<DataType>> s_tmp = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor(s_tmp_as, ordering );
   Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( s_tmp, s_test_tensor ); 
   cout << " s_test_tensor->norm() * s_test_tensor->norm() = " <<  s_test_tensor->norm() * s_test_tensor->norm() <<endl;
   }

@@ -70,26 +70,43 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
+   string ordering = "0213"; // TEST!! 
+   if ( ordering == "0123" ) {
+     aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
+     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { core_a, core_a, virt_a, virt_a  } );
+   } else if ( ordering == "3210" ) {
+     aops = make_shared<vector<bool>>  (vector<bool>  { false, false, true, true } );
+     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_core_a, not_virt_a, not_virt_a } );
+   } else if ( ordering == "0213" ) {
+     aops = make_shared<vector<bool>>  (vector<bool>  { false, true, false, true } );
+     //idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { act_a, virt_a, core_a, virt_a } );
+     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt_a, virt_a, not_virt_a, virt_a } );
+   } else if ( ordering == "3120" ) {
+     aops = make_shared<vector<bool>>  (vector<bool>  { true, false, true, false } );
+     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  virt_a, act_a, virt_a, core_a } );
+   }
    idxs = make_shared<vector<string>>(vector<string> { "H0", "H1", "H2", "H3" } );
-   aops = make_shared<vector<bool>>(vector<bool>  { true, true, false, false } );
-//   idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  virt_a, virt_a, core_a, act_a } );
-   idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_core_a, not_virt_a, not_virt_a } );
    factor = make_pair( -0.5, 0.0);
 
   } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
 
     cout << "initializing S" << endl;
-    bool dag = false; // TEST!! 
-    if ( dag ) {
-      idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
+    string ordering = "0213"; // TEST!! 
+    if ( ordering == "0123" ) {
       aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
       idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { core_a, core_a, virt_a, virt_a  } );
-    } else {
-      idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
+    } else if ( ordering == "3210" ) {
       aops = make_shared<vector<bool>>  (vector<bool>  { false, false, true, true } );
       idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_core_a, not_virt_a, not_virt_a } );
-//      idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> {  virt_a, virt_a, not_virt_a, not_virt_a } );
+    } else if ( ordering == "0213" ) {
+      aops = make_shared<vector<bool>>  (vector<bool>  { true, false, true, false } );
+      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt_a, virt_a, not_virt_a, virt_a } );
+    } else if ( ordering == "3120" ) {
+      aops = make_shared<vector<bool>>  (vector<bool>  { false, true, false, true } );
+      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_virt_a, not_core_a, not_virt_a } );
     }
+    idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
+    constraints.push_back(not_all_act);
     factor = make_pair( -0.5, 0.0);
 
   } else if ( op_name == "h" ) {  /* ---- h Tensor ( 1 electron Hamiltonian ) ----  */
