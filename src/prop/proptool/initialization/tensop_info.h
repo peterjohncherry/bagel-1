@@ -67,6 +67,19 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
   static shared_ptr<Constraint_NotAllAct>  not_all_act = make_shared<Constraint_NotAllAct>();
   static shared_ptr<Constraint_Spin_Neutral_Normal_Order>  spin_neutral = make_shared<Constraint_Spin_Neutral_Normal_Order>();
   static shared_ptr<Constraint_All_Same_Spin>  all_same_spin = make_shared<Constraint_All_Same_Spin>();
+   
+  vector<string> vavc = { "v", "a", "v", "c" };
+  vector<string> vcva = { "v", "c", "v", "a" };
+  vector<string> cvav = { "c", "v", "a", "v" };
+  vector<string> avcv = { "a", "v", "c", "v" };
+  
+  static shared_ptr<Constraint_Allowed_Blocks> S_allowed_block_list = make_shared<Constraint_Allowed_Blocks>();
+  S_allowed_block_list->add_block( cvav );
+  S_allowed_block_list->add_block( avcv );
+
+  static shared_ptr<Constraint_Allowed_Blocks> H_allowed_block_list = make_shared<Constraint_Allowed_Blocks>();
+  H_allowed_block_list->add_block( avcv );
+  H_allowed_block_list->add_block( cvav );
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
@@ -79,8 +92,8 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_core_a, not_virt_a, not_virt_a } );
    } else if ( ordering == "0213" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { false, true, false, true } );
-     //idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { act_a, virt_a, core_a, virt_a } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt_a, virt_a, not_virt_a, virt_a } );
+     constraints = { H_allowed_block_list };
    } else if ( ordering == "3120" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { true, false, true, false } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  virt_a, act_a, virt_a, core_a } );
@@ -105,9 +118,10 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
       aops = make_shared<vector<bool>>  (vector<bool>  { false, true, false, true } );
       idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_virt_a, not_core_a, not_virt_a } );
     }
+    constraints = { S_allowed_block_list };
     idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
     constraints.push_back(not_all_act);
-    factor = make_pair( -0.5, 0.0);
+    factor = make_pair( 1.0, 0.0);
 
   } else if ( op_name == "h" ) {  /* ---- h Tensor ( 1 electron Hamiltonian ) ----  */
 

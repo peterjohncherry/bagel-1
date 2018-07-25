@@ -68,5 +68,25 @@ class Constraint_All_Same_Spin : public Constraint {
 
 };
 
+class Constraint_Allowed_Blocks : public Constraint { 
+
+  public : 
+   
+   std::vector<std::vector<std::string>> allowed_blocks_;
+
+   Constraint_Allowed_Blocks() : Constraint("Allowed_Block_List") {};  
+
+   Constraint_Allowed_Blocks( const std::vector<std::vector<std::string>>& allowed_blocks ) :
+                              Constraint("Allowed_Block_List"), allowed_blocks_(allowed_blocks){};  
+
+   ~Constraint_Allowed_Blocks(){}
+   
+   bool apply_constraint( const std::vector<std::string>& rngs );  
+
+   void add_block( const std::vector<std::string>& block ){ allowed_blocks_.push_back(block); }
+
+};
+
+
 
 #endif
