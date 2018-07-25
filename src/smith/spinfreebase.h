@@ -155,6 +155,10 @@ class SpinFreeMethod {
     static std::tuple<std::shared_ptr<VecType>, std::shared_ptr<MatType>, std::shared_ptr<MatType>, std::shared_ptr<MatType>>
       feed_rdm_deriv(std::shared_ptr<const SMITH_Info<DataType>> info, std::shared_ptr<const MatType> fockact, const int istate, const size_t offset, const size_t size, std::shared_ptr<const MatType> rdm2fd_in);
 
+///////////TEST
+std::shared_ptr<PTree> proptool_input_;
+///////////END TEST
+
 };
 
 template<> void SpinFreeMethod<double>::rotate_xms();

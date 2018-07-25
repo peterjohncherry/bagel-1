@@ -34,6 +34,7 @@
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 #include <src/prop/proptool/integrals/moint_computer.h>
+#include <src/prop/proptool/proptool.h>
 
 using namespace std;
 using namespace bagel;
@@ -56,6 +57,7 @@ CASPT2::CASPT2::CASPT2(shared_ptr<const SMITH_Info<double>> ref) : SpinFreeMetho
     sall_.push_back(tmp2);
     rall_.push_back(tmp2->clone());
   }
+
   energy_.resize(nstates_);
   pt2energy_.resize(nstates_);
 }
@@ -157,118 +159,23 @@ cout << "CASPT2::CASPT2::solve" << endl;
   const int nact = info_->nact();
   const int nvirt = info_->nvirt() + info_->nfrozenvirt();
  
-  {// TEST source
-
-    int maxtile = min( 10,  info_->maxtile() );
-    cout << "maxtile = " << maxtile << endl;
-    int nfrozenvirt = 0;
-
-    auto closed_rng  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nclosed-ncore, maxtile, 0, ncore));
-    auto active_rng  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact, maxtile, closed_rng->nblock(), ncore + nclosed  ) );
-    auto virtual_rng = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nvirt, maxtile, closed_rng->nblock()+ active_rng->nblock(), ncore + nclosed + nact ));
-    auto free_rng    = make_shared<SMITH::IndexRange>(*closed_rng); free_rng->merge(*active_rng); free_rng->merge(*virtual_rng);
-
-    cout << "nclosed = " << nclosed << "  ncore = " << ncore  << "  nact = " << nact << "  nvirt = " << nvirt << endl; 
-    
-    auto not_closed_rng  = make_shared<SMITH::IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
-    auto not_active_rng  = make_shared<SMITH::IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
-    auto not_virtual_rng = make_shared<SMITH::IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
- 
-    auto  range_conversion_map = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
-    range_conversion_map->emplace("c", closed_rng); 
-    range_conversion_map->emplace("a", active_rng);
-    range_conversion_map->emplace("v", virtual_rng);
-    range_conversion_map->emplace("free", free_rng);
- 
-    range_conversion_map->emplace("notcor", not_closed_rng);
-    range_conversion_map->emplace("notact", not_active_rng);
-    range_conversion_map->emplace("notvir", not_virtual_rng); 
-    
-    auto moint_init = make_shared<MOInt_Init<double>>( info_->geom(),  info_->ref(), ncore, nfrozenvirt, true );
-    
-    auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map );
-    cout << "pre t2all ranges = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
-    cout << "v2 sm range sizes = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
-
-    {
-    cout << endl << endl;
-    set_rdm(0, 0);
-    double source_norm = 0.0;
-    h1_->zero();
-    f1_->zero();
-
-    s = init_residual();
-    s->zero();
-    shared_ptr<Queue> source_task_list = make_sourceq(false, true);
-    while(!source_task_list->done())
-      source_task_list->next_compute();
- 
-    cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
-
-    cout << "----------------------------------TEST SMITH-------------------------------" << endl;
-    vector<int> smith_order_0213 = { 0, 2, 1, 3 };
-    t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_0213 );
-    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
-    cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
-    cout << "post dot source_norm = "<<  s->norm() << endl;
-    cout << "---------------------------------------------------------------------------" << endl;
-    } 
-
-    {
-    cout << endl << endl;
-    set_rdm(0, 0);
-    v2_->zero();
-    v2_ = moint_computer->calculate_v2_smith();
-    cout << "v2 mc range sizes = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
-    h1_->zero();
-    f1_->zero();
-
-    s = init_residual();
-    s->zero();
-    double source_norm = 0.0;
-    shared_ptr<Queue> source_task_list = make_sourceq(false, true);
-    while(!source_task_list->done())
-      source_task_list->next_compute();
-
-    cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
-    vector<int> smith_order_0213 = { 0, 2, 1, 3 };
-    t2all_[0]->at(0)->zero();
-    t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_0213 );
-    cout << "t2all ranges = [ " ; cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
-
-//    cout << endl; Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_, "v2_moint",  true ); cout << endl;
-    cout << "----------------------------------TEST MOINT-------------------------------" << endl;
-    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
-    cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
-    cout << "pre dot source_norm = "<<  s->norm() << endl;
-    cout << "---------------------------------------------------------------------------" << endl;
-    }
-  }
-
-  throw logic_error( "die here for testing purposes!" ); 
-
   // <proj_jst|H|0_K> set to sall in ms-caspt2
+  cout << "getting  <proj_jst|H|0_K> " << endl;
   for (int istate = 0; istate != nstates_; ++istate) { //K states
     t2all_[istate]->fac(istate) = 0.0;
     sall_[istate]->fac(istate)  = 0.0;
 
     for (int jst=0; jst != nstates_; ++jst) { // <jst|
-    
       if (info_->sssr() && jst != istate)
         continue;
-   
       set_rdm(jst, istate);
       s = sall_[istate]->at(jst);
       shared_ptr<Queue> sourceq = make_sourceq(false, jst == istate);
       while(!sourceq->done())
         sourceq->next_compute();
-    
-     cout << " sall_[0]->at(0)->norm() = " <<  sall_[0]->at(0)->norm()  <<  endl;
-     cout << " sall_[0]->at(0)->rms() = " <<   sall_[0]->at(0)->rms()  <<  endl;
-
     }
   }
- 
+  cout << "got  <proj_jst|H|0_K> " << endl;
 
   // solve linear equation for t amplitudes
   t2all_ = solve_linear(sall_, t2all_);
@@ -302,118 +209,6 @@ cout << "CASPT2::CASPT2::solve" << endl;
   // TODO Implement off-diagonal shift correction for nonrelativistic energy + nuclear gradients
   if (info_->shift() && info_->do_ms() && !info_->shift_diag())
     cout << "    Applying levelshift correction to diagonal elements of the Hamiltonian only.  (Off-diagonals have not been implemented for non-relativistic CASPT2.)" << endl << endl;
-
-  /////////////////////////////////// PT2 energy test////////////////////////////////////////////////
-  {
-    shared_ptr<Tensor> h1_buff = make_shared<Tensor>(*h1_);
-    shared_ptr<Tensor> v2_buff =v2_->copy();
-    shared_ptr<Tensor> v2_buff_buff = v2_->copy();
-  //  Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_buff, 1.0);
-    //v2_ = H_2el_;
-    h1_->zero();
-
-    IndexRange not_virt = closed_; not_virt.merge(active_);
-
-    vector<IndexRange> avav = { active_,  virt_,    active_,  virt_    };
-    vector<IndexRange> cvcv = { closed_,  virt_,    closed_,  virt_    };
-    vector<IndexRange> cvav = { closed_,  virt_,    active_,  virt_    };
-    vector<IndexRange> avcv = { active_,  virt_,    closed_,  virt_    };
-    vector<IndexRange> cvov = { closed_,  virt_,    not_virt, virt_    };
-    vector<IndexRange> ovcv = { not_virt, virt_,    closed_,  virt_    };
-    vector<IndexRange> avov = { active_,  virt_,    not_virt, virt_    };
-    vector<IndexRange> ovav = { not_virt, virt_,    active_,  virt_    };
-    vector<IndexRange> ovov = { not_virt, virt_,    not_virt, virt_    };
-    vector<IndexRange> vvaa = { virt_,    virt_,    active_,  active_  };
-    vector<IndexRange> vvcc = { virt_,    virt_,    closed_,  closed_  };
-    vector<IndexRange> vvac = { virt_,    virt_,    active_,  closed_  };
-    vector<IndexRange> vvca = { virt_,    virt_,    closed_,  active_  };
-    vector<IndexRange> vvoo = { virt_,    virt_,    not_virt, not_virt };
-    vector<IndexRange> vovo = { virt_,    not_virt, virt_,    not_virt };
-    vector<IndexRange> vvoc = { virt_,    virt_,    not_virt, closed_  };
-    vector<IndexRange> vvco = { virt_,    virt_,    closed_,  not_virt };
-    vector<IndexRange> vvoa = { virt_,    virt_,    not_virt, active_  };
-    vector<IndexRange> vvao = { virt_,    virt_,    active_,  not_virt };
-    
-    shared_ptr<vector<int>> normal_to_smith_order1 = make_shared<vector<int>>( vector<int> { 2, 0, 3, 1} ); // ++-- -> -+-+  //no conj 
-    shared_ptr<vector<int>> normal_to_smith_order2 = make_shared<vector<int>>( vector<int> { 3, 0, 2, 1} ); // ++-- -> -+-+   
-    shared_ptr<vector<int>> normal_to_smith_order3 = make_shared<vector<int>>( vector<int> { 2, 1, 3, 0} ); // ++-- -> -+-+   
-    shared_ptr<vector<int>> normal_to_smith_order4 = make_shared<vector<int>>( vector<int> { 3, 1, 2, 0} ); // ++-- -> -+-+   //full conj
-    
-    shared_ptr<Tensor_<double>> RTens;// = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvaa));
-    shared_ptr<Tensor_<double>> YTens;//= Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvcc));
-    shared_ptr<Tensor_<double>> ZTens;// = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_test_Tensor_column_major(make_shared<vector<IndexRange>>(vvac));
-    shared_ptr<Tensor_<double>> PTens;// = Tensor_Arithmetic::Tensor_Arithmetic<double>::get_uniform_Tensor(make_shared<vector<IndexRange>>(vvac), 1.0);
-
-    vector<IndexRange> t2_id_ranges =  t2all_[0]->at(0)->indexrange();  
-    shared_ptr<vector<IndexRange>> t2_id_ranges_ptr =  make_shared<vector<IndexRange>>(t2_id_ranges);  
-    shared_ptr<Tensor_<double>> t2_one = t2all_[0]->at(0)->clone();
-//    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( t2_one, 1.0);
-//    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_, 1.0);
-    shared_ptr<MultiTensor> sist = make_shared<MultiTensor>(1);
-  
-    cout << " v2_->norm() = " << v2_->norm() << endl;
-    cout << " t2_one->norm() = " << t2_one->norm() << endl;
-
-    {
-//    Tensor_Arithmetic::Tensor_Arithmetic<double>::set_tensor_elems( v2_, 1.0);
-    cout << "new v2_->norm() = " << v2_->norm() << endl;
-    shared_ptr<MultiTensor> sist = make_shared<MultiTensor>(1);
-    set_rdm( 0, 0 );
-    s = init_residual();
-    s->zero();
-    shared_ptr<Queue> sourceq = make_sourceq(false, true);
-    while(!sourceq->done())
-      sourceq->next_compute();
-    cout<<" ::VVOO -> OVOV 1::  dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one)<< endl; // + (*eref_)(0, 0);
-    }
-
-    {
-    v2_->zero();
-    cout << "v2_buff->norm() = " << v2_buff->norm() << endl;
-//    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( v2_buff, v2_, avav );
-    cout << "avav v2_->norm() = " << v2_->norm() << endl;
-    set_rdm(0, 0);
-    s = init_residual();
-    shared_ptr<Queue> sourceq = make_sourceq(false, true);
-    while(!sourceq->done())
-      sourceq->next_compute();
-    cout<<" ::VVAA -> AVAV reord 1:: dot_product_transpose(sist, t2_tmp) = "; cout.flush();
-    cout<< dot_product_transpose(s, t2_one)<< endl; // + (*eref_)(0, 0);
-    }
-
-    {
-    v2_->zero();
-    cout << "v2_buff->norm() = " << v2_buff->norm() << endl;
-//    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( v2_buff, v2_, cvcv );
-    cout << "cvcv v2_->norm() = " << v2_->norm() << endl;
-    set_rdm(0, 0);
-    s = init_residual();
-    shared_ptr<Queue> sourceq = make_sourceq(false, true);
-    while(!sourceq->done())
-      sourceq->next_compute();
-    cout<<" ::VVCC -> CVCV reord 1:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one)<< endl;; // + (*eref_)(0, 0);
-    }
-
-    {
-    v2_->zero();
-    cout << "v2_buff->norm() = " << v2_buff->norm() << endl;
-//    Tensor_Arithmetic::Tensor_Arithmetic<double>::put_tensor_range_block( v2_buff, v2_, avcv );
-    cout << "avcv v2_->norm() = " << v2_->norm() << endl;
-    set_rdm(0, 0);
-    s = init_residual();
-    shared_ptr<Queue> sourceq = make_sourceq(false, true);
-    while(!sourceq->done())
-      sourceq->next_compute();
-    cout<<" ::VVAC -> AVCV reord 3:: dot_product_transpose(sist, t2_tmp) = "; cout.flush(); 
-    cout<< dot_product_transpose(s, t2_one)<< endl;; // + (*eref_)(0, 0);
-    }
-
-    h1_ = h1_buff;
-    v2_ = v2_buff;
-  }
-  /////////////////////////////////// PT2 energy test////////////////////////////////////////////////
 
   // MS-CASPT2
   if (info_->do_ms() && nstates_ > 1) {
@@ -491,6 +286,101 @@ cout << "CASPT2::CASPT2::solve" << endl;
     heff_->element(0,0) = 1.0;
   }
   energy_ = pt2energy_;
+
+  ////// TEST
+  shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>(proptool_input_, info_->geom(), info_->ref() );
+  ////// END TEST
+  
+  {// TEST source
+
+    int maxtile = min( 10,  info_->maxtile() );
+    cout << "maxtile = " << maxtile << endl;
+    int nfrozenvirt = 0;
+
+    auto closed_rng  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nclosed-ncore, maxtile, 0, ncore));
+    auto active_rng  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact, maxtile, closed_rng->nblock(), ncore + nclosed  ) );
+    auto virtual_rng = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nvirt, maxtile, closed_rng->nblock()+ active_rng->nblock(), ncore + nclosed + nact ));
+    auto free_rng    = make_shared<SMITH::IndexRange>(*closed_rng); free_rng->merge(*active_rng); free_rng->merge(*virtual_rng);
+
+    cout << "nclosed = " << nclosed << "  ncore = " << ncore  << "  nact = " << nact << "  nvirt = " << nvirt << endl; 
+    
+    auto not_closed_rng  = make_shared<SMITH::IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
+    auto not_active_rng  = make_shared<SMITH::IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
+    auto not_virtual_rng = make_shared<SMITH::IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
+ 
+    auto  range_conversion_map = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
+    range_conversion_map->emplace("c", closed_rng); 
+    range_conversion_map->emplace("a", active_rng);
+    range_conversion_map->emplace("v", virtual_rng);
+    range_conversion_map->emplace("free", free_rng);
+ 
+    range_conversion_map->emplace("notcor", not_closed_rng);
+    range_conversion_map->emplace("notact", not_active_rng);
+    range_conversion_map->emplace("notvir", not_virtual_rng); 
+    
+    auto moint_init = make_shared<MOInt_Init<double>>( info_->geom(),  info_->ref(), ncore, nfrozenvirt, true );
+    
+    auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map );
+    cout << "pre t2all ranges = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
+    cout << "v2 sm range sizes = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
+
+    {
+    cout << endl << endl;
+    set_rdm(0, 0);
+    double source_norm = 0.0;
+    h1_->zero();
+    f1_->zero();
+
+    s = init_residual();
+    s->zero();
+    shared_ptr<Queue> source_task_list = make_sourceq(false, true);
+    while(!source_task_list->done())
+      source_task_list->next_compute();
+ 
+    cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
+
+    cout << "----------------------------------TEST SMITH-------------------------------" << endl;
+    vector<int> smith_order_0213 = { 0, 2, 1, 3 };
+//    t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_0213 );
+    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
+    cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
+    cout << "post dot source_norm = "<<  s->norm() << endl;
+    cout << "---------------------------------------------------------------------------" << endl;
+    } 
+
+    {
+    cout << endl << endl;
+    set_rdm(0, 0);
+    v2_->zero();
+    v2_ = moint_computer->calculate_v2_smith();
+    cout << "v2 mc range sizes = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
+    h1_->zero();
+    f1_->zero();
+
+    s = init_residual();
+    s->zero();
+    double source_norm = 0.0;
+    shared_ptr<Queue> source_task_list = make_sourceq(false, true);
+    while(!source_task_list->done())
+      source_task_list->next_compute();
+
+    cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
+    vector<int> smith_order_0213 = { 0, 2, 1, 3 };
+    t2all_[0]->at(0)->zero();
+    t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_0213 );
+    cout << "t2all ranges = [ " ; cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
+
+//    cout << endl; Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_, "v2_moint",  true ); cout << endl;
+    cout << "----------------------------------TEST MOINT-------------------------------" << endl;
+    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
+    cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
+    cout << "pre dot source_norm = "<<  s->norm() << endl;
+    cout << "---------------------------------------------------------------------------" << endl;
+    }
+  }
+
+  throw logic_error( "die here for testing purposes!" ); 
+
 }
 
 

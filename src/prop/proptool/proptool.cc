@@ -203,10 +203,10 @@ void PropTool::PropTool::get_expression_variables( shared_ptr<const PTree> varia
     if (factor_const ) {   
       if ( num_indexes == 0 ) { 
 
-        double factor_value = factor_info->get<double>( "value" ) ;
+        double factor_value = factor_info->get<double>( "value" );
 
         if ( inp_factor_map_->find(factor_name) != inp_factor_map_->end() )
-          throw runtime_error("Factor \"" + factor_name + "\" has been defined twice in input!!! ... aborting" ) ;
+          throw runtime_error("Factor \"" + factor_name + "\" has been defined twice in input!!! ... aborting" );
 
         inp_factor_map_->emplace( factor_name, factor_value ); 
 

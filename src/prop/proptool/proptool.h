@@ -119,6 +119,10 @@ namespace PropTool {
      int nvirt()  { return nvirt_;}     
      int nfrozenvirt(){ return nfrozenvirt_;}     
      bool block_diag_fock() { return block_diag_fock_; }     
+
+     //TEST
+     std::shared_ptr<SMITH::Tensor_<double>> tamps_smith_;
+     //END TEST
  
 };
 };
