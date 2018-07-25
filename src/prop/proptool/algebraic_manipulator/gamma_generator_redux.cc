@@ -26,7 +26,6 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   cout << "block factors = [ "; cout.flush(); 
   for ( auto rb : *(block_info_->range_blocks()) ) { cout << "(" << rb->factors().first << ", " << rb->factors().second << ") " ; cout.flush();}
   cout << "] " << endl;
-   
 
   idxs_trans_ = block_info_->idxs_trans();
   std_rngs_ = *(block_info_->unique_block_->orig_rngs_);

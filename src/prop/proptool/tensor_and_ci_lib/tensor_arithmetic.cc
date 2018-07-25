@@ -56,8 +56,6 @@ cout << endl <<  "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
   vector<IndexRange> summand_ranges = summand->indexrange();
 
   cout.precision(13);
-  cout << "summand->norm() = "; cout.flush(); cout << summand->norm() << endl;
-  cout << "target->norm() = "; cout.flush(); cout << target->norm() << endl;
 
   if ( target->size_alloc() != 1 ) {
     vector<int> summand_maxs = get_num_index_blocks_vec( summand_ranges );
@@ -89,21 +87,18 @@ cout << endl <<  "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
       }
 
       target->put_block( target_block_data, target_block_ranges );
-     
-      {
-      auto tmp = target->get_block(target_block_ranges);
-      cout << " post target_block sum = " << sum_unique_ptr_elems( tmp, summand_block_size); cout << endl;
-      }
 
     } while( fvec_cycle_skipper_f2b(summand_block_pos, summand_maxs, summand_mins) );
 
   } else { 
-    target->ax_plus_y( summand_factors.front() , summand ); 
+    for ( typename vector<DataType>::iterator sf_it = summand_factors.begin(); sf_it !=  summand_factors.end() ; ++sf_it ){ 
+      cout << " target " << *sf_it << " summand : " ;cout.flush(); 
+      cout << sum_tensor_elems(target) <<" " <<  *sf_it << " "  << sum_tensor_elems(summand) << " = ";  cout.flush();
+      target->ax_plus_y( *sf_it , summand ); 
+      cout << sum_tensor_elems(target) << endl;
+    }
 
   } 
-
-  cout << "summand->norm() = "; cout.flush(); cout << summand->norm() << endl;
-  cout << "target->norm() = "; cout.flush(); cout << target->norm() << endl;
 
   return;
 } 
@@ -1504,7 +1499,6 @@ void Tensor_Arithmetic::Tensor_Arithmetic<std::complex<double>>::gemm( char op1,
   zgemm_( &op1, &op2, size_i, size_l, size_j, alpha, A_data, size_i,  B_data, size_j, beta, C_data, size_i);
   return;
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // alpha.[op1(A_ij)B_j] + beta.[C_il] = C_il
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
