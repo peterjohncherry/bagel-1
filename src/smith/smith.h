@@ -94,6 +94,7 @@ class Smith : public Method {
 
     std::shared_ptr<const Matrix> coeff() const { return coeff_; }
 
+
 #ifdef COMPILE_SMITH
     std::shared_ptr<const SMITH::SpinFreeMethod<double>> algo() const { return algo_; }
 #endif

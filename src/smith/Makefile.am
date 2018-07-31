@@ -16,7 +16,6 @@ caspt2/SPCASPT2.cc caspt2/SPCASPT2_gamma.cc caspt2/SPCASPT2_densityq.cc caspt2/S
 caspt2/SPCASPT2_gen2.cc caspt2/SPCASPT2_gen3.cc caspt2/SPCASPT2_gen4.cc caspt2/SPCASPT2_gen5.cc caspt2/SPCASPT2_gen6.cc \
 caspt2/SPCASPT2_tasks1.cc caspt2/SPCASPT2_tasks2.cc caspt2/SPCASPT2_tasks3.cc caspt2/SPCASPT2_tasks4.cc caspt2/SPCASPT2_tasks5.cc \
 caspt2/SPCASPT2_tasks6.cc \
-\
 caspt2/MSCASPT2.cc caspt2/MSCASPT2_gamma.cc caspt2/MSCASPT2_densityq.cc caspt2/MSCASPT2_density1q.cc caspt2/MSCASPT2_density2q.cc caspt2/MSCASPT2_deciq.cc \
 caspt2/MSCASPT2_deci2q.cc caspt2/MSCASPT2_deci3q.cc caspt2/MSCASPT2_deci4q.cc \
 caspt2/MSCASPT2_gen1.cc caspt2/MSCASPT2_gen2.cc caspt2/MSCASPT2_gen3.cc caspt2/MSCASPT2_gen4.cc caspt2/MSCASPT2_gen5.cc \

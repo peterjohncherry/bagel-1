@@ -78,6 +78,8 @@ Smith::Smith(const shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, 
 
   if (method == "caspt2") {
     algo_ = make_shared<CASPT2::CASPT2>(info);
+    algo_->proptool_input_ = idata->get_child("proptool");
+    
   } else if (method == "casa") {
     algo_ = make_shared<CASA::CASA>(info);
   } else if (method == "mrci") {

@@ -31,6 +31,10 @@
 #include <src/smith/caspt2/CASPT2.h>
 #include <src/util/math/linearRM.h>
 #include <src/smith/caspt2/MSCASPT2.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
+#include <src/prop/proptool/integrals/moint_computer.h>
+#include <src/prop/proptool/proptool.h>
 
 using namespace std;
 using namespace bagel;
@@ -39,7 +43,7 @@ using namespace bagel::SMITH;
 CASPT2::CASPT2::CASPT2(shared_ptr<const SMITH_Info<double>> ref) : SpinFreeMethod(ref) {
   eig_ = f1_->diag();
   nstates_ = info_->nact() ? ref->ciwfn()->nstates() : 1;
-
+  
   // MS-CASPT2: t2 and s as MultiTensor (t2all, sall)
   for (int i = 0; i != nstates_; ++i) {
     auto tmp = make_shared<MultiTensor>(nstates_);
@@ -53,15 +57,15 @@ CASPT2::CASPT2::CASPT2(shared_ptr<const SMITH_Info<double>> ref) : SpinFreeMetho
     sall_.push_back(tmp2);
     rall_.push_back(tmp2->clone());
   }
+
   energy_.resize(nstates_);
   pt2energy_.resize(nstates_);
 }
 
 
 CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
+cout << "CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {" << endl;
   info_    = cas.info_;
-  virt_    = cas.virt_;
-  active_  = cas.active_;
   closed_  = cas.closed_;
   rvirt_   = cas.rvirt_;
   ractive_ = cas.ractive_;
@@ -83,14 +87,15 @@ CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {
   h1_ = cas.h1_;
   f1_ = cas.f1_;
   v2_ = cas.v2_;
+  H_2el_ =  cas.H_2el_; 
 
   rdm0all_ = cas.rdm0all_;
   rdm1all_ = cas.rdm1all_;
   rdm2all_ = cas.rdm2all_;
   rdm3all_ = cas.rdm3all_;
   rdm4all_ = cas.rdm4all_;
-}
 
+}
 
 void CASPT2::CASPT2::do_rdm_deriv(double factor) {
   Timer timer(1);
@@ -145,10 +150,17 @@ void CASPT2::CASPT2::do_rdm_deriv(double factor) {
 
 
 void CASPT2::CASPT2::solve() {
+cout << "CASPT2::CASPT2::solve" << endl;
   Timer timer;
   print_iteration();
 
+  const int ncore = info_->ncore();
+  const int nclosed = info_->nclosed()-info_->ncore();
+  const int nact = info_->nact();
+  const int nvirt = info_->nvirt() + info_->nfrozenvirt();
+ 
   // <proj_jst|H|0_K> set to sall in ms-caspt2
+  cout << "getting  <proj_jst|H|0_K> " << endl;
   for (int istate = 0; istate != nstates_; ++istate) { //K states
     t2all_[istate]->fac(istate) = 0.0;
     sall_[istate]->fac(istate)  = 0.0;
@@ -163,6 +175,7 @@ void CASPT2::CASPT2::solve() {
         sourceq->next_compute();
     }
   }
+  cout << "got  <proj_jst|H|0_K> " << endl;
 
   // solve linear equation for t amplitudes
   t2all_ = solve_linear(sall_, t2all_);
@@ -273,6 +286,107 @@ void CASPT2::CASPT2::solve() {
     heff_->element(0,0) = 1.0;
   }
   energy_ = pt2energy_;
+
+  ////// TEST
+  shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>(proptool_input_, info_->geom(), info_->ref() );
+  proptool->tamps_smith_ = make_shared<SMITH::Tensor_<double>>(*(t2all_[0]->at(0)) );
+  cout << "1  proptool->tamps_smith_->norm() = " <<   proptool->tamps_smith_->norm() << endl;
+  proptool->construct_task_lists();
+  cout << "2  proptool->tamps_smith_->norm() = " <<   proptool->tamps_smith_->norm() << endl;
+  proptool->execute_compute_lists();
+  cout << "3  proptool->tamps_smith_->norm() = " <<   proptool->tamps_smith_->norm() << endl;
+  ////// END TEST
+  
+  {// TEST source
+
+    int maxtile = min( 10,  info_->maxtile() );
+    cout << "maxtile = " << maxtile << endl;
+    int nfrozenvirt = 0;
+
+    auto closed_rng  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nclosed-ncore, maxtile, 0, ncore));
+    auto active_rng  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact, maxtile, closed_rng->nblock(), ncore + nclosed  ) );
+    auto virtual_rng = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nvirt, maxtile, closed_rng->nblock()+ active_rng->nblock(), ncore + nclosed + nact ));
+    auto free_rng    = make_shared<SMITH::IndexRange>(*closed_rng); free_rng->merge(*active_rng); free_rng->merge(*virtual_rng);
+
+    cout << "nclosed = " << nclosed << "  ncore = " << ncore  << "  nact = " << nact << "  nvirt = " << nvirt << endl; 
+    
+    auto not_closed_rng  = make_shared<SMITH::IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
+    auto not_active_rng  = make_shared<SMITH::IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
+    auto not_virtual_rng = make_shared<SMITH::IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
+ 
+    auto  range_conversion_map = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
+    range_conversion_map->emplace("c", closed_rng); 
+    range_conversion_map->emplace("a", active_rng);
+    range_conversion_map->emplace("v", virtual_rng);
+    range_conversion_map->emplace("free", free_rng);
+ 
+    range_conversion_map->emplace("notcor", not_closed_rng);
+    range_conversion_map->emplace("notact", not_active_rng);
+    range_conversion_map->emplace("notvir", not_virtual_rng); 
+    
+    auto moint_init = make_shared<MOInt_Init<double>>( info_->geom(),  info_->ref(), ncore, nfrozenvirt, true );
+    
+    auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map );
+    cout << "pre t2all ranges = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
+    cout << "v2 sm range sizes = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
+
+    
+    {
+    cout << endl << endl;
+    set_rdm(0, 0);
+    double source_norm = 0.0;
+    h1_->zero();
+    f1_->zero();
+
+    s = init_residual();
+    s->zero();
+    shared_ptr<Queue> source_task_list = make_sourceq(false, true);
+    while(!source_task_list->done())
+      source_task_list->next_compute();
+ 
+    cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
+
+    cout << "----------------------------------TEST SMITH-------------------------------" << endl;
+    vector<int> smith_order_0213 = { 0, 2, 1, 3 };
+    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
+    cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
+    cout << "post dot source_norm = "<<  s->norm() << endl;
+    cout << "---------------------------------------------------------------------------" << endl;
+    } 
+    throw logic_error( " die here for testing " ); 
+    {
+    cout << endl << endl;
+    set_rdm(0, 0);
+    v2_->zero();
+    v2_ = moint_computer->calculate_v2_smith();
+    cout << "v2 mc range sizes = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
+    h1_->zero();
+    f1_->zero();
+
+    s = init_residual();
+    s->zero();
+    double source_norm = 0.0;
+    shared_ptr<Queue> source_task_list = make_sourceq(false, true);
+    while(!source_task_list->done())
+      source_task_list->next_compute();
+
+    cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
+    vector<int> smith_order_0213 = { 0, 2, 1, 3 };
+    t2all_[0]->at(0)->zero();
+    t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_0213 );
+    cout << "t2all ranges = [ " ; cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
+
+//    cout << endl; Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_, "v2_moint",  true ); cout << endl;
+    cout << "----------------------------------TEST MOINT-------------------------------" << endl;
+    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
+    cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
+    cout << "pre dot source_norm = "<<  s->norm() << endl;
+    cout << "---------------------------------------------------------------------------" << endl;
+    }
+  }
+
+  throw logic_error( "die here for testing purposes!" ); 
+
 }
 
 
@@ -497,6 +611,7 @@ void CASPT2::CASPT2::solve_gradient(const int targetJ, const int targetI, shared
       Den1_ = Den1;
     }
     timer.tick_print("Correlated density matrix evaluation");
+ 
 
     // then form deci0 - 4
     den0ci = rdm0_->clone();
@@ -521,6 +636,7 @@ void CASPT2::CASPT2::solve_gradient(const int targetJ, const int targetI, shared
   } else {
     // in case when CASPT2 is not variational...
     MSCASPT2::MSCASPT2 ms(*this);
+    
     ms.solve_gradient(targetJ, targetI, nocider);
     den1_ = ms.rdm11();
     den2_ = ms.rdm12();

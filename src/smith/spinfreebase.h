@@ -69,6 +69,7 @@ class SpinFreeMethod {
     std::shared_ptr<MatType> xmsmat_;
 
     std::shared_ptr<Tensor_<DataType>> v2_;
+    std::shared_ptr<Tensor_<DataType>> H_2el_;
     std::shared_ptr<Tensor_<DataType>> f1_;
     std::shared_ptr<Tensor_<DataType>> h1_;
 
@@ -129,6 +130,7 @@ class SpinFreeMethod {
     void loop_over(std::function<void(const Index&, const Index&, const Index&, const Index&)>) const;
     // initialize t2 and r amplitude
     std::shared_ptr<Tensor_<DataType>> init_amplitude() const;
+    std::shared_ptr<Tensor_<DataType>> init_amplitude_allranges() const;
     std::shared_ptr<Tensor_<DataType>> init_residual() const;
 
   public:
@@ -155,6 +157,10 @@ class SpinFreeMethod {
     static std::shared_ptr<MatType> feed_rdm_2fderiv(std::shared_ptr<const SMITH_Info<DataType>> info, std::shared_ptr<const MatType> fockact, const int istate);
     static std::tuple<std::shared_ptr<VecType>, std::shared_ptr<MatType>, std::shared_ptr<MatType>, std::shared_ptr<MatType>>
       feed_rdm_deriv(std::shared_ptr<const SMITH_Info<DataType>> info, std::shared_ptr<const MatType> fockact, const int istate, const size_t offset, const size_t size, std::shared_ptr<const MatType> rdm2fd_in);
+
+///////////TEST
+std::shared_ptr<PTree> proptool_input_;
+///////////END TEST
 
 };
 

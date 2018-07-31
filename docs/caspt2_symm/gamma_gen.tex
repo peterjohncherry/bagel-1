@@ -1,0 +1,199 @@
+\documentclass[12pt]{article}
+\usepackage[utf8x]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{textcomp}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage[font=small,format=plain,labelfont=bf,up,textfont=it,up]{caption}
+\usepackage{longtable}
+\usepackage{calc}
+\usepackage{setspace}
+\usepackage{hhline}
+\usepackage{ifthen}
+\usepackage{lscape}
+\usepackage{pdfpages}
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+ bottom=20mm,
+ right=20mm,
+ }
+\usepackage{cite}
+\linespread{1.3}
+
+\begin{document}
+\begin{equation*}
+\sum_{\substack{ x_{1}x_{2}...\\ y_{1}y_{2}... \\ ...}} X_{x_{1}x_{2}...} Y_{y_{1}y_{2}...} ...
+\sum_{I}\sum_{J}
+\langle I | \hat{E}^{\dagger}_{\Omega} a^{\dagger}_{x_{1}} a_{x_{2}}...a^{\dagger}_{y_{1}}a_{y_{2}}....| J \rangle 
+ c^{M \dagger}_{I}c^{N}_{J}
+\end{equation*}
+\begin{equation}
+=
+\sum_{\substack{ x_{1}x_{2}...\\ y_{1}y_{2}... \\ ...}} X_{x_{1}x_{2}...} Y_{y_{1}y_{2}...} ...
+\sum_{I}\sum_{J}
+\langle I | a_{\omega_{1}} a_{\omega_{2}}.. .a^{\dagger}_{x_{1}} a_{x_{2}}...a^{\dagger}_{y_{1}}a_{y_{2}}....| J \rangle 
+ c^{M \dagger}_{I}c^{N}_{J}
+\label{eqn:basic_2nd_quantized_projector}
+\end{equation}
+ \noindent where the $\hat{E}^{\dagger}_{\Omega}$ is an operator
+which excites electrons from orbitals in the space used to represent
+the reference wavefunctions, $\{|N\rangle\}$, and into some
+virtual space.  \\
+
+\noindent An illustrative example is provided by the XMS-CASPT2 amplitude equation: 
+\begin{equation*}
+\sum_{\Omega'}
+\langle \tilde{M} | \hat{E}^{\dagger}_{\Omega} (\hat{H} - \epsilon_{L}) \hat{T}^{LM}_{\Omega'}| \tilde{N} \rangle 
++
+\langle \tilde{M} | \hat{E}^{\dagger}_{\Omega}\hat{H}| \tilde{L} \rangle 
+\end{equation*}
+
+For now we can just consider the second the second term, which written out with all summations over orbitals and 
+ci-indexes made explicit is
+\begin{equation}
+X_{\omega_{1}\omega_{2}\omega_{3}\omega_{4}}
+= 
+\sum_{ H_{1}H_{2}H_{3}H_{4}} 
+\sum_{I}\sum_{J}
+\langle I |
+\hat{a}_{\omega_{4}} \hat{a}_{\omega_{3}}\hat{a}^{\dagger}_{\omega_{2}}\hat{a}^{\dagger}_{\omega_{1}}
+\hat{a}^{\dagger}_{h_{1}} \hat{a}^{\dagger}_{h_{2}}\hat{a}_{h_{3}}\hat{a}_{h_{4}}| J \rangle  
+c^{M \dagger}_{I}c^{N}_{J} H_{h_{1}h_{2}h_{3}h_{4}}
+\label{eqn:XH_example}
+\end{equation}
+This cannot be solved using the same techniques as where all the orbital indexes are summed over; rearranging all the terms into 
+normal order would  cause contractions with the $\omega$ indexes of $X$. Still, we want a method of evaluation which only
+involves contraction of the operator tensors with a reduced density matrix (or similar) with only active indexes.
+
+\noindent To accomplish this, imagine splitting the term up into 
+two subsections using the resolution of identity\footnote{This is to illustrate the rationale behind
+the algorithm; such a resolution of identity is not required in the final proceedure.}.
+
+\begin{equation}
+X_{\omega_{1}\omega_{2}\omega_{3}\omega_{4}}
+= 
+\sum_{ h_{1}h_{2}h_{3}h_{4}} 
+\sum_{IJK}
+\langle I |
+\hat{a}_{\omega_{4}} \hat{a}_{\omega_{3}}\hat{a}^{\dagger}_{\omega_{2}}\hat{a}^{\dagger}_{\omega_{1}}
+| K \rangle \langle K | 
+\hat{a}^{\dagger}_{h_{1}} \hat{a}^{\dagger}_{h_{2}}\hat{a}_{h_{3}}\hat{a}_{h_{4}}| J \rangle  
+c^{M \dagger}_{I}c^{N}_{J} h_{h_{1}h_{2}h_{3}h_{4}}
+\label{eqn:X_RI_H_example}
+\end{equation}
+\noindent We can now rearrange this so that the second BraKet $\langle K | ... | J \rangle$ is a sum of \emph{anti}-normal ordered terms, e.g.,
+\begin{equation}
+\sum_{ h_{1}h_{2}h_{3}h_{4}} 
+\sum_{IKJ}
+\langle I |
+\hat{a}_{\omega_{4}} \hat{a}_{\omega_{3}}\hat{a}^{\dagger}_{\omega_{2}}\hat{a}^{\dagger}_{\omega_{1}}
+| K \rangle \langle K | 
+\hat{a}_{h_{3}}\hat{a}_{h_{4}}\hat{a}^{\dagger}_{h_{1}} \hat{a}^{\dagger}_{h_{2}}| J \rangle  
+c^{M \dagger}_{I}c^{N}_{J} h_{h_{1}h_{2}h_{3}h_{4}}
+\label{eqn:X_RI_H_anti_normal1}
+\end{equation}
+It is apparent that 
+\begin{equation}
+|K\rangle = \hat{a}_{\omega_{1}}^{\dagger} \hat{a}_{\omega_{2}}^{\dagger}\hat{a}_{\omega_{3}}\hat{a}_{\omega_{4}} |I \rangle
+\label{eqn:KI}
+\end{equation}
+\begin{equation}
+|K\rangle =\hat{a}_{h_{3}}\hat{a}_{h_{4}}\hat{a}^{\dagger}_{h_{1}} \hat{a}^{\dagger}_{h_{2}}|J \rangle
+\label{eqn:KJ}
+\end{equation}
+\noindent Now we split the $\mathbf{X}$ into three kinds of blocks. Blocks of the first kind are such that no creation index is in the same 
+range as any annihilation index. In blocks of the second kind, one pair of creation and annihiliation indexes may exist in the same space.
+In blocks of the final kind, all indexes are in active indexes\footnote{Typically, the CASPT2 amplitudes have no such block.}. \\
+ 
+\noindent If we consider blocks where all indexes are different,
+and in the special case where $I\rangle$ and $|K\rangle$ are defined within the same space,
+then it is apparent from (\ref{eqn:KI}) and  (\ref{eqn:KJ}) that every non-active creation $\omega$ index must
+cancel with a non-active annihilation $h$ index. Suppose we are dealing with the block of $\mathbf{X}$ such that \\
+$\omega_{1} = $ core,\\  
+$\omega_{2} = $ core,   \\
+$\omega_{3} = $ virtual, \\
+$\omega_{4} = $ virtual.\\ 
+\noindent  This leads to contributions to the block $X_{\omega_{1}\omega_{2}\omega_{3}\omega_{4}}$ 
+\begin{equation*}
+\sum_{h_{1}h_{2}h_{3}h_{4}} 
+\sum_{IJK}
+\langle I |
+\hat{a}_{\omega_{4}} \hat{a}_{\omega_{3}}\hat{a}^{\dagger}_{\omega_{2}}\hat{a}^{\dagger}_{\omega_{1}}
+\hat{a}_{h_{3}}\hat{a}_{h_{4}}\hat{a}^{\dagger}_{h_{1}} \hat{a}^{\dagger}_{h_{2}}| J \rangle  
+c^{M \dagger}_{I}c^{N}_{J} h_{h_{1}h_{2}h_{3}h_{4}}( \delta_{h_{3},\omega_{1}}\delta_{h_{4},\omega_{2}} +  \delta_{h_{3},\omega_{2}}\delta_{h_{4},\omega_{1}} ).
+\end{equation*}
+\begin{equation}
+=\sum_{h_{1}h_{2}h_{3}h_{4}} 
+\sum_{IJK}
+\langle I |
+\hat{a}_{\omega_{4}} \hat{a}_{\omega_{3}}\hat{a}^{\dagger}_{h_{1}} \hat{a}^{\dagger}_{h_{2}}| J \rangle  
+c^{M \dagger}_{I}c^{N}_{J} h_{h_{1}h_{2}h_{3}h_{4}}( \delta_{h_{3},\omega_{1}}\delta_{h_{4},\omega_{2}} +  \delta_{h_{3},\omega_{2}}\delta_{h_{4},\omega_{1}} ).
+\label{eqn:XRIHmatch}
+\end{equation}
+\noindent We can now reorder the $h$ indexes into normal-ordering, and repeat the process, only this time pairing every non-active annihilation
+$\omega$ index with a non-active creation $h$ index of the same range:
+\begin{equation*}
+\sum_{h_{1}h_{2}h_{3}h_{4}} 
+\sum_{IJK}
+\langle I |
+\hat{a}_{\omega_{4}} \hat{a}_{\omega_{3}}\hat{a}^{\dagger}_{h_{1}} \hat{a}^{\dagger}_{h_{2}}| J \rangle  
+c^{M \dagger}_{I}c^{N}_{J} h_{h_{1}h_{2}h_{3}h_{4}}
+( \delta_{h_{3},\omega_{1}}\delta_{h_{4},\omega_{2}} +  \delta_{h_{3},\omega_{2}}\delta_{h_{4},\omega_{1}} )
+( \delta_{h_{1},\omega_{3}}\delta_{h_{2},\omega_{4}} +  \delta_{h_{1},\omega_{3}}\delta_{h_{2},\omega_{3}} ).
+\end{equation*}
+\begin{equation}
+\sum_{h_{1}h_{2}h_{3}h_{4}} 
+\sum_{IJK}
+\langle I|J\rangle c^{M \dagger}_{I}
+c^{N}_{J} h_{h_{1}h_{2}h_{3}h_{4}}
+( \delta_{h_{3},\omega_{1}}\delta_{h_{4},\omega_{2}} +  \delta_{h_{3},\omega_{2}}\delta_{h_{4},\omega_{1}} )
+( \delta_{h_{1},\omega_{3}}\delta_{h_{2},\omega_{4}} +  \delta_{h_{1},\omega_{3}}\delta_{h_{2},\omega_{3}} ).
+\label{eqn:XRIHmatch2}
+\end{equation}
+This process is then repeated for all the different blocks  of $\mathbf{X}$. As is apparent from the above the dimension of the 
+density matrix can be reduced substantially, but this is at the cost of extensive reordering of the tensor $\mathbf{h}$. However, 
+provided symmetry of $\mathbf{h}$ is properly taken into account many of these reorderings are equivalent or closely related,
+enabling many of the terms in the reordering to be merged. It should be noted that $\langle I | J \rangle $ may never equal $1$ 
+in the relativistic case, as the $ | I\rangle $ and $| J \rangle $ may be from different spin sectors.\\ 
+
+\noindent This method can be applied to more complicated terms, e.g.,
+\begin{equation}
+\sum_{ \substack{t_{1}t_{2}t_{3}t_{4}\\ f_{1}f_{2}}} 
+\sum_{IKJ}
+\langle I |
+\hat{a}_{\omega_{4}} \hat{a}_{\omega_{3}}\hat{a}^{\dagger}_{\omega_{2}}\hat{a}^{\dagger}_{\omega_{1}}
+| K \rangle \langle K | 
+\hat{a}_{f_{2}}\hat{a}_{t_{3}}\hat{a}_{t_{4}}\hat{a}^{\dagger}_{f_{1}}\hat{a}^{\dagger}_{t_{1}} \hat{a}^{\dagger}_{t_{2}}| J \rangle  
+c^{M \dagger}_{I}c^{N}_{J} T_{t_{1}t_{2}t_{3}t_{4}}f_{f_{1}f_{2}}
+\label{eqn:X_RI_fT_anti_normal1}
+\end{equation}
+Which for the block $X_{\omega_{1}\omega_{2}\omega_{3}\omega_{4}}$ with 
+$\omega_{1}$ and $\omega_{2}$ virtual, and $\omega_{3}$ and $\omega_{4}$ active would yield 
+
+\begin{equation}
+\sum_{ \substack{t_{1}t_{2}t_{3}t_{4}\\ f_{1}f_{2}}} 
+\sum_{IKJ}
+\langle I | \hat{a}_{w}\hat{a}_{x}| J \rangle  
+c^{M \dagger}_{I}c^{N}_{J} T_{t_{1}t_{2}t_{3}t_{4}}f_{f_{1}f_{2}}
+( \delta_{t_{1},\omega_{1}}\delta_{t_{2},\omega_{2}} +  \delta_{t_{1},\omega_{2}}\delta_{t_{2},\omega_{1}} + ... ),
+\label{eqn:XfTend}
+\end{equation}
+\noindent where the $w$ are $x$  are the non-contracted active indexes.
+Note that as all the $\omega$ destructors are active, none of the $f$ or $t$ indexes are contracted with them,
+resulting in only one bracket. More importantly, there is a reduced density matrix, however as all the indexes on
+$X$ are now paired up. This results in a contraction between a two index reduced density matrix, and a six index
+tensor, formed from $\mathbf{T}\otimes\mathbf{f}$, with a sum over all the appropriate reordering relations 
+specified by the $\delta$ functions. \\ 
+
+\noindent As a rule, if the projector has $n$ different indexes, and the total number of indexes on the operator is $m$, e.g.,
+$m=6$ for $T_{t_{1}t_{2}t_{3}t_{4}}f_{f_{1}f_{2}}$, then we will need to contract several different orderings of an $m$ rank
+tensor with and $m-n$ rank reduced density matrix. 
+\end{document}

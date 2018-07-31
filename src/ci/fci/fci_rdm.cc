@@ -225,6 +225,7 @@ tuple<shared_ptr<RDM<3>>, shared_ptr<RDM<4>>> FCI::rdm34(const int ist, const in
   }
 
   // second make <J|E_kl|I><I|E_ij|0> - delta_il <J|E_kj|0>
+  // When I try to duplicate I have to use rdm_ijkl = E_klij - delta_{il}E_kj  Note the ordering of the LHS and RHS are not the same
   auto make_evec_half = [this](shared_ptr<Dvec> d, shared_ptr<Matrix> e, const int dsize, const int offset) {
     const int norb2 = norb_ * norb_;
     const int lena = cc_->det()->lena();

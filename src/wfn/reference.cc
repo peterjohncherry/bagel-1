@@ -394,5 +394,3 @@ shared_ptr<Reference> Reference::extract_average_rdm(const vector<int> rdm_state
 
   return make_shared<Reference>(geom_, coeff_, nclosed_, nact_, nvirt_, energy_, rdm1, rdm2, rdm1_av, rdm2_av, ciwfn_);
 }
-
-

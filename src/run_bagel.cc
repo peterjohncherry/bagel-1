@@ -36,6 +36,7 @@
 #include <src/asd/multisite/multisite.h>
 #include <src/util/archive.h>
 #include <src/util/io/moldenout.h>
+#include <src/prop/proptool/proptool.h>
 
 using namespace std;
 using namespace bagel;
@@ -114,6 +115,13 @@ void bagel::impl::run_bagel_(shared_ptr<const PTree> idata) {
 
       auto opt = make_shared<Force>(itree, geom, ref);
       opt->compute();
+
+    } else if (title == "proptool") {
+
+        cout << "===============INTO PROPTOOL================" << endl;
+        shared_ptr<PropTool::PropTool> my_eqn = make_shared<PropTool::PropTool>(itree, geom, ref);
+//        my_eqn->compute();
+        cout << "===============OUT OF PROPTOOL================" << endl;
 
     } else if (title == "hessian") {
 

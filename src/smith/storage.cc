@@ -237,6 +237,12 @@ void StorageIncore<DataType>::add_block(const unique_ptr<DataType[]>& dat, const
   rma_add(dat, generate_hash_key(i0, i1, i2, i3, i4, i5, i6, i7));
 }
 
+template<typename DataType>
+void StorageIncore<DataType>::add_block(const unique_ptr<DataType[]>& dat, vector<Index> i) {
+  rma_add(dat, generate_hash_key(i));
+}
+
+
 
 template<typename DataType>
 tuple<size_t,size_t,size_t> StorageIncore<DataType>::locate(const size_t key) const {

@@ -30,6 +30,8 @@
 #include <src/smith/spinfreebase.h>
 #include <src/smith/smith_util.h>
 #include <src/mat1e/cap.h>
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h> 
+#include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h> 
 
 using namespace std;
 using namespace bagel;
@@ -76,7 +78,7 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
     // canonical orbitals within closed and virtual subspaces
     coeff_ = fock.coeff();
   }
-
+   
   // v2 tensor.
   {
     IndexRange occ(closed_);  occ.merge(active_);
@@ -87,9 +89,19 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
       occ = all_;
       virt = all_;
     }
-    K2ext<DataType> v2k(info_, coeff_, {occ, virt, occ, virt});
+    K2ext<DataType> v2k(info_, coeff_, {occ, virt, occ, virt}); // how does this work for MRCI; moint says it can only handle 2 externals? 
+    vector<IndexRange> new_ranges = { occ, virt, occ, virt }; 
+ 
     v2_ = v2k.tensor();
+
   }
+  ////////////////////// temp H_2el tensor for testing//////////////////////////////////////////
+//  {
+//    K2ext<DataType> v2k(info_, coeff_, {all_, all_, all_, all_});
+//    H_2el_ = v2k.tensor();
+//  }
+  //////////////////////////////////////////////////////////////////////////////////////////////
+
   timer.tick_print("MO integral evaluation");
 
   auto fockact = make_shared<MatType>(active_.size(), active_.size());
@@ -124,6 +136,7 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
 
   // set e0all_
   compute_e0();
+  set_rdm(0, 0);
 
   mpi__->barrier();
 }
@@ -658,44 +671,44 @@ void SpinFreeMethod<DataType>::compute_e0() {
 // local function to compress the following
 template<typename DataType>
 void SpinFreeMethod<DataType>::loop_over(function<void(const Index&, const Index&, const Index&, const Index&)> func) const {
-  for (auto& i3 : virt_)
-    for (auto& i2 : closed_)
+  for (auto& i3 : virt_)          //cvcv
+    for (auto& i2 : closed_)     
       for (auto& i1 : virt_)
         for (auto& i0 : closed_)
           func(i0, i1, i2, i3);
-  for (auto& i2 : active_)
+  for (auto& i2 : active_)        //avav
     for (auto& i0 : active_)
       for (auto& i3 : virt_)
         for (auto& i1 : virt_)
           func(i0, i1, i2, i3);
-  for (auto& i0 : active_)
+  for (auto& i0 : active_)        //avcv
     for (auto& i3 : virt_)
       for (auto& i2 : closed_)
         for (auto& i1 : virt_)
           func(i0, i1, i2, i3);
-  for (auto& i3 : active_)
+  for (auto& i3 : active_)        //cvca
     for (auto& i2 : closed_)
       for (auto& i1 : virt_)
         for (auto& i0 : closed_)
           func(i0, i1, i2, i3);
-  for (auto& i3 : active_)
+  for (auto& i3 : active_)        //caca
     for (auto& i1 : active_)
       for (auto& i2 : closed_)
         for (auto& i0 : closed_)
           func(i0, i1, i2, i3);
-  for (auto& i3 : active_)
-    for (auto& i2 : active_)
+  for (auto& i3 : active_)       //cvaa and //avca
+    for (auto& i2 : active_)     
       for (auto& i1 : virt_)
         for (auto& i0 : closed_) {
           func(i0, i1, i2, i3);
           func(i2, i1, i0, i3);
         }
-  for (auto& i3 : active_)
+  for (auto& i3 : active_)           //avaa
     for (auto& i2 : active_)
       for (auto& i0 : active_)
         for (auto& i1 : virt_)
           func(i0, i1, i2, i3);
-  for (auto& i3 : active_)
+  for (auto& i3 : active_)          //caaa
     for (auto& i1 : active_)
       for (auto& i0 : active_)
         for (auto& i2 : closed_)
@@ -705,6 +718,16 @@ void SpinFreeMethod<DataType>::loop_over(function<void(const Index&, const Index
 
 template<typename DataType>
 shared_ptr<Tensor_<DataType>> SpinFreeMethod<DataType>::init_amplitude() const {
+  unordered_set<size_t> sparse;
+  auto put = [&sparse](const Index& i0, const Index& i1, const Index& i2, const Index& i3) {
+    sparse.insert(generate_hash_key(i0, i1, i2, i3));
+  };
+  loop_over(put);
+  return make_shared<Tensor_<DataType>>(v2_->indexrange(), /*kramers*/false, sparse, /*alloc*/true);
+}
+
+template<typename DataType>
+shared_ptr<Tensor_<DataType>> SpinFreeMethod<DataType>::init_amplitude_allranges() const {
   unordered_set<size_t> sparse;
   auto put = [&sparse](const Index& i0, const Index& i1, const Index& i2, const Index& i3) {
     sparse.insert(generate_hash_key(i0, i1, i2, i3));
