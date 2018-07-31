@@ -258,7 +258,7 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
   //vector<int> s_ordering = { 3, 2, 1, 0};
 //  vector<int> s_ordering = { 0, 2, 1, 3 };
 
-  vector<int> s_ordering = { 0, 2, 1, 3 };
+  vector<int> s_ordering = { 0, 1, 2, 3 };
   
   for ( auto& block : *required_blocks ) { 
  
@@ -272,20 +272,23 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
 
       string full_tens_name = block->op_info_->op_state_name_;
 
-      shared_ptr<vector<string>> id_ranges = CTP_map_->at(block_name)->unc_id_ranges() ;
-      WickUtils::print_vector( *id_ranges, "id_ranges" ); cout << endl;
+      shared_ptr<vector<string>> id_ranges = CTP_map_->at(block_name)->unc_id_ranges();
+      WickUtils::print_vector( *id_ranges, " id_ranges" ); cout << endl;
     
       if( tensop_data_map_->find(full_tens_name) == tensop_data_map_->end()){
 
         // TODO This will get the whole tensor, really, we should just get the blocks we want
         if ( full_tens_name[0] == 'H' || full_tens_name[0] == 'h' || full_tens_name[0] == 'f' ) {  
+          cout << "TOC::get_tensor_data_blocks:: else if ( full_tens_name[0] == 'H' h or f) " << endl; 
           build_mo_tensor( full_tens_name ); 
           get_sub_tensor( full_tens_name, block_name, *id_ranges );
 
         } else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't'  ) {  
+          cout << "TOC::get_tensor_data_blocks:: else if ( full_tens_name[0] == 'X' T or t) " << endl; 
           build_tensor( block_name, *id_ranges, (DataType)(1.0) );
            
         } else if ( full_tens_name[0] == 'S') {  
+          cout << "TOC::get_tensor_data_blocks:: else if ( full_tens_name[0] == 'S') " << endl; 
           build_s_test_tensor(full_tens_name, s_ordering );
           cout << endl; WickUtils::print_vector( *id_ranges, "id_ranges"); cout << endl; 
           Debugging_Utils::print_sizes( tensop_data_map_->at(full_tens_name)->indexrange(), "S indexrange()" ); cout << endl;
@@ -316,8 +319,14 @@ WickUtils::print_vector( ordering , " s_tensor_reordering" ); cout << endl;
 
   auto tdm_loc = tensop_data_map_->find(tensor_name);
   if ( tdm_loc == tensop_data_map_->end() ){ 
+    cout << "TOC::build_s_test_tensor if ( tdm_loc == tensop_data_map_->end() )" << endl;
+    print_vector( ordering , "ordering" ); cout << endl;
     tensop_data_map_->emplace( tensor_name, moint_computer_->build_s_test_tensor(ordering) );
   } else {  
+    cout << "TOC::build_s_test_tensor fount in map)"; cout.flush();
+    throw logic_error( " You have already checked for it in the tensop_data_map_ ... the pointers are probably scrambled!!");
+                          
+    print_vector( ordering , "ordering" ); cout << endl;
     tdm_loc->second = moint_computer_->build_s_test_tensor(ordering);
   }
     
@@ -642,7 +651,7 @@ WickUtils::print_vector( range_names, "range_names"); cout << endl;
   vector<IndexRange> block = Get_Bagel_IndexRanges( range_names ); 
 
 
-  if ( block_name[0] == 'S' ) {
+  if ( full_tens_name[0] == 'S' ) {
     auto tdm_loc = tensop_data_map_->find( block_name );
     vector<int> ord_1 = { 0, 3, 2, 1 };     
     vector<int> ord_2 = { 2, 3, 0, 1 };     

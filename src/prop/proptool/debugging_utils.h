@@ -157,8 +157,27 @@ namespace Debugging_Utils {
       std::cout << elem.name() << " " ; std::cout.flush();
     std::cout << " ] "; std::cout.flush();
   }
-
-
-
+ 
+  template<class IterType>
+  void print_iter_vector(std::vector<IterType> invec, std::string name =""){
+    if (name != "" ) 
+      std::cout << name << " ="; std::cout.flush();
+    std::cout << " [ ";
+    for (auto  elem : invec)
+      std::cout << *elem << " " ; std::cout.flush();
+    std::cout << "]  " ;
+    return;
+  }
+ 
+  template<class DataType>
+  void print_vector_at_pos(const std::vector<DataType>&  orig_vec, const std::vector<int>& posvec, std::string name =""){
+    if (name != "" ) 
+      std::cout << name << " ="; std::cout.flush();
+    std::cout << " [ ";
+    for ( int pos : posvec)
+      std::cout << orig_vec[pos] << " " ; std::cout.flush();
+     std::cout << "]  " ;
+    return;
+  }
 }
 #endif

@@ -192,6 +192,7 @@ WickUtils::print_vector( ordering, "s_test_tensor_ordering"); cout << endl;
   //TEST
   bool use_smith = true;
   if ( use_smith ) { 
+    Debugging_Utils::print_sizes( t_from_smith_->indexrange(), " t_from_smith" ); cout << endl;
     return t_from_smith_;
 
   } else { //ENDTEST

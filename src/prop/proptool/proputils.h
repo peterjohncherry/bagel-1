@@ -84,6 +84,34 @@ namespace WickUtils {
     }
     return true;
   }
+
+  // NOTE!!: The last_iters vector contains points to the last element you want to actually use for comparison.
+  //         It is almost certainly  _NEVER_ container.end(), far more likely container.end()-1 .
+  template<typename IterType> 
+  bool fvec_cycle_skipper_iter( std::vector<IterType>& forvec,
+                                const std::vector<IterType>& last_iters,
+                                const std::vector<IterType>& first_iters ) {
+   
+    typename std::vector<IterType>::const_reverse_iterator li_it = last_iters.crbegin();
+    typename std::vector<IterType>::const_reverse_iterator fi_it = first_iters.crbegin();
+    typename std::vector<IterType>::reverse_iterator id_1st_it = forvec.rend()-1;
+    for( typename std::vector<IterType>::reverse_iterator  fv_it = forvec.rbegin(); fv_it !=forvec.rend(); fv_it++, li_it++ , fi_it++ ) {
+      if ( *li_it == *fi_it ) {
+        if ( fv_it == id_1st_it )
+          return false;
+      } else if (*fv_it == *li_it) {
+        if ( fv_it == id_1st_it )
+          return false;    
+        else
+        *fv_it = *fi_it;
+      } else {
+        ++(*fv_it);
+        break;
+      }
+    }
+    return true;
+  }
+
   template<class DataType>
   void print_vector(std::vector<DataType> invec, std::string name =""){
     if (name != "" ) 
