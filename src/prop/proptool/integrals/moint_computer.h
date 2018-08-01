@@ -63,6 +63,7 @@ namespace bagel {
       //TEST
       std::shared_ptr<SMITH::Tensor_<DataType>> t_from_smith_;
       std::shared_ptr<SMITH::Tensor_<DataType>> s_from_smith_;
+      std::shared_ptr<SMITH::Tensor_<DataType>> v2_from_smith_;
       std::shared_ptr<SMITH::Tensor_<DataType>> build_s_test_tensor( const std::vector<int>& ordering);
       std::shared_ptr<SMITH::Tensor_<DataType>> calculate_v2_smith();
       std::shared_ptr<SMITH::Tensor_<DataType>> get_test_tensor( const std::vector<SMITH::IndexRange>& blocks  );

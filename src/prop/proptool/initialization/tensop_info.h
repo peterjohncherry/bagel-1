@@ -70,30 +70,63 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
    
   vector<string> vavc = { "v", "a", "v", "c" };
   vector<string> vcva = { "v", "c", "v", "a" };
+
+  vector<string> avav = { "a", "v", "a", "v" };
+  vector<string> cvcv = { "c", "v", "c", "v" };
   vector<string> cvav = { "c", "v", "a", "v" };
   vector<string> avcv = { "a", "v", "c", "v" };
+
+  vector<string> cacv = { "c", "a", "c", "v" };
+
+  vector<string> caav = { "c", "a", "a", "v" };
+
+  vector<string> aacv = { "a", "a", "c", "v" };
+
+  vector<string> cvca = { "c", "v", "c", "a" };
+  vector<string> cvaa = { "c", "v", "a", "a" };
+
+  vector<string> avca = { "a", "v", "c", "a" };
+  vector<string> caca = { "c", "a", "c", "a" };
+  vector<string> caaa = { "c", "a", "a", "a" };
+  vector<string> aaca = { "a", "a", "c", "a" };
+
+  vector<string> avaa = { "a", "v", "a", "a" };
+  vector<string> aaav = { "a", "a", "a", "v" };
+  vector<string> aaaa = { "a", "a", "a", "a" };
   
+
   static shared_ptr<Constraint_Allowed_Blocks> S_allowed_block_list = make_shared<Constraint_Allowed_Blocks>();
   S_allowed_block_list->add_block( cvav );
   S_allowed_block_list->add_block( avcv );
 
   static shared_ptr<Constraint_Allowed_Blocks> H_allowed_block_list = make_shared<Constraint_Allowed_Blocks>();
-  H_allowed_block_list->add_block( avcv );
-  H_allowed_block_list->add_block( cvav );
+  //H_allowed_blocks = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, caaa, aaca, avaa, aaav, aaaa }; 
+  {
+  vector<vector<string>> vec_H_allowed_blocks = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, caaa, aaca, avaa, aaav, aaaa }; 
+  for (auto elem : vec_H_allowed_blocks )
+    H_allowed_block_list->add_block( elem );
+  }
+
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
-   string ordering = "0213"; // TEST!! 
+   string ordering = "0123_alt"; // TEST!! 
    if ( ordering == "0123" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { core_a, core_a, virt_a, virt_a  } );
+   } else if ( ordering == "0123_alt" ) {
+     aops = make_shared<vector<bool>>  (vector<bool>  { false, true, false, true } );
+     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { free_a, free_a, free_a, free_a  } );
+     constraints = { H_allowed_block_list };
+      
    } else if ( ordering == "3210" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { false, false, true, true } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_core_a, not_virt_a, not_virt_a } );
    } else if ( ordering == "0213" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { false, true, false, true } );
-     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt_a, virt_a, not_virt_a, virt_a } );
-     constraints = { H_allowed_block_list };
+     //idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt_a, not_core_a, not_virt_a, not_core_a } );
+     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { free_a, free_a, free_a, free_a } );
+     //constraints = { H_allowed_block_list };
    } else if ( ordering == "3120" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { true, false, true, false } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  virt_a, act_a, virt_a, core_a } );
@@ -118,7 +151,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
       aops = make_shared<vector<bool>>  (vector<bool>  { false, true, false, true } );
       idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_virt_a, not_core_a, not_virt_a } );
     }
-    constraints = { S_allowed_block_list };
+//    constraints = { S_allowed_block_list };
     idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
     constraints.push_back(not_all_act);
     factor = make_pair( -1.0, 0.0);

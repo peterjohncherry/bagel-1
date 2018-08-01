@@ -123,6 +123,9 @@ namespace PropTool {
 
      //TEST
      std::shared_ptr<SMITH::Tensor_<double>> tamps_smith_;
+     std::shared_ptr<SMITH::Tensor_<double>> v2_smith_;
+     void set_maxtile( int new_maxtile ) { maxtile_ = new_maxtile; }
+     void set_cimaxtile( int new_cimaxtile ) { cimaxtile_ = new_cimaxtile; }
      //END TEST
  
 };

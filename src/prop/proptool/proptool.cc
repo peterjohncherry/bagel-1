@@ -95,6 +95,7 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
 
   auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
   moint_computer->t_from_smith_ = tamps_smith_; 
+  moint_computer->v2_from_smith_ = v2_smith_; 
   
   vector<string> free2 = { "free" , "free" };
   moint_computer->calculate_fock( free2, true, true );
@@ -126,12 +127,12 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //Initializing range sizes either from idate or reference wfn 
-  maxtile_   = idata_->get<int>("maxtile", 10000);
+  maxtile_   = idata_->get<int>("maxtile", 10);
 
   //cimaxtile_ = idata_->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
   cimaxtile_ = 100000; //TODO fix this so it uses the above statement, issue in b_gamma_computer means must use large cimaxblock for now
 
-  const bool frozen = idata_->get<bool>("frozen", true);
+  const bool frozen = idata_->get<bool>("frozen", false);
   ncore_ = idata_->get<int>("ncore", (frozen ? ref_->geom()->num_count_ncore_only()/2 : 0));
   if (ncore_)
     cout << "    * freezing " << ncore_ << " orbital" << (ncore_^1 ? "s" : "") << endl;

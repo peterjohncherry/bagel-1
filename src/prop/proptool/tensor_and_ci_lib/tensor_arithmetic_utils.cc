@@ -178,26 +178,26 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id
       vector<complex<double>>::const_iterator f_it = factors.begin();
       bool got_symm_partner = false;
       for ( vector<vector<int>>::const_iterator t_it = transforms.begin(); t_it != transforms.end(); t_it++, f_it++ ){
-         vector<Index> trans_id_blocks = reorder_vector(*t_it, id_blocks);
-         if ( Tens_in->exists( trans_id_blocks ) ) {
-           unique_ptr<complex<double>[]> trans_data_block = Tens_in->get_block( trans_id_blocks );
-           unique_ptr<complex<double>[]> data_block = Tensor_Arithmetic::Tensor_Arithmetic<complex<double>>::reorder_tensor_data( trans_data_block.get(), *t_it, trans_id_blocks ) ;
-           complex<double> factor = *f_it;
-           int block_size = Tens_in->get_size(trans_id_blocks);
-           int stride_one = 1; 
-           zscal_( &block_size, &factor, data_block.get(), &stride_one); 
-           Tens_out->put_block( data_block, id_blocks );
-           got_symm_partner = true;
-           cout << "Obtained tensor block ";  cout.flush(); Debugging_Utils::print_sizes( id_blocks, "" ); cout.flush();
-           cout << " from  "; Debugging_Utils::print_sizes( trans_id_blocks,"" ); cout.flush();
-           cout << " using symmetry transformation"; print_vector( *t_it ) ; cout << endl;
-           break;
-         }
-         if ( !got_symm_partner ) {
-           Debugging_Utils::print_sizes( id_blocks, "id_block with sizes " ); cout.flush(); cout << "not_found" << endl;
-           throw logic_error( "Block fetching failed in get sub tensor symm" );
-         } 
+        vector<Index> trans_id_blocks = reorder_vector(*t_it, id_blocks);
+        if ( Tens_in->exists( trans_id_blocks ) ) {
+          unique_ptr<complex<double>[]> trans_data_block = Tens_in->get_block( trans_id_blocks );
+          unique_ptr<complex<double>[]> data_block = Tensor_Arithmetic::Tensor_Arithmetic<complex<double>>::reorder_tensor_data( trans_data_block.get(), *t_it, trans_id_blocks ) ;
+          complex<double> factor = *f_it;
+          int block_size = Tens_in->get_size(trans_id_blocks);
+          int stride_one = 1; 
+          zscal_( &block_size, &factor, data_block.get(), &stride_one); 
+          Tens_out->put_block( data_block, id_blocks );
+          got_symm_partner = true;
+          cout << "Obtained tensor block ";  cout.flush(); Debugging_Utils::print_sizes( id_blocks, "" ); cout.flush();
+          cout << " from  "; Debugging_Utils::print_sizes( trans_id_blocks,"" ); cout.flush();
+          cout << " using symmetry transformation"; print_vector( *t_it ) ; cout << endl;
+          break;
+        }
       }
+      if ( !got_symm_partner ) {
+        Debugging_Utils::print_sizes( id_blocks, "id_block with sizes " ); cout.flush(); cout << "not_found" << endl;
+        throw logic_error( "Block fetching failed in get sub tensor symm" );
+      } 
     }
   } while (fvec_cycle_skipper( block_pos, range_maxs, mins ) ); 
 
@@ -259,25 +259,25 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id
       vector<double>::const_iterator f_it = factors.begin();
       bool got_symm_partner = false;
       for ( vector<vector<int>>::const_iterator t_it = transforms.begin(); t_it != transforms.end(); t_it++, f_it++ ){
-         vector<Index> trans_id_blocks = reorder_vector(*t_it, id_blocks );
-         if ( Tens_in->exists( trans_id_blocks ) ) {
-           unique_ptr<double[]> trans_data_block = Tens_in->get_block( trans_id_blocks );
-           unique_ptr<double[]> data_block =  Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_tensor_data( trans_data_block.get(), *t_it, trans_id_blocks ) ;
-           int stride_one = 1;
-           int block_size = Tens_in->get_size(trans_id_blocks);
-           dscal_( block_size , *f_it, data_block.get(), stride_one ); 
-           Tens_out->put_block( data_block, id_blocks );
-           got_symm_partner = true;
-           cout << "Obtained tensor block ";  cout.flush(); Debugging_Utils::print_sizes( id_blocks, "" ); cout.flush();
-           cout << " from  "; Debugging_Utils::print_sizes( trans_id_blocks,"" ); cout.flush();
-           cout << " using symmetry transformation"; print_vector( *t_it ) ; cout << endl;
-           break;
-         }
-         if ( !got_symm_partner ) {
-           Debugging_Utils::print_sizes( id_blocks, "id_block with sizes " ); cout.flush(); cout << "not_found" << endl;
-           throw logic_error( "Block fetching failed in get sub tensor symm" );
-         } 
+        vector<Index> trans_id_blocks = reorder_vector(*t_it, id_blocks );
+        if ( Tens_in->exists( trans_id_blocks ) ) {
+          unique_ptr<double[]> trans_data_block = Tens_in->get_block( trans_id_blocks );
+          unique_ptr<double[]> data_block =  Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_tensor_data( trans_data_block.get(), *t_it, trans_id_blocks ) ;
+          int stride_one = 1;
+          int block_size = Tens_in->get_size(trans_id_blocks);
+          dscal_( block_size , *f_it, data_block.get(), stride_one ); 
+          Tens_out->put_block( data_block, id_blocks );
+          got_symm_partner = true;
+          cout << "Obtained tensor block ";  cout.flush(); Debugging_Utils::print_sizes( id_blocks, "" ); cout.flush();
+          cout << " from  "; Debugging_Utils::print_sizes( trans_id_blocks,"" ); cout.flush();
+          cout << " using symmetry transformation"; print_vector( *t_it ) ; cout << endl;
+          break;
+        }
       }
+      if ( !got_symm_partner ) {
+        Debugging_Utils::print_sizes( id_blocks, "id_block with sizes " ); cout.flush(); cout << "not_found" << endl;
+        throw logic_error( "Block fetching failed in get sub tensor symm" );
+      } 
     }
   } while (fvec_cycle_skipper( block_pos, range_maxs, mins ) ); 
 

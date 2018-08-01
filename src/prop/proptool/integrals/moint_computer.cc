@@ -134,40 +134,47 @@ shared_ptr<SMITH::Tensor_<DataType>>  MOInt_Computer<DataType>::calculate_v2_smi
 #ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
 cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  bool  use_smith = true;
+  if ( !use_smith ) { 
  
-  SMITH::IndexRange act = *(range_conversion_map_->at("a")); 
-  SMITH::IndexRange core = *(range_conversion_map_->at("c")); 
-  SMITH::IndexRange virt = *(range_conversion_map_->at("v")); 
-  SMITH::IndexRange not_core = *(range_conversion_map_->at("notcor")); 
-  SMITH::IndexRange not_virt = *(range_conversion_map_->at("notvir")); 
-  SMITH::IndexRange free = core; free.merge(act); free.merge(virt);
-   
-  cout << "v2 ranges : core.size() = " << core.size() ; cout << " act.size() = " << act.size(); cout << " virt.size() = " << virt.size() << endl;
+    SMITH::IndexRange act = *(range_conversion_map_->at("a")); 
+    SMITH::IndexRange core = *(range_conversion_map_->at("c")); 
+    SMITH::IndexRange virt = *(range_conversion_map_->at("v")); 
+    SMITH::IndexRange not_core = *(range_conversion_map_->at("notcor")); 
+    SMITH::IndexRange not_virt = *(range_conversion_map_->at("notvir")); 
+    SMITH::IndexRange free = core; free.merge(act); free.merge(virt);
+     
+    cout << "v2 ranges : core.size() = " << core.size() ; cout << " act.size() = " << act.size(); cout << " virt.size() = " << virt.size() << endl;
+    
+    if ( !got_fock_coeffs_ )
+      calculate_fock( {free, free}, true, true);
+    
+    vector<SMITH::IndexRange>  blocks = { free, free, free, free };
+    MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks );
+    auto v2_tens = v2.tensor();
+    v2_tens->allocate();
+    v2_tens->zero();
+    
+    {
+      vector<SMITH::IndexRange> keep_ranges_norder = { virt, virt, core, act };
+      vector<SMITH::IndexRange> keep_ranges_sorder = { keep_ranges_norder[3], keep_ranges_norder[1], keep_ranges_norder[2], keep_ranges_norder[0] };
+      shared_ptr<SMITH::Tensor_<DataType>> v2_keep =  v2.get_v2_part( keep_ranges_sorder ); 
+      Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
+    }
+    {
+      vector<SMITH::IndexRange> keep_ranges_norder = { virt, virt, act, core };
+      vector<SMITH::IndexRange> keep_ranges_sorder = { keep_ranges_norder[3], keep_ranges_norder[1], keep_ranges_norder[2], keep_ranges_norder[0] };
+      shared_ptr<SMITH::Tensor_<DataType>> v2_keep =  v2.get_v2_part( keep_ranges_sorder ); 
+      Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
+    }
+    
+    cout << setprecision(13) <<  "v2_tens->norm() = "; cout.flush(); cout << v2_tens->norm() << endl;
+    return v2_tens;
 
-  if ( !got_fock_coeffs_ )
-    calculate_fock( {free, free}, true, true);
-
-  vector<SMITH::IndexRange>  blocks = { free, free, free, free };
-  MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks );
-  auto v2_tens = v2.tensor();
-  v2_tens->allocate();
-  v2_tens->zero();
-
-  {
-    vector<SMITH::IndexRange> keep_ranges_norder = { virt, virt, core, act };
-    vector<SMITH::IndexRange> keep_ranges_sorder = { keep_ranges_norder[3], keep_ranges_norder[1], keep_ranges_norder[2], keep_ranges_norder[0] };
-    shared_ptr<SMITH::Tensor_<DataType>> v2_keep =  v2.get_v2_part( keep_ranges_sorder ); 
-    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
+  } else { cout << " using v2 from smith " << endl; 
+    return v2_from_smith_; 
   }
-  {
-    vector<SMITH::IndexRange> keep_ranges_norder = { virt, virt, act, core };
-    vector<SMITH::IndexRange> keep_ranges_sorder = { keep_ranges_norder[3], keep_ranges_norder[1], keep_ranges_norder[2], keep_ranges_norder[0] };
-    shared_ptr<SMITH::Tensor_<DataType>> v2_keep =  v2.get_v2_part( keep_ranges_sorder ); 
-    Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
-  }
-
-  cout << setprecision(13) <<  "v2_tens->norm() = "; cout.flush(); cout << v2_tens->norm() << endl;
-  return v2_tens;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
@@ -263,22 +270,6 @@ cout << "MOInt_Computer<DataType>::get_test_tensor string ver" << endl;
 template class MOInt_Computer<double>;
 template class MOInt_Computer<std::complex<double>>;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//  {
-//  vector<SMITH::IndexRange> non_zero_block = { virt, virt, core, active }; 
-//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( s_test_tensor, WickUtils::reorder_vector( ordering, non_zero_block ), (DataType)(1.0) );
-//  }{
-//  vector<SMITH::IndexRange> non_zero_block = { virt, virt, active, core }; 
-//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( s_test_tensor, WickUtils::reorder_vector( ordering, non_zero_block ), (DataType)(-1.0) );
-//  }{
-//  vector<SMITH::IndexRange> non_zero_block = { virt, virt, active, active }; 
-//  Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( s_test_tensor, WickUtils::reorder_vector( ordering, non_zero_block ), (DataType)(0.0) );
-//
-// 
-// 
-// 
-// 
-// 
-// 
 // TESTING FOR BLOCK FETCHING
 //
 // vector<SMITH::IndexRange>  blocks = { free, free, free, free };

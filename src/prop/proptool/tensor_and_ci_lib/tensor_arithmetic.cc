@@ -953,19 +953,19 @@ void Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( shared_pt
 cout << "Tensor_Arithmetic::set_tensor_elems range_block_specific  " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-   vector<int> range_lengths = get_range_lengths( id_ranges ); 
-   vector<int> block_pos(range_lengths.size(),0);  
-   vector<int> mins(range_lengths.size(),0);  
-   do {
-     vector<Index> id_blocks =  get_rng_blocks( block_pos, id_ranges );
-     if ( Tens->exists( id_blocks ) ) { 
-       unique_ptr<DataType[]> block_data = Tens->get_block(id_blocks);
-       std::fill_n( block_data.get(), Tens->get_size(id_blocks), elem_val );
-       Tens->put_block(block_data, id_blocks);
-     }
-   } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
+  vector<int> range_lengths = get_range_lengths( id_ranges ); 
+  vector<int> block_pos(range_lengths.size(),0);  
+  vector<int> mins(range_lengths.size(),0);  
+  do {
+    vector<Index> id_blocks =  get_rng_blocks( block_pos, id_ranges );
+    if ( Tens->exists( id_blocks ) ) { 
+      unique_ptr<DataType[]> block_data = Tens->get_block(id_blocks);
+      std::fill_n( block_data.get(), Tens->get_size(id_blocks), elem_val );
+      Tens->put_block(block_data, id_blocks);
+    }
+  } while (fvec_cycle_skipper(block_pos, range_lengths, mins ));
 
-   return;
+  return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Copies the data of Tens_sub into the appropriate block of Tens_main

@@ -288,49 +288,85 @@ cout << "CASPT2::CASPT2::solve" << endl;
   energy_ = pt2energy_;
 
   ////// TEST
-  shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>(proptool_input_, info_->geom(), info_->ref() );
+  shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>( proptool_input_, info_->geom(), info_->ref() );
   proptool->tamps_smith_ = make_shared<SMITH::Tensor_<double>>(*(t2all_[0]->at(0)) );
-  cout << "1  proptool->tamps_smith_->norm() = " <<   proptool->tamps_smith_->norm() << endl;
+  proptool->set_maxtile( info_->maxtile() ); 
+  shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
+
+  SMITH::IndexRange brng_act = *ractive_;
+  SMITH::IndexRange brng_core = *rclosed_;
+  SMITH::IndexRange brng_virt = *rvirt_;
+
+  { 
+  vector<SMITH::IndexRange> avav = { brng_act,    brng_virt, brng_act,  brng_virt }; 
+  vector<SMITH::IndexRange> cvcv = { brng_core,   brng_virt, brng_core, brng_virt }; 
+  vector<SMITH::IndexRange> cvav = { brng_core,   brng_virt, brng_act,  brng_virt }; 
+  vector<SMITH::IndexRange> avcv = { brng_act,    brng_virt, brng_core, brng_virt }; 
+
+  vector<SMITH::IndexRange> cacv = { brng_core,   brng_act, brng_core, brng_virt }; 
+  vector<SMITH::IndexRange> caav = { brng_core,   brng_act, brng_act,  brng_virt }; 
+  vector<SMITH::IndexRange> aacv = { brng_act,   brng_act, brng_core,  brng_virt }; 
+
+  vector<SMITH::IndexRange> cvca = { brng_core,   brng_virt , brng_core, brng_act }; 
+  vector<SMITH::IndexRange> cvaa = { brng_core,   brng_virt , brng_act,  brng_act }; 
+  vector<SMITH::IndexRange> avca = { brng_act,    brng_virt , brng_core, brng_act }; 
+
+  vector<SMITH::IndexRange> caca = { brng_core, brng_act, brng_core, brng_act }; 
+
+  vector<SMITH::IndexRange> caaa = { brng_core, brng_act, brng_act,  brng_act }; 
+  vector<SMITH::IndexRange> acaa = { brng_act,  brng_core, brng_act,  brng_act }; 
+  vector<SMITH::IndexRange> aaca = { brng_act,  brng_act,  brng_core, brng_act }; 
+  vector<SMITH::IndexRange> aaac = { brng_act,  brng_act,  brng_act, brng_core }; 
+
+  vector<SMITH::IndexRange> vaaa = { brng_virt, brng_act, brng_act,  brng_act }; 
+  vector<SMITH::IndexRange> avaa = { brng_act,  brng_virt, brng_act,  brng_act }; 
+  vector<SMITH::IndexRange> aava = { brng_act,  brng_act,  brng_virt, brng_act }; 
+  vector<SMITH::IndexRange> aaav = { brng_act,  brng_act,  brng_act, brng_virt }; 
+  
+  vector<SMITH::IndexRange> aaaa = { brng_act,  brng_act,  brng_act, brng_act }; 
+
+  vector<SMITH::IndexRange> avvv =  { brng_act,  brng_virt, brng_virt, brng_virt }; 
+  vector<SMITH::IndexRange> cvvv =  { brng_core, brng_virt, brng_virt, brng_virt }; 
+
+  vector<SMITH::IndexRange> vavv =  {  brng_virt, brng_act,  brng_virt, brng_virt }; 
+  vector<SMITH::IndexRange> vcvv =  {  brng_virt, brng_core, brng_virt, brng_virt }; 
+  
+  vector<SMITH::IndexRange> vvav =  {  brng_virt, brng_virt, brng_act, brng_virt }; 
+  vector<SMITH::IndexRange> vvcv =  {  brng_virt, brng_virt, brng_core, brng_virt }; 
+
+  vector<SMITH::IndexRange> vvva =  {  brng_virt, brng_virt, brng_virt, brng_act  }; 
+  vector<SMITH::IndexRange> vvvc =  {  brng_virt, brng_virt, brng_virt, brng_core  }; 
+
+  vector<SMITH::IndexRange> accc =  {  brng_act,  brng_core, brng_core, brng_core }; 
+  vector<SMITH::IndexRange> vccc =  {  brng_virt, brng_core, brng_core, brng_core }; 
+
+  vector<SMITH::IndexRange> cacc =  {  brng_core, brng_act,  brng_core, brng_core }; 
+  vector<SMITH::IndexRange> cvcc =  {  brng_core, brng_virt, brng_core, brng_core }; 
+  
+  vector<SMITH::IndexRange> ccac =  {  brng_core, brng_core, brng_act,  brng_core }; 
+  vector<SMITH::IndexRange> ccvc =  {  brng_core, brng_core, brng_virt, brng_core };  
+
+  vector<SMITH::IndexRange> ccca =  {  brng_core, brng_core, brng_core, brng_act  }; 
+  vector<SMITH::IndexRange> cccv =  {  brng_core, brng_core, brng_core, brng_virt }; 
+
+  //vector<vector<SMITH::IndexRange>> zeroing_blocks = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, 
+  //                                                     caaa, aaca, avaa, aaav, aaaa }; 
+
+  vector<vector<SMITH::IndexRange>> zeroing_blocks = { /*avav, */cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, 
+                                                       caaa, aaca, avaa, aaav, aaaa }; 
+
+  for ( auto zero_block : zeroing_blocks ){ 
+    cout << " [ " << zero_block[0].size() << " " << zero_block[1].size() << " " <<  zero_block[2].size() << " " <<  zero_block[3].size() << " ]" << endl; 
+    tensor_calc->set_tensor_elems( v2_, zero_block, 0.0  );
+  } 
+  cout << "v2_->norm() = " << v2_->norm() << endl;
+  } 
+  proptool->v2_smith_ = make_shared<SMITH::Tensor_<double>>( *v2_ );
   proptool->construct_task_lists();
-  cout << "2  proptool->tamps_smith_->norm() = " <<   proptool->tamps_smith_->norm() << endl;
   proptool->execute_compute_lists();
-  cout << "3  proptool->tamps_smith_->norm() = " <<   proptool->tamps_smith_->norm() << endl;
   ////// END TEST
   
   {// TEST source
-
-    int maxtile = min( 10,  info_->maxtile() );
-    cout << "maxtile = " << maxtile << endl;
-    int nfrozenvirt = 0;
-
-    auto closed_rng  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nclosed-ncore, maxtile, 0, ncore));
-    auto active_rng  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact, maxtile, closed_rng->nblock(), ncore + nclosed  ) );
-    auto virtual_rng = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nvirt, maxtile, closed_rng->nblock()+ active_rng->nblock(), ncore + nclosed + nact ));
-    auto free_rng    = make_shared<SMITH::IndexRange>(*closed_rng); free_rng->merge(*active_rng); free_rng->merge(*virtual_rng);
-
-    cout << "nclosed = " << nclosed << "  ncore = " << ncore  << "  nact = " << nact << "  nvirt = " << nvirt << endl; 
-    
-    auto not_closed_rng  = make_shared<SMITH::IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
-    auto not_active_rng  = make_shared<SMITH::IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
-    auto not_virtual_rng = make_shared<SMITH::IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
- 
-    auto  range_conversion_map = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
-    range_conversion_map->emplace("c", closed_rng); 
-    range_conversion_map->emplace("a", active_rng);
-    range_conversion_map->emplace("v", virtual_rng);
-    range_conversion_map->emplace("free", free_rng);
- 
-    range_conversion_map->emplace("notcor", not_closed_rng);
-    range_conversion_map->emplace("notact", not_active_rng);
-    range_conversion_map->emplace("notvir", not_virtual_rng); 
-    
-    auto moint_init = make_shared<MOInt_Init<double>>( info_->geom(),  info_->ref(), ncore, nfrozenvirt, true );
-    
-    auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map );
-    cout << "pre t2all ranges = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
-    cout << "v2 sm range sizes = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
-
-    
     {
     cout << endl << endl;
     set_rdm(0, 0);
@@ -345,48 +381,14 @@ cout << "CASPT2::CASPT2::solve" << endl;
       source_task_list->next_compute();
  
     cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
-
     cout << "----------------------------------TEST SMITH-------------------------------" << endl;
-    vector<int> smith_order_0213 = { 0, 2, 1, 3 };
     cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
     cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
     cout << "post dot source_norm = "<<  s->norm() << endl;
     cout << "---------------------------------------------------------------------------" << endl;
     } 
-    throw logic_error( " die here for testing " ); 
-    {
-    cout << endl << endl;
-    set_rdm(0, 0);
-    v2_->zero();
-    v2_ = moint_computer->calculate_v2_smith();
-    cout << "v2 mc range sizes = [ ";cout.flush(); for ( const auto elem : v2_->indexrange()){cout << elem.size() << " " ; cout.flush();} cout << " ] " << endl; 
-    h1_->zero();
-    f1_->zero();
-
-    s = init_residual();
-    s->zero();
-    double source_norm = 0.0;
-    shared_ptr<Queue> source_task_list = make_sourceq(false, true);
-    while(!source_task_list->done())
-      source_task_list->next_compute();
-
-    cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
-    vector<int> smith_order_0213 = { 0, 2, 1, 3 };
-    t2all_[0]->at(0)->zero();
-    t2all_[0]->at(0) = moint_computer->build_s_test_tensor( smith_order_0213 );
-    cout << "t2all ranges = [ " ; cout.flush(); for (auto elem : t2all_[0]->at(0)->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
-
-//    cout << endl; Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_, "v2_moint",  true ); cout << endl;
-    cout << "----------------------------------TEST MOINT-------------------------------" << endl;
-    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
-    cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
-    cout << "pre dot source_norm = "<<  s->norm() << endl;
-    cout << "---------------------------------------------------------------------------" << endl;
-    }
-  }
-
+  } //END TEST
   throw logic_error( "die here for testing purposes!" ); 
-
 }
 
 

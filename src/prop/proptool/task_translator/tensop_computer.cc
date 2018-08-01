@@ -9,10 +9,11 @@ using namespace std;
 using namespace bagel;
 using namespace bagel::SMITH;
 using namespace bagel::Tensor_Arithmetic; 
-using namespace bagel::Tensor_Arithmetic_Utils; 
 using namespace WickUtils;
 using namespace Debugging_Utils;
 
+namespace Tens_Utils = bagel::Tensor_Arithmetic_Utils;
+ 
 #define __DEBUG_TENSOP_COMPUTER
 //#define __DEBUG_TENSOP_COMPUTER_X
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +173,7 @@ cout << " TensOp_Computer::TensOp_Computer::get_tensor " << endl;
     if ( init_val == (DataType)(0.0) ) {
       new_tens->zero(); 
     } else {
-      Tensor_Arithmetic::Tensor_Arithmetic<DataType>::set_tensor_elems( new_tens, init_val );
+      Tensor_Calc_->set_tensor_elems( new_tens, init_val );
     }  
   }
  
@@ -291,8 +292,22 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
           cout << "TOC::get_tensor_data_blocks:: else if ( full_tens_name[0] == 'S') " << endl; 
           build_s_test_tensor(full_tens_name, s_ordering );
           cout << endl; WickUtils::print_vector( *id_ranges, "id_ranges"); cout << endl; 
-          Debugging_Utils::print_sizes( tensop_data_map_->at(full_tens_name)->indexrange(), "S indexrange()" ); cout << endl;
+
+          { //TEST 
+         
+          vector<IndexRange> s_idxrngs = tensop_data_map_->at(full_tens_name)->indexrange();
+
+          Debugging_Utils::print_sizes( s_idxrngs, "S indexrange()" ); cout << endl;
+          for ( int qq =0; qq != s_idxrngs.size() ;++qq ) {
+            cout << "S[" << qq << "] range_sizes = [" ; cout.flush();
+            for ( const Index& idx : s_idxrngs[qq].range() ) {
+               cout << idx.size() << " "; cout.flush(); 
+            } 
+            cout << "] " << endl;
+          }
           cout << "pre get sub  block_name = "   << block_name << endl;
+          } //ENDTEST
+
           get_sub_tensor( full_tens_name, block_name, *id_ranges ); 
           cout << "post get sub block_name = "   << block_name << endl;
            
@@ -630,7 +645,7 @@ cout << "TensOp_Computer::TensOp_Computer::build_test_tensor : " << test_tensor_
   test_tens->allocate();
 
   print_vector( max_block_sizes, "max_block_sizes"); cout.flush();   print_vector( dimensions, "   dimensions"); cout << endl;
-  set_test_elems( test_tens, test_tensor_name  );
+  Tens_Utils::set_test_elems( test_tens, test_tensor_name  );
 
   tensop_data_map_->emplace( test_tensor_name, test_tens );
 
@@ -660,16 +675,16 @@ WickUtils::print_vector( range_names, "range_names"); cout << endl;
     vector<DataType> trans_factors= { 1.0, 1.0, 1.0 };
      
     if ( tdm_loc == tensop_data_map_->end() ){
-      tensop_data_map_->emplace( block_name, Tensor_Arithmetic_Utils::get_sub_tensor_symm( full_tens, block, transforms, trans_factors ) );
+      tensop_data_map_->emplace( block_name, Tens_Utils::get_sub_tensor_symm( full_tens, block, transforms, trans_factors ) );
     } else { 
-      tdm_loc->second =  Tensor_Arithmetic_Utils::get_sub_tensor_symm( full_tens, block, transforms, trans_factors  );
+      tdm_loc->second =  Tens_Utils::get_sub_tensor_symm( full_tens, block, transforms, trans_factors  );
     }
   } else { 
     auto tdm_loc = tensop_data_map_->find( block_name );
     if ( tdm_loc == tensop_data_map_->end() ){
-      tensop_data_map_->emplace( block_name, Tensor_Arithmetic_Utils::get_sub_tensor( full_tens, block ) );
+      tensop_data_map_->emplace( block_name, Tens_Utils::get_sub_tensor( full_tens, block ) );
     } else { 
-      tdm_loc->second =  Tensor_Arithmetic_Utils::get_sub_tensor( full_tens, block );
+      tdm_loc->second =  Tens_Utils::get_sub_tensor( full_tens, block );
     }
   }
   cout << "XXXXXXXXXXXXX : "; cout.flush();cout << block_name << "->norm() = " << tensop_data_map_->at(block_name)->norm() << endl;   
