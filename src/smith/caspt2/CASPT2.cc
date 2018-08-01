@@ -35,6 +35,7 @@
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 #include <src/prop/proptool/integrals/moint_computer.h>
 #include <src/prop/proptool/proptool.h>
+#include <src/prop/proptool/debugging_utils.h>
 
 using namespace std;
 using namespace bagel;
@@ -287,12 +288,6 @@ cout << "CASPT2::CASPT2::solve" << endl;
   }
   energy_ = pt2energy_;
 
-  ////// TEST
-  shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>( proptool_input_, info_->geom(), info_->ref() );
-  proptool->tamps_smith_ = make_shared<SMITH::Tensor_<double>>(*(t2all_[0]->at(0)) );
-  proptool->set_maxtile( info_->maxtile() ); 
-  shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
-
   SMITH::IndexRange brng_act = *ractive_;
   SMITH::IndexRange brng_core = *rclosed_;
   SMITH::IndexRange brng_virt = *rvirt_;
@@ -349,19 +344,46 @@ cout << "CASPT2::CASPT2::solve" << endl;
   vector<SMITH::IndexRange> ccca =  {  brng_core, brng_core, brng_core, brng_act  }; 
   vector<SMITH::IndexRange> cccv =  {  brng_core, brng_core, brng_core, brng_virt }; 
 
-  //vector<vector<SMITH::IndexRange>> zeroing_blocks = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, 
-  //                                                     caaa, aaca, avaa, aaav, aaaa }; 
+  vector<vector<SMITH::IndexRange>> all_blocks = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, 
+                                                   caaa, aaca, avaa, aaav, aaaa }; 
 
   vector<vector<SMITH::IndexRange>> zeroing_blocks = { /*avav, */cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, 
                                                        caaa, aaca, avaa, aaav, aaaa }; 
 
-  for ( auto zero_block : zeroing_blocks ){ 
-    cout << " [ " << zero_block[0].size() << " " << zero_block[1].size() << " " <<  zero_block[2].size() << " " <<  zero_block[3].size() << " ]" << endl; 
+  shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
+
+
+  shared_ptr<SMITH::Tensor_<double>> v2_tester = v2_->copy();
+//  tensor_calc->zero_all_but_block( v2_tester, avav ); 
+  cout << "v2_tester->norm() = " << v2_tester->norm() << endl; 
+  
+  vector<double> transform_factors = { 1.0 };
+  vector<vector<int>> transforms = { { 2, 3, 0, 1 } };
+  for ( auto& idx_block : all_blocks ) {
+    auto v2_sub_block = Tensor_Arithmetic_Utils::get_sub_tensor_symm( v2_, idx_block, transforms, transform_factors );
+    auto v2_sub_block_nosymm = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, idx_block );
+    Debugging_Utils::print_sizes( idx_block , "" ); cout << " block    "; cout.flush();
+    auto block_norm = v2_sub_block_nosymm->norm();
+    auto symm_block_norm = v2_sub_block_nosymm->norm();
+    cout << "block_norm = " ; cout.flush(); cout << block_norm << " =?= symm_block_norm = "; cout.flush(); cout << symm_block_norm << endl;
+    if ( block_norm != symm_block_norm )
+      throw logic_error( "Block symmetry is bloken!!");
+  }
+
+  for ( auto zero_block : zeroing_blocks )
     tensor_calc->set_tensor_elems( v2_, zero_block, 0.0  );
-  } 
+
   cout << "v2_->norm() = " << v2_->norm() << endl;
   } 
-  proptool->v2_smith_ = make_shared<SMITH::Tensor_<double>>( *v2_ );
+  ////// TEST
+  h1_->zero();
+  f1_->zero();
+  shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>( proptool_input_, info_->geom(), info_->ref() );
+  proptool->tamps_smith_ = t2all_[0]->at(0)->copy();
+  proptool->v2_smith_ = v2_->copy();
+  proptool->set_maxtile( info_->maxtile() ); 
+
+
   proptool->construct_task_lists();
   proptool->execute_compute_lists();
   ////// END TEST
@@ -371,8 +393,6 @@ cout << "CASPT2::CASPT2::solve" << endl;
     cout << endl << endl;
     set_rdm(0, 0);
     double source_norm = 0.0;
-    h1_->zero();
-    f1_->zero();
 
     s = init_residual();
     s->zero();

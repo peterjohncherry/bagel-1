@@ -137,6 +137,7 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
 
   bool  use_smith = true;
   if ( !use_smith ) { 
+    cout << " calculating v2_smith within proptol" << endl; 
  
     SMITH::IndexRange act = *(range_conversion_map_->at("a")); 
     SMITH::IndexRange core = *(range_conversion_map_->at("c")); 
@@ -173,7 +174,12 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
     return v2_tens;
 
   } else { cout << " using v2 from smith " << endl; 
-    return v2_from_smith_; 
+    Debugging_Utils::print_sizes( v2_from_smith_->indexrange(), "v2_from_smith_->indexrange()");
+    vector<int> reordering_1032 = { 1, 0, 3, 2 };
+    auto v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2_from_smith_, reordering_1032 );
+    cout << "    v2_from_smith_->norm() = " << v2_from_smith_->norm() << endl;
+    cout << "    v2_->norm() = " << v2_->norm() << endl;
+    return v2_; 
   }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
