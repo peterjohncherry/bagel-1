@@ -16,11 +16,12 @@ class GammaIntermediate_Base {
      std::shared_ptr<std::vector<int>> ids_pos_;
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_;
      std::pair<double,double> factors_;
+     bool survives_;
 
      GammaIntermediate_Base( std::shared_ptr<std::vector<int>> ids_pos,
                              std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos,
                              std::pair<double,double> factors ) :
-     ids_pos_(ids_pos), deltas_pos_(deltas_pos), factors_(factors) {};
+     ids_pos_(ids_pos), deltas_pos_(deltas_pos), factors_(factors), survives_(true) {};
 
      ~GammaIntermediate_Base(){};
 

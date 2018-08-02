@@ -207,11 +207,14 @@ void GammaGenerator_Base::anti_normal_order() {
 cout << "GammaGenerator_Base::anti_normal_order" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////
  
+  auto surviving_gammas = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>();
   int kk = 0;
   while ( kk != gamma_vec_->size() ) {
-    if ( proj_onto_map( gamma_vec_->at(kk), *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ) ){ 
-     
-      shared_ptr<vector<int>> ids_pos  = gamma_vec_->at(kk)->ids_pos_;
+    auto& gint = (*gamma_vec_)[kk];
+    gint->survives_ = proj_onto_map( gint, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ); 
+
+    if ( gint->survives_ ) { 
+      shared_ptr<vector<int>> ids_pos  = gint->ids_pos_;
       int num_kill = 0;
       for ( int pos : *ids_pos )
         if (!(*block_aops_)[pos]) 
@@ -220,35 +223,38 @@ cout << "GammaGenerator_Base::anti_normal_order" << endl;
       
       for (int ii = ids_pos->size()-1 ; ii != -1; ii--){
         if ( ii > num_kill ) {
-          if ( (*block_aops_)[ (*ids_pos)[ii]] ) 
-            continue;
-      
-          while( !(*block_aops_)[(*ids_pos)[ii]] ){
+          while( (!(*block_aops_)[(*ids_pos)[ii]]) && ( gint->survives_ ) ){
             for ( int jj = (ii-1); jj != -1 ; jj--) {
-              if ( (*block_aops_)[(*ids_pos)[jj]] ){
+              if ( ( (*block_aops_)[(*ids_pos)[jj]] ) && (gint->survives_) ){
                 swap( jj, jj+1, kk );
+                gint->survives_ = proj_onto_map( gint, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ );
                 break;
               }
+              if ( !(gint->survives_) ) break; //if the swap kills the gamma break out 
             }
           }
-      
+          if ( !(gint->survives_) ) break; //if the swap kills the gamma break out (will move onto the next gamma)
+
         } else if (ii <= num_kill) {
-          if (!(*block_aops_)[(*ids_pos)[ii]] )
-            continue;
-      
-          while((*block_aops_)[(*ids_pos)[ii]] ){
+          while((*block_aops_)[(*ids_pos)[ii]] && gint->survives_ ){
             for ( int jj = (ii-1); jj != -1 ; jj--) {
-              if(!(*block_aops_)[(*ids_pos)[jj]] ) {
+              if( ( !(*block_aops_)[(*ids_pos)[jj]] ) && ( gint->survives_)  ) {
                 swap( jj, jj+1, kk );
+                gint->survives_ = proj_onto_map( gint, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ );
                 break;
               }
+              if ( !(gint->survives_) ) break; //if the swap kills the gamma break out 
             }
           }
+          if ( !(gint->survives_) ) break; //if the swap kills the gamma break out 
         }
       }
     }
+    if (gint->survives_ )
+      surviving_gammas->push_back(gint);
     kk++;
   }
+  gamma_vec_ = surviving_gammas;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -321,17 +327,17 @@ print_gamma_intermediate (gamma_vec_->at(kk) , "pre_swap gamma" );
       }
     }
  
-    auto new_fac =  make_pair( gint->factors_.first * -1.0,  0.0 );
+    auto new_fac =  make_pair( gint->factors_.first * 1.0,  0.0 );
     shared_ptr<GammaIntermediate_Base> new_gamma = make_shared<GammaIntermediate_Base>( new_ids_pos, new_deltas_tmp, new_fac );
     gamma_vec_->push_back(new_gamma);
     
 #ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
     print_gamma_intermediate (new_gamma , "new gamma" );
   }
-  gint->factors_ =  make_pair( gint->factors_.first * 1.0,  0.0 );
+  gint->factors_ =  make_pair( gint->factors_.first * -1.0,  0.0 );
   print_gamma_intermediate (gamma_vec_->at(kk) , "post_swap gamma" );
 #else
-  gint->factors_ =  make_pair( gint->factors_.first * 1.0,  0.0 );
+  gint->factors_ =  make_pair( gint->factors_.first * -1.0,  0.0 );
   }
 #endif
   return;
