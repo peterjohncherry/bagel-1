@@ -162,7 +162,9 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   gaunt_    = false;
   breit_    = false;
 
-  set_ao_range_info();
+  
+  set_ao_range_info(); 
+
   //creates the ci_info from the reference wavefunction
   set_ci_range_info();
 

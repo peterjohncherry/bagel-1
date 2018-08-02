@@ -57,7 +57,6 @@ namespace PropTool {
     std::shared_ptr<SMITH::IndexRange> not_active_rng_  ;
     std::shared_ptr<SMITH::IndexRange> not_virtual_rng_ ;
 
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_ ;
  
     //TODO come up with a better encoding
     std::vector<long unsigned int> range_primes_;
@@ -126,6 +125,8 @@ namespace PropTool {
      std::shared_ptr<SMITH::Tensor_<double>> v2_smith_;
      void set_maxtile( int new_maxtile ) { maxtile_ = new_maxtile; }
      void set_cimaxtile( int new_cimaxtile ) { cimaxtile_ = new_cimaxtile; }
+     void set_range_conversion_map( std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> smith_rcm ) { range_conversion_map_ = smith_rcm; };
+     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_ ;
      //END TEST
  
 };

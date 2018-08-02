@@ -288,11 +288,14 @@ cout << "CASPT2::CASPT2::solve" << endl;
   }
   energy_ = pt2energy_;
 
-  SMITH::IndexRange brng_act = *ractive_;
+
+  auto  t2_all_buff = t2all_[0]->at(0)->copy();
+
+  { 
+  SMITH::IndexRange brng_act =  *ractive_;
   SMITH::IndexRange brng_core = *rclosed_;
   SMITH::IndexRange brng_virt = *rvirt_;
 
-  { 
   vector<SMITH::IndexRange> avav = { brng_act,    brng_virt, brng_act,  brng_virt }; 
   vector<SMITH::IndexRange> cvcv = { brng_core,   brng_virt, brng_core, brng_virt }; 
   vector<SMITH::IndexRange> cvav = { brng_core,   brng_virt, brng_act,  brng_virt }; 
@@ -344,35 +347,46 @@ cout << "CASPT2::CASPT2::solve" << endl;
   vector<SMITH::IndexRange> ccca =  {  brng_core, brng_core, brng_core, brng_act  }; 
   vector<SMITH::IndexRange> cccv =  {  brng_core, brng_core, brng_core, brng_virt }; 
 
-  vector<vector<SMITH::IndexRange>> all_blocks = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, 
-                                                   caaa, aaca, avaa, aaav, aaaa }; 
+  vector<vector<SMITH::IndexRange>> all_blocks_v2 = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, 
+                                                      caaa, aaca, avaa, aaav, aaaa }; 
+  
+  auto rv = []( vector<SMITH::IndexRange>& block ) { reverse(block.begin(), block.end()); } ;
+                    
+  vector<vector<SMITH::IndexRange>> all_blocks_tamps = all_blocks_v2;
+  all_blocks_tamps.pop_back();
+  for_each( all_blocks_tamps.begin(), all_blocks_tamps.end(), rv );
 
-  vector<vector<SMITH::IndexRange>> zeroing_blocks = { /*avav, */cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, 
-                                                       caaa, aaca, avaa, aaav, aaaa }; 
+  vector<SMITH::IndexRange> vcva = avcv; reverse(avcv.begin(), avcv.end() ); 
+  vector<SMITH::IndexRange> vavc = cvav; reverse(cvav.begin(), cvav.end() ); 
 
   shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
+  shared_ptr<SMITH::Tensor_<double>>  v2_buff = v2_->copy();
+  cout << "zeroing_blocks" << endl;
+  tensor_calc->zero_all_but_block( v2_, vcva ); 
+  Debugging_Utils::print_sizes( v2_->indexrange() , "v2_sizes" ); cout << endl;
+  cout << "v2_buff->norm() = " << v2_buff->norm() << endl; 
+  cout << "v2->norm()      = " << v2_->norm() << endl; 
 
-
-  shared_ptr<SMITH::Tensor_<double>> v2_tester = v2_->copy();
-//  tensor_calc->zero_all_but_block( v2_tester, avav ); 
-  cout << "v2_tester->norm() = " << v2_tester->norm() << endl; 
   
-  vector<double> transform_factors = { 1.0 };
-  vector<vector<int>> transforms = { { 2, 3, 0, 1 } };
-  for ( auto& idx_block : all_blocks ) {
-    auto v2_sub_block = Tensor_Arithmetic_Utils::get_sub_tensor_symm( v2_, idx_block, transforms, transform_factors );
-    auto v2_sub_block_nosymm = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, idx_block );
-    Debugging_Utils::print_sizes( idx_block , "" ); cout << " block    "; cout.flush();
-    auto block_norm = v2_sub_block_nosymm->norm();
-    auto symm_block_norm = v2_sub_block_nosymm->norm();
-    cout << "block_norm = " ; cout.flush(); cout << block_norm << " =?= symm_block_norm = "; cout.flush(); cout << symm_block_norm << endl;
-    if ( block_norm != symm_block_norm )
-      throw logic_error( "Block symmetry is bloken!!");
-  }
-
-  for ( auto zero_block : zeroing_blocks )
-    tensor_calc->set_tensor_elems( v2_, zero_block, 0.0  );
-
+  shared_ptr<SMITH::Tensor_<double>> t2_buff = t2all_[0]->at(0)->copy();
+  Debugging_Utils::print_sizes( t2_buff->indexrange() , "tamps sizes" ); cout << endl;
+  tensor_calc->zero_all_but_block( t2all_[0]->at(0), vcva ); 
+  cout << "t2_buff->norm() = " << t2_buff->norm() << endl; 
+  cout << "t2_    ->norm() = " << t2all_[0]->at(0)->norm() << endl; 
+  
+//  vector<double> transform_factors = { 1.0 };
+//  vector<vector<int>> transforms = { { 2, 3, 0, 1 } };
+//  for ( auto& idx_block : all_blocks_v2 ) {
+//    auto v2_sub_block = Tensor_Arithmetic_Utils::get_sub_tensor_symm( v2_, idx_block, transforms, transform_factors );
+//    auto v2_sub_block_nosymm = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, idx_block );
+//    Debugging_Utils::print_sizes( idx_block , "" ); cout << " block    "; cout.flush();
+//    auto block_norm = v2_sub_block_nosymm->norm();
+//    auto symm_block_norm = v2_sub_block_nosymm->norm();
+//    cout << "block_norm = " ; cout.flush(); cout << block_norm << " =?= symm_block_norm = "; cout.flush(); cout << symm_block_norm << endl;
+//    if ( block_norm != symm_block_norm )
+//      throw logic_error( "Block symmetry is bloken!!");
+//  }
+  
   cout << "v2_->norm() = " << v2_->norm() << endl;
   } 
   ////// TEST
@@ -383,23 +397,46 @@ cout << "CASPT2::CASPT2::solve" << endl;
   proptool->v2_smith_ = v2_->copy();
   proptool->set_maxtile( info_->maxtile() ); 
 
-
-  proptool->construct_task_lists();
-  proptool->execute_compute_lists();
-  ////// END TEST
+  { 
+    auto range_conversion_map = make_shared<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>>();
+    auto closed_rng  = make_shared<SMITH::IndexRange>(*rclosed_);
+    auto active_rng  = make_shared<SMITH::IndexRange>(*ractive_);
+    auto virtual_rng = make_shared<SMITH::IndexRange>(*rvirt_);
   
+    auto free_rng   = make_shared<SMITH::IndexRange>(*closed_rng);
+    free_rng->merge(*active_rng);
+    free_rng->merge(*virtual_rng);
+  
+    auto not_closed_rng  = make_shared<SMITH::IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
+    auto not_active_rng  = make_shared<SMITH::IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
+    auto not_virtual_rng = make_shared<SMITH::IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
+  
+  
+    range_conversion_map->emplace("c", closed_rng); 
+    range_conversion_map->emplace("a", active_rng);
+    range_conversion_map->emplace("v", virtual_rng);
+    range_conversion_map->emplace("free", free_rng);
+    range_conversion_map->emplace("notcor",not_closed_rng);
+    range_conversion_map->emplace("notact",not_active_rng);
+    range_conversion_map->emplace("notvir", not_virtual_rng); 
+    proptool->set_range_conversion_map( range_conversion_map ); 
+    proptool->construct_task_lists();
+  }
+  proptool->execute_compute_lists();
   {// TEST source
     {
+    cout << "t2all_[0]->at(0)->norm() = " <<  t2all_[0]->at(0)->norm() << endl;
+    cout << "SMITH v2_->norm() = " <<  v2_->norm() << endl;
     cout << endl << endl;
     set_rdm(0, 0);
     double source_norm = 0.0;
-
     s = init_residual();
     s->zero();
     shared_ptr<Queue> source_task_list = make_sourceq(false, true);
     while(!source_task_list->done())
       source_task_list->next_compute();
- 
+
+    cout << "v2_->norm() = " << v2_->norm() << endl;
     cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
     cout << "----------------------------------TEST SMITH-------------------------------" << endl;
     cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);

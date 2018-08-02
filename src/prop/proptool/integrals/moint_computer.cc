@@ -173,10 +173,12 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
     cout << setprecision(13) <<  "v2_tens->norm() = "; cout.flush(); cout << v2_tens->norm() << endl;
     return v2_tens;
 
-  } else { cout << " using v2 from smith " << endl; 
-    Debugging_Utils::print_sizes( v2_from_smith_->indexrange(), "v2_from_smith_->indexrange()");
+  } else {
+    cout << " using v2 from smith " << endl; 
+    Debugging_Utils::print_sizes( v2_from_smith_->indexrange(), "v2_from_smith_->indexrange()"); cout << endl;
     vector<int> reordering_1032 = { 1, 0, 3, 2 };
     auto v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2_from_smith_, reordering_1032 );
+    Debugging_Utils::print_sizes( v2_from_smith_->indexrange(), "reordered : v2_from_smith_->indexrange()"); cout << endl;
     cout << "    v2_from_smith_->norm() = " << v2_from_smith_->norm() << endl;
     cout << "    v2_->norm() = " << v2_->norm() << endl;
     return v2_; 
