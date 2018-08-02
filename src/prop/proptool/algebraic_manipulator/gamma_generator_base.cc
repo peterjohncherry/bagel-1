@@ -4,7 +4,8 @@
 #include <src/prop/proptool/proputils.h>
 
 #define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
-//#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
+#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
+#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
 using namespace std;
 using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +52,9 @@ else { cout << " : intermediate_reordering" << endl; }
     }
 
   } else if ( reordering_name == "anti-normal order" ) {
+    cout << "anti-normal order " << endl;
     anti_normal_order();
+    cout << "left anti-normal order " << endl;
 
     typename vector<shared_ptr<GammaIntermediate_Base>>::iterator gv_it = gamma_vec_->begin();
     while ( gv_it != gamma_vec_->end() ) {
@@ -94,6 +97,7 @@ bool GammaGenerator_Base::proj_onto_map( shared_ptr<GammaIntermediate_Base> gint
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
 cout << "GammaGenerator_Base::proj_onto_map" << endl;
+print_gamma_intermediate( gint, " " ); cout << endl; 
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////
 
   shared_ptr<vector<int>> idxs_pos =  gint->ids_pos_;
@@ -134,11 +138,10 @@ cout << "GammaGenerator_Base::proj_onto_map" << endl;
     }
   }
 
-  // TODO  may have problems if bra and ket involve different ranges, but not relevant for now.
+  // TODO Will break if bra and ket but built from different orbitals ( not just differing occupations, but different sets ).
   for ( auto& elem : *ket_elec_map_ )  
     if ( elem.second != bra_elec_map.at(elem.first) )
       return false;     
-    
 
   for ( auto& elem : *ket_hole_map_ )                     
     if ( elem.second != bra_hole_map.at(elem.first) )
@@ -210,11 +213,11 @@ cout << "GammaGenerator_Base::anti_normal_order" << endl;
   auto surviving_gammas = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>();
   int kk = 0;
   while ( kk != gamma_vec_->size() ) {
-    auto& gint = (*gamma_vec_)[kk];
-    gint->survives_ = proj_onto_map( gint, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ); 
+    cout << "test_1" << endl; // This check should be unnecessary...
+    (*gamma_vec_)[kk]->survives_ = proj_onto_map( (*gamma_vec_)[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ); 
 
-    if ( gint->survives_ ) { 
-      shared_ptr<vector<int>> ids_pos  = gint->ids_pos_;
+    if ( (*gamma_vec_)[kk]->survives_ ) { 
+      shared_ptr<vector<int>> ids_pos  = (*gamma_vec_)[kk]->ids_pos_;
       int num_kill = 0;
       for ( int pos : *ids_pos )
         if (!(*block_aops_)[pos]) 
@@ -223,35 +226,47 @@ cout << "GammaGenerator_Base::anti_normal_order" << endl;
       
       for (int ii = ids_pos->size()-1 ; ii != -1; ii--){
         if ( ii > num_kill ) {
-          while( (!(*block_aops_)[(*ids_pos)[ii]]) && ( gint->survives_ ) ){
+          while( (!(*block_aops_)[(*ids_pos)[ii]]) && ( (*gamma_vec_)[kk]->survives_ ) ){
             for ( int jj = (ii-1); jj != -1 ; jj--) {
-              if ( ( (*block_aops_)[(*ids_pos)[jj]] ) && (gint->survives_) ){
+              if ( ( (*block_aops_)[(*ids_pos)[jj]] ) && ((*gamma_vec_)[kk]->survives_) ){
+                print_gamma_intermediate ( (*gamma_vec_)[kk] , "before swap " );cout <<endl; 
                 swap( jj, jj+1, kk );
-                gint->survives_ = proj_onto_map( gint, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ );
+                print_gamma_intermediate ( (*gamma_vec_)[kk] , "after swap " );cout <<endl; 
+                if ( !proj_onto_map( (*gamma_vec_)[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ) ){
+                  cout << "proj onto map failed " << endl;
+                  (*gamma_vec_)[kk]->survives_  = false;
+                }
                 break;
               }
-              if ( !(gint->survives_) ) break; //if the swap kills the gamma break out 
+              if ( !((*gamma_vec_)[kk]->survives_) ) { cout << "break1" << endl; break; } //if the swap kills the gamma break out  
             }
           }
-          if ( !(gint->survives_) ) break; //if the swap kills the gamma break out (will move onto the next gamma)
+          if ( !((*gamma_vec_)[kk]->survives_) ) {  cout << "break2" << endl; break; } //if the swap kills the gamma break out (will move onto the next gamma)
 
         } else if (ii <= num_kill) {
-          while((*block_aops_)[(*ids_pos)[ii]] && gint->survives_ ){
+          while((*block_aops_)[(*ids_pos)[ii]] && (*gamma_vec_)[kk]->survives_ ){
             for ( int jj = (ii-1); jj != -1 ; jj--) {
-              if( ( !(*block_aops_)[(*ids_pos)[jj]] ) && ( gint->survives_)  ) {
+              if( ( !(*block_aops_)[(*ids_pos)[jj]] ) && ( (*gamma_vec_)[kk]->survives_)  ) {
                 swap( jj, jj+1, kk );
-                gint->survives_ = proj_onto_map( gint, *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ );
+                cout << "test_3" << endl;
+                if ( !proj_onto_map( (*gamma_vec_)[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ) ) {
+                  cout << "proj onto map failed " << endl;
+                  (*gamma_vec_)[kk]->survives_  = false;
+                } 
                 break;
               }
-              if ( !(gint->survives_) ) break; //if the swap kills the gamma break out 
+              if ( !((*gamma_vec_)[kk]->survives_) )  {  cout << "break3" << endl; break; } //if the swap kills the gamma break out 
             }
           }
-          if ( !(gint->survives_) ) break; //if the swap kills the gamma break out 
+          if ( !((*gamma_vec_)[kk]->survives_) )  {  cout << "break4" << endl; break; } //if the swap kills the gamma break out 
         }
+        if ( !((*gamma_vec_)[kk]->survives_) )  {  cout << "break5" << endl; break; } //if the swap kills the gamma break out 
       }
     }
-    if (gint->survives_ )
-      surviving_gammas->push_back(gint);
+    if ((*gamma_vec_)[kk]->survives_ ){
+      print_gamma_intermediate((*gamma_vec_)[kk], "" );
+      surviving_gammas->push_back((*gamma_vec_)[kk]);
+    }
     kk++;
   }
   gamma_vec_ = surviving_gammas;
