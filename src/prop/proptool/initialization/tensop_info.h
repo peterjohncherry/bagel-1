@@ -100,9 +100,9 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
   S_allowed_block_list->add_block( avcv );
 
   static shared_ptr<Constraint_Allowed_Blocks> H_allowed_block_list = make_shared<Constraint_Allowed_Blocks>();
-  //H_allowed_blocks = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, caaa, aaca, avaa, aaav, aaaa }; 
   {
-  vector<vector<string>> vec_H_allowed_blocks = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, caaa, aaca, avaa, aaav, aaaa }; 
+  //vector<vector<string>> vec_H_allowed_blocks = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, caaa, aaca, avaa, aaav, aaaa }; 
+  vector<vector<string>> vec_H_allowed_blocks = { vcva, vavc }; 
   for (auto elem : vec_H_allowed_blocks )
     H_allowed_block_list->add_block( elem );
   }
@@ -117,7 +117,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
    } else if ( ordering == "0123_alt" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { true, false, true, false } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_virt_a, not_core_a, not_virt_a } );
-//     constraints = { H_allowed_block_list };
+     constraints = { H_allowed_block_list };
       
    } else if ( ordering == "3210" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { false, false, true, true } );
