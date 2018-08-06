@@ -9,6 +9,39 @@
 #include <src/prop/proptool/algebraic_manipulator/a_contrib_info.h>
 
 using namespace WickUtils;
+class GammaIntermediate_Base_Raw {
+
+   public :
+     std::vector<int> ids_pos_;
+     std::vector<std::pair<int,int>> deltas_pos_;
+     std::pair<double,double> factors_;
+     bool survives_;
+
+     GammaIntermediate_Base_Raw( std::vector<int> ids_pos,
+                             std::vector<std::pair<int,int>> deltas_pos,
+                             std::pair<double,double> factors ) :
+     ids_pos_(ids_pos), deltas_pos_(deltas_pos), factors_(factors), survives_(true) {};
+
+     ~GammaIntermediate_Base_Raw(){};
+
+     virtual
+     std::vector<std::pair<int,int>>& A_A_deltas_pos() {
+       throw std::logic_error( "Should not access (A, A) contractions from gammaintermediate_base");
+       return deltas_pos_  ;
+     } 
+
+     virtual
+     std::vector<std::pair<int,int>>& target_A_deltas_pos() {
+       throw std::logic_error( "Should not access (target, A) contractions from gammaintermediate_base");
+       return deltas_pos_  ;
+     } 
+
+     virtual
+     std::vector<std::pair<int,int>>& target_target_deltas_pos() {
+       throw std::logic_error( "Should not access (target, target) contractions from gammaintermediate_base");
+       return deltas_pos_;
+     } 
+};
 
 class GammaIntermediate_Base {
 
@@ -84,6 +117,9 @@ class GammaGenerator_Base{
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate_Base>>> gamma_vec_;
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate_Base>>> final_gamma_vec_;
 
+    std::vector<GammaIntermediate_Base> gamma_vec_raw_;
+    std::vector<GammaIntermediate_Base> final_gamma_vec_raw_;
+
     // key    : name of this gamma
     // result : information used here and in compute routines
     std::shared_ptr<std::map<std::string, std::shared_ptr< GammaInfo_Base >>> Gamma_map_;
@@ -130,6 +166,11 @@ class GammaGenerator_Base{
     bool proj_onto_map( std::shared_ptr<GammaIntermediate_Base> gint,
                         std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
                         std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
+
+    bool proj_onto_map( const GammaIntermediate_Base_Raw& gint,
+                        std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
+                        std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
+
 
     void transform_to_canonical_ids_pos( std::vector<int>& ids_pos );
     void transform_to_canonical_ids_pos( std::vector<std::pair<int,int>>& deltas_pos );

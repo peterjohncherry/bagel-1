@@ -8,6 +8,22 @@
 #include <src/prop/proptool/algebraic_manipulator/a_contrib_info.h>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_base.h>
 
+
+template<typename DataType> 
+class GammaIntermediate_Redux_Raw : public GammaIntermediate_Base {
+
+   public :
+     GammaIntermediate_Redux_Raw( std::vector<int> ids_pos,
+                                 std::vector<std::pair<int,int>> deltas_pos,
+                                 std::pair<double,double> factors ) :
+                                 GammaIntermediate_Base_Raw( ids_pos, deltas_pos, factors ) {};
+
+    ~GammaIntermediate_Redux_Raw(){};
+
+};
+
+
+
 template<typename DataType> 
 class GammaIntermediateRedux : public GammaIntermediate_Base {
 
