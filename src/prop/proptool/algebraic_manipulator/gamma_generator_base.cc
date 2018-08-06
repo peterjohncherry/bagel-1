@@ -85,6 +85,68 @@ if (final_reordering)  { cout << " : final_reordering" << endl; } else { cout <<
   return does_it_contribute;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool GammaGenerator_Base::proj_onto_map_unq( const unique_ptr<GammaIntermediate_Base_Raw>& gint, 
+                                             map<char,int> bra_hole_map, map<char,int> bra_elec_map,
+                                             map<char,int> ket_hole_map, map<char,int> ket_elec_map  ){
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+//Grossly inefficient, but totally generic, should write seperate routines for normal and antinormal
+//ordering; consecutive operators means can just count.
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
+cout << "GammaGenerator_Base::proj_onto_map_unq" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////
+
+  const vector<int>& idxs_pos =  gint->ids_pos_;
+
+  for ( vector<int>::const_reverse_iterator ip_it = idxs_pos.rbegin(); ip_it !=  idxs_pos.rend(); ip_it++ ) {
+    char rng = (*block_aops_rngs_)[*ip_it];  
+
+    if( !((*block_aops_)[*ip_it]) ){
+      auto ket_elec_map_loc = ket_elec_map.find( rng );
+      if ( ket_elec_map_loc == ket_elec_map.end() ) {
+        return false;
+      } else if ( (ket_elec_map_loc->second -= 1 ) == -1  ) {
+        return false;
+      }
+      auto ket_hole_map_loc = ket_hole_map.find( rng );
+
+      if ( ket_hole_map_loc == ket_hole_map.end() ) {
+
+        ket_hole_map.emplace( rng, 1 );
+      } else {
+        ket_hole_map_loc->second += 1;
+      }
+
+    } else {
+      auto ket_hole_map_loc = ket_hole_map.find( rng );
+      if ( ket_hole_map_loc == ket_hole_map.end() ) {
+        return false;
+      } else if ( (ket_hole_map_loc->second -= 1 ) == -1  ) {
+        return false;
+      }
+      
+      auto ket_elec_map_loc = ket_elec_map.find( rng );
+      if ( ket_elec_map_loc == ket_elec_map.end() ) {
+        ket_elec_map.emplace( rng, 1 );
+      } else {
+        ket_elec_map_loc->second += 1;
+      }
+    }
+  }
+
+  // TODO Will break if bra and ket but built from different orbitals ( not just differing occupations, but different sets ).
+  for ( auto& elem : ket_elec_map )  
+    if ( elem.second != bra_elec_map.at(elem.first) )
+      return false;     
+
+  for ( auto& elem : ket_hole_map )                     
+    if ( elem.second != bra_hole_map.at(elem.first) )
+      return false;     
+    
+  return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool GammaGenerator_Base::proj_onto_map( const GammaIntermediate_Base_Raw& gint, 
                                          map<char,int> bra_hole_map, map<char,int> bra_elec_map,
                                          map<char,int> ket_hole_map, map<char,int> ket_elec_map  ){
@@ -209,6 +271,220 @@ print_gamma_intermediate( gint, " " ); cout << endl;
   return true;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGenerator_Base::normal_order_unq() {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
+cout << "GammaGenerator_Base::normal_order_unq" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  int kk = 0;
+  int number_of_surviving_gammas = 0;
+  vector<unique_ptr<GammaIntermediate_Base_Raw>> surviving_gammas_unq;
+  while ( kk != gamma_vec_unq_.size() ) {
+ 
+    gamma_vec_unq_[kk]->survives_ = proj_onto_map_unq( gamma_vec_unq_[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ); 
+
+    if ( gamma_vec_unq_[kk]->survives_ ) { 
+      vector<int>& ids_pos = gamma_vec_unq_[kk]->ids_pos_;
+      int num_plus = 0;
+      for ( int pos : ids_pos )
+        if ( (*block_aops_)[ pos ]) 
+          num_plus++; 
+      
+      num_plus--; 
+     
+      for (int ii = ids_pos.size()-1 ; ii != -1; ii--){
+      
+        if ( ii > num_plus ) {
+          if ( !(*block_aops_)[ids_pos[ii] ] )
+            continue;
+      
+          while( (*block_aops_)[ids_pos[ii]] &&  gamma_vec_unq_[kk]->survives_ ){
+            for ( int jj = (ii-1); jj != -1 ; jj--) {
+              if ( !(*block_aops_)[ids_pos[jj]] ){
+                swap( jj, jj+1, kk);
+                gamma_vec_unq_[kk]->survives_  = proj_onto_map_unq( gamma_vec_unq_[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ );
+                break;
+              }
+              if ( !(gamma_vec_unq_[kk]->survives_) )break;
+            }
+          }
+          if ( !(gamma_vec_unq_[kk]->survives_) )break;
+      
+        } else if (ii <= num_plus) {
+          if ( (*block_aops_)[ids_pos[ii]])
+            continue;
+      
+          while(!(*block_aops_)[ids_pos[ii]] && gamma_vec_unq_[kk]->survives_ ){
+            for ( int jj = (ii-1); jj != -1 ; jj--) {
+              if((*block_aops_)[ids_pos[jj]] ){
+                swap( jj, jj+1, kk);
+                gamma_vec_unq_[kk]->survives_  = proj_onto_map_unq( gamma_vec_unq_[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ );
+                break;
+              }
+              if ( !(gamma_vec_unq_[kk]->survives_) )break;
+            }
+          }
+          if ( !(gamma_vec_unq_[kk]->survives_) )break;
+        }
+        if ( !(gamma_vec_unq_[kk]->survives_) )break;
+      }
+    }
+    if ( gamma_vec_unq_[kk]->survives_ )
+      ++number_of_surviving_gammas;
+  }
+  if ( number_of_surviving_gammas > 0 ){ 
+    vector<unique_ptr<GammaIntermediate_Base_Raw>> surviving_gammas(number_of_surviving_gammas);
+    vector<unique_ptr<GammaIntermediate_Base_Raw>>::iterator sg_it = surviving_gammas.begin();  
+    for ( vector<unique_ptr<GammaIntermediate_Base_Raw>>::iterator gv_it = gamma_vec_unq_.begin(); gv_it != gamma_vec_unq_.end(); gv_it++){ 
+      if ( (*gv_it)->survives_ ) {
+        *sg_it = make_unique<GammaIntermediate_Base_Raw>(*(gv_it->get())); // TODO can this be move, or would that screw up the iterators in gvu?
+        ++sg_it;
+      }
+    }
+    gamma_vec_unq_ = move(surviving_gammas);
+  } else { 
+    gamma_vec_unq_.clear();
+  }
+  return;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGenerator_Base::anti_normal_order_unq() {
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
+cout << "GammaGenerator_Base::anti_normal_order" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  int kk = 0;
+  int number_of_surviving_gammas = 0;
+  while ( kk != gamma_vec_->size() ) {
+    gamma_vec_unq_[kk]->survives_ = proj_onto_map_unq( gamma_vec_unq_[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ); 
+
+    if ( gamma_vec_unq_[kk]->survives_ ) { 
+      vector<int> ids_pos  = gamma_vec_unq_[kk]->ids_pos_;
+      int num_kill = 0;
+      for ( int pos : ids_pos )
+        if (!(*block_aops_)[pos]) 
+          num_kill++; 
+      num_kill--; 
+      
+      int ii = ids_pos.size()-1 ;
+      bool survives =  gamma_vec_unq_[kk]->survives_; 
+      while ( (ii != -1)  && survives ) {
+        if ( ii > num_kill ) {
+          while( (!(*block_aops_)[ids_pos[ii]]) && survives ) {
+            int jj = (ii-1);
+            while ( (jj != -1)  && survives )  {
+              if ( ( (*block_aops_)[ids_pos[jj]] ) && (gamma_vec_unq_[kk]->survives_) ){
+                swap( jj, jj+1, kk );
+                gamma_vec_unq_[kk]->survives_ = proj_onto_map_unq( gamma_vec_unq_[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ );
+                survives = gamma_vec_unq_[kk]->survives_;
+                break;
+              }
+              if ( !survives ) {
+                break;
+              } else {
+                --jj; 
+              }
+            }
+            --ii;
+          }
+	  if ( !survives ) break;
+
+        } else if (ii <= num_kill) {
+          while((*block_aops_)[ids_pos[ii]] && gamma_vec_unq_[kk]->survives_ ){
+            for ( int jj = (ii-1); jj != -1 ; jj--) {
+              if( ( !(*block_aops_)[ids_pos[jj]] ) && (gamma_vec_unq_[kk]->survives_) ) {
+                swap( jj, jj+1, kk );
+                gamma_vec_unq_[kk]->survives_ =  proj_onto_map_unq( gamma_vec_unq_[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ); 
+                break;
+              }
+              if ( !(gamma_vec_unq_[kk]->survives_) ) break; 
+            }
+          }
+          if ( !(gamma_vec_unq_[kk]->survives_) ) break;
+        }
+        if ( !(gamma_vec_unq_[kk]->survives_) ) break;
+      }
+    }
+    if ( gamma_vec_unq_[kk]->survives_ )
+      ++number_of_surviving_gammas;
+    ++kk;
+  }
+  if ( number_of_surviving_gammas > 0 ){ 
+    vector<unique_ptr<GammaIntermediate_Base_Raw>> surviving_gammas(number_of_surviving_gammas);
+    vector<unique_ptr<GammaIntermediate_Base_Raw>>::iterator sg_it = surviving_gammas.begin();  
+    for ( vector<unique_ptr<GammaIntermediate_Base_Raw>>::iterator gv_it = gamma_vec_unq_.begin(); gv_it != gamma_vec_unq_.end(); gv_it++){ 
+      if ( (*gv_it)->survives_ ) {
+        *sg_it = make_unique<GammaIntermediate_Base_Raw>(*(gv_it->get())); // TODO can this be move, or would that screw up the iterators in gvu?
+        ++sg_it;
+      }
+    }
+    gamma_vec_unq_ = move(surviving_gammas);
+  } else { 
+    gamma_vec_unq_.clear();
+  }
+
+  return;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGenerator_Base::alternating_order_unq() {  // e.g. +-+-+-+-
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
+cout << "GammaGenerator_Base::alternating_order_unq" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  int kk = 0;
+  int number_of_surviving_gammas = 0;
+  while ( kk != gamma_vec_unq_.size() ) {
+    gamma_vec_unq_[kk]->survives_ = proj_onto_map_unq( gamma_vec_unq_[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ); 
+    if ( gamma_vec_unq_[kk]->survives_ ){ 
+      vector<int> ids_pos = gamma_vec_unq_[kk]->ids_pos_; 
+      vector<int> new_ids_pos = get_standardized_alt_order_unranged( ids_pos );
+
+      int ii = ids_pos.size()-1;
+      while( (ii != -1) && (gamma_vec_unq_[kk]->survives_) ){
+        if ( ids_pos[ii] == new_ids_pos[ii])
+          continue;
+
+        while( ids_pos[ii] != new_ids_pos[ii] && gamma_vec_unq_[kk]->survives_ ){
+          int jj = ii-1;
+          while ( (jj != -1) && (gamma_vec_unq_[kk]->survives_) ) {
+            if ( ids_pos[jj] == new_ids_pos[ii] ){
+              swap( jj, jj+1, kk );
+              gamma_vec_unq_[kk]->survives_ = proj_onto_map_unq( gamma_vec_unq_[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ );
+              break;
+            }
+            --jj;
+          }
+        }
+        if ( !(gamma_vec_unq_[kk]->survives_) ) {
+          break;
+        } else {
+	  --ii;
+        }
+      }
+    }
+    if (gamma_vec_unq_[kk]->survives_ )
+      ++number_of_surviving_gammas;
+  }
+  if ( number_of_surviving_gammas > 0 ){
+    vector<unique_ptr<GammaIntermediate_Base_Raw>> surviving_gammas(number_of_surviving_gammas);
+    vector<unique_ptr<GammaIntermediate_Base_Raw>>::iterator sg_it = surviving_gammas.begin();  
+    for ( vector<unique_ptr<GammaIntermediate_Base_Raw>>::iterator gv_it = gamma_vec_unq_.begin(); gv_it != gamma_vec_unq_.end(); gv_it++){ 
+      if ( (*gv_it)->survives_ ) {
+        *sg_it = make_unique<GammaIntermediate_Base_Raw>(*(gv_it->get())); // TODO can this be move, or would that screw up the iterators in gvu?
+        ++sg_it;
+      }
+    }
+    gamma_vec_unq_ = move(surviving_gammas);
+  } else {
+    gamma_vec_unq_.clear();
+  }
+
+  return;
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator_Base::normal_order() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
@@ -274,6 +550,8 @@ cout << "GammaGenerator_Base::normal_order" << endl;
   gamma_vec_ = surviving_gammas;
   return;
 }
+
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator_Base::anti_normal_order() {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -487,6 +765,51 @@ cout << "GammaGenerator_Base::get_position_order" << endl;
   sort(pos.begin(), pos.end(), [&ids_pos](int i1, int i2){return (bool)( ids_pos[i1] < ids_pos[i2] ); });
 
   return pos;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// This final ordering is preferable for orbital excitation derivative terms; it ensures that the indexes of the
+// perturbation tensor are always in the same order, which makes combining terms easier. 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+vector<int> GammaGenerator_Base::get_standardized_alt_order_unranged( vector<int> ids_reordered_pos ) {
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_VERBOSE_GAMMAGENERATOR_BASE_PROPTOOL
+cout << "GammaGenerator_Base::get_standardized_alt_order_unranged" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  { 
+  vector<int>& tmp = standard_order_; // TODO cannot remember how to avoid this without asking lambda to capture whole class...
+  sort( ids_reordered_pos.begin(), ids_reordered_pos.end(), [tmp] ( int i1, int i2) { return (bool)( tmp[i1] < tmp[i2]); });  
+  } 
+ 
+  vector<int> standard_order_plus(ids_reordered_pos.size()/2);
+  vector<int> standard_order_kill(ids_reordered_pos.size()/2);
+  vector<int>::iterator sop_it = standard_order_plus.begin();
+  vector<int>::iterator sok_it = standard_order_kill.begin();
+  for ( int pos : ids_reordered_pos) {
+    if ( block_aops_->at(pos) ) {
+      *sop_it = pos;
+      ++sop_it;
+    } else {
+      *sok_it = pos;
+      ++sok_it;
+    }
+  }
+
+  sop_it = standard_order_plus.begin();
+  sok_it = standard_order_kill.begin();
+  vector<int> standard_alt_order( ids_reordered_pos.size() ); 
+  vector<int>::iterator sao_it = standard_alt_order.begin();
+  while ( sao_it != standard_alt_order.end()){
+    *sao_it = *sop_it;
+    ++sop_it;
+    ++sao_it;
+    *sao_it = *sok_it;
+    ++sok_it;
+    ++sao_it;
+  }
+
+  return standard_alt_order;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // This final ordering is preferable for orbital excitation derivative terms; it ensures that the indexes of the

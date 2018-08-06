@@ -117,8 +117,11 @@ class GammaGenerator_Base{
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate_Base>>> gamma_vec_;
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate_Base>>> final_gamma_vec_;
 
-    std::vector<GammaIntermediate_Base> gamma_vec_raw_;
-    std::vector<GammaIntermediate_Base> final_gamma_vec_raw_;
+    std::vector<GammaIntermediate_Base_Raw> gamma_vec_raw_;
+    std::vector<GammaIntermediate_Base_Raw> final_gamma_vec_raw_;
+
+    std::vector<std::unique_ptr<GammaIntermediate_Base_Raw>> gamma_vec_unq_;
+    std::vector<std::unique_ptr<GammaIntermediate_Base_Raw>> final_gamma_vec_unq_;
 
     // key    : name of this gamma
     // result : information used here and in compute routines
@@ -149,15 +152,19 @@ class GammaGenerator_Base{
     bool generic_reorderer_different_sector( std::string reordering_name, bool final_reordering );
 
     void normal_order();
-
     void anti_normal_order();
-
     void alternating_order();
+
+    void normal_order_unq();
+    void anti_normal_order_unq();
+    void alternating_order_unq();
 
     std::shared_ptr<std::vector<std::pair<int,int>>>
     standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
 
     void set_standardized_alt_order_unranged ( std::shared_ptr<GammaIntermediate_Base>& gint , std::vector<int>& standard_alt_order);
+
+    std::vector<int> get_standardized_alt_order_unranged ( std::vector<int> ids_reordered_pos );
 
     std::vector<int> get_Aid_order( const std::vector<int>& id_pos );
 
@@ -171,8 +178,12 @@ class GammaGenerator_Base{
                         std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
                         std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
 
+    bool proj_onto_map_unq( const std::unique_ptr<GammaIntermediate_Base_Raw>& gint, 
+                            std::map<char,int> bra_hole_map, std::map<char,int> bra_elec_map,
+                            std::map<char,int> ket_hole_map, std::map<char,int> ket_elec_map  );
 
     void transform_to_canonical_ids_pos( std::vector<int>& ids_pos );
+
     void transform_to_canonical_ids_pos( std::vector<std::pair<int,int>>& deltas_pos );
 
     virtual void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops ){assert(false); return;};
