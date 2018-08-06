@@ -14,7 +14,8 @@ bool GammaGenerator_Base::generic_reorderer( string reordering_name, bool first_
 #ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
 cout << "GammaGenerator_Base::generic_reorderer" << endl; 
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+   
+ 
   int kk = 0;
   bool does_it_contribute = false;
   final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>(0);
@@ -26,7 +27,7 @@ cout << "GammaGenerator_Base::generic_reorderer" << endl;
       bra_elec_map_ = target_states_->elec_range_map(bra_name_);
       ket_hole_map_ = target_states_->hole_range_map(ket_name_);
       ket_elec_map_ = target_states_->elec_range_map(ket_name_);
-      if( generic_reorderer_different_sector( reordering_name, final_reordering ) ) //TODO find a better way; have contribs specified for individual BraKet combinations?
+      if( generic_reorderer_different_sector( reordering_name, final_reordering ) ) //TODO find a better way, e.g., get contribs for individual BraKet combinations
         does_it_contribute = true;
     }
   }
@@ -374,6 +375,7 @@ cout << "GammaGenerator_Base::anti_normal_order" << endl;
         if ( ii > num_kill ) {
           while( (!(*block_aops_)[ids_pos[ii]]) && survives ) {
             int jj = (ii-1);
+            
             while ( (jj != -1)  && survives )  {
               if ( ( (*block_aops_)[ids_pos[jj]] ) && (gamma_vec_unq_[kk]->survives_) ){
                 swap( jj, jj+1, kk );
@@ -654,7 +656,7 @@ cout << "GammaGenerator_Base::alternating_order" << endl;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Cannot pass shared_ptr to gammaintermediate, as push back can potentially result in the vector being moved,
-// which messes up the pointer inside the shared_ptr.
+// which messes up the pointer inside the shared_ptr 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void GammaGenerator_Base::swap( int ii, int jj, int kk ){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -701,6 +703,62 @@ print_gamma_intermediate (gamma_vec_->at(kk) , "pre_swap gamma" );
   gint->factors_ =  make_pair( gint->factors_.first * 1.0,  0.0 );
   }
 #endif
+  return;
+
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Cannot pass shared_ptr to gammaintermediate, as push back can potentially result in the vector being moved,
+// which messes up the pointer inside the shared_ptr ( why ???? ).
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void GammaGenerator_Base::swap_unq( int ii, int jj, int kk ){
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
+cout << "GammaGenerator_Base::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
+print_gamma_intermediate (gamma_vec_->at(kk) , "pre_swap gamma" );
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  unique_ptr<GammaIntermediate_Base_Raw>& gint =  gamma_vec_unq_[kk];
+
+  // using an extra buffer variable, but makes routine in if clearer 
+  int i_pos = (gint->ids_pos_)[ii];
+  int j_pos = (gint->ids_pos_)[jj];
+ 
+  (gint->ids_pos_)[ii] = j_pos;
+  (gint->ids_pos_)[jj] = i_pos;
+
+  if ( ( (*block_aops_rngs_)[j_pos] == (*block_aops_rngs_)[i_pos]) && (*block_aops_)[i_pos] != (*block_aops_)[ j_pos ] ){
+
+    vector<pair<int,int>> new_deltas_tmp(gint->deltas_pos_.size()+1);
+    copy ( gint->deltas_pos_.begin(), gint->deltas_pos_.end(), new_deltas_tmp.begin());
+    new_deltas_tmp.back() = (*block_aops_)[ j_pos ]  ?  make_pair( j_pos, i_pos ): make_pair( i_pos, j_pos);
+
+    vector<int> new_ids_pos( gint->ids_pos_.size()-2 );
+    {
+    vector<int>::iterator nip_it = new_ids_pos.begin();
+    vector<int>::iterator gip_it = gint->ids_pos_.begin();
+    for( int qq = 0 ; qq != gint->ids_pos_.size(); ++qq, ++gip_it ) {
+      if ( (qq != ii) && (qq != jj)){
+       *nip_it = *gip_it;
+        ++nip_it;
+      }
+    }
+    }
+ 
+    auto new_fac =  make_pair( gint->factors_.first * -1.0,  0.0 );
+    gint->factors_ =  make_pair( gint->factors_.first * 1.0,  0.0 );
+    gamma_vec_unq_.push_back(make_unique<GammaIntermediate_Base_Raw>( new_ids_pos, new_deltas_tmp, new_fac ));
+
+  } else { 
+    gint->factors_ =  make_pair( gint->factors_.first * 1.0,  0.0 );
+  }
+
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
+  if ( ( (*block_aops_rngs_)[j_pos] == (*block_aops_rngs_)[i_pos]) && (*block_aops_)[i_pos] != (*block_aops_)[ j_pos ] ){
+    print_gamma_intermediate ( gamma_vec_unq_.back(), "new gamma" );
+    print_gamma_intermediate ( gamma_vec_unq_[kk] , "post_swap gamma" );
+  }
+#endif
+
   return;
 
 }
@@ -907,6 +965,32 @@ cout << "GammaGenerator_Base::print_gamma_intermediate" << endl;
   cout.flush(); for(const auto& dta : *(gint->deltas_pos_)){ cout << "("<< dta.first << "," << dta.second << ")"; cout.flush();  }cout << "] " <<  endl;
   cout << "gint_deltas_idxs  = [ ";
   cout.flush(); for(const auto& dta : *(gint->deltas_pos_)){ cout << "("<< block_idxs_[dta.first] << "," << block_idxs_[dta.second] << ")"; cout.flush();  }cout << "] " <<  endl;
+  cout << "factor  = ( " ; cout.flush(); cout << gint->factors_.first << ", " << gint->factors_.second << " )" << endl << endl;
+  return;
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+void
+GammaGenerator_Base::print_gamma_intermediate( const unique_ptr<GammaIntermediate_Base_Raw>& gint, string gamma_name ) { 
+/////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
+cout << "GammaGenerator_Base::print_gamma_intermediate (unique_ptr_version)" << endl;
+#endif //////////////////////////////////////////////////////////////////////////////////////
+
+  if ( gamma_name != "" ) 
+    cout << "-------- " << gamma_name << " -------" << endl;
+
+  cout << "gint_ids_pos = [ ";
+  cout.flush(); for(const auto& pos : gint->ids_pos_){ cout << pos << "  " ; cout.flush();  }  cout << "] " << endl;
+  cout << "gint_aops    = [ ";
+  cout.flush(); for(const auto& pos : gint->ids_pos_){ cout << block_aops_->at(pos) << "  " ; cout.flush();  }  cout << "] " << endl;
+  cout << "gint_rngs    = [ ";
+  cout.flush(); for(const auto& pos : gint->ids_pos_){ cout << (*block_aops_rngs_)[pos] << "  " ; cout.flush();  }   cout << "]" << endl;
+  cout << "gint_ids     = [ ";
+  cout.flush(); for(const auto& pos : gint->ids_pos_){ cout << block_idxs_[pos] << " " ; cout.flush();  }   cout << "] " <<  endl;
+  cout << "gint_deltas_pos   = [ ";
+  cout.flush(); for(const auto& dta : gint->deltas_pos_){ cout << "("<< dta.first << "," << dta.second << ")"; cout.flush();  }cout << "] " <<  endl;
+  cout << "gint_deltas_idxs  = [ ";
+  cout.flush(); for(const auto& dta : gint->deltas_pos_){ cout << "("<< block_idxs_[dta.first] << "," << block_idxs_[dta.second] << ")"; cout.flush();  }cout << "] " <<  endl;
   cout << "factor  = ( " ; cout.flush(); cout << gint->factors_.first << ", " << gint->factors_.second << " )" << endl << endl;
   return;
 }

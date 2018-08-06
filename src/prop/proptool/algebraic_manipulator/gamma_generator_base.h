@@ -9,8 +9,11 @@
 #include <src/prop/proptool/algebraic_manipulator/a_contrib_info.h>
 
 using namespace WickUtils;
+class GammaGenerator_Base;
+
 class GammaIntermediate_Base_Raw {
 
+   friend GammaGenerator_Base;
    public :
      std::vector<int> ids_pos_;
      std::vector<std::pair<int,int>> deltas_pos_;
@@ -44,8 +47,7 @@ class GammaIntermediate_Base_Raw {
 };
 
 class GammaIntermediate_Base {
-
-   public :
+   public : 
      std::shared_ptr<std::vector<int>> ids_pos_;
      std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_;
      std::pair<double,double> factors_;
@@ -149,6 +151,7 @@ class GammaGenerator_Base{
 
     bool generic_reorderer( std::string reordering_name, bool first_reordering, bool final_reordering );
 
+  protected :
     bool generic_reorderer_different_sector( std::string reordering_name, bool final_reordering );
 
     void normal_order();
@@ -186,11 +189,15 @@ class GammaGenerator_Base{
 
     void transform_to_canonical_ids_pos( std::vector<std::pair<int,int>>& deltas_pos );
 
-    virtual void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops ){assert(false); return;};
+    virtual void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops ){assert(false);};
 
     virtual void swap( int ii, int jj, int kk );
 
+    virtual void swap_unq( int ii, int jj, int kk );
+
     void print_gamma_intermediate( const std::shared_ptr<GammaIntermediate_Base>& gint , std::string gamma_name = "" );
+
+    void print_gamma_intermediate( const std::unique_ptr<GammaIntermediate_Base_Raw>& gint, std::string gamma_name = "" );
 
     virtual void add_Acontrib_to_map( int gamma_vec_position, std::string bra_name, std::string ket_name ) { assert(false); } 
   
