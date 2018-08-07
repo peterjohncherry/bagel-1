@@ -30,16 +30,9 @@ cout << "GammaGenerator_Base::generic_reorderer" << endl;
       bra_elec_map_ = target_states_->elec_range_map(bra_name_);
       ket_hole_map_ = target_states_->hole_range_map(ket_name_);
       ket_elec_map_ = target_states_->elec_range_map(ket_name_);
-     
       bool unq_does_it_contribute =  generic_reorderer_different_sector_unq( reordering_name, final_reordering );
-//      bool orig_does_it_contribute = generic_reorderer_different_sector( reordering_name, final_reordering ); 
-     //if( generic_reorderer_different_sector( reordering_name, final_reordering ) )
       if( unq_does_it_contribute ) 
         does_it_contribute = true;
-
-      cout << " unq_does_it_contribute  =  " << unq_does_it_contribute << endl;
-//      cout << " orig_does_it_contribute =  " << orig_does_it_contribute << endl;
-  //    if ( unq_does_it_contribute != orig_does_it_contribute ) cout << "!!!!!! WARNING !!!!!!!!!" << endl; 
     }
   }
   return does_it_contribute;
@@ -407,19 +400,19 @@ cout << "GammaGenerator_Base::anti_normal_order_unq" << endl;
     gamma_vec_unq_[kk]->survives_ = proj_onto_map_unq( gamma_vec_unq_[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ ); 
 
     if ( gamma_vec_unq_[kk]->survives_ ) { 
-      vector<int> ids_pos  = gamma_vec_unq_[kk]->ids_pos_;
+      vector<int>& ids_pos  = gamma_vec_unq_[kk]->ids_pos_;
       int num_kill = 0;
       for ( int pos : ids_pos )
         if (!(*block_aops_)[pos]) 
           num_kill++; 
       num_kill--; 
       
-      for (int ii = ids_pos.size()-1 ; ii != -1; --ii){
+      for (int ii = ids_pos.size()-1 ; ii != -1; ii--){
         if ( ii > num_kill ) {
-          cout << "A" << endl;
+          cout << "A num_kill= " << num_kill <<" ii = " << ii << " kk = " << kk << endl;
           while( ((!(*block_aops_)[ids_pos[ii]]) && (gamma_vec_unq_[kk]->survives_)) ) {
             cout << "B  ii = " << ii << " kk = " << kk << endl;
-            for ( int jj = ii-1; jj != -1 ; --jj) {
+            for ( int jj = ii-1; jj != -1 ; jj--) {
               cout << "C1  ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
               if ( (*block_aops_)[ids_pos[jj]]  ){
                 cout << "C2  ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
@@ -460,6 +453,7 @@ cout << "GammaGenerator_Base::anti_normal_order_unq" << endl;
 
     ++kk; 
   }
+  cout << "left main anou loop" << endl;
   if ( number_of_surviving_gammas > 0 ){ 
     vector<unique_ptr<GammaIntermediate_Base_Raw>> surviving_gammas(number_of_surviving_gammas);
     vector<unique_ptr<GammaIntermediate_Base_Raw>>::iterator sg_it = surviving_gammas.begin();  
@@ -473,7 +467,7 @@ cout << "GammaGenerator_Base::anti_normal_order_unq" << endl;
   } else { 
     gamma_vec_unq_.clear();
   }
-
+  cout << "leaving anou" << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -491,34 +485,24 @@ cout << "GammaGenerator_Base::alternating_order_unq" << endl;
       vector<int> ids_pos = gamma_vec_unq_[kk]->ids_pos_; 
       vector<int> new_ids_pos = get_standardized_alt_order_unranged( ids_pos );
 
-      int ii = ids_pos.size()-1;
-      while( (ii != -1) && (gamma_vec_unq_[kk]->survives_) ){
+      for ( int ii = ids_pos.size()-1; ((ii!=-1) && (gamma_vec_unq_[kk]->survives_)); --ii ){
         if ( ids_pos[ii] == new_ids_pos[ii])
           continue;
 
         while( ids_pos[ii] != new_ids_pos[ii] && gamma_vec_unq_[kk]->survives_ ){
-          int jj = ii-1;
-          while ( (jj != -1) && (gamma_vec_unq_[kk]->survives_) ) {
+          for ( int jj = ii-1; jj != -1 ; jj--) {
             if ( ids_pos[jj] == new_ids_pos[ii] ){
               swap_unq( jj, jj+1, kk );
               gamma_vec_unq_[kk]->survives_ = proj_onto_map_unq( gamma_vec_unq_[kk], *bra_hole_map_, *bra_elec_map_, *ket_hole_map_, *ket_elec_map_ );
               break;
             }
-            --jj;
           }
-        }
-        if ( !(gamma_vec_unq_[kk]->survives_) ) {
-          break;
-        } else {
-	  --ii;
         }
       }
     }
     if (gamma_vec_unq_[kk]->survives_ )
       ++number_of_surviving_gammas;
-    cout << " kk = " << kk; cout.flush();
     ++kk;
-    cout << " kk++ = " << kk << " gamma_vec_unq_.size() = " << gamma_vec_unq_.size() << endl ;
   }
   if ( number_of_surviving_gammas > 0 ){
     vector<unique_ptr<GammaIntermediate_Base_Raw>> surviving_gammas(number_of_surviving_gammas);
@@ -810,7 +794,7 @@ print_gamma_intermediate(gamma_vec_unq_[kk] , "pre_swap_unq gamma" );
 #ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP_UNQ
 //  if ( ( (*block_aops_rngs_)[j_pos] == (*block_aops_rngs_)[i_pos]) && (*block_aops_)[i_pos] != (*block_aops_)[ j_pos ] ){
 //    print_gamma_intermediate( gamma_vec_unq_.back(), "new gamma" );
-//    print_gamma_intermediate( gamma_vec_unq_[kk] , "post_swap gamma" );
+    print_gamma_intermediate( gamma_vec_unq_[kk] , "post_swap gamma" );
 //  }
 #endif
   return;

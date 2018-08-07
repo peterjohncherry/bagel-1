@@ -35,9 +35,10 @@
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic_utils.h>
 #include <src/prop/proptool/integrals/moint_computer.h>
 #include <src/prop/proptool/debugging_utils.h>
-//#ifdef __TEST_PROPTOOL
-//#include <src/prop/proptool/proptool.h>
-//#endif
+#define __TEST_PROPTOOL
+#ifdef  __TEST_PROPTOOL
+#include <src/prop/proptool/proptool.h>
+#endif
 
 using namespace std;
 using namespace bagel;
@@ -396,37 +397,38 @@ cout << "CASPT2::CASPT2::solve" << endl;
   f1_->zero();
 
 #ifdef __TEST_PROPTOOL
-//  shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>( proptool_input_, info_->geom(), info_->ref() );
-//  proptool->tamps_smith_ = t2all_[0]->at(0)->copy();
-// proptool->v2_smith_ = v2_->copy();
-//  proptool->set_maxtile( info_->maxtile() ); 
+  cout << endl <<  "======================  BEGIN PROPTOOL TEST =========================" << endl;
+  shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>( proptool_input_, info_->geom(), info_->ref() );
+  proptool->tamps_smith_ = t2all_[0]->at(0)->copy();
+  proptool->v2_smith_ = v2_->copy();
+  proptool->set_maxtile( info_->maxtile() ); 
 
-//  { 
-//    auto range_conversion_map = make_shared<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>>();
-//    auto closed_rng  = make_shared<SMITH::IndexRange>(*rclosed_);
-//    auto active_rng  = make_shared<SMITH::IndexRange>(*ractive_);
-//    auto virtual_rng = make_shared<SMITH::IndexRange>(*rvirt_);
-//  
-//    auto free_rng   = make_shared<SMITH::IndexRange>(*closed_rng);
-//    free_rng->merge(*active_rng);
-//    free_rng->merge(*virtual_rng);
-//  
-//    auto not_closed_rng  = make_shared<SMITH::IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
-//    auto not_active_rng  = make_shared<SMITH::IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
-//    auto not_virtual_rng = make_shared<SMITH::IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
-//  
-//  
-//    range_conversion_map->emplace("c", closed_rng); 
-//    range_conversion_map->emplace("a", active_rng);
-//    range_conversion_map->emplace("v", virtual_rng);
-//    range_conversion_map->emplace("free", free_rng);
-//    range_conversion_map->emplace("notcor",not_closed_rng);
-//    range_conversion_map->emplace("notact",not_active_rng);
-//    range_conversion_map->emplace("notvir", not_virtual_rng); 
-//    proptool->set_range_conversion_map( range_conversion_map ); 
-//    proptool->construct_task_lists();
-//  }
-//  proptool->execute_compute_lists();
+  { 
+    auto range_conversion_map = make_shared<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>>();
+    auto closed_rng  = make_shared<SMITH::IndexRange>(*rclosed_);
+    auto active_rng  = make_shared<SMITH::IndexRange>(*ractive_);
+    auto virtual_rng = make_shared<SMITH::IndexRange>(*rvirt_);
+  
+    auto free_rng   = make_shared<SMITH::IndexRange>(*closed_rng);
+    free_rng->merge(*active_rng);
+    free_rng->merge(*virtual_rng);
+  
+    auto not_closed_rng  = make_shared<SMITH::IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
+    auto not_active_rng  = make_shared<SMITH::IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
+    auto not_virtual_rng = make_shared<SMITH::IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
+  
+  
+    range_conversion_map->emplace("c", closed_rng); 
+    range_conversion_map->emplace("a", active_rng);
+    range_conversion_map->emplace("v", virtual_rng);
+    range_conversion_map->emplace("free", free_rng);
+    range_conversion_map->emplace("notcor",not_closed_rng);
+    range_conversion_map->emplace("notact",not_active_rng);
+    range_conversion_map->emplace("notvir", not_virtual_rng); 
+    proptool->set_range_conversion_map( range_conversion_map ); 
+    proptool->construct_task_lists();
+  }
+  proptool->execute_compute_lists();
 #endif
 
   {// TEST source
