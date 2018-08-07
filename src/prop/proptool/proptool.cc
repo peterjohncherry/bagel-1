@@ -5,6 +5,7 @@
 using namespace std;
 using namespace bagel;
 
+#define __DEBUG_PROPTOOL_DRIVER
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 PropTool::PropTool::PropTool( shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, shared_ptr<const Reference> r ): 
                               idata_(idata), geom_(g), ref_(r), ciwfn_(ref_->ciwfn()), civectors_(ciwfn_->civectors())  {
@@ -25,7 +26,6 @@ cout << "PropTool::PropTool::PropTool" << endl;
   term_init_map_ = make_shared<map<string, shared_ptr<Term_Init>>>();
   expression_init_map_ = make_shared<map<string, shared_ptr<Expression_Init>>>();
   equation_init_map_ = make_shared<map<string, shared_ptr<Equation_Init_Base>>>();
-
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

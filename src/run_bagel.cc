@@ -120,7 +120,8 @@ void bagel::impl::run_bagel_(shared_ptr<const PTree> idata) {
 
         cout << "===============INTO PROPTOOL================" << endl;
         shared_ptr<PropTool::PropTool> my_eqn = make_shared<PropTool::PropTool>(itree, geom, ref);
-//        my_eqn->compute();
+        my_eqn->construct_task_lists();
+        my_eqn->execute_compute_lists();
         cout << "===============OUT OF PROPTOOL================" << endl;
 
     } else if (title == "hessian") {

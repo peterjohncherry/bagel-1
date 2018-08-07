@@ -38,7 +38,13 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>( 1 );
   gamma_vec_->front() = make_shared<GammaIntermediateRedux<DataType>>( ids_pos, make_shared<vector<pair<int,int>>>(0), block_info_->factors() );
   final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>(0);
- 
+
+  {
+  vector<int> ids_pos_raw( std_rngs_.size() );
+  iota( ids_pos_raw.begin(), ids_pos_raw.end(), 0 );
+  gamma_vec_unq_.push_back( make_unique<GammaIntermediate_Redux_Raw<DataType>>( ids_pos_raw, vector<pair<int,int>>(0), block_info_->factors() ) );
+  }
+
 #ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
   block_idxs_ = vector<string>( std_ids_->size() );
   vector<int>::iterator it_it = block_info_->idxs_trans()->begin();
@@ -47,6 +53,60 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   print_gamma_intermediate(gamma_vec_->front(), "initial gamma intermediate" );  
 #endif
 
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<typename DataType> 
+void GammaGeneratorRedux<DataType>::add_Acontrib_to_map_unq( int kk, string bra_name, string ket_name ){  // e.g. ++++----
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
+cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map_unq" << endl;
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  unique_ptr<GammaIntermediate_Base_Raw>& gint = gamma_vec_unq_[kk];
+ 
+  string Gname_alt = get_gamma_name(chrvec_to_strvec(*block_aops_rngs_), *block_aops_, gint->ids_pos_, bra_name, ket_name );
+
+  if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
+    G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo_Base>>>() );
+
+//  Gamma_map_->emplace( Gname_alt, make_shared<GammaInfo<DataType>>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
+//                                                                    block_aops_, make_shared<const vector<string>>(chrvec_to_strvec(*block_aops_rngs_)),
+//                                                                    gint->ids_pos_, Gamma_map_ ) );
+
+  vector<pair<int,int>> idxs_deltas_pos = gint->deltas_pos_; 
+  transform_to_canonical_ids_pos( idxs_deltas_pos ); 
+
+  string Aname_alt = get_ctp_name( op_info_->op_state_name_canonical(), *std_ids_,  std_rngs_, idxs_deltas_pos );
+
+  if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() ) 
+    total_op_->enter_cmtps_into_map(idxs_deltas_pos, std_rngs_, op_info_ );
+
+  vector<int> standardized_ids_pos = gint->ids_pos_;  
+  transform_to_canonical_ids_pos( standardized_ids_pos ); 
+ 
+  vector<int> Aid_order_new = get_Aid_order( standardized_ids_pos );
+  pair<double,double> new_fac = gint->factors_; 
+  auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
+  if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
+    auto AInfo = make_shared<AContribInfo_Full<DataType>>( Aname_alt, Aid_order_new, new_fac );
+    G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
+
+  } else {
+    shared_ptr<AContribInfo_Base> AInfo = AInfo_loc->second;
+    for ( int qq = 0 ; qq != AInfo->id_orders().size(); qq++ ) {
+      if( Aid_order_new == AInfo->id_order(qq) ){
+        AInfo->combine_factors( qq, new_fac );
+        AInfo->remaining_uses_ += 1;
+        AInfo->total_uses_ += 1;
+        break;
+
+      } else if ( qq == AInfo->id_orders().size()-1) {
+        AInfo->add_id_order(Aid_order_new);
+        AInfo->add_factor(new_fac);
+      }
+    }
+  }
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,13 +169,13 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
   }
   return;
 }
-////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::block_trans_test( shared_ptr<GammaIntermediate_Base>& gint ){
-////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
 cout << "GammaGeneratorRedux<DataType>::block_trans_test " << endl;
-#endif /////////////////////////////////////////////////////////////////
+#endif ////////////////////////////////////////////////////////////////////////////////////////////
 
   block_idxs_ = vector<string>( std_ids_->size() );
   vector<int>::iterator it_it = block_info_->idxs_trans()->begin();

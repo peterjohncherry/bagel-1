@@ -10,13 +10,13 @@
 
 
 template<typename DataType> 
-class GammaIntermediate_Redux_Raw : public GammaIntermediate_Base {
+class GammaIntermediate_Redux_Raw : public GammaIntermediate_Base_Raw {
 
    public :
      GammaIntermediate_Redux_Raw( std::vector<int> ids_pos,
-                                 std::vector<std::pair<int,int>> deltas_pos,
-                                 std::pair<double,double> factors ) :
-                                 GammaIntermediate_Base_Raw( ids_pos, deltas_pos, factors ) {};
+                                  std::vector<std::pair<int,int>> deltas_pos,
+                                  std::pair<double,double> factors ) :
+                                  GammaIntermediate_Base_Raw( ids_pos, deltas_pos, factors ) {};
 
     ~GammaIntermediate_Redux_Raw(){};
 
@@ -64,6 +64,8 @@ class GammaGeneratorRedux : public GammaGenerator_Base {
     void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops );
 
     void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
+
+    void add_Acontrib_to_map_unq( int kk, std::string bra_name, std::string ket_name );
 
     void block_trans_test( std::shared_ptr<GammaIntermediate_Base>& gint );
   

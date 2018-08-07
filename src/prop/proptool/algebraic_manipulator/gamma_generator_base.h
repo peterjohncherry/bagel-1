@@ -153,6 +153,7 @@ class GammaGenerator_Base{
 
   protected :
     bool generic_reorderer_different_sector( std::string reordering_name, bool final_reordering );
+    bool generic_reorderer_different_sector_unq( std::string reordering_name, bool final_reordering );
 
     void normal_order();
     void anti_normal_order();
