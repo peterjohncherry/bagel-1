@@ -7,7 +7,7 @@ using namespace std;
 using namespace WickUtils;
 
 
-#define __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
+//#define __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info> block_info, shared_ptr<vector<bool>> trans_aops ) {
@@ -22,10 +22,10 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
 
   op_info_ = block_info_->op_info();
 
-  for ( auto op : *( op_info_->op_info_vec()) ) { cout << op->name_ << " " ; cout.flush(); } cout << endl;
-  cout << "block factors = [ "; cout.flush(); 
-  for ( auto rb : *(block_info_->range_blocks()) ) { cout << "(" << rb->factors().first << ", " << rb->factors().second << ") " ; cout.flush();}
-  cout << "] " << endl;
+//  for ( auto op : *( op_info_->op_info_vec()) ) { cout << op->name_ << " " ; cout.flush(); } cout << endl;
+//  cout << "block factors = [ "; cout.flush(); 
+//  for ( auto rb : *(block_info_->range_blocks()) ) { cout << "(" << rb->factors().first << ", " << rb->factors().second << ") " ; cout.flush();}
+//  cout << "] " << endl;
 
   idxs_trans_ = block_info_->idxs_trans();
   std_rngs_ = *(block_info_->unique_block_->orig_rngs_);
@@ -34,7 +34,7 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( std_rngs_.size() );
   iota( ids_pos->begin(), ids_pos->end(), 0 );
 
-  cout << "block_info_->factors() = (" << block_info_->factors().first << ","<<block_info_->factors().second << ")" << endl;
+//  cout << "block_info_->factors() = (" << block_info_->factors().first << ","<<block_info_->factors().second << ")" << endl;
   gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>( 1 );
   gamma_vec_->front() = make_shared<GammaIntermediateRedux<DataType>>( ids_pos, make_shared<vector<pair<int,int>>>(0), block_info_->factors() );
   final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base>>>(0);
@@ -70,9 +70,8 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map_unq" << endl;
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
     G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo_Base>>>() );
 
-//  Gamma_map_->emplace( Gname_alt, make_shared<GammaInfo<DataType>>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
-//                                                                    block_aops_, make_shared<const vector<string>>(chrvec_to_strvec(*block_aops_rngs_)),
-//                                                                    gint->ids_pos_, Gamma_map_ ) );
+  Gamma_map_->emplace( Gname_alt, make_shared<GammaInfo<DataType>>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
+                                                                    *block_aops_, chrvec_to_strvec(*block_aops_rngs_), gint->ids_pos_, Gamma_map_ ) );
 
   vector<pair<int,int>> idxs_deltas_pos = gint->deltas_pos_; 
   transform_to_canonical_ids_pos( idxs_deltas_pos ); 

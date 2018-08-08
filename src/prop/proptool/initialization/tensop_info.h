@@ -107,10 +107,9 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
     H_allowed_block_list->add_block( elem );
   }
 
-
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
-   string ordering = "0123_alt"; // TEST!! 
+   string ordering = "0213"; // TEST!! 
    if ( ordering == "0123" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { core_a, core_a, virt_a, virt_a  } );
@@ -118,13 +117,11 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
      aops = make_shared<vector<bool>>  (vector<bool>  { true, false, true, false } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_virt_a, not_core_a, not_virt_a } );
      constraints = { H_allowed_block_list };
-      
    } else if ( ordering == "3210" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { false, false, true, true } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_core_a, not_virt_a, not_virt_a } );
    } else if ( ordering == "0213" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { false, true, false, true } );
-     //idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_virt_a, not_core_a, not_virt_a, not_core_a } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { free_a, free_a, free_a, free_a } );
      //constraints = { H_allowed_block_list };
    } else if ( ordering == "3120" ) {
@@ -137,13 +134,13 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
   } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
 
     cout << "initializing S" << endl;
-    string ordering = "0213"; // TEST!! 
+    string ordering = "3210"; // TEST!! 
     if ( ordering == "0123" ) {
       aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
       idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_a, not_core_a, not_virt_a, not_virt_a  } );
     } else if ( ordering == "3210" ) {
       aops = make_shared<vector<bool>>  (vector<bool>  { false, false, true, true } );
-      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_core_a, not_virt_a, not_virt_a } );
+      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_virt_a, not_virt_a, not_core_a, not_core_a } );
     } else if ( ordering == "0213" ) {
       aops = make_shared<vector<bool>>  (vector<bool>  { true, false, true, false } );
       idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_a, not_virt_a, not_core_a, not_virt_a } );

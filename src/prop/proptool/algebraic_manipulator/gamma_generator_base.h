@@ -201,6 +201,8 @@ class GammaGenerator_Base{
     void print_gamma_intermediate( const std::unique_ptr<GammaIntermediate_Base_Raw>& gint, std::string gamma_name = "" );
 
     virtual void add_Acontrib_to_map( int gamma_vec_position, std::string bra_name, std::string ket_name ) { assert(false); } 
+
+    virtual void add_Acontrib_to_map_unq( int gamma_vec_position, std::string bra_name, std::string ket_name ) { assert(false); } 
   
     void transformation_tester( std::shared_ptr<GammaIntermediate_Base>& gint  ); 
 

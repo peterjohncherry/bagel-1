@@ -74,6 +74,11 @@ class GammaInfo : public GammaInfo_Base {
      GammaInfo( std::shared_ptr<CIVecInfo_Base> Bra_info, std::shared_ptr<CIVecInfo_Base> Ket_info,
                 std::shared_ptr<const std::vector<bool>> full_aops_vec, std::shared_ptr<const std::vector<std::string>> full_idx_ranges,
                 std::shared_ptr<std::vector<int>> idxs_pos, std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>>& Gamma_map_in );
+
+     GammaInfo( std::shared_ptr<CIVecInfo_Base> Bra_info, std::shared_ptr<CIVecInfo_Base> Ket_info,
+                const std::vector<bool>& full_aops_vec, const std::vector<std::string>& full_idx_ranges,
+                std::vector<int>& idxs_pos, std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>>& Gamma_map_in );
+
      GammaInfo(){};
     ~GammaInfo(){};
 
