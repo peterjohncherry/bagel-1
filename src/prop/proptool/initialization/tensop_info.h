@@ -109,10 +109,10 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
-   string ordering = "0213"; // TEST!! 
-   if ( ordering == "0123" ) {
+   string ordering = "1100_vvcc"; // TEST!! 
+   if ( ordering == "1100_vvcc" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
-     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { core_a, core_a, virt_a, virt_a  } );
+     idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt_a, virt_a, core_a, core_a  } );
    } else if ( ordering == "0123_alt" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { true, false, true, false } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_core_a, not_virt_a, not_core_a, not_virt_a } );
@@ -134,13 +134,16 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
   } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
 
     cout << "initializing S" << endl;
-    string ordering = "3210"; // TEST!! 
+    string ordering = "1100_ccvv"; // TEST!! 
     if ( ordering == "0123" ) {
       aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
       idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_a, not_core_a, not_virt_a, not_virt_a  } );
     } else if ( ordering == "3210" ) {
-      aops = make_shared<vector<bool>>  (vector<bool>  { false, false, true, true } );
+      aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
       idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  not_virt_a, not_virt_a, not_core_a, not_core_a } );
+    } else if ( ordering == "1100_ccvv" ) {
+      aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
+      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  core_a, core_a, virt_a, virt_a } );
     } else if ( ordering == "0213" ) {
       aops = make_shared<vector<bool>>  (vector<bool>  { true, false, true, false } );
       idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_a, not_virt_a, not_core_a, not_virt_a } );

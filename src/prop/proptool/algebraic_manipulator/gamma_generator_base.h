@@ -186,6 +186,8 @@ class GammaGenerator_Base{
                             std::map<char,int> bra_hole_map, std::map<char,int> bra_elec_map,
                             std::map<char,int> ket_hole_map, std::map<char,int> ket_elec_map  );
 
+    void proj_onto_map_unq( std::unique_ptr<GammaIntermediate_Base_Raw>& gint ); 
+
     void transform_to_canonical_ids_pos( std::vector<int>& ids_pos );
 
     void transform_to_canonical_ids_pos( std::vector<std::pair<int,int>>& deltas_pos );
