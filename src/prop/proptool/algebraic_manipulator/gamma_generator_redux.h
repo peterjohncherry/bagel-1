@@ -22,7 +22,8 @@ class GammaIntermediate_Redux_Raw : public GammaIntermediate_Base_Raw {
 
 };
 
-
+template class GammaIntermediate_Redux_Raw<double>;
+template class GammaIntermediate_Redux_Raw<std::complex<double>>;
 
 template<typename DataType> 
 class GammaIntermediateRedux : public GammaIntermediate_Base {
@@ -43,9 +44,7 @@ template class GammaIntermediateRedux<std::complex<double>>;
 template<typename DataType> 
 class GammaGeneratorRedux : public GammaGenerator_Base {
   friend GammaInfo_Base;
-
   public :
-
 
     // key    : name of this gamma
     // result : map containing names of relevant A-tensors, list of reorderings, and factor for each reordering
@@ -62,8 +61,6 @@ class GammaGeneratorRedux : public GammaGenerator_Base {
     ~GammaGeneratorRedux<DataType>(){};
 
     void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops );
-
-    void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
     void add_Acontrib_to_map_unq( int kk, std::string bra_name, std::string ket_name );
 

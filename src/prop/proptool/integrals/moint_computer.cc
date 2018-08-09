@@ -23,7 +23,8 @@ cout << "MOInt_Computer<DataType>::calculate_v2 IndexRange_ver" << endl;
   shared_ptr<SMITH::Tensor_<DataType>> v2_tens = calculate_v2_smith() ;
 //  v2_ = v2_tens;
   //vector<int> alt_to_norm_order = { 3, 1, 2, 0 };
-  vector<int> alt_to_norm_order = { 0, 2, 1, 3 };
+  //vector<int> alt_to_norm_order = { 1, 3, 0, 2 };
+  vector<int> alt_to_norm_order = { 3, 1, 0, 2 };
   Debugging_Utils::print_sizes( v2_tens->indexrange(), "v2_range sizes" ); cout << endl;
   v2_ = Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( v2_tens, alt_to_norm_order );
 

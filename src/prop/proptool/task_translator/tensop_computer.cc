@@ -258,7 +258,8 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
   //vector<int> s_ordering = { 0, 1, 2, 3};
   //vector<int> s_ordering = { 3, 2, 1, 0};
   //vector<int> s_ordering = { 3, 0, 2, 1 };
-  vector<int> s_ordering = { 0, 2, 1, 3 };
+  //vector<int> s_ordering = { 0, 2, 1, 3 };
+  vector<int> s_ordering = { 1, 3, 0, 2, };
   
   for ( auto& block : *required_blocks ) { 
  
@@ -661,7 +662,7 @@ WickUtils::print_vector( range_names, "range_names"); cout << endl;
   shared_ptr<Tensor_<DataType>> full_tens = find_or_get_CTP_data( full_tens_name );
   vector<IndexRange> block = Get_Bagel_IndexRanges( range_names ); 
 
-  if ( full_tens_name[0] == 'S' ) {
+  if ( full_tens_name[0] == 'S' || full_tens_name[0] == 'H'  ) {
     auto tdm_loc = tensop_data_map_->find( block_name );
     vector<int> ord_0 = { 0, 1, 2, 3 };     
     vector<int> ord_1 = { 0, 3, 2, 1 };     

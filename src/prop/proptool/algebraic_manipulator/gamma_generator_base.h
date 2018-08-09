@@ -119,9 +119,6 @@ class GammaGenerator_Base{
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate_Base>>> gamma_vec_;
     std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate_Base>>> final_gamma_vec_;
 
-    std::vector<GammaIntermediate_Base_Raw> gamma_vec_raw_;
-    std::vector<GammaIntermediate_Base_Raw> final_gamma_vec_raw_;
-
     std::vector<std::unique_ptr<GammaIntermediate_Base_Raw>> gamma_vec_unq_;
     std::vector<std::unique_ptr<GammaIntermediate_Base_Raw>> final_gamma_vec_unq_;
 
@@ -174,14 +171,6 @@ class GammaGenerator_Base{
 
     std::vector<int> get_position_order(const std::vector<int> &positions) ;
 
-    bool proj_onto_map( std::shared_ptr<GammaIntermediate_Base> gint,
-                        std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
-                        std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
-
-    bool proj_onto_map( const GammaIntermediate_Base_Raw& gint,
-                        std::map<char, int> bra_hole_map, std::map<char, int> bra_elec_map,
-                        std::map<char, int> ket_hole_map, std::map<char, int> ket_elec_map );
-
     bool proj_onto_map_unq( const std::unique_ptr<GammaIntermediate_Base_Raw>& gint, 
                             std::map<char,int> bra_hole_map, std::map<char,int> bra_elec_map,
                             std::map<char,int> ket_hole_map, std::map<char,int> ket_elec_map  );
@@ -194,15 +183,11 @@ class GammaGenerator_Base{
 
     virtual void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops ){assert(false);};
 
-    virtual void swap( int ii, int jj, int kk );
-
     virtual void swap_unq( int ii, int jj, int kk );
 
     void print_gamma_intermediate( const std::shared_ptr<GammaIntermediate_Base>& gint , std::string gamma_name = "" );
 
     void print_gamma_intermediate( const std::unique_ptr<GammaIntermediate_Base_Raw>& gint, std::string gamma_name = "" );
-
-    virtual void add_Acontrib_to_map( int gamma_vec_position, std::string bra_name, std::string ket_name ) { assert(false); } 
 
     virtual void add_Acontrib_to_map_unq( int gamma_vec_position, std::string bra_name, std::string ket_name ) { assert(false); } 
   

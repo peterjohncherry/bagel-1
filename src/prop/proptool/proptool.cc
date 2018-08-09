@@ -97,8 +97,8 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
   moint_computer->t_from_smith_ = tamps_smith_; 
   moint_computer->v2_from_smith_ = v2_smith_; 
   
-  vector<string> free2 = { "free" , "free" };
-  moint_computer->calculate_fock( free2, true, true );
+//  vector<string> free2 = { "free" , "free" };
+//  moint_computer->calculate_fock( free2, true, true );
 
   //TODO should build gamma_computer inside system_computer, like this due to DVec class dependence of B_Gamma_Computer 
   auto gamma_computer = make_shared<B_Gamma_Computer::B_Gamma_Computer<double>>(civectors_); 
