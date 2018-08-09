@@ -94,7 +94,7 @@ cout <<  "BraKet_Base::print_gamma_Atensor_contractions()" << endl;
         cout <<  A_map_it->first << "  "; cout.flush();
         for ( int qq = 0; qq !=A_map_it->second->id_orders().size(); qq++) {
           cout << "{ " ; print_vector( A_map_it->second->id_order(qq), "" ); 
-          cout << " (" << A_map_it->second->factor(qq).first <<  "," <<  A_map_it->second->factor(qq).first<<  ") }" ; cout <<endl;
+          cout << " (" << A_map_it->second->factor(qq).first <<  "," <<  A_map_it->second->factor(qq).second<<  ") }" ; cout <<endl;
         }
         cout << endl;
       }

@@ -350,6 +350,8 @@ cout << "CASPT2::CASPT2::solve" << endl;
   vector<SMITH::IndexRange> ccca =  {  brng_core, brng_core, brng_core, brng_act  }; 
   vector<SMITH::IndexRange> cccv =  {  brng_core, brng_core, brng_core, brng_virt }; 
 
+  vector<SMITH::IndexRange> vcvc = { brng_virt, brng_core, brng_virt, brng_core  }; 
+
   vector<vector<SMITH::IndexRange>> all_blocks_v2 = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, 
                                                       caaa, aaca, avaa, aaav, aaaa }; 
   
@@ -365,7 +367,7 @@ cout << "CASPT2::CASPT2::solve" << endl;
   shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
   shared_ptr<SMITH::Tensor_<double>>  v2_buff = v2_->copy();
   cout << "zeroing_blocks" << endl;
-  tensor_calc->zero_all_but_block( v2_, vcva ); 
+  tensor_calc->zero_all_but_block( v2_, cvcv ); 
   Debugging_Utils::print_sizes( v2_->indexrange() , "v2_sizes" ); cout << endl;
   cout << "v2_buff->norm() = " << v2_buff->norm() << endl; 
   cout << "v2->norm()      = " << v2_->norm() << endl; 
@@ -373,7 +375,7 @@ cout << "CASPT2::CASPT2::solve" << endl;
   
   shared_ptr<SMITH::Tensor_<double>> t2_buff = t2all_[0]->at(0)->copy();
   Debugging_Utils::print_sizes( t2_buff->indexrange() , "tamps sizes" ); cout << endl;
-  tensor_calc->zero_all_but_block( t2all_[0]->at(0), vcva ); 
+  tensor_calc->zero_all_but_block( t2all_[0]->at(0), cvcv ); 
   cout << "t2_buff->norm() = " << t2_buff->norm() << endl; 
   cout << "t2_    ->norm() = " << t2all_[0]->at(0)->norm() << endl; 
   

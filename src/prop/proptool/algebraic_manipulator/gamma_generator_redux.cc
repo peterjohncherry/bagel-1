@@ -140,10 +140,8 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
  
   vector<int> Aid_order_new = get_Aid_order( standardized_ids_pos );
   pair<double,double> new_fac = gint->factors_; 
-  cout << "Gname_alt = " << Gname_alt; cout.flush(); cout << "   Aname_alt = " << Aname_alt << endl;
   auto AInfo_loc =  G_to_A_map->at( Gname_alt )->find(Aname_alt);
   if ( AInfo_loc == G_to_A_map->at( Gname_alt )->end() ) {
-    print_vector(Aid_order_new, "Aid_order_new" ); cout.flush(); cout << "  new_fac = ( "<< new_fac.first <<","<<new_fac.second << ")" << endl; 
     auto AInfo = make_shared<AContribInfo_Full<DataType>>( Aname_alt, Aid_order_new, new_fac );
     G_to_A_map->at( Gname_alt )->emplace(Aname_alt, AInfo) ;
 
@@ -151,16 +149,12 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
     shared_ptr<AContribInfo_Base> AInfo = AInfo_loc->second;
     for ( int qq = 0 ; qq != AInfo->id_orders().size(); qq++ ) {
       if( Aid_order_new == AInfo->id_order(qq) ){
-        print_vector(Aid_order_new, "Aid_order_new" ); cout.flush(); cout << "  new_fac = ( "<< new_fac.first <<","<<new_fac.second << ")" << endl; 
-        cout << "pre AInfo_loc->factors(qq) = "; cout.flush(); cout << "(" << AInfo->factors()[qq].first << "," << AInfo->factors()[qq].second << ")" << endl;
         AInfo->combine_factors( qq, new_fac );
         AInfo->remaining_uses_ += 1;
         AInfo->total_uses_ += 1;
-        cout << "post AInfo_loc->factors(qq) = "; cout.flush(); cout << "(" << AInfo->factors()[qq].first << "," << AInfo->factors()[qq].second << ")" << endl;
         break;
 
       } else if ( qq == AInfo->id_orders().size()-1) {
-        print_vector(Aid_order_new, "Aid_order_new" ); cout.flush(); cout << "  new_fac = ( "<< new_fac.first <<","<<new_fac.second << ")" << endl; 
         AInfo->add_id_order(Aid_order_new);
         AInfo->add_factor(new_fac);
       }

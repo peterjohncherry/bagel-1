@@ -256,11 +256,9 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //vector<int> s_ordering = { 0, 1, 2, 3};
- // vector<int> s_ordering = { 3, 2, 1, 0};
-  //vector<int> s_ordering = { 0, 2, 1, 3 };
-  vector<int> s_ordering = { 3, 0, 2, 1 };
-
-//  vector<int> s_ordering = { 0, 1, 2, 3 };
+  //vector<int> s_ordering = { 3, 2, 1, 0};
+  //vector<int> s_ordering = { 3, 0, 2, 1 };
+  vector<int> s_ordering = { 0, 2, 1, 3 };
   
   for ( auto& block : *required_blocks ) { 
  
@@ -308,7 +306,7 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
           }
           cout << "pre get sub  block_name = "   << block_name << endl;
           } //ENDTEST
-
+          
           get_sub_tensor( full_tens_name, block_name, *id_ranges ); 
           cout << "post get sub block_name = "   << block_name << endl;
            
@@ -339,10 +337,7 @@ WickUtils::print_vector( ordering , " s_tensor_reordering" ); cout << endl;
     print_vector( ordering , "ordering" ); cout << endl;
     tensop_data_map_->emplace( tensor_name, moint_computer_->build_s_test_tensor(ordering) );
   } else {  
-    cout << "TOC::build_s_test_tensor fount in map)"; cout.flush();
     throw logic_error( " You have already checked for it in the tensop_data_map_ ... the pointers are probably scrambled!!");
-                          
-    print_vector( ordering , "ordering" ); cout << endl;
     tdm_loc->second = moint_computer_->build_s_test_tensor(ordering);
   }
     
@@ -666,14 +661,14 @@ WickUtils::print_vector( range_names, "range_names"); cout << endl;
   shared_ptr<Tensor_<DataType>> full_tens = find_or_get_CTP_data( full_tens_name );
   vector<IndexRange> block = Get_Bagel_IndexRanges( range_names ); 
 
-
   if ( full_tens_name[0] == 'S' ) {
     auto tdm_loc = tensop_data_map_->find( block_name );
+    vector<int> ord_0 = { 0, 1, 2, 3 };     
     vector<int> ord_1 = { 0, 3, 2, 1 };     
     vector<int> ord_2 = { 2, 3, 0, 1 };     
     vector<int> ord_3 = { 2, 1, 0, 3 };     
-    vector<vector<int>> transforms = { ord_1, ord_2, ord_3 };
-    vector<DataType> trans_factors= { 1.0, 1.0, 1.0 };
+    vector<vector<int>> transforms = { ord_0, ord_1, ord_2, ord_3 };
+    vector<DataType> trans_factors= { 1.0, 1.0, 1.0, 1.0 };
      
     if ( tdm_loc == tensop_data_map_->end() ){
       tensop_data_map_->emplace( block_name, Tens_Utils::get_sub_tensor_symm( full_tens, block, transforms, trans_factors ) );

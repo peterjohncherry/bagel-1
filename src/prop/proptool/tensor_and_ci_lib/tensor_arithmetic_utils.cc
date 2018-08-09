@@ -181,17 +181,19 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id
         vector<Index> trans_id_blocks = reorder_vector(*t_it, id_blocks);
         if ( Tens_in->exists( trans_id_blocks ) ) {
           unique_ptr<complex<double>[]> trans_data_block = Tens_in->get_block( trans_id_blocks );
-          unique_ptr<complex<double>[]> data_block = Tensor_Arithmetic::Tensor_Arithmetic<complex<double>>::reorder_tensor_data( trans_data_block.get(), *t_it, trans_id_blocks ) ;
-          complex<double> factor = *f_it;
           int block_size = Tens_in->get_size(trans_id_blocks);
-          int stride_one = 1; 
-          zscal_( &block_size, &factor, data_block.get(), &stride_one); 
-          Tens_out->put_block( data_block, id_blocks );
-          got_symm_partner = true;
-          cout << "Obtained tensor block ";  cout.flush(); Debugging_Utils::print_sizes( id_blocks, "" ); cout.flush();
-          cout << " from  "; Debugging_Utils::print_sizes( trans_id_blocks,"" ); cout.flush();
-          cout << " using symmetry transformation"; print_vector( *t_it ) ; cout << endl;
-          break;
+//          if ( abs( *( max_element( trans_data_block.get(), trans_data_block.get()+block_size ) )) > 0.00000000001 ) { 
+            unique_ptr<complex<double>[]> data_block = Tensor_Arithmetic::Tensor_Arithmetic<complex<double>>::reorder_tensor_data( trans_data_block.get(), *t_it, trans_id_blocks ) ;
+            complex<double> factor = *f_it;
+            int stride_one = 1; 
+            zscal_( &block_size, &factor, data_block.get(), &stride_one); 
+            Tens_out->put_block( data_block, id_blocks );
+            got_symm_partner = true;
+            cout << "Obtained tensor block ";  cout.flush(); Debugging_Utils::print_sizes( id_blocks, "" ); cout.flush();
+            cout << " from  "; Debugging_Utils::print_sizes( trans_id_blocks,"" ); cout.flush();
+            cout << " using symmetry transformation"; print_vector( *t_it ) ; cout << endl;
+            break;
+//          }
         }
       }
       if ( !got_symm_partner ) {
@@ -251,7 +253,7 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id
 
   do { 
     vector<Index> id_blocks = get_rng_blocks( block_pos, id_ranges );
-    if ( Tens_in->exists( id_blocks ) ) {
+    if  ( Tens_in->exists( id_blocks ) ) {
        unique_ptr<double[]> block = Tens_in->get_block( id_blocks );
        Tens_out->put_block( block, id_blocks );
 
@@ -262,16 +264,18 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id
         vector<Index> trans_id_blocks = reorder_vector(*t_it, id_blocks );
         if ( Tens_in->exists( trans_id_blocks ) ) {
           unique_ptr<double[]> trans_data_block = Tens_in->get_block( trans_id_blocks );
-          unique_ptr<double[]> data_block =  Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_tensor_data( trans_data_block.get(), *t_it, trans_id_blocks ) ;
-          int stride_one = 1;
           int block_size = Tens_in->get_size(trans_id_blocks);
-          dscal_( block_size , *f_it, data_block.get(), stride_one ); 
-          Tens_out->put_block( data_block, id_blocks );
-          got_symm_partner = true;
-          cout << "Obtained tensor block ";  cout.flush(); Debugging_Utils::print_sizes( id_blocks, "" ); cout.flush();
-          cout << " from  "; Debugging_Utils::print_sizes( trans_id_blocks,"" ); cout.flush();
-          cout << " using symmetry transformation"; print_vector( *t_it ) ; cout << endl;
-          break;
+          if ( abs( *(max_element( trans_data_block.get(), trans_data_block.get()+block_size )) ) > 0.00000000001 ) { 
+            unique_ptr<double[]> data_block =  Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_tensor_data( trans_data_block.get(), *t_it, trans_id_blocks ) ;
+            int stride_one = 1;
+            dscal_( block_size , *f_it, data_block.get(), stride_one ); 
+            Tens_out->put_block( data_block, id_blocks );
+            got_symm_partner = true;
+            cout << "Obtained tensor block ";  cout.flush(); Debugging_Utils::print_sizes( id_blocks, "" ); cout.flush();
+            cout << " from  "; Debugging_Utils::print_sizes( trans_id_blocks,"" ); cout.flush();
+            cout << " using symmetry transformation"; print_vector( *t_it ) ; cout << endl;
+            break;
+          }
         }
       }
       if ( !got_symm_partner ) {

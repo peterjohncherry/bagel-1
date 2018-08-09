@@ -2,6 +2,7 @@
 #include <map>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_orb_exc_deriv.h>
 #include <src/prop/proptool/proputils.h>
+#include <src/prop/proptool/debugging_utils.h>
 
 #define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
 #define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_UNQ
@@ -112,7 +113,6 @@ if (final_reordering)  { cout << " : final_reordering" << endl; } else { cout <<
   for ( const auto& gint : gamma_vec_unq_ ) { print_gamma_intermediate( gint , "" ); }
 
   bool does_it_contribute = ( gamma_vec_unq_.size() > 0 );
-  cout << "does_it_contribute = " << does_it_contribute; cout.flush();  cout << "   final_reordering = " << final_reordering << endl;
   if ( final_reordering && does_it_contribute ) { 
     int kk = 0;
     while ( kk != gamma_vec_unq_.size()){
@@ -136,15 +136,8 @@ cout << "GammaGenerator_Base::proj_onto_map_unq" << endl;
   map<char,int> ket_hole_map_mod = *ket_hole_map_;
   
   WickUtils::print_vector( idxs_pos , "idxs_pos       " ); cout << endl;
-  cout << "aops_rngs =       [ "; cout.flush();
-  for ( vector<int>::const_iterator ip_it = idxs_pos.begin(); ip_it !=  idxs_pos.end(); ip_it++ ) {
-    cout << (*block_aops_rngs_)[*ip_it] << " "; cout.flush();
-  } cout <<"]" <<  endl;
-
-  cout << "block_aops_rngs = [ "; cout.flush();
-  for ( vector<int>::const_iterator ip_it = idxs_pos.begin(); ip_it !=  idxs_pos.end(); ip_it++ ) {
-    cout << (*block_aops_)[*ip_it] << " "; cout.flush();
-  } cout <<"]" <<  endl;
+  Debugging_Utils::print_vector_at_pos(*block_aops_rngs_, idxs_pos, "aops_rngs"); cout << endl;
+  Debugging_Utils::print_vector_at_pos(*block_aops_, idxs_pos,      "aops_    "); cout << endl;
 
   for ( vector<int>::const_reverse_iterator ip_it = idxs_pos.rbegin(); ip_it !=  idxs_pos.rend(); ++ip_it ) {
     char rng = (*block_aops_rngs_)[*ip_it];  
@@ -153,11 +146,9 @@ cout << "GammaGenerator_Base::proj_onto_map_unq" << endl;
       auto ket_elec_map_mod_loc = ket_elec_map_mod.find( rng );
       if ( ket_elec_map_mod_loc == ket_elec_map_mod.end() ) {
         gint->survives_ = false;
-        cout << "proj_fail1"<< endl;
         return;
       } else if ( (ket_elec_map_mod_loc->second -= 1 ) == -1  ) {
         gint->survives_ = false;
-        cout << "proj_fail2"<< endl;
         return;
       }
       auto ket_hole_map_mod_loc = ket_hole_map_mod.find( rng );
@@ -172,11 +163,9 @@ cout << "GammaGenerator_Base::proj_onto_map_unq" << endl;
       auto ket_hole_map_mod_loc = ket_hole_map_mod.find( rng );
       if ( ket_hole_map_mod_loc == ket_hole_map_mod.end() ) {
         gint->survives_ = false;
-        cout << "proj_fail3"<< endl;
         return;
       } else if ( (ket_hole_map_mod_loc->second -= 1 ) == -1  ) {
         gint->survives_ = false;
-        cout << "proj_fail4"<< endl;
         return;
       }
       
@@ -194,14 +183,12 @@ cout << "GammaGenerator_Base::proj_onto_map_unq" << endl;
   for ( auto& elem : ket_elec_map_mod )  
     if ( elem.second != bra_elec_map_->at(elem.first) ){
       gint->survives_ = false;
-      cout << "proj_fail5 "<< elem.first << " eket : " <<  elem.second << "!= " << bra_elec_map_->at(elem.first) << "ebra" << endl ;
       return;     
     }
 
   for ( auto& elem : ket_hole_map_mod )                     
     if ( elem.second != bra_hole_map_->at(elem.first) ){
       gint->survives_ = false;
-      cout << "proj_fail6 "<< elem.first << " eket : " <<  elem.second << "!= " << bra_elec_map_->at(elem.first) << "ebra" << endl ;
       return;     
     }
   return;
@@ -219,68 +206,50 @@ cout << "GammaGenerator_Base::proj_onto_map_unq" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////
 
   const vector<int>& idxs_pos =  gint->ids_pos_;
-  
-  WickUtils::print_vector( idxs_pos , "idxs_pos       " ); cout << endl;
-  cout << "aops_rngs =       [ "; cout.flush();
-  for ( vector<int>::const_iterator ip_it = idxs_pos.begin(); ip_it !=  idxs_pos.end(); ip_it++ ) {
-    cout << (*block_aops_rngs_)[*ip_it] << " "; cout.flush();
-  } cout <<"]" <<  endl;
-
-  cout << "block_aops_rngs = [ "; cout.flush();
-  for ( vector<int>::const_iterator ip_it = idxs_pos.begin(); ip_it !=  idxs_pos.end(); ip_it++ ) {
-    cout << (*block_aops_)[*ip_it] << " "; cout.flush();
-  } cout <<"]" <<  endl;
-
   for ( vector<int>::const_reverse_iterator ip_it = idxs_pos.rbegin(); ip_it !=  idxs_pos.rend(); ++ip_it ) {
-    char rng = (*block_aops_rngs_)[*ip_it];  
+   char rng = (*block_aops_rngs_)[*ip_it];  
 
-    if( !((*block_aops_)[*ip_it]) ){
-      auto ket_elec_map_loc = ket_elec_map.find( rng );
-      if ( ket_elec_map_loc == ket_elec_map.end() ) {
-        cout << "proj_fail1"<< endl;
-        return false;
-      } else if ( (ket_elec_map_loc->second -= 1 ) == -1  ) {
-        cout << "proj_fail2"<< endl;
-        return false;
-      }
-      auto ket_hole_map_loc = ket_hole_map.find( rng );
+   if( !((*block_aops_)[*ip_it]) ){
+     auto ket_elec_map_loc = ket_elec_map.find( rng );
+     if ( ket_elec_map_loc == ket_elec_map.end() ) {
+       return false;
+     } else if ( (ket_elec_map_loc->second -= 1 ) == -1  ) {
+       return false;
+     }
+     auto ket_hole_map_loc = ket_hole_map.find( rng );
 
-      if ( ket_hole_map_loc == ket_hole_map.end() ) {
-        ket_hole_map.emplace( rng, 1 );
-      } else {
-        ket_hole_map_loc->second += 1;
-      }
+     if ( ket_hole_map_loc == ket_hole_map.end() ) {
+       ket_hole_map.emplace( rng, 1 );
+     } else {
+       ket_hole_map_loc->second += 1;
+     }
 
-    } else {
-      auto ket_hole_map_loc = ket_hole_map.find( rng );
-      if ( ket_hole_map_loc == ket_hole_map.end() ) {
-        cout << "proj_fail3"<< endl;
-        return false;
-      } else if ( (ket_hole_map_loc->second -= 1 ) == -1  ) {
-        cout << "proj_fail4"<< endl;
-        return false;
-      }
-      
-      auto ket_elec_map_loc = ket_elec_map.find( rng );
-      if ( ket_elec_map_loc == ket_elec_map.end() ) {
-        ket_elec_map.emplace( rng, 1 );
-      } else {
-        ket_elec_map_loc->second += 1;
-      }
-    }
+   } else {
+     auto ket_hole_map_loc = ket_hole_map.find( rng );
+     if ( ket_hole_map_loc == ket_hole_map.end() ) {
+       return false;
+     } else if ( (ket_hole_map_loc->second -= 1 ) == -1  ) {
+       return false;
+     }
+     
+     auto ket_elec_map_loc = ket_elec_map.find( rng );
+     if ( ket_elec_map_loc == ket_elec_map.end() ) {
+       ket_elec_map.emplace( rng, 1 );
+     } else {
+       ket_elec_map_loc->second += 1;
+     }
+   }
   }
   
   // TODO Will break if bra and ket but built from different orbitals ( not just differing occupations, but different sets ).
   // Compares modified ket_map to original bra map
   for ( auto& elem : ket_elec_map )  
     if ( elem.second != bra_elec_map_->at(elem.first) ){
-      cout << "proj_fail5"<< endl;
       return false;     
     }
 
   for ( auto& elem : ket_hole_map )                     
     if ( elem.second != bra_hole_map_->at(elem.first) ){
-      cout << "proj_fail6"<< endl;
       return false;     
     }
   return true;
@@ -874,8 +843,7 @@ print_gamma_intermediate(gamma_vec_unq_[kk] , "pre_swap_unq gamma" );
     gamma_vec_unq_.push_back(make_unique<GammaIntermediate_Base_Raw>( new_ids_pos, new_deltas_tmp, new_fac ));
 
   }// else { 
-//    gamma_vec_unq_->factors_ =  make_pair( gint->factors_.first * 1.0,  0.0 );
-//  }
+  gamma_vec_unq_[kk]->factors_ =  make_pair( gamma_vec_unq_[kk]->factors_.first * 1.0,  0.0 );
 
 #ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP_UNQ
 //  if ( ( (*block_aops_rngs_)[j_pos] == (*block_aops_rngs_)[i_pos]) && (*block_aops_)[i_pos] != (*block_aops_)[ j_pos ] ){

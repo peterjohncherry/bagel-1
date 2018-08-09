@@ -180,6 +180,13 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
     aops = make_shared<vector<bool>>( vector<bool> { false, false, true, true } );
     idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { not_core, not_core, not_virt, not_virt } );
 
+   } else if ( op_name == "Y" ) {
+
+    idxs = make_shared<vector<string>>( vector<string> {"Y0", "Y1", "Y2", "Y3"} );
+    aops = make_shared<vector<bool>>( vector<bool> { true, true, false, false } );
+    idx_ranges = make_shared<vector<vector<string>>>( vector<vector<string>> { free_a, free_a, free_a, free_a } );
+
+
   } else {
     
     throw runtime_error("Do not have in-built definition for operator \"" + op_name + "\", aborting !!!" ) ;
