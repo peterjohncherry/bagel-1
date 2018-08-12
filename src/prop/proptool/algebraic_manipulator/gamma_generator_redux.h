@@ -26,22 +26,6 @@ template class GammaIntermediate_Redux_Raw<double>;
 template class GammaIntermediate_Redux_Raw<std::complex<double>>;
 
 template<typename DataType> 
-class GammaIntermediateRedux : public GammaIntermediate_Base {
-
-   public :
-     GammaIntermediateRedux( std::shared_ptr<std::vector<int>> ids_pos,
-                             std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos,
-                             std::pair<double,double> factors ) :
-                             GammaIntermediate_Base( ids_pos, deltas_pos, factors ) {};
-
-    ~GammaIntermediateRedux(){};
-
-};
-
-template class GammaIntermediateRedux<double>;
-template class GammaIntermediateRedux<std::complex<double>>;
-
-template<typename DataType> 
 class GammaGeneratorRedux : public GammaGenerator_Base {
   friend GammaInfo_Base;
   public :
@@ -62,10 +46,9 @@ class GammaGeneratorRedux : public GammaGenerator_Base {
 
     void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops );
 
-    void add_Acontrib_to_map_unq( int kk, std::string bra_name, std::string ket_name );
+    void add_Acontrib_to_map( int kk, std::string bra_name, std::string ket_name );
 
-    void block_trans_test( std::shared_ptr<GammaIntermediate_Base>& gint );
+    void block_trans_test( std::unique_ptr<GammaIntermediate_Base_Raw>& gint );
   
-    void print_new_gamma_definition(); 
 };
 #endif

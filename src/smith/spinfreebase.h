@@ -160,6 +160,7 @@ class SpinFreeMethod {
 
 ///////////TEST
 std::shared_ptr<PTree> proptool_input_;
+std::shared_ptr<Tensor_<DataType>> h_2el_;
 ///////////END TEST
 
 };

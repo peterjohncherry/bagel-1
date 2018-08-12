@@ -34,34 +34,8 @@ class GammaIntermediate_OrbExcDeriv_Raw : public GammaIntermediate_Base_Raw {
      std::vector<std::pair<int,int>>& target_target_deltas_pos() { return target_target_deltas_pos_;} 
 
 };
-
-
-template<typename DataType> 
-class GammaIntermediate_OrbExcDeriv : public GammaIntermediate_Base {
-
-   public :
-     
-     std::shared_ptr<std::vector<std::pair<int,int>>> target_A_deltas_pos_;
-     std::shared_ptr<std::vector<std::pair<int,int>>> target_target_deltas_pos_;
-
-     GammaIntermediate_OrbExcDeriv( std::shared_ptr<std::vector<int>> ids_pos,
-                                 std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos,
-                                 std::shared_ptr<std::vector<std::pair<int,int>>> target_A_deltas_pos,
-                                 std::shared_ptr<std::vector<std::pair<int,int>>> target_target_deltas_pos,
-                                 std::pair<double,double> factors ) :
-                                 GammaIntermediate_Base( ids_pos, deltas_pos, factors),
-                                 target_A_deltas_pos_(target_A_deltas_pos), target_target_deltas_pos_(target_target_deltas_pos) {} ;
-
-     ~GammaIntermediate_OrbExcDeriv(){};
-
-     std::shared_ptr<std::vector<std::pair<int,int>>> A_A_deltas_pos() { return deltas_pos_  ; } 
-     std::shared_ptr<std::vector<std::pair<int,int>>> target_A_deltas_pos() { return target_A_deltas_pos_  ; } 
-     std::shared_ptr<std::vector<std::pair<int,int>>> target_target_deltas_pos() { return target_target_deltas_pos_;} 
-
-};
-
-template class GammaIntermediate_OrbExcDeriv<double>;
-template class GammaIntermediate_OrbExcDeriv<std::complex<double>>;
+template class GammaIntermediate_OrbExcDeriv_Raw<double>;
+template class GammaIntermediate_OrbExcDeriv_Raw<std::complex<double>>;
 
 template<typename DataType> 
 class GammaGenerator_OrbExcDeriv : public GammaGenerator_Base {

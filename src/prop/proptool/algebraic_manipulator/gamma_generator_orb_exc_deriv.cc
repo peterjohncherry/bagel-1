@@ -66,18 +66,19 @@ cout << "void GammaGenerator_OrbExcDeriv::add_gamma " << endl;
   }
   }
 
-  shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( std_rngs_.size() );
-  iota( ids_pos->begin(), ids_pos->end(), 0 );
+  vector<int> ids_pos( std_rngs_.size() );
+  iota( ids_pos.begin(), ids_pos.end(), 0 );
 
-  shared_ptr<vector<pair<int,int>>> A_deltas_pos = make_shared<vector<pair<int,int>>>(0);
-  shared_ptr<vector<pair<int,int>>> target_target_deltas_pos = make_shared<vector<pair<int,int>>>(0);
-  shared_ptr<vector<pair<int,int>>> target_A_deltas_pos = make_shared<vector<pair<int,int>>>(0);
-  
-  //TODO  Change to specialized class
-  gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base >>>(1);
-  gamma_vec_->front() = make_shared<GammaIntermediate_OrbExcDeriv<DataType>>( ids_pos, A_deltas_pos, target_A_deltas_pos, target_target_deltas_pos, block_info->factors());
+  vector<pair<int,int>> A_deltas_pos(0);
+  vector<pair<int,int>> target_target_deltas_pos(0);
+  vector<pair<int,int>> target_A_deltas_pos(0);
 
-  final_gamma_vec_ = make_shared<vector<shared_ptr<GammaIntermediate_Base >>>(0);
+  {
+    vector<int> ids_pos_raw( std_rngs_.size() );
+    iota( ids_pos_raw.begin(), ids_pos_raw.end(), 0 );
+    gamma_vec_.push_back( make_unique<GammaIntermediate_OrbExcDeriv_Raw<DataType>>( ids_pos, A_deltas_pos, target_A_deltas_pos, target_target_deltas_pos, block_info->factors()) );
+  }
+
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -91,62 +92,53 @@ void GammaGenerator_OrbExcDeriv<DataType>::swap( int ii, int jj, int kk ){
 cout << "GammaGenerator_OrbExcDeriv<DataType>::swap ii = " << ii << " jj = " << jj << " kk = " << kk << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<GammaIntermediate_Base>& gint =  gamma_vec_->at(kk);
+  unique_ptr<GammaIntermediate_Base_Raw>& gint =  gamma_vec_[kk];
+  vector<int>& ids_pos = gint->ids_pos_;
 
   // only need one buffer really, but this looks clearer
-  int j_pos = (*((gint)->ids_pos_))[jj];
-  int i_pos = (*((gint)->ids_pos_))[ii];
+  int j_pos = ids_pos[jj];
+  int i_pos = ids_pos[ii];
 
-  (*((gint)->ids_pos_))[ii] = j_pos;
-  (*((gint)->ids_pos_))[jj] = i_pos;
+  ids_pos[ii] = j_pos;
+  ids_pos[jj] = i_pos;
 
   if ( ( (*block_aops_rngs_)[ j_pos ] == (*block_aops_rngs_)[ i_pos ]) &&( (*block_aops_)[ i_pos ] != (*block_aops_)[ j_pos ]) ){
 
       i_pos = standard_order_[i_pos ]; 
       j_pos = standard_order_[j_pos ]; 
 
-      shared_ptr<vector<int>> new_ids_pos = make_shared<vector<int>>( gint->ids_pos_->size()-2);
-      vector<int>::iterator nip_it = new_ids_pos->begin();
-      vector<int>::iterator gip_it = gint->ids_pos_->begin();
-      for( int qq = 0 ; qq != gint->ids_pos_->size() ; qq++, gip_it++) {
+      vector<int> new_ids_pos( ids_pos.size()-2);
+      vector<int>::iterator nip_it = new_ids_pos.begin();
+      vector<int>::iterator gip_it = ids_pos.begin();
+      for( int qq = 0 ; qq != ids_pos.size() ; qq++, gip_it++) {
         if( (qq != ii) && (qq != jj) ){
          *nip_it = *gip_it;
           ++nip_it;
         }
       }
 
-      shared_ptr<pint_vec> new_target_target_deltas_pos = make_shared<pint_vec>( *(gint->target_target_deltas_pos()) );
-      shared_ptr<pint_vec> new_target_A_deltas_pos = make_shared<pint_vec>( *(gint->target_A_deltas_pos()) );
-      shared_ptr<pint_vec> new_A_A_deltas_pos = make_shared<pint_vec>( *(gint->deltas_pos_) );
+      vector<pair<int,int>> new_target_target_deltas_pos(gint->target_target_deltas_pos());
+      vector<pair<int,int>> new_target_A_deltas_pos(gint->target_A_deltas_pos());
+      vector<pair<int,int>> new_A_A_deltas_pos(gint->A_A_deltas_pos());
 
       //Make it so T is first index, if all or no T, make it so creation op is first index
       if ( (j_pos >= target_block_start_) && ( j_pos < target_block_end_ )  ) {
 
         if (  (i_pos >= target_block_start_) &&  ( i_pos < target_block_end_ ) ) {
-          pair<int,int> new_delta = (*block_aops_)[ j_pos ] ? make_pair( j_pos, i_pos ) : make_pair( i_pos , j_pos);
-	  new_target_target_deltas_pos->push_back(new_delta);
+	  new_target_target_deltas_pos.push_back((*block_aops_)[ j_pos ] ? make_pair( j_pos, i_pos ) : make_pair( i_pos , j_pos));
 	  
         } else {
-          pair<int,int> new_delta = make_pair( j_pos, i_pos );
-	  new_target_A_deltas_pos->push_back(new_delta);
+          new_target_A_deltas_pos.push_back(make_pair( j_pos, i_pos ) );
         }
 
       } else if ( i_pos >= target_block_start_ && i_pos < target_block_end_ ) {
-        pair<int,int> new_delta = make_pair( i_pos, j_pos );
-        new_target_A_deltas_pos->push_back(new_delta);
+        new_target_A_deltas_pos.push_back(make_pair( i_pos, j_pos ));
 
       } else {  
-        pair<int,int> new_delta = (*block_aops_)[ j_pos ] ? make_pair( j_pos, i_pos ) : make_pair( i_pos , j_pos);
-        new_A_A_deltas_pos->push_back(new_delta);
+        new_A_A_deltas_pos.push_back((*block_aops_)[ j_pos ] ? make_pair( j_pos, i_pos ) : make_pair( i_pos , j_pos));
       } 
   
-      shared_ptr<GammaIntermediate_OrbExcDeriv<DataType>> new_gamma = 
-           make_shared<GammaIntermediate_OrbExcDeriv<DataType>>( new_ids_pos, new_A_A_deltas_pos, new_target_A_deltas_pos, new_target_target_deltas_pos, (gint)->factors_ );
-      
-      gint->factors_.first*=-1.0;
-      gint->factors_.second*=-1.0;
-
-      gamma_vec_->push_back(new_gamma);
+      gamma_vec_.push_back( make_unique<GammaIntermediate_OrbExcDeriv_Raw<DataType>>( new_ids_pos, new_A_A_deltas_pos, new_target_A_deltas_pos, new_target_target_deltas_pos, gint->factors_ ) );
 
   } else { // necessary as push_back may change location of vector, thus invalidating reference  
     gint->factors_.first*=-1.0;
@@ -162,19 +154,20 @@ void GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map( int kk, string b
 cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  shared_ptr<GammaIntermediate_Base> gint = (*gamma_vec_)[kk];
-  vector<int> gamma_ids_pos = *(gint->ids_pos_);
+  unique_ptr<GammaIntermediate_Base_Raw>& gint = gamma_vec_[kk];
+  vector<int>& gamma_ids_pos = gint->ids_pos_;
 
   string Gname_alt = get_gamma_name( chrvec_to_strvec(*block_aops_rngs_), *block_aops_, gamma_ids_pos, bra_name, ket_name );
-  if ( Gamma_map_->find(Gname_alt) == Gamma_map_->end() ) 
+
+  if ( Gamma_map_->find(Gname_alt) == Gamma_map_->end() )
     Gamma_map_->emplace( Gname_alt, make_shared<GammaInfo<DataType>>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
-                                                                     block_aops_, make_shared<const vector<string>>(chrvec_to_strvec(*block_aops_rngs_)),
-                                                                     gint->ids_pos_, Gamma_map_) );
+                                                                      *block_aops_, chrvec_to_strvec(*block_aops_rngs_),
+                                                                       gamma_ids_pos, Gamma_map_) );
 
   //This is the name of the CTP we need to contract (perhaps partially) with gamma
-  string Aname_alt = get_ctp_name( std_name_target_op_free_, std_idxs_target_op_free_, std_rngs_target_op_free_, *(gint->deltas_pos_) );
+  string Aname_alt = get_ctp_name( std_name_target_op_free_, std_idxs_target_op_free_, std_rngs_target_op_free_, gint->deltas_pos_ );
   if ( total_op_->CTP_map()->find(Aname_alt) == total_op_->CTP_map()->end() )
-    total_op_->enter_cmtps_into_map( *(gint->deltas_pos_), std_rngs_, op_info_ );
+    total_op_->enter_cmtps_into_map( gint->deltas_pos_, std_rngs_, op_info_ );
 
   shared_ptr<map<string, shared_ptr<map<string, shared_ptr<AContribInfo_Base>>>>> G_to_A_map;
   auto map_loc = block_G_to_A_map_->find(target_block_name_);
@@ -212,8 +205,8 @@ cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
  
   // Get A indexes which are not contracted with gamma; these are T indexes.
   vector<int> A_T_pos(0);
-  if ( gint->target_A_deltas_pos()->size() != 0 ) {
-    for ( pair<int,int>& ctr : *(gint->target_A_deltas_pos()) ) { 
+  if ( gint->target_A_deltas_pos().size() != 0 ) {
+    for ( pair<int,int>& ctr : gint->target_A_deltas_pos() ) { 
 
       if ( ctr.second < target_block_start_ ) {
         A_T_pos.push_back(ctr.second);
@@ -263,7 +256,7 @@ cout << "GammaGenerator_OrbExcDeriv<DataType>::add_Acontrib_to_map" << endl;
   pair<double,double> new_fac = make_pair(1.0, 0.0);
   pair_fac_mult( gint->factors_, new_fac );
   
-  auto a_info_loc =  G_to_A_map->at( Gname_alt )->find(final_reordering_name);
+  auto a_info_loc =  G_to_A_map->at( Gname_alt )->find( final_reordering_name );
   if ( a_info_loc == G_to_A_map->at( Gname_alt )->end() ) {
     auto a_info = make_shared<AContribInfo_OrbExcDeriv<DataType>>( final_reordering_name, target_block_name_, T_pos,  post_gamma_contraction_rngs );
     a_info->add_reordering( Aname_alt, gamma_contraction_pos, pre_contraction_reordering, pre_contraction_ranges, new_fac );
@@ -290,16 +283,16 @@ cout << "GammaGenerator_OrbExcDeriv::print_target_block_info" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////
 
   cout << "------------" << target_block_name_ << "----------"<< endl;
-//  print_vector( gamma_ids_pos,                "Gamma_ids_pos              " ); cout << endl;
-//  print_vector( A_ids_pos,                    "A_ids_pos                  " ); cout << endl;
-//  print_vector( T_pos,                       "T_pos                      " ); cout << endl;
-//  print_vector( A_T_pos,                      "A_T_pos                    " ); cout << endl;
-//  print_vector( A_contraction_pos,            "A_contraction_pos          " ); cout << endl;
-//  print_vector( gamma_contraction_pos,        "gamma_contraction_pos      " ); cout << endl;
-//  print_vector( pre_contraction_reordering,  "pre_contraction_reordering " ); cout << endl;
-//  print_vector( post_contraction_reordering, "post_contraction_reordering" ); cout << endl;
-//  print_vector( post_gamma_contraction_rngs, "post_gamma_contraction_rngs" ); cout << endl;
-//  cout << endl;
+  print_vector( gamma_ids_pos,               "Gamma_ids_pos              " ); cout << endl;
+  print_vector( A_ids_pos,                   "A_ids_pos                  " ); cout << endl;
+  print_vector( T_pos,                       "T_pos                      " ); cout << endl;
+  print_vector( A_T_pos,                     "A_T_pos                    " ); cout << endl;
+  print_vector( A_contraction_pos,           "A_contraction_pos          " ); cout << endl;
+  print_vector( gamma_contraction_pos,       "gamma_contraction_pos      " ); cout << endl;
+  print_vector( pre_contraction_reordering,  "pre_contraction_reordering " ); cout << endl;
+  print_vector( post_contraction_reordering, "post_contraction_reordering" ); cout << endl;
+  print_vector( post_gamma_contraction_rngs, "post_gamma_contraction_rngs" ); cout << endl;
+  cout << endl;
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////

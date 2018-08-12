@@ -128,6 +128,7 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
 
   //Initializing range sizes either from idate or reference wfn 
   maxtile_   = idata_->get<int>("maxtile", 10);
+  maxtile_ = 50;
 
   //cimaxtile_ = idata_->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
   cimaxtile_ = 100000; //TODO fix this so it uses the above statement, issue in b_gamma_computer means must use large cimaxblock for now

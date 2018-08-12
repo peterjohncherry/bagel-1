@@ -49,6 +49,9 @@ SMITH_Info<DataType>::SMITH_Info(shared_ptr<const Reference> o, const shared_ptr
 
   maxiter_ = idata->get<int>("maxiter", 50);
   maxtile_ = idata->get<int>("maxtile", 10);
+  //TEST
+  maxtile_ = 50;
+  //ENDTEST
   cimaxchunk_ = idata->get<int>("cimaxchunk", 317520001);
 
   do_ms_   = idata->get<bool>("ms",  true);
@@ -63,22 +66,22 @@ SMITH_Info<DataType>::SMITH_Info(shared_ptr<const Reference> o, const shared_ptr
   block_diag_fock_ = idata->get<bool>("block_diag_fock", false);
 
   // check nact() because ciwfn() is nullptr with zero active orbitals
-  if (nact() && ciwfn()->nstates() > 1)
-    ss << "    * " << (sssr_ ? "SS-SR" : "MS-MR") << " internal contraction is used" << endl;
+//  if (nact() && ciwfn()->nstates() > 1)
+//    ss << "    * " << (sssr_ ? "SS-SR" : "MS-MR") << " internal contraction is used" << endl;
 
   // print
   const string sout = ss.str();
   cout << sout << (sout.empty() ? "" : "\n");
 
-  if (ref_->nstate() != 1) {
-    if (idata->get<bool>("extract_civectors", false)) {
-      vector<int> states = idata->get_vector<int>("extract_state");
-      ref_ = extract_ref(states, idata->get<bool>("extract_average_rdms", true));
-    } else if (idata->get<bool>("extract_average_rdms", false)) {
-      vector<int> states = idata->get_vector<int>("extract_state");
-      ref_ = ref_->extract_average_rdm(states);
-    }
-  }
+//  if (ref_->nstate() != 1) {
+//    if (idata->get<bool>("extract_civectors", false)) {
+//      vector<int> states = idata->get_vector<int>("extract_state");
+//      ref_ = extract_ref(states, idata->get<bool>("extract_average_rdms", true));
+//    } else if (idata->get<bool>("extract_average_rdms", false)) {
+//      vector<int> states = idata->get_vector<int>("extract_state");
+//      ref_ = ref_->extract_average_rdm(states);
+//    }
+//  }
 
   // These are not input parameters (set automatically)
   grad_    = idata->get<bool>("_grad", false);

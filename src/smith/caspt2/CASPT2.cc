@@ -75,6 +75,7 @@ cout << "CASPT2::CASPT2::CASPT2(const CASPT2& cas) : SpinFreeMethod(cas) {" << e
   ractive_ = cas.ractive_;
   rclosed_ = cas.rclosed_;
   nstates_ = cas.nstates_;
+  nstates_ = 1;// cas.nstates_;
   heff_    = cas.heff_;
   fockact_ = cas.fockact_;
   e0all_   = cas.e0all_;

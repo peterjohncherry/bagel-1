@@ -46,40 +46,6 @@ class GammaIntermediate_Base_Raw {
      } 
 };
 
-class GammaIntermediate_Base {
-   public : 
-     std::shared_ptr<std::vector<int>> ids_pos_;
-     std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos_;
-     std::pair<double,double> factors_;
-     bool survives_;
-
-     GammaIntermediate_Base( std::shared_ptr<std::vector<int>> ids_pos,
-                             std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos,
-                             std::pair<double,double> factors ) :
-     ids_pos_(ids_pos), deltas_pos_(deltas_pos), factors_(factors), survives_(true) {};
-
-     ~GammaIntermediate_Base(){};
-
-
-     virtual
-     std::shared_ptr<std::vector<std::pair<int,int>>> A_A_deltas_pos() {
-       throw std::logic_error( "Should not access (A, A) contractions from gammaintermediate_base");
-       return deltas_pos_  ;
-     } 
-
-     virtual
-     std::shared_ptr<std::vector<std::pair<int,int>>> target_A_deltas_pos() {
-       throw std::logic_error( "Should not access (target, A) contractions from gammaintermediate_base");
-       return deltas_pos_  ;
-     } 
-
-     virtual
-     std::shared_ptr<std::vector<std::pair<int,int>>> target_target_deltas_pos() {
-       throw std::logic_error( "Should not access (target, target) contractions from gammaintermediate_base");
-       return deltas_pos_;
-     } 
-};
-
 class GammaGenerator_Base{
   friend GammaInfo_Base;
 
@@ -116,11 +82,8 @@ class GammaGenerator_Base{
     std::shared_ptr<Op_Info> op_info_;
     std::shared_ptr<TensOp_Base> total_op_;
 
-    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate_Base>>> gamma_vec_;
-    std::shared_ptr<std::vector<std::shared_ptr<GammaIntermediate_Base>>> final_gamma_vec_;
-
-    std::vector<std::unique_ptr<GammaIntermediate_Base_Raw>> gamma_vec_unq_;
-    std::vector<std::unique_ptr<GammaIntermediate_Base_Raw>> final_gamma_vec_unq_;
+    std::vector<std::unique_ptr<GammaIntermediate_Base_Raw>> gamma_vec_;
+    std::vector<std::unique_ptr<GammaIntermediate_Base_Raw>> final_gamma_vec_;
 
     // key    : name of this gamma
     // result : information used here and in compute routines
@@ -150,20 +113,10 @@ class GammaGenerator_Base{
 
   protected :
     bool generic_reorderer_different_sector( std::string reordering_name, bool final_reordering );
-    bool generic_reorderer_different_sector_unq( std::string reordering_name, bool final_reordering );
 
     void normal_order();
     void anti_normal_order();
     void alternating_order();
-
-    void normal_order_unq();
-    void anti_normal_order_unq();
-    void alternating_order_unq();
-
-    std::shared_ptr<std::vector<std::pair<int,int>>>
-    standardize_delta_ordering_generic(std::shared_ptr<std::vector<std::pair<int,int>>> deltas_pos );
-
-    void set_standardized_alt_order_unranged ( std::shared_ptr<GammaIntermediate_Base>& gint , std::vector<int>& standard_alt_order);
 
     std::vector<int> get_standardized_alt_order_unranged ( std::vector<int> ids_reordered_pos );
 
@@ -171,11 +124,11 @@ class GammaGenerator_Base{
 
     std::vector<int> get_position_order(const std::vector<int> &positions) ;
 
-    bool proj_onto_map_unq( const std::unique_ptr<GammaIntermediate_Base_Raw>& gint, 
+    bool proj_onto_map( const std::unique_ptr<GammaIntermediate_Base_Raw>& gint, 
                             std::map<char,int> bra_hole_map, std::map<char,int> bra_elec_map,
                             std::map<char,int> ket_hole_map, std::map<char,int> ket_elec_map  );
 
-    void proj_onto_map_unq( std::unique_ptr<GammaIntermediate_Base_Raw>& gint ); 
+    void proj_onto_map( std::unique_ptr<GammaIntermediate_Base_Raw>& gint ); 
 
     void transform_to_canonical_ids_pos( std::vector<int>& ids_pos );
 
@@ -183,15 +136,13 @@ class GammaGenerator_Base{
 
     virtual void add_gamma( const std::shared_ptr<Range_Block_Info> block_info, std::shared_ptr<std::vector<bool>> trans_aops ){assert(false);};
 
-    virtual void swap_unq( int ii, int jj, int kk );
-
-    void print_gamma_intermediate( const std::shared_ptr<GammaIntermediate_Base>& gint , std::string gamma_name = "" );
+    virtual void swap( int ii, int jj, int kk );
 
     void print_gamma_intermediate( const std::unique_ptr<GammaIntermediate_Base_Raw>& gint, std::string gamma_name = "" );
 
-    virtual void add_Acontrib_to_map_unq( int gamma_vec_position, std::string bra_name, std::string ket_name ) { assert(false); } 
+    virtual void add_Acontrib_to_map( int gamma_vec_position, std::string bra_name, std::string ket_name ) { assert(false); } 
   
-    void transformation_tester( std::shared_ptr<GammaIntermediate_Base>& gint  ); 
+    void transformation_tester( std::unique_ptr<GammaIntermediate_Base_Raw>& gint  ); 
 
 };
 #endif

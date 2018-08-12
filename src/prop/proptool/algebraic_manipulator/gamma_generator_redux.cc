@@ -25,13 +25,10 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   std_rngs_ = *(block_info_->unique_block_->orig_rngs_);
   standard_order_ = *(block_info_->idxs_trans());
 
-  shared_ptr<vector<int>> ids_pos = make_shared<vector<int>>( std_rngs_.size() );
-  iota( ids_pos->begin(), ids_pos->end(), 0 );
-
   {
   vector<int> ids_pos_raw( std_rngs_.size() );
   iota( ids_pos_raw.begin(), ids_pos_raw.end(), 0 );
-  gamma_vec_unq_.push_back( make_unique<GammaIntermediate_Redux_Raw<DataType>>( ids_pos_raw, vector<pair<int,int>>(0), block_info_->factors() ) );
+  gamma_vec_.push_back( make_unique<GammaIntermediate_Redux_Raw<DataType>>( ids_pos_raw, vector<pair<int,int>>(0), block_info_->factors() ) );
   }
 
 #ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
@@ -39,20 +36,20 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   vector<int>::iterator it_it = block_info_->idxs_trans()->begin();
   for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ ) 
     *bi_it = (*std_ids_)[ *it_it ];
-  print_gamma_intermediate(gamma_vec_unq_.front(), "initial gamma intermediate" );  
+  print_gamma_intermediate(gamma_vec_.front(), "initial gamma intermediate" );  
 #endif
 
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
-void GammaGeneratorRedux<DataType>::add_Acontrib_to_map_unq( int kk, string bra_name, string ket_name ){  // e.g. ++++----
+void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name, string ket_name ){  // e.g. ++++----
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
-cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map_unq" << endl;
+cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  unique_ptr<GammaIntermediate_Base_Raw>& gint = gamma_vec_unq_[kk];
+  unique_ptr<GammaIntermediate_Base_Raw>& gint = gamma_vec_[kk];
  
   string Gname_alt = get_gamma_name(chrvec_to_strvec(*block_aops_rngs_), *block_aops_, gint->ids_pos_, bra_name, ket_name );
 
@@ -99,7 +96,7 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map_unq" << endl;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
-void GammaGeneratorRedux<DataType>::block_trans_test( shared_ptr<GammaIntermediate_Base>& gint ){
+void GammaGeneratorRedux<DataType>::block_trans_test( unique_ptr<GammaIntermediate_Base_Raw>& gint ){
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
 cout << "GammaGeneratorRedux<DataType>::block_trans_test " << endl;
@@ -113,14 +110,14 @@ cout << "GammaGeneratorRedux<DataType>::block_trans_test " << endl;
   print_vector( block_idxs_, " block_idxs " ); cout << endl;
   print_vector( *std_ids_,  " std_ids_   " ); cout << endl;
 
-  print_pair_vector( *(gint->deltas_pos_) , "gint->deltas_pos_" ); cout.flush();
+  print_pair_vector( gint->deltas_pos_ , "gint->deltas_pos_" ); cout.flush();
   cout << "  : [ ";
-  for ( auto ctr : *(gint->deltas_pos_) ) {
+  for ( auto ctr : gint->deltas_pos_ ) {
     cout << "(" << block_idxs_[ctr.first] <<","<<  block_idxs_[ctr.second] << ")"; cout.flush();
   }
   cout << "]" << endl;
 
-  vector<pair<int,int>> idxs_deltas_pos = *gint->deltas_pos_;
+  vector<pair<int,int>> idxs_deltas_pos = gint->deltas_pos_;
   transform_to_canonical_ids_pos( idxs_deltas_pos );
 
   print_pair_vector( idxs_deltas_pos , "idxs_deltas_pos_" );
@@ -135,23 +132,6 @@ cout << "GammaGeneratorRedux<DataType>::block_trans_test " << endl;
     cout << "(" << (std_rngs_)[ctr.first] <<","<<  (std_rngs_)[ctr.second] << ")"; cout.flush();
   }
   cout << "]" << endl;
-
-  return;
-}
-/////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType> 
-void GammaGeneratorRedux<DataType>::print_new_gamma_definition() {
-/////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
-cout << "GammaGeneratorRedux<DataType>::print_new_gamma_block_definition" << endl;
-#endif //////////////////////////////////////////////////////////////////////////////
-
-  cout << endl;
-  cout << "--------------- gamma def -------------------" << endl;
-  print_vector( std_rngs_ ,         " unique_block_      "); cout << endl;
-  print_vector( standard_order_ ,   " range_reordering   "); cout << endl;
-  print_vector(*block_aops_rngs_ ,  " block_aops_rngs    "); cout << endl;
-  cout << endl;
 
   return;
 }

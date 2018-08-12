@@ -69,11 +69,27 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
   ractive_ = make_shared<const IndexRange>(active_);
   rvirt_   = make_shared<const IndexRange>(virt_);
 
+  ////////////////////// temp H_2el tensor for testing//////////////////////////////////////////
+  {
+    
+    MOFock<DataType> fock_buff(info_, {all_, all_});
+    f1_ = fock_buff.tensor()->clone();
+    f1_->zero();
+    h1_ = fock_buff.h1()->clone();
+    h1_->zero();
+    core_energy_ = fock_buff.core_energy();
+    coeff_ = fock_buff.coeff();
+    K2ext<DataType> v2k_buff(info_, coeff_, {all_, all_, all_, all_});
+    h_2el_ = v2k_buff.tensor();
+  }
+  //////////////////////////////////////////////////////////////////////////////////////////////
+
   // f1 tensor.
   {
     MOFock<DataType> fock(info_, {all_, all_});
     f1_ = fock.tensor();
     h1_ = fock.h1();
+    //ENDTEST
     core_energy_ = fock.core_energy();
     // canonical orbitals within closed and virtual subspaces
     coeff_ = fock.coeff();
@@ -95,12 +111,6 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
     v2_ = v2k.tensor();
 
   }
-  ////////////////////// temp H_2el tensor for testing//////////////////////////////////////////
-//  {
-//    K2ext<DataType> v2k(info_, coeff_, {all_, all_, all_, all_});
-//    H_2el_ = v2k.tensor();
-//  }
-  //////////////////////////////////////////////////////////////////////////////////////////////
 
   timer.tick_print("MO integral evaluation");
 
@@ -112,7 +122,8 @@ SpinFreeMethod<DataType>::SpinFreeMethod(shared_ptr<const SMITH_Info<DataType>> 
   fockact_ = fockact->get_conjg();
 
   // set Eref
-  const int nstates = info_->nact() ? info_->ciwfn()->nstates() : 1;
+  //const int nstates = info_->nact() ? info_->ciwfn()->nstates() : 1;
+  const int nstates = 1;
   eref_ = make_shared<MatType>(nstates, nstates);
   if (info_->nact())
     for (int i = 0; i != nstates; ++i)
@@ -234,7 +245,8 @@ void SpinFreeMethod<complex<double>>::rotate_xms() {
 
 template<>
 void SpinFreeMethod<double>::reference_prop() const {
-  const int nstates = info_->ciwfn()->nstates();
+  //const int nstates = info_->ciwfn()->nstates();
+  const int nstates = 1 ; 
   const array<double,3> cap = info_->geom()->cap();
 
   const bool dothis = !isnan(cap[0]);
@@ -281,7 +293,8 @@ void SpinFreeMethod<complex<double>>::reference_prop() const {
 template<>
 void SpinFreeMethod<double>::feed_rdm_denom() {
   const int nclo = info_->nclosed();
-  const int nstates = info_->ciwfn()->nstates();
+  //const int nstates = info_->ciwfn()->nstates();
+  const int nstates = 1;
   rdm0all_ = make_shared<Vec<Tensor_<double>>>();
   rdm1all_ = make_shared<Vec<Tensor_<double>>>();
   rdm2all_ = make_shared<Vec<Tensor_<double>>>();
@@ -526,7 +539,8 @@ tuple<shared_ptr<VectorB>, shared_ptr<Matrix>,shared_ptr<Matrix>, shared_ptr<Mat
 template<>
 std::shared_ptr<CIWfn> SpinFreeMethod<double>::rotate_ciwfn(std::shared_ptr<const CIWfn> input, const Matrix& rotation) const {
   // construct CIWfn
-  const int nstates = input->nstates();
+  //const int nstates = input->nstates();
+  const int nstates = 1;
   assert(rotation.ndim() == rotation.mdim() && rotation.ndim() == nstates);
   shared_ptr<const Dvec> dvec = input->civectors();
   shared_ptr<Dvec> new_dvec = dvec->clone();
@@ -549,7 +563,8 @@ template<>
 std::shared_ptr<RelCIWfn> SpinFreeMethod<std::complex<double>>::rotate_ciwfn(std::shared_ptr<const RelCIWfn> input, const ZMatrix& rotation) const {
   // construct CIWfn
   // TODO:  Verify this chunk of code carefully
-  const int nstates = input->nstates();
+ // const int nstates = input->nstates();
+  const int nstates = 1;//input->nstates();
   assert(rotation.ndim() == rotation.mdim() && rotation.ndim() == nstates);
   shared_ptr<const RelZDvec> dvec = input->civectors();
   shared_ptr<RelZDvec> new_dvec = dvec->clone();

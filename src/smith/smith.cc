@@ -56,7 +56,10 @@ Smith::Smith(const shared_ptr<const PTree> idata, shared_ptr<const Geometry> g, 
     const size_t nact2 = nact * nact;
     const size_t nact4 = nact2 * nact2;
     const size_t nact6 = nact4 * nact2;
-    const size_t nstate = r->nstate();
+    // TEST
+    //const size_t nstate = r->nstate();
+    const size_t nstate = 1; 
+    // ENDTEST
     const size_t nclosed = r->nclosed() - info->ncore();
     const size_t nvirtual = r->nvirt() - info->nfrozenvirt();
     const size_t nocc = nclosed + nact;
