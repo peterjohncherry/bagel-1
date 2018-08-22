@@ -267,7 +267,7 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id
         if ( Tens_in->exists( trans_id_blocks ) ) {
           unique_ptr<double[]> trans_data_block = Tens_in->get_block( trans_id_blocks );
           int block_size = Tens_in->get_size(trans_id_blocks);
-          if ( abs( *(max_element( trans_data_block.get(), trans_data_block.get()+block_size )) ) > 0.00000000001 ) { 
+          if ( abs( *(max_element( trans_data_block.get(), trans_data_block.get() + block_size )) ) > 0.00000000001 ) { 
             unique_ptr<double[]> data_block =  Tensor_Arithmetic::Tensor_Arithmetic<double>::reorder_tensor_data( trans_data_block.get(), *t_it, trans_id_blocks ) ;
             int stride_one = 1;
             dscal_( block_size , *f_it, data_block.get(), stride_one ); 
@@ -1205,4 +1205,51 @@ cout << "Tensor_Arithmetic_Utils::get_test_tensor" << endl;
   throw logic_error ( "cannot set complex test tensor" ); 
   return;
 }  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
+bool Tensor_Arithmetic_Utils::check_idx_rng_existence( const shared_ptr<SMITH::Tensor_<double>>& Tens, const vector<SMITH::IndexRange>& id_ranges  ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+cout << "Tensor_Arithmetic_Utils::get_test_tensor" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  vector<int> range_maxs  = get_range_lengths( id_ranges ) ;
+  vector<int> block_pos(range_maxs.size(),0);  
+  vector<int> mins(range_maxs.size(),0);  
 
+  do { 
+     vector<Index> id_blocks = get_rng_blocks( block_pos, id_ranges );
+     if ( !Tens->exists( id_blocks )) {
+       print_sizes( id_ranges, "WARNING idranges with these sizes is not found in tensor!!" );
+       cout << endl << "Missing block at : "; cout.flush();
+       print_vector(block_pos, "block_pos"); cout.flush(); print_sizes(id_blocks, "   id_blocks" ); cout << endl;
+       return false;
+     }  
+  } while (fvec_cycle_skipper( block_pos, range_maxs, mins ) ); 
+
+  return true;
+}  
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template<>     
+bool Tensor_Arithmetic_Utils::check_idx_rng_existence( const shared_ptr<SMITH::Tensor_<complex<double>>>& Tens, const vector<SMITH::IndexRange>& id_ranges  ) {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+cout << "Tensor_Arithmetic_Utils::get_test_tensor" << endl;
+#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
+  vector<int> range_maxs  = get_range_lengths( id_ranges ) ;
+  vector<int> block_pos(range_maxs.size(),0);  
+  vector<int> mins(range_maxs.size(),0);  
+
+  do { 
+     vector<Index> id_blocks = get_rng_blocks( block_pos, id_ranges );
+     if ( !Tens->exists( id_blocks )) {
+       print_sizes( id_ranges, "WARNING idranges with these sizes is not found in tensor!!" );
+       cout << endl << "Missing block at : "; cout.flush();
+       print_vector(block_pos, "block_pos"); cout.flush(); print_sizes(id_blocks, "   id_blocks" ); cout << endl;
+       return false;
+     }  
+  } while (fvec_cycle_skipper( block_pos, range_maxs, mins ) ); 
+
+  return true;
+}  

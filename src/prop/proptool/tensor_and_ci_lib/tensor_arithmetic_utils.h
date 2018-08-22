@@ -128,6 +128,12 @@ namespace Tensor_Arithmetic_Utils {
      template<>
      void set_test_elems( std::shared_ptr<SMITH::Tensor_<std::complex<double>>> Tens, std::string name  );
 
+     template<typename DataType>     
+     bool check_idx_rng_existence( const std::shared_ptr<SMITH::Tensor_<DataType>>& Tens, const std::vector<SMITH::IndexRange>& id_ranges  );
+     template<>     
+     bool check_idx_rng_existence( const std::shared_ptr<SMITH::Tensor_<double>>& Tens, const std::vector<SMITH::IndexRange>& id_ranges  );
+     template<>     
+     bool check_idx_rng_existence( const std::shared_ptr<SMITH::Tensor_<std::complex<double>>>& Tens, const std::vector<SMITH::IndexRange>& id_ranges  );
 };
 };
 #endif 

@@ -151,6 +151,12 @@ class CASPT2 : public SpinFreeMethod<double> {
     std::tuple<std::shared_ptr<double>,std::shared_ptr<RDM<1>>,std::shared_ptr<RDM<2>>,std::shared_ptr<RDM<3>>,std::shared_ptr<RDM<3>>> feed_denci();
     std::shared_ptr<VectorB> contract_rdm_deriv(std::shared_ptr<const CIWfn> ciwfn, int offset, int size, std::shared_ptr<const Matrix> fock);
     void do_rdm_deriv(double factor);
+    
+    //TEST 
+    std::map<std::string, std::vector<SMITH::IndexRange>> range_block_map_;
+    std::shared_ptr<SMITH::Tensor_<double>> build_full_T( std::shared_ptr<SMITH::Tensor_<double>> smith_t );
+    std::shared_ptr<SMITH::Tensor_<double>> build_full_H( std::shared_ptr<SMITH::Tensor_<double>> smith_h ); 
+    //
 
   public:
     CASPT2(std::shared_ptr<const SMITH_Info<double>> ref);
@@ -171,6 +177,7 @@ class CASPT2 : public SpinFreeMethod<double> {
 
     std::shared_ptr<const Dvec> ci_deriv() const { return ci_deriv_; }
     std::shared_ptr<const Matrix> dcheck() const { return dcheck_; }
+   
 
 };
 
