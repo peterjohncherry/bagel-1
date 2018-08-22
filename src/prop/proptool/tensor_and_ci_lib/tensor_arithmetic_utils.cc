@@ -11,7 +11,7 @@ using namespace bagel::SMITH;
 using namespace WickUtils;
 using namespace Debugging_Utils;
 
-//#define __DEBUG_TENSOR_ARITHMETIC_UTILS
+#define __DEBUG_TENSOR_ARITHMETIC_UTILS
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 vector<size_t> Tensor_Arithmetic_Utils::get_strides_row_major( const std::vector<Index>& block ) { 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,8 +155,9 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor 2arg" << endl; print_sizes( id
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
-shared_ptr<Tensor_<complex<double>>>  Tensor_Arithmetic_Utils::get_sub_tensor_symm( shared_ptr<Tensor_<complex<double>>> Tens_in, const vector<IndexRange>& id_ranges,
-                                                                                    const vector<vector<int>>& transforms, const vector<complex<double>>& factors ) {
+shared_ptr<Tensor_<complex<double>>>
+Tensor_Arithmetic_Utils::get_sub_tensor_symm( shared_ptr<Tensor_<complex<double>>> Tens_in, const vector<IndexRange>& id_ranges,
+                                              const vector<vector<int>>& transforms, const vector<complex<double>>& factors ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
 cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id_ranges, "id_ranges" ); cout << endl;
@@ -238,8 +239,9 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor 3arg" << endl;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<>
-shared_ptr<Tensor_<double>>  Tensor_Arithmetic_Utils::get_sub_tensor_symm( shared_ptr<Tensor_<double>> Tens_in, const vector<IndexRange>& id_ranges,
-                                                                           const vector<vector<int>>& transforms, const vector<double>& factors ) {
+shared_ptr<Tensor_<double>> 
+Tensor_Arithmetic_Utils::get_sub_tensor_symm( shared_ptr<Tensor_<double>> Tens_in, const vector<IndexRange>& id_ranges,
+                                              const vector<vector<int>>& transforms, const vector<double>& factors ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
 cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id_ranges, "id_ranges" ); cout << endl;

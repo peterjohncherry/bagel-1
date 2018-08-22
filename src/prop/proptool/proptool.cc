@@ -93,26 +93,42 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
   auto moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_,
                                                      nfrozenvirt_, block_diag_fock_ );
 
-  auto moint_computer = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
-  moint_computer->t_from_smith_ = tamps_smith_; 
-  moint_computer->v2_from_smith_ = v2_smith_; 
+  moint_computer_ = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
+  cout << "pt::pt::riai X1" << endl;
+  moint_computer_->t_from_smith_ = tamps_smith_; 
+  cout << "pt::pt::riai X2" << endl;
+   
   
-//  vector<string> free2 = { "free" , "free" };
-//  moint_computer->calculate_fock( free2, true, true );
+  vector<string> free2 = { "free" , "free" };
+  cout << "pt::pt::riai X4" << endl;
+  moint_computer_->calculate_fock( free2, true, true );
+  cout << "pt::pt::riai X5" << endl;
 
-  //TODO should build gamma_computer inside system_computer, like this due to DVec class dependence of B_Gamma_Computer 
+  vector<string> free4 = { "free" , "free", "free", "free" };
+  moint_computer_->calculate_v2( free4 );
+  v2_smith_ = moint_computer_->v2_from_smith_->copy(); 
+  cout << "pt::pt::riai X3" << endl;
+
+  //TODO should build gamma_computer inside system_computer, like this due to Determinant class dependence of B_Gamma_Computer 
+  cout << "pt::pt::riai X6" << endl;
   auto gamma_computer = make_shared<B_Gamma_Computer::B_Gamma_Computer<double>>(civectors_); 
+  cout << "pt::pt::riai X7" << endl;
 
-  system_computer_ = make_shared<System_Computer::System_Computer<double>>(sys_info_, moint_computer, range_conversion_map_, gamma_computer );
+  system_computer_ = make_shared<System_Computer::System_Computer<double>>(sys_info_, moint_computer_, range_conversion_map_, gamma_computer );
+  cout << "pt::pt::riai X8" << endl;
 
   shared_ptr< const PTree > ops_def_tree = idata_->get_child_optional( "operators" ) ;
+  cout << "pt::pt::riai X9" << endl;
   if (ops_def_tree)
     get_new_ops_init( ops_def_tree ); 
 
+  cout << "pt::pt::riai X10" << endl;
   // Getting info about target expression (this includes which states are relevant)
   get_terms_init( idata_->get_child( "terms" ) ); 
+  cout << "pt::pt::riai X11" << endl;
 
   get_equations_init( idata_->get_child( "equations" ) );
+  cout << "pt::pt::riai X12" << endl;
 
   return;
 }

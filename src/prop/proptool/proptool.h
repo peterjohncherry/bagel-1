@@ -121,6 +121,7 @@ namespace PropTool {
      bool block_diag_fock() { return block_diag_fock_; }     
 
      //TEST
+     std::shared_ptr<MOInt_Computer<double>> moint_computer_;
      std::shared_ptr<SMITH::Tensor_<double>> tamps_smith_;
      std::shared_ptr<SMITH::Tensor_<double>> v2_smith_;
      void set_maxtile( int new_maxtile ) { maxtile_ = new_maxtile; }

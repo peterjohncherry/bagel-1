@@ -402,9 +402,13 @@ cout << "CASPT2::CASPT2::solve" << endl;
 #ifdef __TEST_PROPTOOL
   cout << endl <<  "======================  BEGIN PROPTOOL TEST =========================" << endl;
   shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>( proptool_input_, info_->geom(), info_->ref() );
+  cout << "S::cpt2::X1" << endl;
   proptool->tamps_smith_ = t2all_[0]->at(0)->copy();
-  proptool->v2_smith_ = v2_->copy();
+  cout << "S::cpt2::X2" << endl;
+  cout << "S::cpt2::X3" << endl;
   proptool->set_maxtile( info_->maxtile() ); 
+  cout << "t2all_[0]->at(0)->norm() = " <<  t2all_[0]->at(0)->norm() << endl;
+  cout << "SMITH v2_->norm() = " <<  v2_->norm() << endl << endl << endl;
 
   { 
     auto range_conversion_map = make_shared<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>>();
@@ -428,17 +432,26 @@ cout << "CASPT2::CASPT2::solve" << endl;
     range_conversion_map->emplace("notcor",not_closed_rng);
     range_conversion_map->emplace("notact",not_active_rng);
     range_conversion_map->emplace("notvir", not_virtual_rng); 
+    cout << "S::cpt2::X4" << endl;
     proptool->set_range_conversion_map( range_conversion_map ); 
+    cout << "S::cpt2::X5" << endl;
     proptool->construct_task_lists();
+    cout << "S::cpt2::X6" << endl;
   }
+  cout << endl << endl <<endl;
+  cout << "S::cpt2::X7" << endl;
+//  Tensor_Arithmetic_Utils::print_tensor_with_indexes( proptool->moint_computer_->v2(), "v2_ for proptool" ,false );
+  cout << "S::cpt2::X8" << endl;
+  cout << endl << endl <<endl;
+  v2_ =  proptool->v2_smith_->copy();
+  cout << "PROPTOOL v2_->norm() = " <<  v2_->norm() << endl << endl << endl;
   proptool->execute_compute_lists();
+  cout << "S::cpt2::X9" << endl;
 #endif
 
   {// TEST source
     {
-    cout << "t2all_[0]->at(0)->norm() = " <<  t2all_[0]->at(0)->norm() << endl;
-    cout << "SMITH v2_->norm() = " <<  v2_->norm() << endl;
-    cout << endl << endl;
+    
     set_rdm(0, 0);
     double source_norm = 0.0;
     s = init_residual();
@@ -447,6 +460,9 @@ cout << "CASPT2::CASPT2::solve" << endl;
     while(!source_task_list->done())
       source_task_list->next_compute();
 
+    cout << endl << endl <<endl;
+//    Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_, "v2_ for smith", false );
+    cout << endl << endl <<endl;
     cout << "v2_->norm() = " << v2_->norm() << endl;
     cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
     cout << "----------------------------------TEST SMITH-------------------------------" << endl;

@@ -2,6 +2,7 @@
 #include <map>
 #include <src/prop/proptool/algebraic_manipulator/gamma_generator_redux.h>
 #include <src/prop/proptool/proputils.h>
+#include <src/prop/proptool/debugging_utils.h>
 
 using namespace std;
 using namespace WickUtils;
@@ -32,6 +33,11 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   }
 
 #ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
+  WickUtils::print_vector( gamma_vec_.front()->ids_pos_ , "gamma_vec_.front()->ids_pos_"); cout << endl;
+  WickUtils::print_vector( standard_order_, "standard_order_"); cout << endl;
+  WickUtils::print_vector( *std_ids_, "standard_ids_"); cout << endl;
+  Debugging_Utils::print_vector_at_pos( *std_ids_, standard_order_, "std_ids standard_order_"); cout << endl;
+  Debugging_Utils::print_vector_at_pos( *block_aops_rngs_, standard_order_, "block_aops_rngs , standard_order_"); cout << endl;
   block_idxs_ = vector<string>( std_ids_->size() );
   vector<int>::iterator it_it = block_info_->idxs_trans()->begin();
   for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ ) 

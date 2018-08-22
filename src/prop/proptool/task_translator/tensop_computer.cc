@@ -259,7 +259,7 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
   //vector<int> s_ordering = { 3, 2, 1, 0};
   //vector<int> s_ordering = { 3, 0, 2, 1 };
   //vector<int> s_ordering = { 0, 2, 1, 3 };
-  vector<int> s_ordering = { 1, 3, 0, 2, };
+  vector<int> s_ordering = { 3, 1, 2, 0 };
   
   for ( auto& block : *required_blocks ) { 
  
@@ -663,6 +663,7 @@ WickUtils::print_vector( range_names, "range_names"); cout << endl;
   vector<IndexRange> block = Get_Bagel_IndexRanges( range_names ); 
 
   if ( full_tens_name[0] == 'S' || full_tens_name[0] == 'H'  ) {
+    cout << "into symm" << endl;
     auto tdm_loc = tensop_data_map_->find( block_name );
     vector<int> ord_0 = { 0, 1, 2, 3 };     
     vector<int> ord_1 = { 0, 3, 2, 1 };     
@@ -672,16 +673,32 @@ WickUtils::print_vector( range_names, "range_names"); cout << endl;
     vector<DataType> trans_factors= { 1.0, 1.0, 1.0, 1.0 };
      
     if ( tdm_loc == tensop_data_map_->end() ){
-      tensop_data_map_->emplace( block_name, Tens_Utils::get_sub_tensor_symm( full_tens, block, transforms, trans_factors ) );
+      cout << "1a block_name = " << block_name << endl;
+      auto tmp  = Tens_Utils::get_sub_tensor_symm( full_tens, block, transforms, trans_factors ); 
+      cout << "1b block_name = " << block_name << endl;
+      tensop_data_map_->emplace( block_name, tmp  );
+      cout << "1c block_name = " << block_name << endl;
     } else { 
-      tdm_loc->second =  Tens_Utils::get_sub_tensor_symm( full_tens, block, transforms, trans_factors  );
+      cout << "2a block_name = " << block_name << endl;
+      auto tmp  = Tens_Utils::get_sub_tensor_symm( full_tens, block, transforms, trans_factors ); 
+      cout << "2b block_name = " << block_name << endl;
+      tdm_loc->second =  tmp->copy();
+      cout << "2c block_name = " << block_name << endl;
     }
   } else { 
     auto tdm_loc = tensop_data_map_->find( block_name );
     if ( tdm_loc == tensop_data_map_->end() ){
-      tensop_data_map_->emplace( block_name, Tens_Utils::get_sub_tensor( full_tens, block ) );
+      cout << "3a block_name = " << block_name << endl;
+      auto tmp = Tens_Utils::get_sub_tensor( full_tens, block );
+      cout << "3b block_name = " << block_name << endl;
+      tensop_data_map_->emplace( block_name, tmp );
+      cout << "3c block_name = " << block_name << endl;
     } else { 
-      tdm_loc->second =  Tens_Utils::get_sub_tensor( full_tens, block );
+      cout << "4a block_name = " << block_name << endl;
+      auto tmp = Tens_Utils::get_sub_tensor( full_tens, block );
+      cout << "4b block_name = " << block_name << endl;
+      tdm_loc->second =  tmp->copy();
+      cout << "4c block_name = " << block_name << endl;
     }
   }
   cout << "XXXXXXXXXXXXX : "; cout.flush();cout << block_name << "->norm() = " << tensop_data_map_->at(block_name)->norm() << endl;   
