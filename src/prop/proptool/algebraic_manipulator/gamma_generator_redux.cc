@@ -32,16 +32,18 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   gamma_vec_.push_back( make_unique<GammaIntermediate_Redux_Raw<DataType>>( ids_pos_raw, vector<pair<int,int>>(0), block_info_->factors() ) );
   }
 
+  //TODO : so widely used when checking just keep this for now; not technically needed though.
+  block_idxs_ = vector<string>( std_ids_->size() );
+  vector<int>::iterator it_it = block_info_->idxs_trans()->begin();
+  for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ ) 
+    *bi_it = (*std_ids_)[ *it_it ];
+
 #ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
   WickUtils::print_vector( gamma_vec_.front()->ids_pos_ , "gamma_vec_.front()->ids_pos_"); cout << endl;
   WickUtils::print_vector( standard_order_, "standard_order_"); cout << endl;
   WickUtils::print_vector( *std_ids_, "standard_ids_"); cout << endl;
   Debugging_Utils::print_vector_at_pos( *std_ids_, standard_order_, "std_ids standard_order_"); cout << endl;
   Debugging_Utils::print_vector_at_pos( *block_aops_rngs_, standard_order_, "block_aops_rngs , standard_order_"); cout << endl;
-  block_idxs_ = vector<string>( std_ids_->size() );
-  vector<int>::iterator it_it = block_info_->idxs_trans()->begin();
-  for ( vector<string>::iterator bi_it = block_idxs_.begin(); bi_it != block_idxs_.end(); bi_it++, it_it++ ) 
-    *bi_it = (*std_ids_)[ *it_it ];
   print_gamma_intermediate(gamma_vec_.front(), "initial gamma intermediate" );  
 #endif
 

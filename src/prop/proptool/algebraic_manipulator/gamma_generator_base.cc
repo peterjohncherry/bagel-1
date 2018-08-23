@@ -558,18 +558,21 @@ cout << "GammaGenerator_Base::print_gamma_intermediate (unique_ptr_version)" << 
   if ( gamma_name != "" ) 
     cout << "-------- " << gamma_name << " -------" << endl;
 
-  cout << "gint_ids_pos = [ ";
-  cout.flush(); for(const auto& pos : gint->ids_pos_){ cout << pos << "  " ; cout.flush();  }  cout << "] " << endl;
-  cout << "gint_aops    = [ ";
-  cout.flush(); for(const auto& pos : gint->ids_pos_){ cout << block_aops_->at(pos) << "  " ; cout.flush();  }  cout << "] " << endl;
-  cout << "gint_rngs    = [ ";
-  cout.flush(); for(const auto& pos : gint->ids_pos_){ cout << (*block_aops_rngs_)[pos] << "  " ; cout.flush();  }   cout << "]" << endl;
-  cout << "gint_ids     = [ ";
-  cout.flush(); for(const auto& pos : gint->ids_pos_){ cout << block_idxs_[pos] << " " ; cout.flush();  }   cout << "] " <<  endl;
-  cout << "gint_deltas_pos   = [ ";
-  cout.flush(); for(const auto& dta : gint->deltas_pos_){ cout << "("<< dta.first << "," << dta.second << ")"; cout.flush();  }cout << "] " <<  endl;
-  cout << "gint_deltas_idxs  = [ ";
-  cout.flush(); for(const auto& dta : gint->deltas_pos_){ cout << "("<< block_idxs_[dta.first] << "," << block_idxs_[dta.second] << ")"; cout.flush();  }cout << "] " <<  endl;
+  WickUtils::print_vector(block_idxs_,                                     "block_idxs     "); cout << endl;
+  WickUtils::print_vector(gint->ids_pos_,                                  "gint_ids_pos   "); cout << endl;
+  WickUtils::print_pair_vector( gint->deltas_pos_,                         "gint_deltas_pos"); cout << endl;
+  Debugging_Utils::print_vector_at_pos( block_idxs_,  gint->ids_pos_,      "gint_idxs      "); cout << endl;
+  cout << "gint_deltas_idxs  = [ ";  cout.flush();
+  for(const auto& dta : gint->deltas_pos_){
+    cout << "("<< block_idxs_[dta.first]  << ":" << (*block_aops_rngs_)[dta.first ] << ","; cout.flush();
+    cout <<       block_idxs_[dta.second] << ":" << (*block_aops_rngs_)[dta.second] << ") "; cout.flush();
+  }
+  cout << "] " <<  endl;
+
+  Debugging_Utils::print_vector_at_pos(*block_aops_,       gint->ids_pos_,      "gint_aops      "); cout << endl;
+  Debugging_Utils::print_vector_at_pos(*block_aops_rngs_,  gint->ids_pos_, "gint_aops_rngs "); cout << endl;
+
+
   cout << "factor  = ( " ; cout.flush(); cout << gint->factors_.first << ", " << gint->factors_.second << " )" << endl << endl;
   return;
 }
