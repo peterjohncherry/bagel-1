@@ -366,10 +366,11 @@ cout << "CASPT2::CASPT2::solve" << endl;
     range_conversion_map->emplace("notact",not_active_rng);
     range_conversion_map->emplace("notvir", not_virtual_rng); 
     shared_ptr<SMITH::Tensor_<double>> tamps_full = build_full_T( t2all_[0]->at(0) ); 
+    proptool->set_range_conversion_map( range_conversion_map ); 
+
     proptool->tamps_smith_ = tamps_full->copy();
     proptool->set_maxtile( info_->maxtile() ); 
 
-    proptool->set_range_conversion_map( range_conversion_map ); 
     proptool->construct_task_lists();
 
     cout << "t2all_[0]->at(0)->norm() = " <<  t2all_[0]->at(0)->norm() << endl;

@@ -10,7 +10,6 @@ using namespace bagel;
 using namespace bagel::SMITH;
 using namespace WickUtils;
 using namespace Debugging_Utils;
-
 #define __DEBUG_TENSOR_ARITHMETIC_UTILS
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 vector<size_t> Tensor_Arithmetic_Utils::get_strides_row_major( const std::vector<Index>& block ) { 
@@ -648,7 +647,7 @@ cout << "Tensor_Arithmetic_Utils::put_ctr_at_front" <<  endl;
 vector<Index>
 Tensor_Arithmetic_Utils::get_rng_blocks( const vector<int>& block_pos, const vector<IndexRange>& id_ranges) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS_VERBOSE
   cout << "TensOp_Arithemetic_Utils::get_rng_blocks " << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -661,7 +660,7 @@ Tensor_Arithmetic_Utils::get_rng_blocks( const vector<int>& block_pos, const vec
 vector<int>
 Tensor_Arithmetic_Utils::get_num_index_blocks_vec(vector<IndexRange>& rngvec) {
 ////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS_VERBOSE
 cout << "TensOp_Arithemetic_Utils::get_num_index_blocks" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
