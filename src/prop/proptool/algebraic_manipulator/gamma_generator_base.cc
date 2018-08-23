@@ -4,12 +4,8 @@
 #include <src/prop/proptool/proputils.h>
 #include <src/prop/proptool/debugging_utils.h>
 
-#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
-#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_UNQ
-//#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP_UNQ
-//#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE_UNQ
-//#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP
-//#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_VERBOSE
+//#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
+//#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_UNQ
 using namespace std;
 using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

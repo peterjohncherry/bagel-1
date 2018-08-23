@@ -139,9 +139,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
    factor = make_pair( 0.5, 0.0);
 
   } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
-
-    cout << "initializing S" << endl;
-    string ordering = "1100_ooxx"; // TEST!! 
+    string ordering = "1100_xxoo"; // TEST!! 
     if ( ordering == "0123" ) {
       aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
       idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { not_core_a, not_core_a, not_virt_a, not_virt_a  } );

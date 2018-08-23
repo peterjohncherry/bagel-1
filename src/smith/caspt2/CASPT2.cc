@@ -291,150 +291,49 @@ cout << "CASPT2::CASPT2::solve" << endl;
     heff_->element(0,0) = 1.0;
   }
   energy_ = pt2energy_;
-
-
-  auto  t2_all_buff = t2all_[0]->at(0)->copy();
-
-  { 
+   
   SMITH::IndexRange brng_act =  *ractive_;
   SMITH::IndexRange brng_core = *rclosed_;
   SMITH::IndexRange brng_virt = *rvirt_;
-
-  // TEST 
-  vector<SMITH::IndexRange> avav = { brng_act,    brng_virt, brng_act,  brng_virt }; 
-  range_block_map_.emplace( "avav" , avav ); 
-  vector<SMITH::IndexRange> cvcv = { brng_core,   brng_virt, brng_core, brng_virt }; 
-  range_block_map_.emplace( "cvcv" , cvcv ); 
-  vector<SMITH::IndexRange> cvav = { brng_core,   brng_virt, brng_act,  brng_virt }; 
-  range_block_map_.emplace( "cvav" , cvav ); 
-  vector<SMITH::IndexRange> avcv = { brng_act,    brng_virt, brng_core, brng_virt }; 
-  range_block_map_.emplace( "avcv" , avcv ); 
-
-  vector<SMITH::IndexRange> cacv = { brng_core,   brng_act, brng_core, brng_virt }; 
-  range_block_map_.emplace( "cacv" , cacv ); 
-  vector<SMITH::IndexRange> caav = { brng_core,   brng_act, brng_act,  brng_virt }; 
-  range_block_map_.emplace( "caav" , caav ); 
-  vector<SMITH::IndexRange> aacv = { brng_act,   brng_act, brng_core,  brng_virt }; 
-  range_block_map_.emplace( "aacv" , aacv ); 
-
-  vector<SMITH::IndexRange> cvca = { brng_core,   brng_virt , brng_core, brng_act }; 
-  range_block_map_.emplace( "cvca" , cvca ); 
-  vector<SMITH::IndexRange> cvaa = { brng_core,   brng_virt , brng_act,  brng_act }; 
-  range_block_map_.emplace( "cvaa" , cvaa ); 
-  vector<SMITH::IndexRange> avca = { brng_act,    brng_virt , brng_core, brng_act }; 
-  range_block_map_.emplace( "avca" , avca ); 
-
-  vector<SMITH::IndexRange> caca = { brng_core, brng_act, brng_core, brng_act }; 
-  range_block_map_.emplace( "caca" , caca ); 
-
-  vector<SMITH::IndexRange> caaa = { brng_core, brng_act, brng_act,  brng_act }; 
-  range_block_map_.emplace( "caaa" , caaa ); 
-
-  vector<SMITH::IndexRange> acaa = { brng_act,  brng_core, brng_act,  brng_act }; 
-  range_block_map_.emplace( "acaa" , acaa ); 
-
-  vector<SMITH::IndexRange> aaca = { brng_act,  brng_act,  brng_core, brng_act }; 
-  range_block_map_.emplace( "acaa" , acaa ); 
-  vector<SMITH::IndexRange> aaac = { brng_act,  brng_act,  brng_act, brng_core }; 
-  range_block_map_.emplace( "acaa" , acaa ); 
-
-  vector<SMITH::IndexRange> vaaa = { brng_virt, brng_act, brng_act,  brng_act }; 
-  range_block_map_.emplace( "acaa" , acaa ); 
-  vector<SMITH::IndexRange> avaa = { brng_act,  brng_virt, brng_act,  brng_act }; 
-  range_block_map_.emplace( "acaa" , acaa ); 
-  vector<SMITH::IndexRange> aava = { brng_act,  brng_act,  brng_virt, brng_act }; 
-  range_block_map_.emplace( "acaa" , acaa ); 
-  vector<SMITH::IndexRange> aaav = { brng_act,  brng_act,  brng_act, brng_virt }; 
-  range_block_map_.emplace( "acaa" , acaa ); 
   
-  vector<SMITH::IndexRange> aaaa = { brng_act,  brng_act,  brng_act, brng_act }; 
-  range_block_map_.emplace( "aaaa" , aaaa ); 
+  SMITH::IndexRange brng_free = *rclosed_;
+  brng_free.merge(*ractive_);
+  brng_free.merge(*rvirt_);
+ 
+  SMITH::IndexRange brng_occ = *rclosed_;
+  brng_occ.merge(*ractive_);
 
-  vector<SMITH::IndexRange> avvv =  { brng_act,  brng_virt, brng_virt, brng_virt }; 
-  range_block_map_.emplace( "avvv" , avvv ); 
-  vector<SMITH::IndexRange> cvvv =  { brng_core, brng_virt, brng_virt, brng_virt }; 
-  range_block_map_.emplace( "cvvv" , cvvv ); 
+  SMITH::IndexRange brng_exc = *ractive_;
+  brng_exc.merge(*rvirt_);
 
-  vector<SMITH::IndexRange> vavv =  {  brng_virt, brng_act,  brng_virt, brng_virt }; 
-  range_block_map_.emplace( "vavv" , vavv ); 
-  vector<SMITH::IndexRange> vcvv =  {  brng_virt, brng_core, brng_virt, brng_virt }; 
-  range_block_map_.emplace( "vcvv" , vcvv ); 
+  { 
+  vector<SMITH::IndexRange> branges = { brng_core, brng_act, brng_virt, brng_free, brng_occ, brng_exc }; 
+  vector<char> range_names = { 'c', 'a', 'v', 'f', 'o', 'e' }; 
+  for ( int r0 = 0 ; r0!=6; r0++) { 
+  for ( int r1 = 0 ; r1!=6; r1++) { 
+  for ( int r2 = 0 ; r2!=6; r2++) { 
+  for ( int r3 = 0 ; r3!=6; r3++) { 
+    string rname = "";
+    rname += range_names[r0];rname += range_names[r1]; rname += range_names[r2]; rname += range_names[r3];
+    cout << "rname = "<< rname ; cout.flush(); 
+    vector<SMITH::IndexRange> rblock = { branges[r0], branges[r1], branges[r2], branges[r3] }; 
+    Debugging_Utils::print_sizes(rblock, "range_block"); cout << endl; 
+    range_block_map_.emplace( rname, rblock );
+  }}}}
   
-  vector<SMITH::IndexRange> vvav =  {  brng_virt, brng_virt, brng_act, brng_virt }; 
-  range_block_map_.emplace( "vvav" , vvav ); 
-  vector<SMITH::IndexRange> vvcv =  {  brng_virt, brng_virt, brng_core, brng_virt }; 
-  range_block_map_.emplace( "vvcv" , vvcv ); 
-
-  vector<SMITH::IndexRange> vvva =  {  brng_virt, brng_virt, brng_virt, brng_act  }; 
-  range_block_map_.emplace( "vvva" , vvva ); 
-  vector<SMITH::IndexRange> vvvc =  {  brng_virt, brng_virt, brng_virt, brng_core  }; 
-  range_block_map_.emplace( "vvvc" , vvvc ); 
-
-  vector<SMITH::IndexRange> accc =  {  brng_act,  brng_core, brng_core, brng_core }; 
-  range_block_map_.emplace( "accc" , accc ); 
-  vector<SMITH::IndexRange> vccc =  {  brng_virt, brng_core, brng_core, brng_core }; 
-  range_block_map_.emplace( "vccc" , vccc ); 
-
-  vector<SMITH::IndexRange> cacc =  {  brng_core, brng_act,  brng_core, brng_core }; 
-  range_block_map_.emplace( "cacc" , cacc ); 
-  vector<SMITH::IndexRange> cvcc =  {  brng_core, brng_virt, brng_core, brng_core }; 
-  range_block_map_.emplace( "cvcc" , cvcc ); 
-  
-  vector<SMITH::IndexRange> ccac =  {  brng_core, brng_core, brng_act,  brng_core }; 
-  range_block_map_.emplace( "ccac" , ccac ); 
-  vector<SMITH::IndexRange> ccvc =  {  brng_core, brng_core, brng_virt, brng_core };  
-  range_block_map_.emplace( "ccvc" , cvcc ); 
-
-  vector<SMITH::IndexRange> ccca =  {  brng_core, brng_core, brng_core, brng_act  }; 
-  range_block_map_.emplace( "ccca" , ccca ); 
-  vector<SMITH::IndexRange> cccv =  {  brng_core, brng_core, brng_core, brng_virt }; 
-  range_block_map_.emplace( "cccv" , cccv ); 
-
-  vector<SMITH::IndexRange> vcvc = { brng_virt, brng_core, brng_virt, brng_core  }; 
-  range_block_map_.emplace( "vcvc" , vcvc ); 
-
-
-  vector<vector<SMITH::IndexRange>> all_blocks_v2 = { avav, cvcv, cvav, avcv, cacv, caav, aacv, cvca, cvaa, avca, caca, 
-                                                      caaa, aaca, avaa, aaav, aaaa }; 
-  
-  auto rv = []( vector<SMITH::IndexRange>& block ) { reverse(block.begin(), block.end()); } ;
-                    
-  vector<vector<SMITH::IndexRange>> all_blocks_tamps = all_blocks_v2;
-  all_blocks_tamps.pop_back();
-  for_each( all_blocks_tamps.begin(), all_blocks_tamps.end(), rv );
-
-  vector<SMITH::IndexRange> vcva = avcv; reverse(avcv.begin(), avcv.end() ); 
-  vector<SMITH::IndexRange> vavc = cvav; reverse(cvav.begin(), cvav.end() ); 
-
   shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
   shared_ptr<SMITH::Tensor_<double>>  v2_buff = v2_->copy();
-  cout << "zeroing_blocks" << endl;
-  tensor_calc->zero_all_but_block( v2_, cvcv ); 
+  tensor_calc->zero_all_but_block( v2_, range_block_map_.at("cvcv") ); 
   Debugging_Utils::print_sizes( v2_->indexrange() , "v2_sizes" ); cout << endl;
-  cout << "v2_buff->norm() = " << v2_buff->norm() << endl; 
-  cout << "v2->norm()      = " << v2_->norm() << endl; 
+  cout << "v2_buff->norm() = " << v2_buff->norm() << endl;  cout << "v2->norm()      = " << v2_->norm() << endl; 
 
   
   shared_ptr<SMITH::Tensor_<double>> t2_buff = t2all_[0]->at(0)->copy();
   Debugging_Utils::print_sizes( t2_buff->indexrange() , "tamps sizes" ); cout << endl;
-  tensor_calc->zero_all_but_block( t2all_[0]->at(0), cvcv ); 
+  tensor_calc->zero_all_but_block( t2all_[0]->at(0), range_block_map_.at("cvcv") ); 
   cout << "t2_buff->norm() = " << t2_buff->norm() << endl; 
   cout << "t2_    ->norm() = " << t2all_[0]->at(0)->norm() << endl; 
-  
-//  vector<double> transform_factors = { 1.0 };
-//  vector<vector<int>> transforms = { { 2, 3, 0, 1 } };
-//  for ( auto& idx_block : all_blocks_v2 ) {
-//    auto v2_sub_block = Tensor_Arithmetic_Utils::get_sub_tensor_symm( v2_, idx_block, transforms, transform_factors );
-//    auto v2_sub_block_nosymm = Tensor_Arithmetic_Utils::get_sub_tensor( v2_, idx_block );
-//    Debugging_Utils::print_sizes( idx_block , "" ); cout << " block    "; cout.flush();
-//    auto block_norm = v2_sub_block_nosymm->norm();
-//    auto symm_block_norm = v2_sub_block_nosymm->norm();
-//    cout << "block_norm = " ; cout.flush(); cout << block_norm << " =?= symm_block_norm = "; cout.flush(); cout << symm_block_norm << endl;
-//    if ( block_norm != symm_block_norm )
-//      throw logic_error( "Block symmetry is bloken!!");
-//  }
-  
-  cout << "v2_->norm() = " << v2_->norm() << endl;
+
   } 
   ////// TEST
   h1_->zero();
@@ -444,12 +343,6 @@ cout << "CASPT2::CASPT2::solve" << endl;
   cout << endl <<  "======================  BEGIN PROPTOOL TEST =========================" << endl;
   shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>( proptool_input_, info_->geom(), info_->ref() );
   cout << "S::cpt2::X1" << endl;
-  proptool->tamps_smith_ = t2all_[0]->at(0)->copy();
-  cout << "S::cpt2::X2" << endl;
-  cout << "S::cpt2::X3" << endl;
-  proptool->set_maxtile( info_->maxtile() ); 
-  cout << "t2all_[0]->at(0)->norm() = " <<  t2all_[0]->at(0)->norm() << endl;
-  cout << "SMITH v2_->norm() = " <<  v2_->norm() << endl << endl << endl;
 
   { 
     auto range_conversion_map = make_shared<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>>();
@@ -465,7 +358,6 @@ cout << "CASPT2::CASPT2::solve" << endl;
     auto not_active_rng  = make_shared<SMITH::IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
     auto not_virtual_rng = make_shared<SMITH::IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
   
-  
     range_conversion_map->emplace("c", closed_rng); 
     range_conversion_map->emplace("a", active_rng);
     range_conversion_map->emplace("v", virtual_rng);
@@ -473,25 +365,18 @@ cout << "CASPT2::CASPT2::solve" << endl;
     range_conversion_map->emplace("notcor",not_closed_rng);
     range_conversion_map->emplace("notact",not_active_rng);
     range_conversion_map->emplace("notvir", not_virtual_rng); 
-    cout << "S::cpt2::X4" << endl;
-    proptool->set_range_conversion_map( range_conversion_map ); 
-    cout << "S::cpt2::X5" << endl;
-    proptool->construct_task_lists();
-    cout << "S::cpt2::X6" << endl;
+    shared_ptr<SMITH::Tensor_<double>> tamps_full = build_full_T( t2all_[0]->at(0) ); 
+    proptool->tamps_smith_ = tamps_full->copy();
+    proptool->set_maxtile( info_->maxtile() ); 
 
-    vector<SMITH::IndexRange> eeoo = { *not_closed_rng, *not_closed_rng,   *not_virtual_rng, *not_virtual_rng }; 
-    range_block_map_.emplace( "eeoo" , eeoo ); 
-    vector<SMITH::IndexRange> eoeo = { *not_closed_rng, *not_virtual_rng,  *not_closed_rng,  *not_virtual_rng }; 
-    range_block_map_.emplace( "eoeo" , eoeo ); 
-    vector<SMITH::IndexRange> oeoe = { *not_virtual_rng, *not_closed_rng,  *not_virtual_rng, *not_closed_rng  }; 
-    range_block_map_.emplace( "oeoe" , oeoe ); 
-    vector<SMITH::IndexRange> ooee = { *not_virtual_rng, *not_virtual_rng, *not_closed_rng,  *not_closed_rng  }; 
-    range_block_map_.emplace( "ooee" , ooee ); 
+    proptool->set_range_conversion_map( range_conversion_map ); 
+    proptool->construct_task_lists();
+
+    cout << "t2all_[0]->at(0)->norm() = " <<  t2all_[0]->at(0)->norm() << endl;
+    cout << "tamps_full->norm() = " <<  tamps_full->norm() << endl;
+    cout << "SMITH v2_->norm() = " <<  v2_->norm() << endl << endl << endl;
+
   }
-  cout << endl << endl <<endl;
-  cout << "S::cpt2::X7" << endl;
-//  Tensor_Arithmetic_Utils::print_tensor_with_indexes( proptool->moint_computer_->v2(), "v2_ for proptool" ,false );
-  cout << "S::cpt2::X8" << endl;
   cout << endl << endl <<endl;
   v2_ =  proptool->v2_smith_->copy();
   cout << "PROPTOOL v2_->norm() = " <<  v2_->norm() << endl << endl << endl;
@@ -930,7 +815,7 @@ cout << " CASPT2::CASPT2::build_full_T( shared_ptr<SMITH::Tensor_<double>>) " <<
    shared_ptr<SMITH::Tensor_<double>> t_amps_full = make_shared<SMITH::Tensor_<double>>(range_block_map_.at( "oeoe") );
    t_amps_full->allocate();
     
-   vector<string> t_blocks = { "cvcv", "cvav", "avcv", "avav", "caca", "caaa", "aaca", "cacv", "caav", "aacv", "aaav", "cvca", "cvaa", "avca", "aaav" }; 
+   vector<string> t_blocks = { "cvcv", "cvav", "avcv", "avav", "caca", "caaa", "aaca", "cacv", "caav", "aacv", "aaav", "cvca", "cvaa", "avca", "avaa" }; 
 
    vector<vector<int>> symm_orders = {{0,3,2,1},{2,1,0,3},{2,3,0,1}};  
    vector<double> symm_facs = { -1.0, -1,0, 1.0 };  
@@ -941,6 +826,7 @@ cout << " CASPT2::CASPT2::build_full_T( shared_ptr<SMITH::Tensor_<double>>) " <<
    }; 
 
    for ( auto block_name : t_blocks ) {
+     cout<< "block_name = " << block_name << endl;
      vector<SMITH::IndexRange> t_block_ranges = range_block_map_.at(block_name);
      vector<SMITH::Index> t_block_index = { t_block_ranges[0].range(0), t_block_ranges[1].range(0), t_block_ranges[2].range(0), t_block_ranges[3].range(0) };
 
@@ -959,7 +845,7 @@ cout << " CASPT2::CASPT2::build_full_T( shared_ptr<SMITH::Tensor_<double>>) " <<
 
          if ( smith_t->exists(reord_t_block_index) ) { 
            cout << "Found!!" << endl;
-           shared_ptr<SMITH::Tensor_<double>> tmp = Tensor_Arithmetic_Utils::get_sub_tensor( smith_t, t_block_ranges );
+           shared_ptr<SMITH::Tensor_<double>> tmp = Tensor_Arithmetic_Utils::get_sub_tensor( smith_t, reord_t_block_ranges );
            auto t_part = tensor_calc->reorder_block_Tensor( tmp, symm_orders[ii] );
            t_part->scale(symm_facs[ii]);
            tensor_calc->put_sub_tensor( t_part, t_amps_full );

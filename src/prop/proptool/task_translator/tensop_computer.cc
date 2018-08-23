@@ -259,7 +259,7 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
   //vector<int> s_ordering = { 3, 2, 1, 0};
   //vector<int> s_ordering = { 3, 0, 2, 1 };
   //vector<int> s_ordering = { 0, 2, 1, 3 };
-  vector<int> s_ordering = { 3, 1, 2, 0 };
+  vector<int> s_ordering = { 1, 3, 0, 2 };
   
   for ( auto& block : *required_blocks ) { 
  
