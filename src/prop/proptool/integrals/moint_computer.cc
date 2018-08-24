@@ -195,7 +195,8 @@ WickUtils::print_vector( ordering, "s_test_tensor_ordering"); cout << endl;
   bool use_smith = true;
   if ( use_smith ) { 
     Debugging_Utils::print_sizes( t_from_smith_->indexrange(), " t_from_smith" ); cout << endl;
-    return Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( t_from_smith_, ordering );
+    vector<int> r3120 = { 3, 1, 2, 0 };
+    return Tensor_Arithmetic::Tensor_Arithmetic<DataType>::reorder_block_Tensor( t_from_smith_, r3120 );
 
   } else { 
   
@@ -203,7 +204,7 @@ WickUtils::print_vector( ordering, "s_test_tensor_ordering"); cout << endl;
   auto rng = [&rcm] ( string range_name ) { return *(rcm->at(range_name)); };
 
   // Smith order : {3, 1, 2, 0}  
-  vector<SMITH::IndexRange> full_block = { rng("notvirt"), rng("notvirt"), rng("not_core"), rng("not_core") };
+  vector<SMITH::IndexRange> full_block = { rng("notcore"), rng("notcore"), rng("notvirt"), rng("notvirt") };
   shared_ptr<SMITH::Tensor_<DataType>> s_test_tensor =  make_shared<SMITH::Tensor_<DataType>>( full_block ); 
   s_test_tensor->allocate();
   s_test_tensor->zero();

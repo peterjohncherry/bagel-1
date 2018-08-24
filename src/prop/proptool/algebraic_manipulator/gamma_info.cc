@@ -5,8 +5,7 @@
 
 using namespace std;
 using namespace WickUtils;
-#define  __DEBUG_PROPTOOL_GAMMA_INFO
-
+//#define  __DEBUG_PROPTOOL_GAMMA_INFO
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //TODO extend for rel case (Bra and Ket can vary,  prev gammas and
 // prev_Bra_info should be constructed from idxs_pos, full_idxs_ranges, full_aops and Ket.

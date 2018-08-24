@@ -307,7 +307,8 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
     bool   hconj = conv_to_bool(op_def_inp->get<int>( "HermConj", false ));
     string op_name = op_def_inp->get<string>( "name" );
     double factor = op_def_inp->get<double>( "factor", 1.0 );
-      
+    cout << "factor = " << factor << endl;     
+ 
     vector<shared_ptr<Transformation>> symmfuncs(0);
     vector<shared_ptr<Constraint>> constraints(0);
     
@@ -337,7 +338,7 @@ cout << "PropTool::PropTool::get_equations_init" << endl;
       get_equation_init_Value( equation_inp ) ;
     
     } else { 
-      cout << "this equation type not implemented" << endl; 
+      throw logic_error("This equation type not implemented! Aborting!");
 
     }
   }

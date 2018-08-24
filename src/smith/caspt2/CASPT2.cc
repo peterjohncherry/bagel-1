@@ -300,6 +300,7 @@ cout << "CASPT2::CASPT2::solve" << endl;
   brng_free.merge(*ractive_);
   brng_free.merge(*rvirt_);
  
+#ifdef __TEST_PROPTOOL
   SMITH::IndexRange brng_occ = *rclosed_;
   brng_occ.merge(*ractive_);
 
@@ -315,22 +316,20 @@ cout << "CASPT2::CASPT2::solve" << endl;
   for ( int r3 = 0 ; r3!=6; r3++) { 
     string rname = "";
     rname += range_names[r0];rname += range_names[r1]; rname += range_names[r2]; rname += range_names[r3];
-    cout << "rname = "<< rname ; cout.flush(); 
     vector<SMITH::IndexRange> rblock = { branges[r0], branges[r1], branges[r2], branges[r3] }; 
-    Debugging_Utils::print_sizes(rblock, "range_block"); cout << endl; 
     range_block_map_.emplace( rname, rblock );
   }}}}
   
   shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
   shared_ptr<SMITH::Tensor_<double>>  v2_buff = v2_->copy();
-  tensor_calc->zero_all_but_block( v2_, range_block_map_.at("cvcv") ); 
+//  tensor_calc->zero_all_but_block( v2_, range_block_map_.at("cvcv") ); 
   Debugging_Utils::print_sizes( v2_->indexrange() , "v2_sizes" ); cout << endl;
   cout << "v2_buff->norm() = " << v2_buff->norm() << endl;  cout << "v2->norm()      = " << v2_->norm() << endl; 
 
   
   shared_ptr<SMITH::Tensor_<double>> t2_buff = t2all_[0]->at(0)->copy();
   Debugging_Utils::print_sizes( t2_buff->indexrange() , "tamps sizes" ); cout << endl;
-  tensor_calc->zero_all_but_block( t2all_[0]->at(0), range_block_map_.at("cvcv") ); 
+//  tensor_calc->zero_all_but_block( t2all_[0]->at(0), range_block_map_.at("cvcv") ); 
   cout << "t2_buff->norm() = " << t2_buff->norm() << endl; 
   cout << "t2_    ->norm() = " << t2all_[0]->at(0)->norm() << endl; 
 
@@ -339,7 +338,6 @@ cout << "CASPT2::CASPT2::solve" << endl;
   h1_->zero();
   f1_->zero();
 
-#ifdef __TEST_PROPTOOL
   cout << endl <<  "======================  BEGIN PROPTOOL TEST =========================" << endl;
   shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>( proptool_input_, info_->geom(), info_->ref() );
   cout << "S::cpt2::X1" << endl;
@@ -383,7 +381,6 @@ cout << "CASPT2::CASPT2::solve" << endl;
   cout << "PROPTOOL v2_->norm() = " <<  v2_->norm() << endl << endl << endl;
   proptool->execute_compute_lists();
   cout << "S::cpt2::X9" << endl;
-#endif
 
   {// TEST source
     {
@@ -409,6 +406,7 @@ cout << "CASPT2::CASPT2::solve" << endl;
     } 
   } //END TEST
   throw logic_error( "die here for testing purposes!" ); 
+  #endif
 }
 
 
@@ -849,7 +847,9 @@ cout << " CASPT2::CASPT2::build_full_T( shared_ptr<SMITH::Tensor_<double>>) " <<
            shared_ptr<SMITH::Tensor_<double>> tmp = Tensor_Arithmetic_Utils::get_sub_tensor( smith_t, reord_t_block_ranges );
            auto t_part = tensor_calc->reorder_block_Tensor( tmp, symm_orders[ii] );
            t_part->scale(symm_facs[ii]);
+           cout << "t_part->norm() = " << t_part->norm() << endl;
            tensor_calc->put_sub_tensor( t_part, t_amps_full );
+           
            break;
          }
 
@@ -870,6 +870,60 @@ cout << " CASPT2::CASPT2::build_full_H( shared_ptr<SMITH::Tensor_<double>>) " <<
 /////////////////////////////////////////////////////////////////////////////
 
    shared_ptr<SMITH::Tensor_<double>> t_amps_full = make_shared<SMITH::Tensor_<double>>(); 
+   auto tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>(); 
+
+   shared_ptr<SMITH::Tensor_<double>> t_amps_full = make_shared<SMITH::Tensor_<double>>(range_block_map_.at( "oeoe") );
+   t_amps_full->allocate();
+    
+   vector<string> t_blocks = { "cvcv", "cvav", "avcv", "avav", "caca", "caaa", "aaca", "cacv", "caav", "aacv", "aaav", "cvca", "cvaa", "avca", "avaa" }; 
+
+   vector<vector<int>> symm_orders = {{0,3,2,1},{2,1,0,3},{2,3,0,1}};  
+   vector<double> symm_facs = { -1.0, -1,0, 1.0 };  
+ 
+   auto reorder_vec = []( vector<SMITH::IndexRange> tbr, vector<int> ro ) { 
+     vector<SMITH::IndexRange> nbr = { tbr[ro[0]] , tbr[ro[1]] , tbr[ro[2]], tbr[ro[3]] }; 
+     return nbr; 
+   }; 
+
+   for ( auto block_name : t_blocks ) {
+     cout<< "block_name = " << block_name << endl;
+     vector<SMITH::IndexRange> t_block_ranges = range_block_map_.at(block_name);
+     vector<SMITH::Index> t_block_index = { t_block_ranges[0].range(0), t_block_ranges[1].range(0), t_block_ranges[2].range(0), t_block_ranges[3].range(0) };
+
+     if (smith_t->exists(t_block_index)) {
+       shared_ptr<SMITH::Tensor_<double>> t_part = Tensor_Arithmetic_Utils::get_sub_tensor( smith_t, t_block_ranges );
+       tensor_calc->put_sub_tensor( t_part, t_amps_full );
+
+     } else {
+       cout << " block [ "; cout.flush(); for( auto idx : t_block_ranges) { cout << idx.size() << " "; cout.flush(); } cout << "] not in smith_t" << endl;
+
+       for ( int ii = 0; ii != 3; ++ii ) {
+
+         vector<SMITH::IndexRange> reord_t_block_ranges = reorder_vec( t_block_ranges, symm_orders[ii] ); 
+         cout << "trying block [ "; cout.flush(); for( auto idx : t_block_ranges) { cout << idx.size() << " "; cout.flush(); } cout << "] not in smith_t" << endl;
+         vector<SMITH::Index> reord_t_block_index = { reord_t_block_ranges[0].range(0), reord_t_block_ranges[1].range(0), reord_t_block_ranges[2].range(0), reord_t_block_ranges[3].range(0) };
+
+         if ( smith_t->exists(reord_t_block_index) ) { 
+           cout << "Found!!" << endl;
+           shared_ptr<SMITH::Tensor_<double>> tmp = Tensor_Arithmetic_Utils::get_sub_tensor( smith_t, reord_t_block_ranges );
+           auto t_part = tensor_calc->reorder_block_Tensor( tmp, symm_orders[ii] );
+           t_part->scale(symm_facs[ii]);
+           cout << "t_part->norm() = " << t_part->norm() << endl;
+           tensor_calc->put_sub_tensor( t_part, t_amps_full );
+           
+           break;
+         }
+
+         cout << "not found!!" << endl;
+         if ( ii == 2 ) { 
+           cout << "could not find symmetry block" << endl;
+           throw logic_error( "could not build full t" ) ;
+         }
+       }
+     }
+   }
+
+
    return t_amps_full;     
 }
 

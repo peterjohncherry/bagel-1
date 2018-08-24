@@ -109,7 +109,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
-   string ordering = "1100_ffff"; // TEST!! 
+   string ordering = "1100_ccvv"; // TEST!! 
    if ( ordering == "1100_vvcc" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> { virt_a, virt_a, core_a, core_a  } );

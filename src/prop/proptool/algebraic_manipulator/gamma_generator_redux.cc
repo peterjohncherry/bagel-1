@@ -8,7 +8,7 @@ using namespace std;
 using namespace WickUtils;
 
 
-//#define __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
+// #define __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info> block_info, shared_ptr<vector<bool>> trans_aops ) {
@@ -26,10 +26,12 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   std_rngs_ = *(block_info_->unique_block_->orig_rngs_);
   standard_order_ = *(block_info_->idxs_trans());
 
+
   {
   vector<int> ids_pos_raw( std_rngs_.size() );
   iota( ids_pos_raw.begin(), ids_pos_raw.end(), 0 );
-  gamma_vec_.push_back( make_unique<GammaIntermediate_Redux_Raw<DataType>>( ids_pos_raw, vector<pair<int,int>>(0), block_info_->factors() ) );
+  gamma_vec_ = vector<unique_ptr<GammaIntermediate_Base_Raw>>();  
+  gamma_vec_.push_back(make_unique<GammaIntermediate_Redux_Raw<DataType>>( ids_pos_raw, vector<pair<int,int>>(0), block_info_->factors() ) );
   }
 
   //TODO : so widely used when checking just keep this for now; not technically needed though.
@@ -64,8 +66,11 @@ cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
   if ( G_to_A_map->find( Gname_alt ) == G_to_A_map->end() )
     G_to_A_map->emplace( Gname_alt, make_shared<map<string, shared_ptr<AContribInfo_Base>>>() );
 
-  Gamma_map_->emplace( Gname_alt, make_shared<GammaInfo<DataType>>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
-                                                                    *block_aops_, chrvec_to_strvec(*block_aops_rngs_), gint->ids_pos_, Gamma_map_ ) );
+  // TODO : Don't like recursive nature of this argument list (Gamma_map_), check if OK
+  if ( Gamma_map_->find(Gname_alt) ==  Gamma_map_->end() ) { 
+     Gamma_map_->emplace( Gname_alt, make_shared<GammaInfo<DataType>>( target_states_->civec_info(bra_name), target_states_->civec_info(ket_name),
+                                                                       *block_aops_, chrvec_to_strvec(*block_aops_rngs_), gint->ids_pos_, Gamma_map_ ) );
+  }
 
   vector<pair<int,int>> idxs_deltas_pos = gint->deltas_pos_; 
   transform_to_canonical_ids_pos( idxs_deltas_pos ); 

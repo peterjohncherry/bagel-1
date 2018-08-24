@@ -49,10 +49,6 @@ if (final_reordering)  { cout << " : final_reordering" << endl; } else { cout <<
     alternating_order();
   }
 
-  cout << " ==================  UNIQUE_PTR VERSION WITH CONSTANT CHECKING =================== " << endl;
-  cout << " ====  gammas left after transformation to " << reordering_name << " ===== " << endl;
-  for ( const auto& gint : gamma_vec_ ) { print_gamma_intermediate( gint , "" ); }
-
   bool does_it_contribute = ( gamma_vec_.size() > 0 );
   if ( final_reordering && does_it_contribute ) { 
     int kk = 0;
@@ -61,6 +57,12 @@ if (final_reordering)  { cout << " : final_reordering" << endl; } else { cout <<
       ++kk;
     } 
   }
+
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_UNQ
+  cout << " ==================  UNIQUE_PTR VERSION WITH CONSTANT CHECKING =================== " << endl;
+  cout << " ====  gammas left after transformation to " << reordering_name << " ===== " << endl;
+  for ( const auto& gint : gamma_vec_ ) { print_gamma_intermediate( gint , "" ); }
+#endif
   return does_it_contribute;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +251,7 @@ cout << "GammaGenerator_Base::normal_order" << endl;
     }
     if ( gamma_vec_[kk]->survives_ ){
       ++number_of_surviving_gammas;
-       print_gamma_intermediate (gamma_vec_[kk] , "SURVIVING GAMMA !! NORMAL ORDER !!" );
+       //print_gamma_intermediate (gamma_vec_[kk] , "SURVIVING GAMMA !! NORMAL ORDER !!" );
     }
     ++kk;
   }
@@ -311,11 +313,11 @@ cout << "GammaGenerator_Base::anti_normal_order" << endl;
             }
           }
         }
-        if (!gamma_vec_[kk]->survives_ ) { print_gamma_intermediate( gamma_vec_[kk], "Gamma dies in anti-normal"); break;}
+        if (!gamma_vec_[kk]->survives_ ) { /* print_gamma_intermediate( gamma_vec_[kk], "Gamma dies in anti-normal"); */ break;}
       }
     } 
     if ( gamma_vec_[kk]->survives_ ){
-       print_gamma_intermediate (gamma_vec_[kk] , "SURVIVING GAMMA !! ANTI-NORMAL ORDER !!" );
+//       print_gamma_intermediate (gamma_vec_[kk] , "SURVIVING GAMMA !! ANTI-NORMAL ORDER !!" );
       ++number_of_surviving_gammas;
     }
     ++kk; 
@@ -369,7 +371,7 @@ cout << "GammaGenerator_Base::alternating_order" << endl;
     }
     if (gamma_vec_[kk]->survives_ ){
       ++number_of_surviving_gammas;
-       print_gamma_intermediate (gamma_vec_[kk] , "SURVIVING GAMMA !! ALT ORDER !!" );
+//       print_gamma_intermediate (gamma_vec_[kk] , "SURVIVING GAMMA !! ALT ORDER !!" );
     }
     ++kk;
   }
@@ -410,40 +412,30 @@ print_gamma_intermediate(gamma_vec_[kk] , "pre_swap gamma" );
   ids_pos_kk[ii] = j_pos;
   ids_pos_kk[jj] = i_pos;
 
-  WickUtils::print_vector( ids_pos_kk ,                    "ids_pos_kk                  ") ;cout << endl;
-  WickUtils::print_vector( gamma_vec_[kk]->ids_pos_ , "gamma_vec_[kk]->id_pos_ ") ;cout << endl;
-
   if ( ( (*block_aops_rngs_)[j_pos] == (*block_aops_rngs_)[i_pos]) && (*block_aops_)[i_pos] != (*block_aops_)[ j_pos ] ){
 
     vector<pair<int, int>>& deltas_pos_kk  =  gamma_vec_[kk]->deltas_pos_;
-
     vector<pair<int,int>> new_deltas_tmp( deltas_pos_kk.size()+1);
     copy ( deltas_pos_kk.begin(), deltas_pos_kk.end(), new_deltas_tmp.begin());
     new_deltas_tmp.back() = (*block_aops_)[ j_pos ]  ?  make_pair( j_pos, i_pos ): make_pair( i_pos, j_pos);
 
-    vector<int> new_ids_pos( ids_pos_kk.size()-2 );
+    vector<int> new_ids_pos(ids_pos_kk.size()-2);
     {
-    vector<int>::iterator nip_it = new_ids_pos.begin();
-    vector<int>::iterator ipk_it = ids_pos_kk.begin();
-    for( int qq = 0 ; qq != ids_pos_kk.size(); ++qq, ++ipk_it ) {
-      if ( (qq != ii) && (qq != jj)){
-       *nip_it = *ipk_it;
-        ++nip_it;
-      }
-    }
-    }
- 
+    vector<int>::iterator gip_it =  ( ii < jj ) ? ids_pos_kk.begin()+ii : ids_pos_kk.begin()+jj ; 
+    copy( gip_it+2 , ids_pos_kk.end(), copy( ids_pos_kk.begin(), gip_it, new_ids_pos.begin() ));
+    } 
+
     auto new_fac =  make_pair( gamma_vec_[kk]->factors_.first * 1.0,  0.0 );
     gamma_vec_.push_back(make_unique<GammaIntermediate_Base_Raw>( new_ids_pos, new_deltas_tmp, new_fac ));
+#ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP_UNQ
+    print_gamma_intermediate( gamma_vec_.back() , "new gamma" ); cout << endl;
+#endif
 
-  }// else { 
+  } 
   gamma_vec_[kk]->factors_ =  make_pair( gamma_vec_[kk]->factors_.first * -1.0,  0.0 );
 
 #ifdef __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_SWAP_UNQ
-//  if ( ( (*block_aops_rngs_)[j_pos] == (*block_aops_rngs_)[i_pos]) && (*block_aops_)[i_pos] != (*block_aops_)[ j_pos ] ){
-//    print_gamma_intermediate( gamma_vec_.back(), "new gamma" );
-    print_gamma_intermediate( gamma_vec_[kk] , "post_swap gamma" );
-//  }
+  print_gamma_intermediate( gamma_vec_[kk] , "post_swap gamma" );
 #endif
   return;
 }
@@ -562,6 +554,7 @@ cout << "GammaGenerator_Base::print_gamma_intermediate (unique_ptr_version)" << 
   WickUtils::print_vector(gint->ids_pos_,                                  "gint_ids_pos   "); cout << endl;
   WickUtils::print_pair_vector( gint->deltas_pos_,                         "gint_deltas_pos"); cout << endl;
   Debugging_Utils::print_vector_at_pos( block_idxs_,  gint->ids_pos_,      "gint_idxs      "); cout << endl;
+
   cout << "gint_deltas_idxs  = [ ";  cout.flush();
   for(const auto& dta : gint->deltas_pos_){
     cout << "("<< block_idxs_[dta.first]  << ":" << (*block_aops_rngs_)[dta.first ] << ","; cout.flush();

@@ -291,22 +291,6 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
         } else if ( full_tens_name[0] == 'S') {  
           cout << "TOC::get_tensor_data_blocks:: else if ( full_tens_name[0] == 'S') " << endl; 
           build_s_test_tensor(full_tens_name, s_ordering );
-          cout << endl; WickUtils::print_vector( *id_ranges, "id_ranges"); cout << endl; 
-
-          { //TEST 
-         
-          vector<IndexRange> s_idxrngs = tensop_data_map_->at(full_tens_name)->indexrange();
-
-          Debugging_Utils::print_sizes( s_idxrngs, "S indexrange()" ); cout << endl;
-          for ( int qq =0; qq != s_idxrngs.size() ;++qq ) {
-            cout << "S[" << qq << "] range_sizes = [" ; cout.flush();
-            for ( const Index& idx : s_idxrngs[qq].range() ) {
-               cout << idx.size() << " "; cout.flush(); 
-            } 
-            cout << "] " << endl;
-          }
-          cout << "pre get sub  block_name = "   << block_name << endl;
-          } //ENDTEST
           
           get_sub_tensor( full_tens_name, block_name, *id_ranges ); 
           cout << "post get sub block_name = "   << block_name << endl;
@@ -599,14 +583,11 @@ TensOp_Computer::TensOp_Computer<DataType>::find_or_get_CTP_data(string CTP_name
   auto data_loc =  tensop_data_map_->find(CTP_name); 
   if ( data_loc == tensop_data_map_->end() ){
     tensor_block = get_block_Tensor(CTP_name);   
-    tensop_data_map_->emplace(CTP_name, tensor_block);   
+    tensop_data_map_->emplace(CTP_name, get_block_Tensor(CTP_name));   
   } else {
-    tensor_block = data_loc->second;
+    return data_loc->second;
   }
-  
-  return tensor_block;
 }
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
 vector<IndexRange>
@@ -673,35 +654,23 @@ WickUtils::print_vector( range_names, "range_names"); cout << endl;
     vector<DataType> trans_factors= { 1.0, 1.0, 1.0, 1.0 };
      
     if ( tdm_loc == tensop_data_map_->end() ){
-      cout << "1a block_name = " << block_name << endl;
       auto tmp  = Tens_Utils::get_sub_tensor_symm( full_tens, block, transforms, trans_factors ); 
-      cout << "1b block_name = " << block_name << endl;
       tensop_data_map_->emplace( block_name, tmp  );
-      cout << "1c block_name = " << block_name << endl;
     } else { 
-      cout << "2a block_name = " << block_name << endl;
       auto tmp  = Tens_Utils::get_sub_tensor_symm( full_tens, block, transforms, trans_factors ); 
-      cout << "2b block_name = " << block_name << endl;
       tdm_loc->second =  tmp->copy();
-      cout << "2c block_name = " << block_name << endl;
     }
   } else { 
     auto tdm_loc = tensop_data_map_->find( block_name );
     if ( tdm_loc == tensop_data_map_->end() ){
-      cout << "3a block_name = " << block_name << endl;
       auto tmp = Tens_Utils::get_sub_tensor( full_tens, block );
-      cout << "3b block_name = " << block_name << endl;
       tensop_data_map_->emplace( block_name, tmp );
-      cout << "3c block_name = " << block_name << endl;
     } else { 
-      cout << "4a block_name = " << block_name << endl;
       auto tmp = Tens_Utils::get_sub_tensor( full_tens, block );
-      cout << "4b block_name = " << block_name << endl;
       tdm_loc->second =  tmp->copy();
-      cout << "4c block_name = " << block_name << endl;
     }
   }
-  cout << "XXXXXXXXXXXXX : "; cout.flush();cout << block_name << "->norm() = " << tensop_data_map_->at(block_name)->norm() << endl;   
+  cout << block_name << "->norm() = " << tensop_data_map_->at(block_name)->norm() << endl;   
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
