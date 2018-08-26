@@ -145,7 +145,8 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
     
     if ( !got_fock_coeffs_ )
       calculate_fock( {rng("free"), rng("free")}, true, true);
-    
+   
+    //TODO excessive, for testing 
     vector<SMITH::IndexRange>  blocks = { rng("free"), rng("free"), rng("free"), rng("free") };
     MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks );
     auto v2_tens = v2.tensor();
@@ -153,12 +154,15 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
     v2_tens->zero();
     
     {
-      vector<SMITH::IndexRange> keep_ranges_norder = { rng("v"), rng("v"), rng("c"), rng("c") };
+      vector<SMITH::IndexRange> keep_ranges_norder = { rng("free"), rng("free"), rng("free"), rng("free") };
       vector<SMITH::IndexRange> keep_ranges_sorder = { keep_ranges_norder[3], keep_ranges_norder[1], keep_ranges_norder[2], keep_ranges_norder[0] };
       shared_ptr<SMITH::Tensor_<DataType>> v2_keep =  v2.get_v2_part( keep_ranges_sorder ); 
       Tensor_Arithmetic::Tensor_Arithmetic<DataType>::put_sub_tensor( v2_keep, v2_tens ); 
     }
     
+    //TEST 
+    v2_smith_ = v2_tens->copy(); 
+    //END TEST
     return v2_tens;
 
   // TODO check this reordering!!

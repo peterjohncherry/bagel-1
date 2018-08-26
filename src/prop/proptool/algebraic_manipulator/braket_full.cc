@@ -79,8 +79,10 @@ cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
     }
   }
   ctp_map->insert( Total_Op_->CTP_map()->begin(), Total_Op_->CTP_map()->end() );
-  print_gamma_Atensor_contractions( G_to_A_map, false );
 
+#ifdef __DEBUG_PROPTOOL_BRAKET_FULL_VERBOSE
+  print_gamma_Atensor_contractions( G_to_A_map, false );
+#endif
   return;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

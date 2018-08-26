@@ -382,6 +382,10 @@ cout << "CASPT2::CASPT2::solve" << endl;
   proptool->execute_compute_lists();
   cout << "S::cpt2::X9" << endl;
 
+  v2_ = proptool->moint_computer_->v2_smith_->copy();
+  cout << " xxxxxxx FROM moint_computer xxxxxxxxxx" << endl;
+  cout << "v2_->norm() = " << v2_->norm() << endl <<endl; 
+
   {// TEST source
     {
     
@@ -393,11 +397,8 @@ cout << "CASPT2::CASPT2::solve" << endl;
     while(!source_task_list->done())
       source_task_list->next_compute();
 
-    cout << endl << endl <<endl;
-//    Tensor_Arithmetic_Utils::print_tensor_with_indexes( v2_, "v2_ for smith", false );
-    cout << endl << endl <<endl;
-    cout << "v2_->norm() = " << v2_->norm() << endl;
-    cout << "s ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
+    cout << "v2 ranges = [ " ; cout.flush(); for (auto elem : v2_->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
+    cout << "s  ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
     cout << "----------------------------------TEST SMITH-------------------------------" << endl;
     cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
     cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
@@ -869,11 +870,10 @@ shared_ptr<SMITH::Tensor_<double>> CASPT2::CASPT2::build_full_H( shared_ptr<SMIT
 cout << " CASPT2::CASPT2::build_full_H( shared_ptr<SMITH::Tensor_<double>>) " << endl;
 /////////////////////////////////////////////////////////////////////////////
 
-   shared_ptr<SMITH::Tensor_<double>> t_amps_full = make_shared<SMITH::Tensor_<double>>(); 
    auto tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>(); 
 
-   shared_ptr<SMITH::Tensor_<double>> t_amps_full = make_shared<SMITH::Tensor_<double>>(range_block_map_.at( "oeoe") );
-   t_amps_full->allocate();
+   shared_ptr<SMITH::Tensor_<double>> h_full = make_shared<SMITH::Tensor_<double>>(range_block_map_.at( "ffff") );
+   h_full->allocate();
     
    vector<string> t_blocks = { "cvcv", "cvav", "avcv", "avav", "caca", "caaa", "aaca", "cacv", "caav", "aacv", "aaav", "cvca", "cvaa", "avca", "avaa" }; 
 
@@ -890,26 +890,26 @@ cout << " CASPT2::CASPT2::build_full_H( shared_ptr<SMITH::Tensor_<double>>) " <<
      vector<SMITH::IndexRange> t_block_ranges = range_block_map_.at(block_name);
      vector<SMITH::Index> t_block_index = { t_block_ranges[0].range(0), t_block_ranges[1].range(0), t_block_ranges[2].range(0), t_block_ranges[3].range(0) };
 
-     if (smith_t->exists(t_block_index)) {
-       shared_ptr<SMITH::Tensor_<double>> t_part = Tensor_Arithmetic_Utils::get_sub_tensor( smith_t, t_block_ranges );
-       tensor_calc->put_sub_tensor( t_part, t_amps_full );
+     if (smith_h->exists(t_block_index)) {
+       shared_ptr<SMITH::Tensor_<double>> t_part = Tensor_Arithmetic_Utils::get_sub_tensor( smith_h, t_block_ranges );
+       tensor_calc->put_sub_tensor( t_part, h_full );
 
      } else {
-       cout << " block [ "; cout.flush(); for( auto idx : t_block_ranges) { cout << idx.size() << " "; cout.flush(); } cout << "] not in smith_t" << endl;
+       cout << " block [ "; cout.flush(); for( auto idx : t_block_ranges) { cout << idx.size() << " "; cout.flush(); } cout << "] not in smith_h" << endl;
 
        for ( int ii = 0; ii != 3; ++ii ) {
 
          vector<SMITH::IndexRange> reord_t_block_ranges = reorder_vec( t_block_ranges, symm_orders[ii] ); 
-         cout << "trying block [ "; cout.flush(); for( auto idx : t_block_ranges) { cout << idx.size() << " "; cout.flush(); } cout << "] not in smith_t" << endl;
+         cout << "trying block [ "; cout.flush(); for( auto idx : t_block_ranges) { cout << idx.size() << " "; cout.flush(); } cout << "] not in smith_h" << endl;
          vector<SMITH::Index> reord_t_block_index = { reord_t_block_ranges[0].range(0), reord_t_block_ranges[1].range(0), reord_t_block_ranges[2].range(0), reord_t_block_ranges[3].range(0) };
 
-         if ( smith_t->exists(reord_t_block_index) ) { 
+         if ( smith_h->exists(reord_t_block_index) ) { 
            cout << "Found!!" << endl;
-           shared_ptr<SMITH::Tensor_<double>> tmp = Tensor_Arithmetic_Utils::get_sub_tensor( smith_t, reord_t_block_ranges );
+           shared_ptr<SMITH::Tensor_<double>> tmp = Tensor_Arithmetic_Utils::get_sub_tensor( smith_h, reord_t_block_ranges );
            auto t_part = tensor_calc->reorder_block_Tensor( tmp, symm_orders[ii] );
            t_part->scale(symm_facs[ii]);
            cout << "t_part->norm() = " << t_part->norm() << endl;
-           tensor_calc->put_sub_tensor( t_part, t_amps_full );
+           tensor_calc->put_sub_tensor( t_part, h_full );
            
            break;
          }
@@ -924,7 +924,7 @@ cout << " CASPT2::CASPT2::build_full_H( shared_ptr<SMITH::Tensor_<double>>) " <<
    }
 
 
-   return t_amps_full;     
+   return h_full;     
 }
 
 #endif

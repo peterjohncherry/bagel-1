@@ -369,10 +369,9 @@ cout << "GammaGenerator_Base::alternating_order" << endl;
         }
       }
     }
-    if (gamma_vec_[kk]->survives_ ){
+    if (gamma_vec_[kk]->survives_ )
       ++number_of_surviving_gammas;
-//       print_gamma_intermediate (gamma_vec_[kk] , "SURVIVING GAMMA !! ALT ORDER !!" );
-    }
+    
     ++kk;
   }
   if ( number_of_surviving_gammas > 0 ){

@@ -109,6 +109,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
 
   if ( op_name == "H" ) {  /* ---- H Tensor (2 electron Hamiltonian ----  */
 
+   cout << "Initializing H tensor using PROPTOOL defaults" << endl;
    string ordering = "1100_ccvv"; // TEST!! 
    if ( ordering == "1100_vvcc" ) {
      aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
@@ -136,9 +137,10 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
      idx_ranges =  make_shared<vector<vector<string>>>( vector<vector<string>> {  virt_a, act_a, virt_a, core_a } );
    }
    idxs = make_shared<vector<string>>(vector<string> { "H0", "H1", "H2", "H3" } );
-   factor = make_pair( 0.5, 0.0);
+   factor = make_pair( -0.5, 0.0);
 
   } else if ( op_name == "S" ) {  /* ---- S Tensor ----  */
+    cout << "Initializing S tensor using PROPTOOL DEFAULTs" << endl;
     string ordering = "1100_xxoo"; // TEST!! 
     if ( ordering == "0123" ) {
       aops = make_shared<vector<bool>>  (vector<bool>  { true, true, false, false } );
