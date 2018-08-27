@@ -317,7 +317,6 @@ cout << "GammaGenerator_Base::anti_normal_order" << endl;
       }
     } 
     if ( gamma_vec_[kk]->survives_ ){
-//       print_gamma_intermediate (gamma_vec_[kk] , "SURVIVING GAMMA !! ANTI-NORMAL ORDER !!" );
       ++number_of_surviving_gammas;
     }
     ++kk; 
@@ -563,7 +562,6 @@ cout << "GammaGenerator_Base::print_gamma_intermediate (unique_ptr_version)" << 
 
   Debugging_Utils::print_vector_at_pos(*block_aops_,       gint->ids_pos_,      "gint_aops      "); cout << endl;
   Debugging_Utils::print_vector_at_pos(*block_aops_rngs_,  gint->ids_pos_, "gint_aops_rngs "); cout << endl;
-
 
   cout << "factor  = ( " ; cout.flush(); cout << gint->factors_.first << ", " << gint->factors_.second << " )" << endl << endl;
   return;

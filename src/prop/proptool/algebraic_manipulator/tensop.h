@@ -46,7 +46,9 @@ class TensOp_Base {
      // MultiTens specific, but should be obtainable for TensOp (with warning)
      std::vector<std::shared_ptr<TensOp_Base>> sub_tensops_; 
 
+
    public:
+
 
      std::pair<double,double> factor_;
 
@@ -63,18 +65,20 @@ class TensOp_Base {
 
      ~TensOp_Base(){};
 
-     std::string const name(){ return name_;}
+     std::string name() const { return name_;}
 
-     std::string const Tsymm(){ return Tsymm_;}
+     std::string Tsymm() const { return Tsymm_;}
      
-     int num_idxs(){ return num_idxs_;}
+     int num_idxs() const { return num_idxs_;}
 
-     std::pair<double,double> factor(){ return factor_; };
+     std::pair<double,double> factor() const { return factor_; };
 
-     std::shared_ptr< const std::vector<std::string>> idxs(){ return idxs_;}
+     void print_definition() const;
+
+     std::shared_ptr< const std::vector<std::string>> idxs() const { return idxs_;}
      std::string idxs(int ii ){ return (*idxs_)[ii];}
 
-     std::shared_ptr< const std::vector<bool>> aops(){ return aops_;}
+     std::shared_ptr< const std::vector<bool>> aops() const { return aops_;}
      bool aops(int ii){ return (*aops_)[ii];}
 
      std::shared_ptr< const std::vector<std::vector<std::string>>> idx_ranges(){ return idx_ranges_;}
@@ -147,8 +151,6 @@ class TensOp : public TensOp_Base , public std::enable_shared_from_this<TensOp<D
    ~TensOp(){};
 
    void generate_uncontracted_ctps( std::shared_ptr<Op_Info> op_info );
-
-//   void generate_uncontracted_ctps( std::shared_ptr<Op_Info> op_info );
 
    void generate_blocks();
 

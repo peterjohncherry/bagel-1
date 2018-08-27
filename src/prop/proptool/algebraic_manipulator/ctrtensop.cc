@@ -149,8 +149,10 @@ cout << endl <<  "CtrTensorPart<DataType>::build_contraction_sequence : CTP name
   
       ACompute_list->push_back( make_shared<CtrOp_same_T> (CTP_in_name, CTP_out_name, ctrs_done_->back(), ctrs_rel_pos_in, "same_T new" ));
 
+#ifdef __DEBUG_PROPTOOL_CTR_TENSOR_PART
       cout << " added to " << name_ << "'s Acompute_list"<<  endl;
       cout << "CTP Contract " << CTP_in_name << " over  (" << ctrs_done_->back().first << ","<< ctrs_done_->back().second << ") to get " << CTP_out_name ; cout.flush(); 
+#endif
   
       shared_ptr<vector<shared_ptr<CtrOp_base>>> ACompute_list_out =  make_shared<vector<shared_ptr<CtrOp_base>>>(*ACompute_list);
       ACompute_map->emplace(CTP_out_name, ACompute_list_out);

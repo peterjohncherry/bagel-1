@@ -231,5 +231,5 @@ std::vector<int> WickUtils::get_ascending_order( const std::vector<int>& scrambl
     std::iota( new_order.begin(), new_order.end() , 0 );
     std::sort( new_order.begin(), new_order.end(), [&scrambled_vec]( int& i1, int& i2 ){ return (bool)( scrambled_vec[i1] < scrambled_vec[i2] );}); 
     return new_order;
-  }; 
+}; 
 

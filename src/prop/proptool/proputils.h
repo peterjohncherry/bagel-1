@@ -210,5 +210,38 @@ namespace WickUtils {
     return sub_vec;
   };
 
+template<typename ContType > 
+void print_vec_of_conts( const std::vector<ContType>& vecvec, std::string name  ) {
+
+   std::vector<int> maxs(vecvec.size());
+   typename std::vector<ContType>::const_iterator vv_it = vecvec.begin();
+   for ( std::vector<int>::iterator mx_it = maxs.begin(); mx_it!= maxs.end(); ++mx_it, ++vv_it )
+     *mx_it =( vv_it->size() -1);
+
+   std::vector<int> mins(vecvec.size(), 0);
+   std::vector<int> fvec(vecvec.size(), 0);
+
+   if (name != "" ){ 
+     std::cout << name; std::cout.flush();
+     std::string indent_s( name.size()+2, ' ');   
+     bool first_block = true;
+     do  {
+       if ( first_block ) {
+         first_block = false;
+       } else {
+         std::cout << indent_s ; std::cout.flush();
+       }
+       print_vector( get_1d_from_2d ( vecvec, fvec ) ); std::cout << std::endl;
+     } while( fvec_cycle_skipper( fvec, maxs, mins) );
+
+   
+   } else { 
+     do  {
+       print_vector( get_1d_from_2d ( vecvec, fvec ) ); std::cout << std::endl;
+     } while( fvec_cycle_skipper( fvec, maxs, mins) );
+
+   } 
+   return; 
+}
 };
 #endif

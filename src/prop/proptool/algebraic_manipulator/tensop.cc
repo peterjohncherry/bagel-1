@@ -22,6 +22,23 @@ cout << "TensOp_Base::TensOp_Base (MT constructor) " << endl;
   cout << "sub_tensops_ = [ " ; cout.flush();  for ( auto& t : sub_tensops_)    cout << t->name() << " ";  cout << "]" << endl;
 #endif
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void TensOp_Base::print_definition() const {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_TENSOP_BASE
+cout << "TensOp_Base::print_tensop_definition() " << endl; 
+#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   cout << endl;
+   cout << " ==================== " << name_  << " ==================== " << endl;
+   print_vector( *idxs_,       " idxs " ); cout <<endl;
+   print_vector( *aops_,       " aops " ); cout <<endl;
+   print_vec_of_conts( *idx_ranges_, " rngs " ); cout <<endl;
+   cout << "factor = ( " << factor_.first << ", " << factor_.second << " )" << endl;
+   cout << " ========================================================== " << endl << endl;
+   return; 
+
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 TensOp::TensOp<DataType>::TensOp( string name, vector<string>& idxs, vector<vector<string>>& idx_ranges,

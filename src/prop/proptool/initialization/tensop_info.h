@@ -170,7 +170,7 @@ cout << "shared_ptr<TensOp::TensOp<DataType>>::Initialize_Tensor_Op_Info" << end
 //    constraints = { S_allowed_block_list };
     idxs = make_shared<vector<string>>(vector<string>{"S0", "S1", "S2", "S3"}  );
     constraints.push_back(not_all_act);
-    factor = make_pair( 1.0, 0.0);
+    factor = make_pair( -0.5, 0.0);
 
   } else if ( op_name == "h" ) {  /* ---- h Tensor ( 1 electron Hamiltonian ) ----  */
 
