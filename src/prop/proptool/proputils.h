@@ -222,7 +222,7 @@ void print_vec_of_conts( const std::vector<ContType>& vecvec, std::string name  
    std::vector<int> fvec(vecvec.size(), 0);
 
    if (name != "" ){ 
-     std::cout << name; std::cout.flush();
+     std::cout << name << " = "; std::cout.flush();
      std::string indent_s( name.size()+2, ' ');   
      bool first_block = true;
      do  {

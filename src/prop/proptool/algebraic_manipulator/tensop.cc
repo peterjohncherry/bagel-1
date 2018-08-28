@@ -7,6 +7,7 @@ using namespace std;
 using namespace WickUtils;
 using namespace Algebra_Utils;
 
+#define __DEBUG_PROPTOOL_TENSOP_BASE
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TensOp_Base::TensOp_Base( std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp_Base>>& sub_tensops ) :
                           name_(name), spinfree_(spinfree), Tsymm_("none"), state_dep_(0), 
@@ -34,7 +35,7 @@ cout << "TensOp_Base::print_tensop_definition() " << endl;
    print_vector( *idxs_,       " idxs " ); cout <<endl;
    print_vector( *aops_,       " aops " ); cout <<endl;
    print_vec_of_conts( *idx_ranges_, " rngs " ); cout <<endl;
-   cout << "factor = ( " << factor_.first << ", " << factor_.second << " )" << endl;
+   cout << "factor_ = ( " << factor_.first << ", " << factor_.second << " )" << endl;
    cout << " ========================================================== " << endl << endl;
    return; 
 
@@ -432,28 +433,25 @@ cout << "  name = " << name << endl;
   all_ranges_state_specific_ = make_shared<map<string,shared_ptr<map<const vector<string>, shared_ptr<Range_Block_Info>>>>>(); 
 
   CTP_map_  = make_shared< map< string, shared_ptr<CtrTensorPart_Base> >>();
-  { 
-    num_idxs_ = 0;
-    factor_ = make_pair(1.0,0.0);
-    vector<string> idxs;
-    vector<vector<string>> idx_ranges;
-    vector<bool> aops;
-    vector<int> cmlsizevec(num_tensors_);
-    for ( int ii = 0;  ii != sub_tensops_.size() ; ii++ ) {
-    
-      WickUtils::pair_fac_mult( sub_tensops_[ii]->factor_ , factor_ );
-      idx_ranges.insert(  idx_ranges.end(), sub_tensops_[ii]->idx_ranges()->begin(), sub_tensops_[ii]->idx_ranges()->end() );
-      idxs.insert( idxs.end(),sub_tensops_[ii]->idxs()->begin(), sub_tensops_[ii]->idxs()->end() );
-      aops.insert( aops.end(),sub_tensops_[ii]->aops()->begin(), sub_tensops_[ii]->aops()->end() );
-      cmlsizevec[ii]  = num_idxs_;
-      num_idxs_ += sub_tensops_[ii]->num_idxs();
-   
-    } 
-    aops_ = make_shared<const vector<bool>>(aops);
-    idxs_ = make_shared<const vector<string>>(idxs);
-    idx_ranges_ = make_shared<const vector<vector<string>>> (idx_ranges); 
-    cmlsizevec_ = make_shared<const vector<int>>( cmlsizevec ); 
+  num_idxs_ = 0;
+  factor_ = make_pair(1.0,0.0);
+  vector<string> idxs;
+  vector<vector<string>> idx_ranges;
+  vector<bool> aops;
+  vector<int> cmlsizevec(num_tensors_);
+  for ( int ii = 0;  ii != sub_tensops_.size() ; ii++ ) {
+    factor_.first *= sub_tensops_[ii]->factor_.first; 
+    idx_ranges.insert(  idx_ranges.end(), sub_tensops_[ii]->idx_ranges()->begin(), sub_tensops_[ii]->idx_ranges()->end() );
+    idxs.insert( idxs.end(),sub_tensops_[ii]->idxs()->begin(), sub_tensops_[ii]->idxs()->end() );
+    aops.insert( aops.end(),sub_tensops_[ii]->aops()->begin(), sub_tensops_[ii]->aops()->end() );
+    cmlsizevec[ii]  = num_idxs_;
+    num_idxs_ += sub_tensops_[ii]->num_idxs();
+  
   } 
+  aops_ = make_shared<const vector<bool>>(aops);
+  idxs_ = make_shared<const vector<string>>(idxs);
+  idx_ranges_ = make_shared<const vector<vector<string>>> (idx_ranges); 
+  cmlsizevec_ = make_shared<const vector<int>>( cmlsizevec ); 
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
@@ -737,3 +735,9 @@ template class TensOp::TensOp<complex<double>>;
 template class MultiTensOp::MultiTensOp<double>;
 template class MultiTensOp::MultiTensOp<complex<double>>;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//    cout << "      factor["<< ii <<"]         = (" << factor_.first << ", " << factor_.second << ")" << endl;
+//    cout << "sub_tensops_["<< ii <<"]->factor = (" << factor_.first << ", " << factor_.second << ")" << endl;
+//    WickUtils::pair_fac_mult( sub_tensops_[ii]->factor_ , factor_ );           
+//    cout << "      factor["<< ii <<"]         = (" << factor_.first << ", " << factor_.second << ")" << endl;
+//    cout << "sub_tensops_["<< ii <<"]->factor = (" << factor_.first << ", " << factor_.second << ")" << endl;
+

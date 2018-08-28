@@ -79,17 +79,17 @@ System_Info<DataType>::Build_TensOp( string op_name,
                                      shared_ptr<vector<vector<string>>> op_idx_ranges,
                                      vector<shared_ptr<Transformation>>& symmfuncs,
                                      vector<shared_ptr<Constraint>>& constraints,
-                                     DataType factor, string Tsymmetry, bool hconj,  int state_dep  ) {
+                                     pair<double,double> factor, string Tsymmetry, bool hconj,  int state_dep  ) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef  __DEBUG_PROPTOOL_SYSTEM_INFO
 cout << "System_Info<DataType>::System_Info::Build_TensOp" <<   endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   //NOTE: change to use proper factor ( the factor is the factor by which the Re/Im parts of the Tensop are multiplied, not the Re/Im parts of the factor itself) 
-  pair<double,double> tmp_fac = make_pair(1.0 , 1.0 );
+  //TODO : CHECK IF THIS IS STILL A VALDI COMMENT; I DON'T THINK IT IS!!!
 
   shared_ptr<TensOp::TensOp<DataType>> new_op = make_shared<TensOp::TensOp<DataType>>( op_name, *op_idxs, *op_idx_ranges, *op_aops,
-                                                                                        tmp_fac, symmfuncs, constraints, Tsymmetry, state_dep, range_prime_map_);
+                                                                                       factor, symmfuncs, constraints, Tsymmetry, state_dep, range_prime_map_);
   
   // change to be expression specific
   CTP_map_->insert( new_op->CTP_map()->begin(), new_op->CTP_map()->end());

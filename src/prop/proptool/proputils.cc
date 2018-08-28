@@ -223,13 +223,12 @@ vector<string> WickUtils::chrvec_to_strvec( const vector<char>& chrvec ) {
 
   return strvec;
 } 
-
 //////////////////////////////////////////////////////////////////////////////////////
 std::vector<int> WickUtils::get_ascending_order( const std::vector<int>& scrambled_vec ) {
 //////////////////////////////////////////////////////////////////////////////////////
-    std::vector<int> new_order(scrambled_vec.size());
-    std::iota( new_order.begin(), new_order.end() , 0 );
-    std::sort( new_order.begin(), new_order.end(), [&scrambled_vec]( int& i1, int& i2 ){ return (bool)( scrambled_vec[i1] < scrambled_vec[i2] );}); 
-    return new_order;
+  std::vector<int> new_order(scrambled_vec.size());
+  std::iota( new_order.begin(), new_order.end() , 0 );
+  std::sort( new_order.begin(), new_order.end(), [&scrambled_vec]( int& i1, int& i2 ){ return (bool)( scrambled_vec[i1] < scrambled_vec[i2] );}); 
+  return new_order;
 }; 
 

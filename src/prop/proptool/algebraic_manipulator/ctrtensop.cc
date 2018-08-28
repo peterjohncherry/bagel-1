@@ -294,7 +294,9 @@ cout << "CtrMultiTensorPart<DataType>::Binary_Contract_diff_tensors : " << name_
    shared_ptr<CtrTensorPart<DataType>> CTP_intermediate = make_shared< CtrTensorPart<DataType> >(full_idxs_, full_id_ranges_, ctrs_done_, op_info_ ); 
    Tmap->emplace(CTP_intermediate->name_, CTP_intermediate); 
     
+#ifdef __DEBUG_PROPTOOL_CTR_MULTITENSOR_PART
    cout << "BCDT contracting " << T1name << " and " << T2name << " over (" << abs_ctr.first << "," << abs_ctr.second << ") to get " << get_next_name(CTP_new->ctrs_done_) << endl;
+#endif
    return CTP_new;
 }
 

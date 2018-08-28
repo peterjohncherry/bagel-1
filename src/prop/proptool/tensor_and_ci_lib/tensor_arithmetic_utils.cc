@@ -158,7 +158,7 @@ shared_ptr<Tensor_<complex<double>>>
 Tensor_Arithmetic_Utils::get_sub_tensor_symm( shared_ptr<Tensor_<complex<double>>> Tens_in, const vector<IndexRange>& id_ranges,
                                               const vector<vector<int>>& transforms, const vector<complex<double>>& factors ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS_VERBOSE
 cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id_ranges, "id_ranges" ); cout << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -182,18 +182,13 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id
         if ( Tens_in->exists( trans_id_blocks ) ) {
           unique_ptr<complex<double>[]> trans_data_block = Tens_in->get_block( trans_id_blocks );
           int block_size = Tens_in->get_size(trans_id_blocks);
-//          if ( abs( *( max_element( trans_data_block.get(), trans_data_block.get()+block_size ) )) > 0.00000000001 ) { 
-            unique_ptr<complex<double>[]> data_block = Tensor_Arithmetic::Tensor_Arithmetic<complex<double>>::reorder_tensor_data( trans_data_block.get(), *t_it, trans_id_blocks ) ;
-            complex<double> factor = *f_it;
-            int stride_one = 1; 
-            zscal_( &block_size, &factor, data_block.get(), &stride_one); 
-            Tens_out->put_block( data_block, id_blocks );
-            got_symm_partner = true;
-            cout << "Obtained tensor block ";  cout.flush(); Debugging_Utils::print_sizes( id_blocks, "" ); cout.flush();
-            cout << " from  "; Debugging_Utils::print_sizes( trans_id_blocks,"" ); cout.flush();
-            cout << " using symmetry transformation"; print_vector( *t_it ) ; cout << endl;
-            break;
-//          }
+          unique_ptr<complex<double>[]> data_block = Tensor_Arithmetic::Tensor_Arithmetic<complex<double>>::reorder_tensor_data( trans_data_block.get(), *t_it, trans_id_blocks ) ;
+          complex<double> factor = *f_it;
+          int stride_one = 1; 
+          zscal_( &block_size, &factor, data_block.get(), &stride_one); 
+          Tens_out->put_block( data_block, id_blocks );
+          got_symm_partner = true;
+          break;
         }
       }
       if ( !got_symm_partner ) {
@@ -242,7 +237,7 @@ shared_ptr<Tensor_<double>>
 Tensor_Arithmetic_Utils::get_sub_tensor_symm( shared_ptr<Tensor_<double>> Tens_in, const vector<IndexRange>& id_ranges,
                                               const vector<vector<int>>& transforms, const vector<double>& factors ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS_VERBOSE
 cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id_ranges, "id_ranges" ); cout << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -272,9 +267,6 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id
             dscal_( block_size , *f_it, data_block.get(), stride_one ); 
             Tens_out->put_block( data_block, id_blocks );
             got_symm_partner = true;
-            cout << "Obtained tensor block ";  cout.flush(); Debugging_Utils::print_sizes( id_blocks, "" ); cout.flush();
-            cout << " from  "; Debugging_Utils::print_sizes( trans_id_blocks,"" ); cout.flush();
-            cout << " using symmetry transformation"; print_vector( *t_it ) ; cout << endl;
             break;
           }
         }

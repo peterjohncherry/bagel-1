@@ -49,17 +49,18 @@ class TensOp_Base {
 
    public:
 
-
      std::pair<double,double> factor_;
 
      std::shared_ptr<std::map<std::string, std::shared_ptr<std::map<const std::vector<std::string>, std::shared_ptr<Range_Block_Info>>>>> all_ranges_state_specific_;
     
      TensOp_Base( std::string name, bool spinfree, std::string Tsymm, int state_dep ) : name_(name),  factor_(std::make_pair(1.0,1.0)), spinfree_(spinfree),
                                                                                         Tsymm_(Tsymm), state_dep_(state_dep),
-                                                                                        required_blocks_(std::make_shared<std::set<std::shared_ptr<Range_Block_Info>>>()) {};
+                                                                                        required_blocks_(std::make_shared<std::set<std::shared_ptr<Range_Block_Info>>>()) {;
+                                                                                        std::cout << " TensOp_Base cstr1" << std::endl; };
 
-     TensOp_Base( std::string name, std::pair<double,double>& factor, bool spinfree ) : name_(name), factor_(factor), spinfree_(spinfree), Tsymm_("none"),
-                                                                                        state_dep_(0), required_blocks_(std::make_shared<std::set<std::shared_ptr<Range_Block_Info>>>()) {};
+     TensOp_Base( std::string name, std::pair<double,double>& factor, bool spinfree ) : name_(name), factor_(factor), spinfree_(spinfree), Tsymm_("none"), state_dep_(0),
+                                                                                        required_blocks_(std::make_shared<std::set<std::shared_ptr<Range_Block_Info>>>()){
+                                                                                        std::cout << " TensOp_Base cstr2" << std::endl; };
 
      TensOp_Base( std::string name, bool spinfree, std::vector<std::shared_ptr<TensOp_Base>>& sub_tensops );
 

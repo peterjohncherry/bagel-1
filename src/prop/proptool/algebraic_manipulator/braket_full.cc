@@ -36,7 +36,10 @@ cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
   if ( multiop_info_->op_info_vec()->size() > 1 ) { 
  
     for ( auto range_map_it = all_ranges->begin(); range_map_it != all_ranges->end(); range_map_it++ ){
-//     print_braket_block( multiop_info_, range_map_it->second ); 
+
+      #ifdef __DEBUG_PROPTOOL_BRAKET_FULL_VERBOSE
+        print_braket_block( multiop_info_, range_map_it->second ); 
+      #endif
   
       // TODO if is only here for non-relativistic case ; constraints should be specified in input
       if ( !(range_map_it->second->ci_sector_transition_ ) ) {

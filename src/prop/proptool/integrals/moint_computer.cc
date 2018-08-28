@@ -56,7 +56,7 @@ void MOInt_Computer<DataType>::calculate_h1( const vector<SMITH::IndexRange>& bl
 cout << "MOInt_Computer<DataType>::calculate_h1" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  MOInt::MOFock_new<DataType> one_el_ints( info_, blocks );
+  MOInt::MOFock_new<DataType> one_el_ints( moint_info_, blocks );
   h1_ = one_el_ints.h1();
   
   if ( set_fock ) 
@@ -92,10 +92,10 @@ template<typename DataType>
 void MOInt_Computer<DataType>::calculate_fock( const vector<SMITH::IndexRange>& blocks, bool set_coeffs, bool set_h1 ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_MOINT_COMPUTER
-cout << "MOInt_Computer<DataType>::calculate_fock   : set_coeffs = " << set_coeffs << endl ;
+cout << "MOInt_Computer<DataType>::calculate_fock : set_coeffs = " << set_coeffs << endl ;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  MOInt::MOFock_new<DataType> one_el_ints( info_, blocks );
+  MOInt::MOFock_new<DataType> one_el_ints( moint_info_, blocks );
   f1_ = one_el_ints.fock();
 
   if ( set_coeffs ) {  
@@ -148,7 +148,7 @@ cout << "MOInt_Computer<DataType>::calculate_v2_smith IndexRange_ver" << endl;
    
     //TODO excessive, for testing 
     vector<SMITH::IndexRange>  blocks = { rng("free"), rng("free"), rng("free"), rng("free") };
-    MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks );
+    MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( moint_info_, coeffs_, blocks );
     auto v2_tens = v2.tensor();
     v2_tens->allocate();
     v2_tens->zero();
@@ -234,27 +234,3 @@ cout << "MOInt_Computer<DataType>::get_test_tensor string ver" << endl;
 template class MOInt_Computer<double>;
 template class MOInt_Computer<std::complex<double>>;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// TESTING FOR BLOCK FETCHING
-//
-// vector<SMITH::IndexRange>  blocks = { free, free, free, free };
-// MOInt::K2ext_new<DataType> v2 = MOInt::K2ext_new<DataType>( info_, coeffs_, blocks );
-// auto v2_tens = v2.tensor();
-//
-// vector<string> r1_names = { "c", "a", "notvir", "notcor", "v" };                                                                                              
-// vector<string> r2_names = { "a", "v", "notcor", "notvir", "c" };                                                                                              
-// vector<string> range_names(4);
-// for ( auto r1_name : r1_names ) {                                                                                                                             
-//   for ( auto r2_name : r2_names ){                                                                                                                            
-//     range_names = { r1_name, r2_name, r1_name, r2_name } ;                                                                                                    
-//     SMITH::IndexRange rng1 =  *( range_conversion_map_->at(r1_name) );                                                                                        
-//     SMITH::IndexRange rng2 =  *( range_conversion_map_->at(r2_name) );                                                                                        
-//     vector<SMITH::IndexRange> test_ranges = { rng1, rng2, rng1, rng2  };                                                                                      
-//     WickUtils::print_vector( range_names, "test_range_names" ); Debugging_Utils::print_sizes( test_ranges, "test_range_sizes" ); cout << endl; 
-//     auto v2_keep_orig = Tensor_Arithmetic_Utils::get_sub_tensor( v2_tens, test_ranges );                                                                      
-//     shared_ptr<SMITH::Tensor_<DataType>> v2_keep =  v2.get_v2_part( test_ranges ); 
-//     cout << " v2_keep_orig->norm() = "<<  v2_keep_orig->norm() ; cout.flush(); cout << " v2_keep->norm() = "<<  v2_keep->norm() <<endl;                       
-//     v2_keep->ax_plus_y( -1.0, v2_keep_orig ); 
-//     cout << " v2_keep_orig->norm() = "<<  v2_keep_orig->norm() ; cout.flush();  cout << " (v2_keep -  v2_keep_orig )->norm() = "<<  v2_keep->norm() << endl; 
-//   }
-// }
-//

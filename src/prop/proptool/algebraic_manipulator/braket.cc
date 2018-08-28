@@ -30,7 +30,6 @@ void BraKet_Base::BraKet_Base::print_braket_block( std::shared_ptr<Op_Info> mult
 #ifdef __DEBUG_PROPTOOL_BRAKET_BASE
 cout <<  "BraKet_Base::print_braket_block()" << endl; 
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
 
    cout << endl <<  "op_info in actual order :" ; cout.flush();
    for ( auto op_info : *(multiop_info->op_info_vec()) ) { 

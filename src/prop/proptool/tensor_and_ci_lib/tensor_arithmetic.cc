@@ -75,15 +75,8 @@ cout << endl <<  "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
       DataType* summand_block_ptr = summand_block_data.get();
       vector<vector<int>>::iterator sr_it = summand_reorderings.begin();
       for ( typename vector<DataType>::iterator sf_it = summand_factors.begin(); sf_it !=  summand_factors.end() ; sr_it++, sf_it++ ) {
-        cout << endl; print_vector( *sr_it , " summand_reordering" ); cout << "   summand_factor = " << *sf_it << endl;
-
         unique_ptr<DataType[]> summand_block_data_reordered = reorder_tensor_data( summand_block_ptr, *sr_it, summand_block_ranges );
-        cout << " pre summand_block sum  = " << sum_unique_ptr_elems( summand_block_data_reordered, summand_block_size); cout.flush();
-        cout << " pre target_block sum   = " << sum_unique_ptr_elems( target_block_data, summand_block_size); cout << endl;
         ax_plus_y( summand_block_size, *sf_it, summand_block_data_reordered.get(), target_block_data.get() );
-        cout << " post summand_block sum = " << sum_unique_ptr_elems( summand_block_data_reordered, summand_block_size); cout.flush();
-        cout << " post target_block sum  = " << sum_unique_ptr_elems( target_block_data, summand_block_size); cout << endl << endl;
-
       }
 
       target->put_block( target_block_data, target_block_ranges );
@@ -91,12 +84,9 @@ cout << endl <<  "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
     } while( fvec_cycle_skipper_f2b(summand_block_pos, summand_maxs, summand_mins) );
 
   } else { 
-    for ( typename vector<DataType>::iterator sf_it = summand_factors.begin(); sf_it !=  summand_factors.end() ; ++sf_it ){ 
-      cout << " target " << *sf_it << " summand : " ;cout.flush(); 
-      cout << sum_tensor_elems(target) <<" " <<  *sf_it << " "  << sum_tensor_elems(summand) << " = ";  cout.flush();
+
+    for ( typename vector<DataType>::iterator sf_it = summand_factors.begin(); sf_it !=  summand_factors.end() ; ++sf_it )
       target->ax_plus_y( *sf_it , summand ); 
-      cout << sum_tensor_elems(target) << endl;
-    }
 
   } 
 

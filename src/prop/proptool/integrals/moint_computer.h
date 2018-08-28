@@ -25,7 +25,7 @@ namespace bagel {
       using Tensor = typename std::conditional<std::is_same<DataType,double>::value,
                                                SMITH::Tensor_<double>,SMITH::Tensor_<std::complex<double>>>::type;
 
-      std::shared_ptr<const MOInt_Init<DataType>> info_;
+      std::shared_ptr<const MOInt_Init<DataType>> moint_info_;
       std::shared_ptr<const MatType> coeffs_;
       std::shared_ptr<std::map<std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
 
@@ -38,7 +38,7 @@ namespace bagel {
     public :
       MOInt_Computer( std::shared_ptr<const MOInt_Init<DataType>> r,
                       std::shared_ptr<std::map<std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map  ):
-                      info_(r), coeffs_(info_->coeff()), range_conversion_map_(range_conversion_map)  {}
+                      moint_info_(r), coeffs_(moint_info_->coeff()), range_conversion_map_(range_conversion_map)  {}
       ~MOInt_Computer(){};
 
       //note, this does not have the diagonal component
@@ -69,6 +69,7 @@ namespace bagel {
       std::shared_ptr<SMITH::Tensor_<DataType>> calculate_v2_smith();
       std::shared_ptr<SMITH::Tensor_<DataType>> get_test_tensor( const std::vector<SMITH::IndexRange>& blocks  );
       std::shared_ptr<SMITH::Tensor_<DataType>> get_test_tensor( const std::vector<std::string>& blocks  );
+      std::shared_ptr<std::map<std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map() { return range_conversion_map_; }
       // ENDTEST
 
   };

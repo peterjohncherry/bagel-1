@@ -14,7 +14,7 @@ using namespace Debugging_Utils;
 
 namespace Tens_Utils = bagel::Tensor_Arithmetic_Utils;
  
-#define __DEBUG_TENSOP_COMPUTER
+//#define __DEBUG_TENSOP_COMPUTER
 //#define __DEBUG_TENSOP_COMPUTER_X
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<class DataType>
@@ -255,10 +255,6 @@ void TensOp_Computer::TensOp_Computer<DataType>::get_tensor_data_blocks(shared_p
 cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  //vector<int> s_ordering = { 0, 1, 2, 3};
-  //vector<int> s_ordering = { 3, 2, 1, 0};
-  //vector<int> s_ordering = { 3, 0, 2, 1 };
-  //vector<int> s_ordering = { 0, 2, 1, 3 };
   vector<int> s_ordering = { 1, 3, 0, 2 };
   
   for ( auto& block : *required_blocks ) { 
@@ -274,22 +270,18 @@ cout << "TensOp_Computer::TensOp_Computer::get_tensor_data_blocks " << endl;
       string full_tens_name = block->op_info_->op_state_name_;
 
       shared_ptr<vector<string>> id_ranges = CTP_map_->at(block_name)->unc_id_ranges();
-      WickUtils::print_vector( *id_ranges, " id_ranges" ); cout << endl;
     
       if( tensop_data_map_->find(full_tens_name) == tensop_data_map_->end()){
 
         // TODO This will get the whole tensor, really, we should just get the blocks we want
         if ( full_tens_name[0] == 'H' || full_tens_name[0] == 'h' || full_tens_name[0] == 'f' ) {  
-          cout << "TOC::get_tensor_data_blocks:: else if ( full_tens_name[0] == 'H' h or f) " << endl; 
           build_mo_tensor( full_tens_name ); 
           get_sub_tensor( full_tens_name, block_name, *id_ranges );
 
         } else if ( full_tens_name[0] == 'X' || full_tens_name[0] == 'T' || full_tens_name[0] == 't'  ) {  
-          cout << "TOC::get_tensor_data_blocks:: else if ( full_tens_name[0] == 'X' T or t) " << endl; 
           build_tensor( block_name, *id_ranges, (DataType)(1.0) );
            
         } else if ( full_tens_name[0] == 'S') {  
-          cout << "TOC::get_tensor_data_blocks:: else if ( full_tens_name[0] == 'S') " << endl; 
           build_s_test_tensor(full_tens_name, s_ordering );
           
           get_sub_tensor( full_tens_name, block_name, *id_ranges ); 
@@ -644,7 +636,6 @@ WickUtils::print_vector( range_names, "range_names"); cout << endl;
   vector<IndexRange> block = Get_Bagel_IndexRanges( range_names ); 
 
   if ( full_tens_name[0] == 'S' || full_tens_name[0] == 'H'  ) {
-    cout << "into symm" << endl;
     auto tdm_loc = tensop_data_map_->find( block_name );
     vector<int> ord_0 = { 0, 1, 2, 3 };     
     vector<int> ord_1 = { 0, 3, 2, 1 };     
@@ -670,7 +661,7 @@ WickUtils::print_vector( range_names, "range_names"); cout << endl;
       tdm_loc->second =  tmp->copy();
     }
   }
-  cout << block_name << "->norm() = " << tensop_data_map_->at(block_name)->norm() << endl;   
+//  cout << block_name << "->norm() = " << tensop_data_map_->at(block_name)->norm() << endl;   
   return;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -307,7 +307,7 @@ cout << "CASPT2::CASPT2::solve" << endl;
   SMITH::IndexRange brng_exc = *ractive_;
   brng_exc.merge(*rvirt_);
 
-  { 
+   
   vector<SMITH::IndexRange> branges = { brng_core, brng_act, brng_virt, brng_free, brng_occ, brng_exc }; 
   vector<char> range_names = { 'c', 'a', 'v', 'f', 'o', 'e' }; 
   for ( int r0 = 0 ; r0!=6; r0++) { 
@@ -320,91 +320,76 @@ cout << "CASPT2::CASPT2::solve" << endl;
     range_block_map_.emplace( rname, rblock );
   }}}}
   
-  shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
-  shared_ptr<SMITH::Tensor_<double>>  v2_buff = v2_->copy();
-//  tensor_calc->zero_all_but_block( v2_, range_block_map_.at("cvcv") ); 
-  Debugging_Utils::print_sizes( v2_->indexrange() , "v2_sizes" ); cout << endl;
-  cout << "v2_buff->norm() = " << v2_buff->norm() << endl;  cout << "v2->norm()      = " << v2_->norm() << endl; 
-
-  
-  shared_ptr<SMITH::Tensor_<double>> t2_buff = t2all_[0]->at(0)->copy();
-  Debugging_Utils::print_sizes( t2_buff->indexrange() , "tamps sizes" ); cout << endl;
-//  tensor_calc->zero_all_but_block( t2all_[0]->at(0), range_block_map_.at("cvcv") ); 
-  cout << "t2_buff->norm() = " << t2_buff->norm() << endl; 
-  cout << "t2_    ->norm() = " << t2all_[0]->at(0)->norm() << endl; 
-
-  } 
-  ////// TEST
-  h1_->zero();
-  f1_->zero();
-
   cout << endl <<  "======================  BEGIN PROPTOOL TEST =========================" << endl;
   shared_ptr<PropTool::PropTool> proptool = make_shared<PropTool::PropTool>( proptool_input_, info_->geom(), info_->ref() );
   cout << "S::cpt2::X1" << endl;
-
-  { 
-    auto range_conversion_map = make_shared<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>>();
-    auto closed_rng  = make_shared<SMITH::IndexRange>(*rclosed_);
-    auto active_rng  = make_shared<SMITH::IndexRange>(*ractive_);
-    auto virtual_rng = make_shared<SMITH::IndexRange>(*rvirt_);
+   
+  shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<double>> tensor_calc = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<double>>();
+  auto rcm = make_shared<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>>();
+  auto closed_rng  = make_shared<SMITH::IndexRange>(*rclosed_);
+  auto active_rng  = make_shared<SMITH::IndexRange>(*ractive_);
+  auto virtual_rng = make_shared<SMITH::IndexRange>(*rvirt_);
   
-    auto free_rng   = make_shared<SMITH::IndexRange>(*closed_rng);
-    free_rng->merge(*active_rng);
-    free_rng->merge(*virtual_rng);
+  auto free_rng   = make_shared<SMITH::IndexRange>(*closed_rng);
+  free_rng->merge(*active_rng);
+  free_rng->merge(*virtual_rng);
   
-    auto not_closed_rng  = make_shared<SMITH::IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
-    auto not_active_rng  = make_shared<SMITH::IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
-    auto not_virtual_rng = make_shared<SMITH::IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
+  auto not_closed_rng  = make_shared<SMITH::IndexRange>(*active_rng); not_closed_rng->merge(*virtual_rng);
+  auto not_active_rng  = make_shared<SMITH::IndexRange>(*closed_rng); not_active_rng->merge(*virtual_rng);
+  auto not_virtual_rng = make_shared<SMITH::IndexRange>(*closed_rng); not_virtual_rng->merge(*active_rng);
+
+  rcm->emplace("c", closed_rng);
+  rcm->emplace("a", active_rng);
+  rcm->emplace("v", virtual_rng);
+  rcm->emplace("free", free_rng);
+  rcm->emplace("notcor",not_closed_rng);
+  rcm->emplace("notact",not_active_rng);
+  rcm->emplace("notvir", not_virtual_rng);
+  proptool->set_range_conversion_map( rcm );
+  vector<SMITH::IndexRange> rng_block_nz = { *(rcm->at("c")), *(rcm->at("v")), *(rcm->at("c")), *(rcm->at("v")) };
+
+  tensor_calc->set_tensor_elems(t2all_[0]->at(0), 1.0);
+  shared_ptr<SMITH::Tensor_<double>> tamps_full = build_full_T( t2all_[0]->at(0) ); 
+  tensor_calc->zero_all_but_block( tamps_full ,  rng_block_nz );
+
+  tensor_calc->set_tensor_elems(v2_, 1.0);
+  tensor_calc->zero_all_but_block( v2_ ,  rng_block_nz );
+
+  proptool->tamps_smith_ = tamps_full->copy();
+  proptool->set_maxtile( info_->maxtile() ); 
+
+  proptool->construct_task_lists();
+
+  cout << "t2all_[0]->at(0)->norm() = " <<  t2all_[0]->at(0)->norm() << endl;
+  cout << "tamps_full->norm() = " <<  tamps_full->norm() << endl;
+  cout << "SMITH v2_->norm() = " <<  v2_->norm() << endl << endl << endl;
   
-    range_conversion_map->emplace("c", closed_rng); 
-    range_conversion_map->emplace("a", active_rng);
-    range_conversion_map->emplace("v", virtual_rng);
-    range_conversion_map->emplace("free", free_rng);
-    range_conversion_map->emplace("notcor",not_closed_rng);
-    range_conversion_map->emplace("notact",not_active_rng);
-    range_conversion_map->emplace("notvir", not_virtual_rng); 
-    shared_ptr<SMITH::Tensor_<double>> tamps_full = build_full_T( t2all_[0]->at(0) ); 
-    proptool->set_range_conversion_map( range_conversion_map ); 
-
-    proptool->tamps_smith_ = tamps_full->copy();
-    proptool->set_maxtile( info_->maxtile() ); 
-
-    proptool->construct_task_lists();
-
-    cout << "t2all_[0]->at(0)->norm() = " <<  t2all_[0]->at(0)->norm() << endl;
-    cout << "tamps_full->norm() = " <<  tamps_full->norm() << endl;
-    cout << "SMITH v2_->norm() = " <<  v2_->norm() << endl << endl << endl;
-
-  }
   cout << endl << endl <<endl;
-  v2_ =  proptool->v2_smith_->copy();
-  cout << "PROPTOOL v2_->norm() = " <<  v2_->norm() << endl << endl << endl;
   proptool->execute_compute_lists();
-  cout << "S::cpt2::X9" << endl;
 
-  v2_ = proptool->moint_computer_->v2_smith_->copy();
   cout << " xxxxxxx FROM moint_computer xxxxxxxxxx" << endl;
-  cout << "v2_->norm() = " << v2_->norm() << endl <<endl; 
+  cout << "            v2_->norm() = " << v2_->norm() << endl <<endl; 
 
   {// TEST source
-    {
-    
+ 
     set_rdm(0, 0);
     double source_norm = 0.0;
     s = init_residual();
     s->zero();
-    shared_ptr<Queue> source_task_list = make_sourceq(false, true);
+    h1_->zero();
+    shared_ptr<Queue> source_task_list = make_sourceq(true, true);
     while(!source_task_list->done())
       source_task_list->next_compute();
 
     cout << "v2 ranges = [ " ; cout.flush(); for (auto elem : v2_->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
     cout << "s  ranges = [ " ; cout.flush(); for (auto elem : s->indexrange() ) {cout << elem.size() << " " ; cout.flush(); } cout << " ] " << endl; 
     cout << "----------------------------------TEST SMITH-------------------------------" << endl;
-    cout <<" dot_product_transpose(s, t2_one) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
-    cout <<" dot_product(s, t2_one) = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
+    cout <<" dot_product_transpose(s, t2_one     ) = " <<  dot_product_transpose(s, t2all_[0]->at(0))<< endl; // + (*eref_)(0, 0);
+    cout <<" dot_product_transpose(s, tamps_full ) = " <<  dot_product_transpose(s, tamps_full )<< endl; // + (*eref_)(0, 0);
+    cout <<" dot_product(s, t2_one     )           = " <<  s->dot_product( t2all_[0]->at(0) ) << endl; // + (*eref_)(0, 0);
+    cout <<" dot_product(s, tamps_full )           = " <<  s->dot_product( tamps_full ) << endl; // + (*eref_)(0, 0);
     cout << "post dot source_norm = "<<  s->norm() << endl;
     cout << "---------------------------------------------------------------------------" << endl;
-    } 
   } //END TEST
   throw logic_error( "die here for testing purposes!" ); 
   #endif

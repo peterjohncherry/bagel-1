@@ -90,45 +90,29 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
   sys_info_->range_prime_map_ = range_prime_map_;
 
   // build system computer (for computational task list construction/execution)
-  auto moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_,
-                                                     nfrozenvirt_, block_diag_fock_ );
+  auto moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_, nfrozenvirt_, block_diag_fock_ );
 
   moint_computer_ = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
-  cout << "pt::pt::riai X1" << endl;
   moint_computer_->t_from_smith_ = tamps_smith_; 
-  cout << "pt::pt::riai X2" << endl;
-   
   
-  vector<string> free2 = { "free" , "free" };
-  cout << "pt::pt::riai X4" << endl;
-  moint_computer_->calculate_fock( free2, true, true );
-  cout << "pt::pt::riai X5" << endl;
+//  vector<string> free2 = { "free" , "free" };
+//  moint_computer_->calculate_fock( free2, true, true );
 
-  vector<string> free4 = { "free" , "free", "free", "free" };
-  moint_computer_->calculate_v2( free4 );
-  v2_smith_ = moint_computer_->v2_from_smith_->copy(); 
-  cout << "pt::pt::riai X3" << endl;
+//  vector<string> free4 = { "free", "free", "free", "free" };
+//  moint_computer_->calculate_v2( free4 );
 
   //TODO should build gamma_computer inside system_computer, like this due to Determinant class dependence of B_Gamma_Computer 
-  cout << "pt::pt::riai X6" << endl;
   auto gamma_computer = make_shared<B_Gamma_Computer::B_Gamma_Computer<double>>(civectors_); 
-  cout << "pt::pt::riai X7" << endl;
 
   system_computer_ = make_shared<System_Computer::System_Computer<double>>(sys_info_, moint_computer_, range_conversion_map_, gamma_computer );
-  cout << "pt::pt::riai X8" << endl;
 
   shared_ptr< const PTree > ops_def_tree = idata_->get_child_optional( "operators" ) ;
-  cout << "pt::pt::riai X9" << endl;
   if (ops_def_tree)
     get_new_ops_init( ops_def_tree ); 
 
-  cout << "pt::pt::riai X10" << endl;
   // Getting info about target expression (this includes which states are relevant)
   get_terms_init( idata_->get_child( "terms" ) ); 
-  cout << "pt::pt::riai X11" << endl;
-
   get_equations_init( idata_->get_child( "equations" ) );
-  cout << "pt::pt::riai X12" << endl;
 
   return;
 }
@@ -306,15 +290,30 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
     string TimeSymm = op_def_inp->get<string>( "TimeSymm", "none" );
     bool   hconj = conv_to_bool(op_def_inp->get<int>( "HermConj", false ));
     string op_name = op_def_inp->get<string>( "name" );
-    double factor = op_def_inp->get<double>( "factor", 1.0 );
-    cout << "factor = " << factor << endl;     
+
+    pair<double,double> factor_re_im;
+    auto factors_reim_ptree = op_def_inp->get_child_optional("factor_complex");
+    if ( factors_reim_ptree ) { 
+      factor_re_im = make_pair( factors_reim_ptree->get<double>( "Real", 1.0 ), factors_reim_ptree->get<double>( "Imag", 0.0 ) );
+    } else {  
+      factor_re_im = make_pair( factors_reim_ptree->get<double>( "factor", 1.0 ), factors_reim_ptree->get<double>( "factor", 0.0));
+    }
+
+    cout << "factor_re_im = (" << factor_re_im.first << ", " << factor_re_im.second << " )" << endl;     
  
     vector<shared_ptr<Transformation>> symmfuncs(0);
     vector<shared_ptr<Constraint>> constraints(0);
     
     cout << endl << " user defined operator : " << op_name << endl << endl;
-    shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp(op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor, TimeSymm, hconj, state_dep);
-    sys_info_->MT_map()->emplace( op_name, new_op );
+    shared_ptr<TensOp::TensOp<double>> new_op = sys_info_->Build_TensOp(op_name, idxs_ptr, aops_ptr, ranges_ptr, symmfuncs, constraints, factor_re_im, TimeSymm, hconj, state_dep);
+
+    new_op->print_definition();
+    auto mt_map_loc = sys_info_->MT_map()->find(op_name);
+    if ( mt_map_loc == sys_info_->MT_map()->end()  ) { 
+      sys_info_->MT_map()->emplace( op_name, new_op );
+    } else { 
+      mt_map_loc->second = new_op;
+    } 
 
   }
 

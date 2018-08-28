@@ -79,7 +79,7 @@ class System_Info {
                                                                 std::shared_ptr<std::vector<std::vector<std::string>>> op_idx_ranges,
                                                                 std::vector<std::shared_ptr<Transformation>>& symmfuncs,
                                                                 std::vector<std::shared_ptr<Constraint>>& constraints,
-                                                                DataType factor, std::string Tsymmetry, bool hconj, int state_dependence ) ;
+                                                                std::pair<double,double> factor, std::string Tsymmetry, bool hconj, int state_dependence ) ;
        
         void  create_equation( std::string name, std::string type, 
                                std::shared_ptr<std::map<std::string, std::shared_ptr<std::vector<std::shared_ptr<BraKet_Base>>>>>  term_braket_map,

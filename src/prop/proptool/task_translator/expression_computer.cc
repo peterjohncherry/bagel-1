@@ -180,9 +180,11 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_orb_exc_
     }
   }                  
  
-  cout << endl << "Contributions from different gamma terms " << endl;
+#ifdef __DEBUG_EXPRESSION_COMPUTER 
+  cout << endl << "============== Contributions from different gamma terms =============== " << endl;
   for ( auto elem : *tensor_results_map_ )
     cout << elem.first << "->norm() = " << setprecision(13) << elem.second->norm() << endl; 
+#endif
  
   return;  
 }
@@ -216,12 +218,19 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
     cout << endl << "gamma_name = " << gamma_name << endl;
     
     tensop_machine_->build_tensor( "a_combined_data" , *(expression->gamma_info_map_->at(gamma_name)->id_ranges()), 0.0 ); 
+    #ifdef __DEBUG_EXPRESSION_COMPUTER 
+       cout << "a_combined_data = " << tensop_data_map_->at("a_combined_data")->norm() << endl;
+    #endif
 
     // Loop through A-tensors needed for this gamma
     auto A_contrib_loc = expression->G_to_A_map()->find( gamma_name );
     if ( (A_contrib_loc != expression->G_to_A_map()->end()) &&  (A_contrib_loc->second->size() != 0) ) {
       for ( auto& A_contrib_map_elem : *A_contrib_loc->second ) {
-      
+
+        #ifdef __DEBUG_EXPRESSION_COMPUTER 
+          cout << "a_combined_data = " << tensop_data_map_->at("a_combined_data")->norm() << endl;
+        #endif
+
         string  a_contrib_name = A_contrib_map_elem.first;    
         shared_ptr<AContribInfo_Base> a_contrib = A_contrib_map_elem.second;    
  
@@ -239,6 +248,9 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
         DataType tmp_result = tensop_machine_->dot_arg1_with_gamma( "a_combined_data", gamma_name );
         auto grm_loc = g_result_map->find( gamma_name);
 
+        #ifdef __DEBUG_EXPRESSION_COMPUTER 
+          cout << "a_combined_data = " << tensop_data_map_->at("a_combined_data")->norm() << endl;
+        #endif
         if ( grm_loc == g_result_map->end() ) {
           g_result_map->emplace(gamma_name, tmp_result);
         } else { 
@@ -258,6 +270,9 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
       }
     }
   }
+  cout << endl << endl << "======================== Checking RDMS ============================" << endl;
+  //check_rdms();
+  cout << endl << endl;
 
   if (new_result ) {
     scalar_results_map->emplace( expression_name, result );
@@ -348,7 +363,7 @@ cout << "Expression_Computer::check_rdms" << endl;
 template < typename DataType >
 bool Expression_Computer::Expression_Computer<DataType>::check_acontrib_factors(AContribInfo_Base& AC_info ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_EXPRESSION_COMPUTER
+#ifdef __DEBUG_EXPRESSION_COMPUTER_VERBOSE
 cout << "Expression_Computer::Expression_Computer<DataType>::check_acontrib_factors" << endl;
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

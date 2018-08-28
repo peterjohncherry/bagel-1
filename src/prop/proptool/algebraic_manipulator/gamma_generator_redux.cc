@@ -8,7 +8,7 @@ using namespace std;
 using namespace WickUtils;
 
 
-// #define __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
+#define __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::add_gamma( const shared_ptr<Range_Block_Info> block_info, shared_ptr<vector<bool>> trans_aops ) {
@@ -55,7 +55,7 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
 template<typename DataType> 
 void GammaGeneratorRedux<DataType>::add_Acontrib_to_map( int kk, string bra_name, string ket_name ){  // e.g. ++++----
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX
+#ifdef __DEBUG_PROPTOOL_GAMMA_GENERATOR_REDUX_VERBOSE
 cout << "void GammaGeneratorRedux<DataType>::add_Acontrib_to_map" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

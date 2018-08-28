@@ -38,7 +38,7 @@ using namespace bagel;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 MOInt::K2ext_new<DataType>::K2ext_new(shared_ptr<const MOInt_Init<DataType>> r , shared_ptr<const MatType> c, const vector<IndexRange>& b)
-  : info_(r), coeff_(c), blocks_(b) {
+  : moint_info_(r), coeff_(c), blocks_(b) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_MOINT
 cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::MOFock_new<double>::get_v2_part() " << endl;
@@ -75,7 +75,7 @@ cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<double>::get_v2_par
   shared_ptr<Tensor> v2_part = make_shared<Tensor>(id_ranges);
   v2_part->allocate();
 
-  shared_ptr<const DFDist> df = info_->geom()->df();
+  shared_ptr<const DFDist> df = moint_info_->geom()->df();
 
   // It is the easiest to do integral transformation for each blocks.
   assert(id_ranges.size() == 4);
@@ -173,7 +173,7 @@ cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<double>::init()" <<
   data_ = make_shared<Tensor>(blocks_);
   data_->allocate();
 
-  shared_ptr<const DFDist> df = info_->geom()->df();
+  shared_ptr<const DFDist> df = moint_info_->geom()->df();
 
   // It is the easiest to do integral transformation for each blocks.
   assert(blocks_.size() == 4);
@@ -283,8 +283,8 @@ cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<complex<double>>::i
   data_->set_stored_sectors(cblocks);
 
   // Aux index blocking
-  const IndexRange aux(info_->geom()->df()->adist_now());
-  const size_t astart = info_->geom()->df()->block(0)->astart();
+  const IndexRange aux(moint_info_->geom()->df()->adist_now());
+  const size_t astart = moint_info_->geom()->df()->block(0)->astart();
 
   auto compute = [&, this](const bool gaunt, const bool breit) {
     // create an intermediate array
@@ -301,7 +301,7 @@ cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<complex<double>>::i
     for (auto& i0 : blocks_[0]) {
       shared_ptr<const ZMatrix> i0coeff = coeff_->slice_copy(i0.offset(), i0.offset()+i0.size());
       list<shared_ptr<RelDFHalf>> half, half2;
-      tie(half, half2) = RelJop::compute_half(info_->geom(), i0coeff, gaunt, breit);
+      tie(half, half2) = RelJop::compute_half(moint_info_->geom(), i0coeff, gaunt, breit);
 
       for (auto& i1 : blocks_[1]) {
         shared_ptr<const ZMatrix> i1coeff = coeff_->slice_copy(i1.offset(), i1.offset()+i1.size());
@@ -371,8 +371,8 @@ cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::K2ext_new<complex<double>>::i
 
   // coulomb operator
   compute(false, false);
-  if (info_->gaunt())
-    compute(true, info_->breit());
+  if (moint_info_->gaunt())
+    compute(true, moint_info_->breit());
 
   map<vector<int>, pair<double,bool>> perm{{{0,1,2,3}, {1.0, false}}, {{2,3,0,1}, {1.0, false}}};
   if (braket) {
@@ -391,31 +391,31 @@ void MOInt::MOFock_new<double>::init() {
 cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::MOFock_new<double>::init() " << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // for simplicity, I assume that the Fock matrix is formed at once (may not be needed).
-  const int ncore   = info_->ncore();
-  const int nclosed = info_->nclosed() - ncore;
+  const int ncore   = moint_info_->ncore();
+  const int nclosed = moint_info_->nclosed() - ncore;
   assert(nclosed >= 0);
-  const int nocc    = info_->nocc();
-  const int nact    = info_->nact();
+  const int nocc    = moint_info_->nocc();
+  const int nact    = moint_info_->nact();
   const int nbasis  = coeff_->ndim();
 
   // cfock
-  shared_ptr<Matrix> cfock = info_->hcore()->copy();
+  shared_ptr<Matrix> cfock = moint_info_->hcore()->copy();
   core_energy_ = 0.0;
   if (ncore+nclosed) {
-    cfock = make_shared<Fock<1>>(info_->geom(), info_->hcore(), nullptr, coeff_->slice(0, ncore+nclosed), false, true);
+    cfock = make_shared<Fock<1>>(moint_info_->geom(), moint_info_->hcore(), nullptr, coeff_->slice(0, ncore+nclosed), false, true);
     shared_ptr<const Matrix> den = coeff_->form_density_rhf(ncore+nclosed);
-    core_energy_ = (*den * (*info_->hcore()+*cfock)).trace() * 0.5;
+    core_energy_ = (*den * (*moint_info_->hcore()+*cfock)).trace() * 0.5;
   }
 
   shared_ptr<const Matrix> fock1;
   if (nact) {
     Matrix tmp(nact, nact);
-    copy_n(info_->rdm1_av()->data(), tmp.size(), tmp.data());
+    copy_n(moint_info_->rdm1_av()->data(), tmp.size(), tmp.data());
     tmp.sqrt();
     tmp.scale(1.0/sqrt(2.0));
     shared_ptr<Matrix> weighted_coeff = coeff_->slice_copy(ncore+nclosed, nocc);
     *weighted_coeff *= tmp;
-    fock1 = make_shared<Fock<1>>(info_->geom(), cfock, nullptr, weighted_coeff, false, true);
+    fock1 = make_shared<Fock<1>>(moint_info_->geom(), cfock, nullptr, weighted_coeff, false, true);
   } else {
     fock1 = cfock;
   }
@@ -424,7 +424,7 @@ cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::MOFock_new<double>::init() " 
   // Note that E_ij,kl = E_ij E_kl - delta_jk E_il
   // and SMITH uses E_ij E_kl type excitations throughout. j and k must be active
   if (nact) {
-    shared_ptr<const DFHalfDist> half = info_->geom()->df()->compute_half_transform(coeff_->slice(ncore+nclosed, nocc))->apply_J();
+    shared_ptr<const DFHalfDist> half = moint_info_->geom()->df()->compute_half_transform(coeff_->slice(ncore+nclosed, nocc))->apply_J();
     *cfock -= *half->form_2index(half, 0.5);
   }
 
@@ -437,13 +437,13 @@ cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::MOFock_new<double>::init() " 
     fcl->diagonalize(eig);
     newcoeff->copy_block(0, 0, nbasis, ncore+nclosed, newcoeff->slice(0, ncore+nclosed) * *fcl);
   }
-  const int nvirt   = info_->nvirt();
-  const int nvirtall = nvirt+info_->nfrozenvirt();
+  const int nvirt   = moint_info_->nvirt();
+  const int nvirtall = nvirt+moint_info_->nfrozenvirt();
   if (nvirtall > 1) {
     shared_ptr<Matrix> fvirt = forig.get_submatrix(nocc, nocc, nvirtall, nvirtall);
     fvirt->diagonalize(eig);
     newcoeff->copy_block(0, nocc, nbasis, nvirtall, newcoeff->slice(nocc, nocc+nvirtall) * *fvirt);
-    if (info_->nfrozenvirt() > 0) {
+    if (moint_info_->nfrozenvirt() > 0) {
       cout << "       - Truncating virtual orbitals: " << setw(20) << setprecision(10) << eig[nvirt] << endl;
       newcoeff = newcoeff->slice_copy(0, nocc+nvirt);
     }
@@ -454,17 +454,23 @@ cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::MOFock_new<double>::init() " 
   auto f  = make_shared<Matrix>(*coeff_ % *fock1 * *coeff_);
   auto h1 = make_shared<Matrix>(*coeff_ % *cfock * *coeff_);
 
-  if (info_->block_diag_fock()) {
+  if (moint_info_->block_diag_fock()) {
     cout << "  * Removing off-diagonal blocks of the (nonrel) Fock matrix" << endl;
-    if (to_lower(info_->method()) == "casa")
+    if (to_lower(moint_info_->method()) == "casa")
       cout << "    CAS/A with these blocks neglected is equivalent to partially contracted NEVPT2." << endl;
     auto fsave = f->copy();
     f->zero();
-    const int nc = 1;
-    assert(f->ndim() == f->mdim() && f->ndim() == nc * info_->nocc() + nc * info_->nvirt());
-    f->copy_block(0, 0, nc*info_->nclosed(), nc*info_->nclosed(), fsave->get_submatrix(0, 0, nc*info_->nclosed(), nc*info_->nclosed()));
-    f->copy_block(nc*info_->nclosed(), nc*info_->nclosed(), nc*info_->nact(), nc*info_->nact(), fsave->get_submatrix(nc*info_->nclosed(), nc*info_->nclosed(), nc*info_->nact(), nc*info_->nact()));
-    f->copy_block(nc*info_->nocc(), nc*info_->nocc(), nc*info_->nvirt(), nc*info_->nvirt(), fsave->get_submatrix(nc*info_->nocc(), nc*info_->nocc(), nc*info_->nvirt(), nc*info_->nvirt()));
+    const int nc = 1; // TODO silly, fix
+    assert(f->ndim() == f->mdim() && f->ndim() == nc * moint_info_->nocc() + nc * moint_info_->nvirt());
+
+    f->copy_block( 0, 0, nc*moint_info_->nclosed(), nc*moint_info_->nclosed(),
+                   fsave->get_submatrix(0, 0, nc*moint_info_->nclosed(), nc*moint_info_->nclosed()));
+
+    f->copy_block( nc*moint_info_->nclosed(), nc*moint_info_->nclosed(), nc*moint_info_->nact(), nc*moint_info_->nact(),
+                   fsave->get_submatrix(nc*moint_info_->nclosed(), nc*moint_info_->nclosed(), nc*moint_info_->nact(), nc*moint_info_->nact()));
+
+    f->copy_block( nc*moint_info_->nocc(), nc*moint_info_->nocc(), nc*moint_info_->nvirt(), nc*moint_info_->nvirt(),
+                   fsave->get_submatrix(nc*moint_info_->nocc(), nc*moint_info_->nocc(), nc*moint_info_->nvirt(), nc*moint_info_->nvirt()));
   }
 
   data_ = SMITH::fill_block<2,double>(f, {0,0}, blocks_);
@@ -474,21 +480,21 @@ cout << "shared_ptr<SMITH::Tensor_<double>> MOInt::MOFock_new<double>::init() " 
 
 template<>
 void MOInt::MOFock_new<complex<double>>::init() {
-  const int ncore   = info_->ncore();
-  const int nclosed = info_->nclosed() - ncore;
+  const int ncore   = moint_info_->ncore();
+  const int nclosed = moint_info_->nclosed() - ncore;
   assert(nclosed >= 0);
-  const int nocc    = info_->nocc();
-  const int nact    = info_->nact();
+  const int nocc    = moint_info_->nocc();
+  const int nact    = moint_info_->nact();
 
-  auto relref = dynamic_pointer_cast<const RelReference>(info_->ref());
+  auto relref = dynamic_pointer_cast<const RelReference>(moint_info_->ref());
 
   // first hcore
-  auto hcore = make_shared<RelHcore>(info_->geom());
+  auto hcore = make_shared<RelHcore>(moint_info_->geom());
   shared_ptr<ZMatrix> cfock;
   core_energy_ = 0.0;
   if (ncore+nclosed) {
-    cfock = make_shared<DFock>(info_->geom(), hcore, coeff_->slice_copy(0, 2*(ncore+nclosed)),
-                               info_->gaunt(), info_->breit(), /*store_half*/false, info_->breit());
+    cfock = make_shared<DFock>(moint_info_->geom(), hcore, coeff_->slice_copy(0, 2*(ncore+nclosed)),
+                               moint_info_->gaunt(), moint_info_->breit(), /*store_half*/false, moint_info_->breit());
     shared_ptr<const ZMatrix> den = coeff_->form_density_rhf(2*(ncore+nclosed), 0);
     core_energy_ = detail::real((*den * (*hcore+*cfock)).trace()) * 0.5;
   } else {
@@ -502,7 +508,7 @@ void MOInt::MOFock_new<complex<double>>::init() {
     tmp->sqrt();
     shared_ptr<ZMatrix> weighted_coeff = coeff_->slice_copy(2*(ncore+nclosed), 2*nocc);
     *weighted_coeff *= *tmp;
-    fock1 = make_shared<DFock>(info_->geom(), cfock, weighted_coeff, info_->gaunt(), info_->breit(), false, info_->breit());
+    fock1 = make_shared<DFock>(moint_info_->geom(), cfock, weighted_coeff, moint_info_->gaunt(), moint_info_->breit(), false, moint_info_->breit());
   } else {
     fock1 = cfock;
   }
@@ -511,8 +517,8 @@ void MOInt::MOFock_new<complex<double>>::init() {
   // Note that E_ij,kl = E_ij E_kl - delta_jk E_il
   // and SMITH uses E_ij E_kl type excitations throughout. j and k must be active
   if (nact) {
-    cfock = make_shared<DFock>(info_->geom(), cfock, coeff_->slice_copy(2*(ncore+nclosed), 2*nocc),
-                               info_->gaunt(), info_->breit(), /*store_half*/false, /*robust*/info_->breit(),
+    cfock = make_shared<DFock>(moint_info_->geom(), cfock, coeff_->slice_copy(2*(ncore+nclosed), 2*nocc),
+                               moint_info_->gaunt(), moint_info_->breit(), /*store_half*/false, /*robust*/moint_info_->breit(),
                                /*scale_exch*/0.5, /*scale_coulomb*/0.0);
   }
 
@@ -535,8 +541,8 @@ void MOInt::MOFock_new<complex<double>>::init() {
     cout << endl;
   }
 
-  const int nvirt = info_->nvirt();
-  const int nvirtall = nvirt+info_->nfrozenvirt();
+  const int nvirt = moint_info_->nvirt();
+  const int nvirtall = nvirt+moint_info_->nfrozenvirt();
   if (nvirtall > 1) {
     auto fvirt = make_shared<QuatMatrix>(*forig.get_submatrix(nocc*2, nocc*2, nvirtall*2, nvirtall*2));
     assert(fvirt->is_t_symmetric(1.0e-6));
@@ -545,7 +551,7 @@ void MOInt::MOFock_new<complex<double>>::init() {
     const ZMatrix crot = coeff_->slice(nocc*2, (nocc+nvirtall)*2) * *fvirt;
     newcoeff->copy_block(0, nocc*2,       newcoeff->ndim(), nvirt, crot.slice(0, nvirt));
     newcoeff->copy_block(0, nocc*2+nvirt, newcoeff->ndim(), nvirt, crot.slice(nvirtall, nvirtall+nvirt));
-    if (info_->nfrozenvirt() > 0) {
+    if (moint_info_->nfrozenvirt() > 0) {
       cout << "       - Truncating virtual orbitals: " << setw(20) << setprecision(10) << eig[nvirt] << endl;
       newcoeff = newcoeff->slice_copy(0, (nocc+nvirt)*2);
     }
@@ -567,17 +573,23 @@ void MOInt::MOFock_new<complex<double>>::init() {
   if (!f->is_hermitian()) throw logic_error("Fock is not Hermitian");
   if (!h1->is_hermitian()) throw logic_error("Hcore is not Hermitian");
 
-  if (info_->block_diag_fock()) {
+  if (moint_info_->block_diag_fock()) {
     cout << "  * Removing off-diagonal blocks of the relativistic Fock matrix" << endl;
-    if (to_lower(info_->method()) == "casa")
+    if (to_lower(moint_info_->method()) == "casa")
       cout << "    CAS/A with these blocks neglected is equivalent to partially contracted NEVPT2." << endl;
     auto fsave = f->copy();
     f->zero();
     const int nc = 2;
-    assert(f->ndim() == f->mdim() && f->ndim() == nc * info_->nocc() + nc * info_->nvirt());
-    f->copy_block(0, 0, nc*info_->nclosed(), nc*info_->nclosed(), fsave->get_submatrix(0, 0, nc*info_->nclosed(), nc*info_->nclosed()));
-    f->copy_block(nc*info_->nclosed(), nc*info_->nclosed(), nc*info_->nact(), nc*info_->nact(), fsave->get_submatrix(nc*info_->nclosed(), nc*info_->nclosed(), nc*info_->nact(), nc*info_->nact()));
-    f->copy_block(nc*info_->nocc(), nc*info_->nocc(), nc*info_->nvirt(), nc*info_->nvirt(), fsave->get_submatrix(nc*info_->nocc(), nc*info_->nocc(), nc*info_->nvirt(), nc*info_->nvirt()));
+    assert(f->ndim() == f->mdim() && f->ndim() == nc * moint_info_->nocc() + nc * moint_info_->nvirt());
+
+    f->copy_block( 0, 0, nc*moint_info_->nclosed(), nc*moint_info_->nclosed(),
+                   fsave->get_submatrix(0, 0, nc*moint_info_->nclosed(), nc*moint_info_->nclosed()));
+
+    f->copy_block( nc*moint_info_->nclosed(), nc*moint_info_->nclosed(), nc*moint_info_->nact(), nc*moint_info_->nact(),
+                   fsave->get_submatrix(nc*moint_info_->nclosed(), nc*moint_info_->nclosed(), nc*moint_info_->nact(), nc*moint_info_->nact()));
+
+    f->copy_block( nc*moint_info_->nocc(), nc*moint_info_->nocc(), nc*moint_info_->nvirt(), nc*moint_info_->nvirt(),
+                   fsave->get_submatrix(nc*moint_info_->nocc(), nc*moint_info_->nocc(), nc*moint_info_->nvirt(), nc*moint_info_->nvirt()));
   }
 
   data_ = SMITH::fill_block<2,complex<double>>(f->get_conjg(), {0,0}, blocks_);

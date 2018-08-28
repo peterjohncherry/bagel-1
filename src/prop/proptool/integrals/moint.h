@@ -51,7 +51,7 @@ namespace MOInt {
   
       using IndexRange = SMITH::IndexRange;
   
-      std::shared_ptr<const MOInt_Init<DataType>> info_;
+      std::shared_ptr<const MOInt_Init<DataType>> moint_info_;
       std::shared_ptr<const MatType> coeff_;
       std::vector<IndexRange> blocks_;
       std::shared_ptr<Tensor> data_;
@@ -80,7 +80,7 @@ namespace MOInt {
     
       using IndexRange = SMITH::IndexRange;
     
-      std::shared_ptr<const MOInt_Init<DataType>> info_;
+      std::shared_ptr<const MOInt_Init<DataType>> moint_info_;
       std::shared_ptr<const MatType> coeff_;
       std::vector<IndexRange> blocks_;
       std::shared_ptr<Tensor> data_;
@@ -92,7 +92,7 @@ namespace MOInt {
     
     public:
       MOFock_new(std::shared_ptr<const MOInt_Init<DataType>> r, const std::vector<SMITH::IndexRange>& b)
-            : info_(r), coeff_(info_->coeff()), blocks_(b) {
+            : moint_info_(r), coeff_(moint_info_->coeff()), blocks_(b) {
              assert(b.size() == 2 && b[0] == b[1]);
              init();
             };
