@@ -102,53 +102,40 @@ class StatesInfo_Base  {
   
      //for spin-free only 
      std::shared_ptr<std::vector<std::string>> civec_names(int state_number) { return state_civec_names_.at(state_number); }
- 
-     std::shared_ptr<CIVecInfo_Base> civec_info ( std::string civec_name )  {
-       return civec_info_map_.at(civec_name);
-     };
+     std::shared_ptr<CIVecInfo_Base> civec_info ( std::string civec_name ) { return civec_info_map_.at(civec_name); };
 
-     std::shared_ptr<std::map< char ,int>> hole_range_map( std::string civec_name )  {
-       return civec_info_map_.at(civec_name)->hole_range_map();
-     };
-  
-     std::shared_ptr<std::map< char ,int>> elec_range_map( std::string civec_name )  {
-       return civec_info_map_.at(civec_name)->elec_range_map();
-     };
+     std::shared_ptr<std::map<char,int>> hole_range_map( std::string civec_name ) { return civec_info_map_.at(civec_name)->hole_range_map(); };
+     std::shared_ptr<std::map<char,int>> elec_range_map( std::string civec_name ) { return civec_info_map_.at(civec_name)->elec_range_map(); };
 
      int nalpha(int state_number) { return civec_info_map_.at(state_civec_names_.at(state_number)->front())->nalpha(); }
-     int nbeta(int state_number) { return civec_info_map_.at(state_civec_names_.at(state_number)->front())->nbeta(); }
-     int nact(int state_number) { return civec_info_map_.at(state_civec_names_.at(state_number)->front())->nact(); }
-     int nele(int state_number) { return civec_info_map_.at(state_civec_names_.at(state_number)->front())->nele(); } 
+     int nbeta( int state_number) { return civec_info_map_.at(state_civec_names_.at(state_number)->front())->nbeta();  }
+     int nact(  int state_number) { return civec_info_map_.at(state_civec_names_.at(state_number)->front())->nact();   }
+     int nele(  int state_number) { return civec_info_map_.at(state_civec_names_.at(state_number)->front())->nele();   } 
 
-//     std::shared_ptr<std::vector< std::shared_ptr<CIVecInfo_Base>>> civec_info ( int state_number )  {
-//       return civec_info_map_.at(state_civec_names_.at(state_number));
-//     };
+     std::shared_ptr<CIVecInfo_Base> civec_info ( int state_number )  { return civec_info_map_.at(state_civec_names_.at(state_number)->front()); };
 
 };
-
-
 
 //Written strangely so can be compatible with states with multiple spin sectors.
 //Would be better with base class and two derived classes.
 template<typename DataType>
 class StatesInfo  : public  StatesInfo_Base { 
    
-   public: 
+  public: 
 
-     StatesInfo(std::vector<int> target_state_nums) : StatesInfo_Base( target_state_nums ) {}; 
-     ~StatesInfo(){}; 
+    StatesInfo(std::vector<int> target_state_nums) : StatesInfo_Base( target_state_nums ) {}; 
+    ~StatesInfo(){}; 
 
-     void add_state( const int nact, const int nele, const int state_number, std::shared_ptr<std::map<char, int>> elec_range_map,
-                     std::shared_ptr<std::map<char, int>> hole_range_map ) {
-        
-       if ( state_civec_names_.find(state_number) == state_civec_names_.end() ){ 
-         std::string civec_name = WickUtils::get_civec_name( state_number, elec_range_map->at('a') + hole_range_map->at('a'), elec_range_map->at('a'), elec_range_map->at('A'));
-         civec_info_map_.emplace( civec_name, std::make_shared<CIVecInfo<DataType>>( state_number, civec_name, elec_range_map, hole_range_map ) ); 
-         state_civec_names_.emplace(state_number, std::make_shared<std::vector<std::string>>(1, civec_name));
-       } else { 
-         std::cout << "state " << state_number << " already has it's civecs in the map !! " << std::endl; 
-       }
-     }
- 
+    void add_state( const int nact, const int nele, const int state_number, std::shared_ptr<std::map<char, int>> elec_range_map,
+                    std::shared_ptr<std::map<char, int>> hole_range_map ) {
+       
+      if ( state_civec_names_.find(state_number) == state_civec_names_.end() ){ 
+        std::string civec_name = WickUtils::get_civec_name( state_number, elec_range_map->at('a') + hole_range_map->at('a'), elec_range_map->at('A'), elec_range_map->at('A'));
+        civec_info_map_.emplace( civec_name, std::make_shared<CIVecInfo<DataType>>( state_number, civec_name, elec_range_map, hole_range_map ) ); 
+        state_civec_names_.emplace(state_number, std::make_shared<std::vector<std::string>>(1, civec_name));
+      } else { 
+        std::cout << "state " << state_number << " already has it's civecs in the map !! " << std::endl; 
+      }
+    }
 };
 #endif

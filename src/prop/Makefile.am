@@ -14,6 +14,7 @@ proptool/algebraic_manipulator/braket_full.cc proptool/algebraic_manipulator/gam
 proptool/algebraic_manipulator/braket_orb_exc_deriv.cc proptool/algebraic_manipulator/gamma_generator_orb_exc_deriv.cc \
 proptool/algebraic_manipulator/symmetry_operations.cc proptool/algebraic_manipulator/system_info.cc proptool/algebraic_manipulator/range_block_info.cc \
 proptool/algebraic_manipulator/constraints.cc proptool/algebraic_manipulator/op_info.cc \
+proptool/algebraic_manipulator/rdm_tester.cc \
 \
 proptool/initialization/equation_init.cc proptool/initialization/equation_init_linearRM.cc \
 \
