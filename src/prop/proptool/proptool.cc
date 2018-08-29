@@ -1,6 +1,8 @@
 #include <src/prop/proptool/proptool.h>
 #include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
 #include <src/prop/proptool/debugging_utils.h>
+#include <src/prop/proptool/tensor_and_ci_lib/gamma_computer.h>
+#include <src/prop/proptool/tensor_and_ci_lib/ci_type_converter.h>
 
 using namespace std;
 using namespace bagel;
@@ -100,6 +102,8 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
 
 //  vector<string> free4 = { "free", "free", "free", "free" };
 //  moint_computer_->calculate_v2( free4 );
+
+  shared_ptr<Gamma_Computer::Gamma_Computer<double>> gamma_computer_new = make_shared<Gamma_Computer::Gamma_Computer<double>>();
 
   //TODO should build gamma_computer inside system_computer, like this due to Determinant class dependence of B_Gamma_Computer 
   auto gamma_computer = make_shared<B_Gamma_Computer::B_Gamma_Computer<double>>(civectors_); 

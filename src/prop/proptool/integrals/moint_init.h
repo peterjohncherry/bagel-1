@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <src/wfn/relreference.h>
 #include <src/smith/tensor.h>
-#include <src/smith/indexrange.h>
 
 namespace bagel {
 
@@ -17,8 +16,6 @@ namespace bagel {
 
       using Tensor = typename std::conditional<std::is_same<DataType,double>::value,
                                                SMITH::Tensor_<double>,SMITH::Tensor_<std::complex<double>>>::type;
-
-      using IndexRange = SMITH::IndexRange;
 
       int ncore_;
       int nfrozenvirt_;

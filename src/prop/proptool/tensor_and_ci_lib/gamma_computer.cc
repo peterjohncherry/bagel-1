@@ -11,38 +11,6 @@ using namespace Tensor_Arithmetic;
 using namespace Tensor_Arithmetic_Utils;
 using namespace WickUtils;
 //#define __DEBUG_PROPTOOL_GAMMA_COMPUTER
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//Need different one for rel and non-rel
-template<typename DataType>
-void Gamma_Computer_Init::Gamma_Computer_Init<DataType>::add_civec(std::shared_ptr<Civec> civec, int state_num )  {
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer_Init" << endl;
-#endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  std::string civec_name = get_civec_name( state_num, civec->det()->norb(), civec->det()->nelea(), civec->det()->neleb() );
-
-  if ( civec_data_map_->find(civec_name) == civec_data_map_->end()){
- 
-    vector<IndexRange> civec_idxrng(1, *(range_conversion_map_->at(civec_name)) );
-
-    shared_ptr<Tensor_<DataType>> civec_tensor = make_shared<Tensor_<DataType>>( civec_idxrng );
-    civec_tensor->allocate();
-    civec_tensor->zero();
-    size_t idx_position = 0;
-    for ( Index idx_block : civec_idxrng[0].range() ){
-       unique_ptr<DataType[]> civec_block(new DataType[idx_block.size()]);
-       std::fill_n(civec_block.get(), idx_block.size(), DataType(0.0) );
-       copy_n( civec->data() + idx_position, idx_block.size(), civec_block.get());
-       civec_tensor->put_block(civec_block, vector<Index>({ idx_block })) ;
-       idx_position += idx_block.size();
-    }
-    civec_data_map_->emplace( civec_name, civec_tensor);
-  } else { 
-    throw logic_error("Already have civec " +  civec_name + " in the map! Aborting!!" );
-  } 
-  return;
-}
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 Gamma_Computer::Gamma_Computer<DataType>::Gamma_Computer() {
@@ -779,4 +747,5 @@ cout << "Gamma_Computer::get_bagel_indexranges 1arg "; print_vector(ranges_str, 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template class Gamma_Computer::Gamma_Computer<double>;
+//template class Gamma_Computer::Gamma_Computer<std::complex<double>>;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

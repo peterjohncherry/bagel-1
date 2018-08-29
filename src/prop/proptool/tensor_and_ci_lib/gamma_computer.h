@@ -1,10 +1,9 @@
-#ifndef __SRC_PROP_PROPTOOL_WICKTOOL_B_GAMMA_COMPUTER_H
-#define __SRC_PROP_PROPTOOL_WICKTOOL_B_GAMMA_COMPUTER_H
+#ifndef __SRC_PROP_PROPTOOL_TENS_AND_CI_LIB_GAMMA_COMPUTER_H
+#define __SRC_PROP_PROPTOOL_TENS_AND_CI_LIB_GAMMA_COMPUTER_H
 
 #include <src/smith/tensor.h>
 #include <src/smith/indexrange.h>
-#include <src/ci/fci/civec.h>
-#include <src/ci/fci/dvec.h>
+#include <src/ci/fci/determinants.h>
 #include <src/util/f77.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_sorter.h>
 #include <src/prop/proptool/tensor_and_ci_lib/tensor_arithmetic.h>
@@ -13,24 +12,6 @@
 
 namespace bagel {
 
-namespace Gamma_Computer_Init { 
-template<typename DataType>
-class Gamma_Computer_Init { 
-  public: 
-
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_; 
-
-    Gamma_Computer_Init( std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map ): 
-                         range_conversion_map_(range_conversion_map),
-                         civec_data_map_( std::make_shared<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>>()) {};
-    ~Gamma_Computer_Init(){};
-    
-     void add_civec( std::shared_ptr<Civec> civec, int state_num );
-    
-   
- };
-};
 namespace Gamma_Computer { 
 template<typename DataType>
 class Gamma_Computer { 

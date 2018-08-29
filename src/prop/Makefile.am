@@ -19,7 +19,7 @@ proptool/algebraic_manipulator/rdm_tester.cc \
 proptool/initialization/equation_init.cc proptool/initialization/equation_init_linearRM.cc \
 \
 proptool/tensor_and_ci_lib/b_gamma_computer.cc proptool/tensor_and_ci_lib/tensor_arithmetic.cc proptool/tensor_and_ci_lib/tensor_arithmetic_utils.cc \
-proptool/tensor_and_ci_lib/gamma_computer.cc proptool/tensor_and_ci_lib/vector_bundle.cc \
+proptool/tensor_and_ci_lib/gamma_computer.cc proptool/tensor_and_ci_lib/vector_bundle.cc proptool/tensor_and_ci_lib/ci_type_converter.cc \
 \
 proptool/task_translator/tensop_computer.cc proptool/task_translator/expression_computer.cc \
 proptool/task_translator/equation_computer.cc proptool/task_translator/system_computer.cc \
