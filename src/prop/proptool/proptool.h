@@ -2,18 +2,14 @@
 #define __SRC_PROPTOOL
 
 #include <src/global.h>
-#include <src/wfn/get_energy.h>
 #include <src/wfn/reference.h>
 #include <src/wfn/ciwfn.h>
 #include <src/smith/indexrange.h>
 #include <src/smith/tensor.h>
-#include <src/smith/multitensor.h>
 #include <src/prop/proptool/initialization/equation_init_linearRM.h>
 #include <src/prop/proptool/initialization/op_bk_term_expr_init.h>
 #include <src/prop/proptool/integrals/moint_computer.h>
 #include <src/prop/proptool/task_translator/system_computer.h>
-#include <src/prop/proptool/tensor_and_ci_lib/b_gamma_computer.h>
-
 
 namespace bagel {
 namespace PropTool { 
@@ -69,9 +65,6 @@ namespace PropTool {
     std::shared_ptr<std::map< std::string, std::shared_ptr<Expression<double>>>> expression_map_;
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<Term_Init> >> term_init_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Expression_Init> >> expression_init_map_;
-    std::shared_ptr<std::map< std::string, std::shared_ptr<Equation_Init_Base> >> equation_init_map_;
-
     std::shared_ptr<StatesInfo<double>> targets_info_; //this contains all information about the states
 
     // initialiation info
@@ -109,9 +102,13 @@ namespace PropTool {
       PropTool(); 
       ~PropTool(){};
     
+     void build_mo_computer();
+     void build_gamma_computer();  
+
      void construct_task_lists();
      void execute_compute_lists();  
 
+     //TEST
      int nclosed(){ return nclosed_;}     
      int nocc ()  { return nocc_;}     
      int nact ()  { return nact_;}     
@@ -120,7 +117,6 @@ namespace PropTool {
      int nfrozenvirt(){ return nfrozenvirt_;}     
      bool block_diag_fock() { return block_diag_fock_; }     
 
-     //TEST
      std::shared_ptr<MOInt_Computer<double>> moint_computer_;
      std::shared_ptr<SMITH::Tensor_<double>> tamps_smith_;
      std::shared_ptr<SMITH::Tensor_<double>> v2_smith_;

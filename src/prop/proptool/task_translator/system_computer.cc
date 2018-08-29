@@ -1,19 +1,12 @@
 #include <bagel_config.h>
 #include  <src/prop/proptool/task_translator/system_computer.h>
 
-
 using namespace std;
 using namespace bagel;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-System_Computer::System_Computer<DataType>::System_Computer(shared_ptr<System_Info<DataType>> system_info,
-                                                            shared_ptr<MOInt_Computer<DataType>> moint_computer,
-                                                            shared_ptr<map< string, shared_ptr<SMITH::IndexRange>>> range_conversion_map,
-                                                            shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> b_gamma_computer ):
-                                                            system_info_(system_info), moint_computer_(moint_computer),
-                                                            range_conversion_map_(range_conversion_map),
-                                                            b_gamma_computer_(b_gamma_computer) {
+System_Computer::System_Computer<DataType>::System_Computer(shared_ptr<System_Info<DataType>> system_info ): system_info_(system_info) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL
 cout << "System_Computer::System_Computer<DataType>::System_Computer()" << endl;
@@ -21,13 +14,7 @@ cout << "System_Computer::System_Computer<DataType>::System_Computer()" << endl;
   sigma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
   civec_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
   gamma_data_map_  = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
-
   tensop_data_map_ = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
-
-  gamma_data_map_ = make_shared<map< string, shared_ptr<SMITH::Tensor_<DataType>>>>();
-
-  b_gamma_computer_->set_maps( range_conversion_map_, system_info_->Gamma_map, gamma_data_map_,
-                               sigma_data_map_, civec_data_map_ );
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////

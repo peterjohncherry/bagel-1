@@ -1,8 +1,10 @@
 #include <src/prop/proptool/proptool.h>
 #include <src/prop/proptool/algebraic_manipulator/symmetry_operations.h>
-#include <src/prop/proptool/debugging_utils.h>
+#include <src/prop/proptool/tensor_and_ci_lib/b_gamma_computer.h>
 #include <src/prop/proptool/tensor_and_ci_lib/gamma_computer.h>
 #include <src/prop/proptool/tensor_and_ci_lib/ci_type_converter.h>
+#include <src/prop/proptool/debugging_utils.h>
+
 
 using namespace std;
 using namespace bagel;
@@ -21,13 +23,12 @@ cout << "PropTool::PropTool::PropTool" << endl;
   inp_indexed_factor_map_ = make_shared<map<string, shared_ptr<vector<double>>>>(); // TODO sort this
   inp_range_map_ = make_shared<map<string, shared_ptr<vector<int>>>>();
 
-  set_primes();
   range_conversion_map_ = make_shared<map<string, shared_ptr<SMITH::IndexRange>>>();
+
+  set_primes();
   range_prime_map_ = make_shared<map<char,long unsigned int>>();
 
   term_init_map_ = make_shared<map<string, shared_ptr<Term_Init>>>();
-  expression_init_map_ = make_shared<map<string, shared_ptr<Expression_Init>>>();
-  equation_init_map_ = make_shared<map<string, shared_ptr<Equation_Init_Base>>>();
 
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -39,6 +40,9 @@ cout << "PropTool::PropTool::construct_task_lists" << endl;
 
   read_input_and_initialize(); 
   build_algebraic_task_lists( idata_->get<string>("equation interdependence", "share" ) ) ;
+
+  build_mo_computer();
+  build_gamma_computer();
 
   return;
 }
@@ -91,25 +95,6 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
   sys_info_ = make_shared<System_Info<double>>( targets_info_, true );
   sys_info_->range_prime_map_ = range_prime_map_;
 
-  // build system computer (for computational task list construction/execution)
-  auto moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_, nfrozenvirt_, block_diag_fock_ );
-
-  moint_computer_ = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
-  moint_computer_->t_from_smith_ = tamps_smith_; 
-  
-//  vector<string> free2 = { "free" , "free" };
-//  moint_computer_->calculate_fock( free2, true, true );
-
-//  vector<string> free4 = { "free", "free", "free", "free" };
-//  moint_computer_->calculate_v2( free4 );
-
-  shared_ptr<Gamma_Computer::Gamma_Computer<double>> gamma_computer_new = make_shared<Gamma_Computer::Gamma_Computer<double>>();
-
-  //TODO should build gamma_computer inside system_computer, like this due to Determinant class dependence of B_Gamma_Computer 
-  auto gamma_computer = make_shared<B_Gamma_Computer::B_Gamma_Computer<double>>(civectors_); 
-
-  system_computer_ = make_shared<System_Computer::System_Computer<double>>(sys_info_, moint_computer_, range_conversion_map_, gamma_computer );
-
   shared_ptr< const PTree > ops_def_tree = idata_->get_child_optional( "operators" ) ;
   if (ops_def_tree)
     get_new_ops_init( ops_def_tree ); 
@@ -118,9 +103,49 @@ cout << "void PropTool::PropTool::read_input_and_initialize()" << endl;
   get_terms_init( idata_->get_child( "terms" ) ); 
   get_equations_init( idata_->get_child( "equations" ) );
 
+  system_computer_ = make_shared<System_Computer::System_Computer<double>>(sys_info_ );
+  system_computer_->range_conversion_map_ = range_conversion_map_;
+
+  return;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::build_mo_computer(){ //TODO should be inside system computer when finished with testing
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
+cout << "void PropTool::PropTool::read_input_and_initialize()" << endl; 
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  // build system computer (for computational task list construction/execution)
+  auto moint_init = make_shared<MOInt_Init<double>>( geom_, dynamic_pointer_cast<const Reference>(ref_), ncore_, nfrozenvirt_, block_diag_fock_ );
+
+  moint_computer_ = make_shared<MOInt_Computer<double>>( moint_init, range_conversion_map_ );
+  moint_computer_->t_from_smith_ = tamps_smith_; 
+  
+  vector<string> free2 = { "free" , "free" };
+  moint_computer_->calculate_fock( free2, true, true );
+
+  vector<string> free4 = { "free", "free", "free", "free" };
+  moint_computer_->calculate_v2( free4 );
+
+  system_computer_->moint_computer_ = moint_computer_;
   return;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PropTool::PropTool::build_gamma_computer(){ //TODO should be inside system computer when finished with testing
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef __DEBUG_PROPTOOL_DRIVER
+cout << "void PropTool::PropTool::build_gamma_computer()" << endl; 
+#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  unique_ptr<CI_Type_Converter::CI_Type_Converter<double>> ci_type_converter = make_unique<CI_Type_Converter::CI_Type_Converter<double>>(range_conversion_map_);
+  unique_ptr<Gamma_Computer::Gamma_Computer<double>> gamma_computer_new = make_unique<Gamma_Computer::Gamma_Computer<double>>();
+
+  //TODO should build gamma_computer inside system_computer, like this due to Determinant class dependence of B_Gamma_Computer 
+  system_computer_->b_gamma_computer_ = make_shared<B_Gamma_Computer::B_Gamma_Computer<double>>(civectors_);
+
+  return;
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Gets ranges and factors from the input which will be used in definition of terms
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,8 +159,9 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   maxtile_   = idata_->get<int>("maxtile", 10);
   maxtile_ = 50;
 
+  //TODO fix this so it uses the above statement, issue in b_gamma_computer means must use large cimaxblock for now
   //cimaxtile_ = idata_->get<int>("cimaxtile", (ciwfn_->civectors()->size() > 10000) ? 100 : 10);
-  cimaxtile_ = 100000; //TODO fix this so it uses the above statement, issue in b_gamma_computer means must use large cimaxblock for now
+  cimaxtile_ = 100000;
 
   const bool frozen = idata_->get<bool>("frozen", false);
   ncore_ = idata_->get<int>("ncore", (frozen ? ref_->geom()->num_count_ncore_only()/2 : 0));
@@ -166,13 +192,11 @@ cout << "PropTool::PropTool::get_wavefunction_info()" << endl;
   block_diag_fock_ = false;
   gaunt_    = false;
   breit_    = false;
-
   
   set_ao_range_info(); 
 
   //creates the ci_info from the reference wavefunction
   set_ci_range_info();
-
   set_target_state_info();
 
   return;
@@ -302,8 +326,6 @@ cout << "void PropTool::PropTool::get_new_ops_init" << endl;
     } else {  
       factor_re_im = make_pair( factors_reim_ptree->get<double>( "factor", 1.0 ), factors_reim_ptree->get<double>( "factor", 0.0));
     }
-
-    cout << "factor_re_im = (" << factor_re_im.first << ", " << factor_re_im.second << " )" << endl;     
  
     vector<shared_ptr<Transformation>> symmfuncs(0);
     vector<shared_ptr<Constraint>> constraints(0);
@@ -545,7 +567,6 @@ cout << "PropTool::PropTool::set_ao_range_info" << endl;
   //active_rng_  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact_, min((size_t)10,maxtile_), closed_rng_->nblock(), ncore_ + closed_rng_->size()));
   active_rng_  = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nact_, maxtile_, closed_rng_->nblock(), ncore_ + closed_rng_->size()));
   virtual_rng_ = make_shared<SMITH::IndexRange>(SMITH::IndexRange(nvirt_, maxtile_, closed_rng_->nblock()+ active_rng_->nblock(), ncore_+closed_rng_->size()+active_rng_->size()));
-
 
   free_rng_    = make_shared<SMITH::IndexRange>(*closed_rng_);
   free_rng_->merge(*active_rng_);
