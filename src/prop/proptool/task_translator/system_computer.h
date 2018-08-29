@@ -29,6 +29,11 @@ class System_Computer {
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_ ;
     std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> b_gamma_computer_;
 
+#ifdef __PROPTOOL_RDM_UNIT_TEST
+    RDM_Computer::RDM_Computer rdm_computer_;
+#endif 
+  
+
   public:
     System_Computer( std::shared_ptr<System_Info<DataType>> system_info, std::shared_ptr<MOInt_Computer<DataType>> moint_computer,
                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map, 

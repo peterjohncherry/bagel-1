@@ -24,9 +24,17 @@ Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_
   moint_computer_(moint_computer) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
   scalar_results_map   = make_shared<map<string, DataType >>(); //TODO dumb, check why not in header and fix  
   tensor_results_map_  = make_shared<map<string, shared_ptr<Tensor_<DataType>>>>(); 
   gamma_contrib_maps_ = make_shared<map<string, shared_ptr<map<string, DataType> >>>(); 
+
+#ifdef __DEBUG_PROPTOOL_RDM_TEST
+  if ( std::is_same<double, DataType> ) 
+    rdm_computer_ = make_unique<RDM_Computer::RDM_Computer>(gamma_computer);
+#endif
+
+
 }  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
