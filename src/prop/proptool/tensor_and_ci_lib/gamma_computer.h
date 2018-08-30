@@ -19,16 +19,14 @@ class Gamma_Computer {
     private: 
 
       std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map_;
-      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map_;
-
       std::shared_ptr<std::map< std::string, std::shared_ptr<Determinants>>> bagel_determinant_map_;
-
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
-      
+
       std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<DataType>> tensor_calc_;
  
-      std::shared_ptr<std::map< std::string, std::shared_ptr<Vector_Bundle<DataType>>>>  vb_sigma_data_map_;
-      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> vb_gamma_data_map_;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map_;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map_;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<Vector_Bundle<DataType>>>>  sigma_data_map_;
 
       double thresh_;
       size_t civec_maxtile_;
@@ -36,42 +34,49 @@ class Gamma_Computer {
     public: 
 
       Gamma_Computer(); 
-      Gamma_Computer( std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map,
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map,
-                      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map );
       ~Gamma_Computer(){};
+
+      ////////////////////// Setting map routines ////////////////////////
+ 
+      void set_range_conversion_map (  std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map ) {
+           range_conversion_map_ = range_conversion_map; return; }
+ 
+      void set_gamma_info_map ( std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>>  gamma_info_map  ) {
+           gamma_info_map_ = gamma_info_map; return; }
+
+      void set_civec_data_map ( std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map ) {
+           civec_data_map_ = civec_data_map; return; }
+
+      /////////////Gamma routines (Vector Bundle based) //////////////////
       
+      void get_gamma( std::string gamma_name );
 
-      ////////////Gamma routines (Vector Bundle based) //////////////////
-      
-      void get_gamma_vb( std::string gamma_name );
+      void get_gammaN_from_sigmaN( std::shared_ptr<GammaInfo_Base> gamma_n_info );
 
-      void get_gammaN_from_sigmaN_vb( std::shared_ptr<GammaInfo_Base> gamma_n_info );
-
-      void compute_gammaN_vb( std::shared_ptr<GammaInfo_Base> gammaN_info );
+      void compute_gammaN( std::shared_ptr<GammaInfo_Base> gammaN_info );
      
-      void compute_sigmaN_vb( std::shared_ptr<GammaInfo_Base> gammaN_info );
+      void compute_sigmaN( std::shared_ptr<GammaInfo_Base> gammaN_info );
 
-      void sigma_aa_vb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
+      void sigma_aa( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
    
-      void sigma2_aa_vb( std::shared_ptr<Vector_Bundle<DataType>> sigma_aa, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
+      void sigma2_aa( std::shared_ptr<Vector_Bundle<DataType>> sigma_aa, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
+                      std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+
+      void compute_sigma2( std::shared_ptr<GammaInfo_Base> gamma2_info );
+
+      void sigma_bb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ); 
+
+      void sigma2_bb( std::shared_ptr<Vector_Bundle<DataType>> sigma_bb, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
                          std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
 
-      void compute_sigma2_vb( std::shared_ptr<GammaInfo_Base> gamma2_info );
+      void sigma_ab( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
 
-      void sigma_bb_vb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ); 
-
-      void sigma2_bb_vb( std::shared_ptr<Vector_Bundle<DataType>> sigma_bb, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
+      void sigma2_ab( std::shared_ptr<Vector_Bundle<DataType>> sigma_ba, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
                          std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
 
-      void sigma_ab_vb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
+      void sigma_ba( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
 
-      void sigma2_ab_vb( std::shared_ptr<Vector_Bundle<DataType>> sigma_ba, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
-                         std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
-
-      void sigma_ba_vb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
-
-      void sigma2_ba_vb( std::shared_ptr<Vector_Bundle<DataType>> sigma_ba, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
+      void sigma2_ba( std::shared_ptr<Vector_Bundle<DataType>> sigma_ba, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
                          std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
 
       void compute_eiej_on_ket( std::shared_ptr<Vector_Bundle<DataType>> eiej_on_ket, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
@@ -79,7 +84,7 @@ class Gamma_Computer {
 
       /////////// Utility routines /////////////////////////
       
-      std::vector<SMITH::IndexRange>  get_bagel_indexranges( const std::vector<std::string>& ranges_str);
+      std::vector<SMITH::IndexRange> get_bagel_indexranges( const std::vector<std::string>& ranges_str);
       void get_wfn_data( std::shared_ptr<CIVecInfo_Base>  cvec_info );
       void convert_civec_to_tensor( std::string civec_name ) ;
 };

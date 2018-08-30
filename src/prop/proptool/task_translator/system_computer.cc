@@ -28,7 +28,7 @@ cout << "System_Computer<DataType>::build_equation_computer : " << equation_name
   shared_ptr<Equation_Base<DataType>> equation_basic = system_info_->equation_map_->at(equation_name);
 
   if ( equation_basic->type()  ==  "Value" ) {
-    shared_ptr<Equation_Computer_Value<DataType>> equation_computer = make_shared<Equation_Computer_Value<DataType>>( equation_basic, range_conversion_map_ );
+    auto equation_computer = make_shared<Equation_Computer_Value<DataType>>( equation_basic, range_conversion_map_ );
     equation_computer->set_computers( b_gamma_computer_, moint_computer_ ) ;
     equation_computer->set_maps( gamma_data_map_, tensop_data_map_ );
     equation_computer->build_expression_computer();

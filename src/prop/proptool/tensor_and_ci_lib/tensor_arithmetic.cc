@@ -69,8 +69,6 @@ cout << endl <<  "Tensor_Arithmetic::add_list_of_reordered_tensors" <<endl;
 
       unique_ptr<DataType[]> target_block_data  = target->get_block(target_block_ranges);
       size_t summand_block_size  = summand->get_size( summand_block_ranges );    
-      cout << endl <<  " pre target_block sum = " << sum_unique_ptr_elems( target_block_data, summand_block_size); cout << endl;
-
       unique_ptr<DataType[]> summand_block_data  = summand->get_block(summand_block_ranges);
       DataType* summand_block_ptr = summand_block_data.get();
       vector<vector<int>>::iterator sr_it = summand_reorderings.begin();
@@ -506,11 +504,10 @@ template<class DataType>
 shared_ptr<Tensor_<DataType>>
 Tensor_Arithmetic::Tensor_Arithmetic<DataType>::contract_on_same_tensor( shared_ptr<Tensor_<DataType>> Tens_in,  pair<int,int> ctrs_pair) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC 
+#ifdef __DEBUG_PROPTOOL_TENSOR_ARITHMETIC_VERBOSE 
 cout << "Tensor_Arithmetic::contract_on_same_tensor , pair " << endl;
 #endif ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
    vector<int> ctrs_pos = { ctrs_pair.first, ctrs_pair.second };
-
    return contract_on_same_tensor( Tens_in, ctrs_pos) ;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -32,18 +32,17 @@ class System_Computer {
 
   public:
     System_Computer( std::shared_ptr<System_Info<DataType>> system_info ); 
-
    ~System_Computer(){};
 
     void build_equation_computer(std::string equation_name );
     void build_tensop( std::string tensop_name ) ;
  
-
     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_ ;
 
   // TODO these should be protected 
     std::shared_ptr<MOInt_Computer<DataType>> moint_computer_;
     std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> b_gamma_computer_;
+    std::shared_ptr<Gamma_Computer::Gamma_Computer<DataType>> gamma_computer_;
 
 };
 }

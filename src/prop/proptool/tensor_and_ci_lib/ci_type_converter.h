@@ -14,10 +14,10 @@ class CI_Type_Converter {
   public: 
 
     // TODO For different conversions modify these using statements (why not typedef?)
+    using Index = SMITH::Index;
+    using IndexRange = SMITH::IndexRange;
     using Tensor = typename std::conditional<std::is_same<DataType,double>::value,
                                              SMITH::Tensor_<double>,SMITH::Tensor_<std::complex<double>>>::type;
-    using IndexRange = SMITH::IndexRange;
-    using Index = SMITH::Index;
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor>>> civec_data_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_; 
@@ -29,7 +29,7 @@ class CI_Type_Converter {
     CI_Type_Converter(){};
     ~CI_Type_Converter(){};
    
-     void add_civec( std::shared_ptr<Civec> civec, int state_num );
+    void add_civec( std::shared_ptr<const Civec> civec, int state_num );
    
   };
 }

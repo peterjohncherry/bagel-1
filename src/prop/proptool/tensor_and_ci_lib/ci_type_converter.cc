@@ -10,13 +10,13 @@ using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Need different one for rel and non-rel
 template<typename DataType>
-void CI_Type_Converter::CI_Type_Converter<DataType>::add_civec(std::shared_ptr<Civec> civec, int state_num )  {
+void CI_Type_Converter::CI_Type_Converter<DataType>::add_civec(std::shared_ptr<const Civec> civec, int state_num )  {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_CI_TYPE_CONVERTER
 cout << "CI_Type_Converter::CI_Type_Converter" << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  assert( range_conversion_map_ != NULL ); 
+  //assert( range_conversion_map_ != NULL ); 
 
   std::string civec_name = get_civec_name( state_num, civec->det()->norb(), civec->det()->nelea(), civec->det()->neleb() );
 

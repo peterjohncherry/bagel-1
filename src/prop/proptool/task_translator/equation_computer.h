@@ -1,5 +1,5 @@
-#ifndef __SRC_PROP_PROPTOOL_TASKTRANSLATOR_EQUATIONCOMPUTER_H
-#define __SRC_PROP_PROPTOOL_TASKTRANSLATOR_EQUATIONCOMPUTER_H
+#ifndef __SRC_PROP_PROPTOOL_TASKTRANSLATOR_EQNCOMPUTER_H
+#define __SRC_PROP_PROPTOOL_TASKTRANSLATOR_EQNCOMPUTER_H
 
 #include <cstdarg>
 #include <src/util/math/matrix.h>
@@ -9,6 +9,8 @@
 #include <src/prop/proptool/task_translator/expression_computer.h>
 #include <src/prop/proptool/algebraic_manipulator/system_info.h>
 #include <src/prop/proptool/integrals/moint_computer.h>
+#include <src/prop/proptool/tensor_and_ci_lib/gamma_computer.h>
+ 
 
 namespace bagel { 
 template<typename DataType>
@@ -22,10 +24,10 @@ class Equation_Computer_Base {
 
      std::shared_ptr<Expression_Computer::Expression_Computer<DataType>> expression_computer_;
      std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> gamma_computer_;
+     std::shared_ptr<Gamma_Computer::Gamma_Computer<DataType>> gamma_computer_new_;
      std::shared_ptr<MOInt_Computer<DataType>> moint_computer_;
 
      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map_; 
-     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> system_tensop_data_map_;
      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map_;
 
      DataType
@@ -70,6 +72,13 @@ class Equation_Computer_Base {
 
      void set_computers( std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> gamma_computer,
                          std::shared_ptr<MOInt_Computer<DataType>> moint_computer );
+
+     void set_gamma_computer( std::shared_ptr<Gamma_Computer::Gamma_Computer<DataType>> gamma_computer ) {
+                              gamma_computer_new_ = gamma_computer; return; }
+
+     void set_moint_computer( std::shared_ptr<MOInt_Computer<DataType>> moint_computer ) { 
+                              moint_computer_ = moint_computer; return; }
+
 
      void set_maps( std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map,  
                     std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map );

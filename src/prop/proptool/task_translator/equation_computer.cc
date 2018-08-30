@@ -30,7 +30,6 @@ cout << "Equation_Computer_Value<DataType>::set_maps() " << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   gamma_data_map_ = gamma_data_map;
-  system_tensop_data_map_ = tensop_data_map;
   tensop_data_map_ = tensop_data_map;
 
   return; 

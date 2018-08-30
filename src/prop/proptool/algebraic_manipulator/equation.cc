@@ -26,7 +26,8 @@ cout << "void Equation_Value<DataType>::set_maps" << endl;
   ACompute_map_   = ACompute_map;     if(!ACompute_map_   ) throw logic_error( "ACompute_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
   MT_map_         = MT_map;           if(!MT_map_         ) throw logic_error( "MT_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
   CTP_map_        = CTP_map;          if(!CTP_map_        ) throw logic_error( "CTP_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
-  range_prime_map_  = range_prime_map; if(!range_prime_map_        ) throw logic_error( "range_prime_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
+//  range_prime_map_  = range_prime_map; if(!range_prime_map_ ) throw logic_error( "range_prime_map_ is null when set in Equation_Base<DataType>::set_maps !! Aborting!! " );
+  range_prime_map_  = make_shared<map<char, long unsigned int >>();
 
   return;
 }
@@ -71,17 +72,15 @@ cout << "Equation_Base<DataType>::add_Expression : " << expression_name << endl 
 
   cout << "making expression of Type : " << expression_type << endl;
   if ( expression_type == "orbital_excitation_derivative" || expression_type == "orb" ) {
-    cout << "expression_type = " << expression_type <<  endl;
-
     shared_ptr<Expression_Orb_Exc_Deriv<DataType>>  new_exp = make_shared<Expression_Orb_Exc_Deriv<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type );
     new_exp->generate_algebraic_task_list();
     expression_map_->emplace( expression_name, new_exp);
 
   } else  if ( expression_type == "full"  ) {
-    cout << "expression_type = " << expression_type <<  endl;
     shared_ptr<Expression_Full<DataType>>  new_exp = make_shared<Expression_Full<DataType>>( bk_list, states_info_, MT_map_, CTP_map_, ACompute_map_, gamma_info_map_, expression_type );
     new_exp->generate_algebraic_task_list();
     expression_map_->emplace( expression_name, new_exp );
+
   } else { 
     throw std::logic_error( "have not implemented expression type \"" + expression_type +"\" !  Aborting!!" );  
   } 

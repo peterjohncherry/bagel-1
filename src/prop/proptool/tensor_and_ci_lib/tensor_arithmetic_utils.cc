@@ -132,7 +132,7 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor 3arg" << endl;
 template<>
 shared_ptr<Tensor_<complex<double>>>  Tensor_Arithmetic_Utils::get_sub_tensor( shared_ptr<Tensor_<complex<double>>> Tens_in, const vector<IndexRange>& id_ranges) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS_VERBOSE
 cout << "Tensor_Arithemetic_Utils::get_sub_tensor 2arg" << endl; print_sizes( id_ranges, "id_ranges" ); cout << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
@@ -284,7 +284,7 @@ cout << "Tensor_Arithemetic_Utils::get_sub_tensor_symm" << endl; print_sizes( id
 template<>
 shared_ptr<Tensor_<double>>  Tensor_Arithmetic_Utils::get_sub_tensor( shared_ptr<Tensor_<double>> Tens_in, const vector<IndexRange>& id_ranges) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS
+#ifdef __DEBUG_TENSOR_ARITHMETIC_UTILS_VERBOSE
 cout << "Tensor_Arithemetic_Utils::get_sub_tensor 2arg" << endl; print_sizes( id_ranges, "id_ranges" ); cout << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   

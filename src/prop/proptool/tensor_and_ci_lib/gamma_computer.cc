@@ -24,55 +24,38 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::Gamma_Computer" << endl;
 
   tensor_calc_           = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
   bagel_determinant_map_ = make_shared<std::map< std::string, std::shared_ptr<Determinants>>>();
+  range_conversion_map_ =  make_shared<map< string, shared_ptr<SMITH::IndexRange>>>();
+  gamma_info_map_ =  make_shared<map< string, shared_ptr<GammaInfo_Base>>>();
+  civec_data_map_ =  make_shared<map< string, shared_ptr<Tensor_<DataType>>>>();
 
 } 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template<typename DataType>
-Gamma_Computer::Gamma_Computer<DataType>::Gamma_Computer( std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map,
-                                                          std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map,
-                                                          std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor_<DataType>>>> civec_data_map ){
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << " Gamma_Computer::Gamma_Computer<DataType>::set_maps" << endl;
-#endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  range_conversion_map_ = range_conversion_map;
-  gamma_info_map_ = gamma_info_map;
-  civec_data_map_ = civec_data_map;
-
-  return;
-}
 /////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer::Gamma_Computer<DataType>::get_gamma_vb( string gamma_name ) {
+void Gamma_Computer::Gamma_Computer<DataType>::get_gamma( string gamma_name ) {
 /////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::get_gamma_vb :  " <<  gamma_name << endl;
+cout << "Gamma_Computer::get_gamma :  " <<  gamma_name << endl;
 #endif //////////////////////////////////////////////////////////////////////////////
 
-  if ( vb_gamma_data_map_->find( gamma_name ) == vb_gamma_data_map_->end()) {
-
+  if ( gamma_data_map_->find( gamma_name ) == gamma_data_map_->end()) {
     shared_ptr<GammaInfo_Base> gamma_info = gamma_info_map_->at(gamma_name);
 
     //note this has reverse iterators!
     if (gamma_info->order() > 2 ) { 
-      compute_sigmaN_vb( gamma_info );
-
+      compute_sigmaN( gamma_info );
     } else {
-      compute_sigma2_vb( gamma_info );
-
+      compute_sigma2( gamma_info );
     }
-    get_gammaN_from_sigmaN_vb ( gamma_info ) ;
+    get_gammaN_from_sigmaN ( gamma_info ) ;
   }
-  
   return;                              
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer::Gamma_Computer<DataType>::compute_sigma2_vb( shared_ptr<GammaInfo_Base> gamma2_info ) {
+void Gamma_Computer::Gamma_Computer<DataType>::compute_sigma2( shared_ptr<GammaInfo_Base> gamma2_info ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::compute_sigma2_vb : " << gamma2_info->name() << endl;
+cout << "Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
   string ket_name = gamma2_info->Ket_name();
@@ -80,15 +63,14 @@ cout << "Gamma_Computer::compute_sigma2_vb : " << gamma2_info->name() << endl;
   shared_ptr<Determinants> ket_det = bagel_determinant_map_->at( ket_name ); 
 
   if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha() ) { 
-
-   sigma_aa_vb( gamma2_info, true  );
-   sigma_bb_vb( gamma2_info, false );
+   sigma_aa( gamma2_info, true  );
+   sigma_bb( gamma2_info, false );
     
   } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()+1 ) { 
-   sigma_ab_vb( gamma2_info, true );
+   sigma_ab( gamma2_info, true );
 
   } else if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha()-1 ) { 
-   sigma_ba_vb( gamma2_info, true );
+   sigma_ba( gamma2_info, true );
 
   } else {
     throw logic_error( "this sigma: " + gamma2_info->sigma_name() + " is not implemented" ); 
@@ -98,22 +80,22 @@ cout << "Gamma_Computer::compute_sigma2_vb : " << gamma2_info->name() << endl;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer::Gamma_Computer<DataType>::get_gammaN_from_sigmaN_vb( shared_ptr<GammaInfo_Base> gamma_n_info )  {  
+void Gamma_Computer::Gamma_Computer<DataType>::get_gammaN_from_sigmaN( shared_ptr<GammaInfo_Base> gamma_n_info )  {  
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::get_gammaN_from_sigmaN_vb : " << gamma_n_info->name() << endl;
+cout << "Gamma_Computer::get_gammaN_from_sigmaN : " << gamma_n_info->name() << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   int order = gamma_n_info->order(); 
    
-  shared_ptr<Vector_Bundle<DataType>> sigma_n = vb_sigma_data_map_->at( gamma_n_info->sigma_name() ); 
+  shared_ptr<Vector_Bundle<DataType>> sigma_n = sigma_data_map_->at( gamma_n_info->sigma_name() ); 
   shared_ptr<Tensor_<DataType>> bra = civec_data_map_->at(gamma_n_info->Bra_name());
  
   vector<IndexRange> id_ranges = get_bagel_indexranges( *(gamma_n_info->id_ranges()) ); 
   shared_ptr<Tensor_<DataType>> gamma_n_tens = make_shared<Tensor_<DataType>>( id_ranges ); 
   gamma_n_tens->allocate();
   gamma_n_tens->zero();
-  vb_gamma_data_map_->emplace( gamma_n_info->name(), gamma_n_tens ); 
+  gamma_data_map_->emplace( gamma_n_info->name(), gamma_n_tens ); 
   
   vector<int> range_lengths = get_range_lengths( id_ranges ) ;
   vector<int> block_pos(order,0);  
@@ -151,10 +133,10 @@ cout << "Gamma_Computer::get_gammaN_from_sigmaN_vb : " << gamma_n_info->name() <
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer::Gamma_Computer<DataType>::compute_sigmaN_vb( shared_ptr<GammaInfo_Base> gammaN_info )  {
+void Gamma_Computer::Gamma_Computer<DataType>::compute_sigmaN( shared_ptr<GammaInfo_Base> gammaN_info )  {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::compute_sigmaN_vb : " << gammaN_info->sigma_name() << endl;
+cout << "Gamma_Computer::compute_sigmaN : " << gammaN_info->sigma_name() << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   int sorder  = gammaN_info->order(); 
@@ -169,14 +151,14 @@ cout << "Gamma_Computer::compute_sigmaN_vb : " << gammaN_info->sigma_name() << e
 
   shared_ptr<Vector_Bundle<DataType>> sigma_n = make_shared<Vector_Bundle<DataType>>( orb_ranges_sigma_n, bra_length, civec_maxtile_, true, true, true );
  
-  vb_sigma_data_map_->emplace( gammaN_info->sigma_name(), sigma_n );
+  sigma_data_map_->emplace( gammaN_info->sigma_name(), sigma_n );
 
   // TODO should define norb so can be variable from gamma_info..
   vector<int> maxs_prev_sigma(sorder-2, norb-1);
   vector<int> mins_prev_sigma(sorder-2, 0);
   vector<int> orb_ids_prev_sigma = mins_prev_sigma;
 
-  shared_ptr<Vector_Bundle<DataType>> prev_sigma = vb_sigma_data_map_->at( gammaN_info->prev_sigma_name() );
+  shared_ptr<Vector_Bundle<DataType>> prev_sigma = sigma_data_map_->at( gammaN_info->prev_sigma_name() );
   
   vector<bool> sigma_overwrite_pattern(sorder,false);
   sigma_overwrite_pattern[sorder-1] = true;
@@ -242,19 +224,19 @@ cout << "Gamma_Computer::compute_eiej_on_ket ";
 
   if ( transition_name == "AA") {
     assert( (bra_det->nelea() == ket_det->nelea()) && ( bra_det->neleb() == ket_det->neleb()));
-    sigma2_aa_vb( eiej_on_ket, ket_tensor, bra_det, ket_det );
+    sigma2_aa( eiej_on_ket, ket_tensor, bra_det, ket_det );
   
   } else if ( transition_name == "BB") {
     assert( (bra_det->nelea() == ket_det->nelea()) && ( bra_det->neleb() == ket_det->neleb()));
-    sigma2_bb_vb( eiej_on_ket, ket_tensor, bra_det, ket_det );
+    sigma2_bb( eiej_on_ket, ket_tensor, bra_det, ket_det );
     
   } else if ( transition_name == "AB") {
     assert( (bra_det->nelea()+1 == ket_det->nelea()) && ( bra_det->neleb()-1 == ket_det->neleb()));
-    sigma2_ab_vb( eiej_on_ket, ket_tensor, bra_det, ket_det );
+    sigma2_ab( eiej_on_ket, ket_tensor, bra_det, ket_det );
 
   } else if ( transition_name == "BA") {
     assert( (bra_det->nelea()-1 == ket_det->nelea()) && ( bra_det->neleb()+1 == ket_det->neleb()));
-    sigma2_ba_vb( eiej_on_ket, ket_tensor, bra_det, ket_det );
+    sigma2_ba( eiej_on_ket, ket_tensor, bra_det, ket_det );
 
   } else {
     throw logic_error( "Gamma_Computer::compute_eiej_on_ket : Aborted as this sigma is not implemented; not aa , bb, ab or ba" ); 
@@ -265,10 +247,10 @@ cout << "Gamma_Computer::compute_eiej_on_ket ";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer::Gamma_Computer<DataType>::sigma_aa_vb( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ) {
+void Gamma_Computer::Gamma_Computer<DataType>::sigma_aa( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_aa_test_vb" << endl;
+cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_aa_test" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   string bra_name = gamma_info->Bra_name();
@@ -278,12 +260,12 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_aa_test_vb" << endl;
   shared_ptr<Determinants> bra_det = bagel_determinant_map_->at(bra_name);
 
   shared_ptr<Vector_Bundle<DataType>> sigma_aa;
-  auto sigma_map_loc = vb_sigma_data_map_->find( gamma_info->sigma_name() );
-  if ( new_sigma || sigma_map_loc == vb_sigma_data_map_->end() ){ 
+  auto sigma_map_loc = sigma_data_map_->find( gamma_info->sigma_name() );
+  if ( new_sigma || sigma_map_loc == sigma_data_map_->end() ){ 
     vector<int> orb_id_ranges = { bra_det->norb(), bra_det->norb() };
     sigma_aa = make_shared<Vector_Bundle<DataType>>( orb_id_ranges, bra_det->lena()*bra_det->lenb(), civec_maxtile_, true, true, true );
-    if ( sigma_map_loc == vb_sigma_data_map_->end() ){ 
-      vb_sigma_data_map_->insert( make_pair( gamma_info->sigma_name(), sigma_aa ) );
+    if ( sigma_map_loc == sigma_data_map_->end() ){ 
+      sigma_data_map_->insert( make_pair( gamma_info->sigma_name(), sigma_aa ) );
     } else { 
       sigma_map_loc->second = sigma_aa; 
     }
@@ -292,19 +274,19 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_aa_test_vb" << endl;
   }
   shared_ptr<SMITH::Tensor_<DataType>> ket_tensor = civec_data_map_->at(ket_name);
   
-  sigma2_aa_vb( sigma_aa, ket_tensor, bra_det, ket_det );
+  sigma2_aa( sigma_aa, ket_tensor, bra_det, ket_det );
 
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void
-Gamma_Computer::Gamma_Computer<DataType>::sigma2_aa_vb( shared_ptr<Vector_Bundle<DataType>> sigma_aa,
+Gamma_Computer::Gamma_Computer<DataType>::sigma2_aa( shared_ptr<Vector_Bundle<DataType>> sigma_aa,
                                                             shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
                                                             shared_ptr<Determinants> bra_det, shared_ptr<Determinants> ket_det ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_aa_vb" << endl;
+cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_aa" << endl;
 //TODO : ket_det and bra_det should be the same, only keep for now to facilitate tests on gamma task list generation
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -324,7 +306,6 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_aa_vb" << endl;
       for (int jj = 0; jj != norb; jj++) {
         
         vector<int> orb_ids = { ii, jj }; 
-        //std::shared_ptr<SMITH::Tensor_<DataType>> sigma_ij_vec = sigma_aa->get_vector( orb_ids, true );
         std::shared_ptr<SMITH::Tensor_<DataType>> sigma_ij_vec = sigma_aa->get_new_vector( true );
 
         assert ( sigma_aa->index_range_vec_[0].range().size() == 1 ) ; //TODO : will not work if ci block is split
@@ -374,10 +355,10 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_aa_vb" << endl;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer::Gamma_Computer<DataType>::sigma_bb_vb( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma  ) {
+void Gamma_Computer::Gamma_Computer<DataType>::sigma_bb( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma  ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_bb_vb" << endl;
+cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_bb" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   string bra_name = gamma_info->Bra_name();
@@ -387,14 +368,14 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_bb_vb" << endl;
   shared_ptr<Determinants> bra_det = ket_det;
 
   shared_ptr<Vector_Bundle<DataType>> sigma_bb;
-  auto sigma_map_loc = vb_sigma_data_map_->find( gamma_info->sigma_name() );
-  if ( new_sigma || sigma_map_loc == vb_sigma_data_map_->end() ){ 
+  auto sigma_map_loc = sigma_data_map_->find( gamma_info->sigma_name() );
+  if ( new_sigma || sigma_map_loc == sigma_data_map_->end() ){ 
 
     vector<int> orb_id_ranges = { bra_det->norb(), bra_det->norb() };
     sigma_bb = make_shared<Vector_Bundle<DataType>>( orb_id_ranges, bra_det->lena()*bra_det->lenb(), civec_maxtile_, true, true, true );
 
-    if ( sigma_map_loc == vb_sigma_data_map_->end() ){ 
-      vb_sigma_data_map_->insert( make_pair( gamma_info->sigma_name(), sigma_bb ) );
+    if ( sigma_map_loc == sigma_data_map_->end() ){ 
+      sigma_data_map_->insert( make_pair( gamma_info->sigma_name(), sigma_bb ) );
 
     } else { 
       sigma_map_loc->second = sigma_bb; 
@@ -408,19 +389,19 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_bb_vb" << endl;
 
   shared_ptr<SMITH::Tensor_<DataType>> ket_tensor = civec_data_map_->at(ket_name);
   
-  sigma2_bb_vb( sigma_bb, ket_tensor, bra_det, ket_det ) ;
+  sigma2_bb( sigma_bb, ket_tensor, bra_det, ket_det ) ;
 
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void
-Gamma_Computer::Gamma_Computer<DataType>::sigma2_bb_vb( shared_ptr<Vector_Bundle<DataType>> sigma_bb,
+Gamma_Computer::Gamma_Computer<DataType>::sigma2_bb( shared_ptr<Vector_Bundle<DataType>> sigma_bb,
                                                             shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
                                                             shared_ptr<Determinants> bra_det, shared_ptr<Determinants> ket_det ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_bb_vb" << endl;
+cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_bb" << endl;
 //TODO : ket_det and bra_det should be the same, only keep for now to facilitate tests on gamma task list generation
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
@@ -504,10 +485,10 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_bb_vb" << endl;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer::Gamma_Computer<DataType>::sigma_ab_vb( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ) {
+void Gamma_Computer::Gamma_Computer<DataType>::sigma_ab( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_ab_vb" << endl;
+cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_ab" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   string bra_name = gamma_info->Bra_name();
@@ -515,41 +496,39 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_ab_vb" << endl;
   
   shared_ptr<Determinants> ket_det = bagel_determinant_map_->at(ket_name);
   shared_ptr<Determinants> bra_det = bagel_determinant_map_->at(bra_name);
-
-  {//TEST  
-  bra_det = make_shared<Determinants>( ket_det->norb(), ket_det->nelea()+1, ket_det->neleb()-1, false /*compress*/, true /*mute*/);
-  } // END TEST
-
   shared_ptr<SMITH::Tensor_<DataType>> ket_tensor = civec_data_map_->at(ket_name); 
 
   shared_ptr<Vector_Bundle<DataType>> sigma_ab;
-  auto sigma_map_loc = vb_sigma_data_map_->find( gamma_info->sigma_name() );
-  if ( new_sigma || sigma_map_loc == vb_sigma_data_map_->end() ){ 
+  auto sigma_map_loc = sigma_data_map_->find( gamma_info->sigma_name() );
+
+  if ( new_sigma || (sigma_map_loc == sigma_data_map_->end()) ) { 
     vector<int> orb_id_ranges = { bra_det->norb(), bra_det->norb() };
     sigma_ab = make_shared<Vector_Bundle<DataType>>( orb_id_ranges, bra_det->lena()*bra_det->lenb(), civec_maxtile_, true, true, true );
-    if ( sigma_map_loc == vb_sigma_data_map_->end() ){ 
-      vb_sigma_data_map_->insert( make_pair( gamma_info->sigma_name(), sigma_ab ) );
+
+    if ( sigma_map_loc == sigma_data_map_->end() ){ 
+      sigma_data_map_->insert( make_pair( gamma_info->sigma_name(), sigma_ab ) );
     } else { 
       sigma_map_loc->second = sigma_ab; 
     }
+
   } else {
     sigma_ab = sigma_map_loc->second;
   }
   
-  sigma2_ab_vb( sigma_ab, ket_tensor, bra_det, ket_det );
-  vb_sigma_data_map_->emplace( gamma_info->sigma_name(), sigma_ab );
+  sigma2_ab( sigma_ab, ket_tensor, bra_det, ket_det );
+  sigma_data_map_->emplace( gamma_info->sigma_name(), sigma_ab );
 
   return;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void
-Gamma_Computer::Gamma_Computer<DataType>::sigma2_ab_vb( shared_ptr<Vector_Bundle<DataType>> sigma_ab,
+Gamma_Computer::Gamma_Computer<DataType>::sigma2_ab( shared_ptr<Vector_Bundle<DataType>> sigma_ab,
                                                             shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
                                                             shared_ptr<Determinants> bra_det, shared_ptr<Determinants> ket_det ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_ab_vb" << endl;
+cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_ab" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -618,10 +597,10 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_ab_vb" << endl;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
-void Gamma_Computer::Gamma_Computer<DataType>::sigma_ba_vb( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ) {
+void Gamma_Computer::Gamma_Computer<DataType>::sigma_ba( shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_ba_vb" << endl;
+cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_ba" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   string bra_name = gamma_info->Bra_name();
@@ -630,39 +609,40 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_ba_vb" << endl;
   shared_ptr<Determinants> ket_det = bagel_determinant_map_->at(ket_name);
   shared_ptr<Determinants> bra_det = bagel_determinant_map_->at(bra_name);
 
-  { // TEST
-  bra_det = make_shared<Determinants>( ket_det->norb(), ket_det->nelea()-1, ket_det->neleb()+1, false /*compress*/, true /*mute*/);
-  } // ENDTEST
-
   shared_ptr<Vector_Bundle<DataType>> sigma_ba;
-  auto sigma_map_loc = vb_sigma_data_map_->find( gamma_info->sigma_name() );
-  if ( new_sigma || sigma_map_loc == vb_sigma_data_map_->end() ){ 
+  auto sigma_map_loc = sigma_data_map_->find( gamma_info->sigma_name() );
+
+  if ( new_sigma || sigma_map_loc == sigma_data_map_->end() ){ 
+
     vector<int> orb_id_ranges = { bra_det->norb(), bra_det->norb() };
     sigma_ba = make_shared<Vector_Bundle<DataType>>( orb_id_ranges, bra_det->lena()*bra_det->lenb(), civec_maxtile_, true, true, true );
-    if ( sigma_map_loc == vb_sigma_data_map_->end() ){ 
-      vb_sigma_data_map_->insert( make_pair( gamma_info->sigma_name(), sigma_ba ) );
+
+    if ( sigma_map_loc == sigma_data_map_->end() ){ 
+      sigma_data_map_->insert( make_pair( gamma_info->sigma_name(), sigma_ba ) );
     } else { 
       sigma_map_loc->second = sigma_ba; 
     }
+
   } else {
     sigma_ba = sigma_map_loc->second;
   }
 
   shared_ptr<SMITH::Tensor_<DataType>> ket_tensor = civec_data_map_->at(ket_name); 
 
-  sigma2_ba_vb( sigma_ba, ket_tensor, bra_det, ket_det );
-  vb_sigma_data_map_->emplace( gamma_info->sigma_name(), sigma_ba );
+  sigma2_ba( sigma_ba, ket_tensor, bra_det, ket_det );
+
+  sigma_data_map_->emplace( gamma_info->sigma_name(), sigma_ba );
 
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 void
-Gamma_Computer::Gamma_Computer<DataType>::sigma2_ba_vb( shared_ptr<Vector_Bundle<DataType>> sigma_ba,
+Gamma_Computer::Gamma_Computer<DataType>::sigma2_ba( shared_ptr<Vector_Bundle<DataType>> sigma_ba,
                                                             shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
                                                             shared_ptr<Determinants> bra_det, shared_ptr<Determinants> ket_det ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
-cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_ba_vb" << endl;
+cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_ba" << endl;
 #endif /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   assert ( bra_det->nelea() == ket_det->nelea()-1  && bra_det->neleb() == ket_det->neleb()+1 );
