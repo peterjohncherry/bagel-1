@@ -85,8 +85,18 @@ class Gamma_Computer {
       /////////// Utility routines /////////////////////////
       
       std::vector<SMITH::IndexRange> get_bagel_indexranges( const std::vector<std::string>& ranges_str);
-      void get_wfn_data( std::shared_ptr<CIVecInfo_Base>  cvec_info );
-      void convert_civec_to_tensor( std::string civec_name ) ;
+
+  
+      void fill_and_link_determinant_map( int nele , int norb  );
+
+      /////////// Variable access /////////////////////////
+      
+      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map() { return gamma_info_map_ ; };
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map() {return gamma_data_map_; }
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map() {return civec_data_map_; }
+
+      std::shared_ptr<SMITH::Tensor_<DataType>> gamma_data( std::string name ) {return gamma_data_map_->at(name); }
+      std::shared_ptr<SMITH::Tensor_<DataType>> civec_data( std::string name ) {return civec_data_map_->at(name); }
 };
 
 }

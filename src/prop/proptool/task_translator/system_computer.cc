@@ -29,7 +29,7 @@ cout << "System_Computer<DataType>::build_equation_computer : " << equation_name
 
   if ( equation_basic->type()  ==  "Value" ) {
     auto equation_computer = make_shared<Equation_Computer_Value<DataType>>( equation_basic, range_conversion_map_ );
-    equation_computer->set_computers( b_gamma_computer_, moint_computer_ ) ;
+    equation_computer->set_computers( gamma_computer_, moint_computer_ ) ;
     equation_computer->set_maps( gamma_data_map_, tensop_data_map_ );
     equation_computer->build_expression_computer();
     equation_computer->solve_equation();
@@ -39,7 +39,7 @@ cout << "System_Computer<DataType>::build_equation_computer : " << equation_name
     if (!equation_linearrm) { throw logic_error("casting of sptr<Equation_base> to sptr<Equation_LinearRM>  failed") ; } 
 
     shared_ptr<Equation_Computer_LinearRM<DataType>> equation_computer = make_shared<Equation_Computer_LinearRM<DataType>>( equation_linearrm, range_conversion_map_ );
-    equation_computer->set_computers( b_gamma_computer_, moint_computer_ ) ;
+    equation_computer->set_computers( gamma_computer_, moint_computer_ ) ;
     equation_computer->set_maps( gamma_data_map_, tensop_data_map_ );
     equation_computer->build_expression_computer(); // TODO WRONG NAME AND WRONG FUNCTIONALITY
     equation_computer->solve_equation();

@@ -141,11 +141,11 @@ cout << "void PropTool::PropTool::build_gamma_computer()" << endl;
   for ( int ii = 0 ; ii != civectors_->ij(); ++ii )
     ci_type_converter->add_civec( civectors_->data(ii), ii );
 
-  unique_ptr<Gamma_Computer::Gamma_Computer<double>> gamma_computer_new = make_unique<Gamma_Computer::Gamma_Computer<double>>();
-  gamma_computer_new->set_civec_data_map( ci_type_converter->civec_data_map_ );
+  shared_ptr<Gamma_Computer::Gamma_Computer<double>> gamma_computer = make_shared<Gamma_Computer::Gamma_Computer<double>>();
+  gamma_computer->set_civec_data_map( ci_type_converter->civec_data_map_ );
 
   //TODO should build gamma_computer inside system_computer, like this due to Determinant class dependence of B_Gamma_Computer 
-  system_computer_->b_gamma_computer_ = make_shared<B_Gamma_Computer::B_Gamma_Computer<double>>(civectors_);
+  system_computer_->gamma_computer_ = gamma_computer;
 
   return;
 }

@@ -5,10 +5,9 @@ using namespace bagel;
 using namespace bagel::SMITH;
 
 //TODO Several routines here should be changed so that they use the OpInfo or MultiOpInfo class. 
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
-void Equation_Computer_Base<DataType>::set_computers( std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> gamma_computer, 
+void Equation_Computer_Base<DataType>::set_computers( std::shared_ptr<Gamma_Computer::Gamma_Computer<DataType>> gamma_computer, 
                                                       std::shared_ptr<MOInt_Computer<DataType>> moint_computer) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_EQUATION_COMPUTER_BASE 
@@ -26,7 +25,7 @@ void Equation_Computer_Base<DataType>::set_maps( shared_ptr<map< string, shared_
                                                  shared_ptr<map< string, shared_ptr<SMITH::Tensor_<DataType>>>> tensop_data_map ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_EQUATION_COMPUTER_BASE 
-cout << "Equation_Computer_Value<DataType>::set_maps() " << endl;
+cout << "Equation_Computer_Value<DataType>::set_maps" << endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
   gamma_data_map_ = gamma_data_map;
@@ -45,7 +44,6 @@ cout << "equation_->expression_map()->size() = "<< equation_->expression_map()->
   expression_computer_ =
   make_shared<Expression_Computer::Expression_Computer<DataType>>( gamma_computer_, equation_->expression_map(), range_conversion_map_, tensop_data_map_,
                                                                    moint_computer_ );
-
   return;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -56,10 +54,9 @@ Equation_Computer_Base<DataType>::get_scalar_result( string result_name, vector<
 #ifdef __DEBUG_PROPTOOL_EQUATION_COMPUTER_BASE 
  std::cout << "Equation_Computer_Base<DataType>::get_scalar_result (name, fixed) "  << result_name << std::endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
- throw logic_error("not implemented");
- DataType x = 1.0 ;
- return x;
-
+  throw logic_error("not implemented");
+  DataType x = 1.0 ;
+  return x;
 } 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType> 
@@ -84,10 +81,8 @@ Equation_Computer_Base<DataType>::get_tensop( string tensop_name, vector<pair<st
 #ifdef __DEBUG_PROPTOOL_EQUATION_COMPUTER_BASE 
 std::cout << "Equation_Computer_Base<DataType>::get_tensop( name, fixed, summed )" << std::endl;
 #endif ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
   assert( tensop_data_map_->find(tensop_name) != tensop_data_map_->end() ) ;
   std::shared_ptr<SMITH::Tensor_<DataType>> tens = tensop_data_map_->at(tensop_name);
-
   return tens;
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +112,7 @@ cout << "Equation_Computer_Base<DataType>::get_tensop_vector ( name, fixed, summ
 
   vector<shared_ptr<Tensor_<DataType>>> tens_list(5); 
   // TODO replace with call to range map in equation for varios input idxs
-  vector<int> range = { 1,2,3,4,5}; 
+  vector<int> range = { 1,2,3,4,5 }; 
   for ( int  ii : range ) { 
     assert( tensop_data_map_->find(tensop_name) != tensop_data_map_->end() ) ;
     tens_list[ii] = tensop_data_map_->at(tensop_name);

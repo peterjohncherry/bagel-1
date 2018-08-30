@@ -23,8 +23,7 @@ class Equation_Computer_Base {
      const std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
 
      std::shared_ptr<Expression_Computer::Expression_Computer<DataType>> expression_computer_;
-     std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> gamma_computer_;
-     std::shared_ptr<Gamma_Computer::Gamma_Computer<DataType>> gamma_computer_new_;
+     std::shared_ptr<Gamma_Computer::Gamma_Computer<DataType>> gamma_computer_;
      std::shared_ptr<MOInt_Computer<DataType>> moint_computer_;
 
      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map_; 
@@ -70,11 +69,11 @@ class Equation_Computer_Base {
      std::string const name() { return name_; } 
      std::string const type() { return type_; } 
 
-     void set_computers( std::shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>> gamma_computer,
+     void set_computers( std::shared_ptr<Gamma_Computer::Gamma_Computer<DataType>> gamma_computer,
                          std::shared_ptr<MOInt_Computer<DataType>> moint_computer );
 
      void set_gamma_computer( std::shared_ptr<Gamma_Computer::Gamma_Computer<DataType>> gamma_computer ) {
-                              gamma_computer_new_ = gamma_computer; return; }
+                              gamma_computer_ = gamma_computer; return; }
 
      void set_moint_computer( std::shared_ptr<MOInt_Computer<DataType>> moint_computer ) { 
                               moint_computer_ = moint_computer; return; }

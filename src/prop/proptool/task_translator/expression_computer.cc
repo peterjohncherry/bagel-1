@@ -15,7 +15,7 @@ using namespace Debugging_Utils;
 #define __DEBUG_EXPRESSION_COMPUTER
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
-Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_ptr<B_Gamma_Computer::B_Gamma_Computer<DataType>>   gamma_computer,
+Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_ptr<Gamma_Computer::Gamma_Computer<DataType>>   gamma_computer,
                                                                          shared_ptr<map< string, shared_ptr<Expression<DataType>>>> expression_map,
                                                                          shared_ptr<map< string, shared_ptr<IndexRange>>>           range_conversion_map,
                                                                          shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    tensop_data_map,
@@ -23,7 +23,6 @@ Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_
   gamma_computer_(gamma_computer), expression_map_(expression_map), range_conversion_map_(range_conversion_map), tensop_data_map_(tensop_data_map),
   moint_computer_(moint_computer) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
   scalar_results_map   = make_shared<map<string, DataType >>(); //TODO dumb, check why not in header and fix  
   tensor_results_map_  = make_shared<map<string, shared_ptr<Tensor_<DataType>>>>(); 
@@ -33,8 +32,6 @@ Expression_Computer::Expression_Computer<DataType>::Expression_Computer( shared_
   if ( std::is_same<double, DataType> ) 
     rdm_computer_ = make_unique<RDM_Computer::RDM_Computer>(gamma_computer);
 #endif
-
-
 }  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
@@ -391,20 +388,6 @@ cout << "Expression_Computer::Expression_Computer<DataType>::check_acontrib_fact
   } 
   return !skip;
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template < typename DataType >
-void Expression_Computer::Expression_Computer<DataType>::set_gamma_maps( string expression_name, 
-                                                                         shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    gamma_data_map,
-                                                                         shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    sigma_data_map,
-                                                                         shared_ptr<map< string, shared_ptr<Tensor_<DataType>>>>    civec_data_map  ){
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef __DEBUG_EXPRESSION_COMPUTER 
-cout << "Expression_Computer::Expression_Computer<DataType>::set_gamma_maps" << endl;
-#endif ///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-  gamma_computer_->set_maps(range_conversion_map_, expression_map_->at(expression_name)->gamma_info_map_, gamma_data_map, sigma_data_map, civec_data_map );
-  return;
-} 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template < typename DataType >
 void Expression_Computer::Expression_Computer<DataType>::test_trace_subtraction(){
