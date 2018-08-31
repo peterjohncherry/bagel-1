@@ -21,8 +21,8 @@ class GammaIntermediate_Base_Raw {
      bool survives_;
 
      GammaIntermediate_Base_Raw( std::vector<int> ids_pos,
-                             std::vector<std::pair<int,int>> deltas_pos,
-                             std::pair<double,double> factors ) :
+                                 std::vector<std::pair<int,int>> deltas_pos,
+                                 std::pair<double,double> factors ) :
      ids_pos_(ids_pos), deltas_pos_(deltas_pos), factors_(factors), survives_(true) {};
 
      ~GammaIntermediate_Base_Raw(){};

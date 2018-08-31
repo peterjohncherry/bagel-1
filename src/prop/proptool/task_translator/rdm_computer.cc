@@ -1154,11 +1154,11 @@ shared_ptr<vector<IndexRange>> B_Gamma_Computer::B_Gamma_Computer<DataType>::Get
 cout << "B_Gamma_Computer::Get_Bagel_IndexRanges 1arg "; print_vector(*ranges_str, "ranges_str" ) ; cout << endl;
 #endif //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  auto ranges_Bagel = make_shared<vector<IndexRange>>(0);
+  auto ranges_bagel = make_shared<vector<IndexRange>>(0);
   for ( auto rng : *ranges_str) 
-    ranges_Bagel->push_back(*range_conversion_map_->at(rng));
+    ranges_bagel->push_back(*range_conversion_map_->at(rng));
 
-  return ranges_Bagel;
+  return ranges_bagel;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>

@@ -47,12 +47,16 @@ cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
         GGen->add_gamma( range_map_it->second, trans_aops );
 
         if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
+          cout << "done ANO" << endl;
           if ( GGen->generic_reorderer( "normal order", false, false ) ) {
+            cout << "done NO" << endl;
             if ( GGen->generic_reorderer( "alternating order", false, true ) ){
-
+              cout << "done AO" << endl;
+             
               for (  auto& block :  *(range_map_it->second->unique_block_->range_blocks()) ){
                 MT_map->at( block->op_info_->op_name_ )->add_required_block( block );
                 required_blocks->emplace( block );
+                cout << "require_block =  " <<  block->name() << endl;
               }
 
             }
@@ -69,12 +73,16 @@ cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
         GGen->add_gamma( range_map_it->second, trans_aops );
 
         if ( GGen->generic_reorderer( "anti-normal order", true, false ) ){ 
+          cout << "done ANO" << endl;
           if ( GGen->generic_reorderer( "normal order", false, false ) ) {
+            cout << "done NO" << endl;
             if ( GGen->generic_reorderer( "alternating order", false, true ) ){
+              cout << "done AO" << endl;
 
               auto& block = range_map_it->second->unique_block_; 
               MT_map->at( block->op_info_->op_name_ )->add_required_block( block );
               required_blocks->emplace( block );
+              cout << "require_block =  " <<  block->name() << endl;
               
             }
           }
@@ -83,7 +91,7 @@ cout << "BraKet_Full::generate_gamma_Atensor_contractions : " << name_ << endl;
     }
   }
   ctp_map->insert( Total_Op_->CTP_map()->begin(), Total_Op_->CTP_map()->end() );
-
+  
 #ifdef __DEBUG_PROPTOOL_BRAKET_FULL_VERBOSE
   print_gamma_Atensor_contractions( G_to_A_map, false );
 #endif

@@ -21,12 +21,14 @@ class CI_Type_Converter {
 
     std::shared_ptr<std::map< std::string, std::shared_ptr<Tensor>>> civec_data_map_;
     std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map_; 
+    std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> bagel_determinant_map_;
 
 
+    CI_Type_Converter(){};
     CI_Type_Converter( std::shared_ptr<std::map< std::string, std::shared_ptr<IndexRange>>> range_conversion_map ): 
                        range_conversion_map_(range_conversion_map),
-                       civec_data_map_( std::make_shared<std::map< std::string, std::shared_ptr<Tensor>>>()) {};
-    CI_Type_Converter(){};
+                       civec_data_map_( std::make_shared<std::map< std::string, std::shared_ptr<Tensor>>>()),
+                       bagel_determinant_map_(std::make_shared<std::map< std::string, std::shared_ptr<const Determinants>>>()) {};
     ~CI_Type_Converter(){};
    
     void add_civec( std::shared_ptr<const Civec> civec, int state_num );

@@ -20,6 +20,9 @@ cout << "CI_Type_Converter::CI_Type_Converter" << endl;
 
   std::string civec_name = get_civec_name( state_num, civec->det()->norb(), civec->det()->nelea(), civec->det()->neleb() );
 
+  if ( bagel_determinant_map_->find(civec_name) == bagel_determinant_map_->end())
+    bagel_determinant_map_->emplace( civec_name , civec->det() ); 
+
   if ( civec_data_map_->find(civec_name) == civec_data_map_->end()){
  
     vector<IndexRange> civec_idxrng(1, *(range_conversion_map_->at(civec_name)) );

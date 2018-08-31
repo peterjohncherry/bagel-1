@@ -275,9 +275,17 @@ cout <<  "Expression_Computer::Expression_Computer::evaluate_expression_full : "
       }
     }
   }
+  
   cout << endl << endl << "======================== Checking RDMS ============================" << endl;
+  for ( auto& g_elem : *(gamma_computer_->gamma_data_map()) ){
+    cout << "1" << endl;
+    cout << endl; 
+    cout << endl; 
+    print_tensor_with_indexes( g_elem.second, g_elem.first, true);
+    cout << endl; 
+    cout << endl; 
+  }
   //check_rdms();
-  cout << endl << endl;
 
   if (new_result ) {
     scalar_results_map->emplace( expression_name, result );

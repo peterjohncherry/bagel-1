@@ -10,7 +10,7 @@ using namespace bagel::SMITH;
 using namespace Tensor_Arithmetic;
 using namespace Tensor_Arithmetic_Utils;
 using namespace WickUtils;
-//#define __DEBUG_PROPTOOL_GAMMA_COMPUTER
+#define __DEBUG_PROPTOOL_GAMMA_COMPUTER
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template<typename DataType>
 Gamma_Computer::Gamma_Computer<DataType>::Gamma_Computer() {
@@ -23,7 +23,10 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::Gamma_Computer" << endl;
   thresh_ = 1.0e-12;
 
   tensor_calc_           = make_shared<Tensor_Arithmetic::Tensor_Arithmetic<DataType>>();
-  bagel_determinant_map_ = make_shared<std::map< std::string, std::shared_ptr<Determinants>>>();
+  gamma_data_map_ = std::make_shared<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>>();
+  sigma_data_map_ = std::make_shared<std::map< std::string, std::shared_ptr<Vector_Bundle<DataType>>>>(); 
+
+  bagel_determinant_map_ = make_shared<std::map< std::string, std::shared_ptr<const Determinants>>>();
   range_conversion_map_ =  make_shared<map< string, shared_ptr<SMITH::IndexRange>>>();
   gamma_info_map_ =  make_shared<map< string, shared_ptr<GammaInfo_Base>>>();
   civec_data_map_ =  make_shared<map< string, shared_ptr<Tensor_<DataType>>>>();
@@ -60,7 +63,7 @@ cout << "Gamma_Computer::compute_sigma2 : " << gamma2_info->name() << endl;
 
   string ket_name = gamma2_info->Ket_name();
 
-  shared_ptr<Determinants> ket_det = bagel_determinant_map_->at( ket_name ); 
+  shared_ptr<const Determinants> ket_det = bagel_determinant_map_->at( ket_name ); 
 
   if ( gamma2_info->Bra_nalpha() == gamma2_info->Ket_nalpha() ) { 
    sigma_aa( gamma2_info, true  );
@@ -141,8 +144,8 @@ cout << "Gamma_Computer::compute_sigmaN : " << gammaN_info->sigma_name() << endl
 
   int sorder  = gammaN_info->order(); 
   // check to see if previous sigma has been calculated, if not calculate it (recursive call here) 
-  shared_ptr<Determinants> ket_det = bagel_determinant_map_->at( gammaN_info->Bra_name() );  
-  shared_ptr<Determinants> bra_det = bagel_determinant_map_->at( gammaN_info->Prev_Bra_name() );  
+  shared_ptr<const Determinants> ket_det = bagel_determinant_map_->at( gammaN_info->Bra_name() );  
+  shared_ptr<const Determinants> bra_det = bagel_determinant_map_->at( gammaN_info->Prev_Bra_name() );  
 
   size_t bra_length = bra_det->lena()*bra_det->lenb();
   int norb = ket_det->norb();
@@ -214,8 +217,8 @@ template<typename DataType>
 void
 Gamma_Computer::Gamma_Computer<DataType>::compute_eiej_on_ket( shared_ptr<Vector_Bundle<DataType>> eiej_on_ket,
                                                                    shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
-                                                                   shared_ptr<Determinants> bra_det,
-                                                                   shared_ptr<Determinants> ket_det,
+                                                                   shared_ptr<const Determinants> bra_det,
+                                                                   shared_ptr<const Determinants> ket_det,
                                                                    string transition_name ) {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
@@ -256,8 +259,8 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_aa_test" << endl;
   string bra_name = gamma_info->Bra_name();
   string ket_name = gamma_info->Ket_name();
   
-  shared_ptr<Determinants> ket_det = bagel_determinant_map_->at(ket_name);
-  shared_ptr<Determinants> bra_det = bagel_determinant_map_->at(bra_name);
+  shared_ptr<const Determinants> ket_det = bagel_determinant_map_->at(ket_name);
+  shared_ptr<const Determinants> bra_det = bagel_determinant_map_->at(bra_name);
 
   shared_ptr<Vector_Bundle<DataType>> sigma_aa;
   auto sigma_map_loc = sigma_data_map_->find( gamma_info->sigma_name() );
@@ -283,7 +286,7 @@ template<typename DataType>
 void
 Gamma_Computer::Gamma_Computer<DataType>::sigma2_aa( shared_ptr<Vector_Bundle<DataType>> sigma_aa,
                                                             shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
-                                                            shared_ptr<Determinants> bra_det, shared_ptr<Determinants> ket_det ) {
+                                                            shared_ptr<const Determinants> bra_det, shared_ptr<const Determinants> ket_det ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
 cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_aa" << endl;
@@ -364,8 +367,8 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_bb" << endl;
   string bra_name = gamma_info->Bra_name();
   string ket_name = gamma_info->Ket_name();
   
-  shared_ptr<Determinants> ket_det = bagel_determinant_map_->at(ket_name);
-  shared_ptr<Determinants> bra_det = ket_det;
+  shared_ptr<const Determinants> ket_det = bagel_determinant_map_->at(ket_name);
+  shared_ptr<const Determinants> bra_det = ket_det;
 
   shared_ptr<Vector_Bundle<DataType>> sigma_bb;
   auto sigma_map_loc = sigma_data_map_->find( gamma_info->sigma_name() );
@@ -398,7 +401,7 @@ template<typename DataType>
 void
 Gamma_Computer::Gamma_Computer<DataType>::sigma2_bb( shared_ptr<Vector_Bundle<DataType>> sigma_bb,
                                                             shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
-                                                            shared_ptr<Determinants> bra_det, shared_ptr<Determinants> ket_det ) {
+                                                            shared_ptr<const Determinants> bra_det, shared_ptr<const Determinants> ket_det ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
 cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_bb" << endl;
@@ -494,8 +497,8 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_ab" << endl;
   string bra_name = gamma_info->Bra_name();
   string ket_name = gamma_info->Ket_name();
   
-  shared_ptr<Determinants> ket_det = bagel_determinant_map_->at(ket_name);
-  shared_ptr<Determinants> bra_det = bagel_determinant_map_->at(bra_name);
+  shared_ptr<const Determinants> ket_det = bagel_determinant_map_->at(ket_name);
+  shared_ptr<const Determinants> bra_det = bagel_determinant_map_->at(bra_name);
   shared_ptr<SMITH::Tensor_<DataType>> ket_tensor = civec_data_map_->at(ket_name); 
 
   shared_ptr<Vector_Bundle<DataType>> sigma_ab;
@@ -525,7 +528,7 @@ template<typename DataType>
 void
 Gamma_Computer::Gamma_Computer<DataType>::sigma2_ab( shared_ptr<Vector_Bundle<DataType>> sigma_ab,
                                                             shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
-                                                            shared_ptr<Determinants> bra_det, shared_ptr<Determinants> ket_det ) {
+                                                            shared_ptr<const Determinants> bra_det, shared_ptr<const Determinants> ket_det ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
 cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_ab" << endl;
@@ -606,8 +609,8 @@ cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma_ba" << endl;
   string bra_name = gamma_info->Bra_name();
   string ket_name = gamma_info->Ket_name();
   
-  shared_ptr<Determinants> ket_det = bagel_determinant_map_->at(ket_name);
-  shared_ptr<Determinants> bra_det = bagel_determinant_map_->at(bra_name);
+  shared_ptr<const Determinants> ket_det = bagel_determinant_map_->at(ket_name);
+  shared_ptr<const Determinants> bra_det = bagel_determinant_map_->at(bra_name);
 
   shared_ptr<Vector_Bundle<DataType>> sigma_ba;
   auto sigma_map_loc = sigma_data_map_->find( gamma_info->sigma_name() );
@@ -639,7 +642,7 @@ template<typename DataType>
 void
 Gamma_Computer::Gamma_Computer<DataType>::sigma2_ba( shared_ptr<Vector_Bundle<DataType>> sigma_ba,
                                                             shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
-                                                            shared_ptr<Determinants> bra_det, shared_ptr<Determinants> ket_det ) {
+                                                            shared_ptr<const Determinants> bra_det, shared_ptr<const Determinants> ket_det ) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef __DEBUG_PROPTOOL_GAMMA_COMPUTER
 cout << "Gamma_Computer::Gamma_Computer<DataType>::sigma2_ba" << endl;

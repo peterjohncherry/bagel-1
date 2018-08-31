@@ -143,6 +143,9 @@ cout << "void PropTool::PropTool::build_gamma_computer()" << endl;
 
   shared_ptr<Gamma_Computer::Gamma_Computer<double>> gamma_computer = make_shared<Gamma_Computer::Gamma_Computer<double>>();
   gamma_computer->set_civec_data_map( ci_type_converter->civec_data_map_ );
+  gamma_computer->set_range_conversion_map( range_conversion_map_ );
+
+  cout << "gamma_computer->gamma_data_map()->size() = "; cout.flush(); cout << gamma_computer->gamma_data_map()->size() << endl;
 
   //TODO should build gamma_computer inside system_computer, like this due to Determinant class dependence of B_Gamma_Computer 
   system_computer_->gamma_computer_ = gamma_computer;

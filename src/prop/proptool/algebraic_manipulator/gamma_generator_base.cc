@@ -4,8 +4,8 @@
 #include <src/prop/proptool/proputils.h>
 #include <src/prop/proptool/debugging_utils.h>
 
-//#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
-//#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_UNQ
+#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE
+#define __DEBUG_PROPTOOL_GAMMAGENERATOR_BASE_UNQ
 using namespace std;
 using namespace WickUtils;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +46,9 @@ if (final_reordering)  { cout << " : final_reordering" << endl; } else { cout <<
     anti_normal_order();
 
   } else if ( reordering_name == "alternating order" ) {
+    cout << "hello1" << endl;
     alternating_order();
+    cout << "hello2" << endl;
   }
 
   bool does_it_contribute = ( gamma_vec_.size() > 0 );
@@ -266,7 +268,8 @@ cout << "GammaGenerator_Base::normal_order" << endl;
     }
     gamma_vec_ = move(surviving_gammas);
   } else { 
-    gamma_vec_.clear();
+    vector<unique_ptr<GammaIntermediate_Base_Raw>> surviving_gammas(0);
+    gamma_vec_ = move(surviving_gammas);
   }
   return;
 }
@@ -332,9 +335,12 @@ cout << "GammaGenerator_Base::anti_normal_order" << endl;
         ++sg_it;
       }
     }
+    cout << "X" << endl;
     gamma_vec_ = move(surviving_gammas);
   } else { 
-    gamma_vec_.clear();
+    //gamma_vec_.clear();
+    vector<unique_ptr<GammaIntermediate_Base_Raw>> surviving_gammas(0);
+    gamma_vec_ = move(surviving_gammas);
   }
   return;
 }
@@ -347,32 +353,46 @@ cout << "GammaGenerator_Base::alternating_order" << endl;
  
   int kk = 0;
   int number_of_surviving_gammas = 0;
+  cout << "gamma_vec_.size() = "; cout.flush(); cout <<  gamma_vec_.size() << endl;
   while ( kk != gamma_vec_.size() ) {
+    cout << "1 kk = " << kk << endl;
     proj_onto_map( gamma_vec_[kk] ); 
+    cout << "2 kk = " << kk << endl;
     if ( gamma_vec_[kk]->survives_ ){ 
-      vector<int> ids_pos = gamma_vec_[kk]->ids_pos_; 
+      cout << "3 kk = " << kk << endl;
+      vector<int>& ids_pos = gamma_vec_[kk]->ids_pos_; 
       vector<int> new_ids_pos = get_standardized_alt_order_unranged( ids_pos );
 
       for ( int ii = ids_pos.size()-1; ((ii!=-1) && (gamma_vec_[kk]->survives_)); --ii ){
         if ( ids_pos[ii] == new_ids_pos[ii])
           continue;
 
-        while( ids_pos[ii] != new_ids_pos[ii] && gamma_vec_[kk]->survives_ ){
-          for ( int jj = ii-1; jj != -1 ; jj--) {
-            if ( ids_pos[jj] == new_ids_pos[ii] ){
+        while( gamma_vec_[kk]->survives_ && (ids_pos[ii] != new_ids_pos[ii]) ){
+          for ( int jj = (ii-1); (jj != -1 && gamma_vec_[kk]->survives_); jj--) {
+            
+            cout << "ids_pos["<<jj<<"] != new_ids_pos["<<jj<<"] ){ = " ;cout.flush(); cout << ids_pos[jj]<<" != "<< new_ids_pos[jj] << endl;
+            if ( ids_pos[jj] != new_ids_pos[jj] ){
               swap( jj, jj+1, kk );
               proj_onto_map( gamma_vec_[kk] );
               break;
             }
+            print_vector(ids_pos, "7 ids_pos " );  print_vector(new_ids_pos, " new_ids_pos " ); cout << endl;
           }
+          print_vector(ids_pos, "8 ids_pos " );  print_vector(new_ids_pos, " new_ids_pos " ); cout << endl;
         }
+        cout << "9 kk = " << kk << endl;
       }
+      cout << "10 kk = " << kk << endl;
     }
+    cout << "11 kk = " << kk << endl;
     if (gamma_vec_[kk]->survives_ )
       ++number_of_surviving_gammas;
+    cout << "12 kk = " << kk << endl;
     
+    cout << " gamma_vec_["<< kk <<"]->survives_ = " << gamma_vec_[kk]->survives_  << endl;
     ++kk;
   }
+  cout << "number_of_surviving_gammas = "  << number_of_surviving_gammas  << endl;
   if ( number_of_surviving_gammas > 0 ){
     vector<unique_ptr<GammaIntermediate_Base_Raw>> surviving_gammas(number_of_surviving_gammas);
     vector<unique_ptr<GammaIntermediate_Base_Raw>>::iterator sg_it = surviving_gammas.begin();  
@@ -382,9 +402,14 @@ cout << "GammaGenerator_Base::alternating_order" << endl;
         ++sg_it;
       }
     }
+     
     gamma_vec_ = move(surviving_gammas);
+    cout << " some surviving gammas gamma_vec_.size() = " << gamma_vec_.size() << endl;
   } else {
     gamma_vec_.clear();
+    vector<unique_ptr<GammaIntermediate_Base_Raw>> surviving_gammas(0);
+    gamma_vec_ = move(surviving_gammas);
+    cout << " cleared ? gamma_vec_.size() = " << gamma_vec_.size() << endl;
   }
 
   return;

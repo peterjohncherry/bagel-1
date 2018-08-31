@@ -19,7 +19,7 @@ class Gamma_Computer {
     private: 
 
       std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map_;
-      std::shared_ptr<std::map< std::string, std::shared_ptr<Determinants>>> bagel_determinant_map_;
+      std::shared_ptr<std::map< std::string, std::shared_ptr<const Determinants>>> bagel_determinant_map_;
       std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::IndexRange>>> range_conversion_map_;
 
       std::shared_ptr<Tensor_Arithmetic::Tensor_Arithmetic<DataType>> tensor_calc_;
@@ -32,7 +32,6 @@ class Gamma_Computer {
       size_t civec_maxtile_;
 
     public: 
-
       Gamma_Computer(); 
       ~Gamma_Computer(){};
 
@@ -60,27 +59,27 @@ class Gamma_Computer {
       void sigma_aa( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
    
       void sigma2_aa( std::shared_ptr<Vector_Bundle<DataType>> sigma_aa, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
-                      std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+                      std::shared_ptr<const Determinants> bra_det, std::shared_ptr<const Determinants> ket_det );
 
       void compute_sigma2( std::shared_ptr<GammaInfo_Base> gamma2_info );
 
       void sigma_bb( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma ); 
 
       void sigma2_bb( std::shared_ptr<Vector_Bundle<DataType>> sigma_bb, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
-                         std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+                         std::shared_ptr<const Determinants> bra_det, std::shared_ptr<const Determinants> ket_det );
 
       void sigma_ab( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
 
       void sigma2_ab( std::shared_ptr<Vector_Bundle<DataType>> sigma_ba, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
-                         std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+                         std::shared_ptr<const Determinants> bra_det, std::shared_ptr<const Determinants> ket_det );
 
       void sigma_ba( std::shared_ptr<GammaInfo_Base> gamma_info, bool new_sigma );
 
       void sigma2_ba( std::shared_ptr<Vector_Bundle<DataType>> sigma_ba, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
-                         std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det );
+                         std::shared_ptr<const Determinants> bra_det, std::shared_ptr<const Determinants> ket_det );
 
       void compute_eiej_on_ket( std::shared_ptr<Vector_Bundle<DataType>> eiej_on_ket, std::shared_ptr<SMITH::Tensor_<DataType>> ket_tensor,
-                                std::shared_ptr<Determinants> bra_det, std::shared_ptr<Determinants> ket_det, std::string transition_type );
+                                std::shared_ptr<const Determinants> bra_det, std::shared_ptr<const Determinants> ket_det, std::string transition_type );
 
       /////////// Utility routines /////////////////////////
       
@@ -91,9 +90,9 @@ class Gamma_Computer {
 
       /////////// Variable access /////////////////////////
       
-      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>> gamma_info_map() { return gamma_info_map_ ; };
-      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> gamma_data_map() {return gamma_data_map_; }
-      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>> civec_data_map() {return civec_data_map_; }
+      std::shared_ptr<std::map< std::string, std::shared_ptr<GammaInfo_Base>>>& gamma_info_map() { return gamma_info_map_ ; };
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>>& gamma_data_map() {return gamma_data_map_; }
+      std::shared_ptr<std::map< std::string, std::shared_ptr<SMITH::Tensor_<DataType>>>>& civec_data_map() {return civec_data_map_; }
 
       std::shared_ptr<SMITH::Tensor_<DataType>> gamma_data( std::string name ) {return gamma_data_map_->at(name); }
       std::shared_ptr<SMITH::Tensor_<DataType>> civec_data( std::string name ) {return civec_data_map_->at(name); }

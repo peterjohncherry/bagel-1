@@ -26,7 +26,6 @@ cout << "void GammaGeneratorRedux<DataType>::add_gamma " << endl;
   std_rngs_ = *(block_info_->unique_block_->orig_rngs_);
   standard_order_ = *(block_info_->idxs_trans());
 
-
   {
   vector<int> ids_pos_raw( std_rngs_.size() );
   iota( ids_pos_raw.begin(), ids_pos_raw.end(), 0 );
